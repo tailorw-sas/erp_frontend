@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ResourceType;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageResourceType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,13 +14,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ResourceTypeReadDataJPARepository extends JpaRepository<ResourceType, UUID>, 
-        JpaSpecificationExecutor<ResourceType> {
+public interface ResourceTypeReadDataJPARepository extends JpaRepository<ManageResourceType, UUID>, 
+        JpaSpecificationExecutor<ManageResourceType> {
 
-    Page<ResourceType> findAll(Specification specification, Pageable pageable);
+    Page<ManageResourceType> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ResourceType b WHERE b.code = :code AND b.id <> :id")
+    @Query("SELECT COUNT(b) FROM ManageResourceType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
-    Optional<ResourceType> findResourceTypeByCode(String code);
+    Optional<ManageResourceType> findResourceTypeByCode(String code);
 }

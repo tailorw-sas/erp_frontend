@@ -40,11 +40,11 @@ public class MasterPaymentAttachment implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "resource_type_id")
-    private ResourceType resourceType;
+    private MaganeResourceType resourceType;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "attachment_type_id")
-    private AttachmentType attachmentType;
+    private ManageAttachmentType attachmentType;
 
     private String fileName;
     private String fileWeight;
@@ -61,8 +61,8 @@ public class MasterPaymentAttachment implements Serializable {
     public MasterPaymentAttachment(MasterPaymentAttachmentDto dto) {
         this.id = dto.getId();
         this.resource = dto.getResource() != null ? new Payment(dto.getResource()) : null;
-        this.resourceType = dto.getResourceType() != null ? new ResourceType(dto.getResourceType()) : null;
-        this.attachmentType = dto.getAttachmentType() != null ? new AttachmentType(dto.getAttachmentType()) : null;
+        this.resourceType = dto.getResourceType() != null ? new MaganeResourceType(dto.getResourceType()) : null;
+        this.attachmentType = dto.getAttachmentType() != null ? new ManageAttachmentType(dto.getAttachmentType()) : null;
         this.fileName = dto.getFileName();
         this.fileWeight = dto.getFileWeight();
         this.path = dto.getPath();

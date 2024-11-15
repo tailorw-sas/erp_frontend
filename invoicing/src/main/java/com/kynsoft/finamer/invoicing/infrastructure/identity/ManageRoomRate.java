@@ -49,7 +49,7 @@ public class ManageRoomRate {
     private Long nights;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "booking")
-    private ManageBooking booking;
+    private Booking booking;
 
     @Column(nullable = true)
     private Boolean deleted = false;
@@ -87,7 +87,7 @@ public class ManageRoomRate {
         this.remark = dto.getRemark();
         this.hotelAmount = dto.getHotelAmount();
 
-        this.booking = dto.getBooking() != null ? new ManageBooking(dto.getBooking()) : null;
+        this.booking = dto.getBooking() != null ? new Booking(dto.getBooking()) : null;
         this.adjustments = dto.getAdjustments() != null ? dto.getAdjustments().stream().map(a -> {
             ManageAdjustment adjustment = new ManageAdjustment(a);
             adjustment.setRoomRate(this);

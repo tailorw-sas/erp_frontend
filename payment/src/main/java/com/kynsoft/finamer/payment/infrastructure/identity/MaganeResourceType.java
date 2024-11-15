@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
-import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
+import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -18,8 +17,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "attachment_type")
-public class AttachmentType implements Serializable {
+@Table(name = "manage_resource_type")
+public class MaganeResourceType {
 
     @Id
     @Column(name = "id")
@@ -27,15 +26,21 @@ public class AttachmentType implements Serializable {
 
     @Column(unique = true)
     private String code;
+
     private String name;
     private String description;
-    private Boolean defaults;
-    @Column(name = "anti_import",columnDefinition = "boolean default false")
-    private boolean antiToIncomeImport;
 
     @Enumerated(EnumType.STRING)
     private Status status;
-    
+
+    private Boolean defaults;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean invoice;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean invoiceDefault;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -43,18 +48,22 @@ public class AttachmentType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    public AttachmentType(AttachmentTypeDto dto){
+    public MaganeResourceType(ResourceTypeDto dto) {
         this.id = dto.getId();
-        this.code = dto.getCode();
         this.name = dto.getName();
+        this.code = dto.getCode();
         this.description = dto.getDescription();
-        this.defaults = dto.getDefaults();
         this.status = dto.getStatus();
-        this.antiToIncomeImport=dto.isAntiToIncomeImport();
+        this.defaults = dto.getDefaults();
+        this.invoice = dto.isInvoice();
+        this.invoiceDefault = dto.isInvoiceDefault();
     }
 
-    public AttachmentTypeDto toAggregate() {
-        return new AttachmentTypeDto(id, code, name, description, defaults, status,antiToIncomeImport);
+    public ResourceTypeDto toAggregate() {
+        return new ResourceTypeDto(
+                id, code, name, description, status,
+                defaults != null ? defaults : null,
+                invoice, invoiceDefault
+        );
     }
-
 }

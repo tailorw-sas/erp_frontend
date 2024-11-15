@@ -11,8 +11,8 @@ import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchRes
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ResourceType;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageResourceTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ResourceTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +37,13 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public UUID create(ResourceTypeDto dto) {
-        ResourceType data = new ResourceType(dto);
+        ManageResourceType data = new ManageResourceType(dto);
         return this.repositoryCommand.save(data).getId();
     }
 
     @Override
     public void update(ResourceTypeDto dto) {
-        ResourceType update = new ResourceType(dto);
+        ManageResourceType update = new ManageResourceType(dto);
 
         update.setUpdatedAt(LocalDateTime.now());
 
@@ -61,7 +61,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public ResourceTypeDto findById(UUID id) {
-        Optional<ResourceType> userSystem = this.repositoryQuery.findById(id);
+        Optional<ManageResourceType> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -70,7 +70,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public ResourceTypeDto findByCode(String code) {
-        Optional<ResourceType> userSystem = this.repositoryQuery.findResourceTypeByCode(code);
+        Optional<ManageResourceType> userSystem = this.repositoryQuery.findResourceTypeByCode(code);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -86,12 +86,12 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
-        GenericSpecificationsBuilder<ResourceType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ResourceType> data = repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<ManageResourceType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageResourceType> data = repositoryQuery.findAll(specifications, pageable);
         return getPaginatedResponse(data);
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ResourceType> data) {
+    private PaginatedResponse getPaginatedResponse(Page<ManageResourceType> data) {
         List<GetSearchResourceTypeResponse> responses = data.stream()
                 .map(resourceType -> GetSearchResourceTypeResponse.builder()
                         .name(resourceType.getName())

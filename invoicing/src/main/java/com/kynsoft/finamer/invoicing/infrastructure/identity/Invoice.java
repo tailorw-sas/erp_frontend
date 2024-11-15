@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Table(name = "invoice")
 @EntityListeners(AuditEntityListener.class)
 @RemoteAudit(name = "invoice",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
-public class ManageInvoice {
+public class Invoice {
 
     @Id
     @Column(name = "id")
@@ -62,7 +62,7 @@ public class ManageInvoice {
     private LocalDate reSendDate;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageInvoice parent;
+    private Invoice parent;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "invoice_type_id")
@@ -97,7 +97,7 @@ public class ManageInvoice {
     private ImportType importType;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
-    private List<ManageBooking> bookings;
+    private List<Booking> bookings;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
     private List<ManageAttachment> attachments;
@@ -121,7 +121,7 @@ public class ManageInvoice {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    public ManageInvoice(ManageInvoiceDto dto) {
+    public Invoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
@@ -134,7 +134,7 @@ public class ManageInvoice {
         this.invoiceStatus = dto.getStatus();
         this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : false;
         this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(_booking -> {
-            ManageBooking booking = new ManageBooking(_booking);
+            Booking booking = new Booking(_booking);
             booking.setInvoice(this);
             return booking;
         }).collect(Collectors.toList()) : null;
@@ -155,7 +155,7 @@ public class ManageInvoice {
         this.invoiceNo = dto.getInvoiceNo();
         this.invoiceNumberPrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
-        this.parent = dto.getParent() != null ? new ManageInvoice(dto.getParent()) : null;
+        this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
         this.sendStatusError = dto.getSendStatusError();
         this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
@@ -182,7 +182,7 @@ public class ManageInvoice {
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, invoiceAmount, dueAmount,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec,
-                bookings != null ? bookings.stream().map(ManageBooking::toAggregate).collect(Collectors.toList()) : null,
+                bookings != null ? bookings.stream().map(Booking::toAggregate).collect(Collectors.toList()) : null,
                 attachments != null ? attachments.stream().map(ManageAttachment::toAggregateSample).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,

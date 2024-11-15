@@ -30,7 +30,7 @@ public class InvoiceStatusHistory  implements Serializable {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
 
     private String description;
@@ -49,7 +49,7 @@ public class InvoiceStatusHistory  implements Serializable {
 
     public InvoiceStatusHistory(InvoiceStatusHistoryDto dto){
         this.id = dto.getId();
-        this.invoice = new ManageInvoice(dto.getInvoice());
+        this.invoice = new Invoice(dto.getInvoice());
         this.description = dto.getDescription();
         this.employee =dto.getEmployee();
         this.invoiceStatus = dto.getInvoiceStatus() != null ? dto.getInvoiceStatus() : EInvoiceStatus.PROCECSED;

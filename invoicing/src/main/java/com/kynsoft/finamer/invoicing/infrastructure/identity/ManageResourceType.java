@@ -20,8 +20,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "resource_type")
-public class ResourceType {
+@Table(name = "manage_resource_type")
+public class ManageResourceType {
 
     @Id
     @Column(name = "id")
@@ -42,7 +42,7 @@ public class ResourceType {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    public ResourceType(ResourceTypeDto dto) {
+    public ManageResourceType(ResourceTypeDto dto) {
         this.id = dto.getId();
         this.name = dto.getName();
         this.code = dto.getCode();
