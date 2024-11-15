@@ -16,13 +16,19 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
+import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
+import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,14 +50,20 @@ public class TransactionServiceImpl implements ITransactionService {
 
     private final TemplateEntityServiceImpl templateEntityService;
 
+    private final IManageTransactionStatusService transactionStatusService;
+
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
     public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
                                   TransactionReadDataJPARepository repositoryQuery,
-                                   MailService mailService,
-                                  TemplateEntityServiceImpl templateEntityService) {
+                                  MailService mailService,
+                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.mailService = mailService;
         this.templateEntityService = templateEntityService;
+        this.transactionStatusService = transactionStatusService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -122,6 +134,25 @@ public class TransactionServiceImpl implements ITransactionService {
 
         return new TransactionTotalResume(BankerRounding.round(totalAmount,2),
                 BankerRounding.round(commission,2), BankerRounding.round(netAmount,2));
+    }
+
+    @Override
+    @Transactional
+    public void changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee) {
+        for (Long transactionId : transactionIds) {
+            TransactionDto transactionDto = this.findById(transactionId);
+            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(status);
+            transactionDto.setStatus(transactionStatusDto);
+            this.update(transactionDto);
+            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                    UUID.randomUUID(),
+                    transactionDto,
+                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                    null,
+                    null,
+                    transactionStatusDto
+            ));
+        }
     }
 
     @Override
