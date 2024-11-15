@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentShareFileDto;
 import jakarta.persistence.*;
@@ -22,6 +24,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "payment_share_file")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment_share_file",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class PaymentShareFile implements Serializable {
 
     @Id

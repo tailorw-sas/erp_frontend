@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -20,6 +22,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "payment_close_operation")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment_close_operation",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class PaymentCloseOperation implements Serializable {
 
     @Id
