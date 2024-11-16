@@ -121,6 +121,14 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
     }
 
     @Override
+    public List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardTypeById(UUID managerMerchant, UUID manageCreditCartType, UUID id) {
+        return this.repositoryQuery.findAllByManagerMerchantAndManageCreditCartTypeById(id, managerMerchant, manageCreditCartType)
+                .stream()
+                .map(ManageMerchantCommission::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public boolean checkDateOverlapForSameCombination(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, LocalDate fromDate, LocalDate toDate) {
         List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
         for (ManageMerchantCommissionDto existing : existingCommissions) {
