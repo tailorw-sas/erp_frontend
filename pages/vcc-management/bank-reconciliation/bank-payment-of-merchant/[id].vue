@@ -31,7 +31,8 @@ const loadingStatusNavigateOptions = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
-const totals: any = ref({ amount: 0, commission: 0, paymentDetails: 0 })
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
+const paymentAmount = ref(0)
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
@@ -259,7 +260,7 @@ async function getItemById(id: string) {
         item.value.amount = response.amount
         item.value.paidDate = response.paidDate ? dayjs(response.paidDate).toDate() : null
         item.value.remark = response.remark
-        totals.value.paymentDetails = response.detailsAmount
+        paymentAmount.value = response.detailsAmount
       }
       formReload.value += 1
     }
@@ -279,18 +280,16 @@ async function getList() {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
+  const count = { amount: 0, commission: 0, net: 0 }
+  subTotals.value = { ...count }
   try {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse } = response
-    const transactionTotalResume: any = response.transactionTotalResume
+    const { transactionSearchResponse, transactionTotalResume } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
-
-    totals.value.amount = transactionTotalResume.totalAmount
-    totals.value.commission = transactionTotalResume.commission
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -326,12 +325,15 @@ async function getList() {
         iterator.referenceId = String(iterator.id)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        count.amount += iterator.amount
         iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        count.commission += iterator.commission
         iterator.commission = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        count.net += iterator.netAmount
         iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
@@ -348,6 +350,7 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
 }
 
@@ -512,7 +515,7 @@ async function bindTransactions(transactions: any[]) {
     const response: any = await GenericService.create(confApi.moduleApi, `${confApi.uriApi}/add-transactions`, payload)
     if (response) {
       if (response.detailsAmount) {
-        totals.value.paymentDetails = response.detailsAmount
+        paymentAmount.value = response.detailsAmount
       }
       // Guarda el id del elemento creado
       const newIds = [...response.adjustmentIds || [], ...response.transactionIds || []]
@@ -547,7 +550,7 @@ async function unbindTransactions() {
 
     const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
     if (response && response.detailsAmount) {
-      totals.value.paymentDetails = response.detailsAmount
+      paymentAmount.value = response.detailsAmount
     }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
@@ -582,7 +585,7 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (totals.value.paymentDetails > item.amount) {
+  if (paymentAmount.value > item.amount) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
     return
   }
@@ -616,7 +619,6 @@ function bindAdjustment(data: any) {
 function formatAdjustment(data: any) {
   data.id = v4() // id temporal para poder eliminar de forma local
   data.checkIn = dayjs().format('YYYY-MM-DD')
-  totals.value.paymentDetails += data.amount
   data.amount = formatNumber(data.amount)
   data.adjustment = true
   return data
@@ -804,17 +806,17 @@ onMounted(async () => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
-            <Column :footer="formatNumber(totals.amount)" />
-            <Column :footer="formatNumber(totals.commission)" />
-            <Column :footer="formatNumber(totals.paymentDetails)" />
+            <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :footer="formatNumber(subTotals.commission)" />
+            <Column :footer="formatNumber(subTotals.net)" />
           </Row>
         </ColumnGroup>
       </template>
     </DynamicTable>
-    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <!-- <Badge
-        v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
-      /> -->
+    <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
+      <Badge
+        v-tooltip.top="'Payment Amount'" :value="`Payment Amount: $${formatNumber(paymentAmount)}`"
+      />
       <div>
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
