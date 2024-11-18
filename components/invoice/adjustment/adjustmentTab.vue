@@ -695,12 +695,14 @@ onMounted(() => {
       operator: 'EQUALS',
       value: props.selectedInvoice,
       logicalOperation: 'AND'
-    }, {
-      key: 'roomRate.booking.invoice.isCloned',
-      operator: 'EQUALS', // Usamos 'EQUALS' para igualar
-      value: false, // Buscamos aquellos que no están clonados
-      logicalOperation: 'AND' // Operación lógica
-    }]
+    },
+    //  {
+    //   key: 'roomRate.booking.invoice.isCloned',
+    //   operator: 'EQUALS', // Usamos 'EQUALS' para igualar
+    //   value: true, // Buscamos aquellos que no están clonados
+    //   logicalOperation: 'AND' // Operación lógica
+    // }
+    ]
   }
   if (!props.isCreationDialog) {
     getAdjustmentList()
