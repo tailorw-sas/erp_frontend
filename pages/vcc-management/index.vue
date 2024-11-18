@@ -86,8 +86,7 @@ const allMenuListItems = [
     icon: 'pi pi-times-circle',
     command: () => {},
     disabled: false,
-    isCollection: false,
-    default: true
+    isCollection: true
   },
   {
     index: 4,
