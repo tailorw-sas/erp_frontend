@@ -1306,6 +1306,8 @@ function mapFunctionForStatus(data: DataListItemForStatus): DataListItemForStatu
 const objLoading = ref({
   loadingAgency: false,
   loadingClient: false,
+  loadingHotel: false,
+  loadingStatus: false
 })
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   try {
@@ -1341,19 +1343,37 @@ async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { 
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  let hotelTemp: any[] = []
-  hotelItemsList.value = []
-  hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  hotelItemsList.value = [...hotelItemsList.value, ...hotelTemp]
+  try {
+    objLoading.value.loadingHotel = true
+    let hotelTemp: any[] = []
+    hotelItemsList.value = []
+    hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    hotelItemsList.value = [...hotelItemsList.value, ...hotelTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingHotel = false
+  }
+  finally {
+    objLoading.value.loadingHotel = false
+  }
 }
 async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  let statusTemp: any[] = []
-  statusItemsList.value = []
-  statusTemp = await getDataList<DataListItemForStatus, ListItemForStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForStatus, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  statusItemsList.value = [...statusItemsList.value, ...statusTemp]
+  try {
+    objLoading.value.loadingStatus = true
+    let statusTemp: any[] = []
+    statusItemsList.value = []
+    statusTemp = await getDataList<DataListItemForStatus, ListItemForStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForStatus, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    statusItemsList.value = [...statusItemsList.value, ...statusTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingStatus = false
+  }
+  finally {
+    objLoading.value.loadingStatus = false
+  }
 }
 
 async function getAgencyByClient() {
@@ -3348,7 +3368,7 @@ onMounted(async () => {
                         v-if="!loadingSaveAll"
                         id="autocomplete"
                         field="name"
-                        class="w-full"
+                        class="w-full h-2rem align-items-center"
                         item-value="id"
                         :model="filterToSearch.client"
                         :suggestions="[...clientItemsList]"
@@ -3423,7 +3443,7 @@ onMounted(async () => {
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete"
-                        class="w-full"
+                        class="w-full h-2rem align-items-center"
                         field="name"
                         item-value="id"
                         :model="filterToSearch.agency"
@@ -3518,7 +3538,40 @@ onMounted(async () => {
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> Hotels</label>
                     <div class="w-full">
+                      <DebouncedMultiSelectComponent
+                        id="autocomplete"
+                        class="w-full h-2rem align-items-center"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.hotel"
+                        :suggestions="[...hotelItemsList]"
+                        :loading="objLoading.loadingHotel"
+                        @change="($event) => {
+                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                       <DebouncedAutoCompleteComponent
+                        v-if="false"
                         id="autocomplete"
                         class="w-full"
                         field="name"
@@ -3555,7 +3608,45 @@ onMounted(async () => {
                   <div class="flex align-items-center">
                     <label for="" class="mr-2 font-bold">Status</label>
                     <div class="w-full">
+                      <DebouncedMultiSelectComponent
+                        id="autocomplete"
+                        class="w-full h-2rem align-items-center"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.status"
+                        :suggestions="[...statusItemsList]"
+                        @change="($event) => {
+                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                            // {
+                            //   key: 'code',
+                            //   logicalOperation: 'AND',
+                            //   operator: 'NOT_EQUALS',
+                            //   value: 'TRA',
+                            // },
+                          ]
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          await getStatusList(objApis.status.moduleApi, objApis.status.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
                       <DebouncedAutoCompleteComponent
+                        v-if="false"
                         id="autocomplete"
                         class="w-full"
                         field="name"

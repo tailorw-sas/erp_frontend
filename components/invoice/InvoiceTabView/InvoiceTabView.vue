@@ -411,9 +411,7 @@ onMounted(async () => {
             :invoice-obj-amount="invoiceObjAmount"
             :is-dialog-open="adjustmentDialogOpen"
             :close-dialog="() => {
-
               adjustmentDialogOpen = false;
-
             }"
             :open-dialog="handleDialogOpen"
             :refetch-invoice="refetchInvoice"
