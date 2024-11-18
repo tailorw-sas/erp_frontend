@@ -4053,6 +4053,7 @@ onMounted(async () => {
                 </template>
               </DataTable>
             </BlockUI>
+            <!-- @on-row-double-click="onRowDoubleClickInDataTableApplyPayment" -->
             <DynamicTable
               class="card p-0"
               :data="applyPaymentListOfInvoice"
@@ -4060,7 +4061,6 @@ onMounted(async () => {
               :options="applyPaymentOptions"
               :pagination="applyPaymentPagination"
               @on-change-pagination="applyPaymentOnChangePage = $event"
-              @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
               @on-expand-row="onExpandRowApplyPayment($event)"
               @update:clicked-item="addAmmountsToApplyPayment($event)"
             >
@@ -4238,7 +4238,7 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-
+          <!-- @on-row-double-click="onRowDoubleClickInDataTableApplyPayment" -->
           <DynamicTable
             class="card p-0"
             :data="applyPaymentListOfInvoiceOtherDeduction"
@@ -4246,7 +4246,6 @@ onMounted(async () => {
             :options="applyPaymentOptionsOtherDeduction"
             :pagination="applyPaymentPaginationOtherDeduction"
             @on-change-pagination="applyPaymentOnChangePageOtherDeduction = $event"
-            @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
             @update:clicked-item="selectRowsOfInvoiceOfOtherDeduction($event)"
             @on-table-cell-edit-complete="onCellEditCompleteApplyPaymentOtherDeduction($event)"
           >
