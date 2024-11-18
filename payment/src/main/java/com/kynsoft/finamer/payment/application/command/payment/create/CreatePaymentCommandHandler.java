@@ -3,6 +3,9 @@ package com.kynsoft.finamer.payment.application.command.payment.create;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsoft.finamer.payment.application.command.manageEmployee.create.CreateManageEmployeeCommand;
+import com.kynsoft.finamer.payment.application.query.http.setting.manageEmployee.ManageEmployeeRequest;
+import com.kynsoft.finamer.payment.application.query.http.setting.manageEmployee.ManageEmployeeResponse;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -11,6 +14,7 @@ import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIs
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.*;
+import com.kynsoft.finamer.payment.infrastructure.services.http.ManageEmployeeHttpService;
 import java.time.LocalTime;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +46,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IMasterPaymentAttachmentService masterPaymentAttachmentService;
 
+    private final ManageEmployeeHttpService employeeHttpService;
+
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
                                        IManagePaymentStatusService statusService,
                                        IManageClientService clientService,
@@ -56,7 +62,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                                        IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                        IManageEmployeeService manageEmployeeService,
                                        IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-                                       IMasterPaymentAttachmentService masterPaymentAttachmentService) {
+                                       IMasterPaymentAttachmentService masterPaymentAttachmentService,
+                                       ManageEmployeeHttpService employeeHttpService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -72,6 +79,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         this.manageEmployeeService = manageEmployeeService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
+        this.employeeHttpService = employeeHttpService;
     }
 
     @Override
@@ -89,11 +97,15 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAttachmentStatus(), "attachmentStatus", "Attachment Status ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "employee", "Employee ID cannot be null."));
 
-        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
-//        try {
-//            employeeDto = this.manageEmployeeService.findById(command.getEmployee());
-//        } catch (Exception e) {
-//        }
+        ManageEmployeeDto employeeDto = null;
+        try {
+            employeeDto = this.manageEmployeeService.findById(command.getEmployee());
+        } catch (Exception e) {
+            ManageEmployeeResponse response = this.employeeHttpService.sendAccountStatement(new ManageEmployeeRequest(command.getEmployee()));
+            command.getMediator().send(CreateManageEmployeeCommand.fromRequest(response));
+            employeeDto = response.createObject();
+        }
+
         RulesChecker.checkRule(new CheckIfDateIsBeforeCurrentDateRule(command.getTransactionDate()));
         RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(command.getPaymentAmount()));
 
