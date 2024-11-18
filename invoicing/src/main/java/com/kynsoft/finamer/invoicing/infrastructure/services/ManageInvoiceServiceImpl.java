@@ -89,7 +89,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         InvoiceUtils.establishDueDate(dto);
         InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
-        ManageInvoice entity = new ManageInvoice(dto);
         Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
         String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
         entity.setInvoiceNumber(invoiceNumber);
@@ -138,8 +137,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable,List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
-        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAll(specifications,pageable).map(ManageInvoice::toAggregate);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        return repositoryQuery.findAll(specifications,pageable).map(Invoice::toAggregate);
     }
 
     @Override
