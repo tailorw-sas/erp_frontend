@@ -14,7 +14,6 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
-import { parseFormattedNumber } from '~/utils/helpers'
 
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
@@ -129,9 +128,9 @@ const columns: IColumn[] = [
   { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'netAmount', header: 'T.Amount', type: 'text' },
+  { field: 'amountStr', header: 'Amount', type: 'text' },
+  { field: 'commissionStr', header: 'Commission', type: 'text' },
+  { field: 'netAmountStr', header: 'T.Amount', type: 'text' },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -168,7 +167,7 @@ const paginatedData = computed(() => {
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0) : 0
+  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0) : 0
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -298,7 +297,9 @@ function unbindTransactions() {
   const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  subTotals.value.amount -= parseFormattedNumber(contextMenuTransaction.value.netAmount)
+  subTotals.value.amount -= contextMenuTransaction.value.netAmount
+  subTotals.value.amount = Number.parseFloat(subTotals.value.amount.toFixed(2))
+  console.log(subTotals.value.amount)
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -316,7 +317,7 @@ async function createItem(item: { [key: string]: any }) {
         agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
         transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
         transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
-        amount: parseFormattedNumber(elem.netAmount),
+        amount: elem.netAmount,
         reservationNumber: elem.reservationNumber,
         referenceNumber: elem.referenceNumber
       }))
@@ -385,9 +386,12 @@ function formatAdjustment(data: any) {
   else {
     subTotals.value.amount += data.amount
   }
-  newAdjustment.commission = formatNumber(0)
-  newAdjustment.netAmount = formatNumber(data.amount)
-  newAdjustment.amount = data.transactionCategory.onlyApplyNet ? formatNumber(0) : formatNumber(data.amount)
+  newAdjustment.commission = 0
+  newAdjustment.commissionStr = formatNumber(0)
+  newAdjustment.netAmount = data.amount
+  newAdjustment.netAmountStr = formatNumber(data.amount)
+  newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.amount
+  newAdjustment.amountStr = formatNumber(newAdjustment.amount)
   newAdjustment.adjustment = true
   if (data.transactionCategory) {
     newAdjustment.categoryType = data.transactionCategory
@@ -402,7 +406,7 @@ function bindTransactions(event: any[]) {
   removeUnbindSelectedTransactions(event)
   const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
   LocalBindTransactionList.value = [...event, ...adjustmentList]
-  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0)
+  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + item.netAmount, 0)
   subTotals.value.amount = totalAmount
 }
 
