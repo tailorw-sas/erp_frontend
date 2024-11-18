@@ -47,7 +47,6 @@ const props = defineProps({
 
 const emit = defineEmits(['load', 'update:modelValue', 'change'])
 const allSuggestions = ref<any[]>(props.suggestions)
-const firstLoad = ref(false)
 
 const debouncedComplete = useDebounceFn((event: any) => {
   emit('load', event.value)
@@ -95,10 +94,7 @@ watch(() => props.suggestions, (newSuggestions) => {
       emit('change', ev)
     }"
     @before-show="($event) => {
-      if (!firstLoad) { // Validar que se llame al servicio la primera vez que se abre el selector
-        emit('load', '')
-        firstLoad = true
-      }
+      emit('load', '')
     }"
   >
     <template #value>

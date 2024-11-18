@@ -1303,17 +1303,39 @@ function mapFunctionForStatus(data: DataListItemForStatus): DataListItemForStatu
   }
 }
 
+const objLoading = ref({
+  loadingAgency: false,
+  loadingClient: false,
+})
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
-  let clientTemp: any[] = []
-  clientItemsList.value = []
-  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  clientItemsList.value = [...clientItemsList.value, ...clientTemp]
+  try {
+    objLoading.value.loadingClient = true
+    let clientTemp: any[] = []
+    clientItemsList.value = []
+    clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    clientItemsList.value = [...clientItemsList.value, ...clientTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingClient = false
+  }
+  finally {
+    objLoading.value.loadingClient = false
+  }
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  let agencyTemp: any[] = []
-  agencyItemsList.value = []
-  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  agencyItemsList.value = [...agencyItemsList.value, ...agencyTemp]
+  try {
+    objLoading.value.loadingAgency = true
+    let agencyTemp: any[] = []
+    agencyItemsList.value = []
+    agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    agencyItemsList.value = [...agencyItemsList.value, ...agencyTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingAgency = false
+  }
+  finally {
+    objLoading.value.loadingAgency = false
+  }
 }
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
@@ -3320,10 +3342,47 @@ onMounted(async () => {
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <!-- <pre>{{ filterToSearch }}</pre> -->
                     <label for="" class="mr-2 font-bold"> Client</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        class="w-full"
+                        item-value="id"
+                        :model="filterToSearch.client"
+                        :suggestions="[...clientItemsList]"
+                        :loading="objLoading.loadingClient"
+                        @change="($event) => {
+                          if (!filterToSearch.client.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.client = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                          if (filterToSearch.client.length === 0) {
+                            filterToSearch.agency = []
+                          }
+                          filterToSearch.agency = []
+                          agencyItemsList = []
+                        }"
+                        @load="async($event) => {
+
+                          const objQueryToSearch = {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }
+                          const filter: FilterCriteria[] = [{
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          }]
+                          await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
+                        }"
+                      />
+                      <!-- <DebouncedAutoCompleteComponent
+                        v-if="false"
                         id="autocomplete"
                         field="name"
                         item-value="id"
@@ -3355,13 +3414,56 @@ onMounted(async () => {
                           }]
                           await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
                         }"
-                      />
+                      /> -->
                     </div>
                   </div>
                   <div class="flex align-items-center">
                     <label for="" class="mr-2 font-bold"> Agency</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.agency"
+                        :suggestions="[...agencyItemsList]"
+                        :loading="objLoading.loadingAgency"
+                        @change="($event) => {
+                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
+                          }
+                          else {
+                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
+                          }
+                        }"
+                        @load="async($event) => {
+                          let ids = []
+                          if (filterToSearch.client.length > 0) {
+                            ids = filterToSearch.client.map((element: any) => element?.id)
+                          }
+
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'client.id',
+                              logicalOperation: 'AND',
+                              operator: 'IN',
+                              value: ids,
+                            },
+                            {
+                              key: 'status',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                            },
+                          ]
+                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                            query: $event,
+                            keys: ['name', 'code'],
+                          }, filter)
+                        }"
+                      />
+                      <!-- <DebouncedAutoCompleteComponent
                         id="autocomplete"
                         field="name"
                         item-value="id"
@@ -3402,7 +3504,7 @@ onMounted(async () => {
                             keys: ['name', 'code'],
                           }, filter)
                         }"
-                      />
+                      /> -->
                     </div>
                   </div>
                 </div>
