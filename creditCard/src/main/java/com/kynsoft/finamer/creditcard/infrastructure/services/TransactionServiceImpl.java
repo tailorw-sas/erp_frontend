@@ -83,6 +83,11 @@ public class TransactionServiceImpl implements ITransactionService {
     @Override
     public void delete(TransactionDto dto) {
         try {
+            List<TransactionStatusHistoryDto> histories = this.transactionStatusHistoryService.findByTransactionId(dto.getId());
+            histories.forEach(history -> {
+                history.setTransaction(null);
+                this.transactionStatusHistoryService.delete(history.getId());
+            });
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));

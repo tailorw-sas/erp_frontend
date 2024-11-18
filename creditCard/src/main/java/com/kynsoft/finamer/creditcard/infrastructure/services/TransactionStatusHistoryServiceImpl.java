@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHistoryService {
@@ -75,6 +76,11 @@ public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHi
         Page<TransactionStatusHistory> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public List<TransactionStatusHistoryDto> findByTransactionId(Long transactionId) {
+        return this.repositoryQuery.findByTransactionId(transactionId).stream().map(TransactionStatusHistory::toAggregate).collect(Collectors.toList());
     }
 
     private PaginatedResponse getPaginatedResponse(Page<TransactionStatusHistory> data) {
