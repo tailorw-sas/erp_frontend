@@ -39,4 +39,6 @@ public interface IManageTransactionStatusService {
     Long countByDeclinedStatusAndNotId(UUID id);
 
     ManageTransactionStatusDto findByETransactionStatus(ETransactionStatus status);
+
+    Long countByReconciledStatusAndNotId(UUID id);
 }
