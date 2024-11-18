@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.query.collections;
+package com.kynsoft.finamer.payment.application.query.collections.payment;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
@@ -10,6 +10,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class CollectionsSummaryQuery implements IQuery {
+public class PaymentCollectionsSummaryQuery implements IQuery {
     private List<FilterCriteria> filter;
+    private Pageable  pageable;
 }

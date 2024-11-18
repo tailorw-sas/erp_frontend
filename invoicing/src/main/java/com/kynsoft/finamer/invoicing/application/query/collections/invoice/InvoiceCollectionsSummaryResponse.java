@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.query.collections;
+package com.kynsoft.finamer.invoicing.application.query.collections.invoice;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import lombok.Builder;
@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class CollectionsSummaryResponse implements IResponse {
+public class InvoiceCollectionsSummaryResponse implements IResponse {
     private long totalInvoiceWith30;
     private double totalInvoiceBalanceWithAging30;
     private long totalInvoicePercentWithAging30;

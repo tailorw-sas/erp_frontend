@@ -1,9 +1,9 @@
-package com.kynsoft.finamer.invoicing.controllers;
+package com.kynsoft.finamer.payment.controllers;
 
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.query.collections.invoice.InvoiceCollectionsSummaryQuery;
+import com.kynsoft.finamer.payment.application.query.collections.payment.PaymentCollectionsSummaryQuery;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,9 +20,9 @@ public class CollectionsController {
         this.mediator = mediator;
     }
 
-    @PostMapping("/invoice-summary")
-    public ResponseEntity<?> invoiceCollectionSummary(@RequestBody SearchRequest searchRequest){
-        InvoiceCollectionsSummaryQuery query =new InvoiceCollectionsSummaryQuery(searchRequest.getFilter(), PageableUtil.createPageable(searchRequest));
-        return ResponseEntity.ok(mediator.send(query));
+    @PostMapping("/payment-summary")
+    public ResponseEntity<?> paymentCollectionSummary(@RequestBody SearchRequest searchRequest){
+        PaymentCollectionsSummaryQuery query =new PaymentCollectionsSummaryQuery(searchRequest.getFilter(),PageableUtil.createPageable(searchRequest));
+        return mediator.send(query);
     }
 }

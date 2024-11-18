@@ -136,10 +136,10 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public List<ManageInvoiceDto> getInvoiceForSummary(List<FilterCriteria> filterCriteria) {
+    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable,List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAll(specifications).stream().map(ManageInvoice::toAggregate).toList();
+        return repositoryQuery.findAll(specifications,pageable).map(ManageInvoice::toAggregate);
     }
 
     @Override
