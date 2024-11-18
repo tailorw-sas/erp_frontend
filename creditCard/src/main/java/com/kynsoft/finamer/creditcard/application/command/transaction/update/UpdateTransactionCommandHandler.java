@@ -8,6 +8,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageLanguageService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
@@ -24,10 +25,13 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
 
     private final IManageLanguageService languageService;
 
-    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService) {
+    private final IManageTransactionStatusService transactionStatusService;
+
+    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageTransactionStatusService transactionStatusService) {
         this.transactionService = transactionService;
         this.agencyService = agencyService;
         this.languageService = languageService;
+        this.transactionStatusService = transactionStatusService;
     }
 
     @Override
@@ -42,6 +46,7 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setReservationNumber, command.getReservationNumber(), dto.getReservationNumber(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setReferenceNumber, command.getReferenceNumber(), dto.getReferenceNumber(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setHotelContactEmail, command.getHotelContactEmail(), dto.getHotelContactEmail(), update::setUpdate);
+        updateEntity(dto::setStatus, command.getTransactionStatus(), dto.getStatus() != null ? dto.getStatus().getId() : null, this.transactionStatusService::findById, update::setUpdate);
 
         if (update.getUpdate() > 0){
             this.transactionService.update(dto);
