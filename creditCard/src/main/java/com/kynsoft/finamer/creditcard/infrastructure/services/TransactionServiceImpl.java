@@ -142,7 +142,8 @@ public class TransactionServiceImpl implements ITransactionService {
 
     @Override
     @Transactional
-    public void changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee) {
+    public Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee) {
+        Set<TransactionDto> transactionsDto = new HashSet<>();
         for (Long transactionId : transactionIds) {
             TransactionDto transactionDto = this.findById(transactionId);
             ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(status);
@@ -156,7 +157,9 @@ public class TransactionServiceImpl implements ITransactionService {
                     null,
                     transactionStatusDto
             ));
+            transactionsDto.add(transactionDto);
         }
+        return transactionsDto;
     }
 
     @Override
