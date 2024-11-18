@@ -20,4 +20,5 @@ public class UpdateTransactionRequest {
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;
+    private UUID transactionStatus;
 }
