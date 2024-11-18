@@ -85,7 +85,7 @@ const allMenuListItems = [
     type: MenuType.cancelled,
     label: 'Cancelled',
     icon: 'pi pi-times-circle',
-    command: () => {},
+    command: () => cancelTransaction(),
     disabled: false,
     isCollection: true
   },
@@ -760,6 +760,66 @@ async function resendPost() {
   }
   finally {
     options.value.loading = false
+  }
+}
+
+async function cancelTransaction() {
+  options.value.loading = true
+  const payload: { [key: string]: any } = {}
+  try {
+    if (contextMenuTransaction.value.id) {
+      const cancelledStatus = await findCancelledStatus()
+      if (cancelledStatus && cancelledStatus.length > 0) {
+        payload.transactionStatus = cancelledStatus[0].id
+        delete payload.event
+        const response: any = await GenericService.update('creditcard', 'transactions', contextMenuTransaction.value.id, payload)
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
+        options.value.loading = false
+        await getList()
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Cancelled Config not found in Manage Transaction Status', life: 10000 })
+      }
+    }
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+async function findCancelledStatus() {
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'cancelledStatus',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    return dataList
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
 }
 
