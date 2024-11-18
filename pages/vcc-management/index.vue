@@ -10,6 +10,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import { formatCardNumber } from '~/components/vcc/vcc_utils'
+import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const authStore = useAuthStore()
@@ -19,8 +20,8 @@ const isAdmin = (data.value?.user as any)?.isAdmin === true
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
-const newAdjustmentTransactionDialogVisible = ref(false)
 const transactionHistoryDialogVisible = ref<boolean>(false)
+const attachmentDialogOpen = ref<boolean>(false)
 const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
@@ -64,7 +65,7 @@ const allMenuListItems = [
     type: MenuType.document,
     label: 'Document',
     icon: 'pi pi-paperclip',
-    command: () => {},
+    command: () => handleAttachmentDialogOpen(),
     disabled: false,
     isCollection: false,
     default: true
@@ -442,7 +443,6 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value = {
     criteria: null,
     search: '',
@@ -453,8 +453,8 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  getList()
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  searchAndFilter()
 }
 
 async function getCollectionStatusList() {
@@ -767,12 +767,12 @@ async function openNewManualTransactionDialog() {
   newManualTransactionDialogVisible.value = true
 }
 
-async function openNewAdjustmentTransactionDialog() {
-  newAdjustmentTransactionDialogVisible.value = true
-}
-
 async function openNewRefundDialog() {
   newRefundDialogVisible.value = true
+}
+
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
 }
 
 async function onCloseEditManualTransactionDialog(isCancel: boolean) {
@@ -784,13 +784,6 @@ async function onCloseEditManualTransactionDialog(isCancel: boolean) {
 
 async function onCloseNewManualTransactionDialog(isCancel: boolean) {
   newManualTransactionDialogVisible.value = false
-  if (!isCancel) {
-    getList()
-  }
-}
-
-async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
-  newAdjustmentTransactionDialogVisible.value = false
   if (!isCancel) {
     getList()
   }
@@ -1120,11 +1113,18 @@ onMounted(() => {
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
-    <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
     <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
     <div v-if="transactionHistoryDialogVisible">
       <TransactionStatusHistoryDialog :close-dialog="() => { transactionHistoryDialogVisible = false }" :open-dialog="transactionHistoryDialogVisible" :selected-transaction="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
+    <div v-if="attachmentDialogOpen">
+      <AttachmentTransactionDialog
+        :close-dialog="(total: number) => {
+          attachmentDialogOpen = false
+          // item.hasAttachments = total > 0
+        }" header="Manage Transaction Attachment" :open-dialog="attachmentDialogOpen" :selected-transaction="contextMenuTransaction"
+      />
     </div>
   </div>
 </template>
