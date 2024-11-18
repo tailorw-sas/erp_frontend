@@ -65,6 +65,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
                             request.getImportProcessId())));
             paymentImportHelperService.readExcel(readerConfiguration, request);
         } catch (ExcelException e) {
+            e.printStackTrace();
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
                             request.getImportProcessId(), true, e.getMessage())));
@@ -73,11 +74,12 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
             return;
         }
         try {
-            if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())){
+            if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())) {
                 ((PaymentImportAntiIncomeHelperServiceImpl) paymentImportHelperService).createAttachment(request);
             }
             paymentImportHelperService.readPaymentCacheAndSave(request);
-        }catch (Exception e){
+        } catch (Exception e) {
+            e.printStackTrace();
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
@@ -99,7 +101,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
         if (paymentImportStatusDto.isHasError()) {
             throw new ExcelException(paymentImportStatusDto.getExceptionMessage());
         }
-        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus(),paymentImportHelperService.getTotalProcessRow());
+        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus(), paymentImportHelperService.getTotalProcessRow());
     }
 
 
