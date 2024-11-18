@@ -5,7 +5,6 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
-import { parseFormattedNumber } from '~/utils/helpers'
 
 const props = defineProps({
   header: {
@@ -66,9 +65,9 @@ const columns: IColumn[] = [
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'netAmount', header: 'T.Amount', type: 'text' },
+  { field: 'amountStr', header: 'Amount', type: 'text' },
+  { field: 'commissionStr', header: 'Commission', type: 'text' },
+  { field: 'netAmountStr', header: 'T.Amount', type: 'text' },
   { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, showFilter: false },
 ]
 
@@ -100,7 +99,7 @@ const pagination = ref<IPagination>({
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.netAmount), 0)
+  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0)
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -196,15 +195,15 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = formatNumber(iterator.amount)
+        iterator.amountStr = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
         count.commission += iterator.commission
-        iterator.commission = formatNumber(iterator.commission)
+        iterator.commissionStr = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
         count.net += iterator.netAmount
-        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
+        iterator.netAmountStr = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
