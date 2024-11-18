@@ -548,7 +548,7 @@ async function unbindTransactions() {
     payload.transactionsIds = transactionsIds
 
     const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
-    if (response && response.detailsAmount) {
+    if (response) {
       paymentAmount.value = response.detailsAmount
     }
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
