@@ -45,13 +45,13 @@ public class PaymentController {
 
     @PostMapping()
     public ResponseEntity<CreatePaymentMessage> create(@RequestBody CreatePaymentRequest request) {
-        CreatePaymentCommand createCommand = CreatePaymentCommand.fromRequest(request);
+        CreatePaymentCommand createCommand = CreatePaymentCommand.fromRequest(request, mediator);
         CreatePaymentMessage response = mediator.send(createCommand);
+//
+//        FindPaymentByIdQuery query = new FindPaymentByIdQuery(response.getPayment().getId());
+//        PaymentResponse paymentResponse = mediator.send(query);
 
-        FindPaymentByIdQuery query = new FindPaymentByIdQuery(response.getPayment().getId());
-        PaymentResponse paymentResponse = mediator.send(query);
-
-        response.setPayment(paymentResponse);
+//        response.setPayment(paymentResponse);
         return ResponseEntity.ok(response);
     }
 
