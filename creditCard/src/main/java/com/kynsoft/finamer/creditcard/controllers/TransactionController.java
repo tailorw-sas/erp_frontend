@@ -7,6 +7,9 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandRequest;
+import com.kynsoft.finamer.creditcard.application.command.resendPost.ResendPostCommand;
+import com.kynsoft.finamer.creditcard.application.command.resendPost.ResendPostMessage;
+import com.kynsoft.finamer.creditcard.application.command.resendPost.ResendPostRequest;
 import com.kynsoft.finamer.creditcard.application.command.transaction.adjustment.CreateAdjustmentTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.transaction.adjustment.CreateAdjustmentTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.transaction.adjustment.CreateAdjustmentTransactionRequest;
@@ -27,9 +30,6 @@ import com.kynsoft.finamer.creditcard.application.command.transaction.refund.Cre
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailCommand;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailMessage;
 import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailRequest;
-import com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation.RemoveReconciliationCommand;
-import com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation.RemoveReconciliationMessage;
-import com.kynsoft.finamer.creditcard.application.command.transaction.removeReconciliation.RemoveReconciliationRequest;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionRequest;
@@ -38,6 +38,7 @@ import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMer
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.getById.FindTransactionByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.GetSearchTransactionQuery;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionResumeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.PaymentRequestDto;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -88,7 +89,7 @@ public class TransactionController {
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
         GetSearchTransactionQuery query = new GetSearchTransactionQuery(pageable, request.getFilter(), request.getQuery());
-        PaginatedResponse response = mediator.send(query);
+        TransactionResumeResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }
@@ -97,6 +98,14 @@ public class TransactionController {
     public ResponseEntity<?> send(@RequestBody SendMailRequest request) {
         SendMailCommand command = SendMailCommand.fromRequest(request);
         SendMailMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/resend-post")
+    public ResponseEntity<?> resendPost(@RequestBody ResendPostRequest request) {
+        ResendPostCommand command = ResendPostCommand.fromRequest(request);
+        ResendPostMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
     }
@@ -148,15 +157,6 @@ public class TransactionController {
 
         UpdateTransactionCommand command = UpdateTransactionCommand.fromRequest(request, id);
         UpdateTransactionMessage response = mediator.send(command);
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/unbind")
-    public ResponseEntity<?> unbind(@RequestBody RemoveReconciliationRequest request) {
-
-        RemoveReconciliationCommand command = RemoveReconciliationCommand.fromRequest(request);
-        RemoveReconciliationMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

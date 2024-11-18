@@ -4,8 +4,11 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
+import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeRequest;
+import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -15,10 +18,12 @@ import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreat
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfNewPaymentDetailIsApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.*;
+import com.kynsoft.finamer.payment.infrastructure.services.http.PaymentTransactionTypeHttpService;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class CreatePaymentDetailCommandHandler implements ICommandHandler<CreatePaymentDetailCommand> {
@@ -26,20 +31,32 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
     private final IPaymentDetailService paymentDetailService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
+    private final PaymentTransactionTypeHttpService paymentTransactionTypeHttpService;
 
     public CreatePaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService) {
+            IPaymentService paymentService, PaymentTransactionTypeHttpService paymentTransactionTypeHttpService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
+        this.paymentTransactionTypeHttpService = paymentTransactionTypeHttpService;
     }
 
     @Override
-    //@Transactional
+    @Transactional
     public void handle(CreatePaymentDetailCommand command) {
 
-        ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
+        ManagePaymentTransactionTypeDto paymentTransactionTypeDto = null;
+        try {
+            paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
+        } catch (Exception e) {
+            //Esto es un flujo alternativo, si en algun momento kafka funciona y el proceso no encuentra el
+            //Payment Transaction Type, se busca en setting para insertar.
+            ManagePaymentTransactionTypeResponse response = paymentTransactionTypeHttpService.sendAccountStatement(new ManagePaymentTransactionTypeRequest(command.getTransactionType()));
+            command.getMediator().send(CreateManagePaymentTransactionTypeCommand.fromRequest(response));
+            paymentTransactionTypeDto = response.createObject();
+        }
+
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();

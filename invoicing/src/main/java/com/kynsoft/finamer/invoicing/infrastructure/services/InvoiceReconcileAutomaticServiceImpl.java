@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
@@ -12,28 +11,24 @@ import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processs
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceReconcileAutomaticImportProcessDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.event.importStatus.CreateImportReconcileAutomaticStatusEvent;
-import com.kynsoft.finamer.invoicing.domain.excel.bean.reconcileAutomatic.InvoiceReconcileAutomaticRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReconcileAutomaticService;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticInvoiceValidator;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticValidatorFactory;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportCacheEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportProcessStatusRedisEntity;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.reconcileAutomatic.reconcile.InvoiceReconcileAutomaticImportProcessStatusRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.autoRec.ProducerManageInvoiceAutoRecService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.slf4j.Logger;
@@ -41,9 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -69,6 +61,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final ServiceLocator<IMediator> serviceLocator;
     private final IManageResourceTypeService resourceTypeService;
     private final IManageBookingService bookingService;
+    private final ProducerManageInvoiceAutoRecService producerManageInvoiceAutoRecService;
 
     @Value("${resource.type.code}")
     private String paymentInvoiceTypeCode;
@@ -87,7 +80,8 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
                                                 InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
                                                 InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
                                                 ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService,
-                                                IManageBookingService bookingService, ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService
+                                                IManageBookingService bookingService, ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService,
+                                                ProducerManageInvoiceAutoRecService producerManageInvoiceAutoRecService
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.reconcileAutomaticValidatorFactory = reconcileAutomaticValidatorFactory;
@@ -102,6 +96,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         this.resourceTypeService = resourceTypeService;
         this.bookingService = bookingService;
         this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
+        this.producerManageInvoiceAutoRecService = producerManageInvoiceAutoRecService;
     }
 
     @Override
@@ -223,6 +218,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoiceId);
         invoiceDto.setAutoRec(true);
         this.manageInvoiceService.update(invoiceDto);
-        this.producerUpdateManageInvoiceService.create(invoiceDto);
+        this.producerManageInvoiceAutoRecService.create(invoiceDto);
+        //this.producerUpdateManageInvoiceService.create(this.manageInvoiceService.findById(invoiceDto.getId()));
     }
 }

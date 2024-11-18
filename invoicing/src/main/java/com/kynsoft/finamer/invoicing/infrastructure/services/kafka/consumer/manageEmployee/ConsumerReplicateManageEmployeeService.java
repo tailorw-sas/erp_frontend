@@ -18,10 +18,16 @@ public class ConsumerReplicateManageEmployeeService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-replicate-manage-employee", groupId = "payment-entity-replica")
+    @KafkaListener(topics = "finamer-replicate-manage-employee", groupId = "invoicing-entity-replica")
     public void listen(ReplicateManageEmployeeKafka objKafka) {
         try {
-            CreateManageEmployeeCommand command = new CreateManageEmployeeCommand(objKafka.getId(), objKafka.getFirstName(), objKafka.getLastName(), objKafka.getEmail());
+            CreateManageEmployeeCommand command = new CreateManageEmployeeCommand(
+                    objKafka.getId(), 
+                    objKafka.getFirstName(), 
+                    objKafka.getLastName(), 
+                    objKafka.getEmail(), 
+                    objKafka.getPhoneExtension()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageEmployeeService.class.getName()).log(Level.SEVERE, null, ex);

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.domain.dto;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,6 +48,8 @@ public class ManageInvoiceDto {
 
     private String sendStatusError;
     private Double originalAmount;
+    private ImportType importType;
+    private boolean deleteInvoice;
     private int aging;
 
     public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,

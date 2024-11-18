@@ -15,4 +15,7 @@ public class UpdateManageCreditCardTypeKafka {
 
     private UUID id;
     private String name;
+    private String description;
+    private Integer firstDigit;
+    private String status;
 }

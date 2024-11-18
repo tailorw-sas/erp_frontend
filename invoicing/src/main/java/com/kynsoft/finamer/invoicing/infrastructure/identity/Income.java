@@ -63,7 +63,7 @@ public class Income implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_booking")
-    private ManageBooking booking;
+    private Booking booking;
 
     private Double incomeAmount;
 
@@ -83,7 +83,7 @@ public class Income implements Serializable {
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.invoiceType = dto.getInvoiceType() != null ? new ManageInvoiceType(dto.getInvoiceType()) : null;
         this.invoiceStatus = dto.getInvoiceStatus() != null ? new ManageInvoiceStatus(dto.getInvoiceStatus()) : null;
-        this.booking = dto.getBooking() != null ? new ManageBooking(dto.getBooking()) : null;
+        this.booking = dto.getBooking() != null ? new Booking(dto.getBooking()) : null;
         this.incomeAmount = dto.getIncomeAmount();
         this.invoiceNumber = dto.getInvoiceNumber();
         this.dueDate = dto.getDueDate();

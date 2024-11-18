@@ -49,9 +49,12 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
 
         ManageMerchantCommissionDto existingCommission = this.service.findById(command.getId());
 
-        LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
+        //LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
+        LocalDate toDate = command.getToDate() != null ? command.getToDate() : null;
         RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service, command.getId(),
-                command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate));
+                command.getManagerMerchant(), command.getManageCreditCartType(), 
+                command.getFromDate(), toDate, command.getCommission(), command.getCalculationType()
+        ));
         ConsumerUpdate update = new ConsumerUpdate();
 
         updateFields(existingCommission, command, update);
@@ -80,7 +83,8 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
 
         // Allow toDate to be updated to null
         if (command.getToDate() == null) {
-            LocalDate toDate = LocalDate.parse("4000-12-31");
+            //LocalDate toDate = LocalDate.parse("4000-12-31");
+            LocalDate toDate = null;
             existingCommission.setToDate(toDate);
             update.setUpdate(1);
         } else if (updateDate(existingCommission::setToDate, command.getToDate(), existingCommission.getToDate(), update::setUpdate)) {

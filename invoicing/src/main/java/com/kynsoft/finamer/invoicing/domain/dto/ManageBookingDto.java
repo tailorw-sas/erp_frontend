@@ -54,6 +54,7 @@ public class ManageBookingDto {
 
     private ManageBookingDto parent;
     private String contract;
+    private boolean deleteInvoice;
 
     public ManageBookingDto(ManageBookingDto dto) {
         this.id = UUID.randomUUID();

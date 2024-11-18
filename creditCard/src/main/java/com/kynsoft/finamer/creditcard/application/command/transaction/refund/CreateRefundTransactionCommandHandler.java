@@ -6,18 +6,17 @@ import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.refundTransaction.RefundTransactionCompareParentAmountRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
@@ -31,11 +30,14 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManageMerchantCommissionService manageMerchantCommissionService;
 
-    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService) {
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.service = service;
         this.parameterizationService = parameterizationService;
         this.transactionStatusService = transactionStatusService;
         this.manageMerchantCommissionService = manageMerchantCommissionService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -54,31 +56,22 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
             UUID parentMerchantId = parentTransaction.getMerchant().getId();
             UUID parentCreditCardTypeId = parentTransaction.getCreditCardType().getId();
-            LocalDate parentCheckIn = parentTransaction.getCheckIn();
-            ManageMerchantCommissionDto merchantCommissionDto = this.manageMerchantCommissionService
-                    .findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(
-                            parentMerchantId, parentCreditCardTypeId, parentCheckIn
-                    );
-            double merchantCommission = merchantCommissionDto.getCommission();
-            if(merchantCommissionDto.getCalculationType().compareTo(CalculationType.PER) == 0){
-                commission = BigDecimal.valueOf(merchantCommission / 100 * command.getAmount()).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            LocalDateTime parentCheckIn = parentTransaction.getCheckIn();
 
-                // Realizar la división usando BigDecimal para mantener la precisión
-                BigDecimal result = BigDecimal.valueOf(command.getAmount() - commission);
+            ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
-                // Redondear el resultado a dos decimales hacia el "entero más cercano" donde
-                // todos los números que son exactamente a medio camino se
-                // redondean hacia arriba. Convirtiendo el resultado a double
-                netAmount = result.setScale(2, RoundingMode.HALF_UP).doubleValue();
-            } else if(merchantCommissionDto.getCalculationType().compareTo(CalculationType.FIX) == 0){
-                netAmount = command.getAmount() - commission;
-            }
+            //si no encuentra la parametrization que agarre 2 decimales por defecto
+            int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+            commission = manageMerchantCommissionService.calculateCommission(command.getAmount(), parentMerchantId, parentCreditCardTypeId, parentCheckIn.toLocalDate(), decimals);
+            //independientemente del valor de la commission el netAmount tiene dos decimales
+            netAmount = BankerRounding.round(command.getAmount() - commission, 2);
         }
 
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
 
         TransactionDto transactionDto = this.service.create(new TransactionDto(
-                parentTransaction.getTransactionUuid(),
+                UUID.randomUUID(),
                 parentTransaction.getMerchant(),
                 parentTransaction.getMethodType(),
                 parentTransaction.getHotel(),
@@ -109,5 +102,13 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
             parentTransaction.setPermitRefund(false);
             this.service.update(parentTransaction);
         }
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                null,
+                command.getEmployee(),
+                transactionStatusDto
+        ));
     }
 }

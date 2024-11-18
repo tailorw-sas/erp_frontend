@@ -3,13 +3,11 @@ package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliat
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
-import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.EReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Component
@@ -23,28 +21,24 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     private final ITransactionService transactionService;
 
-    private final IManageAgencyService agencyService;
-
     private final IManageReconcileTransactionStatusService reconcileTransactionStatusService;
 
-    private final IManageVCCTransactionTypeService transactionTypeService;
+    private final IBankReconciliationAdjustmentService bankReconciliationAdjustmentService;
 
-    private final IManageTransactionStatusService transactionStatusService;
+    private final IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService;
 
-    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageAgencyService agencyService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IManageVCCTransactionTypeService transactionTypeService, IManageTransactionStatusService transactionStatusService) {
+    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService) {
         this.bankReconciliationService = bankReconciliationService;
         this.merchantBankAccountService = merchantBankAccountService;
         this.hotelService = hotelService;
         this.transactionService = transactionService;
-        this.agencyService = agencyService;
         this.reconcileTransactionStatusService = reconcileTransactionStatusService;
-        this.transactionTypeService = transactionTypeService;
-        this.transactionStatusService = transactionStatusService;
+        this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
+        this.bankReconciliationStatusHistoryService = bankReconciliationStatusHistoryService;
     }
 
     @Override
     public void handle(CreateBankReconciliationCommand command) {
-        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), command.getDetailsAmount()));
         ManageMerchantBankAccountDto merchantBankAccountDto = this.merchantBankAccountService.findById(command.getMerchantBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
@@ -56,13 +50,25 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
             }
         }
 
+        Double detailsAmount = transactionList.stream().map(TransactionDto::getNetAmount).reduce(0.0, Double::sum);
+
         if (command.getAdjustmentTransactions() != null) {
-            List<Long> adjustmentIds = this.createAdjustments(command.getAdjustmentTransactions(), transactionList);
+            List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList, command.getAmount(), detailsAmount);
             command.setAdjustmentTransactionIds(adjustmentIds);
+        } else {
+            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), detailsAmount));
         }
 
+        detailsAmount = transactionList.stream().map(transactionDto ->
+                transactionDto.isAdjustment()
+                    ? transactionDto.getTransactionSubCategory().getNegative()
+                        ? -transactionDto.getNetAmount()
+                        : transactionDto.getNetAmount()
+                    : transactionDto.getNetAmount()
+        ).reduce(0.0, Double::sum);
+
         //todo: reconcile status
-        ManageReconcileTransactionStatusDto reconcileTransactionStatusDto = null;
+        ManageReconcileTransactionStatusDto reconcileTransactionStatusDto = this.reconcileTransactionStatusService.findByEReconcileTransactionStatus(EReconcileTransactionStatus.CREATED);
 
         ManageBankReconciliationDto bankReconciliationDto = new ManageBankReconciliationDto(
                 command.getId(),
@@ -70,7 +76,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
                 merchantBankAccountDto,
                 hotelDto,
                 command.getAmount(),
-                command.getDetailsAmount(),
+                detailsAmount,
                 command.getPaidDate(),
                 command.getRemark(),
                 reconcileTransactionStatusDto,
@@ -79,41 +85,14 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
         ManageBankReconciliationDto created = this.bankReconciliationService.create(bankReconciliationDto);
         command.setReconciliationId(created.getReconciliationId());
+        this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
+                UUID.randomUUID(),
+                created,
+                "The reconcile status is "+reconcileTransactionStatusDto.getCode()+"-"+reconcileTransactionStatusDto.getName()+".",
+                null,
+                null,
+                reconcileTransactionStatusDto
+        ));
     }
 
-    private List<Long> createAdjustments(List<CreateBankReconciliationAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList){
-        List<Long> ids = new ArrayList<>();
-        for (CreateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
-            RulesChecker.checkRule(new AdjustmentTransactionAmountRule(request.getAmount()));
-
-            ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
-            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECEIVE);
-            ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(request.getTransactionCategory());
-            ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(request.getTransactionSubCategory());
-
-            //todo: calculo de la commission
-            double commission = 0;
-            double netAmount = request.getAmount() - commission;
-
-            TransactionDto transactionDto = this.transactionService.create(new TransactionDto(
-                    UUID.randomUUID(),
-                    agencyDto,
-                    transactionCategory,
-                    transactionSubCategory,
-                    request.getAmount(),
-                    request.getReservationNumber(),
-                    request.getReferenceNumber(),
-                    transactionStatusDto,
-                    0.0,
-                    LocalDate.now(),
-                    netAmount,
-                    LocalDate.now(),
-                    false,
-                    true
-            ));
-            transactionList.add(transactionDto);
-            ids.add(transactionDto.getId());
-        }
-        return ids;
-    }
 }

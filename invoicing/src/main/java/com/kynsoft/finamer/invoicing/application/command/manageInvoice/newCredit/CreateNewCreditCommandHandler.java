@@ -10,7 +10,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -45,7 +43,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService,
-                                         ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -65,10 +63,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     public void handle(CreateNewCreditCommand command) {
         ManageInvoiceDto parentInvoice = this.invoiceService.findById(command.getInvoice());
         ManageHotelDto hotelDto = this.hotelService.findById(parentInvoice.getHotel().getId());
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-                this.closeOperationService,
-                command.getInvoiceDate().toLocalDate(),
-                hotelDto.getId()));
+//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+//                this.closeOperationService,
+//                command.getInvoiceDate().toLocalDate(),
+//                hotelDto.getId()));
 
         //preparando lo necesario
         List<ManageBookingDto> parentBookings = parentInvoice.getBookings();
@@ -83,14 +81,14 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             Double bookingAmount = parentBooking.getInvoiceAmount();
             Double newBookingAmount = bookingRequest.getAmount();
 
-            if(newBookingAmount != 0){
+            if (newBookingAmount != 0) {
                 //en caso de que venga positivo
                 if (newBookingAmount > 0) {
                     newBookingAmount = -newBookingAmount;
                 }
                 //sumando credits, el nuevo amount del booking y el amount del invoice
                 //para saber si excede el amount del invoice
-                if(credits + newBookingAmount + parentInvoice.getInvoiceAmount() < 0){
+                if (credits + newBookingAmount + parentInvoice.getInvoiceAmount() < 0) {
                     throw new BusinessException(
                             DomainErrorMessage.CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT,
                             DomainErrorMessage.CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT.getReasonPhrase());
@@ -120,7 +118,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         null,
                         newBooking,
                         new LinkedList<>(),
-                        newBooking.getNights()
+                        newBooking.getNights(),
+                        false
                 );
                 List<ManageRoomRateDto> rates = new LinkedList<>();
                 rates.add(roomRateDto);
@@ -133,7 +132,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 System.out.println(credits + newBookingAmount + parentInvoice.getInvoiceAmount());
             }
             //actualizando el invoiceAmount a guardar
-            invoiceAmount+=newBookingAmount;
+            invoiceAmount += newBookingAmount;
         }
 
         int cont = 0;
@@ -143,7 +142,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-            if(attachmentType.isAttachInvDefault()) {
+            if (attachmentType.isAttachInvDefault()) {
                 cont++;
             }
 
@@ -156,13 +155,18 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                     command.getAttachmentCommands().get(i).getFile(),
                     command.getAttachmentCommands().get(i).getRemark(),
                     attachmentType,
-                    null, command.getEmployee(), //TODO hay que colocar el nombre del empleado
-                    UUID.fromString(command.getEmployee()), null, resourceTypeDto);
+                    null, 
+                    command.getEmployee(), //TODO hay que colocar el nombre del empleado
+                    UUID.fromString(command.getEmployee()), 
+                    null, 
+                    resourceTypeDto,
+                    false
+            );
 
             attachments.add(attachmentDto);
         }
         //debe venir al menos un attachment de tipo attinvdefault
-        if(cont == 0){
+        if (cont == 0) {
             throw new BusinessException(
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
@@ -221,6 +225,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0.0,
                 0
         );
+        invoiceDto.setOriginalAmount(invoiceAmount);
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
         this.producerReplicateManageInvoiceService.create(created);
 
@@ -239,7 +244,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         invoiceStatus
                 )
         );
-        for(ManageAttachmentDto attachment : created.getAttachments()){
+        for (ManageAttachmentDto attachment : created.getAttachments()) {
             this.attachmentStatusHistoryService.create(
                     new AttachmentStatusHistoryDto(
                             UUID.randomUUID(),

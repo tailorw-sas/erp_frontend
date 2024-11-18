@@ -35,7 +35,7 @@ public class ManageMerchantCommissionResponse implements IResponse {
         this.calculationType = dto.getCalculationType();
         this.description = dto.getDescription();
         this.fromDate = dto.getFromDate();
-        this.toDate = dto.getToDate().equals(LocalDate.parse("4000-12-31")) ? null : dto.getToDate();
+        this.toDate = dto.getToDate() != null ? dto.getToDate() : null;
         this.status = dto.getStatus();
     }
 

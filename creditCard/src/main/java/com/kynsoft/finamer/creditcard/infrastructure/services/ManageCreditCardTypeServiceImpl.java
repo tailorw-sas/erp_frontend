@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -85,11 +86,12 @@ public class ManageCreditCardTypeServiceImpl implements IManageCreditCardTypeSer
 
     @Override
     public ManageCreditCardTypeDto findByFirstDigit(Integer digit) {
-        Optional<ManageCreditCardType> manageCreditCardType = this.repositoryQuery.findByFirstDigit(digit);
-        if (manageCreditCardType.isPresent()) {
-            return manageCreditCardType.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Credit Card Type not found.")));
+        return this.repositoryQuery.findByFirstDigit(digit)
+                .map(ManageCreditCardType::toAggregate)
+                .orElseThrow(() -> new BusinessException(
+                        DomainErrorMessage.CREDIT_CARD_TYPE_NOT_FOUND,
+                        DomainErrorMessage.CREDIT_CARD_TYPE_NOT_FOUND.getReasonPhrase()
+                ));
     }
 
 }

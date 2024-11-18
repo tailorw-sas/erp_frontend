@@ -1,10 +1,9 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +20,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "parameterization")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "parameterization",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Parameterization implements Serializable {
 
     @Id
@@ -29,17 +30,8 @@ public class Parameterization implements Serializable {
 
     private Boolean isActive;
 
-    @Column(name = "transaction_status_code")
-    private String transactionStatusCode;
-
-    @Column(name = "transaction_category")
-    private String transactionCategory;
-
-    @Column(name = "transaction_sub_category")
-    private String transactionSubCategory;
-
-    @Column(name = "refund_transaction_status_code")
-    private String refundTransactionStatusCode;
+    @Column(columnDefinition = "int DEFAULT 2")
+    private int decimals = 2;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -48,17 +40,12 @@ public class Parameterization implements Serializable {
     public Parameterization(ParameterizationDto dto){
         this.id = dto.getId();
         this.isActive = dto.getIsActive();
-        this.transactionStatusCode = dto.getTransactionStatusCode();
-        this.transactionCategory = dto.getTransactionCategory();
-        this.transactionSubCategory = dto.getTransactionSubCategory();
-        this.refundTransactionStatusCode = dto.getRefundTransactionStatusCode();
+        this.decimals = dto.getDecimals();
     }
 
     public ParameterizationDto toAggregate(){
         return new ParameterizationDto(
-                id, isActive, transactionStatusCode,
-                transactionCategory, transactionSubCategory,
-                refundTransactionStatusCode
+                id, isActive, decimals
         );
     }
 

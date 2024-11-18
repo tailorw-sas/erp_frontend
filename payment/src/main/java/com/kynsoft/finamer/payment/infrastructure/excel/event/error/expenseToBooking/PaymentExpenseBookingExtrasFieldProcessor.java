@@ -8,7 +8,7 @@ import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBooki
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseErrorRepository;
 import org.springframework.stereotype.Service;

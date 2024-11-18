@@ -1,8 +1,11 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,6 +30,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "payment")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Payment implements Serializable {
 
     @Id
@@ -71,7 +76,7 @@ public class Payment implements Serializable {
     //TODO: este invoice es para relacionar el Payment con el CREDIT padre en el proceso automatico. HU 154
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "invoice_id")
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bank_account_id")
@@ -120,6 +125,9 @@ public class Payment implements Serializable {
     @Column(nullable = true, updatable = true)
     private OffsetDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    private ImportType importType;
+
     @PrePersist
     protected void prePersist() {
         this.createdAt = OffsetDateTime.now(ZoneId.of("UTC"));
@@ -147,18 +155,52 @@ public class Payment implements Serializable {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied());
         this.applied = ScaleAmount.scaleAmount(dto.getApplied());
         this.remark = dto.getRemark();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.isApplyPayment();
         this.paymentSupport = dto.isPaymentSupport();
         this.createByCredit = dto.isCreateByCredit();
         this.dateTime = dto.getTransactionDateTime() != null ? dto.getTransactionDateTime() : LocalTime.now();
+        this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
     }
 
     public PaymentDto toAggregate() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
+                status,
+                paymentSource != null ? paymentSource.toAggregate() : null,
+                reference,
+                transactionDate,
+                paymentStatus != null ? paymentStatus.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                agency != null ? agency.toAggregate() : null,
+                hotel != null ? hotel.toAggregate() : null,
+                bankAccount != null ? bankAccount.toAggregate() : null,
+                attachmentStatus != null ? attachmentStatus.toAggregate() : null,
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                invoice != null ? invoice.toAggregate() : null,
+                attachments != null ? attachments.stream().map(b -> {
+                            return b.toAggregateSimple();
+                        }).collect(Collectors.toList()) : null,
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
+        );
+    }
+
+    public PaymentDto toAggregateBasicPayment() {
+        return new PaymentDto(
+                id,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,
@@ -197,7 +239,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregateWihtDetails() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,
@@ -230,7 +272,8 @@ public class Payment implements Serializable {
                 applyPayment,
                 paymentSupport,
                 createByCredit,
-                dateTime
+                dateTime,
+                importType
         );
     }
 

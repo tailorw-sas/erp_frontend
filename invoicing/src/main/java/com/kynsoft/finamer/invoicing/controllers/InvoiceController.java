@@ -27,11 +27,15 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.Send
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.originalAmount.UpdateInvoiceOriginalAmountCommand;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendList.SendListInvoiceQuery;
@@ -104,6 +108,17 @@ public class InvoiceController {
 
     }
 
+    @PostMapping("/undo")
+    public ResponseEntity<UndoImportInvoiceMessage> createBulk(@RequestBody UndoImportInvoiceRequest request) {
+
+        UndoImportInvoiceCommand command = UndoImportInvoiceCommand.fromRequest(request, mediator);
+
+        UndoImportInvoiceMessage message = this.mediator.send(command);
+
+        return ResponseEntity.ok(message);
+
+    }
+
     @GetMapping(path = "/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id) {
 
@@ -163,6 +178,19 @@ public class InvoiceController {
         headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         return ResponseEntity.ok().headers(headers).body(bytes);
+    }
+
+    @PostMapping("/export-base64")
+    public ResponseEntity<?> exportBase64(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        ExportInvoiceQuery query = new ExportInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        ExportInvoiceResponse data = mediator.send(query);
+
+        final byte[] bytes = data.getStream().toByteArray();
+        PaymentExcelExporterResponse response = new PaymentExcelExporterResponse(bytes, "file");
+
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(path = "/{id}")

@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_invoice_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_invoice_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageInvoiceType implements Serializable {
 
     @Id
@@ -37,6 +41,15 @@ public class ManageInvoiceType implements Serializable {
 
     private Boolean enabledToPolicy;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean invoice;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean credit;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean income;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -44,18 +57,21 @@ public class ManageInvoiceType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    public ManageInvoiceType(ManageInvoiceTypeDto dto){
+    public ManageInvoiceType(ManageInvoiceTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.status = dto.getStatus();
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.enabledToPolicy = dto.getEnabledToPolicy();
+        this.invoice = dto.isInvoice();
+        this.credit = dto.isCredit();
+        this.income = dto.isIncome();
     }
 
-    public ManageInvoiceTypeDto toAggregate(){
+    public ManageInvoiceTypeDto toAggregate() {
         return new ManageInvoiceTypeDto(
-                id, code, description, status, name, enabledToPolicy
+                id, code, description, status, name, enabledToPolicy, income, credit, invoice
         );
     }
 

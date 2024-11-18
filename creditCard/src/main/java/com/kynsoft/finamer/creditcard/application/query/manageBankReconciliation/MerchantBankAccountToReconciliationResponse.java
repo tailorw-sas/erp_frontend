@@ -4,7 +4,9 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantBankAccountDto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -13,15 +15,17 @@ public class MerchantBankAccountToReconciliationResponse {
 
     private UUID id;
     private String accountNumber;
-    private String bankCode;
-    private String bankName;
     private String description;
+    private Set<MerchantToBankReconciliationResponse> managerMerchant;
+    private ManageBankToBankReconciliationResponse manageBank;
+    private Set<CreditCardTypeToBankReconciliationResponse> creditCardTypes;
 
     public MerchantBankAccountToReconciliationResponse(ManageMerchantBankAccountDto dto){
         this.id = dto.getId();
         this.accountNumber = dto.getAccountNumber();
-        this.bankCode = dto.getManageBank() != null ? dto.getManageBank().getCode() : "";
-        this.bankName = dto.getManageBank() != null ? dto.getManageBank().getName() : "";
         this.description = dto.getDescription();
+        this.managerMerchant = dto.getManagerMerchant() != null ? dto.getManagerMerchant().stream().map(MerchantToBankReconciliationResponse::new).collect(Collectors.toSet()) : null;
+        this.manageBank = dto.getManageBank() != null ? new ManageBankToBankReconciliationResponse(dto.getManageBank()) : null;
+        this.creditCardTypes = dto.getCreditCardTypes() != null ? dto.getCreditCardTypes().stream().map(CreditCardTypeToBankReconciliationResponse::new).collect(Collectors.toSet()) : null;
     }
 }

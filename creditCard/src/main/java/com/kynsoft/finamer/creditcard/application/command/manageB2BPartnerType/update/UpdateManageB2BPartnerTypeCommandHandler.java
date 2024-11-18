@@ -24,8 +24,6 @@ public class UpdateManageB2BPartnerTypeCommandHandler implements ICommandHandler
     @Override
     public void handle(UpdateManageB2BPartnerTypeCommand command) {
 
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage B2BPartner Type ID cannot be null."));
-
         ManageB2BPartnerTypeDto test = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();

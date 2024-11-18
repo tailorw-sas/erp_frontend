@@ -1,11 +1,9 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageInvoiceType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoiceType.create.CreateManageInvoiceTypeCommand;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +24,10 @@ public class ConsumerReplicateManageInvoiceTypeService {
     public void listen(ReplicateManageInvoiceTypeKafka objKafka) {
         try {
 
-            CreateManageInvoiceTypeCommand command = new CreateManageInvoiceTypeCommand(objKafka.getId(),
-                    objKafka.getCode(), objKafka.getName());
+            CreateManageInvoiceTypeCommand command = new CreateManageInvoiceTypeCommand(
+                    objKafka.getId(), objKafka.getCode(), objKafka.getName(),
+                    objKafka.isInvoice(), objKafka.isCredit(), objKafka.isIncome(),
+                    Status.valueOf(objKafka.getStatus()));
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageInvoiceTypeService.class.getName()).log(Level.SEVERE, null, ex);

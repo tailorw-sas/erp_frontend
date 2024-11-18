@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
+import com.kynsoft.finamer.creditcard.domain.dto.MerchantRedirectResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
@@ -39,41 +40,27 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
             Claims claims = tokenService.validateToken(command.getToken());
             TransactionDto transactionDto = transactionService.findByUuid(UUID.fromString(claims.get("transactionUuid").toString()));
             // No procesar transacciones completadas
-            if (!transactionDto.getStatus().isSentStatus()) {
+            if (!transactionDto.getStatus().isSentStatus() && !transactionDto.getStatus().isDeclinedStatus()) {
                 throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
             }
 
             ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
-            command.setResult(formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto).getBody());
+            MerchantRedirectResponse merchantRedirectResponse = formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto);
 
-            String[] dataForm = split(command.getResult());
             TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
 
             if (dto == null) {
-                if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
-                    formPaymentService.create(new TransactionPaymentLogsDto(
-                            UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[0], null, false)
-                    );
-                }
-                if (merchantConfigDto.getMethod().equals(Method.CARDNET.toString())) {
-                    formPaymentService.create(new TransactionPaymentLogsDto(
-                            UUID.randomUUID(), transactionDto.getTransactionUuid(), dataForm[1], null, false)
-                    );
-                }
+                formPaymentService.create(new TransactionPaymentLogsDto(
+                        UUID.randomUUID(), transactionDto.getTransactionUuid(), merchantRedirectResponse.getLogData(), null, false, transactionDto.getId())
+                );
             } else {
-                dto.setMerchantRequest(dataForm[0]);
+                dto.setMerchantRequest(merchantRedirectResponse.getLogData());
                 this.formPaymentService.update(dto);
             }
-            command.setResult(dataForm[0]);
+            command.setResult(merchantRedirectResponse.getRedirectForm());
         } catch (io.jsonwebtoken.security.SignatureException ex) {
             throw new BusinessException(DomainErrorMessage.VCC_INVALID_PAYMENT_LINK, DomainErrorMessage.VCC_INVALID_PAYMENT_LINK.getReasonPhrase());
         }
-    }
-
-    public String[] split(String response) {
-        String[] spliter = response.split("\\{", 2);
-        spliter[1] = "{" + spliter[1];
-        return spliter;
     }
 }
 

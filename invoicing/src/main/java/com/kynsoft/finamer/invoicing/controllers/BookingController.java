@@ -120,7 +120,9 @@ public class BookingController {
     @PostMapping(path = "/import",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<ResponseEntity<?>> importBooking(@RequestPart("file") FilePart filePart,
                                                  @RequestPart("importProcessId") String importProcessId,
-                                                 @RequestPart("importType") String eImportPaymentType) {
+                                                 @RequestPart("importType") String eImportPaymentType,
+                                                 @RequestPart("employee") String employee
+                                                 ) {
 
         return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {
@@ -128,7 +130,7 @@ public class BookingController {
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
 
-                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId,bytes, EImportType.valueOf(eImportPaymentType));
+                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId,bytes, EImportType.valueOf(eImportPaymentType),employee);
                     ImportBookingFromFileCommand importBookingFromFileCommand = new ImportBookingFromFileCommand(importRequest);
                     try {
                         IMessage message = mediator.send(importBookingFromFileCommand);

@@ -40,12 +40,13 @@ public class CreateManageMerchantCommissionCommandHandler implements ICommandHan
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageCreditCartType(), "manageCreditCartType", "Manage Credit Cart Type ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getFromDate(), "fromDate", "From Date cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getCommission(), "commission", "Commission cannot be null."));
-        LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
-        // Retrieve related DTOs
+        LocalDate toDate = command.getToDate() != null ? command.getToDate() : null;
+        //LocalDate toDate = command.getToDate() != null ? command.getToDate() : LocalDate.parse("4000-12-31");
+
+        RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service, command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate, command.getCommission(), command.getCalculationType()));
+
         ManageCreditCardTypeDto manageCreditCardTypeDto = this.serviceCurrencyService.findById(command.getManageCreditCartType());
         ManagerMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
-
-        RulesChecker.checkRule(new ManageMerchantCommissionMustNotOverlapRule(this.service,command.getId(), command.getManagerMerchant(), command.getManageCreditCartType(), command.getFromDate(), toDate));
 
         ManageMerchantCommissionDto commissionDto = new ManageMerchantCommissionDto(
                 command.getId(),

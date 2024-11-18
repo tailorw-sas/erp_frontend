@@ -23,4 +23,5 @@ public class CreateManageInvoiceStatusRequest {
     private List<UUID> navigate;
 
     private Boolean showClone;
+    private boolean waitingStatus;
 }

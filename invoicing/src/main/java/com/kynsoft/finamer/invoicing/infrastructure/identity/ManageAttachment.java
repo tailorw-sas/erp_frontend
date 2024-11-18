@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,7 +20,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_invoice_attachment")
+@Table(name = "invoice_attachment")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "invoice_attachment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAttachment {
 
     @Id
@@ -44,11 +48,11 @@ public class ManageAttachment {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice")
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "resource_type", nullable = true)
-    private ResourceType paymentResourceType;
+    private ManageResourceType paymentResourceType;
 
     @Column(nullable = true)
     private Boolean deleted = false;
@@ -63,29 +67,55 @@ public class ManageAttachment {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
+
     public ManageAttachment(ManageAttachmentDto dto) {
 
         this.id = dto.getId();
         this.attachmentId = dto.getAttachmentId();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.filename = dto.getFilename();
         this.file = dto.getFile();
         this.remark = dto.getRemark();
         this.type = dto.getType() != null ? new ManageAttachmentType(dto.getType()) : null;
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
-        this.paymentResourceType = dto.getPaymentResourceType() != null ?  new ResourceType(dto.getPaymentResourceType()) : null;
+        this.paymentResourceType = dto.getPaymentResourceType() != null ? new ManageResourceType(dto.getPaymentResourceType()) : null;
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageAttachmentDto toAggregate() {
-        return new ManageAttachmentDto(id, attachmentId, filename, file, remark,
+        return new ManageAttachmentDto(
+                id, 
+                attachmentId, 
+                filename, 
+                file, 
+                remark,
                 type != null ? type.toAggregate() : null,
-                invoice != null ? invoice.toAggregateSample() : null, employee, employeeId, createdAt, paymentResourceType != null ? paymentResourceType.toAggregate() : null);
+                invoice != null ? invoice.toAggregateSample() : null, 
+                employee, 
+                employeeId, 
+                createdAt, 
+                paymentResourceType != null ? paymentResourceType.toAggregate() : null,
+                deleteInvoice
+        );
     }
 
     public ManageAttachmentDto toAggregateSample() {
-        return new ManageAttachmentDto(id, attachmentId, filename, file, remark,
+        return new ManageAttachmentDto(
+                id, 
+                attachmentId, 
+                filename, 
+                file, 
+                remark,
                 type != null ? type.toAggregate() : null,
-                null, employee, employeeId,createdAt,  paymentResourceType != null ? paymentResourceType.toAggregate() : null);
+                null, 
+                employee, 
+                employeeId, 
+                createdAt, 
+                paymentResourceType != null ? paymentResourceType.toAggregate() : null,
+                deleteInvoice
+        );
     }
 }

@@ -20,4 +20,10 @@ public interface IManageInvoiceTypeService {
     ManageInvoiceTypeDto findByEInvoiceType(EInvoiceType invoiceType);
 
     ManageInvoiceTypeDto findByCode(String code);
+
+    ManageInvoiceTypeDto findByIncome();
+
+    ManageInvoiceTypeDto findByCredit();
+
+    ManageInvoiceTypeDto findByInvoice();
 }

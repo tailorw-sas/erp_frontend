@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -53,6 +54,7 @@ public class PaymentDto {
     private boolean paymentSupport;
     private boolean createByCredit;
     private LocalTime transactionDateTime;
+    private ImportType importType;
 
     public PaymentDto(UUID id, long paymentId, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt, EAttachment eAttachment, LocalTime transactionDateTime) {
         this.id = id;
@@ -83,5 +85,33 @@ public class PaymentDto {
         this.eAttachment = eAttachment;
         this.transactionDateTime = transactionDateTime;
     }
-    
+
+    public PaymentDto(UUID id, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt, EAttachment eAttachment, LocalTime transactionDateTime) {
+        this.id = id;
+        this.status = status;
+        this.paymentSource = paymentSource;
+        this.reference = reference;
+        this.transactionDate = transactionDate;
+        this.paymentStatus = paymentStatus;
+        this.client = client;
+        this.agency = agency;
+        this.hotel = hotel;
+        this.bankAccount = bankAccount;
+        this.attachmentStatus = attachmentStatus;
+        this.paymentAmount = paymentAmount;
+        this.paymentBalance = paymentBalance;
+        this.depositAmount = depositAmount;
+        this.depositBalance = depositBalance;
+        this.otherDeductions = otherDeductions;
+        this.identified = identified;
+        this.notIdentified = notIdentified;
+        this.notApplied = notApplied;
+        this.applied = applied;
+        this.remark = remark;
+        this.invoice = invoice;
+        this.attachments = attachments;
+        this.createdAt = createdAt;
+        this.eAttachment = eAttachment;
+        this.transactionDateTime = transactionDateTime;
+    }
 }

@@ -25,6 +25,11 @@ public class PaymentExpenseBookingTransactionTypeValidation extends ExcelRuleVal
             return false;
         }
 
+        if(Objects.isNull(managePaymentTransactionTypeService.findByCode(obj.getTransactionType()))){
+            errorFieldList.add(new ErrorField("transactionType","Transaction Type not exist"));
+            return false;
+        }
+
         return true;
     }
 }

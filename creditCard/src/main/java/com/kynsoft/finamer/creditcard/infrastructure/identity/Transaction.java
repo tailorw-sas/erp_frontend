@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import jakarta.persistence.*;
@@ -20,6 +22,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "vcc_transaction")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "vcc_transaction",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Transaction implements Serializable {
 
     @Id
@@ -54,7 +58,7 @@ public class Transaction implements Serializable {
 
     private Double amount;
 
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
 
     private String reservationNumber;
 
@@ -153,7 +157,7 @@ public class Transaction implements Serializable {
     private TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
-                createdAt != null ? createdAt.toLocalDate() : null);
+                createdAt != null ? createdAt : null);
     }
 
     public TransactionDto toAggregate(){
@@ -172,7 +176,7 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt != null ? createdAt.toLocalDate() : null,
+                createdAt != null ? createdAt : null,
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
                 netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,

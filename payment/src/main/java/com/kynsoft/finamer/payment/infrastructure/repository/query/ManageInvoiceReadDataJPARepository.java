@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
-import com.kynsoft.finamer.payment.infrastructure.identity.ManageInvoice;
+import com.kynsoft.finamer.payment.infrastructure.identity.Invoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface ManageInvoiceReadDataJPARepository extends JpaRepository<ManageInvoice, UUID>,
-        JpaSpecificationExecutor<ManageInvoice> {
+public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoice, UUID>, 
+        JpaSpecificationExecutor<Invoice> {
 
     @Override
-    Page<ManageInvoice> findAll(Specification specification, Pageable pageable);
+    Page<Invoice> findAll(Specification specification, Pageable pageable);
 }

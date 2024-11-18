@@ -17,11 +17,14 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
     @Override
     public void handle(CreateManageInvoiceTypeCommand command) {
 
-
         service.create(new ManageInvoiceTypeDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
-                ));
+                command.getName(),
+                command.isInvoice(),
+                command.isCredit(),
+                command.isIncome(),
+                command.getStatus()
+        ));
     }
 }

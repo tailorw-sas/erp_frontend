@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,6 +47,7 @@ public class ManageInvoiceResponse implements IResponse {
     private ManageInvoiceDto parent;
     private Double credits;
     private Double originalAmount;
+    private ImportType importType;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -72,6 +74,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.invoiceNo = dto.getInvoiceNo();
         this.credits = dto.getCredits();
         this.originalAmount = dto.getOriginalAmount();
+        this.importType = dto.getImportType();
     }
 
     private String deleteHotelInfo(String input) {

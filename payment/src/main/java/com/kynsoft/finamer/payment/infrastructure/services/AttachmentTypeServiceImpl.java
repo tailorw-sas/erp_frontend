@@ -11,7 +11,7 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTy
 import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
-import com.kynsoft.finamer.payment.infrastructure.identity.AttachmentType;
+import com.kynsoft.finamer.payment.infrastructure.identity.ManageAttachmentType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageAttachmentTypeWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.AttachmentTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +35,13 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
 
     @Override
     public UUID create(AttachmentTypeDto dto) {
-        AttachmentType data = new AttachmentType(dto);
+        ManageAttachmentType data = new ManageAttachmentType(dto);
         return this.repositoryCommand.save(data).getId();
     }
 
     @Override
     public void update(AttachmentTypeDto dto) {
-        AttachmentType update = new AttachmentType(dto);
+        ManageAttachmentType update = new ManageAttachmentType(dto);
 
         this.repositoryCommand.save(update);
     }
@@ -57,7 +57,7 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
 
     @Override
     public AttachmentTypeDto findById(UUID id) {
-        Optional<AttachmentType> userSystem = this.repositoryQuery.findById(id);
+        Optional<ManageAttachmentType> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -66,7 +66,7 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
 
     @Override
     public AttachmentTypeDto findByCode(String code) {
-        Optional<AttachmentType> userSystem = this.repositoryQuery.findByCode(code);
+        Optional<ManageAttachmentType> userSystem = this.repositoryQuery.findByCode(code);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -77,8 +77,8 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<AttachmentType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<AttachmentType> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<ManageAttachmentType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageAttachmentType> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -97,9 +97,9 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<AttachmentType> data) {
+    private PaginatedResponse getPaginatedResponse(Page<ManageAttachmentType> data) {
         List<AttachmentTypeResponse> responses = new ArrayList<>();
-        for (AttachmentType p : data.getContent()) {
+        for (ManageAttachmentType p : data.getContent()) {
             responses.add(new AttachmentTypeResponse(p.toAggregate()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),

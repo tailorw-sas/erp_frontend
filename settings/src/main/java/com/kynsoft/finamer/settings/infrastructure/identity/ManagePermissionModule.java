@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagePermissionModuleDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "manage_permission_module")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_permission_module",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagePermissionModule implements Serializable {
 
     @Id

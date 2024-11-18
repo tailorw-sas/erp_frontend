@@ -4,15 +4,18 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.addTransactions.AddTransactionsCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.addTransactions.AddTransactionsMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.addTransactions.AddTransactionsRequest;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.create.CreateBankReconciliationRequest;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.removeTransactions.RemoveReconciliationCommand;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.removeTransactions.RemoveReconciliationMessage;
+import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.removeTransactions.RemoveReconciliationRequest;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.update.UpdateBankReconciliationCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.update.UpdateBankReconciliationMessage;
 import com.kynsoft.finamer.creditcard.application.command.manageBankReconciliation.update.UpdateBankReconciliationRequest;
-import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionCommand;
-import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionMessage;
-import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionRequest;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.ManageBankReconciliationResponse;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.getById.FindManageBankReconciliationByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.search.GetSearchManageBankReconciliationQuery;
@@ -63,6 +66,24 @@ public class ManageBankReconciliationController {
 
         UpdateBankReconciliationCommand command = UpdateBankReconciliationCommand.fromRequest(id, request);
         UpdateBankReconciliationMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/unbind")
+    public ResponseEntity<?> unbind(@RequestBody RemoveReconciliationRequest request) {
+
+        RemoveReconciliationCommand command = RemoveReconciliationCommand.fromRequest(request);
+        RemoveReconciliationMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/add-transactions")
+    public ResponseEntity<?> addTransactions(@RequestBody AddTransactionsRequest request) {
+
+        AddTransactionsCommand command = AddTransactionsCommand.fromRequest(request);
+        AddTransactionsMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

@@ -238,7 +238,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_VCC_TRANSACTION_TYPE -> {
                     for (ManageVCCTransactionTypeDto transactionTypeDto : this.manageVCCTransactionTypeService.findAllToReplicate()) {
-                        this.replicateManageVCCTransactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(transactionTypeDto.getId(), transactionTypeDto.getCode(), transactionTypeDto.getName(), transactionTypeDto.getIsDefault()));
+                        this.replicateManageVCCTransactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(transactionTypeDto.getId(), transactionTypeDto.getCode(), transactionTypeDto.getName(), transactionTypeDto.getIsDefault(), transactionTypeDto.getSubcategory(), transactionTypeDto.isManual(), transactionTypeDto.getStatus().name()));
                     }
                 }
                 case MANAGE_LANGUAGE -> {
@@ -248,7 +248,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_INVOICE_TYPE -> {
                     for (ManageInvoiceTypeDto invoiceType : this.invoiceTypeService.findAllToReplicate()) {
-                        this.replicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(invoiceType.getId(), invoiceType.getCode(), invoiceType.getName()));
+                        this.replicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(invoiceType.getId(), invoiceType.getCode(), invoiceType.getName(), invoiceType.isIncome(), invoiceType.isCredit(), invoiceType.isInvoice(), invoiceType.getStatus().name()));
                     }
                 }
                 case MANAGE_ATTACHMENT_TYPE -> {
@@ -293,7 +293,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_EMPLOYEE -> {//
                     for (ManageEmployeeDto employeeDto : this.manageEmployeeService.findAllToReplicate()) {
-                        this.replicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(employeeDto.getId(), employeeDto.getFirstName(), employeeDto.getLastName(), employeeDto.getEmail()));
+                        this.replicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(employeeDto.getId(), employeeDto.getFirstName(), employeeDto.getLastName(), employeeDto.getEmail(), employeeDto.getPhoneExtension()));
                     }
                 }
                 case MANAGE_ATTACHMENT_STATUS -> {//
@@ -505,7 +505,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 } case MANAGE_CREDIT_CARD_TYPE -> {
                     for (ManageCreditCardTypeDto dto : this.creditCardTypeService.findAllToReplicate()){
                         this.producerReplicateManageCreditCardTypeService.create(new ReplicateManageCreditCardTypeKafka(
-                                dto.getId(), dto.getCode(), dto.getName()
+                                dto.getId(), dto.getCode(), dto.getName(), dto.getDescription(), dto.getFirstDigit(), dto.getStatus().name()
                         ));
                     }
                 } case MANAGE_MERCHANT_CURRENCY -> {

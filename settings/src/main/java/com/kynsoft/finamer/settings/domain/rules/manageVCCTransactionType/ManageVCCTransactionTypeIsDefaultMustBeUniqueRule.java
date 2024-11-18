@@ -25,7 +25,7 @@ public class ManageVCCTransactionTypeIsDefaultMustBeUniqueRule extends BusinessR
 
     @Override
     public boolean isBroken() {
-        return this.service.countByIsDefaultsAndNotId(id) > 0;
+        return this.service.countByIsDefaultsAndNotSubcategoryAndNotId(id) > 0;
     }
 
 }

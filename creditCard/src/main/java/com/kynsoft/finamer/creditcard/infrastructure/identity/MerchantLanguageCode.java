@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.MerchantLanguageCodeDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "merchant_language_code")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "merchant_language_code",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class MerchantLanguageCode implements Serializable {
 
     @Id

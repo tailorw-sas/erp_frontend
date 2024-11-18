@@ -26,7 +26,9 @@ public class ConsumerReplicateUpdateManageNightTypeService {
 
             UpdateManageNightTypeCommand command = new UpdateManageNightTypeCommand(
                     objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(),
+                    objKafka.getStatus()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateUpdateManageNightTypeService.class.getName()).log(Level.SEVERE, null, ex);

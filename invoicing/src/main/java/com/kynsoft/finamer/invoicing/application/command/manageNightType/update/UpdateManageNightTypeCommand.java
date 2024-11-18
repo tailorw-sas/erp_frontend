@@ -13,11 +13,12 @@ public class UpdateManageNightTypeCommand implements ICommand {
 
     private UUID id;
     private String name;
+    private String status;
 
-
-    public UpdateManageNightTypeCommand(UUID id, String name) {
+    public UpdateManageNightTypeCommand(UUID id, String name, String status) {
         this.id = id;
         this.name = name;
+        this.status = status;
     }
 
     @Override

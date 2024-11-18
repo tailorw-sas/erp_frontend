@@ -2,10 +2,13 @@ package com.kynsoft.finamer.creditcard.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ITransactionService {
@@ -33,4 +36,8 @@ public interface ITransactionService {
     void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto);
 
     void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink);
+
+    TransactionTotalResume searchTotal(List<FilterCriteria> filterCriteria);
+
+    void changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee);
 }

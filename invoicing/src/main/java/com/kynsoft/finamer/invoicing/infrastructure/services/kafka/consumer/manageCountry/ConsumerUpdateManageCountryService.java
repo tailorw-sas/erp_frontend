@@ -1,8 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageCountry;
 
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAgencyKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCountryKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageAgency.update.UpdateManageAgencyCommand;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +17,8 @@ public class ConsumerUpdateManageCountryService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-update-manage-client", groupId = "invoicing-entity-replica")
-    public void listen(UpdateManageAgencyKafka objKafka) {
+    @KafkaListener(topics = "finamer-update-manage-country", groupId = "invoicing-entity-replica")
+    public void listen(UpdateManageCountryKafka objKafka) {
         try {
 //            UpdateManageAgencyCommand command = new UpdateManageAgencyCommand(objKafka.getId(), objKafka.getName(),
 //                    objKafka.getClient(),objKafka.getCif(),

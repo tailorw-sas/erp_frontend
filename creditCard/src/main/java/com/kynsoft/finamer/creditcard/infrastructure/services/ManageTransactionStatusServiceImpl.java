@@ -197,11 +197,22 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND,
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND.getReasonPhrase())
                );
+           } case RECONCILED -> {
+               return this.repositoryQuery.findByReconciledStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECONCILED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECONCILED_NOT_FOUND.getReasonPhrase())
+               );
            }
        }
        throw new BusinessException(
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND,
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND.getReasonPhrase());
+    }
+
+    @Override
+    public Long countByReconciledStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByReconciledStatusAndNotId(id);
     }
 
 

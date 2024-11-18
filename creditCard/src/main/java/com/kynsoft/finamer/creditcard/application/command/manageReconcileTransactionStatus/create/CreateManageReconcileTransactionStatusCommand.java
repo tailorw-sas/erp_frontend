@@ -20,27 +20,35 @@ public class CreateManageReconcileTransactionStatusCommand implements ICommand {
     private String description;
     private Boolean requireValidation;
     private List<UUID> navigate;
+    private boolean created;
+    private boolean cancelled;
+    private boolean completed;
 
-    public CreateManageReconcileTransactionStatusCommand(String code, Status status, String name, String description, Boolean requireValidation,List<UUID> navigate) {
+    public CreateManageReconcileTransactionStatusCommand(String code, Status status, String name, String description, Boolean requireValidation, List<UUID> navigate, boolean created, boolean cancelled, boolean completed) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
         this.name = name;
         this.description = description;
-        this.navigate = navigate;
         this.requireValidation = requireValidation;
+        this.navigate = navigate;
+        this.created = created;
+        this.cancelled = cancelled;
+        this.completed = completed;
     }
 
     public static CreateManageReconcileTransactionStatusCommand fromRequest(
             CreateManageReconcileTransactionStatusRequest request) {
         return new CreateManageReconcileTransactionStatusCommand(
                 request.getCode(),
-
                 request.getStatus(),
                 request.getName(),
                 request.getDescription(),
                 request.getRequireValidation(),
-                request.getNavigate()
+                request.getNavigate(),
+                request.isCreated(),
+                request.isCancelled(),
+                request.isCompleted()
 
         );
     }

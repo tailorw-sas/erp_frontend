@@ -26,16 +26,15 @@ public class ManageNightType implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
-    @Column(unique = true)
+
     private String code;
 
     private String name;
 
-
-    @Column(nullable = true)
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean deleted = false;
 
-
+    private String status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -51,11 +50,11 @@ public class ManageNightType implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
-
+        this.status = dto.getStatus();
     }
 
     public ManageNightTypeDto toAggregate() {
-        return new ManageNightTypeDto(id, code, name);
+        return new ManageNightTypeDto(id, code, name, status);
     }
 
 }

@@ -13,16 +13,18 @@ public class CreateRefundTransactionCommand implements ICommand {
     private Long parentId;
     private Boolean hasCommission;
     private Double amount;
+    private String employee;
 
-    public CreateRefundTransactionCommand(Long parentId, Boolean hasCommission, Double amount) {
+    public CreateRefundTransactionCommand(Long parentId, Boolean hasCommission, Double amount, String employee) {
         this.parentId = parentId;
         this.hasCommission = hasCommission;
         this.amount = amount;
+        this.employee = employee;
     }
 
     public static CreateRefundTransactionCommand fromRequest(CreateRefundTransactionRequest request){
         return new CreateRefundTransactionCommand(
-                request.getParentId(), request.getHasCommission(), request.getAmount()
+                request.getParentId(), request.getHasCommission(), request.getAmount(), request.getEmployee()
         );
     }
 

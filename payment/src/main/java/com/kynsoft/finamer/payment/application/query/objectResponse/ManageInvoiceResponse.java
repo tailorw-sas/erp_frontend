@@ -32,7 +32,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.invoiceNumber = deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
-        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : null;
+        this.autoRec = dto.getAutoRec();
         this.parent = dto.getParent() != null ? new ManageInvoiceResponse(dto.getParent()) : null;
     }
 

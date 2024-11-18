@@ -39,4 +39,6 @@ public interface IManageInvoiceService {
     ManageInvoiceDto findByInvoiceId(long id);
 
     boolean existManageInvoiceByInvoiceId(long invoiceId);
+
+    void deleteInvoice(ManageInvoiceDto dto);
 }

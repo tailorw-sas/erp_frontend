@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageReconcileTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "manage_reconcile_transaction_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_reconcile_transaction_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageReconcileTransactionStatus implements Serializable {
 
     @Id
@@ -47,6 +51,15 @@ public class ManageReconcileTransactionStatus implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean created;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cancelled;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean completed;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,16 +79,19 @@ public class ManageReconcileTransactionStatus implements Serializable {
                     .map(ManageReconcileTransactionStatus::new)
                     .collect(Collectors.toList());
         }
+        this.created = dto.isCreated();
+        this.cancelled = dto.isCancelled();
+        this.completed = dto.isCompleted();
     }
     public ManageReconcileTransactionStatusDto toAggregateSample(){
         return new ManageReconcileTransactionStatusDto(
                 id,code, description, status, name, requireValidation,
-                null
+                null, created, cancelled, completed
         );
     }
 
     public ManageReconcileTransactionStatusDto toAggregate(){
-        return new ManageReconcileTransactionStatusDto(id,code, description, status, name, requireValidation, relatedStatuses != null ? relatedStatuses.stream().map(ManageReconcileTransactionStatus::toAggregateSample).toList() : null);
+        return new ManageReconcileTransactionStatusDto(id,code, description, status, name, requireValidation, relatedStatuses != null ? relatedStatuses.stream().map(ManageReconcileTransactionStatus::toAggregateSample).toList() : null, created, cancelled, completed);
     }
 
 }
