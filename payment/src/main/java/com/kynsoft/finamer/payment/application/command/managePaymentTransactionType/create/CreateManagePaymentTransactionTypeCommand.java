@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.managePaymentTransaction
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeResponse;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,10 +28,10 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
     private Boolean debit;
 
     public CreateManagePaymentTransactionTypeCommand(UUID id, String code, String name, String status,
-                                                     Boolean cash, Boolean deposit, Boolean applyDeposit, 
-                                                     Boolean remarkRequired, Integer minNumberOfCharacter,
-                                                     String defaultRemark,Boolean defaults, Boolean paymentInvoice,
-                                                     Boolean debit) {
+            Boolean cash, Boolean deposit, Boolean applyDeposit,
+            Boolean remarkRequired, Integer minNumberOfCharacter,
+            String defaultRemark, Boolean defaults, Boolean paymentInvoice,
+            Boolean debit) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -44,6 +45,24 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
         this.defaults = Objects.nonNull(defaults) ? defaults : false;
         this.paymentInvoice = paymentInvoice;
         this.debit = debit;
+    }
+
+    public static CreateManagePaymentTransactionTypeCommand fromRequest(ManagePaymentTransactionTypeResponse response) {
+        return new CreateManagePaymentTransactionTypeCommand(
+                response.getId(),
+                response.getCode(),
+                response.getName(),
+                response.getStatus(),
+                response.getCash(),
+                response.getDeposit(),
+                response.getApplyDeposit(),
+                response.getRemarkRequired(),
+                response.getMinNumberOfCharacter(),
+                response.getDefaultRemark(),
+                response.getDefaults(),
+                response.getPaymentInvoice(),
+                response.getDebit()
+        );
     }
 
     @Override
