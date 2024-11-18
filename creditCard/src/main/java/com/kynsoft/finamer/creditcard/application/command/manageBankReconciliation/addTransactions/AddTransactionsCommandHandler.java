@@ -7,6 +7,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.IBankReconciliationAdjustmentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageBankReconciliationService;
+import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
@@ -23,10 +24,13 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
 
     private final ITransactionService transactionService;
 
-    public AddTransactionsCommandHandler(IManageBankReconciliationService bankReconciliationService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, ITransactionService transactionService) {
+    private final IParameterizationService parameterizationService;
+
+    public AddTransactionsCommandHandler(IManageBankReconciliationService bankReconciliationService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, ITransactionService transactionService, IParameterizationService parameterizationService) {
         this.bankReconciliationService = bankReconciliationService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
         this.transactionService = transactionService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -58,7 +62,7 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
             command.setAdjustmentIds(adjustmentIds);
             cont++;
         } else {
-            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(bankReconciliationDto.getAmount(), newDetails));
+            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(bankReconciliationDto.getAmount(), newDetails, this.parameterizationService));
         }
 
         if (cont > 0) {
