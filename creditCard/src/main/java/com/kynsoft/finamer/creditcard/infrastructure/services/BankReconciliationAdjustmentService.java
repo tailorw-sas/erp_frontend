@@ -8,7 +8,6 @@ import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionAmountRule;
 import com.kynsoft.finamer.creditcard.domain.rules.adjustmentTransaction.AdjustmentTransactionReferenceNumberMustBeNullRule;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
-import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationListOfAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -29,12 +28,15 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
 
     private final IManageBankReconciliationService bankReconciliationService;
 
-    public BankReconciliationAdjustmentService(IManageAgencyService agencyService, ITransactionService transactionService, IManageTransactionStatusService transactionStatusService, IManageVCCTransactionTypeService transactionTypeService, IManageBankReconciliationService bankReconciliationService) {
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    public BankReconciliationAdjustmentService(IManageAgencyService agencyService, ITransactionService transactionService, IManageTransactionStatusService transactionStatusService, IManageVCCTransactionTypeService transactionTypeService, IManageBankReconciliationService bankReconciliationService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.agencyService = agencyService;
         this.transactionService = transactionService;
         this.transactionStatusService = transactionStatusService;
         this.transactionTypeService = transactionTypeService;
         this.bankReconciliationService = bankReconciliationService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -84,6 +86,7 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
             ));
             transactionList.add(transactionDto);
             ids.add(transactionDto.getId());
+            statusHistory(transactionDto);
         }
         return ids;
     }
@@ -136,9 +139,21 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
             adjustmentTransactions.add(transactionDto);
             ids.add(transactionDto.getId());
             reconciliationDto.setDetailsAmount(detailsAmount);
+            statusHistory(transactionDto);
         }
         reconciliationDto.getTransactions().addAll(adjustmentTransactions);
         this.bankReconciliationService.update(reconciliationDto);
         return ids;
+    }
+
+    private void statusHistory(TransactionDto transactionDto) {
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction status change to "+transactionDto.getStatus().getCode() + "-" +transactionDto.getStatus().getName()+".",
+                null,
+                null,
+                transactionDto.getStatus()
+        ));
     }
 }
