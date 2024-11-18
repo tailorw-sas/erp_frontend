@@ -636,7 +636,7 @@ async function validateCloseOperation(hotelId: string, dateList: string[]) {
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = { ...item }
-    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DDTHH:mm:ss') : payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.reSendDate = payload.reSendDate ? dayjs(payload.reSendDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.invoiceDate = payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.invoiceType = Object.prototype.hasOwnProperty.call(payload.invoiceType, 'id') ? payload.invoiceType.id : payload.invoiceType
