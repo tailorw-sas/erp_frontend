@@ -30,13 +30,16 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
 
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
 
-    public BankReconciliationAdjustmentService(IManageAgencyService agencyService, ITransactionService transactionService, IManageTransactionStatusService transactionStatusService, IManageVCCTransactionTypeService transactionTypeService, IManageBankReconciliationService bankReconciliationService, ITransactionStatusHistoryService transactionStatusHistoryService) {
+    private final IParameterizationService parameterizationService;
+
+    public BankReconciliationAdjustmentService(IManageAgencyService agencyService, ITransactionService transactionService, IManageTransactionStatusService transactionStatusService, IManageVCCTransactionTypeService transactionTypeService, IManageBankReconciliationService bankReconciliationService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService) {
         this.agencyService = agencyService;
         this.transactionService = transactionService;
         this.transactionStatusService = transactionStatusService;
         this.transactionTypeService = transactionTypeService;
         this.bankReconciliationService = bankReconciliationService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -57,7 +60,7 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                 }
         ).reduce(0.0, Double::sum);
 
-        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(amount, detailsAmount));
+        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(amount, detailsAmount, this.parameterizationService));
 
         List<Long> ids = new ArrayList<>();
         for (CreateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
@@ -111,7 +114,7 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     }
                 }
         ).reduce(0.0, Double::sum);
-        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(reconciliationDto.getAmount(), detailsAmount));
+        RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(reconciliationDto.getAmount(), detailsAmount, this.parameterizationService));
 
         for (UpdateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
             ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
