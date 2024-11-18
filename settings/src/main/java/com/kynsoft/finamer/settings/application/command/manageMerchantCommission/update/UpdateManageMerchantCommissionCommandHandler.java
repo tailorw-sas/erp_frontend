@@ -83,7 +83,8 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
 
         // Allow toDate to be updated to null
         if (command.getToDate() == null) {
-            LocalDate toDate = LocalDate.parse("4000-12-31");
+            //LocalDate toDate = LocalDate.parse("4000-12-31");
+            LocalDate toDate = null;
             existingCommission.setToDate(toDate);
             update.setUpdate(1);
         } else if (updateDate(existingCommission::setToDate, command.getToDate(), existingCommission.getToDate(), update::setUpdate)) {
