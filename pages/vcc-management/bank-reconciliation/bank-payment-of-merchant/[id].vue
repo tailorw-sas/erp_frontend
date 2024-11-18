@@ -585,7 +585,8 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (paymentAmount.value > item.amount) {
+  // console.log(paymentAmount.value, item)
+  if (isGreaterThanTwoDecimals(paymentAmount.value, item.amount)) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
     return
   }
@@ -602,6 +603,15 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
+}
+
+function isGreaterThanTwoDecimals(num1: number, num2: number): boolean {
+  // Redondear ambos números a dos decimales
+  const roundedNum1 = Math.round(num1 * 100) / 100
+  const roundedNum2 = Math.round(num2 * 100) / 100
+
+  // Comparar los números redondeados
+  return roundedNum1 > roundedNum2
 }
 
 async function handleSave(event: any) {
