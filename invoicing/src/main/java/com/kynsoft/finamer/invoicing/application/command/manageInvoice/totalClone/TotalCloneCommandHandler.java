@@ -365,7 +365,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 null,
                 true,
                 invoiceToClone,
-                invoiceToClone.getCredits()
+                invoiceToClone.getCredits(),0
         );
         //actualizando el invoice con la info de los bookings
         command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(clonedInvoice));

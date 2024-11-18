@@ -52,9 +52,9 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public void delete(PaymentDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
@@ -85,7 +85,7 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public PaymentDto findByPaymentId(long paymentId) {
         return repositoryQuery.findPaymentByPaymentId(paymentId).map(Payment::toAggregate)
-                .orElseThrow(()->new  BusinessNotFoundException(
+                .orElseThrow(() -> new BusinessNotFoundException(
                         new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND,
                                 new ErrorField("payment id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase()))));
     }
@@ -98,6 +98,16 @@ public class PaymentServiceImpl implements IPaymentService {
         Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public Page<PaymentDto> paymentCollectionSummary(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        return this.repositoryQuery.findAll(specifications, pageable).map(Payment::toAggregate);
+
+
     }
 
     @Override

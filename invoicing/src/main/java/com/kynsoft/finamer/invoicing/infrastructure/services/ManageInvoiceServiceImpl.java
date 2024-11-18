@@ -25,6 +25,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,6 +86,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
+        InvoiceUtils.establishDueDate(dto);
+        InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
         Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
         String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
@@ -129,6 +132,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponseToPayment(data);
+    }
+
+    @Override
+    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable,List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        return repositoryQuery.findAll(specifications,pageable).map(Invoice::toAggregate);
     }
 
     @Override
@@ -441,5 +451,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public boolean existManageInvoiceByInvoiceId(long invoiceId) {
         return repositoryQuery.existsByInvoiceId(invoiceId);
     }
+
 
 }
