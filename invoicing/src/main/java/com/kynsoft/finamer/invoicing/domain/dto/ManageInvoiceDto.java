@@ -51,6 +51,7 @@ public class ManageInvoiceDto {
     private ImportType importType;
     private boolean deleteInvoice;
     private int aging;
+    private boolean cloneParent;
 
     public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
                             Double invoiceAmount, Double dueAmount, ManageHotelDto hotel,
