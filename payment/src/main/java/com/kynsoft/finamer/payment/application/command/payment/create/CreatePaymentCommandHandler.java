@@ -90,6 +90,10 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "employee", "Employee ID cannot be null."));
 
         ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
+//        try {
+//            employeeDto = this.manageEmployeeService.findById(command.getEmployee());
+//        } catch (Exception e) {
+//        }
         RulesChecker.checkRule(new CheckIfDateIsBeforeCurrentDateRule(command.getTransactionDate()));
         RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(command.getPaymentAmount()));
 
