@@ -100,8 +100,9 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
     private void updateStatus(ManageBankReconciliationDto dto, ManageReconcileTransactionStatusDto transactionStatusDto, String employee){
         if (transactionStatusDto.isCompleted()){
             if (dto.getAmount().equals(dto.getDetailsAmount())){
-                this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employee);
+                Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employee);
                 dto.setReconcileStatus(transactionStatusDto);
+                dto.setTransactions(updatedTransactions);
                 this.bankReconciliationService.update(dto);
                 this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
                         UUID.randomUUID(),
