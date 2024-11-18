@@ -442,7 +442,6 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value = {
     criteria: null,
     search: '',
@@ -453,8 +452,8 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  getList()
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  searchAndFilter()
 }
 
 async function getCollectionStatusList() {
