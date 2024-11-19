@@ -21,12 +21,14 @@ public class UpdateTransactionCommand implements ICommand {
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;
+    private UUID transactionStatus;
 
     public static UpdateTransactionCommand fromRequest(UpdateTransactionRequest request, Long id){
         return new UpdateTransactionCommand(
                 id, request.getAgency(), request.getLanguage(),
                 request.getCheckIn(), request.getReservationNumber(),
-                request.getReferenceNumber(), request.getHotelContactEmail()
+                request.getReferenceNumber(), request.getHotelContactEmail(),
+                request.getTransactionStatus()
         );
     }
 

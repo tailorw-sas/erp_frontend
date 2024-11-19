@@ -27,7 +27,9 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     private final IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService;
 
-    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService) {
+    private final IParameterizationService parameterizationService;
+
+    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService, IParameterizationService parameterizationService) {
         this.bankReconciliationService = bankReconciliationService;
         this.merchantBankAccountService = merchantBankAccountService;
         this.hotelService = hotelService;
@@ -35,6 +37,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
         this.reconcileTransactionStatusService = reconcileTransactionStatusService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
         this.bankReconciliationStatusHistoryService = bankReconciliationStatusHistoryService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -56,7 +59,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
             List<Long> adjustmentIds = this.bankReconciliationAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList, command.getAmount(), detailsAmount);
             command.setAdjustmentTransactionIds(adjustmentIds);
         } else {
-            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), detailsAmount));
+            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(command.getAmount(), detailsAmount, this.parameterizationService));
         }
 
         detailsAmount = transactionList.stream().map(transactionDto ->

@@ -5,10 +5,10 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.creditcard.domain.services.IManageLanguageService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -24,10 +24,16 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
 
     private final IManageLanguageService languageService;
 
-    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService) {
+    private final IManageTransactionStatusService transactionStatusService;
+
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.transactionService = transactionService;
         this.agencyService = agencyService;
         this.languageService = languageService;
+        this.transactionStatusService = transactionStatusService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -42,6 +48,20 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setReservationNumber, command.getReservationNumber(), dto.getReservationNumber(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setReferenceNumber, command.getReferenceNumber(), dto.getReferenceNumber(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setHotelContactEmail, command.getHotelContactEmail(), dto.getHotelContactEmail(), update::setUpdate);
+
+        if (command.getTransactionStatus() != null && !command.getTransactionStatus().equals(dto.getStatus().getId())) {
+            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getTransactionStatus());
+            dto.setStatus(transactionStatusDto);
+            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                    UUID.randomUUID(),
+                    dto,
+                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                    null,
+                    null,
+                    transactionStatusDto
+            ));
+            update.setUpdate(1);
+        }
 
         if (update.getUpdate() > 0){
             this.transactionService.update(dto);

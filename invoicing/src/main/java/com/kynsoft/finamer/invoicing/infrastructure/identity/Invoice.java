@@ -120,6 +120,11 @@ public class Invoice {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
+    @Column(nullable = false,columnDefinition = "integer default 0")
+    private Integer aging;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cloneParent;
 
     public Invoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
@@ -158,8 +163,10 @@ public class Invoice {
         this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
         this.sendStatusError = dto.getSendStatusError();
+        this.aging = dto.getAging();
         this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
         this.deleteInvoice = dto.isDeleteInvoice();
+        this.cloneParent = dto.isCloneParent();
     }
 
     public ManageInvoiceDto toAggregateSample() {
@@ -170,7 +177,7 @@ public class Invoice {
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                null, credits);
+                null, credits,aging);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
@@ -188,7 +195,7 @@ public class Invoice {
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregateSample() : null, credits);
+                parent != null ? parent.toAggregateSample() : null, credits,aging);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
@@ -203,7 +210,7 @@ public class Invoice {
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregateSample() : null, credits);
+                parent != null ? parent.toAggregateSample() : null, credits,aging);
         manageInvoiceDto.setSendStatusError(sendStatusError);
         manageInvoiceDto.setOriginalAmount(originalAmount);
         manageInvoiceDto.setImportType(importType);

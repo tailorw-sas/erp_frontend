@@ -169,8 +169,8 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                     command.getAttachmentCommands().get(i).getRemark(),
                     attachmentType,
                     null, command.getAttachmentCommands().get(i).getEmployee(),
-                    command.getAttachmentCommands().get(i).getEmployeeId(), 
-                    null, 
+                    command.getAttachmentCommands().get(i).getEmployeeId(),
+                    null,
                     null,
                     false
             );
@@ -229,7 +229,8 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 null,
                 true,
                 invoiceToClone,
-                0.00
+                0.00,
+                0
         );
 
         invoiceDto.setOriginalAmount(invoiceToClone.getInvoiceAmount());
