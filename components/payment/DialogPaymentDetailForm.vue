@@ -621,11 +621,11 @@ function processValidation($event: any, data: any) {
               onUpdate('transactionType', $event)
               if ($event) {
                 onUpdate('remark', '')
-                if ($event.cash || $event.applyDeposit) {
-                  disabledBtnApplyPaymentByTransactionType = true
+                if ($event.deposit) {
+                  disabledBtnApplyPaymentByTransactionType = false
                 }
                 else {
-                  disabledBtnApplyPaymentByTransactionType = false
+                  disabledBtnApplyPaymentByTransactionType = true
                 }
               }
               processValidation($event, data)
