@@ -6,6 +6,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import type { PageState } from 'primevue/paginator'
+import InputNumber from 'primevue/inputnumber'
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -205,14 +206,14 @@ const columns: IColumn[] = [
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'nights', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'number' },
 
 ]
-
 const adjustmentColumns: IColumn[] = [
   { field: 'adjustmentId', header: 'ID', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  // { field: 'amountTemp', header: 'Amount', type: 'text' },
   { field: 'roomRateId', header: 'Room Rate', type: 'text' },
   { field: 'transaction', header: 'Category', type: 'text' },
   { field: 'date', header: 'Transaction Date', type: 'text' },
@@ -230,8 +231,8 @@ const roomRateColumns: IColumn[] = [
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'nights', header: 'Nights', type: 'text' },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'number' },
 ]
 
 const formTitle = computed(() => {
@@ -845,6 +846,7 @@ function saveLocal(itemP: { [key: string]: any }) {
   localAdjustment.date = adjustmentDate
   localAdjustment.employee = userData?.value?.user?.name
   localAdjustment.id = AdjustmentList.value.length
+  localAdjustment.amountTemp = formatNumber(itemAmount)
   if (AdjustmentList.value.length > 0) {
     AdjustmentList.value.push(localAdjustment)
   }
@@ -1175,7 +1177,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" />
         </template>
         <template #field-incomeAmount="{ item: data, onUpdate }">
-          <InputText
+          <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.incomeAmount"
             show-clear :disabled="true"
@@ -1374,7 +1376,7 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Total:" :colspan="1" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="String(totalAmount)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalAmount)" footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                 <Column :colspan="5" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
