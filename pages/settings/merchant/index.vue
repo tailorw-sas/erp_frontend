@@ -475,9 +475,11 @@ onMounted(() => {
     <h3 class="mb-0">
       Manage Merchant
     </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
-      <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
-    </div>
+    <IfCan :perms="['MERCHANT:CREATE']">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+        <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
+      </div>
+    </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
@@ -558,6 +560,16 @@ onMounted(() => {
                 @load="($event) => getb2bPartnerList($event)"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #form-footer="props">
+              <div class="flex justify-content-end">
+                <IfCan :perms="idItem ? ['MERCHANT:EDIT'] : ['MERCHANT:CREATE']">
+                  <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
+                </IfCan>
+                <IfCan :perms="['MERCHANT:DELETE']">
+                  <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                </IfCan>
+              </div>
             </template>
           </EditFormV2>
         </div>
