@@ -397,15 +397,26 @@ const itemTemp = ref({
 
 const fieldAdjustments = ref<FieldDefinitionType[]>([
 
+  // {
+  //   field: 'amount',
+  //   header: 'Amount',
+  //   dataType: 'text',
+  //   class: 'field col-12 required',
+  //   validation: z.string().min(1, { message: 'The amount field is required' })
+  //     .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
+  //     .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
+  // },
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 required',
-    validation: z.string().min(1, { message: 'The amount field is required' })
-      .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-      .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
+    validation: z.number()
+      .positive({ message: 'The amount must be a positive number' })
+      .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
+      .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
   },
+
   {
     field: 'date',
     header: 'Date',
@@ -1322,8 +1333,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="String(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="String(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1349,8 +1360,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Totals:" :colspan="6" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="String(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="String(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
