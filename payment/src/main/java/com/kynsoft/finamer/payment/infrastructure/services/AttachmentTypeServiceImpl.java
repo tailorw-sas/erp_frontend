@@ -121,4 +121,13 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
         return this.repositoryQuery.countByAntiToIncomeImportAndNotId(id);
     }
 
+    @Override
+    public AttachmentTypeDto getByDefault() {
+        Optional<ManageAttachmentType> attachmentType = this.repositoryQuery.getByDefault();
+        if (attachmentType.isPresent()) {
+            return attachmentType.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
 }

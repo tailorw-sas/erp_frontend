@@ -3,13 +3,13 @@ package com.kynsoft.finamer.payment.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
-import jakarta.annotation.Resource;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface IManageResourceTypeService {
+
     UUID create(ResourceTypeDto dto);
 
     void update(ResourceTypeDto dto);
@@ -26,7 +26,9 @@ public interface IManageResourceTypeService {
 
     Long countByDefaultAndNotId(UUID id);
 
-  List<ResourceTypeDto> findAllToReplicate();
+    List<ResourceTypeDto> findAllToReplicate();
 
-  Long countByInvoiceAndNotId(UUID id);
+    Long countByInvoiceAndNotId(UUID id);
+
+    ResourceTypeDto getByDefault();
 }
