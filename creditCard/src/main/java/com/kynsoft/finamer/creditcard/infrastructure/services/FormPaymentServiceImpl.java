@@ -234,7 +234,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     }
 
     private Boolean isValidLink(TransactionDto transaction) {
-        LocalDateTime date1 = transaction.getCheckIn();
+        LocalDateTime date1 = transaction.getTransactionDate();
         LocalDateTime currentDate = LocalDateTime.now();
         // Calcular la diferencia en minutos
         Duration difernce = Duration.between(date1, currentDate);
