@@ -72,6 +72,13 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required mb-2',
   },
   {
+    field: 'vcc',
+    header: 'VCC Default',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 required mb-2',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
@@ -86,6 +93,7 @@ const item = ref<GenericObject>({
   description: '',
   defaults: false,
   invoice: false,
+  vcc: false,
   status: true
 })
 
@@ -95,6 +103,7 @@ const itemTemp = ref<GenericObject>({
   description: '',
   defaults: false,
   invoice: false,
+  vcc: false,
   status: true
 })
 
@@ -238,6 +247,7 @@ async function getItemById(id: string) {
         item.value.description = response.description
         item.value.defaults = response.defaults
         item.value.invoice = response.invoice
+        item.value.vcc = response.vcc
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
       }

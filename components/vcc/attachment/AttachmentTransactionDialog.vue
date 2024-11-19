@@ -7,7 +7,6 @@ import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContai
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
-import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
 import { updateFieldProperty } from '~/utils/helpers'
 import type { FilterCriteria } from '~/composables/list'
 
@@ -32,19 +31,19 @@ const props = defineProps({
 
 const { data: userData } = useAuth()
 
-const invoice = ref<any>(props.selectedTransaction)
+const transaction = ref<any>(props.selectedTransaction)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const selectedAttachment = ref<string>('')
 
 const filterToSearch = ref({
-  criteria: 'invoice.invoiceId',
+  criteria: 'transaction.id',
   search: ''
 })
 
 const attachmentTypeList = ref<any[]>([])
 const resourceTypeList = ref<any[]>([])
 const confattachmentTypeListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-attachment-type',
 })
 const confResourceTypeListApi = reactive({
@@ -67,9 +66,9 @@ const item = ref<GenericObject>({
   filename: '',
   file: '',
   remark: '',
-  invoice: props.selectedTransaction?.id,
+  transaction: props.selectedTransaction?.id,
   attachmentId: '',
-  resource: invoice.value.incomeId,
+  resource: transaction.value.incomeId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
@@ -80,9 +79,9 @@ const itemTemp = ref<GenericObject>({
   filename: '',
   file: '',
   remark: '',
-  invoice: props.selectedTransaction?.id,
+  transaction: props.selectedTransaction?.id,
   attachmentId: '',
-  resource: invoice.value.incomeId,
+  resource: transaction.value.incomeId,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
@@ -142,7 +141,7 @@ const Fields: Array<FieldDefinitionType> = [
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px' },
+  { field: 'transaction.id', header: 'Transaction Id', type: 'text', width: '100px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
   { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
@@ -151,9 +150,9 @@ const Columns: IColumn[] = [
 
 const dialogVisible = ref(props.openDialog)
 const options = ref({
-  tableName: 'Invoice',
-  moduleApi: 'invoicing',
-  uriApi: 'manage-attachment',
+  tableName: 'VCC Attachments',
+  moduleApi: 'creditcard',
+  uriApi: 'attachment',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -224,8 +223,8 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'invoice')) {
-        iterator['invoice.invoiceId'] = iterator.invoice.invoiceId
+      if (Object.prototype.hasOwnProperty.call(iterator, 'transaction')) {
+        iterator['transaction.id'] = iterator.transaction.id
       }
       ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
     }
@@ -316,7 +315,7 @@ async function loadDefaultResourceType() {
     // Listar solo si el resource type esta en null, ya que no cambia. O si viene en null el status
     const filter: FilterCriteria[] = [
       {
-        key: 'invoice',
+        key: 'vcc',
         logicalOperation: 'AND',
         operator: 'EQUALS',
         value: true,
@@ -337,7 +336,7 @@ async function loadDefaultResourceType() {
 async function loadDefaultAttachmentType() {
   const attachmentFilter: FilterCriteria[] = [
     {
-      key: 'attachInvDefault',
+      key: 'defaults',
       logicalOperation: 'AND',
       operator: 'EQUALS',
       value: true,
@@ -360,7 +359,7 @@ function listDefaultData() {
   loadDefaultResourceType()
   // Validar que no exista dicho attachment type por defecto en la lista
   hasDefaultAttachment.value = ListItems.value.some(item => item.type?.isDefault)
-  if (!hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
+  if (!hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Attachment
     loadDefaultAttachmentType()
   }
 }
@@ -396,7 +395,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
-    payload.invoice = props.selectedTransaction?.id
+    payload.transaction = props.selectedTransaction?.id
     payload.file = file
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId ?? ''
@@ -428,7 +427,7 @@ async function deleteItem(id: string) {
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
   }
   catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete attachment', life: 3000 })
     loadingSaveAll.value = false
   }
   finally {
@@ -527,9 +526,9 @@ async function getItemById(id: string | null | undefined) {
         item.value.filename = response.filename
         item.value.file = response.file
         item.value.remark = response.remark
-        item.value.invoice = response.invoice
-        item.value.resource = response.invoice.invoiceId
-        item.value.resourceType = { ...response.paymenResourceType, fullName: `${response?.paymenResourceType?.code} - ${response?.paymenResourceType?.name}` }
+        item.value.transaction = response.transaction
+        item.value.resource = response.transaction?.id
+        item.value.resourceType = { ...response.paymentResourceType, fullName: `${response?.paymentResourceType?.code} - ${response?.paymentResourceType?.name}` }
         selectedAttachment.value = response.attachmentId
       }
 
@@ -537,7 +536,7 @@ async function getItemById(id: string | null | undefined) {
     }
     catch (error) {
       if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Attachment could not be loaded', life: 3000 })
       }
     }
     finally {
@@ -582,13 +581,13 @@ function downloadFile() {
 }
 
 watch(() => props.selectedTransaction, () => {
-  invoice.value = props.selectedTransaction
+  transaction.value = props.selectedTransaction
 
-  if (invoice.value?.id) {
+  if (transaction.value?.id) {
     Payload.value.filter = [{
-      key: 'invoice.id',
+      key: 'transaction.id',
       operator: 'EQUALS',
-      value: invoice.value?.id,
+      value: transaction.value?.id,
       logicalOperation: 'AND'
     }]
     getList()
@@ -616,12 +615,12 @@ watch(() => idItem.value, async (newValue) => {
 })
 
 onMounted(() => {
-  const invoice = props.selectedTransaction?.id
-  if (invoice) {
+  const transaction = props.selectedTransaction?.id
+  if (transaction) {
     Payload.value.filter = [{
-      key: 'invoice.id',
+      key: 'transaction.id',
       operator: 'EQUALS',
-      value: invoice,
+      value: transaction,
       logicalOperation: 'AND'
     }]
   }
@@ -793,14 +792,14 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div v-if="attachmentHistoryDialogOpen">
+      <!--      <div v-if="attachmentHistoryDialogOpen">
         <AttachmentIncomeHistoryDialog
           :selected-attachment="selectedAttachment"
           :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
-          :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="invoice.id" :selected-invoice-obj="invoice"
+          :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="transaction.id" :selected-invoice-obj="transaction"
           header="Attachment Status History" :attachment-type="item.type"
         />
-      </div>
+      </div> -->
     </div>
   </Dialog>
 </template>
