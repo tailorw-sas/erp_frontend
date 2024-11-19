@@ -368,7 +368,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_RESEND_LINK_INVALID(1146, Series.DOMAIN_ERROR,"Guest name and email are required to send the payment link."),
     MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR(1147, Series.DOMAIN_ERROR,"Error generating session on CardNet merchant."),
     MANAGE_TRANSACTION_STATUS_RECONCILED_NOT_FOUND(1148, Series.DOMAIN_ERROR,"There is no transaction status of type reconciled by default."),
-    MANAGE_TRANSACTION_STATUS_CHECK_RECONCILED(1149, Series.DOMAIN_ERROR,"Another item already exists with reconciled status.");
+    MANAGE_TRANSACTION_STATUS_CHECK_RECONCILED(1149, Series.DOMAIN_ERROR,"Another item already exists with reconciled status."),
+    MANAGE_PAYMENT_RESOURCE_TYPE_CHECK_VCC(1150, Series.DOMAIN_ERROR,"Another item already exists with creditcard default."),;
 
     private static final DomainErrorMessage[] VALUES;
 

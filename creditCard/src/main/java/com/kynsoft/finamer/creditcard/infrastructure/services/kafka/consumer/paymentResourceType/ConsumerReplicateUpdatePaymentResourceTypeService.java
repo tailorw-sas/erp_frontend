@@ -26,7 +26,7 @@ public class ConsumerReplicateUpdatePaymentResourceTypeService {
             UpdateManageResourceTypeCommand command = new UpdateManageResourceTypeCommand(
                     objKafka.getId(),
                     objKafka.getName(),
-                    objKafka.isInvoice()
+                    objKafka.isVcc()
             );
             mediator.send(command);
         } catch (Exception ex) {

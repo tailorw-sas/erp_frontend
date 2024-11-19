@@ -34,4 +34,6 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<MaganeR
 
     Optional<MaganeResourceType> findResourceTypeByCodeAndStatus(String code, Status status);
 
+    @Query("SELECT COUNT(b) FROM MaganeResourceType b WHERE b.vcc = true AND b.id <> :id")
+    Long countByVccAndNotId(@Param("id") UUID id);
 }

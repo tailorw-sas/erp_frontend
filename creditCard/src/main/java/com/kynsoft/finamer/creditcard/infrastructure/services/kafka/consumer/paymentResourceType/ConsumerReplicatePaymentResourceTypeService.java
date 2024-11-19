@@ -23,9 +23,8 @@ public class ConsumerReplicatePaymentResourceTypeService {
     @KafkaListener(topics = "finamer-replicate-payment-resource-type", groupId = "vcc-entity-replica")
     public void listen(ReplicatePaymentResourceTypeKafka objKafka) {
         try {
-
             CreateManageResourceTypeCommand command = new CreateManageResourceTypeCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.isInvoice());
+                    objKafka.getName(), objKafka.isVcc());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicatePaymentResourceTypeService.class.getName()).log(Level.SEVERE, null, ex);
