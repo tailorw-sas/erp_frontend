@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { FieldDefinitionType } from '../form/EditFormV2'
-import type {FilterCriteria} from "~/composables/list";
+import type { FilterCriteria } from '~/composables/list'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -202,6 +202,17 @@ watch(() => props.item, async (newValue) => {
         @force-save="forceSave = $event"
         @submit="handleSaveForm($event)"
       >
+        <template #field-amount="{ item: data, onUpdate }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.amount"
+            show-clear
+            @update:model-value="($event: any) => {
+              onUpdate('amount', $event)
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingDefaultTransactionType && !props.loadingSaveAll"
