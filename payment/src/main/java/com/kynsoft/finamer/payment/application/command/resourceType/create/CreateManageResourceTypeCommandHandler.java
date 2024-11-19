@@ -7,6 +7,7 @@ import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceInvoiceMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceTypeCodeMustBeUniqueRule;
+import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceVccMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerReplicateResourceTypeService;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,9 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
         if (command.isInvoice()) {
             RulesChecker.checkRule(new ResourceInvoiceMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isVcc()) {
+            RulesChecker.checkRule(new ResourceVccMustBeUniqueRule(this.service, command.getId()));
+        }
 
         service.create(new ResourceTypeDto(
                 command.getId(),
@@ -43,9 +47,9 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
                 command.getStatus(),
                 command.getDefaults(),
                 command.isInvoice(),
-                command.isInvoiceDefault()
+                command.isVcc()
         ));
-        this.producer.create(new ReplicatePaymentResourceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isInvoice()));
+        this.producer.create(new ReplicatePaymentResourceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isInvoice(), command.isVcc()));
     }
 
 }

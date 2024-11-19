@@ -31,4 +31,6 @@ public interface IManageResourceTypeService {
     Long countByInvoiceAndNotId(UUID id);
 
     ResourceTypeDto getByDefault();
+
+    Long countByVccAndNotId(UUID id);
 }

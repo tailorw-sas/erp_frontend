@@ -10,6 +10,7 @@ import com.kynsoft.finamer.payment.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceInvoiceMustBeUniqueRule;
+import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceVccMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerUpdateResourceTypeService;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,9 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
         if (command.isInvoice()) {
             RulesChecker.checkRule(new ResourceInvoiceMustBeUniqueRule(this.service, command.getId()));
         }
-
+        if (command.isVcc()) {
+            RulesChecker.checkRule(new ResourceVccMustBeUniqueRule(this.service, command.getId()));
+        }
         ResourceTypeDto resourceTypeDto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -48,11 +51,11 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
         this.updateStatus(resourceTypeDto::setStatus, command.getStatus(), resourceTypeDto.getStatus(), update::setUpdate);
         this.updateBooleam(resourceTypeDto::setDefaults, command.getDefaults(), resourceTypeDto.getDefaults(), update::setUpdate);
         this.updateBooleam(resourceTypeDto::setInvoice, command.isInvoice(), resourceTypeDto.isInvoice(), update::setUpdate);
-        this.updateBooleam(resourceTypeDto::setInvoiceDefault, command.isInvoiceDefault(), resourceTypeDto.isInvoiceDefault(), update::setUpdate);
+        this.updateBooleam(resourceTypeDto::setVcc, command.isVcc(), resourceTypeDto.isVcc(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(resourceTypeDto);
-            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName(), resourceTypeDto.isInvoice()));
+            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName(), resourceTypeDto.isInvoice(), resourceTypeDto.isVcc()));
         }
 
     }

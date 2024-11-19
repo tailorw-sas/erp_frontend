@@ -17,8 +17,6 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
 
     @Override
     public void handle(CreateManageResourceTypeCommand command) {
-
-      
         service.create(new ResourceTypeDto(
                 command.getId(),
                 command.getCode(),
