@@ -439,10 +439,10 @@ const columns: IColumn[] = [
   { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name' } },
-  { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'text' },
-  { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'text' },
-  { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'text' },
-  { field: 'notApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'text' },
+  { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number' },
+  { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'number' },
+  { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
+  { field: 'notApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'number' },
   { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
   { field: 'paymentStatus', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
   // { field: 'totalAmount', header: 'T.Amount', tooltip: 'Total Amount', width: '60px', type: 'text' },
@@ -955,32 +955,32 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'paymentAmount')) {
         count.paymentAmount = count.paymentAmount + iterator.paymentAmount
-        iterator.paymentAmount = formatNumber(iterator.paymentAmount)
+        iterator.paymentAmount = iterator.paymentAmount || 0
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'depositBalance')) {
         count.depositBalance += iterator.depositBalance
-        iterator.depositBalance = formatNumber(iterator.depositBalance)
+        iterator.depositBalance = iterator.depositBalance || 0
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
         count.applied += iterator.applied
-        iterator.applied = formatNumber(iterator.applied)
+        iterator.applied = iterator.applied || 0
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'notApplied')) {
         count.noApplied += iterator.notApplied
-        iterator.notApplied = formatNumber(iterator.notApplied)
+        iterator.notApplied = iterator.notApplied || 0
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'depositAmount')) {
-        iterator.depositAmount = String(iterator.depositAmount)
+        iterator.depositAmount = iterator.depositAmount || 0
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'otherDeductions')) {
         iterator.otherDeductions = String(iterator.otherDeductions)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'identified')) {
-        iterator.identified = formatNumber(iterator.identified)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'notIdentified')) {
-        iterator.notIdentified = formatNumber(iterator.notIdentified)
-      }
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'identified')) {
+      //   iterator.identified = formatNumber(iterator.identified)
+      // }
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'notIdentified')) {
+      //   iterator.notIdentified = formatNumber(iterator.notIdentified)
+      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'bankAccount')) {
         iterator.bankAccount = {
           id: iterator?.bankAccount?.id,

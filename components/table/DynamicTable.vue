@@ -650,6 +650,9 @@ defineExpose({ clearSelectedItems })
             <span v-else-if="column.type === 'bool'">
               <Badge v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'" :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)" :severity="data[column.field] ? 'success' : 'danger'" class="success" />
             </span>
+            <span v-else-if="column.type === 'number'">
+              {{ formatNumber(data[column.field]) }}
+            </span>
             <span v-else-if="column.type === 'custom-badge'">
               <Badge
                 v-tooltip.top="data[column.field].toString()" :value="data[column.field]"

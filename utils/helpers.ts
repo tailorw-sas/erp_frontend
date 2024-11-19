@@ -422,3 +422,14 @@ export function parseFormattedNumber(formattedNumber: string): number {
 
   return parsedNumber
 }
+
+export function formatCurrency(value: any) {
+  if (Number.isNaN(value) || value === null || value === undefined) {
+    return 'Invalid value' // Mensaje de error o valor predeterminado
+  }
+
+  // Convertir a número en caso de que sea un string válido
+  const numericValue = Number(value)
+
+  return numericValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}

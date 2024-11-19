@@ -733,8 +733,8 @@ const columns: IColumn[] = [
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
   // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
@@ -918,8 +918,8 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator?.dueAmount ? formatNumber(iterator?.dueAmount) : 0, 
-          invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator?.invoiceAmount) : 0,
+          dueAmount: iterator?.dueAmount || 0, 
+          invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
