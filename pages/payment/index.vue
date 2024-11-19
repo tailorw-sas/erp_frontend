@@ -2554,7 +2554,22 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && (event.data.attachmentStatus.nonNone || event.data.attachmentStatus.patWithAttachment || event.data.attachmentStatus.pwaWithOutAttachment)) {
+  // if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
+  //       if (iterator.attachmentStatus?.patWithAttachment) {
+  //         color = listColor.ATTACHMENT_WITHOUT_ERROR
+  //       }
+  //       else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
+  //         color = listColor.ATTACHMENT_WITH_ERROR
+  //       }
+  //       else if (iterator.attachmentStatus?.nonNone) {
+  //         color = listColor.NONE
+  //       }
+  //       else {
+  //         color = listColor.NONE
+  //       }
+  //     }
+  // ( || event.data.attachmentStatus.patWithAttachment || event.data.attachmentStatus.pwaWithOutAttachment)
+  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -2567,15 +2582,41 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
-    if (menuItemPaymentWithAttachment) {
-      menuItemPaymentWithAttachment.disabled = true
-      menuItemPaymentWithAttachment.visible = true
+    if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
+      const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+      if (menuItemPaymentWithAttachment) {
+        menuItemPaymentWithAttachment.disabled = false
+        menuItemPaymentWithAttachment.visible = true
+      }
+      const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+      if (menuItemPaymentWithOutAttachment) {
+        menuItemPaymentWithOutAttachment.disabled = true
+        menuItemPaymentWithOutAttachment.visible = true
+      }
     }
-    const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
-    if (menuItemPaymentWithOutAttachment) {
-      menuItemPaymentWithOutAttachment.disabled = true
-      menuItemPaymentWithOutAttachment.visible = true
+    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
+      const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+      if (menuItemPaymentWithOutAttachment) {
+        menuItemPaymentWithOutAttachment.disabled = false
+        menuItemPaymentWithOutAttachment.visible = true
+      }
+      const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+      if (menuItemPaymentWithAttachment) {
+        menuItemPaymentWithAttachment.disabled = true
+        menuItemPaymentWithAttachment.visible = true
+      }
+    }
+    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === true) {
+      const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+      if (menuItemPaymentWithAttachment) {
+        menuItemPaymentWithAttachment.disabled = true
+        menuItemPaymentWithAttachment.visible = true
+      }
+      const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+      if (menuItemPaymentWithOutAttachment) {
+        menuItemPaymentWithOutAttachment.disabled = true
+        menuItemPaymentWithOutAttachment.visible = true
+      }
     }
   }
 
