@@ -51,9 +51,9 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public void delete(ResourceTypeDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
@@ -69,7 +69,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
 
     @Override
     public ResourceTypeDto findByCode(String code) {
-        Optional<MaganeResourceType> resourceType = this.repositoryQuery.findResourceTypeByCodeAndStatus(code,Status.ACTIVE);
+        Optional<MaganeResourceType> resourceType = this.repositoryQuery.findResourceTypeByCodeAndStatus(code, Status.ACTIVE);
         if (resourceType.isPresent()) {
             return resourceType.get().toAggregate();
         }
@@ -119,8 +119,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
-
-     @Override
+    @Override
     public List<ResourceTypeDto> findAllToReplicate() {
         List<MaganeResourceType> objects = this.repositoryQuery.findAll();
         List<ResourceTypeDto> objectDtos = new ArrayList<>();
@@ -135,6 +134,15 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     @Override
     public Long countByInvoiceAndNotId(UUID id) {
         return this.repositoryQuery.countByInvoiceAndNotId(id);
+    }
+
+    @Override
+    public ResourceTypeDto getByDefault() {
+        Optional<MaganeResourceType> userSystem = this.repositoryQuery.getByDefault();
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
 }

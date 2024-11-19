@@ -26,4 +26,6 @@ public interface IManageAttachmentTypeService {
     Long countByDefaultAndNotId(UUID id);
 
     Long countByAntiToIncomeImportAndNotId(UUID id);
+
+    AttachmentTypeDto getByDefault();
 }

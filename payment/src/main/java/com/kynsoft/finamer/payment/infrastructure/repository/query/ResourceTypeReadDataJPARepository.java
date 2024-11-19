@@ -25,6 +25,9 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<MaganeR
         
     @Query("SELECT COUNT(b) FROM MaganeResourceType b WHERE b.defaults = true AND b.id <> :id")
     Long countByDefaultAndNotId(@Param("id") UUID id);
+        
+    @Query("SELECT b FROM MaganeResourceType b WHERE b.defaults = true")
+    Optional<MaganeResourceType> getByDefault();
 
     @Query("SELECT COUNT(b) FROM MaganeResourceType b WHERE b.invoice = true AND b.id <> :id")
     Long countByInvoiceAndNotId(@Param("id") UUID id);
