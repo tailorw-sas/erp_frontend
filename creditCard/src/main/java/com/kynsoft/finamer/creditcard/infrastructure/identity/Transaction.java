@@ -154,7 +154,7 @@ public class Transaction implements Serializable {
         this.adjustment = dto.isAdjustment();
     }
 
-    private TransactionDto toAggregateParent() {
+    public TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
                 createdAt != null ? createdAt : null);
