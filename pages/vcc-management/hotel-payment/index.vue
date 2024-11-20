@@ -43,7 +43,6 @@ const menuListItems = [
 
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
-const MerchantBankAccountList = ref<any[]>([])
 
 const confStatusListApi = reactive({
   moduleApi: 'settings',
@@ -103,7 +102,12 @@ const columns: IColumn[] = [
 const subTotals: any = ref({ amount: 0, details: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
-  { id: 'reconciliationId', name: 'Id' },
+  { id: 'id', name: 'Hotel Payment Id', filterOnlyByField: true },
+  { id: 'transactionId', name: 'Transaction Id', filterOnlyByField: true },
+  { id: 'reference', name: 'Transaction Reference', filterOnlyByField: false },
+  { id: 'reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false },
+  { id: 'agencyCode', name: 'Agency Code', filterOnlyByField: false },
+  { id: 'remark', name: 'Remark', filterOnlyByField: false },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
@@ -216,7 +220,8 @@ function searchAndFilter() {
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
   }
-  if (filterToSearch.value.criteria && filterToSearch.value.search) {
+  // Si el criterio es filterOnlyByField entonces solo se filtra por ese valor
+  if (filterToSearch.value.criteria && filterToSearch.value.criteria.filterOnlyByField && filterToSearch.value.search) {
     newPayload.filter = [{
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
@@ -227,6 +232,16 @@ function searchAndFilter() {
   }
   else {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    // Si el criterio no es filterOnlyByField entonces se agrega a la lista de filtros
+    if (filterToSearch.value.criteria && filterToSearch.value.search) {
+      newPayload.filter = [{
+        key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
+        operator: 'EQUALS',
+        value: filterToSearch.value.search,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+    }
     // Date
     if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {
@@ -414,44 +429,6 @@ async function getStatusList(query: string = '') {
   }
   finally {
     accordionLoading.value.status = false
-  }
-}
-
-async function getMerchantBankAccountList(query: string) {
-  try {
-    accordionLoading.value.merchantBankAccount = true
-    const payload = {
-      filter: [{
-        key: 'accountNumber',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
-      query: '',
-      sortBy: 'createdAt',
-      sortType: 'ASC',
-      pageSize: 20,
-      page: 0,
-    }
-    const response: any = await GenericService.search('creditcard', 'manage-merchant-bank-account', payload)
-    const { data: dataList } = response
-    MerchantBankAccountList.value = [allDefaultItem]
-
-    for (const iterator of dataList) {
-      const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading merchant bank account list:', error)
-  }
-  finally {
-    accordionLoading.value.merchantBankAccount = false
   }
 }
 
@@ -650,7 +627,7 @@ onMounted(() => {
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Criteria:</label>
-                    <div class="w-full" style=" z-index:5 ">
+                    <div class="w-full" style=" z-index:5; overflow: hidden;">
                       <Dropdown
                         v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
                         placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
