@@ -24,7 +24,7 @@ public class ManageMerchantCommissionMustNotOverlapRule extends BusinessRule {
     public ManageMerchantCommissionMustNotOverlapRule(IManageMerchantCommissionService service, UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate, Double commission, String calculationType) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
-                new ErrorField("dateRange", "Item already exists.")
+                new ErrorField("dateRange", "Data entered overlaps with others, please check.")
         );
         this.service = service;
 
