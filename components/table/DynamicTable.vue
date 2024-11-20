@@ -609,9 +609,9 @@ defineExpose({ clearSelectedItems })
           class="custom-table-head" :class="column.columnClass"
           :style="{
             width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-            minWidth: column?.width ? column?.width : 'auto',
+            minWidth: column?.minWidth ? column?.minWidth : 'auto',
             display: column?.hidden ? 'none' : 'table-cell',
-            maxWidth: column?.width ? column?.width : 'auto',
+            maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->

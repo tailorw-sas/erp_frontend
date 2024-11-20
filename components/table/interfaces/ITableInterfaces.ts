@@ -11,6 +11,8 @@ export interface IColumn {
   showFilter?: boolean
   frozen?: boolean
   width?: string
+  minWidth?: string
+  maxWidth?: string
   icon?: string
   editable?: boolean
   badge?: {
