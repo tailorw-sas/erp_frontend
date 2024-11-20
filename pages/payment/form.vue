@@ -3284,6 +3284,7 @@ const checkboxValue1 = ref(false)
               onUpdate('paymentAmount', $event)
               if (idItem === '' && paymentDetailsList.length === 0) {
                 onUpdate('notIdentified', $event)
+                onUpdate('paymentBalance', $event)
               }
             }"
           />
