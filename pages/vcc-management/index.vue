@@ -205,6 +205,7 @@ const computedShowMenuItemAdjustmentTransaction = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
+  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
   { field: 'id', header: 'Id', type: 'text' },
   { field: 'parent', header: 'Parent Id', type: 'text' },
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
@@ -212,7 +213,7 @@ const columns: IColumn[] = [
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'methodType', header: 'Method Type', type: 'text' },
-  { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px' },
+  { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', maxWidth: '220px' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'netAmount', header: 'T.Amount', type: 'text' },
@@ -1158,10 +1159,23 @@ onMounted(() => {
         @on-row-right-click="onRowRightClick"
         @on-row-double-click="onDoubleClick($event)"
       >
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0">
+            <!-- <pre>{{ objData }}</pre> -->
+            <Button
+              v-if="objData.hasAttachment"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+            />
+          </div>
+          <!-- style="color: #616161;" -->
+          <!-- :style="{ 'background-color': '#00b816' }" -->
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
               <Column :footer="formatNumber(subTotals.commission)" />
               <Column :footer="formatNumber(subTotals.net)" />
