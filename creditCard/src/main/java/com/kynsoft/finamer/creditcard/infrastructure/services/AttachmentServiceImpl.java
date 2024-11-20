@@ -41,9 +41,9 @@ public class AttachmentServiceImpl implements IAttachmentService {
     }
 
     @Override
-    public Long create(AttachmentDto dto) {
+    public AttachmentDto create(AttachmentDto dto) {
         Attachment entity = new Attachment(dto);
-        return repositoryCommand.saveAndFlush(entity).getAttachmentId();
+        return repositoryCommand.save(entity).toAggregate();
     }
 
     @Override
