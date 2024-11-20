@@ -923,6 +923,10 @@ function setRefundAvailable(isAvailable: boolean) {
 function openBankReconciliation() {
   window.open('/vcc-management/bank-reconciliation', '_blank')
 }
+
+function openHotelPayment() {
+  window.open('/vcc-management/hotel-payment', '_blank')
+}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -952,6 +956,7 @@ onMounted(() => {
     <div class="my-2 flex justify-content-end px-0">
       <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
       <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
+      <Button class="ml-2" icon="pi pi-dollar" label="Hotel Payment" @click="openHotelPayment()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
       <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
     </div>
