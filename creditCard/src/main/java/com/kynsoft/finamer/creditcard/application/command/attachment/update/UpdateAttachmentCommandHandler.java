@@ -7,6 +7,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.AttachmentDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IAttachmentService;
+import com.kynsoft.finamer.creditcard.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageResourceTypeService;
 import org.springframework.stereotype.Component;
@@ -20,12 +21,14 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
     private final IAttachmentService attachmentService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public UpdateAttachmentCommandHandler(IAttachmentService attachmentService,
-                                          IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService) {
+                                          IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     @Override
@@ -51,7 +54,7 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
 
         if (update.getUpdate() > 0) {
             this.attachmentService.update(dto);
-//            this.updateAttachmentStatusHistory(dto.getInvoice() , dto.getFilename(), dto.getAttachmentId(), dto.getEmployee(), dto.getEmployeeId());
+            this.attachmentStatusHistoryService.create(dto, "updated");
         }
     }
 
@@ -71,17 +74,4 @@ public class UpdateAttachmentCommandHandler implements ICommandHandler<UpdateAtt
             update.accept(1);
         }
     }
-
-//     private void updateAttachmentStatusHistory( ManageInvoiceDto invoice, String fileName, Long attachmentId, String employee, UUID employeeId) {
-//
-//        AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto.setDescription("An attachment to the invoice was updated. The file name: " + fileName);
-//        attachmentStatusHistoryDto.setEmployee(employee);
-//        attachmentStatusHistoryDto.setInvoice(invoice);
-//        attachmentStatusHistoryDto.setEmployeeId(employeeId);
-//        attachmentStatusHistoryDto.setAttachmentId(attachmentId);
-//
-//        this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
 }

@@ -2,10 +2,7 @@ package com.kynsoft.finamer.creditcard.application.command.attachment.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.creditcard.domain.dto.AttachmentDto;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageAttachmentTypeDto;
-import com.kynsoft.finamer.creditcard.domain.dto.ResourceTypeDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.rules.attachment.AttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -17,21 +14,18 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
     private final ITransactionService transactionService;
-//    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
-    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public CreateAttachmentCommandHandler(IAttachmentService attachmentService,
                                           IManageAttachmentTypeService attachmentTypeService,
                                           ITransactionService transactionService,
                                           IManageResourceTypeService resourceTypeService,
-//                                            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-                                          ITransactionStatusHistoryService transactionStatusHistoryService) {
+                                          IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
         this.transactionService = transactionService;
         this.resourceTypeService = resourceTypeService;
-//        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
-        this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     @Override
@@ -47,7 +41,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                 ? this.resourceTypeService.findById(command.getPaymentResourceType())
                 : null;
 
-            Long attachmentId = attachmentService.create(new AttachmentDto(
+            AttachmentDto attachmentDto = attachmentService.create(new AttachmentDto(
                     command.getId(),
                     null,
                     command.getFilename(),
@@ -60,22 +54,6 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     null,
                     resourceTypeDto
             ));
-//            this.updateAttachmentStatusHistory(transactionDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
+            this.attachmentStatusHistoryService.create(attachmentDto, "inserted");
     }
-
-//    private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, String fileName, Long attachmentId,
-//            String employee, UUID employeeId) {
-//
-//        AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto
-//                .setDescription("An attachment to the invoice was inserted. The file name: " + fileName);
-//        attachmentStatusHistoryDto.setEmployee(employee);
-//        attachmentStatusHistoryDto.setInvoice(invoice);
-//        attachmentStatusHistoryDto.setEmployeeId(employeeId);
-//        attachmentStatusHistoryDto.setAttachmentId(attachmentId);
-//
-//        this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
-
 }
