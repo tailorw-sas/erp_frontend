@@ -631,8 +631,17 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
+    v-model:visible="dialogVisible" modal :header="header" class="mx-3 sm:mx-0"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :style="{ width: '80%' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog-history',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
     @hide="closeDialog(ListItems.length)"
   >
     <div class="grid p-fluid formgrid">
@@ -792,14 +801,14 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <!--      <div v-if="attachmentHistoryDialogOpen">
-        <AttachmentIncomeHistoryDialog
+      <div v-if="attachmentHistoryDialogOpen">
+        <AttachmentTransactionHistoryDialog
           :selected-attachment="selectedAttachment"
           :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
-          :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="transaction.id" :selected-invoice-obj="transaction"
+          :open-dialog="attachmentHistoryDialogOpen" :selected-invoice-obj="transaction"
           header="Attachment Status History" :attachment-type="item.type"
         />
-      </div> -->
+      </div>
     </div>
   </Dialog>
 </template>
