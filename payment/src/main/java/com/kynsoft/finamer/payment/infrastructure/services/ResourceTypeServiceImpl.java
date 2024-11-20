@@ -145,4 +145,9 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
+    @Override
+    public Long countByVccAndNotId(UUID id) {
+        return this.repositoryQuery.countByVccAndNotId(id);
+    }
+
 }

@@ -48,6 +48,7 @@ public class ConsumerCreateIncomeTransactionService {
             mediator.send(createIncomeAdjustmentCommand(objKafka));
             producerCreateIncomeTransactionSuccess.create(this.createIncomeTransactionSuccessKafka(objKafka.getId(), objKafka.getRelatedPaymentDetail()));
         } catch (Exception e) {
+            e.printStackTrace();
             CreateIncomeTransactionFailedKafka createIncomeTransactionFailedKafka = new CreateIncomeTransactionFailedKafka(objKafka.getRelatedPaymentDetail());
             producerCreateIncomeTransactionFailed.create(createIncomeTransactionFailedKafka);
         }
