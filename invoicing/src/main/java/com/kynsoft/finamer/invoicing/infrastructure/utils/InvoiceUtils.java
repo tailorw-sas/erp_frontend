@@ -43,7 +43,7 @@ public class InvoiceUtils {
     public static ManageInvoiceDto calculateInvoiceAging(ManageInvoiceDto manageInvoiceDto) {
         LocalDate dueDate = manageInvoiceDto.getDueDate();
         LocalDate serverDate = LocalDate.now();
-        if (dueDate.isEqual(serverDate) || dueDate.isAfter(serverDate)) {
+        if (Objects.isNull(dueDate) || serverDate.isEqual(dueDate) || dueDate.isAfter(serverDate)) {
             manageInvoiceDto.setAging(0);
         } else {
             long dayBetween = ChronoUnit.DAYS.between(dueDate, serverDate);
