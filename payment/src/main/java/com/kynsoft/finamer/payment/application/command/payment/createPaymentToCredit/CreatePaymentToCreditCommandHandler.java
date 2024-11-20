@@ -44,6 +44,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     private final IManageEmployeeService manageEmployeeService;
 
     private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final IManageBankAccountService manageBankAccountService;
 
     public CreatePaymentToCreditCommandHandler(IManagePaymentSourceService sourceService,
             IManagePaymentStatusService statusService,
@@ -54,7 +55,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             IPaymentDetailService paymentDetailService,
             IManagePaymentAttachmentStatusService attachmentStatusService,
             IManageEmployeeService manageEmployeeService,
-            IPaymentCloseOperationService paymentCloseOperationService) {
+            IPaymentCloseOperationService paymentCloseOperationService,
+            IManageBankAccountService manageBankAccountService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -65,12 +67,15 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         this.attachmentStatusService = attachmentStatusService;
         this.manageEmployeeService = manageEmployeeService;
         this.paymentCloseOperationService = paymentCloseOperationService;
+        this.manageBankAccountService = manageBankAccountService;
     }
 
     @Override
     public void handle(CreatePaymentToCreditCommand command) {
 
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
+        List<ManageBankAccountDto> listBankAccountDtos = this.manageBankAccountService.findAllByHotel(hotelDto.getId());
+        ManageBankAccountDto bankAccountDto = listBankAccountDtos.isEmpty() ? null : listBankAccountDtos.get(0);
 
         //Crear servicio para obtener el que esta marcado con expense
         ManagePaymentSourceDto paymentSourceDto = this.sourceService.findByExpense();
@@ -80,12 +85,12 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByDefaults();
-        this.createPaymentToCreditNegative(hotelDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
-        this.createPaymentToCreditPositive(hotelDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
+        this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
+        this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
     }
 
     //Payment creado con el deposit y apply deposit
-    private void createPaymentToCreditPositive(ManageHotelDto hotelDto,
+    private void createPaymentToCreditPositive(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto,
             ManagePaymentSourceDto paymentSourceDto,
             ManagePaymentStatusDto paymentStatusDto,
             ManageClientDto clientDto,
@@ -107,7 +112,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 agencyDto,
                 hotelDto,
                 //hotelDto,
-                null,
+                bankAccountDto,
                 attachmentStatusDto,
                 paymentAmount,
                 0.0,
@@ -157,7 +162,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     //Payment creado con el cash
-    private void createPaymentToCreditNegative(ManageHotelDto hotelDto,
+    private void createPaymentToCreditNegative(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto,
             ManagePaymentSourceDto paymentSourceDto,
             ManagePaymentStatusDto paymentStatusDto,
             ManageClientDto clientDto,
@@ -178,7 +183,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 clientDto,
                 agencyDto,
                 hotelDto,
-                null,
+                bankAccountDto,
                 attachmentStatusDto,
                 paymentAmount,
                 0.0,

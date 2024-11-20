@@ -21,4 +21,6 @@ public interface IManageBankAccountService {
 
     boolean existByAccountNumber(String accountNumber);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    List<ManageBankAccountDto> findAllByHotel(UUID hotelId);
 }
