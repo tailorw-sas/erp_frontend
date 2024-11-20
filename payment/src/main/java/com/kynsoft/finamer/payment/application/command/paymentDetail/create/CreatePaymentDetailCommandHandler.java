@@ -43,7 +43,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
     }
 
     @Override
-    @Transactional
+    //@Transactional
     public void handle(CreatePaymentDetailCommand command) {
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = null;

@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetSessionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.ICardNetJobService;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.IMerchantLanguageCodeService;
@@ -56,15 +57,15 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     }
 
     public MerchantRedirectResponse redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
-        if (compareDates(transactionDto.getTransactionUuid())) {
+        if (transactionDto.getMethodType() == MethodType.LINK && !isValidLink(transactionDto)) {
+            throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
+        } else {
             if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
                 return redirectToAzul(transactionDto, merchantConfigDto);
             } else {
                 return redirectToCardNet(transactionDto, merchantConfigDto);
             }
-        } else
-            throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
-//        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing transaction date.");
+        }
     }
 
     private MerchantRedirectResponse redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
@@ -232,16 +233,13 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         return new MerchantRedirectResponse(htmlForm, requestData.toString());
     }
 
-    private Boolean compareDates(UUID id) {
-        Optional<Transaction> transaction = transactionRepositoryQuery.findByTransactionUuid(id);
-        if (transaction.isPresent()) {
-            LocalDateTime date1 = transaction.get().getCreatedAt();
-            LocalDateTime currentDate = LocalDateTime.now();
-            // Calcular la diferencia en minutos
-            Duration difernce = Duration.between(date1, currentDate);
-            //Comprobar que la diferncia sea menor que una semana
-            return difernce.toDays() <= 7;
-        } else return false;
+    private Boolean isValidLink(TransactionDto transaction) {
+        LocalDateTime date1 = transaction.getTransactionDate();
+        LocalDateTime currentDate = LocalDateTime.now();
+        // Calcular la diferencia en minutos
+        Duration difernce = Duration.between(date1, currentDate);
+        //Comprobar que la diferncia sea menor que una semana
+        return difernce.toDays() <= 7;
     }
 
     private CardNetSessionResponse getCardNetSession(Map<String, String> requestData, String url) {

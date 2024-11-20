@@ -76,7 +76,7 @@ public class TransactionServiceImpl implements ITransactionService {
     public void update(TransactionDto dto) {
         Transaction entity = new Transaction(dto);
         entity.setUpdateAt(LocalDateTime.now());
-        
+
         this.repositoryCommand.save(entity);
     }
 
@@ -129,13 +129,14 @@ public class TransactionServiceImpl implements ITransactionService {
         double commission = 0.0;
         double netAmount = 0.0;
 
-        for (Transaction transaction : repositoryQuery.findAll(specifications)) {
+        // Se comenta iteracion sobre lista de transactions ya que no se va a usar por ahora el total global
+        /*for (Transaction transaction : repositoryQuery.findAll(specifications)) {
             if (transaction.getAmount() != null) {
                 totalAmount += transaction.getAmount();
                 commission += transaction.getCommission();
                 netAmount += transaction.getNetAmount();
             }
-        }
+        }*/
         ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
         //si no encuentra la parametrization que agarre 2 decimales por defecto

@@ -53,6 +53,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         //Obtener toda la informacion necesaria para los updates
         CardnetJobDto cardnetJobDto = statusTransactionService.findBySession(command.getSession());
         TransactionDto transactionDto = transactionService.findByUuid(cardnetJobDto.getTransactionId());
+        if (!transactionDto.getStatus().isSentStatus() && !transactionDto.getStatus().isDeclinedStatus()) {
+            throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
+        }
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         String url = merchantConfigDto.getAltUrl() + "/" + cardnetJobDto.getSession() + "?sk=" + cardnetJobDto.getSessionKey();
 

@@ -43,7 +43,7 @@ public class MaganeResourceType {
     private boolean invoice;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
-    private boolean invoiceDefault;
+    private boolean vcc;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -60,14 +60,14 @@ public class MaganeResourceType {
         this.status = dto.getStatus();
         this.defaults = dto.getDefaults();
         this.invoice = dto.isInvoice();
-        this.invoiceDefault = dto.isInvoiceDefault();
+        this.vcc = dto.isVcc();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
                 id, code, name, description, status,
                 defaults != null ? defaults : null,
-                invoice, invoiceDefault
+                invoice, vcc
         );
     }
 }

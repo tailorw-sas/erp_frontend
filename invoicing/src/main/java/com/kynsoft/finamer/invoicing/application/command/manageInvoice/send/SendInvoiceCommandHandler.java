@@ -251,21 +251,21 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         List<MailJetAttachment> attachments = new ArrayList<>();
         List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
         //Comenta estas dos lineas y descomenta las lineas de abajo.
-        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
-        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
+//        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
+//        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
 
-//        String base64 = "";
-//        try {
-//            //Se hace la llamada a lo interno para generar el excel.
-//            base64 = this.fileService.convertExcelToBase64(ids, employeeDto);
-//        } catch (IOException ex) {
-//            Logger.getLogger(SendInvoiceCommandHandler.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        String base64 = "";
+        try {
+            //Se hace la llamada a lo interno para generar el excel.
+            base64 = this.fileService.convertExcelToBase64(ids, employeeDto);
+        } catch (IOException ex) {
+            Logger.getLogger(SendInvoiceCommandHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
         MailJetAttachment attachment = new MailJetAttachment(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
                 "AccountStatement.xlsx",  // Nombre del archivo
-                sendAccountStatementResponse.getFile()
-//                base64
+//                sendAccountStatementResponse.getFile()
+                base64
         );
         attachments.add(attachment);
         return attachments;

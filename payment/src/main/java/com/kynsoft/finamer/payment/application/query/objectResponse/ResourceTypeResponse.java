@@ -23,7 +23,7 @@ public class ResourceTypeResponse implements IResponse {
     private Status status;
     private Boolean defaults;
     private boolean invoice;
-    private boolean invoiceDefault;
+    private boolean vcc;
 
     public ResourceTypeResponse(ResourceTypeDto dto) {
         this.id = dto.getId();
@@ -33,7 +33,7 @@ public class ResourceTypeResponse implements IResponse {
         this.name = dto.getName();
         this.defaults = dto.getDefaults();
         this.invoice = dto.isInvoice();
-        this.invoiceDefault = dto.isInvoiceDefault();
+        this.vcc = dto.isVcc();
     }
 
 }

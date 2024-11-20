@@ -123,6 +123,9 @@ public class Invoice {
     @Column(nullable = false,columnDefinition = "integer default 0")
     private Integer aging;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cloneParent;
+
     public Invoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
         this.invoiceNumber = dto.getInvoiceNumber();
@@ -163,6 +166,7 @@ public class Invoice {
         this.aging = dto.getAging();
         this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
         this.deleteInvoice = dto.isDeleteInvoice();
+        this.cloneParent = dto.isCloneParent();
     }
 
     public ManageInvoiceDto toAggregateSample() {
