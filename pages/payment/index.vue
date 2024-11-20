@@ -3902,6 +3902,7 @@ onMounted(async () => {
     >
       <template #column-icon="{ data: objData, column }">
         <div class="flex align-items-center justify-content-center p-0 m-0">
+          <!-- <pre>{{ objData }}</pre> -->
           <Button
             v-if="objData.hasAttachment"
             :icon="column.icon"
