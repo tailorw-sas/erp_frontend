@@ -2619,8 +2619,9 @@ function onRowContextMenu(event: any) {
       }
     }
   }
+  // event && event.data && event.data.applyPayment === false
 
-  if (event && event.data && event.data.applyPayment === false) {
+  if (event && event.data && event.data.paymentStatus.applied === false && event.data.paymentStatus.cancelled === false) {
     const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
     if (menuItemChangeAgency) {
       menuItemChangeAgency.disabled = false
