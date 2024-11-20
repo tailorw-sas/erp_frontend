@@ -272,12 +272,20 @@ async function goToList() {
 async function getTransactionStatusList() {
   try {
     const payload = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        },
+        {
+          key: 'antiToIncome',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 100,
       page: 0,
