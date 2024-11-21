@@ -542,9 +542,11 @@ onMounted(() => {
     <h3 class="mb-0">
       Management Bank Reconciliation
     </h3>
-    <div class="my-2 flex justify-content-end px-0">
-      <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />
-    </div>
+    <IfCan :perms="['BANK-RECONCILIATION:CREATE']">
+      <div class="my-2 flex justify-content-end px-0">
+        <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />
+      </div>
+    </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 order-0">
