@@ -12,9 +12,10 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -120,6 +121,12 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "bank_reconciliation")
     private ManageBankReconciliation reconciliation;
 
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "transaction", cascade = CascadeType.MERGE)
+    private List<Attachment> attachments;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean hasAttachments;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -152,6 +159,13 @@ public class Transaction implements Serializable {
         this.paymentDate = dto.getPaymentDate();
         this.reconciliation = dto.getReconciliation() != null ? new ManageBankReconciliation(dto.getReconciliation()) : null;
         this.adjustment = dto.isAdjustment();
+        this.attachments = dto.getAttachments() != null
+                ? dto.getAttachments().stream().map(attachmentDto -> {
+                        Attachment attachment = new Attachment(attachmentDto);
+                        attachment.setTransaction(this);
+                        return attachment;
+                    }).collect(Collectors.toList())
+                : null;
     }
 
     public TransactionDto toAggregateParent() {
@@ -183,7 +197,13 @@ public class Transaction implements Serializable {
                 manual,
                 adjustment,
                 paymentDate,
-                reconciliation != null ? reconciliation.toAggregateSimple() : null
+                reconciliation != null ? reconciliation.toAggregateSimple() : null,
+                attachments != null ? attachments.stream().map(Attachment::toAggregate).collect(Collectors.toList()) : null
         );
+    }
+
+    @PostLoad
+    public void initDefaultValue() {
+        hasAttachments = (attachments != null && !attachments.isEmpty());
     }
 }

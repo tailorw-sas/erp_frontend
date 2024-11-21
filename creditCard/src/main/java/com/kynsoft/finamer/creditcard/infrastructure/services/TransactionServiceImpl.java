@@ -216,7 +216,7 @@ public class TransactionServiceImpl implements ITransactionService {
     private PaginatedResponse getPaginatedSearchResponse(Page<Transaction> data) {
         List<TransactionSearchResponse> responseList = new ArrayList<>();
         for (Transaction entity : data.getContent()) {
-            responseList.add(new TransactionSearchResponse(entity.toAggregate()));
+            responseList.add(new TransactionSearchResponse(entity.toAggregate(), entity.getHasAttachments()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
