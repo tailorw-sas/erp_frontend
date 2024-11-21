@@ -331,7 +331,7 @@ onMounted(async () => {
       >
 
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="import-ellipsis-text">
             <span style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
@@ -400,12 +400,20 @@ onMounted(async () => {
   text-align: left !important;
 }
 
-.ellipsis-text {
+.import-ellipsis-text {
   white-space: pre-wrap; /* Respeta los saltos de línea */
   //overflow: hidden;
   //text-overflow: ellipsis;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
+  //max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
   word-wrap: break-word; /* Permite dividir palabras largas */
+}
+
+.ellipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
 }
 
 .border-round-bottom {

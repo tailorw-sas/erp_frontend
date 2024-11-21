@@ -53,7 +53,7 @@ const columns: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false },
+  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false, minWidth: '150px' },
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -129,7 +129,7 @@ async function getErrorList() {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+          rowError += `- ${err.message?.trim()}\n`
         }
         rowExpandable.push({ ...iterator.row })
         newListItems.push(
@@ -137,7 +137,7 @@ async function getErrorList() {
             ...iterator.row,
             id: iterator.id,
             fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
-            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n${rowError}`,
             hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
             invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
             rowExpandable,
@@ -177,6 +177,7 @@ async function importFile() {
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
+      options.value.loading = false
       return
     }
     const uuid = uuidv4()
@@ -330,7 +331,7 @@ onMounted(async () => {
         @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="import-ellipsis-text">
             <span style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
@@ -358,7 +359,7 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importFile" />
+        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete || !inputFile" @click="importFile" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
