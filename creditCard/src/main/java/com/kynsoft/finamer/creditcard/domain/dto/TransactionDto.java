@@ -6,8 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -48,6 +49,7 @@ public class TransactionDto {
     private boolean adjustment;
     private LocalDateTime paymentDate;
     private ManageBankReconciliationDto reconciliation;
+    private List<AttachmentDto> attachments = new ArrayList<>();
 
     //uso -> toAggregateParent
     public TransactionDto(
