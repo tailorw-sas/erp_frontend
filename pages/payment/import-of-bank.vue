@@ -41,7 +41,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Total Amount', type: 'text' },
   { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
   { field: 'remarks', header: 'Remark', type: 'text' },
-  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
+  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ async function getErrorList() {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+          rowError += `- ${err.message?.trim()}\n`
         }
 
         const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
@@ -114,7 +114,7 @@ async function getErrorList() {
             ...iterator.row,
             id: iterator.id,
             transactionDate: dateTemp,
-            impSta: `Warning row ${iterator.row.rowNumber}: \n ${rowError}`,
+            impSta: `Warning row ${iterator.row.rowNumber}: \n${rowError}`,
             amount: iterator.row.amount ? formatNumber(iterator.row.amount) : 0,
             loadingEdit: false,
             loadingDelete: false
@@ -152,6 +152,7 @@ async function importFile() {
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
+      options.value.loading = false
       return
     }
     const uuid = uuidv4()
@@ -304,7 +305,7 @@ onMounted(async () => {
         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="import-ellipsis-text">
             <span style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
@@ -312,7 +313,7 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete"
+          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete || !inputFile"
           @click="importFile"
         />
         <Button
@@ -329,14 +330,5 @@ onMounted(async () => {
   background-color: transparent !important;
   border: none !important;
   text-align: left !important;
-}
-
-.ellipsis-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  max-width: 150px;
-  /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>
