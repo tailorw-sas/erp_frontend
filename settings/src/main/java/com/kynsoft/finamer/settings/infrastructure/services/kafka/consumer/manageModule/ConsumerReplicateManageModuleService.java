@@ -23,15 +23,15 @@ public class ConsumerReplicateManageModuleService {
 
     //@KafkaListener(topics = "finamer-module", groupId = "settings-entity-replica")
     public void listen(String event) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(event);
-
-            ReplicateModuleKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateModuleKafka.class);
-            CreateManageModuleCommand command = new CreateManageModuleCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.getStatus());
-            mediator.send(command);
-        } catch (JsonProcessingException ex) {
-            Logger.getLogger(com.kynsoft.finamer.settings.infrastructure.services.kafka.consumer.manageModule.ConsumerReplicateManageModuleService.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            JsonNode rootNode = objectMapper.readTree(event);
+//
+//            ReplicateModuleKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateModuleKafka.class);
+//            CreateManageModuleCommand command = new CreateManageModuleCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.getStatus());
+//            mediator.send(command);
+//        } catch (JsonProcessingException ex) {
+//            Logger.getLogger(com.kynsoft.finamer.settings.infrastructure.services.kafka.consumer.manageModule.ConsumerReplicateManageModuleService.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
 }
