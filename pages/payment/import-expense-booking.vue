@@ -60,7 +60,7 @@ const columns: IColumn[] = [
   { field: 'balance', header: 'Amount', type: 'text' },
   { field: 'transactionType', header: 'Trans.', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
-  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
+  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ async function getErrorList() {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+          rowError += `- ${err.message?.trim()}\n`
         }
 
         // const datTemp = new Date(iterator.row.transactionDate)
@@ -138,7 +138,7 @@ async function getErrorList() {
             checkIn: dayjs(iterator.row.checkIn).format('YYYY-MM-DD'),
             checkOut: dayjs(iterator.row.checkOut).format('YYYY-MM-DD'),
             balance: iterator.row.balance ? formatNumber(iterator.row.balance) : 0,
-            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n${rowError}`,
             loadingEdit: false,
             loadingDelete: false
           }
@@ -193,6 +193,7 @@ async function importExpenseBooking() {
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
+      options.value.loading = false
       return
     }
     const uuid = uuidv4()
@@ -206,6 +207,7 @@ async function importExpenseBooking() {
 
     if (!pdfFiles || pdfFiles.length === 0) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one file', life: 10000 })
+      options.value.loading = false
       return
     }
 
@@ -446,15 +448,16 @@ onMounted(async () => {
         @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="import-ellipsis-text">
+            <span style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete"
+          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
+          :disabled="uploadComplete || !importModel.hotel || !inputFile || !fileNames"
           @click="importExpenseBooking"
         />
         <Button
@@ -471,13 +474,5 @@ onMounted(async () => {
   background-color: transparent !important;
   border: none !important;
   text-align: left !important;
-}
-
-.ellipsis-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>
