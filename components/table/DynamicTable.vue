@@ -312,7 +312,7 @@ async function deleteItem(id: string, isLocal = false) {
   }
 }
 
-async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = []) {
+async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined) {
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
@@ -324,8 +324,13 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
       }
       if (objApi) {
         const response = await GenericService.search(objApi.moduleApi, objApi.uriApi, payload)
-        for (const iterator of response.data) {
-          listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+        if (mapFunction) {
+          listItems = response.data.map(mapFunction)
+        }
+        else {
+          for (const iterator of response.data) {
+            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+          }
         }
       }
     }

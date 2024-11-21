@@ -17,7 +17,7 @@ const multiSelectLoading = ref({
 const entryCode = ref('')
 const randomCode = ref(generateRandomCode())
 const idItemToLoadFirstTime = ref('')
-const totalHotelAmount = ref(0)
+const totalAmount = ref(0)
 const totalInvoiceAmount = ref(0)
 const openDialog = ref(false)
 const toast = useToast()
@@ -36,20 +36,14 @@ const loadingSaveAll = ref(false)
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
-  onlyManul: false,
+  onlyManual: true,
   onlyInssist: false,
   hotel: [],
   date: dayjs(new Date()).startOf('month').toDate(),
 
 })
 
-const onlyManual = ref(false)
-const onlyInssist = ref(false)
-
 const hotelList = ref<any[]>([])
-const attachList = ref<any[]>([])
-const resourceList = ref<any[]>([])
-const agencyList = ref<any[]>([])
 
 const { data: userData } = useAuth()
 const confApi = reactive({
@@ -84,33 +78,63 @@ const confhotelListApi = reactive({
   uriApi: 'manage-hotel',
 })
 
-const confAttachApi = reactive({
+const confagencyListApi = reactive({
   moduleApi: 'settings',
-  uriApi: 'manage-attachment-type',
+  uriApi: 'manage-agency',
 })
-const confResourceApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
-})
-const confReconcileApi = reactive({
+const confRoomRateApi = reactive({
   moduleApi: 'invoicing',
-  uriApi: 'manage-invoice/reconcile-manual',
+  uriApi: 'manage-room-rate',
 })
-// -------------------------------------------------------------------------------------------------------
 
+// -------------------------------------------------------------------------------------------------------
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+}
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} ${data.name}`,
+    code: `${data.code}`,
+    status: data.status
+  }
+}
 const columns: IColumn[] = [
-  { field: 'fullName', header: 'FullName', type: 'text', width: '7%' },
-  { field: 'checkIn', header: 'Check In', type: 'date', width: '9%' },
-  { field: 'checkOut', header: 'Check Out', type: 'date', width: '9%' },
-  { field: 'children', header: 'Children', type: 'text', width: '7%' },
-  { field: 'adults', header: 'Adults', type: 'text', width: '7%' },
-  { field: 'roomType', header: 'Room Type', type: 'text', width: '11%' },
-  { field: 'nights', header: 'Nights', type: 'text', width: '7%' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text', width: '10%' },
-  { field: 'hotelAmountTemp', header: 'Hotel Amount', type: 'text', width: '11%' },
-  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '12%' },
+  { field: 'invoiceId', header: 'Id', type: 'text' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { ...confhotelListApi, keyValue: 'name', mapFunction } },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: { ...confagencyListApi, keyValue: 'name', mapFunction } },
+  { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
+  { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
+  { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   { field: 'status', header: 'Reverse Status', width: '12%', frozen: true, showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
+
+const columnsExpandable: IColumn[] = [
+  { field: 'firstName', header: 'First Name', type: 'text' },
+  { field: 'lastName', header: 'Last Name', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'date' },
+  { field: 'checkOut', header: 'Check Out', type: 'date' },
+  { field: 'nights', header: 'Nights', type: 'text' },
+  { field: 'adults', header: 'Adults', type: 'text' },
+  { field: 'children', header: 'Children', type: 'text' },
+  { field: 'roomType', header: 'Room Type', type: 'text' },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
+]
+const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 // -------------------------------------------------------------------------------------------------------
 function generateRandomCode() {
   return Math.floor(100000 + Math.random() * 900000).toString()
@@ -130,12 +154,12 @@ const options = ref({
   tableName: 'Undo Import',
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
+  expandableRows: true,
   loading: false,
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
   selectAllItemByDefault: true,
   showFilters: true,
-  expandableRows: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -176,13 +200,7 @@ function openUndo() {
   openDialog.value = true
 }
 async function onMultipleSelect(data: any) {
-  const bookingIdsSelected = [...data]
-
-  if (bookingIdsSelected.length > 0) {
-    selectedElements.value = bookinglistItems.value
-      .filter(booking => bookingIdsSelected.includes(booking.id))
-      .map(booking => booking.invoice.id)
-  }
+  selectedElements.value = [...data]
 }
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
@@ -204,17 +222,29 @@ async function getList() {
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
 
+    totalInvoiceAmount.value = 0
+    totalAmount.value = 0
+
     const existingIds = new Set(listItems.value.map(item => item.id))
     selectedInvoiceIds.value = []
     for (const iterator of dataList) {
       // Verificar si el ID ya existe en la lista
+      totalAmount.value += iterator.dueAmount || 0 // Asegúrate de manejar posibles valores nulos
+      totalInvoiceAmount.value += iterator.invoiceAmount || 0
       if (!existingIds.has(iterator.id)) {
         newListItems.push({
           ...iterator,
+          hotel: {
+            ...iterator?.hotel,
+            name: `${iterator?.hotel?.code} - ${iterator?.hotel?.name}`
+          },
+          agency: {
+            ...iterator?.agency,
+            name: `${iterator?.agency?.code} - ${iterator?.agency?.name}`
+          },
+          roomRates: [],
           loadingEdit: false,
           loadingDelete: false,
-          // invoiceDate: new Date(iterator?.invoiceDate),
-
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
         selectedInvoiceIds.value.push(iterator.id)
@@ -222,14 +252,14 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
-    return listItems
   }
 
   catch (error) {
+    options.value.loading = false
     console.error(error)
   }
   finally {
-    // options.value.loading = false
+    options.value.loading = false
   }
 }
 async function getBookingList(clearFilter: boolean = false) {
@@ -298,8 +328,8 @@ async function getBookingList(clearFilter: boolean = false) {
 
     for (const iterator of dataList) {
       //    const id = v4()
-      totalHotelAmount.value += iterator.hotelAmount || 0 // Asegúrate de manejar posibles valores nulos
-      totalInvoiceAmount.value += iterator.invoiceAmount || 0
+      totalAmount.value += iterator.invoiceAmount || 0 // Asegúrate de manejar posibles valores nulos
+      totalInvoiceAmount.value += iterator.dueAmount || 0
 
       bookinglistItems.value = [...bookinglistItems.value, {
         ...iterator,
@@ -453,23 +483,13 @@ function onSortField(event: any) {
 }
 
 async function searchAndFilter() {
-  const newPayload: IQueryRequest = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.ASC
-  }
-
-  // Mantener los filtros existentes
-  newPayload.filter = [
-    ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
-  ]
-
   // Filtros adicionales
-  if (filterToSearch.value.date) {
-    newPayload.filter.push({
+  const filterOfInvoiceDate = payload.value.filter.find((item: any) => item?.key === 'invoiceDate')
+  if (filterOfInvoiceDate) {
+    filterOfInvoiceDate.value = dayjs(filterToSearch.value.date).startOf('day').format('YYYY-MM-DD')
+  }
+  else {
+    payload.value.filter.push({
       key: 'invoiceDate',
       operator: 'EQUALS',
       value: dayjs(filterToSearch.value.date).startOf('day').format('YYYY-MM-DD'),
@@ -478,53 +498,44 @@ async function searchAndFilter() {
     })
   }
 
-  if (filterToSearch.value.hotel?.length > 0) {
-    const selectedHotelIds = filterToSearch.value.hotel
+  // Filter by hotel.id
+  const filterOfHotelId = payload.value.filter.find((item: any) => item?.key === 'hotel.id')
+  if (filterOfHotelId) {
+    filterOfHotelId.value = filterToSearch.value.hotel
       .filter((item: any) => item?.id !== 'All')
       .map((item: any) => item?.id)
-
-    if (selectedHotelIds.length > 0) {
-      newPayload.filter.push({
-        key: 'hotel.id',
-        operator: 'IN',
-        value: selectedHotelIds,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      })
-    }
   }
-
-  // Aplicar solo un filtro de invoiceStatus basado en el checkbox marcado
-  if (filterToSearch.value.onlyManual) {
-    newPayload.filter.push({
-      key: 'invoiceStatus',
+  else {
+    payload.value.filter.push({
+      key: 'hotel.id',
       operator: 'IN',
-      value: ['PROCECSED'], // Solo se aplica este filtro
-      logicalOperation: 'AND'
+      value: filterToSearch.value.hotel
+        .filter((item: any) => item?.id !== 'All')
+        .map((item: any) => item?.id),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
     })
-  } /* else if (filterToSearch.value.onlyInssist) {
-    newPayload.filter.push({
-      key: 'invoiceStatus',
-      operator: 'IN',
-      value: ['SENT'], // Solo se aplica este filtro
-      logicalOperation: 'AND'
-    });
   }
-*/
-  // Actualizar el payload
-  payload.value = newPayload
+
+  // Filter by importType
+  // const filterOfImportType = payload.value.filter.find((item: any) => item?.key === 'importType')
+  // if (filterOfImportType) {
+  //   filterOfImportType.value = ['BOOKING_FROM_FILE_VIRTUAL_HOTEL', 'INVOICE_BOOKING_FROM_FILE']
+  // }
+  // else {
+  //   payload.value.filter.push({
+  //     key: 'importType',
+  //     operator: 'IN',
+  //     value: ['BOOKING_FROM_FILE_VIRTUAL_HOTEL', 'INVOICE_BOOKING_FROM_FILE'],
+  //     logicalOperation: 'AND',
+  //     type: 'filterSearch'
+  //   })
+  // }
 
   // Obtener la lista de facturas
   options.value.selectAllItemByDefault = false
-  await getList() // Asegúrate de que esto funcione como esperas
-  const dataList = await getBookingList() // Ahora esto debería devolver los datos
-
-  // Seleccionar automáticamente todos los elementos retornados
-  /* if (dataList && dataList.length > 0) {
-    selectedElements.value = dataList; // Llenar selectedElements con los elementos obtenidos
-  } else {
-    selectedElements.value = []; // Asegurarse de que esté vacío si no hay resultados
-  } */
+  await getList()
+  // await getBookingList()
 }
 
 function clearFilterToSearch() {
@@ -535,7 +546,7 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     // Mantener el primer elemento del enum como valor predeterminado
     search: '', // Dejar el campo de búsqueda en blanco
-    onlyManual: false,
+    onlyManual: true,
     onlyInssist: false,
     hotel: [], // Restablecer a valor predeterminado
     date: dayjs(new Date()).startOf('month').toDate(),
@@ -543,7 +554,7 @@ function clearFilterToSearch() {
   }
   selectedElements.value = []
   bookinglistItems.value = []
-  totalHotelAmount.value = 0
+  totalAmount.value = 0
   totalInvoiceAmount.value = 0
   Pagination.value.totalElements = 0
 }
@@ -576,9 +587,68 @@ async function applyUndo() {
 }
 
 const disabledSearch = computed(() => {
-  // return !(filterToSearch.value.criteria && filterToSearch.value.search)
-  return false
+  return filterToSearch.value.hotel.length === 0 || filterToSearch.value.date === null
 })
+
+async function getRoomRateList(invoiceId: string = '') {
+  if (invoiceId === '') { return }
+  try {
+    let listRoomRateTemp: any[] = []
+
+    const payload: IQueryRequest = {
+      filter: [
+        {
+          key: 'booking.invoice.id',
+          operator: 'EQUALS',
+          value: invoiceId,
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 50,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+
+    const response = await GenericService.search(confRoomRateApi.moduleApi, confRoomRateApi.uriApi, payload)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      listRoomRateTemp = [...listRoomRateTemp, {
+        ...iterator,
+        firstName: iterator?.booking?.firstName,
+        lastName: iterator?.booking?.lastName,
+        checkIn: iterator?.checkIn ? dayjs(iterator?.checkIn).format('YYYY-MM-DD') : '',
+        checkOut: iterator?.checkOut ? dayjs(iterator?.checkOut).format('YYYY-MM-DD') : '',
+        children: iterator?.children || 0,
+        adults: iterator?.adults || 0,
+        roomType: iterator?.booking?.roomType ? { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` } : null,
+        ratePlan: iterator?.booking?.ratePlan ? { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` } : null,
+        invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
+        hotelAmount: formatNumber(iterator?.hotelAmount) || 0,
+      }]
+    }
+    return listRoomRateTemp
+  }
+  catch (error) {
+    console.error(error)
+  }
+}
+
+async function getRoomRateByInvoice(invoiceId: string) {
+  const objInvoice = listItems.value.find((item: any) => item.id === invoiceId)
+
+  if (objInvoice) {
+    objInvoice.roomRates = await getRoomRateList(invoiceId)
+  }
+}
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
@@ -590,7 +660,8 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   // filterToSearch.value.criterial = ENUM_FILTER[0]
 
-  // getList()
+  // await getList()
+  // selectedElements.value = listItems.value.map((item: any) => item.id)
 })
 </script>
 
@@ -691,10 +762,17 @@ onMounted(async () => {
         </div>
         <div class="m-3">
           <DynamicTable
-            :data="bookinglistItems" :columns="columns" :options="options" :pagination="Pagination"
-            @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
-            @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
-            @on-sort-field="onSortField" @update:clicked-item="onMultipleSelect($event)"
+            :data="listItems"
+            :columns="columns"
+            :options="options"
+            :pagination="Pagination"
+            @on-confirm-create="clearForm"
+            @on-change-pagination="payloadOnChangePage = $event"
+            @on-change-filter="parseDataTableFilter"
+            @on-list-item="resetListItems"
+            @on-sort-field="onSortField"
+            @update:clicked-item="onMultipleSelect($event)"
+            @on-expand-row="getRoomRateByInvoice($event)"
           >
             <template #column-message="{ data }">
               <div id="fieldError">
@@ -715,14 +793,37 @@ onMounted(async () => {
               >
                 <Row>
                   <Column
-                    footer="Totals:" :colspan="9"
+                    footer="Totals:" :colspan="8"
                     footer-style="text-align:right; font-weight: 700"
                   />
-                  <Column :footer="totalHotelAmount ? formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100) : ''" :colspan="1" />
+                  <Column :footer="totalAmount ? formatNumber(Math.round((totalAmount + Number.EPSILON) * 100) / 100) : ''" :colspan="1" />
                   <Column :footer="totalInvoiceAmount ? formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100) : ''" :colspan="1" />
                   <Column :colspan="1" />
                 </Row>
               </ColumnGroup>
+            </template>
+
+            <template #expansion="{ data: item }">
+              <div class="p-0 m-0">
+                <DataTable :value="item.roomRates" striped-rows>
+                  <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                  <template #empty>
+                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                      <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                        <div class="row">
+                          <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                        </div>
+                        <div class="row">
+                          <p>{{ messageForEmptyTable }}</p>
+                        </div>
+                      </span>
+                      <span v-else class="flex flex-column align-items-center justify-content-center">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                      </span>
+                    </div>
+                  </template>
+                </DataTable>
+              </div>
             </template>
           </DynamicTable>
         </div>

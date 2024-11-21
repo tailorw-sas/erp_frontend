@@ -22,6 +22,7 @@ export interface IColumn {
     moduleApi: string
     uriApi: string
     keyValue?: string
+    mapFunction?: (item: any) => any
   }
   filter?: {
     // Define aquí los campos de filtro según tu necesidad
