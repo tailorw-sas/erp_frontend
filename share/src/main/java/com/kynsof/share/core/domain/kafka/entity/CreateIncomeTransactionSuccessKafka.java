@@ -25,4 +25,5 @@ public class CreateIncomeTransactionSuccessKafka {
     private List<ManageBookingKafka> bookings;
     private LocalDateTime invoiceDate;
     private UUID relatedPaymentDetailIds;
+    private UUID employeeId;
 }
