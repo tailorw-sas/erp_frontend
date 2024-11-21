@@ -19,6 +19,9 @@ import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
 const route = useRoute()
 const toast = useToast()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+const authStore = useAuthStore()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
@@ -39,8 +42,13 @@ const contextMenu = ref()
 const contextMenuTransaction = ref()
 const currentSavedPaymentStatus = ref() // Guardar estado actual en backend para listar las opciones de posibles estados a seleccionar
 
-const menuListItems = [
+enum MenuType {
+  unBind
+}
+
+const allMenuListItems = [
   {
+    type: MenuType.unBind,
     label: 'Unbind Transaction',
     icon: 'pi pi-dollar',
     iconSvg: 'M304.1 405.9c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-59.3 59.3-155.7 59.3-215 0-59.3-59.3-59.3-155.7 0-215l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-28.1 28.1-28.1 73.8 0 101.8 28.1 28.1 73.8 28.1 101.8 0l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6zm-56.6-260.2c4.7 4.7 12.3 4.7 17 0l44.7-44.7c28.1-28.1 73.8-28.1 101.8 0 28.1 28.1 28.1 73.8 0 101.8l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6c4.7 4.7 12.3 4.7 17 0l44.7-44.7c59.3-59.3 59.3-155.7 0-215-59.3-59.3-155.7-59.3-215 0l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6zm234.8 359.3l22.6-22.6c9.4-9.4 9.4-24.6 0-33.9L63.6 7c-9.4-9.4-24.6-9.4-33.9 0L7 29.7c-9.4 9.4-9.4 24.6 0 33.9l441.4 441.4c9.4 9.4 24.6 9.4 33.9 0z',
@@ -51,6 +59,8 @@ const menuListItems = [
     disabled: false,
   }
 ]
+
+const menuListItems = ref<any[]>([])
 
 const confApi = reactive({
   moduleApi: 'creditcard',
@@ -189,6 +199,11 @@ const computedTransactionAmountSelected = computed(() => {
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+
+async function canEditBankReconciliation() {
+  return (status.value === 'authenticated' && (isAdmin || authStore.can(['BANK-RECONCILIATION:EDIT'])))
+}
+
 async function openNewAdjustmentTransactionDialog() {
   newAdjustmentTransactionDialogVisible.value = true
 }
@@ -657,7 +672,13 @@ function onSortField(event: any) {
 async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  contextMenu.value.show(event.originalEvent)
+  menuListItems.value = [...allMenuListItems]
+  if (!await canEditBankReconciliation()) {
+    menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
+  }
+  if (menuListItems.value.length > 0) {
+    contextMenu.value.show(event.originalEvent)
+  }
 }
 
 watch(payloadOnChangePage, (newValue) => {
@@ -827,9 +848,11 @@ onMounted(async () => {
         v-tooltip.top="'Payment Amount'" :value="`Payment Amount: $${formatNumber(paymentAmount)}`"
       />
       <div>
-        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
-        <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
-        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+        <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
+          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+          <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
+          <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+        </IfCan>
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
       </div>
     </div>
