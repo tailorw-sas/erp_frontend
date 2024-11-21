@@ -1168,10 +1168,11 @@ onMounted(() => {
           <div class="flex align-items-center justify-content-center p-0 m-0">
             <!-- <pre>{{ objData }}</pre> -->
             <Button
-              v-if="objData.hasAttachment"
+              v-if="objData.hasAttachments"
               :icon="column.icon"
               class="p-button-rounded p-button-text w-2rem h-2rem"
               aria-label="Submit"
+              :style="{ color: '#000' }"
             />
           </div>
           <!-- style="color: #616161;" -->
@@ -1199,9 +1200,11 @@ onMounted(() => {
     </div>
     <div v-if="attachmentDialogOpen">
       <AttachmentTransactionDialog
-        :close-dialog="(total: number) => {
+        :close-dialog="(refreshTransactions: boolean) => {
           attachmentDialogOpen = false
-          // item.hasAttachments = total > 0
+          if (refreshTransactions) {
+            getList()
+          }
         }" header="Manage Transaction Attachment" :open-dialog="attachmentDialogOpen" :selected-transaction="contextMenuTransaction"
       />
     </div>

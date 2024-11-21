@@ -59,6 +59,7 @@ const loadingSearch = ref(false)
 const loadingDefaultResourceType = ref(false)
 const loadingDefaultAttachmentType = ref(false)
 const hasDefaultAttachment = ref(true)
+const initialTotalAttachments = ref(0)
 
 const idItem = ref('')
 const item = ref<GenericObject>({
@@ -580,6 +581,14 @@ function downloadFile() {
   }
 }
 
+function onCloseDialog() {
+  clearForm()
+  // Se debe actualizar la lista de transacciones si varia el hasAttachments
+  const refreshTransactions = (initialTotalAttachments.value > 0 && ListItems.value.length === 0)
+    || (initialTotalAttachments.value === 0 && ListItems.value.length > 0)
+  props.closeDialog(refreshTransactions)
+}
+
 watch(() => props.selectedTransaction, () => {
   transaction.value = props.selectedTransaction
 
@@ -614,7 +623,7 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   const transaction = props.selectedTransaction?.id
   if (transaction) {
     Payload.value.filter = [{
@@ -624,8 +633,9 @@ onMounted(() => {
       logicalOperation: 'AND'
     }]
   }
-  getList()
   listDefaultData()
+  await getList()
+  initialTotalAttachments.value = ListItems.value.length
 })
 </script>
 
@@ -642,7 +652,7 @@ onMounted(() => {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
     }"
-    @hide="closeDialog(ListItems.length)"
+    @hide="onCloseDialog()"
   >
     <div class="grid p-fluid formgrid">
       <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
@@ -791,10 +801,7 @@ onMounted(() => {
                 />
                 <Button
                   v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times"
-                  @click="() => {
-                    clearForm()
-                    closeDialog(ListItems.length)
-                  }"
+                  @click="onCloseDialog"
                 />
               </template>
             </EditFormV2>
@@ -805,7 +812,7 @@ onMounted(() => {
         <AttachmentTransactionHistoryDialog
           :selected-attachment="selectedAttachment"
           :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
-          :open-dialog="attachmentHistoryDialogOpen" :selected-invoice-obj="transaction"
+          :open-dialog="attachmentHistoryDialogOpen" :selected-transaction="transaction"
           header="Attachment Status History" :attachment-type="item.type"
         />
       </div>
