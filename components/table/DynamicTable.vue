@@ -9,7 +9,7 @@ import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterf
 import { getLastDayOfMonth } from '../../utils/helpers'
 import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
-import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
+import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
@@ -180,6 +180,7 @@ const menuItems = ref([
 const menuItemsDate = ref(ENUM_OPERATOR_DATE)
 const menuItemsString = ref(ENUM_OPERATOR_STRING)
 const menuItemsSelect = ref(ENUM_OPERATOR_SELECT)
+const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
 // const menuItemsBoolean = ref(ENUM_OPERATOR_BOOLEAN)
 
 const selectMultiple1: Ref = ref(null)
@@ -355,6 +356,9 @@ async function getOptionsList() {
         case 'slot-text':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
+        case 'number':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
         case 'select':
           filters1.value[iterator.field] = { constraints: [{ value: null, matchMode: FilterMatchMode.IN }] }
           // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
@@ -396,7 +400,9 @@ async function getOptionsListOldVersion() {
     for (const iterator of props.columns) {
       switch (iterator.type) {
         case 'text':
-
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -706,6 +712,41 @@ defineExpose({ clearSelectedItems })
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                    <span :class="item.icon" />
+                    <span class="ml-2">{{ item.label }}</span>
+                  </a>
+                </template>
+              </Menu>
+            </div>
+
+            <div v-if="column.type === 'number'" class="flex flex-column">
+              <Dropdown
+                v-if="true"
+                v-model="filterModel.matchMode"
+                :options="menuItemsNumeric"
+                option-label="label"
+                placeholder="Select a operator"
+                class="w-full mb-2"
+              />
+              <InputNumber
+                v-model="filterModel.value"
+                class="p-column-filter w-full"
+                placeholder="Write a number"
+              />
+              <!-- @change="filterCallback()" -->
+              <Button
+                v-if="false"
+                type="button"
+                icon="pi pi-filter"
+                text
+                aria-haspopup="true"
+                :aria-controls="`overlayPanel_${index}`"
+                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
+              />
+
+              <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">
                   <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
