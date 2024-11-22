@@ -2,6 +2,10 @@ package com.kynsoft.finamer.payment.infrastructure.services.kafka.consumer.incom
 
 import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionSuccessKafka;
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsof.share.utils.ServiceLocator;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -19,17 +23,20 @@ public class ConsumerCreateIncomeTransactionSuccess {
 
     private final IManageHotelService manageHotelService;
     private final IManageAgencyService manageAgencyService;
+    private final ServiceLocator<IMediator> serviceLocator;
 
     public ConsumerCreateIncomeTransactionSuccess(IManageInvoiceService manageInvoiceService,
                                                   IPaymentDetailService paymentDetailService,
                                                   IManageBookingService manageBookingService,
                                                   IManageHotelService manageHotelService,
-                                                  IManageAgencyService manageAgencyService) {
+                                                  IManageAgencyService manageAgencyService,
+                                                  ServiceLocator<IMediator> serviceLocator) {
         this.manageInvoiceService = manageInvoiceService;
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.manageHotelService = manageHotelService;
         this.manageAgencyService = manageAgencyService;
+        this.serviceLocator = serviceLocator;
     }
 
     @KafkaListener(topics = "finamer-create-income-transaction-success", groupId = "income-entity-replica")
@@ -43,6 +50,11 @@ public class ConsumerCreateIncomeTransactionSuccess {
         PaymentDetailDto paymentDetailDto =paymentDetailService.findById(objKafka.getRelatedPaymentDetailIds());
         paymentDetailDto.setManageBooking(manageInvoiceDto.getBookings().get(0));
         paymentDetailService.create(paymentDetailDto);
+        //TODO
+        //Aplicar pago
+        ApplyPaymentDetailCommand applyPaymentDetailCommand = new ApplyPaymentDetailCommand(paymentDetailDto.getId(),
+                objKafka.getBookings().get(0).getId(),objKafka.getEmployeeId());
+        serviceLocator.getBean(IMediator.class).send(applyPaymentDetailCommand);
     }
 
     private List<ManageBookingDto> createManageBooking(List<ManageBookingKafka> manageBookingKafkas){
