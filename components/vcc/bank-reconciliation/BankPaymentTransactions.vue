@@ -6,7 +6,6 @@ import ContextMenu from 'primevue/contextmenu'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
-import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import { formatCardNumber } from '~/components/vcc/vcc_utils'
 
 const props = defineProps({
@@ -54,9 +53,9 @@ const columns: IColumn[] = [
   { field: 'creditCardType', header: 'CC Type', type: 'text' },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'netAmount', header: 'T.Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'categoryType', header: 'Trans Cat Type', type: 'text' },
   { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, showFilter: false },
@@ -209,15 +208,6 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
         iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        iterator.amount = formatNumber(iterator.amount)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
-        iterator.commission = formatNumber(iterator.commission)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
-        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {

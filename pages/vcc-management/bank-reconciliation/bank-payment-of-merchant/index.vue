@@ -128,9 +128,9 @@ const columns: IColumn[] = [
   { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'amountStr', header: 'Amount', type: 'text' },
-  { field: 'commissionStr', header: 'Commission', type: 'text' },
-  { field: 'netAmountStr', header: 'T.Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number' },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -387,11 +387,8 @@ function formatAdjustment(data: any) {
     subTotals.value.amount += data.amount
   }
   newAdjustment.commission = 0
-  newAdjustment.commissionStr = formatNumber(0)
   newAdjustment.netAmount = data.amount
-  newAdjustment.netAmountStr = formatNumber(data.amount)
   newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.amount
-  newAdjustment.amountStr = formatNumber(newAdjustment.amount)
   newAdjustment.adjustment = true
   if (data.transactionCategory) {
     newAdjustment.categoryType = data.transactionCategory
