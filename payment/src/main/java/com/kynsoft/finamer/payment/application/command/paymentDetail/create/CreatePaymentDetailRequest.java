@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.application.command.paymentDetail.create;
 
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsRequest;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,4 +20,7 @@ public class CreatePaymentDetailRequest {
 
     private UUID booking;
     private Boolean applyPayment;
+
+    //Para aplicar pago Other Deductions
+    private CreateApplyOtherDeductionsRequest otherDeductions;
 }
