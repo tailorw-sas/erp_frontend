@@ -96,9 +96,16 @@ interface ListItem {
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
+const hotelFilters: IFilter[] = [{
+  key: 'isApplyByVCC',
+  operator: 'EQUALS',
+  value: true,
+  logicalOperation: 'AND'
+}]
+
 const columns: IColumn[] = [
   { field: 'reconciliationId', header: 'Id', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: hotelFilters }, sortable: true },
   { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant-bank-account', keyValue: 'name', mapFunction }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },

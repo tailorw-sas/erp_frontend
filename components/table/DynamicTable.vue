@@ -432,7 +432,7 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
-        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, [], iterator.localItems || [], iterator.objApi?.mapFunction)
+        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, iterator.objApi?.filter || [], iterator.localItems || [], iterator.objApi?.mapFunction)
         objListData[iterator.field] = response
       }
     }

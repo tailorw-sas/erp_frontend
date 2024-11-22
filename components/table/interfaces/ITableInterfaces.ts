@@ -1,4 +1,5 @@
 import type { CALENDAR_MODE } from '~/utils/Enums'
+import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 
 export interface IColumn {
   field: string
@@ -23,6 +24,7 @@ export interface IColumn {
     uriApi: string
     keyValue?: string
     mapFunction?: (item: any) => any
+    filter?: IFilter[]
   }
   filter?: {
     // Define aquí los campos de filtro según tu necesidad
