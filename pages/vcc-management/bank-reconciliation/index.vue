@@ -496,6 +496,9 @@ function getStatusFilter(element: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'merchantBankAccount') {
+      event.sortField = 'merchantBankAccount.accountNumber'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
