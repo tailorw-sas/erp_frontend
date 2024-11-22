@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.create;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsRequest;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.Getter;
@@ -25,10 +26,12 @@ public class CreatePaymentDetailCommand implements ICommand {
     private UUID booking;
     private Boolean applyPayment;
 
+    private CreateApplyOtherDeductionsRequest otherDeductions;
+
     private PaymentDto paymentResponse;
     private final IMediator mediator;
 
-    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee, UUID booking, Boolean applyPayment, final IMediator mediator) {
+    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee, UUID booking, Boolean applyPayment, final IMediator mediator, CreateApplyOtherDeductionsRequest otherDeductions) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.payment = payment;
@@ -39,6 +42,7 @@ public class CreatePaymentDetailCommand implements ICommand {
         this.booking = booking;
         this.applyPayment = applyPayment;
         this.mediator = mediator;
+        this.otherDeductions = otherDeductions;
     }
 
     public static CreatePaymentDetailCommand fromRequest(CreatePaymentDetailRequest request, final IMediator mediator) {
@@ -51,7 +55,8 @@ public class CreatePaymentDetailCommand implements ICommand {
                 request.getEmployee(),
                 request.getBooking(),
                 request.getApplyPayment(),
-                mediator
+                mediator,
+                request.getOtherDeductions()
         );
     }
 

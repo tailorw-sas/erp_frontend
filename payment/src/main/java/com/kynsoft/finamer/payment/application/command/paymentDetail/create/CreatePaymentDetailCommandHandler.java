@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeRequest;
@@ -85,7 +86,8 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         }
 
         //Other Deductions
-        if (!paymentTransactionTypeDto.getCash() && !paymentTransactionTypeDto.getDeposit()) {
+        boolean otherDeductionAndApplyPayment = !paymentTransactionTypeDto.getCash() && !paymentTransactionTypeDto.getDeposit() && command.getApplyPayment();
+        if (!paymentTransactionTypeDto.getCash() && !paymentTransactionTypeDto.getDeposit() && !command.getApplyPayment()) {
             UpdateIfNotNull.updateDouble(paymentDto::setOtherDeductions, paymentDto.getOtherDeductions() + command.getAmount(), updatePayment::setUpdate);
 
             //Aplicando regla para el campo Remark
@@ -133,7 +135,9 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         }
 
-        this.paymentDetailService.create(newDetailDto);
+        if (!otherDeductionAndApplyPayment) {
+            this.paymentDetailService.create(newDetailDto);
+        }
 
         if (updatePayment.getUpdate() > 0) {
             this.paymentService.update(paymentDto);
@@ -144,7 +148,16 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             paymentDto.setApplyPayment(message.getPayment().isApplyPayment());
             paymentDto.setPaymentStatus(message.getPayment().getPaymentStatus());
         }
-
+        if (command.getApplyPayment() && !paymentTransactionTypeDto.getCash() && !paymentTransactionTypeDto.getDeposit()) {
+            command.getMediator().send(new CreateApplyOtherDeductionsCommand(
+                    command.getOtherDeductions().getPayment(), 
+                    command.getOtherDeductions().getTransactionType(), 
+                    command.getOtherDeductions().getRemark(), 
+                    command.getOtherDeductions().getBooking(), 
+                    command.getMediator(), 
+                    command.getOtherDeductions().getEmployee()
+            ));
+        }
         command.setPaymentResponse(paymentDto);
     }
 }
