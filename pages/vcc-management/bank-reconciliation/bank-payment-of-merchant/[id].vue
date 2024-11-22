@@ -162,9 +162,9 @@ const columns: IColumn[] = [
   { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'amountStr', header: 'Amount', type: 'text' },
-  { field: 'commissionStr', header: 'Commission', type: 'text' },
-  { field: 'netAmountStr', header: 'T.Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number' },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -329,7 +329,7 @@ async function getList() {
         iterator.categoryType = { id: iterator.categoryType.id, name: `${iterator.categoryType.code} - ${iterator.categoryType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'subCategoryType') && iterator.subCategoryType) {
-        iterator.subCategoryType = { id: iterator.subCategoryType.id, name: `${iterator.subCategoryType.code} - ${iterator.subCategoryType.name}` }
+        iterator.subCategoryType = { id: iterator.subCategoryType.id, name: `${iterator.subCategoryType.code} - ${iterator.subCategoryType.name}`, negative: iterator.subCategoryType.negative }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
@@ -339,16 +339,28 @@ async function getList() {
         iterator.referenceId = String(iterator.id)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        count.amount += iterator.amount
-        iterator.amountStr = formatNumber(iterator.amount)
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.amount -= iterator.amount
+        }
+        else {
+          count.amount += iterator.amount
+        }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
-        count.commission += iterator.commission
-        iterator.commissionStr = formatNumber(iterator.commission)
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.commission -= iterator.commission
+        }
+        else {
+          count.commission += iterator.commission
+        }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
-        count.net += iterator.netAmount
-        iterator.netAmountStr = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.net -= iterator.netAmount
+        }
+        else {
+          count.net += iterator.netAmount
+        }
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -643,7 +655,6 @@ function bindAdjustment(data: any) {
 function formatAdjustment(data: any) {
   data.id = v4() // id temporal para poder eliminar de forma local
   data.checkIn = dayjs().format('YYYY-MM-DD')
-  data.amount = formatNumber(data.amount)
   data.adjustment = true
   return data
 }
