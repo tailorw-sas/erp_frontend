@@ -111,7 +111,7 @@ const columns: IColumn[] = [
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
-  { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
+  { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, details: 0 })
@@ -188,9 +188,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'reconcileStatus')) {
-        iterator.statusName = iterator.reconcileStatus?.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
@@ -479,53 +476,16 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
-}
-
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
 }
 
 function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'merchantBankAccount') {
       event.sortField = 'merchantBankAccount.accountNumber'
+    }
+    if (event.sortField === 'reconcileStatus') {
+      event.sortField = 'reconcileStatus.name'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
@@ -763,6 +723,13 @@ onMounted(() => {
         @on-row-right-click="onRowRightClick"
         @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
       >
+        <template #column-reconcileStatus="{ data, column }">
+          <Badge
+            v-tooltip.top="data.reconcileStatus.name.toString()"
+            :value="data.reconcileStatus.name"
+            :class="column.statusClassMap?.find(e => e.status === data.reconcileStatus.name)?.class"
+          />
+        </template>
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
           <BankPaymentTransactions
