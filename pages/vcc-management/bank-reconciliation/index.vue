@@ -80,13 +80,26 @@ const sClassMap: IStatusClass[] = [
   { status: 'Created', class: 'vcc-text-created' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
 ]
+
+interface DataListItem {
+  id: string
+  accountNumber: string
+  description: string
+  status: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: string
+}
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'reconciliationId', header: 'Id', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
-  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
+  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant-bank-account', keyValue: 'name', mapFunction }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
@@ -129,6 +142,14 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.accountNumber} - ${data.description}`,
+    status: data.status
+  }
+}
 function goToPaymentOfMerchantInNewTab(item: any) {
   const id = item.hasOwnProperty('id') ? item.id : item
   const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant/${id}`
