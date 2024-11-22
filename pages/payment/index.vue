@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import dayjs from 'dayjs'
 import { useRoute } from 'vue-router'
+import { z } from 'zod'
 import { formatNumber } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
@@ -2837,28 +2838,29 @@ async function saveApplyPayment() {
 async function saveApplyPaymentOtherDeduction() {
   if (loadingSaveApplyPayment.value === true) { return }
   try {
-    // Filtramos los objetos cuyos IDs coincidan con los del array 'selectedIds'
-    let listTemp: any[] = []
-    listTemp = applyPaymentListOfInvoiceOtherDeduction.value
-      .filter(item => idInvoicesSelectedToApplyPaymentForOtherDeduction.value.includes(item.id)).map((item) => {
-        return {
-          bookingId: item.id,
-          bookingBalance: typeof item.dueAmountTemp !== 'number' ? Number.parseFloat(item.dueAmountTemp.replace(/,/g, '')) : item.dueAmountTemp
-        }
-      })
+    if (validateForm()) {
+      let listTemp: any[] = []
+      listTemp = applyPaymentListOfInvoiceOtherDeduction.value
+        .filter(item => idInvoicesSelectedToApplyPaymentForOtherDeduction.value.includes(item.id)).map((item) => {
+          return {
+            bookingId: item.id,
+            bookingBalance: typeof item.dueAmountTemp !== 'number' ? Number.parseFloat(item.dueAmountTemp.replace(/,/g, '')) : item.dueAmountTemp
+          }
+        })
 
-    loadingSaveApplyPayment.value = true
-    const payload = {
-      payment: objItemSelectedForRightClickApplyPaymentOtherDeduction.value.id || '',
-      booking: [...listTemp], // este ya es un array de ids
-      transactionType: transactionType.value?.id || '',
-      remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark
+      loadingSaveApplyPayment.value = true
+      const payload = {
+        payment: objItemSelectedForRightClickApplyPaymentOtherDeduction.value.id || '',
+        booking: [...listTemp], // este ya es un array de ids
+        transactionType: transactionType.value?.id || '',
+        remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark
+      }
+
+      await GenericService.create('payment', 'payment-detail/apply-other-deductions', payload)
+      toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment Other Deduction has been applied successfully', life: 3000 })
+      closeModalApplyPaymentOtherDeductions()
+      getList()
     }
-
-    await GenericService.create('payment', 'payment-detail/apply-other-deductions', payload)
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment Other Deduction has been applied successfully', life: 3000 })
-    closeModalApplyPaymentOtherDeductions()
-    getList()
   }
   catch (error) {
     loadingSaveApplyPayment.value = false
@@ -3245,6 +3247,70 @@ function isRowSelectable(rowData: any) {
 
 function onRowSelectAll(event: any) {
   paymentDetailsTypeDepositSelected.value = event.filter(item => item.applyDepositValue > 0)
+}
+
+const fields: Array<FieldDefinitionType> = [
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+  },
+]
+
+const errors = ref<{ [key: string]: string[] }>({})
+
+async function validateField(fieldKey: string, value: any) {
+  const field = fields.find(f => f.field === fieldKey)
+  if (field && field.validation) {
+    const result = field.validation.safeParse(value)
+    if (!result.success) {
+      errors.value[fieldKey] = result && result.error ? result.error.issues.map(e => e.message) : []
+    }
+    else {
+      delete errors.value[fieldKey]
+    }
+  }
+}
+
+function validateForm() {
+  let isValid = true
+  fields.forEach((field) => {
+    if (field.validation) {
+      const result = field.validation.safeParse(fieldRemark.value)
+      if (!result.success) {
+        isValid = false
+        errors.value[field.field] = result && result.error ? result.error.issues.map(e => e.message) : []
+      }
+      else {
+        delete errors.value[field.field]
+      }
+    }
+  })
+  return isValid
+}
+
+async function processValidation($event: any) {
+  errors.value = {}
+  if ($event.remarkRequired === false) {
+    const decimalSchema = z.object(
+      {
+        remark: z
+          .string()
+      }
+    )
+    updateFieldProperty(fields, 'remark', 'validation', decimalSchema.shape.remark)
+  }
+  if ($event.remarkRequired === true) {
+    const decimalSchema = z.object(
+      {
+        remark: z
+          .string()
+          .min($event.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${$event.minNumberOfCharacter} characters.` })
+      }
+    )
+    updateFieldProperty(fields, 'remark', 'validation', decimalSchema.shape.remark)
+  }
 }
 
 // -------------------------------------------------------------------------------------------------------
@@ -4220,6 +4286,7 @@ onMounted(async () => {
                     :suggestions="[...transactionTypeList]"
                     @change="($event) => {
                       transactionType = $event
+                      processValidation($event)
                     }"
                     @load="async($event) => {
                       const objQueryToSearch = {
@@ -4276,7 +4343,22 @@ onMounted(async () => {
                   <label for="autocomplete" class="font-semibold"> Remark </label>
                 </div>
                 <div class="w-30rem">
-                  <InputText v-model="fieldRemark" show-clear />
+                  <InputText
+                    v-model="fieldRemark"
+                    show-clear
+                    @update:model-value="($event) => {
+                      validateField('remark', $event)
+                    }"
+                  />
+                  <div v-if="true" class="flex">
+                    <div class="w-full">
+                      <div v-if="errors.remark" class="p-error text-xs w-full">
+                        <div v-for="error in errors.remark" :key="error" class="error-message">
+                          {{ error }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
