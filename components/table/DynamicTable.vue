@@ -7,7 +7,7 @@ import type { PageState } from 'primevue/paginator'
 import type { PropType } from 'vue'
 import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
 import { getLastDayOfMonth } from '../../utils/helpers'
-import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
+import type { IColumn, IObjApi, ISortOptions } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
 import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
@@ -313,7 +313,7 @@ async function deleteItem(id: string, isLocal = false) {
   }
 }
 
-async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined) {
+async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined, sortOptions?: ISortOptions | undefined) {
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
@@ -321,7 +321,9 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
         filter,
         query: '',
         pageSize: 200,
-        page: 0
+        page: 0,
+        sortBy: sortOptions?.sortBy || 'createdAt',
+        sortType: sortOptions?.sortType || 'DESC'
       }
       if (objApi) {
         const response = await GenericService.search(objApi.moduleApi, objApi.uriApi, payload)
@@ -438,7 +440,18 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
-        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, iterator.objApi?.filter || [], iterator.localItems || [], iterator.objApi?.mapFunction)
+        const response = await getList(
+          {
+            moduleApi: iterator.objApi?.moduleApi || '',
+            uriApi: iterator.objApi?.uriApi || '',
+            keyValue: iterator.objApi?.keyValue
+          },
+          iterator.objApi?.filter || [],
+          iterator.localItems || [],
+          iterator.objApi?.mapFunction,
+          iterator.objApi?.sortOption
+        )
+
         objListData[iterator.field] = response
       }
     }

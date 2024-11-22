@@ -429,6 +429,28 @@ interface SubTotals {
 }
 const subTotals = ref<SubTotals>({ paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0 })
 
+interface DataListItemForBankAccount {
+  id: string
+  accountNumber: string
+  manageBank: {
+    id: string
+    name: string
+  }
+  status: string
+}
+
+interface ListItemForBankAccount {
+  id: string
+  name: string
+  status: string
+}
+function mapFunctionForBankAccount(data: DataListItemForBankAccount): ListItemForBankAccount {
+  return {
+    id: data.id,
+    name: `${data.manageBank.name} (${data.accountNumber}) `,
+    status: data.status
+  }
+}
 const columns: IColumn[] = [
   { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
   { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: true },
@@ -439,7 +461,7 @@ const columns: IColumn[] = [
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
-  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name' } },
+  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name', mapFunction: mapFunctionForBankAccount, sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC } } },
   { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'number' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
