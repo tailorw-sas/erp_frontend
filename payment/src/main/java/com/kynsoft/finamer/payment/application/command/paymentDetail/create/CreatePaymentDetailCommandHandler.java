@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsBookingRequest;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyOtherDeductions.CreateApplyOtherDeductionsCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
@@ -149,13 +152,18 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             paymentDto.setPaymentStatus(message.getPayment().getPaymentStatus());
         }
         if (command.getApplyPayment() && !paymentTransactionTypeDto.getCash() && !paymentTransactionTypeDto.getDeposit()) {
+            List<CreateApplyOtherDeductionsBookingRequest> booking = new ArrayList<>();
+            CreateApplyOtherDeductionsBookingRequest b = new CreateApplyOtherDeductionsBookingRequest();
+            b.setBookingId(command.getBooking());
+            b.setBookingBalance(command.getAmount());
+            booking.add(b);
             command.getMediator().send(new CreateApplyOtherDeductionsCommand(
-                    command.getOtherDeductions().getPayment(), 
-                    command.getOtherDeductions().getTransactionType(), 
-                    command.getOtherDeductions().getRemark(), 
-                    command.getOtherDeductions().getBooking(), 
+                    command.getPayment(), 
+                    command.getTransactionType(), 
+                    command.getRemark(), 
+                    booking, 
                     command.getMediator(), 
-                    command.getOtherDeductions().getEmployee()
+                    command.getEmployee()
             ));
         }
         command.setPaymentResponse(paymentDto);
