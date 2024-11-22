@@ -25,6 +25,7 @@ export interface IColumn {
     keyValue?: string
     mapFunction?: (item: any) => any
     filter?: IFilter[]
+    sortOption?: ISortOptions
   }
   filter?: {
     // Define aquí los campos de filtro según tu necesidad
@@ -36,6 +37,11 @@ export interface IColumn {
   statusClassMap?: IStatusClass[]
   props?: IProps
   hidden?: boolean
+}
+
+export interface ISortOptions {
+  sortBy?: string
+  sortType?: ENUM_SHORT_TYPE
 }
 
 export interface IProps {
