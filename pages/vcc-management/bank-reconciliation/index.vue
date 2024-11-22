@@ -110,7 +110,7 @@ const columns: IColumn[] = [
 const subTotals: any = ref({ amount: 0, details: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
-  { id: 'reconciliationId', name: 'Id' },
+  { id: 'reconciliationId', name: 'Bank Reconciliation Id' },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
@@ -661,9 +661,9 @@ onMounted(() => {
               </div>
               <div class="col-12 md:col-6 lg:col-2 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                  <div class="flex align-items-center gap-2" style=" z-index:5;">
                     <label class="filter-label font-bold" for="">Criteria:</label>
-                    <div class="w-full" style=" z-index:5 ">
+                    <div class="w-full" style=" z-index:5; overflow: hidden  ">
                       <Dropdown
                         v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
                         placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
@@ -673,10 +673,7 @@ onMounted(() => {
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Search:</label>
                     <div class="w-full">
-                      <IconField icon-position="left">
-                        <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                        <InputIcon class="pi pi-search" />
-                      </IconField>
+                      <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                     </div>
                   </div>
                 </div>
