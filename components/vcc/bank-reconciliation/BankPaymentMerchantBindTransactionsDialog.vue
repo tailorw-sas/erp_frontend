@@ -65,9 +65,9 @@ const columns: IColumn[] = [
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'amountStr', header: 'Amount', type: 'text' },
-  { field: 'commissionStr', header: 'Commission', type: 'text' },
-  { field: 'netAmountStr', header: 'T.Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number' },
   { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, showFilter: false },
 ]
 
@@ -195,15 +195,12 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amountStr = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
         count.commission += iterator.commission
-        iterator.commissionStr = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
         count.net += iterator.netAmount
-        iterator.netAmountStr = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {

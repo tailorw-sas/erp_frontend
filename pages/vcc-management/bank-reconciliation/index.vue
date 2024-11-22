@@ -87,8 +87,8 @@ const columns: IColumn[] = [
   { field: 'reconciliationId', header: 'Id', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
   { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
@@ -168,11 +168,9 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'detailsAmount')) {
         count.details += iterator.detailsAmount
-        iterator.detailsAmount = formatNumber(iterator.detailsAmount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'merchantBankAccount')) {
         const merchantNames = iterator.merchantBankAccount.managerMerchant.map((item: any) => item.description).join(' - ')
