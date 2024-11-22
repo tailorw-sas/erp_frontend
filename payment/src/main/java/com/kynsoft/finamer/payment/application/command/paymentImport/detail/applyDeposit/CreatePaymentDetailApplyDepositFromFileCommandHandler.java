@@ -117,11 +117,11 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         this.paymentService.update(paymentUpdate);
         command.setPaymentResponse(paymentUpdate);
         ManageInvoiceStatusDto manageInvoiceStatusDto = statusService.findByCode(RELATE_INCOME_STATUS_CODE);
-        this.sendToCreateRelatedIncome(children, employeeDto.getFirstName(), command.getTransactionTypeForAdjustment(),manageInvoiceStatusDto.getId());
+        this.sendToCreateRelatedIncome(children,employeeDto.getId(),employeeDto.getFirstName(), command.getTransactionTypeForAdjustment(),manageInvoiceStatusDto.getId());
 
     }
 
-    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto, String employeeName, UUID transactionType,UUID status) {
+    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,UUID employeeId, String employeeName, UUID transactionType,UUID status) {
         PaymentDto paymentDto = paymentDetailDto.getPayment();
         CreateIncomeTransactionKafka createIncomeTransactionSuccessKafka = new CreateIncomeTransactionKafka();
         UUID incomeId = UUID.randomUUID();
@@ -138,6 +138,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         createIncomeTransactionSuccessKafka.setDateAdjustment(LocalDate.now());
         createIncomeTransactionSuccessKafka.setRelatedPaymentDetail(paymentDetailDto.getId());
         createIncomeTransactionSuccessKafka.setStatusAdjustment(Status.ACTIVE.name());
+        createIncomeTransactionSuccessKafka.setEmployeeId(employeeId);
         producerCreateIncomeService.create(createIncomeTransactionSuccessKafka);
     }
 

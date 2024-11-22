@@ -38,7 +38,7 @@ public class PaymentImportBankAccountValidator extends ExcelRuleValidator<Paymen
             return false;
         }else{
             ManageBankAccountDto manageBankAccountDto =bankAccountService.findByAccountNumber(obj.getBankAccount());
-            if(Status.INACTIVE.equals(manageBankAccountDto.getStatus())){
+            if(Status.INACTIVE.name().equals(manageBankAccountDto.getStatus())){
                 errorFieldList.add(new ErrorField("Bank Account", "The bank account is not active "));
                 return false;
             }
