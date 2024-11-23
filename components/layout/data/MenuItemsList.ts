@@ -665,6 +665,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/invoice'),
               items: []
             },
+            {
+              label: 'Collection',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/collection'),
+              items: []
+            },
           ]
         }
       ],
