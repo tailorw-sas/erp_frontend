@@ -33,6 +33,23 @@ const filterToSearch = ref<IData>({
   contactName: '',
   country: '',
 })
+const filterToSearchTemp = {
+  criteria: null,
+  search: '',
+  allFromAndTo: false,
+  agency: [],
+  hotel: [],
+  client: null,
+  clientName: '',
+  clientStatus: '',
+  creditDays: 0,
+  language: '',
+  primaryPhone: '',
+  alternativePhone: '',
+  email: '',
+  contactName: '',
+  country: '',
+}
 // agency: [allDefaultItem],
 //   hotel: [allDefaultItem],
 
@@ -64,7 +81,13 @@ const confagencyListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
 })
-
+interface SubTotals {
+  paymentAmount: number
+  depositBalance: number
+  applied: number
+  noApplied: number
+}
+const subTotals = ref<SubTotals>({ paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0 })
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
@@ -145,15 +168,15 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
+  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
   { field: 'paymentId', header: 'Id', type: 'text' },
   { field: 'transactionDate', header: 'Trans. Date', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'text' },
-  { field: 'agency', header: 'Agencia', type: 'text' },
-  { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-  { field: 'depositBalance', header: 'D.Balance', type: 'text' },
-  { field: 'applied', header: 'Applied', type: 'text' },
-  { field: 'notapplied', header: 'Not Applied', type: 'text' },
+  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
+  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
+  { field: 'paymentAmount', header: 'P.Amount', type: 'number' },
+  { field: 'depositBalance', header: 'D.Balance', type: 'number' },
+  { field: 'applied', header: 'Applied', type: 'number' },
+  { field: 'notApplied', header: 'Not Applied', type: 'number' },
 
 ]
 const columnsInvoice: IColumn[] = [
@@ -180,7 +203,7 @@ const columnsAgency: IColumn[] = [
 const options = ref({
   tableName: 'Payment',
   moduleApi: 'payment',
-  uriApi: 'manage-payment',
+  uriApi: 'payment',
   loading: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
   selectAllItemByDefault: false,
@@ -265,6 +288,7 @@ function clearForm() {
 }
 
 async function getList() {
+  const count: SubTotals = { paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -274,6 +298,62 @@ async function getList() {
     options.value.loading = true
     listItems.value = []
     const newListItems = []
+
+    const filterPaymentSource = payload.value.filter.find((item: IFilter) => item.key === 'paymentSource.code')
+    if (filterPaymentSource) {
+      filterPaymentSource.value = ['EXP', 'BK']
+    }
+    else {
+      payload.value.filter.push({
+        key: 'paymentSource.code',
+        operator: 'IN',
+        value: ['EXP', 'BK'],
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+
+    const filterDepositAmount = payload.value.filter.find((item: IFilter) => item.key === 'depositAmount')
+    if (filterDepositAmount) {
+      filterDepositAmount.value = 0
+    }
+    else {
+      payload.value.filter.push({
+        key: 'depositAmount',
+        operator: 'GREATER_THAN',
+        value: 0,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+
+    const filterStatusCanceled = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.cancelled')
+    if (filterStatusCanceled) {
+      filterStatusCanceled.value = false
+    }
+    else {
+      payload.value.filter.push({
+        key: 'paymentStatus.cancelled',
+        operator: 'EQUALS',
+        value: false,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+
+    const filterStatusApplied = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.applied')
+    if (filterStatusApplied) {
+      filterStatusApplied.value = false
+    }
+    else {
+      payload.value.filter.push({
+        key: 'paymentStatus.applied',
+        operator: 'EQUALS',
+        value: false,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -286,14 +366,82 @@ async function getList() {
 
     const existingIds = new Set(listItems.value.map(item => item.id))
 
+    interface ListColor {
+      NONE: string
+      ATTACHMENT_WITH_ERROR: string
+      ATTACHMENT_WITHOUT_ERROR: string
+    }
+
+    const listColor: ListColor = {
+      NONE: '#616161',
+      ATTACHMENT_WITH_ERROR: '#ff002b',
+      ATTACHMENT_WITHOUT_ERROR: '#00b816',
+    }
+    let color = listColor.NONE
+
     for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
+        iterator.hotel = {
+          ...iterator.hotel,
+          name: `${iterator.hotel.code} - ${iterator.hotel.name}`
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
+        iterator.agencyType = iterator.agency.agencyTypeResponse
+        iterator.agency = {
+          ...iterator.agency,
+          name: `${iterator.agency.code} - ${iterator.agency.name}`
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'paymentId')) {
+        iterator.paymentId = String(iterator.paymentId)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'paymentAmount')) {
+        count.paymentAmount = count.paymentAmount + iterator.paymentAmount
+        iterator.paymentAmount = iterator.paymentAmount || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'depositBalance')) {
+        count.depositBalance += iterator.depositBalance
+        iterator.depositBalance = iterator.depositBalance || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
+        count.applied += iterator.applied
+        iterator.applied = iterator.applied || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'notApplied')) {
+        count.noApplied += iterator.notApplied
+        iterator.notApplied = iterator.notApplied || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'depositAmount')) {
+        iterator.depositAmount = iterator.depositAmount || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'otherDeductions')) {
+        iterator.otherDeductions = String(iterator.otherDeductions)
+      }
+
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
 
+      if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
+        if (iterator.attachmentStatus?.patWithAttachment) {
+          color = listColor.ATTACHMENT_WITHOUT_ERROR
+        }
+        else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
+          color = listColor.ATTACHMENT_WITH_ERROR
+        }
+        else if (iterator.attachmentStatus?.nonNone) {
+          color = listColor.NONE
+        }
+        else {
+          color = listColor.NONE
+        }
+      }
+
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...iterator, color, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -309,27 +457,61 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
 }
 
 function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  if (filterToSearch.value.criterial && filterToSearch.value.search) {
-    payload.value.filter = [...payload.value.filter, {
-      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
-      operator: 'LIKE',
-      value: filterToSearch.value.search,
-      logicalOperation: 'AND',
-      type: 'filterSearch',
-    }]
+  // Client
+  if (filterToSearch.value.client?.length > 0) {
+    const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
+    if (filteredItems.length > 0) {
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+      payload.value.filter = [...payload.value.filter, {
+        key: 'client.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+    }
   }
+  // Agency
+  if (filterToSearch.value.agency?.length > 0) {
+    const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
+    if (filteredItems.length > 0) {
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+      payload.value.filter = [...payload.value.filter, {
+        key: 'agency.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+    }
+  }
+  // Hotel
+  if (filterToSearch.value.hotel?.length > 0) {
+    const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
+    if (filteredItems.length > 0) {
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+      payload.value.filter = [...payload.value.filter, {
+        key: 'hotel.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+    }
+  }
+  options.value.selectAllItemByDefault = false
   getList()
 }
 
 function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  filterToSearch.value.search = ''
+  filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp))
   getList()
 }
 
@@ -984,11 +1166,30 @@ onMounted(() => {
         </div>
       </div>
       <DynamicTable
-        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm" @open-edit-dialog="getItemById($event)"
-        @update:clicked-item="getItemById($event)" @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="clearForm"
+        @open-edit-dialog="getItemById($event)"
+        @update:clicked-item="getItemById($event)"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
       >
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0">
+            <Button
+              v-if="objData.hasAttachment"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+              :disabled="objData?.attachmentStatus?.nonNone"
+              :style="{ color: objData.color }"
+            />
+          </div>
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>

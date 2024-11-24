@@ -924,8 +924,6 @@ async function getList() {
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(listItems.value.map(item => item.id))
-    const arrayNumero = []
-    const valores = ['#ff002b', '#00b816', '#616161']
 
     interface ListColor {
       NONE: string
