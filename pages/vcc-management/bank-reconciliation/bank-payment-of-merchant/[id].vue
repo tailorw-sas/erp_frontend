@@ -37,7 +37,10 @@ const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const paymentAmount = ref(0)
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
+const selectedTransactionId = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
+const editManualTransactionDialogVisible = ref(false)
+const editAdjustmentTransactionDialogVisible = ref(false)
 const contextMenu = ref()
 const contextMenuTransaction = ref()
 const currentSavedPaymentStatus = ref() // Guardar estado actual en backend para listar las opciones de posibles estados a seleccionar
@@ -713,6 +716,18 @@ async function onRowRightClick(event: any) {
   }
 }
 
+function onDoubleClick(item: any) {
+  const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
+  if (item.manual || item.parent) {
+    selectedTransactionId.value = id
+    editManualTransactionDialogVisible.value = true
+  }
+  if (item.adjustment) {
+    selectedTransactionId.value = id
+    editAdjustmentTransactionDialogVisible.value = true
+  }
+}
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
@@ -863,6 +878,7 @@ onMounted(async () => {
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
       @on-row-right-click="onRowRightClick"
+      @on-row-double-click="onDoubleClick($event)"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -896,6 +912,22 @@ onMounted(async () => {
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
+    <VCCEditManualTransaction
+      :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="($event) => {
+        editManualTransactionDialogVisible = false
+        if (!$event) {
+          getList()
+        }
+      }"
+    />
+    <VCCEditAdjustmentTransaction
+      :open-dialog="editAdjustmentTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="($event) => {
+        editAdjustmentTransactionDialogVisible = false
+        if (!$event) {
+          getList()
+        }
+      }"
+    />
     <VCCNewAdjustmentTransaction
       is-local :open-dialog="newAdjustmentTransactionDialogVisible"
       @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => bindAdjustment($event)"
