@@ -369,7 +369,16 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR(1147, Series.DOMAIN_ERROR,"Error generating session on CardNet merchant."),
     MANAGE_TRANSACTION_STATUS_RECONCILED_NOT_FOUND(1148, Series.DOMAIN_ERROR,"There is no transaction status of type reconciled by default."),
     MANAGE_TRANSACTION_STATUS_CHECK_RECONCILED(1149, Series.DOMAIN_ERROR,"Another item already exists with reconciled status."),
-    MANAGE_PAYMENT_RESOURCE_TYPE_CHECK_VCC(1150, Series.DOMAIN_ERROR,"Another item already exists with creditcard default."),;
+    MANAGE_PAYMENT_RESOURCE_TYPE_CHECK_VCC(1150, Series.DOMAIN_ERROR,"Another item already exists with creditcard default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_CHECK_IN_PROGRESS(1151, Series.DOMAIN_ERROR,"Another item already exists with in progress default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_CHECK_COMPLETED(1152, Series.DOMAIN_ERROR,"Another item already exists with completed default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_CHECK_CANCELLED(1153, Series.DOMAIN_ERROR,"Another item already exists with cancelled default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_CHECK_APPLIED(1154, Series.DOMAIN_ERROR,"Another item already exists with applied default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_NOT_FOUND(1155, Series.DOMAIN_ERROR, "Manage Hotel Payment Status not found."),
+    MANAGE_HOTEL_PAYMENT_STATUS_IN_PROGRESS_NOT_FOUND(1156, Series.DOMAIN_ERROR,"There is no hotel payment status of type in progress selected by default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_COMPLETED_NOT_FOUND(1157, Series.DOMAIN_ERROR,"There is no hotel payment status of type completed selected by default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_CANCELLED_NOT_FOUND(1158, Series.DOMAIN_ERROR,"There is no hotel payment status of type cancelled selected by default."),
+    MANAGE_HOTEL_PAYMENT_STATUS_APPLIED_NOT_FOUND(1159, Series.DOMAIN_ERROR,"There is no hotel payment status of type applied selected by default.");
 
     private static final DomainErrorMessage[] VALUES;
 
