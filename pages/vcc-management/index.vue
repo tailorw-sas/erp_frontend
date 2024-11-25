@@ -852,7 +852,6 @@ async function onCloseNewRefundDialog(isCancel: boolean = true) {
 }
 
 function onDoubleClick(item: any) {
-  console.log(item)
   if (item.manual || item.parent) {
     const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
     selectedTransactionId.value = id
