@@ -28,7 +28,9 @@ const formReload = ref(0)
 const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
+const selectedTransactionId = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
+const editManualTransactionDialogVisible = ref(false)
 const contextMenu = ref()
 const contextMenuTransaction = ref()
 
@@ -435,6 +437,14 @@ function onSortField(event: any) {
   }
 }
 
+function onDoubleClick(item: any) {
+  if (item.manual || item.parent) {
+    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
+    selectedTransactionId.value = id
+    editManualTransactionDialogVisible.value = true
+  }
+}
+
 async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
@@ -552,6 +562,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
       @on-row-right-click="onRowRightClick"
+      @on-row-double-click="onDoubleClick($event)"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -587,6 +598,16 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
         @update:list-items="($event) => bindTransactions($event)"
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
+      />
+    </div>
+    <div v-if="editManualTransactionDialogVisible">
+      <VCCEditManualTransaction
+        :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="($event) => {
+          editManualTransactionDialogVisible = false
+          // if (!$event) {
+          //   getList()
+          // }
+        }"
       />
     </div>
     <VCCNewAdjustmentTransaction
