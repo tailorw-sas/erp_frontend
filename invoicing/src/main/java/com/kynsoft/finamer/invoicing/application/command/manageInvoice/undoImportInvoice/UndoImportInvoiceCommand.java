@@ -16,6 +16,7 @@ public class UndoImportInvoiceCommand implements ICommand {
     private List<UUID> ids;
     private IMediator mediator;
     private List<UndoImportErrors> errors;
+    private int satisfactoryQuantity;
 
     public UndoImportInvoiceCommand(List<UUID> ids, IMediator mediator) {
         this.ids = ids;
@@ -28,7 +29,7 @@ public class UndoImportInvoiceCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new UndoImportInvoiceMessage(errors);
+        return new UndoImportInvoiceMessage(errors, satisfactoryQuantity);
     }
 
 }
