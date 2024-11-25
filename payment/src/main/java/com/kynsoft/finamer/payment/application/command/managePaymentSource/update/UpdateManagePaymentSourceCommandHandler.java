@@ -21,6 +21,7 @@ public class UpdateManagePaymentSourceCommandHandler implements ICommandHandler<
         update.setName(command.getName());
         update.setStatus(command.getStatus());
         update.setExpense(command.getExpense());
+        update.setIsBank(command.getIsBank());
         service.update(update);
     }
 }
