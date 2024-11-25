@@ -693,10 +693,10 @@ function onSortField(event: any) {
       event.sortField = 'creditCardType.code'
     }
     if (event.sortField === 'categoryType') {
-      event.sortField = 'categoryType.code'
+      event.sortField = 'transactionCategory.code'
     }
     if (event.sortField === 'subCategoryType') {
-      event.sortField = 'subCategoryType.code'
+      event.sortField = 'transactionSubCategory.code'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
