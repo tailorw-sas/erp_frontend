@@ -154,13 +154,22 @@ const fields: Array<FieldDefinitionType> = [
   },
 ]
 
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
+
 const columns: IColumn[] = [
   { field: 'referenceId', header: 'Id', type: 'text' },
-  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
-  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
+  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description', filter: activeStatusFilter }, sortable: true },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
-  { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
-  { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
+  { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type', filter: activeStatusFilter } },
+  { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type', filter: activeStatusFilter } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
@@ -674,6 +683,18 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'merchant') {
+      event.sortField = 'merchant.code'
+    }
+    if (event.sortField === 'creditCardType') {
+      event.sortField = 'creditCardType.code'
+    }
+    if (event.sortField === 'categoryType') {
+      event.sortField = 'categoryType.code'
+    }
+    if (event.sortField === 'subCategoryType') {
+      event.sortField = 'subCategoryType.code'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
