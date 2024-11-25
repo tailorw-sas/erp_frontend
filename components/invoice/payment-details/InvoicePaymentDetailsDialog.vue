@@ -233,7 +233,7 @@ onMounted(async () => {
     modal
     class="mx-3 sm:mx-0"
     content-class="border-round-bottom border-top-1 surface-border"
-    :style="{ width: 'auto', maxWidth: '90%' }"
+    :style="{ width: 'auto', maxWidth: '98%' }"
     :pt="{
       root: {
         class: 'custom-dialog-history',
