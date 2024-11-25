@@ -43,7 +43,7 @@ public class UpdateManagePaymentSourceCommandHandler implements ICommandHandler<
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManagePaymentSourceService.update(new UpdateManagePaymentSourceKafka(dto.getId(), dto.getName(), command.getStatus().name(), command.getExpense()));
+            this.producerUpdateManagePaymentSourceService.update(new UpdateManagePaymentSourceKafka(dto.getId(), dto.getName(), command.getStatus().name(), command.getExpense(), command.getIsBank()));
         }
     }
 
