@@ -38,6 +38,7 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public PaymentDto create(PaymentDto dto) {
         Payment data = new Payment(dto);
+        data.setPaymentId(this.findMaxId());
         return this.repositoryCommand.save(data).toAggregateBasicPayment();
     }
 
@@ -165,6 +166,11 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public Long countByAgencyOther(UUID agencyId) {
         return this.repositoryQuery.countByAgencyOther(agencyId);
+    }
+
+    @Override
+    public Long findMaxId() {
+        return this.repositoryQuery.findMaxId() + 1;
     }
 
 }

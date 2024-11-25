@@ -86,7 +86,7 @@ public class PaymentDto {
         this.transactionDateTime = transactionDateTime;
     }
 
-    public PaymentDto(UUID id, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt, EAttachment eAttachment, LocalTime transactionDateTime) {
+    public PaymentDto(UUID id, Status status, ManagePaymentSourceDto paymentSource, String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus, ManageClientDto client, ManageAgencyDto agency, ManageHotelDto hotel, ManageBankAccountDto bankAccount, ManagePaymentAttachmentStatusDto attachmentStatus, double paymentAmount, double paymentBalance, double depositAmount, double depositBalance, double otherDeductions, double identified, double notIdentified, Double notApplied, Double applied, String remark, ManageInvoiceDto invoice, List<MasterPaymentAttachmentDto> attachments, OffsetDateTime createdAt, EAttachment eAttachment, LocalTime transactionDateTime, long paymentId) {
         this.id = id;
         this.status = status;
         this.paymentSource = paymentSource;
@@ -113,5 +113,6 @@ public class PaymentDto {
         this.createdAt = createdAt;
         this.eAttachment = eAttachment;
         this.transactionDateTime = transactionDateTime;
+        this.paymentId = paymentId;
     }
 }

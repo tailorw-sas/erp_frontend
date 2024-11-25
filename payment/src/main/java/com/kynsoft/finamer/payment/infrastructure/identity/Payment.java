@@ -12,8 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -31,15 +29,16 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "payment")
 @EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "payment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Payment implements Serializable {
 
     @Id
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition = "serial", name = "payment_gen_id")
-    @Generated(event = EventType.INSERT)
+//    @Column(columnDefinition = "serial", name = "payment_gen_id")
+//    @Generated(event = EventType.INSERT)
+    @Column(name = "payment_gen_id", nullable = false, updatable = false, unique = true)
     private Long paymentId;
 
     @Enumerated(EnumType.STRING)
@@ -135,6 +134,7 @@ public class Payment implements Serializable {
 
     public Payment(PaymentDto dto) {
         this.id = dto.getId();
+        this.paymentId = dto.getPaymentId();
         this.status = dto.getStatus();
         this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSource(dto.getPaymentSource()) : null;
         this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatus(dto.getPaymentStatus()) : null;
@@ -227,7 +227,8 @@ public class Payment implements Serializable {
                         }).collect(Collectors.toList()) : null,
                 createdAt,
                 eAttachment != null ? eAttachment : EAttachment.NONE,
-                dateTime
+                dateTime,
+                paymentId
         );
     }
 

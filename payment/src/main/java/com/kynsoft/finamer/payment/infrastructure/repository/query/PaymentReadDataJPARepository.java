@@ -28,4 +28,7 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
 
     @Query("SELECT COUNT(b) FROM Payment b WHERE b.agency.id = :agencyId")
     Long countByAgencyOther(@Param("agencyId") UUID agencyId);
+
+    @Query("SELECT COALESCE(MAX(p.paymentId), 0) FROM Payment p")
+    Long findMaxId();
 }

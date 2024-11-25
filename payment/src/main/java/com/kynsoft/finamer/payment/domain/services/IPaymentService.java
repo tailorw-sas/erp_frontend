@@ -42,4 +42,6 @@ public interface IPaymentService {
     Long countByAgency(UUID agencyId);
 
     Long countByAgencyOther(UUID agencyId);
+
+    Long findMaxId();
 }
