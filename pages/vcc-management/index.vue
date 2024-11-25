@@ -218,7 +218,7 @@ const columns: IColumn[] = [
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'T.Amount', type: 'number' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status' }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -281,9 +281,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.statusName = iterator.status.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
@@ -674,18 +671,6 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
 }
 
@@ -719,6 +704,9 @@ function getStatusFilter(element: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'status') {
+      event.sortField = 'status.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
@@ -896,7 +884,7 @@ async function onRowRightClick(event: any) {
   menuListItems.value = [] // Elementos que se van a mostrar en el menu
   menuListItems.value = allMenuListItems.filter((e: any) => e.default) // Agregar elementos por defecto
   // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
-  await findCollectionStatusMenuOptions(contextMenuTransaction.value.statusName)
+  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status?.name)
   if (menuListItems.value.length > 0) {
     const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
     // aqui se valida que hayan fondos disponibles para la devolucion
@@ -1120,10 +1108,7 @@ onMounted(() => {
                       <div class="flex align-items-center gap-2">
                         <label class="filter-label font-bold" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>
@@ -1174,6 +1159,13 @@ onMounted(() => {
           </div>
           <!-- style="color: #616161;" -->
           <!-- :style="{ 'background-color': '#00b816' }" -->
+        </template>
+        <template #column-status="{ data, column }">
+          <Badge
+            v-tooltip.top="data.status.name.toString()"
+            :value="data.status.name"
+            :class="column.statusClassMap?.find(e => e.status === data.status.name)?.class"
+          />
         </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
