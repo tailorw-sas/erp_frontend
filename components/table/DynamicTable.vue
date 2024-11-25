@@ -747,6 +747,8 @@ defineExpose({ clearSelectedItems })
                 v-model="filterModel.value"
                 class="p-column-filter w-full"
                 placeholder="Write a number"
+                :min-fraction-digits="2"
+                :max-fraction-digits="4"
               />
               <!-- @change="filterCallback()" -->
               <Button
