@@ -180,16 +180,16 @@ const columns: IColumn[] = [
 
 ]
 const columnsInvoice: IColumn[] = [
-  { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
-  { field: 'hotel', header: 'Hotel', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'text' },
-  { field: 'invoiceNo', header: 'Inv.No', type: 'text' },
-  { field: 'invoiceDate', header: 'Gen.Date', type: 'text' },
+  // { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
+  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
+  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
+  { field: 'invoiceNumber', header: 'Inv.No', type: 'text' },
+  { field: 'invoiceDate', header: 'Gen.Date', type: 'date' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
   { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
   { field: 'aging', header: 'Aging', type: 'text' },
-  { field: 'invoiceStatus', header: 'Status', type: 'bool' },
+  { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
 
 ]
 const columnsAgency: IColumn[] = [
@@ -209,6 +209,19 @@ const options = ref({
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
+})
+const optionsInv = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  showEdit: false,
+  showAcctions: false,
+  messageToDelete: 'Do you want to save the change?',
+  showTitleBar: false
 })
 const optionsAgency = ref({
   tableName: 'Agency',
@@ -448,9 +461,9 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
-      idItemToLoadFirstTime.value = listItems.value[0].id
-    }
+    // if (listItems.value.length > 0) {
+    //   idItemToLoadFirstTime.value = listItems.value[0].id
+    // }
   }
   catch (error) {
     console.error(error)
@@ -459,6 +472,88 @@ async function getList() {
     options.value.loading = false
     subTotals.value = { ...count }
   }
+}
+
+async function getListInvoice() {
+  if (optionsInv.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    idItemToLoadFirstTime.value = ''
+    optionsInv.value.loading = true
+    listItemsInvoice.value = []
+    const newListItems = []
+
+    // totalInvoiceAmount.value = 0
+    // totalDueAmount.value = 0
+
+    const response = await GenericService.search(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    paginationInvoice.value.page = page
+    paginationInvoice.value.limit = size
+    paginationInvoice.value.totalElements = totalElements
+    paginationInvoice.value.totalPages = totalPages
+
+    const existingIds = new Set(listItemsInvoice.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        let invoiceNumber
+        if (iterator?.invoiceNumber?.split('-')?.length === 3) {
+          invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
+        }
+        else {
+          invoiceNumber = iterator?.invoiceNumber
+        }
+        newListItems.push({
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          invoiceDate: new Date(iterator?.invoiceDate),
+          agencyCd: iterator?.agency?.code,
+          dueAmount: iterator?.dueAmount || 0,
+          invoiceAmount: iterator?.invoiceAmount || 0,
+          invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+        })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+
+      // totalInvoiceAmount.value += iterator.invoiceAmount
+      // totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
+    }
+
+    listItemsInvoice.value = [...listItemsInvoice.value, ...newListItems]
+    return listItemsInvoice
+  }
+
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    optionsInv.value.loading = false
+  }
+}
+interface InvoiceStatus {
+  id: string
+  code: string
+  name: string
+  showClone: boolean
+  enabledToApply: boolean
+  sentStatus: boolean
+  reconciledStatus: boolean
+  canceledStatus: boolean
+  processStatus: boolean
+}
+function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) {
+  if (!item) { return }
+  if (item.processStatus) { return '#FF8D00' }
+  if (item.sentStatus) { return '#006400' }
+  if (item.reconciledStatus) { return '#005FB7' }
+  if (item.canceledStatus) { return '#888888' }
 }
 
 function searchAndFilter() {
@@ -667,6 +762,29 @@ async function parseDataTableFilter(payloadFilter: any) {
   getList()
 }
 
+async function parseDataTableFilterInvoice(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsInvoice)
+
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'agencyCd') {
+        parseFilter[i].key = 'agency.code'
+      }
+
+      if (parseFilter[i]?.key === 'status') {
+        parseFilter[i].key = 'invoiceStatus'
+      }
+
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+    }
+  }
+
+  payloadFilter.value.filter = [...parseFilter || []]
+  getListInvoice()
+}
+
 async function getClientList(query = '') {
   try {
     const payload
@@ -808,6 +926,29 @@ function onSortField(event: any) {
     parseDataTableFilter(event.filter)
   }
 }
+function onSortFieldInvoice(event: any) {
+  if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
+    }
+    if (event.sortField === 'agencyCd') {
+      event.sortField = 'agency.code'
+    }
+    if (event.sortField === 'agency') {
+      event.sortField = 'agency.name'
+    }
+    if (event.sortField === 'status') {
+      event.sortField = 'invoiceStatus'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
+    }
+    payloadInv.value.sortBy = event.sortField
+    payloadInv.value.sortType = event.sortOrder
+    parseDataTableFilterInvoice(event.filter)
+    // getListInvoice()
+  }
+}
 // || filterToSearch.value.agency || filterToSearch.value.hotel
 const disabledSearch = computed(() => {
   return filterToSearch.value.client?.id === '' || filterToSearch.value.agency.length === 0 || filterToSearch.value.hotel.length === 0
@@ -840,6 +981,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    getListInvoice()
   }
 })
 // -------------------------------------------------------------------------------------------------------
@@ -1452,11 +1594,25 @@ onMounted(() => {
       </div>
 
       <DynamicTable
-        :data="listItemsInvoice" :columns="columnsInvoice" :options="optionsInvoice"
-        :pagination="paginationInvoice" @on-confirm-create="clearForm" @open-edit-dialog="getItemById($event)"
-        @update:clicked-item="getItemById($event)" @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
+        :data="listItemsInvoice"
+        :columns="columnsInvoice"
+        :options="optionsInv"
+        :pagination="paginationInvoice"
+        @on-confirm-create="clearForm"
+        @open-edit-dialog="getItemById($event)"
+        @update:clicked-item="getItemById($event)"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilterInvoice"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortFieldInvoice"
       >
+        <template #column-invoiceStatus="{ item: objData }">
+          {{ objData }}
+          <!-- <Badge
+            v-if="objData" :value="objData?.name"
+            :style="`background-color: ${getStatusBadgeBackgroundColorByItem(objData)}`"
+          /> -->
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
