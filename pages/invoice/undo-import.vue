@@ -685,7 +685,7 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-  getBookingList()
+  getList()
 })
 
 onMounted(async () => {
@@ -796,7 +796,7 @@ onMounted(async () => {
             :data="listItems"
             :columns="columns"
             :options="options"
-            :pagination="Pagination"
+            :pagination="pagination"
             @on-confirm-create="clearForm"
             @on-change-pagination="payloadOnChangePage = $event"
             @on-change-filter="parseDataTableFilter"
