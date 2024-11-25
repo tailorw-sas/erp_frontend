@@ -52,7 +52,7 @@ const columns: IColumn[] = [
   { field: 'agency', header: 'Agency', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'text' },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'referenceNumber', header: 'Reference Number', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'T.Amount', type: 'number' },

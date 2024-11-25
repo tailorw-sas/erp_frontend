@@ -136,6 +136,15 @@ const confCCTypeListApi = reactive({
   uriApi: 'manage-credit-card-type',
 })
 
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
+
 const legend = ref(
   [
     {
@@ -209,16 +218,16 @@ const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
   { field: 'parent', header: 'Parent Id', type: 'text' },
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
   { field: 'methodType', header: 'Method Type', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', maxWidth: '220px' },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'T.Amount', type: 'number' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -1164,7 +1173,7 @@ onMounted(() => {
           <Badge
             v-tooltip.top="data.status.name.toString()"
             :value="data.status.name"
-            :class="column.statusClassMap?.find(e => e.status === data.status.name)?.class"
+            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
           />
         </template>
         <template #datatable-footer>

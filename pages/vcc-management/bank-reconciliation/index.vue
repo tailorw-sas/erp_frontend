@@ -103,15 +103,24 @@ const hotelFilters: IFilter[] = [{
   logicalOperation: 'AND'
 }]
 
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
+
 const columns: IColumn[] = [
   { field: 'reconciliationId', header: 'Id', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: hotelFilters }, sortable: true },
-  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant-bank-account', keyValue: 'name', mapFunction }, sortable: true },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: [...hotelFilters, ...activeStatusFilter] }, sortable: true },
+  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant-bank-account', keyValue: 'name', mapFunction, filter: activeStatusFilter }, sortable: true },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
-  { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
+  { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, details: 0 })

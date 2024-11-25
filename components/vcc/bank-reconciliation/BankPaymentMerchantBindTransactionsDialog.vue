@@ -48,6 +48,15 @@ const confStatusListApi = reactive({
   uriApi: 'manage-transaction-status',
 })
 
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
+
 const sClassMap: IStatusClass[] = [
   { status: 'Sent', class: 'vcc-text-sent' },
   { status: 'Created', class: 'vcc-text-created' },
@@ -61,14 +70,14 @@ const sClassMap: IStatusClass[] = [
 
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
-  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
-  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
+  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description', filter: activeStatusFilter }, sortable: true },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'T.Amount', type: 'number' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, showFilter: false },
+  { field: 'status', header: 'Status', type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter } },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -174,9 +183,6 @@ async function getList() {
     const existingIds = new Set(BindTransactionList.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'merchant') && iterator.hotel) {
         iterator.merchant = { id: iterator.merchant.id, name: `${iterator.merchant.code} - ${iterator.merchant.description}` }
       }
@@ -252,6 +258,9 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'status') {
+      event.sortField = 'status.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
@@ -510,6 +519,13 @@ onMounted(async () => {
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
     >
+      <template #column-status="{ data, column }">
+        <Badge
+          v-tooltip.top="data.status.name.toString()"
+          :value="data.status.name"
+          :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+        />
+      </template>
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
