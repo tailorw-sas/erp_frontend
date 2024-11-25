@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.EReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionCheckInCloseOperationRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +30,9 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     private final IParameterizationService parameterizationService;
 
-    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService, IParameterizationService parameterizationService) {
+    private final ICreditCardCloseOperationService closeOperationService;
+
+    public CreateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, IManageMerchantBankAccountService merchantBankAccountService, IManageHotelService hotelService, ITransactionService transactionService, IManageReconcileTransactionStatusService reconcileTransactionStatusService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService, IParameterizationService parameterizationService, ICreditCardCloseOperationService closeOperationService) {
         this.bankReconciliationService = bankReconciliationService;
         this.merchantBankAccountService = merchantBankAccountService;
         this.hotelService = hotelService;
@@ -38,10 +41,12 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
         this.bankReconciliationStatusHistoryService = bankReconciliationStatusHistoryService;
         this.parameterizationService = parameterizationService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(CreateBankReconciliationCommand command) {
+        RulesChecker.checkRule(new ManualTransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), command.getHotel()));
         ManageMerchantBankAccountDto merchantBankAccountDto = this.merchantBankAccountService.findById(command.getMerchantBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
