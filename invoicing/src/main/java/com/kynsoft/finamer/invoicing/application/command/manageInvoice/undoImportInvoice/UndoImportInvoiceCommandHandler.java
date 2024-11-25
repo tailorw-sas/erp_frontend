@@ -28,6 +28,7 @@ public class UndoImportInvoiceCommandHandler implements ICommandHandler<UndoImpo
     @Override
     public void handle(UndoImportInvoiceCommand command) {
         List<UndoImportErrors> errors = new ArrayList<>();
+        int satisfactoryQuantity = 0;
         for (UUID id : command.getIds()) {
             ManageInvoiceDto delete = this.service.findById(id);
             if (delete.getManageInvoiceStatus().getProcessStatus()) {
@@ -41,11 +42,13 @@ public class UndoImportInvoiceCommandHandler implements ICommandHandler<UndoImpo
                 delete.setManageInvoiceStatus(invoiceStatusDto);
                 delete.setStatus(EInvoiceStatus.CANCELED);
                 this.service.deleteInvoice(delete);
+                satisfactoryQuantity ++;
             } else {
                 errors.add(new UndoImportErrors(id, delete.getInvoiceNo(), delete.getManageInvoiceStatus().getCode() + "-" + delete.getManageInvoiceStatus().getName()));
             }
         }
         command.setErrors(errors);
+        command.setSatisfactoryQuantity(satisfactoryQuantity);
     }
 
 }
