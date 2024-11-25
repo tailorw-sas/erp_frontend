@@ -118,7 +118,8 @@ const columns: IColumn[] = [
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
-  { field: 'status', header: 'Reverse Status', width: '12%', frozen: true, showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  // { field: 'status', header: 'Reverse Status', width: '12%', frozen: true, showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'reverseStatus', header: 'Reverse Status', type: 'slot-text' },
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -214,6 +215,18 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
+    const objFilterStatus = payload.value.filter.find(item => item.key === 'manageInvoiceStatus.processStatus')
+    if (objFilterStatus) {
+      objFilterStatus.value = true
+    }
+    else {
+      payload.value.filter.push({
+        key: 'manageInvoiceStatus.processStatus',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      })
+    }
     const response = await GenericService.search('invoicing', 'manage-invoice', payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -559,6 +572,16 @@ function clearFilterToSearch() {
   Pagination.value.totalElements = 0
 }
 
+export interface UndoErrors {
+  invoiceId: string
+  status: string
+  invoiceNo: number
+}
+export interface UndoImportInvoiceResponse {
+  command: string
+  errors: UndoErrors[]
+  satisfactoryQuantity: number
+}
 async function applyUndo() {
   try {
     loadingSaveAll.value = true
@@ -566,17 +589,25 @@ async function applyUndo() {
       const payload = {
         ids: selectedElements.value,
       }
-      const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload)
+      const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload) as UndoImportInvoiceResponse
       loadingSaveAll.value = false
       openDialog.value = false
-      if (response) {
+      if (response.errors.length === 0) {
         toast.add({
           severity: 'success',
           summary: 'Success',
-          detail: 'Undo Successfully',
-          life: 3000
+          detail: `Undo successfully applied to ${response.satisfactoryQuantity} records.`,
+          life: 6000
         })
         await searchAndFilter()
+      }
+      else {
+        for (const element of response.errors) {
+          const objInvoiceTemp = listItems.value.find((item: any) => item.id === element?.invoiceId)
+          if (objInvoiceTemp) {
+            objInvoiceTemp.reverseStatus = `Error undoing the import of invoice ${element?.invoiceNo}. Please try again.`
+          }
+        }
       }
     }
   }
@@ -780,9 +811,9 @@ onMounted(async () => {
               </div>
             </template>
 
-            <template #column-status="{ data }">
+            <template #column-reverseStatus="{ data }">
               <div id="fieldError">
-                <span v-tooltip.bottom="data.sendStatusError" style="color: red;">{{ data.sendStatusError }}</span>
+                <span v-tooltip.bottom="data.reverseStatus" style="color: red;">{{ data.reverseStatus }}</span>
               </div>
             </template>
 
