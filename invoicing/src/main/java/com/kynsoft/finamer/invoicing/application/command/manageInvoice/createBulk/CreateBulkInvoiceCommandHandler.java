@@ -85,10 +85,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     @Transactional
     public void handle(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
-//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-//                this.closeOperationService,
-//                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
-//                hotelDto.getId()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                this.closeOperationService,
+                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
+                hotelDto.getId()));
 
         List<ManageAdjustmentDto> adjustments = new LinkedList<>();
         List<ManageBookingDto> bookings = new LinkedList<>();
@@ -311,12 +311,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
             attachmentDtos.add(attachmentDto);
         }
-//        if (cont == 0) {
-//            throw new BusinessException(
-//                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
-//                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
-//            );
-//        }
+        if (cont == 0) {
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
+        }
         for (ManageBookingDto booking : bookings) {
             this.calculateBookingHotelAmount(booking);
 
