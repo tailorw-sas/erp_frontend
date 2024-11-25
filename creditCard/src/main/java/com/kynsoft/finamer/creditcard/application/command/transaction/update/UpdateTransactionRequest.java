@@ -21,4 +21,5 @@ public class UpdateTransactionRequest {
     private String referenceNumber;
     private String hotelContactEmail;
     private UUID transactionStatus;
+    private Double amount;
 }
