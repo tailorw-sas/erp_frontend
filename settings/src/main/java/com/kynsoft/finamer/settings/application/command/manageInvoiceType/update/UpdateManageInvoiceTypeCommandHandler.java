@@ -58,7 +58,16 @@ public class UpdateManageInvoiceTypeCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.isIncome(), dto.isCredit(), dto.isInvoice(), dto.getStatus().name()));
+            this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(
+                    dto.getId(), 
+                    dto.getCode(), 
+                    dto.getName(), 
+                    dto.isIncome(), 
+                    dto.isCredit(), 
+                    dto.isInvoice(), 
+                    dto.getStatus().name(), 
+                    dto.getEnabledToPolicy()
+            ));
         }
     }
 

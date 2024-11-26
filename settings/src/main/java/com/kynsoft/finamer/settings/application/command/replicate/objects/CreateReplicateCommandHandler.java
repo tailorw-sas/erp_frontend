@@ -270,7 +270,16 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_INVOICE_TYPE -> {
                     for (ManageInvoiceTypeDto invoiceType : this.invoiceTypeService.findAllToReplicate()) {
-                        this.replicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(invoiceType.getId(), invoiceType.getCode(), invoiceType.getName(), invoiceType.isIncome(), invoiceType.isCredit(), invoiceType.isInvoice(), invoiceType.getStatus().name()));
+                        this.replicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(
+                                invoiceType.getId(),
+                                invoiceType.getCode(),
+                                invoiceType.getName(),
+                                invoiceType.isIncome(),
+                                invoiceType.isCredit(),
+                                invoiceType.isInvoice(),
+                                invoiceType.getStatus().name(),
+                                invoiceType.getEnabledToPolicy()
+                        ));
                     }
                 }
                 case MANAGE_ATTACHMENT_TYPE -> {
