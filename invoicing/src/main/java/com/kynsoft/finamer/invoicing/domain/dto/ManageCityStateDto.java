@@ -21,5 +21,6 @@ public class ManageCityStateDto {
     private String description;
     private Status status;
     private ManagerCountryDto country;
+    private ManagerTimeZoneDto timeZone;
 
 }

@@ -22,7 +22,8 @@ public class ManageCityStateResponse implements IResponse {
     private String name;
     private String description;
     private Status status;
-
+    private ManagerCountryResponse country;
+    private ManagerTimeZoneResponse timeZone;
 
     public ManageCityStateResponse(ManageCityStateDto dto) {
         this.id = dto.getId();
@@ -30,6 +31,8 @@ public class ManageCityStateResponse implements IResponse {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.country = dto.getCountry() != null ? new ManagerCountryResponse(dto.getCountry()) : null;
+        this.timeZone = dto.getTimeZone() != null ? new ManagerTimeZoneResponse(dto.getTimeZone()) : null;
     }
 
 }

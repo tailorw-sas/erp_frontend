@@ -488,6 +488,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 .name(manageCityStateDto.getName())
                                 .status(manageCityStateDto.getStatus().name())
                                 .country(manageCityStateDto.getCountry().getId())
+                                .timeZone(manageCityStateDto.getTimeZone().getId())
                                 .description(manageCityStateDto.getDescription())
                                 .build()
                         );
