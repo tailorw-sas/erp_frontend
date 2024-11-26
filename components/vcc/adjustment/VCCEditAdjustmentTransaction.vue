@@ -17,10 +17,15 @@ const props = defineProps({
   transactionId: {
     type: String,
     required: true
+  },
+  transaction: {
+    type: Object,
+    required: false
   }
 })
 const emits = defineEmits<{
   (e: 'onCloseDialog', value: boolean): void
+  (e: 'onSaveLocal', value: any): void
 }>()
 
 const $primevue = usePrimeVue()
@@ -58,7 +63,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('agency'),
   },
   {
-    field: 'amount',
+    field: 'netAmount',
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 md:col-6 required',
@@ -90,7 +95,7 @@ const fields: Array<FieldDefinitionType> = [
 
 const item = ref<GenericObject>({
   id: '',
-  amount: 0,
+  netAmount: 0,
   agency: null,
   reservationNumber: '',
   referenceNumber: '',
@@ -98,7 +103,7 @@ const item = ref<GenericObject>({
 
 const itemTemp = ref<GenericObject>({
   id: '',
-  amount: 0,
+  netAmount: 0,
   agency: null,
   reservationNumber: '',
   referenceNumber: '',
@@ -136,12 +141,14 @@ async function requireConfirmationToSave(item: any) {
   }
 }
 
-async function save(item: { [key: string]: any }) {
+async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   try {
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
+    payload.amount = payload.netAmount
     delete payload.event
+    delete payload.netAmount
     const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
     item.id = response.id
@@ -152,6 +159,21 @@ async function save(item: { [key: string]: any }) {
   }
   finally {
     loadingSaveAll.value = false
+  }
+}
+
+function saveItemLocal(item: { [key: string]: any }) {
+  delete item.event
+  emits('onSaveLocal', item)
+  onClose(true)
+}
+
+async function save(item: { [key: string]: any }) {
+  if (props.transaction) { // Si es local
+    saveItemLocal(item)
+  }
+  else {
+    saveItem(item)
   }
 }
 
@@ -172,7 +194,7 @@ async function getItemById(id: string) {
         AgencyList.value = [objAgency]
         item.value.reservationNumber = response.reservationNumber
         item.value.referenceNumber = response.referenceNumber
-        item.value.amount = response.netAmount
+        item.value.netAmount = response.netAmount
       }
       formReload.value += 1
     }
@@ -240,8 +262,13 @@ watch(() => props.openDialog, async (newValue) => {
   dialogVisible.value = newValue
   if (newValue) {
     clearForm()
-    getItemById(props.transactionId)
-    // getHotelList('')
+    if (props.transaction) {
+      item.value = props.transaction
+      fields[0].hidden = true
+    }
+    else {
+      getItemById(props.transactionId)
+    }
   }
 })
 </script>
