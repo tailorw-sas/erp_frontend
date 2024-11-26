@@ -32,6 +32,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRegion.ProducerReplicateManageRegionService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTimeZone.ProducerReplicateManageTimeZoneService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTradigCompany.ProducerReplicateManageTradingCompanyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTransactionStatus.ProducerReplicateManageTransactionStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerReplicateManageVCCTransactionTypeService;
@@ -48,6 +49,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManagerPaymentStatusService paymentStatusService;
     private final IManagePaymentSourceService paymentSourceService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IManagerTimeZoneService managerTimeZoneService;
     private final ProducerReplicateManageInvoiceTypeService replicateManageInvoiceTypeService;
     private final ProducerReplicateManagePaymentSourceService replicateManagePaymentSourceService;
     private final ProducerReplicateManagePaymentStatusService replicateManagePaymentStatusService;
@@ -120,6 +122,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
 
     private final IManagerMerchantCurrencyService merchantCurrencyService;
     private final ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService;
+    private final ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService;
 
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
                                          IManagerPaymentStatusService paymentStatusService,
@@ -159,7 +162,19 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageCityStateService producerReplicateManageCityStateService,
                                          ProducerReplicateManageCountryService producerReplicateManageCountryService, ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService,
                                          IManageContactService manageContactService,
-                                         ProducerReplicateManageContactService producerReplicateManageContactService, IManagerCurrencyService currencyService, ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, IManageRegionService regionService, ProducerReplicateManageRegionService producerReplicateManageRegionService, IManageAgencyContactService agencyContactService, ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService, IManageCreditCardTypeService creditCardTypeService, ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService, IManagerMerchantCurrencyService merchantCurrencyService, ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService) {
+                                         ProducerReplicateManageContactService producerReplicateManageContactService, 
+                                         IManagerCurrencyService currencyService, 
+                                         ProducerReplicateManageCurrencyService producerReplicateManageCurrencyService, 
+                                         IManageRegionService regionService, 
+                                         ProducerReplicateManageRegionService producerReplicateManageRegionService, 
+                                         IManageAgencyContactService agencyContactService, 
+                                         ProducerReplicateManageAgencyContactService producerReplicateManageAgencyContactService, 
+                                         IManageCreditCardTypeService creditCardTypeService, 
+                                         ProducerReplicateManageCreditCardTypeService producerReplicateManageCreditCardTypeService, 
+                                         IManagerMerchantCurrencyService merchantCurrencyService, 
+                                         ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService,
+                                         IManagerTimeZoneService managerTimeZoneService,
+                                         ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService) {
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -220,6 +235,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
         this.producerReplicateManageCreditCardTypeService = producerReplicateManageCreditCardTypeService;
         this.merchantCurrencyService = merchantCurrencyService;
         this.producerReplicateManageMerchantCurrencyService = producerReplicateManageMerchantCurrencyService;
+        this.managerTimeZoneService = managerTimeZoneService;
+        this.producerReplicateManageTimeZoneService = producerReplicateManageTimeZoneService;
     }
 
     @Override
@@ -234,6 +251,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 case MANAGE_CONTACT -> {
                     for (ManageContactDto manageContactDto : this.manageContactService.findAllToReplicate()) {
                         this.producerReplicateManageContactService.create(new ManageContactKafka(manageContactDto.getId(), manageContactDto.getCode(), manageContactDto.getDescription(), manageContactDto.getName(), manageContactDto.getManageHotel().getId(), manageContactDto.getEmail(), manageContactDto.getPhone(), manageContactDto.getPosition()));
+                    }
+                }
+                case MANAGE_TIME_ZONE -> {
+                    for (ManagerTimeZoneDto managerTimeZoneDto : this.managerTimeZoneService.findAllToReplicate()) {
+                        this.producerReplicateManageTimeZoneService.create(new ReplicateManageTimeZoneKafka(managerTimeZoneDto.getId(), managerTimeZoneDto.getCode(), managerTimeZoneDto.getName(), managerTimeZoneDto.getDescription(),  managerTimeZoneDto.getElapse(), managerTimeZoneDto.getStatus().name()));
                     }
                 }
                 case MANAGE_VCC_TRANSACTION_TYPE -> {

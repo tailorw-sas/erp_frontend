@@ -2,12 +2,14 @@ package com.kynsoft.finamer.settings.application.command.managerTimeZone.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageTimeZoneKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerTimeZoneDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerTimeZoneService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTimeZone.ProducerReplicateManageTimeZoneService;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +17,11 @@ import org.springframework.stereotype.Component;
 public class UpdateManagerTimeZoneCommandHandler implements ICommandHandler<UpdateManagerTimeZoneCommand> {
 
     private final IManagerTimeZoneService service;
+    private final ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService;
 
-    public UpdateManagerTimeZoneCommandHandler(IManagerTimeZoneService service) {
+    public UpdateManagerTimeZoneCommandHandler(IManagerTimeZoneService service,
+            ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService) {
+        this.producerReplicateManageTimeZoneService = producerReplicateManageTimeZoneService;
         this.service = service;
     }
 
@@ -36,6 +41,14 @@ public class UpdateManagerTimeZoneCommandHandler implements ICommandHandler<Upda
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producerReplicateManageTimeZoneService.create(new ReplicateManageTimeZoneKafka(
+                    test.getId(),
+                    test.getCode(),
+                    test.getName(),
+                    test.getDescription(),
+                    test.getElapse(),
+                    test.getStatus().name()
+            ));
         }
 
     }
