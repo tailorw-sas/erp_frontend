@@ -54,6 +54,9 @@ public class CreateManageBankAccountCommandHandler implements ICommandHandler<Cr
                 command.getId(), command.getStatus(), command.getAccountNumber(),
                 manageBankDto, manageHotelDto, manageAccountTypeDto, command.getDescription()
         ));
-        this.producerReplicateManageBankAccount.create(new ReplicateManageBankAccountKafka(command.getId(), command.getAccountNumber(), command.getStatus().name(), manageBankDto.getName(),manageHotelDto.getId()));
+        this.producerReplicateManageBankAccount.create(new ReplicateManageBankAccountKafka(
+                command.getId(), command.getAccountNumber(), command.getStatus().name(),
+                manageBankDto.getName(),manageHotelDto.getId(), manageBankDto.getId(),
+                manageAccountTypeDto.getId(), command.getDescription()));
     }
 }
