@@ -28,7 +28,9 @@ const formReload = ref(0)
 const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
+const selectedTransactionId = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
+const editManualTransactionDialogVisible = ref(false)
 const contextMenu = ref()
 const contextMenuTransaction = ref()
 
@@ -209,6 +211,82 @@ async function onMultipleSelect(data: any) {
 function clearForm() {
   item.value = JSON.parse(JSON.stringify(itemTemp.value))
   formReload.value++
+}
+
+async function updateCurrentManualTransaction() {
+  const transaction = await getCurrentTransactionList()
+  if (transaction) {
+    const index = LocalBindTransactionList.value.findIndex((item: any) => item.id === selectedTransactionId.value)
+    if (index !== -1) {
+      // Reemplazar el objeto en la lista
+      LocalBindTransactionList.value[index] = transaction
+    }
+  }
+}
+
+async function getCurrentTransactionList() {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    options.value.loading = true
+    const payload = {
+      filter: [{
+        key: 'id',
+        operator: 'EQUALS',
+        value: selectedTransactionId.value,
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
+
+    const { transactionSearchResponse } = response
+    const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      if (Object.prototype.hasOwnProperty.call(iterator, 'merchant') && iterator.hotel) {
+        iterator.merchant = { id: iterator.merchant.id, name: `${iterator.merchant.code} - ${iterator.merchant.description}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
+        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType') && iterator.categoryType) {
+        iterator.categoryType = { id: iterator.categoryType.id, name: `${iterator.categoryType.code} - ${iterator.categoryType.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'subCategoryType') && iterator.subCategoryType) {
+        iterator.subCategoryType = { id: iterator.subCategoryType.id, name: `${iterator.subCategoryType.code} - ${iterator.subCategoryType.name}`, negative: iterator.subCategoryType.negative }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
+        iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
+        iterator.id = String(iterator.id)
+        iterator.referenceId = String(iterator.id)
+      }
+    }
+
+    return dataList[0] ?? null
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
+  }
 }
 
 async function getHotelList(query: string) {
@@ -435,6 +513,17 @@ function onSortField(event: any) {
   }
 }
 
+function onDoubleClick(item: any) {
+  if (item.manual || item.parent) {
+    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
+    selectedTransactionId.value = id
+    editManualTransactionDialogVisible.value = true
+  }
+  if (item.adjustment) {
+    // implement local edit adjustment transaction
+  }
+}
+
 async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
@@ -552,6 +641,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
       @on-row-right-click="onRowRightClick"
+      @on-row-double-click="onDoubleClick($event)"
     >
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -589,6 +679,14 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
+    <VCCEditManualTransaction
+      :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="($event) => {
+        editManualTransactionDialogVisible = false
+        if (!$event) {
+          updateCurrentManualTransaction()
+        }
+      }"
+    />
     <VCCNewAdjustmentTransaction
       is-local :open-dialog="newAdjustmentTransactionDialogVisible"
       @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => bindAdjustment($event)"

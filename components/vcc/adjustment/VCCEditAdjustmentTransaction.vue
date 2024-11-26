@@ -37,7 +37,7 @@ const loadingSaveAll = ref(false)
 const idItem = ref('')
 const confApi = reactive({
   moduleApi: 'creditcard',
-  uriApi: 'transactions/manual',
+  uriApi: 'transactions',
 })
 const toast = useToast()
 
@@ -58,7 +58,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('agency'),
   },
   {
-    field: 'netAmount',
+    field: 'amount',
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 md:col-6 required',
@@ -76,9 +76,8 @@ const fields: Array<FieldDefinitionType> = [
     field: 'reservationNumber',
     header: 'Reservation Number',
     dataType: 'text',
-    class: 'field col-12 md:col-6 required',
-    validation: z.string().trim().min(1, 'The reservation number field is required'),
-    // .regex(/^([IG]) \d+ \d+$/i, 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+    class: 'field col-12 md:col-6',
+    // validation: z.string().trim().min(1, 'The reservation number field is required'),
   },
   {
     field: 'referenceNumber',
@@ -91,7 +90,7 @@ const fields: Array<FieldDefinitionType> = [
 
 const item = ref<GenericObject>({
   id: '',
-  netAmount: 0,
+  amount: 0,
   agency: null,
   reservationNumber: '',
   referenceNumber: '',
@@ -99,7 +98,7 @@ const item = ref<GenericObject>({
 
 const itemTemp = ref<GenericObject>({
   id: '',
-  netAmount: 0,
+  amount: 0,
   agency: null,
   reservationNumber: '',
   referenceNumber: '',
@@ -143,7 +142,7 @@ async function save(item: { [key: string]: any }) {
   try {
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     delete payload.event
-    const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
+    const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
     item.id = response.id
     onClose(false)
@@ -161,7 +160,7 @@ async function getItemById(id: string) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(confApi.moduleApi, 'transactions', id)
+      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
         item.value.id = String(response.id)
         const objAgency = {
@@ -173,7 +172,7 @@ async function getItemById(id: string) {
         AgencyList.value = [objAgency]
         item.value.reservationNumber = response.reservationNumber
         item.value.referenceNumber = response.referenceNumber
-        item.value.netAmount = response.netAmount
+        item.value.amount = response.netAmount
       }
       formReload.value += 1
     }
@@ -251,7 +250,7 @@ watch(() => props.openDialog, async (newValue) => {
   <Dialog
     v-model:visible="dialogVisible"
     modal
-    header="Edit Manual Transaction"
+    header="Edit Adjustment Transaction"
     :style="{ width: '50rem' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
