@@ -532,7 +532,6 @@ function onSortField(event: any) {
 }
 
 function updateStatusItem(selectedValue: any) {
-  console.log(selectedValue)
   const tempStatus = {
     sent: false,
     refund: false,

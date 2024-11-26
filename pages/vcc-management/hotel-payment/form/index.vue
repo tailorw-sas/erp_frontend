@@ -579,7 +579,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
 <template>
   <div style="max-height: 100vh; height: 90vh">
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      Bank Payment of Merchant
+      New Hotel Payment
     </div>
     <div class="card p-4 mb-0">
       <EditFormV2
