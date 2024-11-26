@@ -23,7 +23,13 @@ const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as Generic
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
 
+const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
+
 const onOffDialogPaymentDetailSummary = ref(false)
+
+// Attachments for Invoice
+const attachmentDialogOpenInvoice = ref<boolean>(false)
+const attachmentListInvoice = ref<any[]>([])
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -36,6 +42,7 @@ const shareFilesList = ref<any[]>([])
 const paymentSelectedForShareFiles = ref<GenericObject>({})
 
 const contextMenu = ref()
+const contextMenuInvoice = ref()
 
 const allMenuListItems = ref([
   // {
@@ -138,6 +145,30 @@ const allMenuListItems = ref([
     command: ($event: any) => checkAttachment('ATTACHMENT_WITHOUT_ERROR'),
     disabled: true,
     visible: true,
+  },
+])
+
+const allMenuListItemsInvoice = ref([
+  {
+    id: 'navigateToPaymentDetails',
+    label: 'Show Details',
+    icon: 'pi pi-cog',
+    iconSvg: '',
+    command: ($event: any) => navigateToInvoiceDetails($event),
+    disabled: false,
+    visible: true,
+  },
+  {
+    id: 'document',
+    label: 'Document',
+    icon: 'pi pi-file-word',
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    command: ($event: any) => handleAttachmentDialogOpenForInvoice($event),
+    disabled: false,
+    visible: true
   },
 ])
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
@@ -335,7 +366,7 @@ const options = ref({
   moduleApi: 'payment',
   uriApi: 'payment',
   loading: false,
-  selectionMode: 'multiple' as 'multiple' | 'single',
+  // selectionMode: 'single' as 'multiple' | 'single',
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
@@ -1320,6 +1351,22 @@ function onRowContextMenu(event: any) {
   }
 }
 
+function onRowContextMenuInvoice(event: any) {
+  console.log(event)
+
+  if (event && event.data) {
+    objItemSelectedForRightClickInvoice.value = event.data
+  }
+
+  const allHidden = allMenuListItemsInvoice.value.every(item => !item.visible)
+  if (!allHidden) {
+    contextMenuInvoice.value.show(event.originalEvent)
+  }
+  else {
+    contextMenuInvoice.value.hide()
+  }
+}
+
 function addAttachment(attachment: any) {
   attachmentList.value = [...attachmentList.value, attachment]
 }
@@ -1335,9 +1382,33 @@ function handleShareFilesDialogOpen() {
 function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
 }
+
+function handleAttachmentDialogOpenForInvoice() {
+  attachmentDialogOpenInvoice.value = true
+}
 function navigateToPaymentDetails($event: any) {
   if (objItemSelectedForRightClickNavigateToPayment.value && objItemSelectedForRightClickNavigateToPayment.value.id) {
     const url = `/payment/form/?id=${objItemSelectedForRightClickNavigateToPayment.value.id}`
+    window.open(url, '_blank')
+  }
+}
+
+function navigateToInvoiceDetails($event: any) {
+  if (objItemSelectedForRightClickInvoice.value && objItemSelectedForRightClickInvoice.value.id) {
+    let invoceType = ''
+    switch (objItemSelectedForRightClickInvoice.value.invoiceType) {
+      case 'INVOICE':
+        invoceType = '/invoice'
+        break
+      case 'INCOME':
+        invoceType = '/invoice/income'
+        break
+      case 'CREDIT':
+        invoceType = '/invoice/credit'
+        break
+    }
+
+    const url = `${invoceType}/edit/${objItemSelectedForRightClickInvoice.value.id}`
     window.open(url, '_blank')
   }
 }
@@ -1354,6 +1425,11 @@ watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getList()
+})
+watch(payloadOnChangePageInv, (newValue) => {
+  payloadInv.value.page = newValue?.page ? newValue?.page : 0
+  payloadInv.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getListInvoice()
 })
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
@@ -1992,10 +2068,11 @@ onMounted(() => {
         @on-confirm-create="clearForm"
         @open-edit-dialog="getItemById($event)"
         @update:clicked-item="getItemById($event)"
-        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-pagination="payloadOnChangePageInv = $event"
         @on-change-filter="parseDataTableFilterInvoice"
         @on-list-item="resetListItems"
         @on-sort-field="onSortFieldInvoice"
+        @on-row-right-click="onRowContextMenuInvoice($event)"
       >
         <template #column-invoiceStatus="{ data: objData }">
           <Badge
@@ -2083,6 +2160,19 @@ onMounted(() => {
     </div>
   </div>
 
+  <div v-if="attachmentDialogOpenInvoice">
+    <AttachmentDialogForManagerInvoice
+      :close-dialog="() => { attachmentDialogOpenInvoice = false, getListInvoice() }"
+      :is-creation-dialog="false"
+      header="Manage Invoice Attachment"
+      :open-dialog="attachmentDialogOpenInvoice"
+      :selected-invoice="objItemSelectedForRightClickInvoice?.id"
+      :selected-invoice-obj="objItemSelectedForRightClickInvoice"
+      :disable-delete-btn="true"
+      :document-option-has-been-used="true"
+    />
+  </div>
+
   <DialogPaymentDetailSummary
     title="Transactions ANTI Summary"
     :visible="onOffDialogPaymentDetailSummary"
@@ -2127,6 +2217,19 @@ onMounted(() => {
   </div>
 
   <ContextMenu ref="contextMenu" :model="allMenuListItems">
+    <template #itemicon="{ item }">
+      <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
+          <path :d="item.iconSvg" />
+        </svg>
+      </div>
+      <div v-else class="w-2rem flex justify-content-center align-items-center">
+        <i v-if="item.icon" :class="item.icon" />
+      </div>
+    </template>
+  </ContextMenu>
+
+  <ContextMenu ref="contextMenuInvoice" :model="allMenuListItemsInvoice">
     <template #itemicon="{ item }">
       <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
         <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
