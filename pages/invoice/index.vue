@@ -224,7 +224,7 @@ const invoiceAllContextMenuItems = ref([
     command: () => {
       attachmentDialogOpen.value = true
     },
-    default: true,
+    default: false,
     disabled: computedShowMenuItemAttachment,
     showItem: true,
   },
