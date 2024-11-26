@@ -22,6 +22,7 @@ public class ManagerCountryResponse implements IResponse {
     private String description;
     private Boolean isDefault;
     private Status status;
+    private ManageLanguageResponse languageResponse;
 
     public ManagerCountryResponse(ManagerCountryDto dto) {
         this.id = dto.getId();
@@ -30,6 +31,7 @@ public class ManagerCountryResponse implements IResponse {
         this.description = dto.getDescription();
         this.isDefault = dto.getIsDefault();
         this.status = dto.getStatus();
+        this.languageResponse = dto.getManagerLanguage() != null ? new ManageLanguageResponse(dto.getManagerLanguage()) : null;
     }
 
 }
