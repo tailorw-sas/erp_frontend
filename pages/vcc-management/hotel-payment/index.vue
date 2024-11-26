@@ -493,8 +493,8 @@ async function onRowRightClick(event: any) {
   contextMenu.value.show(event.originalEvent)
 }
 
-function goToHotelPaymentInNewTab(itemId?: string) {
-  let url = `/vcc-management/hotel-payment/form`
+function goToHotelPaymentInNewTab() {
+  const url = `/vcc-management/hotel-payment/form`
   window.open(url, '_blank')
 }
 // -------------------------------------------------------------------------------------------------------
@@ -522,7 +522,7 @@ onMounted(() => {
     <h3 class="mb-0">
       Hotel Payment Management
     </h3>
-        <div class="my-2 flex justify-content-end px-0">
+    <div class="my-2 flex justify-content-end px-0">
       <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
     </div>
   </div>
