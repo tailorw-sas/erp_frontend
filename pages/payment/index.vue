@@ -17,7 +17,6 @@ import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
-const route = useRoute()
 const toast = useToast()
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()

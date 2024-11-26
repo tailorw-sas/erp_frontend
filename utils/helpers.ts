@@ -395,7 +395,7 @@ function formatDate(value) {
   return parseAndFormatDate(value)
 }
 
-export function formatNumber(number: any) {
+export function formatNumber(number: any, minDecimals: number = 2, maxDecimals: number = 4) {
   // Asegúrate de que el número sea válido
   if (Number.isNaN(number)) {
     throw new TypeError('El valor proporcionado no es un número.')
@@ -403,8 +403,8 @@ export function formatNumber(number: any) {
 
   // Utiliza Intl.NumberFormat para formatear el número
   return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4
+    minimumFractionDigits: minDecimals,
+    maximumFractionDigits: maxDecimals
   }).format(number)
 }
 

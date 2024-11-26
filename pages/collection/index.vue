@@ -13,6 +13,133 @@ import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 
 // VARIABLES -----------------------------------------------------------------------------------------
+const authStore = useAuthStore()
+const { status, data: userData } = useAuth()
+const isAdmin = (userData.value?.user as any)?.isAdmin === true
+
+const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
+const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
+const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
+const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
+const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
+
+const onOffDialogPaymentDetailSummary = ref(false)
+
+// Attachments
+const attachmentDialogOpen = ref<boolean>(false)
+const attachmentList = ref<any[]>([])
+const paymentSelectedForAttachment = ref<GenericObject>({})
+
+// Share Files
+const shareFilesDialogOpen = ref<boolean>(false)
+const shareFilesList = ref<any[]>([])
+const paymentSelectedForShareFiles = ref<GenericObject>({})
+
+const contextMenu = ref()
+
+const allMenuListItems = ref([
+  // {
+  //   id: 'applayDeposit',
+  //   label: 'Apply Deposit',
+  //   icon: 'pi pi-dollar',
+  //   command: ($event: any) => openModalWithContentMenu($event),
+  //   disabled: true,
+  //   visible: true,
+  // },
+  {
+    id: 'statusHistory',
+    label: 'Deposit',
+    icon: 'pi pi-cog',
+    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+    viewBox: '0 -960 960 960',
+    width: '19px',
+    height: '19px',
+    command: ($event: any) => dialogPaymentDetailSummary($event),
+    disabled: false,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:SHOW-HISTORY']),
+  },
+  // {
+  //   id: 'applyPaymentOtherDeduction',
+  //   label: 'Apply Other Deductions',
+  //   icon: 'pi pi-cog',
+  //   iconSvg: '',
+  //   viewBox: '',
+  //   width: '24px',
+  //   height: '24px',
+  //   command: ($event: any) => openModalApplyPaymentOtherDeduction($event),
+  //   disabled: false,
+  //   visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
+  // },
+  // {
+  //   id: 'applyPayment',
+  //   label: 'Apply Payment',
+  //   icon: 'pi pi-cog',
+  //   iconSvg: '',
+  //   viewBox: '',
+  //   width: '24px',
+  //   height: '24px',
+  //   command: ($event: any) => openModalApplyPayment($event),
+  //   disabled: true,
+  //   visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
+  // },
+  {
+    id: 'navigateToPaymentDetails',
+    label: 'Show Details',
+    icon: 'pi pi-cog',
+    iconSvg: '',
+    command: ($event: any) => navigateToPaymentDetails($event),
+    disabled: false,
+    visible: true,
+  },
+  {
+    id: 'document',
+    label: 'Document',
+    icon: 'pi pi-file-word',
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    command: ($event: any) => handleAttachmentDialogOpen($event),
+    disabled: false,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:DOCUMENT']),
+  },
+  {
+    id: 'shareFiles',
+    label: 'Share Files',
+    icon: 'pi pi-share-alt',
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    command: ($event: any) => handleShareFilesDialogOpen($event),
+    disabled: false,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
+  },
+  {
+    id: 'paymentWithoutAttachment',
+    label: 'Payment Without Attachment',
+    icon: '',
+    iconSvg: 'M8.5 5.3L7.16 3.96C7.62 2.26 9.15 1 11 1c2.21 0 4 1.79 4 4v6.8l-1.5-1.5V5a2.5 2.5 0 0 0-5 0zM18 6h-1.5v7.3l1.5 1.5zm4.11 15.46l-1.27 1.27l-3.22-3.23c-.81 2.05-2.79 3.5-5.12 3.5C9.46 23 7 20.54 7 17.5V8.89L1.11 3l1.28-1.27zM11.5 15.5c0 .55.45 1 1 1s1-.45 1-1v-.11l-2-2zm4.92 2.81l-1.69-1.69A2.48 2.48 0 0 1 12.5 18a2.5 2.5 0 0 1-2.5-2.5v-3.61l-1.5-1.5v7.11c0 2.21 1.79 4 4 4a4.01 4.01 0 0 0 3.92-3.19M10 6.8l1.5 1.5V6H10z',
+    viewBox: '0 0 24 24',
+    width: '16px',
+    height: '16px',
+    command: ($event: any) => checkAttachment('ATTACHMENT_WITH_ERROR'),
+    disabled: true,
+    visible: true,
+  },
+  {
+    id: 'paymentWithAttachment',
+    label: 'Payment With Attachment',
+    icon: '',
+    iconSvg: 'M13.5 21.36c.2.48.47.93.79 1.34A5.497 5.497 0 0 1 7 17.5V5c0-2.21 1.79-4 4-4s4 1.79 4 4v9.54c-.97.87-1.65 2.04-1.9 3.38c-.19.05-.39.08-.6.08a2.5 2.5 0 0 1-2.5-2.5V6h1.5v9.5c0 .55.45 1 1 1s1-.45 1-1V5a2.5 2.5 0 0 0-5 0v12.5c0 2.21 1.79 4 4 4c.34 0 .67-.06 1-.14M18 6h-1.5v7.55c.47-.21.97-.37 1.5-.46zm3.34 9.84l-3.59 3.59l-1.59-1.59L15 19l2.75 3l4.75-4.75z',
+    viewBox: '0 0 24 24',
+    width: '16px',
+    height: '16px',
+    command: ($event: any) => checkAttachment('ATTACHMENT_WITHOUT_ERROR'),
+    disabled: true,
+    visible: true,
+  },
+])
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const activeTab = ref(0)
 const allDefault = { id: 'All', name: 'All' }
@@ -86,8 +213,11 @@ interface SubTotals {
   depositBalance: number
   applied: number
   noApplied: number
+  noAppliedPorcentage: number
+  appliedPorcentage: number
+  depositBalancePorcentage: number
 }
-const subTotals = ref<SubTotals>({ paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0 })
+const subTotals = ref<SubTotals>({ paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0, noAppliedPorcentage: 0, appliedPorcentage: 0, depositBalancePorcentage: 0 })
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
@@ -301,7 +431,7 @@ function clearForm() {
 }
 
 async function getList() {
-  const count: SubTotals = { paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0 }
+  const count: SubTotals = { paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0, noAppliedPorcentage: 0, appliedPorcentage: 0, depositBalancePorcentage: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -470,6 +600,17 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    if (pagination.value.totalElements !== 0) {
+      if (count.noApplied > 0 && count.paymentAmount > 0) {
+        count.noAppliedPorcentage = (count.noApplied * 100) / count.paymentAmount
+      }
+      if (count.applied > 0 && count.paymentAmount > 0) {
+        count.appliedPorcentage = (count.applied * 100) / count.paymentAmount
+      }
+      if (count.depositBalance > 0 && count.paymentAmount > 0) {
+        count.depositBalancePorcentage = (count.depositBalance * 100) / count.paymentAmount
+      }
+    }
     subTotals.value = { ...count }
   }
 }
@@ -487,6 +628,84 @@ async function getListInvoice() {
 
     // totalInvoiceAmount.value = 0
     // totalDueAmount.value = 0
+
+    // Filtros por reconciledStatus y sentStatus ----------------------------------------------------------------------------------------------
+    const objFilterByReconciledStatus = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceStatus.reconciledStatus')
+    if (objFilterByReconciledStatus) {
+      objFilterByReconciledStatus.value = true
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'manageInvoiceStatus.reconciledStatus',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'OR',
+        type: 'filterSearch'
+      })
+    }
+    const objFilterBySentStatus = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceStatus.sentStatus')
+    if (objFilterBySentStatus) {
+      objFilterBySentStatus.value = true
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'manageInvoiceStatus.sentStatus',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'OR',
+        type: 'filterSearch'
+      })
+    }
+    // Aqui termina el filtro por reconciledStatus y sentStatus ----------------------------------------------------------------------------------------------
+
+    // Filtro por el check Enable To Policy para el Status ----------------------------------------------------------------------------------------------
+    const objFilterByEnableToPolicy = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceStatus.enabledToPolicy')
+    if (objFilterByEnableToPolicy) {
+      objFilterByEnableToPolicy.value = true
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'manageInvoiceStatus.enabledToPolicy',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+    // Aqui termina el filtro por el check Enable To Policy para el Status ----------------------------------------------------------------------------------------------
+
+    // Filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
+
+    // const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
+    // if (objFilterByInvoiceType) {
+    //   objFilterByInvoiceType.value = true
+    // }
+    // else {
+    //   payloadInv.value.filter.push({
+    //     key: 'manageInvoiceType.enabledToPolicy',
+    //     operator: 'EQUALS',
+    //     value: true,
+    //     logicalOperation: 'AND',
+    //     type: 'filterSearch'
+    //   })
+    // }
+    // Aqui termina el filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
+
+    // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
+    const objFilterByDueAmount = payloadInv.value.filter.find((item: IFilter) => item.key === 'dueAmount')
+    if (objFilterByDueAmount) {
+      objFilterByDueAmount.value = 0
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'dueAmount',
+        operator: 'GREATER_THAN',
+        value: 0,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+    // Aqui termina el filtro por el dueAmount ----------------------------------------------------------------------------------------------
 
     const response = await GenericService.search(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -954,9 +1173,180 @@ const disabledSearch = computed(() => {
   return filterToSearch.value.client?.id === '' || filterToSearch.value.agency.length === 0 || filterToSearch.value.hotel.length === 0
 })
 
-const disabledClearSearch = computed(() => {
-  return !(filterToSearch.value.criterial && filterToSearch.value.search)
-})
+async function checkAttachment(code: string) {
+  const payload = {
+    payment: objItemSelectedForRightClickNavigateToPayment.value ? objItemSelectedForRightClickNavigateToPayment.value.id : '',
+    status: code,
+    employee: userData.value?.user?.userId || ''
+  }
+  try {
+    await GenericService.create('payment', 'payment/change-attachment-status', payload)
+    toast.add({ severity: 'success', summary: 'Success', detail: `The payment with id ${objItemSelectedForRightClickPaymentWithOrNotAttachment.value?.paymentId} was updated successfully`, life: 3000 })
+    await getList()
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
+
+function onRowContextMenu(event: any) {
+  // idPaymentSelectedForPrint.value = event?.data?.id || ''
+  // isPrintByRightClick.value = true
+  // idPaymentSelectedForPrintChangeAgency.value = event?.data?.id || ''
+  // objClientFormChangeAgency.value = event?.data?.client
+  // currentAgencyForChangeAgency.value = event?.data?.agency
+  // listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
+  objItemSelectedForRightClickChangeAgency.value = event.data
+
+  if (event && event.data) {
+    paymentSelectedForAttachment.value = event.data
+    objItemSelectedForRightClickApplyPaymentOtherDeduction.value = event.data
+    objItemSelectedForRightClickNavigateToPayment.value = event.data
+
+    // share files
+    paymentSelectedForShareFiles.value = event.data
+  }
+  else {
+    paymentSelectedForAttachment.value = {}
+    objItemSelectedForRightClickApplyPaymentOtherDeduction.value = {}
+    // share files
+    paymentSelectedForShareFiles.value = {}
+  }
+  objItemSelectedForRightClickApplyPayment.value = event.data
+  objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
+  if (event && event.data && (event.data.paymentStatus && event.data.paymentStatus.cancelled === false && event.data.paymentStatus.applied === false)) {
+    const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
+    if (menuItemApplayPayment) {
+      menuItemApplayPayment.disabled = false
+      menuItemApplayPayment.visible = true
+    }
+  }
+  else {
+    const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
+    if (menuItemApplayPayment) {
+      menuItemApplayPayment.disabled = true
+      menuItemApplayPayment.visible = true
+    }
+  }
+
+  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+    const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+    if (menuItemPaymentWithAttachment) {
+      menuItemPaymentWithAttachment.disabled = false
+      menuItemPaymentWithAttachment.visible = true
+    }
+    const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+    if (menuItemPaymentWithOutAttachment) {
+      menuItemPaymentWithOutAttachment.disabled = false
+      menuItemPaymentWithOutAttachment.visible = true
+    }
+  }
+  else {
+    if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
+      const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+      if (menuItemPaymentWithAttachment) {
+        menuItemPaymentWithAttachment.disabled = false
+        menuItemPaymentWithAttachment.visible = true
+      }
+      const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+      if (menuItemPaymentWithOutAttachment) {
+        menuItemPaymentWithOutAttachment.disabled = true
+        menuItemPaymentWithOutAttachment.visible = true
+      }
+    }
+    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
+      const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+      if (menuItemPaymentWithOutAttachment) {
+        menuItemPaymentWithOutAttachment.disabled = false
+        menuItemPaymentWithOutAttachment.visible = true
+      }
+      const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+      if (menuItemPaymentWithAttachment) {
+        menuItemPaymentWithAttachment.disabled = true
+        menuItemPaymentWithAttachment.visible = true
+      }
+    }
+    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === true) {
+      const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
+      if (menuItemPaymentWithAttachment) {
+        menuItemPaymentWithAttachment.disabled = true
+        menuItemPaymentWithAttachment.visible = true
+      }
+      const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
+      if (menuItemPaymentWithOutAttachment) {
+        menuItemPaymentWithOutAttachment.disabled = true
+        menuItemPaymentWithOutAttachment.visible = true
+      }
+    }
+  }
+  // event && event.data && event.data.applyPayment === false
+
+  if (event && event.data && event.data.paymentStatus.applied === false && event.data.paymentStatus.cancelled === false) {
+    const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
+    if (menuItemChangeAgency) {
+      menuItemChangeAgency.disabled = false
+      menuItemChangeAgency.visible = true
+    }
+  }
+  else {
+    const menuItemChangeAgency = allMenuListItems.value.find(item => item.id === 'changeAgency')
+    if (menuItemChangeAgency) {
+      menuItemChangeAgency.disabled = true
+      menuItemChangeAgency.visible = true
+    }
+  }
+
+  if (event && event.data && (event.data.paymentStatus.code !== 'CAN' || event.data.paymentStatus.name !== 'Cancelled')) {
+    const menuItemOtherDeduction = allMenuListItems.value.find(item => item.id === 'applyPaymentOtherDeduction')
+    if (menuItemOtherDeduction) {
+      menuItemOtherDeduction.disabled = false
+      menuItemOtherDeduction.visible = true
+    }
+  }
+  else {
+    const menuItemOtherDeduction = allMenuListItems.value.find(item => item.id === 'applyPaymentOtherDeduction')
+    if (menuItemOtherDeduction) {
+      menuItemOtherDeduction.disabled = true
+      menuItemOtherDeduction.visible = true
+    }
+  }
+
+  const allHidden = allMenuListItems.value.every(item => !item.visible)
+  if (!allHidden) {
+    contextMenu.value.show(event.originalEvent)
+  }
+  else {
+    contextMenu.value.hide()
+  }
+}
+
+function addAttachment(attachment: any) {
+  attachmentList.value = [...attachmentList.value, attachment]
+}
+
+function updateAttachment(attachment: any) {
+  const index = attachmentList.value.findIndex(item => item.id === attachment.id)
+  attachmentList.value[index] = attachment
+}
+
+function handleShareFilesDialogOpen() {
+  shareFilesDialogOpen.value = true
+}
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
+}
+function navigateToPaymentDetails($event: any) {
+  if (objItemSelectedForRightClickNavigateToPayment.value && objItemSelectedForRightClickNavigateToPayment.value.id) {
+    const url = `/payment/form/?id=${objItemSelectedForRightClickNavigateToPayment.value.id}`
+    window.open(url, '_blank')
+  }
+}
+function dialogPaymentDetailSummary() {
+  onOffDialogPaymentDetailSummary.value = true
+}
+function onCloseDialogSummary($event: any) {
+  onOffDialogPaymentDetailSummary.value = $event
+}
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1319,6 +1709,7 @@ onMounted(() => {
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
+        @on-row-right-click="onRowContextMenu($event)"
       >
         <template #column-icon="{ data: objData, column }">
           <div class="flex align-items-center justify-content-center p-0 m-0">
@@ -1336,11 +1727,11 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
               <Column
-                footer="Total #:" :colspan="3"
+                :footer="`Total #: ${pagination.totalElements}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
-                footer="Total $:" :colspan="2"
+                :footer="`Total $: ${formatNumber(subTotals.paymentAmount)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
@@ -1348,7 +1739,7 @@ onMounted(() => {
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="Total Deposit #:" :colspan="2"
+                :footer="`Total Deposit #: ${''}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
 
@@ -1359,11 +1750,11 @@ onMounted(() => {
             </Row>
             <Row>
               <Column
-                footer="Total Applied $:" :colspan="3"
+                :footer="`Total Applied $: ${formatNumber(subTotals.applied)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;"
               />
               <Column
-                footer="Total N.A $:" :colspan="2"
+                :footer="`Total N.A $: ${formatNumber(subTotals.noApplied)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
@@ -1371,7 +1762,7 @@ onMounted(() => {
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
-                footer="Total Deposit $:" :colspan="2"
+                :footer="`Total Deposit $: ${formatNumber(subTotals.depositBalance)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
 
@@ -1382,11 +1773,11 @@ onMounted(() => {
             </Row>
             <Row>
               <Column
-                footer="Total Applied %:" :colspan="3"
+                :footer="`Total Applied %:  ${formatNumber(subTotals.appliedPorcentage, 2, 2)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
-                footer="Total N.A %:" :colspan="2"
+                :footer="`Total N.A %:  ${formatNumber(subTotals.noAppliedPorcentage, 2, 2)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
@@ -1394,7 +1785,7 @@ onMounted(() => {
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="Total Deposit %:" :colspan="2"
+                :footer="`Total Deposit %:  ${formatNumber(subTotals.depositBalancePorcentage, 2, 2)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
 
@@ -1606,12 +1997,11 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortFieldInvoice"
       >
-        <template #column-invoiceStatus="{ item: objData }">
-          {{ objData }}
-          <!-- <Badge
-            v-if="objData" :value="objData?.name"
-            :style="`background-color: ${getStatusBadgeBackgroundColorByItem(objData)}`"
-          /> -->
+        <template #column-invoiceStatus="{ data: objData }">
+          <Badge
+            v-if="objData.invoiceStatus" :value="objData.invoiceStatus.name"
+            :style="`background-color: ${getStatusBadgeBackgroundColorByItem(objData.invoiceStatus)}`"
+          />
         </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center ">
@@ -1692,6 +2082,62 @@ onMounted(() => {
       </DynamicTable>
     </div>
   </div>
+
+  <DialogPaymentDetailSummary
+    title="Transactions ANTI Summary"
+    :visible="onOffDialogPaymentDetailSummary"
+    :selected-payment="objItemSelectedForRightClickNavigateToPayment"
+    @update:visible="onCloseDialogSummary($event)"
+  />
+
+  <div v-if="attachmentDialogOpen">
+    <PaymentAttachmentDialog
+      is-create-or-edit-payment="edit"
+      :add-item="addAttachment"
+      :close-dialog="() => {
+        attachmentDialogOpen = false
+        getList()
+      }"
+      :is-creation-dialog="true"
+      header="Manage Payment Attachment"
+      :list-items="attachmentList"
+      :open-dialog="attachmentDialogOpen"
+      :update-item="updateAttachment"
+      :selected-payment="paymentSelectedForAttachment"
+      @update:list-items="attachmentList = $event"
+    />
+  </div>
+
+  <div v-if="shareFilesDialogOpen">
+    <PaymentShareFilesDialog
+      is-create-or-edit-payment="edit"
+      :add-item="addAttachment"
+      :close-dialog="() => {
+        shareFilesDialogOpen = false
+        getList()
+      }"
+      :is-creation-dialog="true"
+      header="Share Files"
+      :list-items="shareFilesList"
+      :open-dialog="shareFilesDialogOpen"
+      :update-item="updateAttachment"
+      :selected-payment="paymentSelectedForShareFiles"
+      @update:list-items="shareFilesList = $event"
+    />
+  </div>
+
+  <ContextMenu ref="contextMenu" :model="allMenuListItems">
+    <template #itemicon="{ item }">
+      <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" :height="item.height" :viewBox="item.viewBox" :width="item.width" fill="#8d8faa">
+          <path :d="item.iconSvg" />
+        </svg>
+      </div>
+      <div v-else class="w-2rem flex justify-content-center align-items-center">
+        <i v-if="item.icon" :class="item.icon" />
+      </div>
+    </template>
+  </ContextMenu>
 </template>
 
 <style lang="scss">
