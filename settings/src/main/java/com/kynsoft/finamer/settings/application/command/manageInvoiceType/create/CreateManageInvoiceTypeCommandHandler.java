@@ -5,7 +5,6 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTypeKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.settings.domain.rules.manageInvoiceType.*;
-import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.ManagePaymentTransactionTypeIncomeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceType.ProducerReplicateManageInvoiceTypeService;
 import org.springframework.stereotype.Component;
@@ -51,6 +50,15 @@ public class CreateManageInvoiceTypeCommandHandler implements ICommandHandler<Cr
                 command.isInvoice()
         ));
 
-        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isIncome(), command.isCredit(), command.isInvoice(), command.getStatus().name()));
+        this.producerReplicateManageInvoiceTypeService.create(new ReplicateManageInvoiceTypeKafka(
+                command.getId(),
+                command.getCode(),
+                command.getName(),
+                command.isIncome(),
+                command.isCredit(),
+                command.isInvoice(),
+                command.getStatus().name(),
+                command.getEnabledToPolicy()
+        ));
     }
 }

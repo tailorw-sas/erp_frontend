@@ -21,4 +21,5 @@ public class ManageInvoiceTypeDto {
     private boolean credit;
     private boolean income;
     private Status status;
+    private boolean enabledToPolicy;
 }

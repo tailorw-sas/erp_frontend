@@ -20,5 +20,6 @@ public class ManagerCountryDto {
     private String description;
     private Boolean isDefault;
     private Status status;
+    private ManageLanguageDto managerLanguage;
 
 }

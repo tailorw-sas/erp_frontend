@@ -105,4 +105,16 @@ public class ManagerTimeZoneServiceImpl implements IManagerTimeZoneService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManagerTimeZoneDto> findAllToReplicate() {
+        List<ManagerTimeZone> objects = this.repositoryQuery.findAll();
+        List<ManagerTimeZoneDto> objectDtos = new ArrayList<>();
+
+        for (ManagerTimeZone object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }
