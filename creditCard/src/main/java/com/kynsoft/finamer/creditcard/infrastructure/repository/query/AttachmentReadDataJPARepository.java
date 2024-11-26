@@ -22,4 +22,6 @@ public interface AttachmentReadDataJPARepository extends JpaRepository<Attachmen
     @Query("SELECT b FROM Attachment b WHERE b.transaction.id = :transaction")
     List<Attachment> findAllByTransactionId(@Param("transaction") Long transaction);
 
+    @Query("SELECT b FROM Attachment b WHERE b.hotelPayment.id = :hotelPayment")
+    List<Attachment> findAllByHotelPaymentId(@Param("hotelPayment") UUID hotelPayment);
 }

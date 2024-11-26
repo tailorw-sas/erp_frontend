@@ -25,4 +25,6 @@ public interface IAttachmentService {
     List<AttachmentDto> findAllByTransactionId(Long invoiceId);
 
     void create(List<AttachmentDto> dtos);
+
+    List<AttachmentDto> findAllByHotelPaymentId(UUID hotelPaymentId);
 }

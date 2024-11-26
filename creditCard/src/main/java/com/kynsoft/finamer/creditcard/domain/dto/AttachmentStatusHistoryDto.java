@@ -22,4 +22,5 @@ public class AttachmentStatusHistoryDto {
     private UUID employeeId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private HotelPaymentDto hotelPayment;
 }

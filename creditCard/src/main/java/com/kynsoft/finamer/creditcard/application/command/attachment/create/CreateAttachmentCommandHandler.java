@@ -15,17 +15,19 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     private final IManageResourceTypeService resourceTypeService;
     private final ITransactionService transactionService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IHotelPaymentService hotelPaymentService;
 
     public CreateAttachmentCommandHandler(IAttachmentService attachmentService,
                                           IManageAttachmentTypeService attachmentTypeService,
                                           ITransactionService transactionService,
                                           IManageResourceTypeService resourceTypeService,
-                                          IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+                                          IAttachmentStatusHistoryService attachmentStatusHistoryService, IHotelPaymentService hotelPaymentService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
         this.transactionService = transactionService;
         this.resourceTypeService = resourceTypeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.hotelPaymentService = hotelPaymentService;
     }
 
     @Override
@@ -35,7 +37,8 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         ManageAttachmentTypeDto attachmentType = command.getType() != null
                 ? this.attachmentTypeService.findById(command.getType())
                 : null;
-        TransactionDto transactionDto = this.transactionService.findById(command.getTransaction());
+        TransactionDto transactionDto = command.getTransaction() != null ? this.transactionService.findById(command.getTransaction()) : null;
+        HotelPaymentDto hotelPaymentDto = command.getHotelPayment() != null ? this.hotelPaymentService.findById(command.getHotelPayment()) : null;
 
         ResourceTypeDto resourceTypeDto = command.getPaymentResourceType() != null
                 ? this.resourceTypeService.findById(command.getPaymentResourceType())
@@ -52,7 +55,8 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     command.getEmployee(), 
                     command.getEmployeeId(),
                     null,
-                    resourceTypeDto
+                    resourceTypeDto,
+                    hotelPaymentDto
             ));
             this.attachmentStatusHistoryService.create(attachmentDto, "inserted");
     }

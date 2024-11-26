@@ -24,6 +24,7 @@ public class AttachmentStatusHistoryResponse implements IResponse {
     private UUID employeeId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private HotelPaymentBasicResponse hotelPayment;
 
     public AttachmentStatusHistoryResponse(AttachmentStatusHistoryDto dto){
         this.id = dto.getId();
@@ -34,5 +35,6 @@ public class AttachmentStatusHistoryResponse implements IResponse {
         this.employeeId = dto.getEmployeeId();
         this.createdAt = dto.getCreatedAt();
         this.updatedAt = dto.getUpdatedAt();
+        this.hotelPayment = dto.getHotelPayment() != null ? new HotelPaymentBasicResponse(dto.getHotelPayment()) : null;
     }
 }
