@@ -63,6 +63,15 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
             update.setUpdate(1);
         }
 
+        if (dto.isAdjustment() && command.getAmount() != null) {
+            if (dto.getTransactionCategory().getOnlyApplyNet()) {
+                UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate);
+            } else {
+                UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate);
+                UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
+            }
+        }
+
         if (update.getUpdate() > 0){
             this.transactionService.update(dto);
         }

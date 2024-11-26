@@ -9,6 +9,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionCheckInCloseOperationRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -28,18 +29,22 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
 
     private final IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService;
 
-    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IManageReconcileTransactionStatusService transactionStatusService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService) {
+    private final ICreditCardCloseOperationService closeOperationService;
+
+    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IManageReconcileTransactionStatusService transactionStatusService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService, ICreditCardCloseOperationService closeOperationService) {
         this.bankReconciliationService = bankReconciliationService;
         this.transactionService = transactionService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
         this.transactionStatusService = transactionStatusService;
         this.bankReconciliationStatusHistoryService = bankReconciliationStatusHistoryService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(UpdateBankReconciliationCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Bank Reconciliation ID cannot be null."));
         ManageBankReconciliationDto dto = this.bankReconciliationService.findById(command.getId());
+        RulesChecker.checkRule(new ManualTransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), dto.getHotel().getId()));
 
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateLocalDateTime(dto::setPaidDate, command.getPaidDate(), dto.getPaidDate(), update::setUpdate);
