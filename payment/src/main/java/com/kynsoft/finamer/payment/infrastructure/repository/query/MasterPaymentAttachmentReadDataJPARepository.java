@@ -24,4 +24,7 @@ public interface MasterPaymentAttachmentReadDataJPARepository extends JpaReposit
         
     @Query("SELECT b FROM MasterPaymentAttachment b WHERE b.resource.id = :resource")
     List<MasterPaymentAttachment> findAllByPayment(@Param("resource") UUID resource);
+
+    @Query("SELECT COALESCE(MAX(mpa.attachmentId), 0) FROM MasterPaymentAttachment mpa")
+    Long findMaxId();
 }
