@@ -29,6 +29,8 @@ const subTotals: any = ref({ amount: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const selectedTransactionId = ref('')
+const selectedTransaction = ref()
+const editAdjustmentTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
 const contextMenu = ref()
@@ -224,6 +226,26 @@ async function updateCurrentManualTransaction() {
   }
 }
 
+async function updateCurrentAdjustmentTransaction(transaction: any) {
+  if (transaction) {
+    const index = LocalBindTransactionList.value.findIndex((item: any) => item.id === transaction.id)
+    if (index !== -1) {
+      formatAdjustmentEdit(transaction)
+      subTotals.value.amount = 0
+      // Recalcular sumatoria local
+      for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
+        const localTransaction = LocalBindTransactionList.value[i]
+        if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
+          subTotals.value.amount -= localTransaction.netAmount
+        }
+        else {
+          subTotals.value.amount += localTransaction.netAmount
+        }
+      }
+    }
+  }
+}
+
 async function getCurrentTransactionList() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -377,7 +399,6 @@ function unbindTransactions() {
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
   subTotals.value.amount -= contextMenuTransaction.value.netAmount
   subTotals.value.amount = Number.parseFloat(subTotals.value.amount.toFixed(2))
-  console.log(subTotals.value.amount)
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -459,14 +480,14 @@ function formatAdjustment(data: any) {
   newAdjustment.id = v4() // id temporal para poder eliminar de forma local
   newAdjustment.checkIn = dayjs().format('YYYY-MM-DD')
   if (newAdjustment.transactionSubCategory.negative) {
-    subTotals.value.amount -= data.amount
+    subTotals.value.amount -= data.netAmount
   }
   else {
-    subTotals.value.amount += data.amount
+    subTotals.value.amount += data.netAmount
   }
   newAdjustment.commission = 0
-  newAdjustment.netAmount = data.amount
-  newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.amount
+  newAdjustment.netAmount = data.netAmount
+  newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.netAmount
   newAdjustment.adjustment = true
   if (data.transactionCategory) {
     newAdjustment.categoryType = data.transactionCategory
@@ -475,6 +496,18 @@ function formatAdjustment(data: any) {
     newAdjustment.subCategoryType = data.transactionSubCategory
   }
   return newAdjustment
+}
+
+function formatAdjustmentEdit(data: any) {
+  const editedAdjustment = JSON.parse(JSON.stringify(data))
+  const prevAdjustment = LocalBindTransactionList.value.find(item => item.id === data.id)
+  prevAdjustment.commission = 0
+  prevAdjustment.netAmount = data.netAmount
+  prevAdjustment.amount = prevAdjustment.categoryType.onlyApplyNet ? 0 : data.netAmount
+  prevAdjustment.agency = data.agency
+  prevAdjustment.referenceNumber = data.referenceNumber
+  prevAdjustment.reservationNumber = data.reservationNumber
+  return editedAdjustment
 }
 
 function bindTransactions(event: any[]) {
@@ -520,7 +553,8 @@ function onDoubleClick(item: any) {
     editManualTransactionDialogVisible.value = true
   }
   if (item.adjustment) {
-    // implement local edit adjustment transaction
+    selectedTransaction.value = item
+    editAdjustmentTransactionDialogVisible.value = true
   }
 }
 
@@ -690,6 +724,14 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
     <VCCNewAdjustmentTransaction
       is-local :open-dialog="newAdjustmentTransactionDialogVisible"
       @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => bindAdjustment($event)"
+    />
+    <VCCEditAdjustmentTransaction
+      :open-dialog="editAdjustmentTransactionDialogVisible" :transaction-id="selectedTransactionId" :transaction="selectedTransaction" @on-close-dialog="($event) => {
+        editAdjustmentTransactionDialogVisible = false
+        if (!$event) {
+          getList()
+        }
+      }" @on-save-local="($event) => updateCurrentAdjustmentTransaction($event)"
     />
     <ContextMenu ref="contextMenu" :model="menuListItems">
       <template #itemicon="{ item }">

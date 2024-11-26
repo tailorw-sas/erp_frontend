@@ -68,7 +68,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('transaction subcategory'),
   },
   {
-    field: 'amount',
+    field: 'netAmount',
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 required',
@@ -107,7 +107,7 @@ const item = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: 0,
+  netAmount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -116,7 +116,7 @@ const itemTemp = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: 0,
+  netAmount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -177,6 +177,8 @@ async function save(item: { [key: string]: any }) {
     payload.transactionCategory = typeof payload.transactionCategory === 'object' ? payload.transactionCategory.id : payload.transactionCategory
     payload.transactionSubCategory = typeof payload.transactionSubCategory === 'object' ? payload.transactionSubCategory.id : payload.transactionSubCategory
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
+    payload.amount = payload.netAmount
+    delete payload.netAmount
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     onClose(false)
