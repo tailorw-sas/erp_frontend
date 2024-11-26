@@ -5,7 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.EReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
-import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionCheckInCloseOperationRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.TransactionCheckInCloseOperationRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +46,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
     @Override
     public void handle(CreateBankReconciliationCommand command) {
-        RulesChecker.checkRule(new ManualTransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), command.getHotel()));
+        RulesChecker.checkRule(new TransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), command.getHotel()));
         ManageMerchantBankAccountDto merchantBankAccountDto = this.merchantBankAccountService.findById(command.getMerchantBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 

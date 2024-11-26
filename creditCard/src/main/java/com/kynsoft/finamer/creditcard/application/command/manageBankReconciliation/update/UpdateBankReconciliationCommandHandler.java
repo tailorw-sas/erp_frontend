@@ -9,7 +9,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
-import com.kynsoft.finamer.creditcard.domain.rules.manualTransaction.ManualTransactionCheckInCloseOperationRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.TransactionCheckInCloseOperationRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +44,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
     public void handle(UpdateBankReconciliationCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Bank Reconciliation ID cannot be null."));
         ManageBankReconciliationDto dto = this.bankReconciliationService.findById(command.getId());
-        RulesChecker.checkRule(new ManualTransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), dto.getHotel().getId()));
+        RulesChecker.checkRule(new TransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), dto.getHotel().getId()));
 
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateLocalDateTime(dto::setPaidDate, command.getPaidDate(), dto.getPaidDate(), update::setUpdate);
