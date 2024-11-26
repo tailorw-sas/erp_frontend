@@ -1,21 +1,19 @@
-package com.kynsoft.finamer.settings.application.command.manageBankAccount.update;
+package com.kynsoft.finamer.creditcard.application.command.manageBankAccount.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageBankAccountKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.settings.domain.dto.ManageBankAccountDto;
-import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerAccountTypeDto;
-import com.kynsoft.finamer.settings.domain.dto.ManagerBankDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
-import com.kynsoft.finamer.settings.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
-import com.kynsoft.finamer.settings.domain.services.IManagerAccountTypeService;
-import com.kynsoft.finamer.settings.domain.services.IManagerBankService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageBankAccount.ProducerUpdateManageBankAccount;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageBankAccountDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerAccountTypeDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerBankDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.services.IManageBankAccountService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageHotelService;
+import com.kynsoft.finamer.creditcard.domain.services.IManagerAccountTypeService;
+import com.kynsoft.finamer.creditcard.domain.services.IManagerBankService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -32,18 +30,14 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
 
     private final IManagerAccountTypeService accountTypeService;
 
-    private final ProducerUpdateManageBankAccount producerUpdateManageBankAccount;
-
     public UpdateManageBankAccountCommandHandler(IManageBankAccountService service, 
                                                  IManagerBankService bankService, 
                                                  IManageHotelService hotelService, 
-                                                 IManagerAccountTypeService accountTypeService,
-                                                 ProducerUpdateManageBankAccount producerUpdateManageBankAccount) {
+                                                 IManagerAccountTypeService accountTypeService) {
         this.service = service;
         this.bankService = bankService;
         this.hotelService = hotelService;
         this.accountTypeService = accountTypeService;
-        this.producerUpdateManageBankAccount = producerUpdateManageBankAccount;
     }
 
     @Override
@@ -62,11 +56,6 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageBankAccount.update(new UpdateManageBankAccountKafka(
-                    dto.getId(), dto.getAccountNumber(), dto.getStatus().name(),
-                    dto.getManageBank().getName(),dto.getManageHotel().getId(),
-                    dto.getManageBank().getId(), dto.getManageAccountType().getId(),
-                    dto.getDescription()));
         }
     }
 
