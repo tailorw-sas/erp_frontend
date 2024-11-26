@@ -44,6 +44,9 @@ public class ManageInvoiceType implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean enabledToPolicy;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -62,11 +65,12 @@ public class ManageInvoiceType implements Serializable {
         this.credit = dto.isCredit();
         this.income = dto.isIncome();
         this.status = dto.getStatus();
+        this.enabledToPolicy = dto.isEnabledToPolicy();
     }
 
     public ManageInvoiceTypeDto toAggregate() {
         return new ManageInvoiceTypeDto(
-                id, code, name, invoice, credit, income, status
+                id, code, name, invoice, credit, income, status, enabledToPolicy
         );
     }
 
