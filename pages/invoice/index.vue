@@ -224,7 +224,7 @@ const invoiceAllContextMenuItems = ref([
     command: () => {
       attachmentDialogOpen.value = true
     },
-    default: false,
+    default: true,
     disabled: computedShowMenuItemAttachment,
     showItem: true,
   },
@@ -1964,10 +1964,10 @@ function onRowRightClick(event: any) {
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
-  // Adjustment
-  if (event?.data?.status === InvoiceStatus.PROCECSED) {
-    findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
-  }
+  // Adjustment (Se comenta temporalmente, no borrar)
+  // if (event?.data?.status === InvoiceStatus.PROCECSED) {
+  //   findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
+  // }
 
   invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.showItem)]
   // Mostrar solo si es para estos estados
