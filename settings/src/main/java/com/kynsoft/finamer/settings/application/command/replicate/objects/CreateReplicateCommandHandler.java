@@ -462,6 +462,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     for (ManagerCountryDto managerCountryDto : this.managerCountryService.findAllToReplicate()) {
                         this.producerReplicateManageCountryService.create(ReplicateManageCountryKafka.builder()
                                 .id(managerCountryDto.getId())
+                                .language(managerCountryDto.getManagerLanguage().getId())
                                 .status(managerCountryDto.getStatus().name())
                                 .code(managerCountryDto.getCode())
                                 .name(managerCountryDto.getName())
