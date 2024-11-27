@@ -69,7 +69,7 @@ const item = ref<GenericObject>({
   remark: '',
   transaction: props.selectedTransaction?.id,
   attachmentId: '',
-  resource: transaction.value.incomeId,
+  resource: props.selectedTransaction?.id,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
@@ -82,7 +82,7 @@ const itemTemp = ref<GenericObject>({
   remark: '',
   transaction: props.selectedTransaction?.id,
   attachmentId: '',
-  resource: transaction.value.incomeId,
+  resource: props.selectedTransaction?.id,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
@@ -121,7 +121,6 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-
   },
   {
     field: 'filename',
@@ -142,11 +141,10 @@ const Fields: Array<FieldDefinitionType> = [
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'transaction.id', header: 'Transaction Id', type: 'text', width: '100px' },
+  { field: 'transaction.id', header: 'Transaction Id', type: 'text', width: '140px', minWidth: '140px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
   { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
-
 ]
 
 const dialogVisible = ref(props.openDialog)
