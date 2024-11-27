@@ -27,6 +27,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchant.ProducerReplicateManageMerchantService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantConfig.ProducerReplicateManageMerchantConfigService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageMerchantCurency.ProducerReplicateManageMerchantCurrencyService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageNightType.ProducerReplicateManageNightTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentAttachmentStatus.ProducerReplicateManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentSource.ProducerReplicateManagePaymentSourceService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentStatus.ProducerReplicateManagePaymentStatusService;
@@ -122,6 +123,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
 
     private final IManagerMerchantCurrencyService merchantCurrencyService;
     private final ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService;
+
+    private final IManageNightTypeService manageNightTypeService;
+    private final ProducerReplicateManageNightTypeService producerReplicateManageNightTypeService;
+
     private final ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService;
 
     public CreateReplicateCommandHandler(IManageInvoiceTypeService invoiceTypeService,
@@ -174,7 +179,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          IManagerMerchantCurrencyService merchantCurrencyService, 
                                          ProducerReplicateManageMerchantCurrencyService producerReplicateManageMerchantCurrencyService,
                                          IManagerTimeZoneService managerTimeZoneService,
-                                         ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService) {
+                                         ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService,
+                                         IManageNightTypeService manageNightTypeService,
+                                         ProducerReplicateManageNightTypeService producerReplicateManageNightTypeService) {
+        this.manageNightTypeService = manageNightTypeService;
+        this.producerReplicateManageNightTypeService = producerReplicateManageNightTypeService;
         this.tradingCompaniesService = tradingCompaniesService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerLanguageService = managerLanguageService;
@@ -243,6 +252,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     public void handle(CreateReplicateCommand command) {
         for (ObjectEnum object : command.getObjects()) {
             switch (object) {
+                case MANAGE_NIGHT_TYPE -> {
+                    for (ManageNightTypeDto nightTypeDto : this.manageNightTypeService.findAllToReplicate()) {
+                        this.producerReplicateManageNightTypeService.create(new ReplicateManageNightTypeKafka(nightTypeDto.getId(), nightTypeDto.getCode(), nightTypeDto.getName(), nightTypeDto.getStatus().name()));
+                    }
+                }
                 case MANAGE_TRANSACTION_STATUS -> {
                     for (ManageTransactionStatusDto transactionStatusDto : this.manageTransactionStatusService.findAllToReplicate()) {
                         this.replicateManageTransactionStatusService.create(new ReplicateManageTransactionStatusKafka(transactionStatusDto.getId(), transactionStatusDto.getCode(), transactionStatusDto.getName()));
