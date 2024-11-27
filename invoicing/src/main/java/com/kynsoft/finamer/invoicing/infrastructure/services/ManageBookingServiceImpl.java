@@ -202,4 +202,16 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return objectDtos;
     }
 
+
+    public List<ManageBookingDto> findByManageInvoicing(UUID id) {
+        List<Booking> objects = this.repositoryQuery.findByManageInvoicing(id);
+        List<ManageBookingDto> objectDtos = new ArrayList<>();
+
+        for (Booking object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

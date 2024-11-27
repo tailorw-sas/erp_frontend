@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +27,10 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     boolean existsByHotelBookingNumber(String bookingNumber);
 
     Optional<Booking> findManageBookingByHotelBookingNumber(String hotelBookingNumber);
+
+    @Query(value = "SELECT * " +
+            "FROM booking mb " +
+            "JOIN invoice ON mb.manage_invoice = invoice.id " +
+            "WHERE invoice.id = :invoicingId", nativeQuery = true)
+    List<Booking> findByManageInvoicing(@Param("invoicingId") UUID invoicingId);
 }
