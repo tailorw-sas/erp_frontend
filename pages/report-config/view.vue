@@ -76,7 +76,7 @@ const fields = ref<FieldDefinitionType[]>([
     field: 'reportFormatType',
     header: 'Format Type',
     dataType: 'select',
-    class: 'field col-12 md:col-1 required',
+    class: 'field col-12 md:col-1 required auto',
     disabled: false,
     validation: z.object({
       id: z.string().min(1, 'This is a required field'),
@@ -89,7 +89,7 @@ const fields = ref<FieldDefinitionType[]>([
     dataType: 'text',
     disabled: true,
     hidden: true,
-    class: 'field col-12 md:col-1',
+    class: 'field col-12 md:col-1 auto',
     validation: z.string().trim()
     // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
   },
