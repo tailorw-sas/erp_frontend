@@ -55,6 +55,7 @@ const confApi = reactive({
 })
 
 const item = ref({
+  reconciliationId: '0',
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
@@ -63,6 +64,7 @@ const item = ref({
 } as GenericObject)
 
 const itemTemp = ref({
+  reconciliationId: '0',
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
@@ -72,10 +74,18 @@ const itemTemp = ref({
 
 const fields: Array<FieldDefinitionType> = [
   {
+    field: 'reconciliationId',
+    header: 'Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-2',
+    headerClass: 'mb-1',
+  },
+  {
     field: 'merchantBankAccount',
     header: 'Bank Account',
     dataType: 'select',
-    class: 'field col-12 md:col-6 required',
+    class: 'field col-12 md:col-4 required',
     headerClass: 'mb-1',
     validation: validateEntityStatus('bank account'),
   },
@@ -408,6 +418,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.merchantBankAccount = Object.prototype.hasOwnProperty.call(payload.merchantBankAccount, 'id') ? payload.merchantBankAccount.id : payload.merchantBankAccount
     payload.detailsAmount = subTotals.value.amount
+    delete payload.reconciliationId
 
     if (LocalBindTransactionList.value.length > 0) {
       payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
@@ -579,7 +590,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
 <template>
   <div style="max-height: 100vh; height: 90vh">
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      Bank Payment of Merchant
+      New Bank Payment of Merchant
     </div>
     <div class="card p-4 mb-0">
       <EditFormV2
