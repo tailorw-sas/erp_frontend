@@ -58,7 +58,6 @@ const confirm = useConfirm()
 const loadingSearch = ref(false)
 const loadingDefaultResourceType = ref(false)
 const loadingDefaultAttachmentType = ref(false)
-const hasDefaultAttachment = ref(true)
 const initialTotalAttachments = ref(0)
 
 const idItem = ref('')
@@ -180,8 +179,13 @@ const Payload = ref<IQueryRequest>({
 const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
 
+// Validar que no exista dicho attachment type por defecto en la lista
+const computedHasDefaultAttachment = computed(() => {
+  return ListItems.value.length > 0
+})
+
 const disableAttachmentTypeSelector = computed(() => {
-  return idItem.value !== '' || !hasDefaultAttachment.value
+  return idItem.value !== '' || !computedHasDefaultAttachment.value
 })
 
 async function ResetListItems() {
@@ -354,13 +358,8 @@ async function loadDefaultAttachmentType() {
 }
 
 function listDefaultData() {
-  // console.log(item.value)
   loadDefaultResourceType()
-  // Validar que no exista dicho attachment type por defecto en la lista
-  hasDefaultAttachment.value = ListItems.value.some(item => item.type?.isDefault)
-  if (!hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Attachment
-    loadDefaultAttachmentType()
-  }
+  loadDefaultAttachmentType()
 }
 
 function searchAndFilter() {
@@ -725,7 +724,7 @@ onMounted(async () => {
               </template>
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="fullName"
+                  v-if="!loadingSaveAll && !loadingDefaultAttachmentType" id="autocomplete" field="fullName"
                   :disabled="disableAttachmentTypeSelector" item-value="id" :model="data.type"
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)

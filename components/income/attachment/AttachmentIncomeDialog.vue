@@ -86,7 +86,6 @@ const confirm = useConfirm()
 const loadingSearch = ref(false)
 const loadingDefaultResourceType = ref(false)
 const loadingDefaultAttachmentType = ref(false)
-const hasDefaultAttachment = ref(true)
 
 const idItem = ref('')
 const item = ref<GenericObject>({
@@ -210,8 +209,15 @@ const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
 const listItemsLocal = ref<any[]>([...(props.listItems || [])])
 
+// Validar que no exista dicho attachment type por defecto en la lista
+const computedHasDefaultAttachment = computed(() => {
+  return props.isCreationDialog
+    ? listItemsLocal.value.some(item => item.type?.isDefault)
+    : true // Se toma como true, porque ya se debe haber validado previamente que haya un Invoice Support
+})
+
 const disableAttachmentTypeSelector = computed(() => {
-  return idItem.value !== '' || !hasDefaultAttachment.value
+  return idItem.value !== '' || !computedHasDefaultAttachment.value
 })
 
 async function ResetListItems() {
@@ -406,14 +412,8 @@ async function loadDefaultAttachmentType() {
 }
 
 function listDefaultData() {
-  // console.log(item.value)
   loadDefaultResourceType()
-  // Validar que no exista dicho attachment type por defecto en la lista
-  hasDefaultAttachment.value = props.isCreationDialog
-    ? listItemsLocal.value.some(item => item.type?.isDefault)
-    // : ListItems.value.some(item => item.type?.attachInvDefault)
-    : true // Se toma como true, porque ya se debe haber validado previamente que haya un Invoice Support
-  if (props.isCreationDialog && !hasDefaultAttachment.value) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
+  if (props.isCreationDialog) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
     loadDefaultAttachmentType()
   }
 }
@@ -824,7 +824,7 @@ onMounted(() => {
               </template>
               <template #field-type="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll" id="autocomplete" field="fullName"
+                  v-if="!loadingSaveAll && !loadingDefaultAttachmentType" id="autocomplete" field="fullName"
                   :disabled="disableAttachmentTypeSelector" item-value="id" :model="data.type"
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
