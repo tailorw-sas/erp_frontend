@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
-import { z } from 'zod'
 import dayjs from 'dayjs'
 import type { Ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
@@ -14,14 +13,17 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import type { FilterCriteria } from '~/composables/list'
 
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
-const MerchantBankAccountList = ref<any[]>([])
+const BankAccountList = ref<any[]>([])
+const StatusList = ref<any[]>([])
 const LocalBindTransactionList = ref<any[]>([])
 const collectionStatusRefundReceivedList = ref<any[]>([])
 const loadingSaveAll = ref(false)
+const loadingDefaultStatus = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
@@ -54,25 +56,46 @@ const confApi = reactive({
   uriApi: 'bank-reconciliation',
 })
 
+const confStatusListApi = reactive({
+  moduleApi: 'creditcard',
+  uriApi: 'manage-payment-transaction-status',
+})
+
 const item = ref({
-  merchantBankAccount: null,
+  paymentId: '0',
+  bankAccount: null,
   hotel: null,
-  amount: 0,
-  paidDate: '',
   remark: '',
+  status: null
 } as GenericObject)
 
 const itemTemp = ref({
-  merchantBankAccount: null,
+  paymentId: '0',
+  bankAccount: null,
   hotel: null,
-  amount: 0,
-  paidDate: '',
   remark: '',
+  status: null
 })
 
 const fields: Array<FieldDefinitionType> = [
   {
-    field: 'merchantBankAccount',
+    field: 'paymentId',
+    header: 'Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-2',
+    headerClass: 'mb-1',
+  },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    dataType: 'select',
+    class: 'field col-12 md:col-4 required',
+    headerClass: 'mb-1',
+    validation: validateEntityStatus('hotel'),
+  },
+  {
+    field: 'bankAccount',
     header: 'Bank Account',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
@@ -80,40 +103,12 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('bank account'),
   },
   {
-    field: 'hotel',
-    header: 'Hotel',
+    field: 'status',
+    header: 'Status',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
     headerClass: 'mb-1',
-    validation: validateEntityStatus('hotel'),
-  },
-  {
-    field: 'amount',
-    header: 'Amount',
-    dataType: 'number',
-    disabled: false,
-    minFractionDigits: 2,
-    maxFractionDigits: 4,
-    class: 'field col-12 md:col-3 required',
-    headerClass: 'mb-1',
-    validation: z.number({
-      invalid_type_error: 'The amount field must be a number',
-      required_error: 'The amount field is required',
-    })
-      .refine(val => Number.parseFloat(String(val)) >= 0, {
-        message: 'The amount must be zero or greater',
-      })
-  },
-  {
-    field: 'paidDate',
-    header: 'Paid Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-3 required ',
-    headerClass: 'mb-1',
-    validation: z.date({
-      required_error: 'The paid date field is required',
-      invalid_type_error: 'The paid date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The paid date field cannot be greater than current date')
+    validation: validateEntityStatus('status'),
   },
   {
     field: 'remark',
@@ -354,13 +349,72 @@ async function getHotelList(query: string) {
   }
 }
 
-async function getMerchantBankAccountList(query: string) {
+async function getStatusList(isDefault: boolean = false, filter?: FilterCriteria[]) {
+  try {
+    if (isDefault) {
+      loadingDefaultStatus.value = true
+    }
+    const payload = {
+      filter: filter ?? [],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    StatusList.value = []
+    for (const iterator of dataList) {
+      StatusList.value = [...StatusList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status ?? 'ACTIVE', fullName: `${iterator.code} - ${iterator.name}` }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading Attachment Type list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultStatus.value = false
+    }
+  }
+}
+
+async function loadDefaultStatus() {
+  const filter: FilterCriteria[] = [
+    {
+      key: 'inProgress',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: true,
+    },
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getStatusList(true, filter)
+  item.value.status = StatusList.value.length > 0 ? StatusList.value[0] : null
+  formReload.value++
+}
+
+async function getBankAccountList(query: string) {
+  if (!item.value.hotel) {
+    return
+  }
   try {
     const payload = {
       filter: [{
         key: 'accountNumber',
         operator: 'LIKE',
         value: query,
+        logicalOperation: 'AND'
+      }, {
+        key: 'manageHotel.id',
+        operator: 'EQUALS',
+        value: item.value.hotel.id,
         logicalOperation: 'AND'
       }, {
         key: 'status',
@@ -374,13 +428,12 @@ async function getMerchantBankAccountList(query: string) {
       pageSize: 20,
       page: 0,
     }
-    const response: any = await GenericService.search('creditcard', 'manage-merchant-bank-account', payload)
+    const response: any = await GenericService.search('settings', 'manage-bank-account', payload)
     const { data: dataList } = response
-    MerchantBankAccountList.value = []
+    BankAccountList.value = []
 
     for (const iterator of dataList) {
-      const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')
-      MerchantBankAccountList.value = [...MerchantBankAccountList.value, { id: iterator.id, name: `${merchantNames} - ${iterator.description} - ${iterator.accountNumber}`, status: iterator.status, managerMerchant: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
+      BankAccountList.value = [...BankAccountList.value, { id: iterator.id, name: `${iterator.accountNumber}${(iterator.description ? ` - ${iterator.description}` : '')}`, status: iterator.status, managerMerchant: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
     }
   }
   catch (error) {
@@ -406,7 +459,7 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.paidDate = payload.paidDate ? dayjs(payload.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
-    payload.merchantBankAccount = Object.prototype.hasOwnProperty.call(payload.merchantBankAccount, 'id') ? payload.merchantBankAccount.id : payload.merchantBankAccount
+    payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
     payload.detailsAmount = subTotals.value.amount
 
     if (LocalBindTransactionList.value.length > 0) {
@@ -574,6 +627,10 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
     pagination.value.totalElements = newValue?.length ?? 0
   }
 })
+
+onMounted(() => {
+  loadDefaultStatus()
+})
 </script>
 
 <template>
@@ -636,6 +693,9 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
             @change="($event) => {
               if (item.hotel && $event.id !== item.hotel.id) {
                 clearTransactions()
+                // Limpiar selector de bank account
+                onUpdate('bankAccount', null)
+                item.bankAccount = null
               }
               onUpdate('hotel', $event)
               item.hotel = $event
@@ -644,21 +704,35 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
-        <template #field-merchantBankAccount="{ item: data, onUpdate }">
+        <template #field-bankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
-            :model="data.merchantBankAccount"
-            :suggestions="[...MerchantBankAccountList]"
+            :disabled="!data.hotel"
+            :model="data.bankAccount"
+            :suggestions="[...BankAccountList]"
             @change="($event) => {
-              onUpdate('merchantBankAccount', $event)
-              item.merchantBankAccount = $event
+              onUpdate('bankAccount', $event)
+              item.bankAccount = $event
             }"
-            @load="($event) => getMerchantBankAccountList($event)"
+            @load="($event) => getBankAccountList($event)"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+        <template #field-status="{ item: data, onUpdate }">
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll && !loadingDefaultStatus" id="autocomplete"
+            field="fullName" item-value="id" disabled :model="data.status" :suggestions="StatusList"
+            @change="($event) => {
+              onUpdate('status', $event)
+            }" @load="($event) => getStatusList()"
+          >
+            <template #option="props">
+              <span>{{ props.item.fullName }}</span>
+            </template>
+          </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
       </EditFormV2>
@@ -699,7 +773,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
         v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
       /> -->
       <div>
-        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
