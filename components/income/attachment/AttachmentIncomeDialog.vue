@@ -545,6 +545,11 @@ async function saveItem(item: { [key: string]: any }) {
   }
 }
 
+function canNotDeleteLastDefaultItem() {
+  const countDefaultsItems = listItemsLocal.value.filter((item: any) => item.type?.isDefault).length
+  return props.isCreationDialog && countDefaultsItems === 1 && listItemsLocal.value.length > 1
+}
+
 function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
     saveItem(item)
@@ -578,9 +583,14 @@ function requireConfirmationToDelete(event: any) {
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
     accept: async () => {
-      await deleteItem(idItem.value)
-      if (!props.isCreationDialog) {
-        getList()
+      if (item.value.type?.isDefault && canNotDeleteLastDefaultItem()) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item cannot be deleted', life: 3000 })
+      }
+      else {
+        await deleteItem(idItem.value)
+        if (!props.isCreationDialog) {
+          getList()
+        }
       }
     },
     reject: () => {
@@ -743,7 +753,7 @@ onMounted(() => {
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-history',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
