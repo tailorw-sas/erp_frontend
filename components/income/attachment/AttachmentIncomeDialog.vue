@@ -169,7 +169,7 @@ const Fields: Array<FieldDefinitionType> = [
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px' },
+  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px', minWidth: '100px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
   { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
@@ -305,13 +305,13 @@ async function getAttachmentTypeList(isDefault: boolean = false, filter?: Filter
     }
     const payload
       = {
-      filter: filter ?? [],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: filter ?? [],
+        query: '',
+        pageSize: 20,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
     const { data: dataList } = response
@@ -654,13 +654,13 @@ function formatSize(bytes: number) {
 function downloadFile() {
   if (listItemsLocal.value?.length > 0) {
     // Selecciona el primer elemento automáticamente
-    item.value = { ...listItemsLocal.value[0] }; // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id; // Carga el ID del primer elemento
+    item.value = { ...listItemsLocal.value[0] } // Asigna el primer elemento a item.value
+    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id // Carga el ID del primer elemento
   }
   if (ListItems.value?.length > 0) {
     // Selecciona el primer elemento automáticamente
-    item.value = { ...ListItems.value[0] }; // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = ListItems.value[0]?.id; // Carga el ID del primer elemento
+    item.value = { ...ListItems.value[0] } // Asigna el primer elemento a item.value
+    idItemToLoadFirstTime.value = ListItems.value[0]?.id // Carga el ID del primer elemento
   }
 
   if (item.value) {
@@ -738,9 +738,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <Dialog v-model:visible="dialogVisible" modal :header="header" class="h-screen"
+  <Dialog
+    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
-    @hide="closeDialog(ListItems.length)">
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
+    @hide="closeDialog(ListItems.length)"
+  >
     <div class="grid p-fluid formgrid">
       <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
         <div class="flex justify-content-end mb-1">
@@ -767,19 +777,25 @@ onMounted(() => {
                 </div>
               </div>
               <div class="flex align-items-center">
-                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch"
-                  @click="searchAndFilter" />
-                <Button v-tooltip.top="'Clear'" class="w-3rem" outlined icon="pi pi-filter-slash"
-                  :loading="loadingSearch" @click="clearFilterToSearch" />
+                <Button
+                  v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :loading="loadingSearch"
+                  @click="searchAndFilter"
+                />
+                <Button
+                  v-tooltip.top="'Clear'" class="w-3rem" outlined icon="pi pi-filter-slash"
+                  :loading="loadingSearch" @click="clearFilterToSearch"
+                />
               </div>
             </div>
           </AccordionTab>
         </Accordion>
-        <DynamicTable :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
+        <DynamicTable
+          :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
           :pagination="Pagination" :is-custom-sorting="!isCreationDialog" @update:clicked-item="getItemById($event)"
           @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
           @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-          @on-list-item="ResetListItems" @on-sort-field="OnSortField" />
+          @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+        />
       </div>
       <div class="col-12 order-2 md:order-0 md:col-3 pt-5">
         <div>
@@ -787,15 +803,19 @@ onMounted(() => {
             {{ idItem !== '' ? "Edit" : "Add" }}
           </div>
           <div class="card">
-            <EditFormV2 :key="formReload" :fields="Fields" :item="item" :show-actions="true"
+            <EditFormV2
+              :key="formReload" :fields="Fields" :item="item" :show-actions="true"
               :loading-save="loadingSaveAll" @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
-              @submit="requireConfirmationToSave($event)" @submit-form="requireConfirmationToSave">
+              @submit="requireConfirmationToSave($event)" @submit-form="requireConfirmationToSave"
+            >
               <template #field-resourceType="{ item: data, onUpdate }">
-                <DebouncedAutoCompleteComponent v-if="!loadingSaveAll && !loadingDefaultResourceType" id="autocomplete"
+                <DebouncedAutoCompleteComponent
+                  v-if="!loadingSaveAll && !loadingDefaultResourceType" id="autocomplete"
                   field="fullName" item-value="id" disabled :model="data.resourceType" :suggestions="resourceTypeList"
                   @change="($event) => {
                     onUpdate('resourceType', $event)
-                  }" @load="($event) => getResourceTypeList()">
+                  }" @load="($event) => getResourceTypeList()"
+                >
                   <template #option="props">
                     <span>{{ props.item.fullName }}</span>
                   </template>
@@ -803,11 +823,13 @@ onMounted(() => {
                 <Skeleton v-else height="2rem" class="mb-2" />
               </template>
               <template #field-type="{ item: data, onUpdate }">
-                <DebouncedAutoCompleteComponent v-if="!loadingSaveAll" id="autocomplete" field="fullName"
+                <DebouncedAutoCompleteComponent
+                  v-if="!loadingSaveAll" id="autocomplete" field="fullName"
                   :disabled="disableAttachmentTypeSelector" item-value="id" :model="data.type"
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
-                  }" @load="($event) => getAttachmentTypeList($event)">
+                  }" @load="($event) => getAttachmentTypeList($event)"
+                >
                   <template #option="props">
                     <span>{{ props.item.fullName }}</span>
                   </template>
@@ -815,18 +837,22 @@ onMounted(() => {
                 <Skeleton v-else height="2rem" class="mb-2" />
               </template>
               <template #field-file="{ onUpdate, item: data }">
-                <FileUpload accept="application/pdf" :disabled="idItem !== ''" :max-file-size="1000000"
+                <FileUpload
+                  accept="application/pdf" :disabled="idItem !== ''" :max-file-size="1000000"
                   :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
                     onUpdate('file', file)
                     onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
-                  }">
+                  }"
+                >
                   <template #header="{ chooseCallback }">
                     <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                       <div class="flex gap-2">
                         <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                        <Button icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file" text
-                          @click="onUpdate('file', null)" />
+                        <Button
+                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file" text
+                          @click="onUpdate('file', null)"
+                        />
                       </div>
                     </div>
                   </template>
@@ -835,9 +861,11 @@ onMounted(() => {
                       <ul v-if="files[0] || data.file" class=" p-0 m-0" style="width: 300px;  overflow: hidden;">
                         <li class=" surface-border flex align-items-center w-fit">
                           <div class="flex flex-column w-fit  text-overflow-ellipsis">
-                            <span class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
-                              style="width: 300px;">{{ data.file.name
-                                || data.file.split("/")[data.file.split("/")?.length - 1] }}</span>
+                            <span
+                              class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
+                              style="width: 300px;"
+                            >{{ data.file.name
+                              || data.file.split("/")[data.file.split("/")?.length - 1] }}</span>
                             <span v-if="data.file.size" class="text-900 font-medium">
                               <Badge severity="warning">
                                 {{ formatSize(data.file.size) }}
@@ -851,30 +879,42 @@ onMounted(() => {
                 </FileUpload>
               </template>
               <template #form-footer="footProps">
-                <Button v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save" :disabled="idItem !== ''"
-                  @click="footProps.item.submitForm($event)" />
-                <Button v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
-                  :disabled="listItemsLocal.length === 0 && ListItems.length === 0" @click="downloadFile" />
-                <Button v-tooltip.top="'Show History'" :disabled="props.isCreationDialog" class="w-3rem ml-1 sticky"
-                  icon="pi pi-book" @click="() => attachmentHistoryDialogOpen = true" />
+                <Button
+                  v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save" :disabled="idItem !== ''"
+                  @click="footProps.item.submitForm($event)"
+                />
+                <Button
+                  v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
+                  :disabled="listItemsLocal.length === 0 && ListItems.length === 0" @click="downloadFile"
+                />
+                <Button
+                  v-tooltip.top="'Show History'" :disabled="props.isCreationDialog" class="w-3rem ml-1 sticky"
+                  icon="pi pi-book" @click="() => attachmentHistoryDialogOpen = true"
+                />
                 <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
-                <Button v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky"
-                  icon="pi pi-trash" :disabled="idItem === ''" @click="requireConfirmationToDelete" />
-                <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times"
+                <Button
+                  v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky"
+                  icon="pi pi-trash" :disabled="idItem === ''" @click="requireConfirmationToDelete"
+                />
+                <Button
+                  v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times"
                   @click="() => {
                     clearForm()
                     closeDialog(ListItems.length)
-                  }" />
+                  }"
+                />
               </template>
             </EditFormV2>
           </div>
         </div>
       </div>
       <div v-if="attachmentHistoryDialogOpen">
-        <AttachmentIncomeHistoryDialog :selected-attachment="selectedAttachment"
+        <AttachmentIncomeHistoryDialog
+          :selected-attachment="selectedAttachment"
           :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
           :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="invoice.id" :selected-invoice-obj="invoice"
-          header="Attachment Status History" :attachment-type="item.type" />
+          header="Attachment Status History" :attachment-type="item.type"
+        />
       </div>
     </div>
   </Dialog>
