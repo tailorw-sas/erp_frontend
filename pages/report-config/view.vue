@@ -480,7 +480,7 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
               header: element.label,
               dataType: element.componentType,
               class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
-              validation: element.reportValidation ? element.reportValidation : z.object({}).nullable(),
+              // validation: element.reportValidation ? element.reportValidation : z.object({}).nullable(),
               objApi: {
                 moduleApi: element.module,
                 uriApi: element.service
@@ -494,7 +494,7 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
               header: element.label,
               dataType: element.componentType,
               class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
-              validation: element.reportValidation ? element.reportValidation : z.string().trim()
+              // validation: element.reportValidation ? element.reportValidation : z.string().trim()
             }]
           }
         }
