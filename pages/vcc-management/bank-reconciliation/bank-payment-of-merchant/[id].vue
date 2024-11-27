@@ -76,6 +76,7 @@ const confStatusListApi = reactive({
 })
 
 const item = ref({
+  reconciliationId: '',
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
@@ -85,6 +86,7 @@ const item = ref({
 } as GenericObject)
 
 const itemTemp = ref({
+  reconciliationId: '',
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
@@ -95,11 +97,19 @@ const itemTemp = ref({
 
 const fields: Array<FieldDefinitionType> = [
   {
+    field: 'reconciliationId',
+    header: 'Id',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-2',
+    headerClass: 'mb-1',
+  },
+  {
     field: 'merchantBankAccount',
     header: 'Bank Account',
     dataType: 'select',
     disabled: true,
-    class: 'field col-12 md:col-6 required',
+    class: 'field col-12 md:col-4 required',
     headerClass: 'mb-1',
     validation: validateEntityStatus('bank account'),
   },
@@ -260,6 +270,7 @@ async function getItemById(id: string) {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
         item.value.id = id
+        item.value.reconciliationId = response.reconciliationId
         if (response.merchantBankAccount) {
           const merchantNames = response.merchantBankAccount?.managerMerchant?.map((item: any) => item.description).join(' - ')
           response.merchantBankAccount.name = `${merchantNames} - ${response.merchantBankAccount.description} - ${response.merchantBankAccount.accountNumber}`
@@ -819,19 +830,6 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-reconcileStatus="{ item: data, onUpdate }">
-          <!--          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
-            id="autocomplete"
-            field="name"
-            item-value="id"
-            :model="data.reconcileStatus"
-            :suggestions="StatusList"
-            @change="($event) => {
-              onUpdate('reconcileStatus', $event)
-              item.reconcileStatus = $event
-            }"
-            @load="($event) => getStatusList($event)"
-          /> -->
           <Dropdown
             v-if="!loadingSaveAll"
             v-model="data.reconcileStatus"
