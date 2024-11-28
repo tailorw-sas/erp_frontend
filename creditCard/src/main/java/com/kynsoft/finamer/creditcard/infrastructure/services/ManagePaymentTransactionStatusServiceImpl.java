@@ -10,9 +10,9 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManagePaymentTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.EHotelPaymentStatus;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.EPaymentTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagePaymentTransactionStatus;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManagePaymentTransactionStatusWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManagePaymentTransactionStatusReadDataJPARepository;
@@ -27,13 +27,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class ManagePaymentTransactionStatusImpl implements IManagePaymentTransactionStatus {
+public class ManagePaymentTransactionStatusServiceImpl implements IManagePaymentTransactionStatusService {
 
     private final ManagePaymentTransactionStatusWriteDataJPARepository repositoryCommand;
 
     private final ManagePaymentTransactionStatusReadDataJPARepository repositoryQuery;
 
-    public ManagePaymentTransactionStatusImpl(ManagePaymentTransactionStatusWriteDataJPARepository repositoryCommand, ManagePaymentTransactionStatusReadDataJPARepository repositoryQuery) {
+    public ManagePaymentTransactionStatusServiceImpl(ManagePaymentTransactionStatusWriteDataJPARepository repositoryCommand, ManagePaymentTransactionStatusReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
@@ -105,7 +105,7 @@ public class ManagePaymentTransactionStatusImpl implements IManagePaymentTransac
     }
 
     @Override
-    public ManagePaymentTransactionStatusDto findByEReconcileTransactionStatus(EHotelPaymentStatus hotelPaymentStatus) {
+    public ManagePaymentTransactionStatusDto findByEPaymentTransactionStatus(EPaymentTransactionStatus hotelPaymentStatus) {
         switch (hotelPaymentStatus){
             case IN_PROGRESS -> {
                 return this.repositoryQuery.findByInProgress().map(ManagePaymentTransactionStatus::toAggregate).orElseThrow(()->

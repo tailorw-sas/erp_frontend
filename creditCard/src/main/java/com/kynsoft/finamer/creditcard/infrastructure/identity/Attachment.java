@@ -89,7 +89,7 @@ public class Attachment implements Serializable {
                 employeeId, 
                 createdAt, 
                 paymentResourceType != null ? paymentResourceType.toAggregate() : null,
-                hotelPayment != null ? hotelPayment.toAggregate() : null
+                hotelPayment != null ? hotelPayment.toAggregateSimple() : null
         );
     }
 

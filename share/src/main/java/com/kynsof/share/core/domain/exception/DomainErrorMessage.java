@@ -379,7 +379,10 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_HOTEL_PAYMENT_STATUS_COMPLETED_NOT_FOUND(1157, Series.DOMAIN_ERROR,"There is no hotel payment status of type completed selected by default."),
     MANAGE_HOTEL_PAYMENT_STATUS_CANCELLED_NOT_FOUND(1158, Series.DOMAIN_ERROR,"There is no hotel payment status of type cancelled selected by default."),
     MANAGE_HOTEL_PAYMENT_STATUS_APPLIED_NOT_FOUND(1159, Series.DOMAIN_ERROR,"There is no hotel payment status of type applied selected by default."),
-    TRANSACTION_CLOSE_OPERATION_OUT_OF_RANGE(1160, Series.DOMAIN_ERROR, "Transaction Date is out of close operation");
+    TRANSACTION_CLOSE_OPERATION_OUT_OF_RANGE(1160, Series.DOMAIN_ERROR, "Transaction Date is out of close operation"),
+    TRANSACTION_MUST_HAVE_ATTACHMENT_TYPE(1161, Series.DOMAIN_ERROR,"The transaction must have at least one attachment of type default."),
+    TRANSACTION_RECONCILIATION_OR_PAYMENT_RELATION(1162, Series.DOMAIN_ERROR,"This transaction already belongs to another relationship."),
+    HOTEL_PAYMENT_NOT_FOUND(1163, Series.DOMAIN_ERROR,"Hotel payment not found.");
 
     private static final DomainErrorMessage[] VALUES;
 

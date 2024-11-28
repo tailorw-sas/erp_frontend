@@ -3,15 +3,15 @@ package com.kynsoft.finamer.creditcard.application.query.managePaymentTransactio
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManagePaymentTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FindManagePaymentTransactionStatusByIdQueryHandler implements IQueryHandler<FindManagePaymentTransactionStatusByIdQuery, ManagePaymentTransactionStatusResponse> {
 
-    private final IManagePaymentTransactionStatus service;
+    private final IManagePaymentTransactionStatusService service;
 
-    public FindManagePaymentTransactionStatusByIdQueryHandler(IManagePaymentTransactionStatus service) {
+    public FindManagePaymentTransactionStatusByIdQueryHandler(IManagePaymentTransactionStatusService service) {
         this.service = service;
     }
 

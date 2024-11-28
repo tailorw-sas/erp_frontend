@@ -2,15 +2,15 @@ package com.kynsoft.finamer.creditcard.application.query.managePaymentTransactio
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GetSearchManagePaymentTransactionStatusQueryHandler implements IQueryHandler<GetSearchManagePaymentTransactionStatusQuery, PaginatedResponse> {
 
-    private final IManagePaymentTransactionStatus service;
+    private final IManagePaymentTransactionStatusService service;
 
-    public GetSearchManagePaymentTransactionStatusQueryHandler(IManagePaymentTransactionStatus service) {
+    public GetSearchManagePaymentTransactionStatusQueryHandler(IManagePaymentTransactionStatusService service) {
         this.service = service;
     }
 

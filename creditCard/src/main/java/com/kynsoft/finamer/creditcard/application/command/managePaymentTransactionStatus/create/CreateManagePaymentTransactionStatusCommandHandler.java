@@ -4,7 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.rules.managePaymentTransactionStatus.*;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,9 +12,9 @@ import java.util.List;
 @Component
 public class CreateManagePaymentTransactionStatusCommandHandler implements ICommandHandler<CreateManagePaymentTransactionStatusCommand> {
 
-    private final IManagePaymentTransactionStatus service;
+    private final IManagePaymentTransactionStatusService service;
 
-    public CreateManagePaymentTransactionStatusCommandHandler(IManagePaymentTransactionStatus service) {
+    public CreateManagePaymentTransactionStatusCommandHandler(IManagePaymentTransactionStatusService service) {
         this.service = service;
     }
 
