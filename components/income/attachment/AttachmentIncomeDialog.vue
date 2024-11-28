@@ -413,9 +413,7 @@ async function loadDefaultAttachmentType() {
 
 function listDefaultData() {
   loadDefaultResourceType()
-  if (props.isCreationDialog) { // Se debe permitir seleccionar si no es local, no se cargan por defecto en este caso ya que debe existir un Invoice Attachment
-    loadDefaultAttachmentType()
-  }
+  loadDefaultAttachmentType()
 }
 
 function searchAndFilter() {
@@ -493,8 +491,8 @@ async function deleteItem(id: string) {
     clearForm()
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
   }
-  catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
     loadingSaveAll.value = false
   }
   finally {
