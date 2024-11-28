@@ -28,6 +28,7 @@ public class AttachmentResponse implements IResponse {
     private UUID employeeId;
     private LocalDateTime createdAt;
     private GetSearchResourceTypeResponse paymentResourceType;
+    private HotelPaymentBasicResponse hotelPayment;
 
     public AttachmentResponse(AttachmentDto dto) {
         this.id = dto.getId();
@@ -46,5 +47,6 @@ public class AttachmentResponse implements IResponse {
                     .code(dto.getPaymentResourceType().getCode())
                     .name(dto.getPaymentResourceType().getName()).build()
                 : null;
+        this.hotelPayment = dto.getHotelPayment() != null ? new HotelPaymentBasicResponse(dto.getHotelPayment()) : null;
     }
 }

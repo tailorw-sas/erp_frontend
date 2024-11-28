@@ -24,6 +24,7 @@ public class AttachmentDto {
     private UUID employeeId;
     private LocalDateTime createdAt;
     private ResourceTypeDto paymentResourceType;
+    private HotelPaymentDto hotelPayment;
 
     public AttachmentDto(AttachmentDto dto) {
         this.id = UUID.randomUUID();
@@ -37,5 +38,6 @@ public class AttachmentDto {
         this.employeeId = dto.getEmployeeId();
         this.createdAt = dto.getCreatedAt();
         this.paymentResourceType = dto.getPaymentResourceType();
+        this.hotelPayment = dto.getHotelPayment();
     }
 }

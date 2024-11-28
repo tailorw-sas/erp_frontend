@@ -105,11 +105,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         for (PartialCloneInvoiceAdjustmentRelation adjustmentRequest : command.getRoomRateAdjustments()) {
             for (ManageRoomRateDto roomRate : roomRateDtos) {
                 if (adjustmentRequest.getRoomRate().equals(roomRate.getId())) {
-                    RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-                            this.closeOperationService,
-                            adjustmentRequest.getAdjustment().getDate().toLocalDate(),
-                            invoiceToClone.getHotel().getId()
-                    ));
                     Double adjustmentAmount = adjustmentRequest.getAdjustment().getAmount();
                     roomRate.setInvoiceAmount(roomRate.getInvoiceAmount() + adjustmentAmount);
                     List<ManageAdjustmentDto> adjustmentDtoList = roomRate.getAdjustments() != null ? roomRate.getAdjustments() : new LinkedList<>();
@@ -117,7 +112,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                             adjustmentRequest.getAdjustment().getId(),
                             null,
                             adjustmentAmount,
-                            adjustmentRequest.getAdjustment().getDate(),
+                            invoiceDate(invoiceToClone.getHotel().getId()),
                             adjustmentRequest.getAdjustment().getDescription(),
                             adjustmentRequest.getAdjustment().getTransactionType() != null
                             ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())

@@ -21,4 +21,5 @@ public class CreateAttachmentRequest {
     private String employee;
     private UUID employeeId;
     private UUID paymentResourceType;
+    private UUID hotelPayment;
 }
