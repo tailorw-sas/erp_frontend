@@ -5,10 +5,7 @@ import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
-import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
-import com.kynsoft.finamer.creditcard.domain.services.IProcessErrorLogService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
+import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
@@ -26,11 +23,12 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final IParameterizationService parameterizationService;
     private final IProcessErrorLogService processErrorLogService;
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
+    private final IManageMerchantConfigService merchantConfigService;
 
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
                                                            ManageTransactionStatusServiceImpl transactionStatusService,
                                                            TransactionPaymentLogsService transactionPaymentLogsService,
-                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService) {
+                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageMerchantConfigService merchantConfigService) {
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
@@ -39,6 +37,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         this.parameterizationService = parameterizationService;
         this.processErrorLogService = processErrorLogService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.merchantConfigService = merchantConfigService;
     }
 
     @Override
@@ -92,8 +91,9 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionPaymentLogsDto.setIsProcessed(true);
         this.transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
+        ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         //Enviar correo (voucher) de confirmacion a las personas implicadas
-        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto);
+        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
 
     }
 }
