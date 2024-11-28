@@ -100,7 +100,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  managerMerchant: null,
+  managerMerchant: [],
   manageBank: null,
   description: '',
   accountNumber: '',
@@ -166,6 +166,7 @@ function clearForm() {
   formReload.value++
   MerchantList.value = []
   BankList.value = []
+  CreditCardTypeList.value = []
 }
 
 async function getList() {
