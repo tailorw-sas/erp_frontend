@@ -2,7 +2,6 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import dayjs from 'dayjs'
 
@@ -1115,10 +1114,12 @@ async function saveItem(item: { [key: string]: any }) {
         detail: `The clonation invoice ${invoiceNo} was created successfully`,
         life: 10000
       })
+      // await new Promise(resolve => setTimeout(resolve, 5000))
+      navigateTo('/invoice')
     }
-    else {
+    /* else {
       throw new Error('Response object or ID is undefined')
-    }
+    } */
   }
   catch (error: any) {
     successOperation = false
@@ -1141,11 +1142,8 @@ async function saveItem(item: { [key: string]: any }) {
 
         // Obtener los detalles del elemento recién creado
       }
-
       // clearForm();
     }
-    await new Promise(resolve => setTimeout(resolve, 5000))
-    navigateTo('/invoice')
   }
 }
 const goToList = async () => await navigateTo('/invoice')
