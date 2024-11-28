@@ -132,7 +132,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
             //Enviar correo (voucher) de confirmacion a las personas implicadas
-            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto);
+            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
 
             command.setResult(transactionResponse);
         } else {

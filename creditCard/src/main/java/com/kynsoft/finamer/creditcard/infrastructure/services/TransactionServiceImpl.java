@@ -224,7 +224,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
     //Conformar el correo para confirmar que la transaccion fue Recivida
     @Override
-    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto){
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto){
         if(transactionDto.getEmail() != null){
             TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
@@ -238,7 +238,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
             // Variables para el template de email, cambiar cuando keimer genere la plantilla
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("commerce", "Finamer Do"),
+                    new MailJetVar("commerce", merchantConfigDto.getName()),
                     new MailJetVar("merchant", transactionDto.getMerchant().getDescription()),
                     new MailJetVar("hotel", transactionDto.getHotel().getName()),
                     new MailJetVar("number_id", transactionDto.getId()),
