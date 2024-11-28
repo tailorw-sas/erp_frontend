@@ -3,17 +3,17 @@ package com.kynsoft.finamer.creditcard.domain.rules.managePaymentTransactionStat
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.BusinessRule;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
 
 import java.util.UUID;
 
 public class ManagePaymentTransactionStatusInProgressMustBeUniqueRule extends BusinessRule {
 
-    private final IManagePaymentTransactionStatus service;
+    private final IManagePaymentTransactionStatusService service;
 
     private final UUID id;
 
-    public ManagePaymentTransactionStatusInProgressMustBeUniqueRule(IManagePaymentTransactionStatus service,
+    public ManagePaymentTransactionStatusInProgressMustBeUniqueRule(IManagePaymentTransactionStatusService service,
                                                                     UUID id) {
         super(
                 DomainErrorMessage.MANAGE_HOTEL_PAYMENT_STATUS_CHECK_IN_PROGRESS,

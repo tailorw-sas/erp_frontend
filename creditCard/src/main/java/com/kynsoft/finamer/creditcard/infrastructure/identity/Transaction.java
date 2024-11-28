@@ -127,6 +127,10 @@ public class Transaction implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean hasAttachments;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_payment")
+    private HotelPayment hotelPayment;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -166,6 +170,7 @@ public class Transaction implements Serializable {
                         return attachment;
                     }).collect(Collectors.toList())
                 : null;
+        this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
     }
 
     public TransactionDto toAggregateParent() {
@@ -198,7 +203,8 @@ public class Transaction implements Serializable {
                 adjustment,
                 paymentDate,
                 reconciliation != null ? reconciliation.toAggregateSimple() : null,
-                attachments != null ? attachments.stream().map(Attachment::toAggregate).collect(Collectors.toList()) : null
+                attachments != null ? attachments.stream().map(Attachment::toAggregate).collect(Collectors.toList()) : null,
+                hotelPayment != null ? hotelPayment.toAggregateSimple() : null
         );
     }
 
