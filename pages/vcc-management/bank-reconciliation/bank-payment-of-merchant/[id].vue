@@ -548,7 +548,6 @@ async function bindTransactions(transactions: any[]) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = {}
     payload.bankReconciliationId = idItem.value
-
     if (transactions.length > 0) {
       payload.transactionIds = transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
       const adjustmentTransactions = transactions.filter((t: any) => t.adjustment)
@@ -556,7 +555,7 @@ async function bindTransactions(transactions: any[]) {
         agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
         transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
         transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
-        amount: elem.amount,
+        amount: elem.netAmount,
         reservationNumber: elem.reservationNumber,
         referenceNumber: elem.referenceNumber
       }))
