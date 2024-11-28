@@ -155,9 +155,6 @@ onMounted(() => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
     }"
     @hide="closeDialog"
   >
