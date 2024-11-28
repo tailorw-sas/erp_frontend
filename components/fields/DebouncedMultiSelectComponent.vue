@@ -99,12 +99,12 @@ watch(() => props.suggestions, (newSuggestions) => {
   >
     <template #value>
       <slot name="custom-value" :value="props.model" class="custom-chip">
-        <span v-for="(item, index) in props.model.slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
+        <span v-for="(item, index) in (props.model || []).slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
           <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item[props.field] }}</span>
           <button class="remove-button" aria-label="Remove" @click.stop="removeItem(item)"><i class="pi pi-times-circle" /></button>
         </span>
         <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
-        <span v-if="props.model.length > props.maxSelectedLabels" class="custom-chip">
+        <span v-if="props.model && props.model.length > props.maxSelectedLabels" class="custom-chip">
           <span>{{ `+${props.model.length - props.maxSelectedLabels}` }}</span>
         </span>
       </slot>
