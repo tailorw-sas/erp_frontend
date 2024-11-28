@@ -21,4 +21,5 @@ public class ReplicateManageCityStateKafka implements Serializable {
     private String description;
     private String status;
     private UUID country;
+    private UUID timeZone;
 }

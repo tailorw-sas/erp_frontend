@@ -38,6 +38,7 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
 
     @Override
     public Long create(MasterPaymentAttachmentDto dto) {
+        dto.setAttachmentId(this.findMaxId());
         MasterPaymentAttachment data = new MasterPaymentAttachment(dto);
         return this.repositoryCommand.save(data).getAttachmentId();
     }
@@ -46,6 +47,7 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
     public void create(List<MasterPaymentAttachmentDto> dtos) {
         List<MasterPaymentAttachment> masterPaymentAttachments = new ArrayList<>();
         for (MasterPaymentAttachmentDto dto : dtos) {
+            dto.setAttachmentId(this.findMaxId());
             masterPaymentAttachments.add(new MasterPaymentAttachment(dto));
         }
         this.repositoryCommand.saveAll(masterPaymentAttachments);
@@ -123,6 +125,11 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
                 .stream()
                 .map(MasterPaymentAttachment::toAggregate)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Long findMaxId() {
+        return this.repositoryQuery.findMaxId() + 1;
     }
 
 }

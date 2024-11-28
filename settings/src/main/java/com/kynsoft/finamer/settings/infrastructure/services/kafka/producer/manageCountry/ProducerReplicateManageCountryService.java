@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry;
 
-import com.kynsof.share.core.domain.kafka.entity.ReplicateB2BPartnerTypeKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCountryKafka;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;

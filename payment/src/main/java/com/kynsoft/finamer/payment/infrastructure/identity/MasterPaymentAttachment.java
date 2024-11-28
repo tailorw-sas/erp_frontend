@@ -10,8 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -34,8 +32,9 @@ public class MasterPaymentAttachment implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(columnDefinition="serial", name = "attachment_gen_id")
-    @Generated(event = EventType.INSERT)
+//    @Column(columnDefinition="serial", name = "attachment_gen_id")
+//    @Generated(event = EventType.INSERT)
+    @Column(name = "attachmentId", nullable = false, updatable = false, unique = true)
     private Long attachmentId;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -64,6 +63,7 @@ public class MasterPaymentAttachment implements Serializable {
 
     public MasterPaymentAttachment(MasterPaymentAttachmentDto dto) {
         this.id = dto.getId();
+        this.attachmentId = dto.getAttachmentId();
         this.resource = dto.getResource() != null ? new Payment(dto.getResource()) : null;
         this.resourceType = dto.getResourceType() != null ? new MaganeResourceType(dto.getResourceType()) : null;
         this.attachmentType = dto.getAttachmentType() != null ? new ManageAttachmentType(dto.getAttachmentType()) : null;
@@ -85,7 +85,7 @@ public class MasterPaymentAttachment implements Serializable {
                 fileWeight != null ? fileWeight : null,
                 path, 
                 remark,
-                attachmentId
+                attachmentId != null ? attachmentId : null
         );
     }
 
@@ -100,7 +100,7 @@ public class MasterPaymentAttachment implements Serializable {
                 fileWeight != null ? fileWeight : null,
                 path, 
                 remark,
-                attachmentId
+                attachmentId != null ? attachmentId : null
         );
     }
 }

@@ -3,7 +3,6 @@ package com.kynsoft.finamer.settings.application.command.manageCountry.update;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCountryKafka;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCountryKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -14,10 +13,10 @@ import com.kynsoft.finamer.settings.domain.rules.managerCountry.ManagerCountryDi
 import com.kynsoft.finamer.settings.domain.rules.managerCountry.ManagerCountryNameMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
 import com.kynsoft.finamer.settings.domain.services.IManagerLanguageService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerReplicateManageCountryService;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCountry.ProducerUpdateManageCountryService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -26,13 +25,13 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
     private final IManagerCountryService service;
     private final IManagerLanguageService serviceLanguage;
 
-    private final ProducerUpdateManageCountryService updateManageCountryService;
+    private final ProducerReplicateManageCountryService producerReplicateManageCountryService;
 
     public UpdateManagerCountryCommandHandler(IManagerCountryService service,
-                                              IManagerLanguageService serviceLanguage, ProducerUpdateManageCountryService updateManageCountryService) {
+            IManagerLanguageService serviceLanguage, ProducerReplicateManageCountryService producerReplicateManageCountryService) {
         this.service = service;
         this.serviceLanguage = serviceLanguage;
-        this.updateManageCountryService = updateManageCountryService;
+        this.producerReplicateManageCountryService = producerReplicateManageCountryService;
     }
 
     @Override
@@ -61,15 +60,17 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+
+            producerReplicateManageCountryService.create(ReplicateManageCountryKafka.builder()
+                    .id(test.getId())
+                    .language(test.getManagerLanguage().getId())
+                    .status(test.getStatus().name())
+                    .name(test.getName())
+                    .description(test.getDescription())
+                    .code(test.getCode())
+                    .build()
+            );
         }
-
-        updateManageCountryService.update(UpdateManageCountryKafka.builder()
-                .id(command.getId())
-                .status(command.getStatus().name())
-                .name(command.getName())
-                .description(command.getDescription())
-                .build());
-
     }
 
     private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {

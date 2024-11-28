@@ -156,8 +156,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         PaymentDto save = this.paymentService.create(paymentDto);
 
         if (command.getAttachments() != null) {
-            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), save));
-            this.createAttachmentStatusHistory(employeeDto, save);
+            List<MasterPaymentAttachmentDto> list = this.createAttachment(command.getAttachments(), save);
+            paymentDto.setAttachments(list);
+            this.createAttachmentStatusHistory(employeeDto, save, list);
             //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
 
@@ -217,8 +218,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     }
 
     //Este metodo es para agregar el history del Attachemnt. Aqui el estado es el del nomenclador Manage Payment Attachment Status
-    private void createAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
-        List<MasterPaymentAttachmentDto> list = masterPaymentAttachmentService.findAllByPayment(payment.getId());
+    private void createAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, List<MasterPaymentAttachmentDto> list) {
+        //List<MasterPaymentAttachmentDto> list = masterPaymentAttachmentService.findAllByPayment(payment.getId());
         for (MasterPaymentAttachmentDto attachment : list) {
 
             AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();

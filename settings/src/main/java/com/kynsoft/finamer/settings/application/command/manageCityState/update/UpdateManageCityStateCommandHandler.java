@@ -14,30 +14,28 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageCityStateService;
 import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
 import com.kynsoft.finamer.settings.domain.services.IManagerTimeZoneService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerReplicateManageCityStateService;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerReplicateManageCityStateService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCityState.ProducerUpdateManageCityStateService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateManageCityStateCommandHandler implements ICommandHandler<UpdateManageCityStateCommand> {
-    
+
     private final IManageCityStateService service;
     private final IManagerCountryService serviceCountry;
     private final IManagerTimeZoneService serviceTimeZone;
-    private final ProducerUpdateManageCityStateService producerUpdateManageCityStateService;
+    private final ProducerReplicateManageCityStateService producerReplicateManageCityStateService;
 
     public UpdateManageCityStateCommandHandler(IManageCityStateService service,
-                                               IManagerCountryService serviceCountry,
-                                               IManagerTimeZoneService serviceTimeZone,
-                                               ProducerUpdateManageCityStateService producerUpdateManageCityStateService) {
+            IManagerCountryService serviceCountry,
+            IManagerTimeZoneService serviceTimeZone,
+            ProducerReplicateManageCityStateService producerReplicateManageCityStateService) {
         this.service = service;
         this.serviceCountry = serviceCountry;
         this.serviceTimeZone = serviceTimeZone;
-
-        this.producerUpdateManageCityStateService = producerUpdateManageCityStateService;
+        this.producerReplicateManageCityStateService = producerReplicateManageCityStateService;
     }
 
     @Override
@@ -60,15 +58,16 @@ public class UpdateManageCityStateCommandHandler implements ICommandHandler<Upda
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            producerReplicateManageCityStateService.create(ReplicateManageCityStateKafka.builder()
+                    .id(test.getId())
+                    .status(test.getStatus().name())
+                    .code(test.getCode())
+                    .name(test.getName())
+                    .country(test.getCountry().getId())
+                    .timeZone(test.getTimeZone().getId())
+                    .description(test.getDescription())
+                    .build());
         }
-
-
-        producerUpdateManageCityStateService.update(UpdateManageCityStateKafka.builder()
-                .id(command.getId())
-                .status(command.getStatus().name())
-                .name(command.getName())
-                .description(command.getDescription())
-                .build());
 
     }
 

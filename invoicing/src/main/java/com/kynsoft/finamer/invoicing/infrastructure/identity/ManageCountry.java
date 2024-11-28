@@ -8,6 +8,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -42,6 +44,12 @@ public class ManageCountry implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_language_id")
+    private ManageLanguage managerLanguage;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -63,6 +71,7 @@ public class ManageCountry implements Serializable {
         this.description = dto.getDescription();
         this.status = dto.getStatus();
         this.isDefault = dto.getIsDefault();
+        this.managerLanguage = dto.getManagerLanguage() != null ? new ManageLanguage(dto.getManagerLanguage()) : null;
 
     }
 
@@ -73,7 +82,8 @@ public class ManageCountry implements Serializable {
                 name, 
                 description,
                 isDefault,
-                status
+                status,
+                managerLanguage.toAggregate()
         );
     }
 

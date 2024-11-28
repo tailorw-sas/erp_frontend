@@ -16,6 +16,7 @@ import java.util.UUID;
 @Builder
 public class ReplicateManageCountryKafka implements Serializable {
     private UUID id;
+    private UUID language;
     private String code;
     private String name;
     private String description;
