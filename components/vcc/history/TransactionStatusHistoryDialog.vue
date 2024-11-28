@@ -165,13 +165,6 @@ onMounted(() => {
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
             @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />
-          <div class=" flex w-full justify-content-end ">
-            <Button
-              v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
-                closeDialog()
-              }"
-            />
-          </div>
         </div>
       </div>
     </template>

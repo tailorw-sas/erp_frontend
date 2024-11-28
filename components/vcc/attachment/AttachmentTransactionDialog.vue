@@ -89,14 +89,14 @@ const itemTemp = ref<GenericObject>({
 const toast = useToast()
 
 const Fields: Array<FieldDefinitionType> = [
-  {
+  /* {
     field: 'resource',
     header: 'Resource',
     dataType: 'number',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
     disabled: true
-  },
+  }, */
   {
     field: 'resourceType',
     header: 'Resource Type',
@@ -140,7 +140,6 @@ const Fields: Array<FieldDefinitionType> = [
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'transaction.id', header: 'Transaction Id', type: 'text', width: '140px', minWidth: '140px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
   { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
@@ -655,7 +654,7 @@ onMounted(async () => {
       <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
         <div class="flex justify-content-end mb-1">
           <div class="pr-4 pl-4 pt-2 pb-2 font-bold bg-container text-white">
-            Transaction: {{ props.selectedTransaction?.id }}
+            Transaction Id: {{ props.selectedTransaction?.id }}
           </div>
         </div>
         <Accordion v-if="false" :active-index="0" class="mb-2 card p-0">
@@ -787,10 +786,10 @@ onMounted(async () => {
                   v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
                   :disabled="ListItems.length === 0" @click="downloadFile"
                 />
-                <Button
+                <!--                <Button
                   v-tooltip.top="'Show History'" class="w-3rem ml-1 sticky"
                   icon="pi pi-book" @click="() => attachmentHistoryDialogOpen = true"
-                />
+                /> -->
                 <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
                 <Button
                   v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky"
