@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -42,8 +44,12 @@ public class ReportPdfServiceImpl {
         return invoiceDto;
 
     }
-    public byte[] generatePdf(UUID id) throws IOException { // Changed to IOException
 
+
+    public byte[] generatePdf(String id) throws IOException { // Changed to IOException
+
+        // Convertir String de vuelta a UUID
+        UUID invoiceUuid = UUID.fromString(id);
         // Variables that are used in the creation of the pdf
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos); // Write to ByteArrayOutputStream
@@ -56,7 +62,7 @@ public class ReportPdfServiceImpl {
         styleHeader.setFontSize(10);
         Style styleCell = new Style();
         styleCell.setFontSize(8);
-        ManageInvoiceDto invoiceDto = this.findById(id);
+        ManageInvoiceDto invoiceDto = this.findById(invoiceUuid);
         List<ManageBookingDto> bookings = invoiceDto.getBookings();
 
         double total = 0;
@@ -137,7 +143,6 @@ public class ReportPdfServiceImpl {
         table.addCell(new Cell());
         table.addCell(new Cell());
 
-
         // Add data row file 5
         for(ManageBookingDto booking : bookings) {
         table.addCell(new Cell().add(new Paragraph(booking.getRoomType().getName()).addStyle(styleCell)));
@@ -200,7 +205,7 @@ public class ReportPdfServiceImpl {
         for(ManageBookingDto booking : bookings) {
             List<ManageRoomRateDto> roomRates = booking.getRoomRates();
             for (ManageRoomRateDto roomRate : roomRates) {
-                total = total + roomRate.getInvoiceAmount();
+                total = total + roomRate.getHotelAmount();
                 moneyType = roomRate.getRemark();
 
                 table.addCell(new Cell().add(new Paragraph(roomRate.getCheckIn().format(formatter)).addStyle(styleCell)));
@@ -208,7 +213,7 @@ public class ReportPdfServiceImpl {
                 table.addCell(new Cell().add(new Paragraph(roomRate.getNights().toString()).addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getAdults().toString()).addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getChildren().toString()).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph("$ " + roomRate.getInvoiceAmount().toString()).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph("$ " + roomRate.getHotelAmount().toString()).addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getRemark()).addStyle(styleCell)));
             }
         }
@@ -234,5 +239,29 @@ public class ReportPdfServiceImpl {
         document.close();
 
         return baos.toByteArray();
+    }
+
+    // Método para combinar PDFs generados desde una lista de UUIDs
+    public byte[] concatenatePDFs(String[] ids) throws IOException {
+        // Crear un PdfDocument de salida
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PdfDocument mergedPdf = new PdfDocument(new PdfWriter(outputStream));
+
+        for (String id : ids) {
+            // Generar el PDF para el INVOICING ID  actual
+            byte[] pdfBytes = generatePdf(id);
+
+            // Leer el PDF desde los bytes generados
+            PdfDocument sourcePdf = new PdfDocument(new PdfReader(new ByteArrayInputStream(pdfBytes)));
+
+            // Copiar páginas al PDF combinado
+            sourcePdf.copyPagesTo(1, sourcePdf.getNumberOfPages(), mergedPdf);
+            sourcePdf.close();
+        }
+
+        // Cerrar el PDF combinado
+        mergedPdf.close();
+
+        return outputStream.toByteArray(); // Devuelve el PDF combinado como un array de bytes
     }
 }

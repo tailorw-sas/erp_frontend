@@ -4,19 +4,17 @@ import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;
 
-import java.util.UUID;
-
 @Getter
 public class InvoiceReconcilePdfCommand implements ICommand {
 
-    private UUID id;
-    private byte[] pdfData;
-    public InvoiceReconcilePdfCommand(UUID id, byte[] pdfData) {
-        this.id = id;
-        this.pdfData = pdfData;
+    private String[] ids;
+    private byte[] pdfBytes;
+    public InvoiceReconcilePdfCommand(String[] ids, byte[] pdfBytes) {
+        this.ids = ids;
+        this.pdfBytes = pdfBytes;
     }
     @Override
     public ICommandMessage getMessage() {
-        return new InvoiceReconcilePdfMessage(id, pdfData);
+        return new InvoiceReconcilePdfMessage(ids, pdfBytes);
     }
 }

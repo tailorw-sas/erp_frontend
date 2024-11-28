@@ -40,6 +40,11 @@ public class InvoiceReportInvoiceSupportService implements IInvoiceReport {
         return Optional.empty();
     }
 
+    @Override
+    public byte[] concatenatePDFs(String[] ids) {
+        return new byte[0];
+    }
+
     private Optional<byte[]> getInvoiceSupport(String invoiceId) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);
