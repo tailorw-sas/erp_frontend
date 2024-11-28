@@ -29,6 +29,11 @@ public class InvoiceReportReconcileAutomaticService implements IInvoiceReport {
         }
     }
 
+    @Override
+    public byte[] concatenatePDFs(String[] ids) {
+        return new byte[0];
+    }
+
     private Optional<byte[]> getInvoiceAndBooking(String invoiceId) throws IOException {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);

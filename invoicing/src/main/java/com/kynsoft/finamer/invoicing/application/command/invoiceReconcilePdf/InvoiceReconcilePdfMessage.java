@@ -5,13 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
 public class InvoiceReconcilePdfMessage implements ICommandMessage {
 
-      private final UUID id;
+      private final String[] Ids;
       private final byte[] pdfData;
       private final String command = "CREATE_RECONCILE_PDF";
 }

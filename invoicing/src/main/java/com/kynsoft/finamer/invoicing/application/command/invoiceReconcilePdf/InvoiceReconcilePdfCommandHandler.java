@@ -15,7 +15,7 @@ public class InvoiceReconcilePdfCommandHandler implements ICommandHandler<Invoic
     @Override
     public void handle(InvoiceReconcilePdfCommand command) {
         try {
-            reportPdfService.generatePdf(command.getId());
+            reportPdfService.concatenatePDFs(command.getIds());
         }catch (Exception e) {
             System.err.println("PDF ERROR:");
         }
