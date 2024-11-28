@@ -14,6 +14,10 @@ import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const props = defineProps({
+  componentTableId: {
+    type: String,
+    required: false,
+  },
   data: {
     type: Array as () => Array<any>,
     required: true,
@@ -41,7 +45,11 @@ const props = defineProps({
       selectionMode?: 'single' | 'multiple' | undefined
       expandableRows?: boolean
       selectAllItemByDefault?: boolean
-    }>
+      showPagination?: boolean
+      showCustomEmptyTable?: boolean
+      scrollHeight?: string | undefined
+    }>,
+    required: true,
   },
   pagination: {
     type: Object as PropType<{
@@ -564,9 +572,10 @@ defineExpose({ clearSelectedItems })
   </Toolbar>
 
   <BlockUI :blocked="options?.loading || parentComponentLoading">
-    <div class="card p-0">
+    <div class="card p-0 mb-0">
       <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
+        :id="'componentTableId' in props ? props.componentTableId : ''"
         v-model:filters="filters1"
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
@@ -583,7 +592,7 @@ defineExpose({ clearSelectedItems })
         removable-sort
         :lazy="props.isCustomSorting"
         scrollable
-        scroll-height="60vh"
+        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '60vh'"
         :filters="filters1"
         edit-mode="cell"
         @sort="onSortField"
@@ -596,7 +605,10 @@ defineExpose({ clearSelectedItems })
         @row-collapse="onRowCollapse"
       >
         <template #empty>
-          <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+          <div v-if="'showCustomEmptyTable' in props?.options ? props.options.showCustomEmptyTable : false">
+            <slot name="emptyTable" :data="{ messageForEmptyTable }" />
+          </div>
+          <div v-else class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
               <div class="row">
                 <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
@@ -952,7 +964,7 @@ defineExpose({ clearSelectedItems })
         <slot name="datatable-footer" />
       </DataTable>
     </div>
-    <div class="flex justify-content-center align-items-center mt-3 card p-0">
+    <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-0 card p-0 mb-0">
       <div v-if="props.showLocalPagination">
         <slot name="pagination" />
       </div>
