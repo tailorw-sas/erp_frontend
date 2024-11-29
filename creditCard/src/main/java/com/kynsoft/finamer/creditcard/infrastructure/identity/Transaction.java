@@ -131,6 +131,9 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "hotel_payment")
     private HotelPayment hotelPayment;
 
+    @CreationTimestamp
+    private LocalDateTime transactionDate;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -171,12 +174,13 @@ public class Transaction implements Serializable {
                     }).collect(Collectors.toList())
                 : null;
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
+        this.transactionDate = dto.getTransactionDate();
     }
 
     public TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
-                createdAt != null ? createdAt : null);
+                transactionDate);
     }
 
     public TransactionDto toAggregate(){
@@ -195,7 +199,7 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt != null ? createdAt : null,
+                transactionDate,
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
                 netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
@@ -211,5 +215,6 @@ public class Transaction implements Serializable {
     @PostLoad
     public void initDefaultValue() {
         hasAttachments = (attachments != null && !attachments.isEmpty());
+        transactionDate = transactionDate != null ? transactionDate : createdAt;
     }
 }
