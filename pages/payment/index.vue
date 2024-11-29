@@ -3421,9 +3421,9 @@ onMounted(async () => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Payment Management
-    </h3>
+    </h5>
     <div class="flex justify-content-end px-0">
       <span v-for="(objBtnAndMenu, index) in itemMenuList" :key="index">
         <IfCan :perms="objBtnAndMenu.permission && objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
@@ -3432,6 +3432,7 @@ onMounted(async () => {
               v-tooltip.left="objBtnAndMenu.btnToolTip"
               :label="objBtnAndMenu.btnLabel"
               severity="primary"
+              class="h-2rem"
               :disabled="objBtnAndMenu.btnDisabled"
               aria-haspopup="true"
               :aria-controls="objBtnAndMenu.menuId"
