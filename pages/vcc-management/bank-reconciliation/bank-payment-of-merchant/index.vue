@@ -59,7 +59,7 @@ const item = ref({
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
-  paidDate: '',
+  paidDate: dayjs().toDate(),
   remark: '',
 } as GenericObject)
 
@@ -68,7 +68,7 @@ const itemTemp = ref({
   merchantBankAccount: null,
   hotel: null,
   amount: 0,
-  paidDate: '',
+  paidDate: dayjs().toDate(),
   remark: '',
 })
 
