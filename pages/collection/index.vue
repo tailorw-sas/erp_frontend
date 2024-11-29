@@ -393,7 +393,7 @@ const optionsAgency = ref({
   actionsAsMenu: false,
   showPagination: false,
   showCustomEmptyTable: true,
-  scrollHeight: '12vh',
+  scrollHeight: '150px',
   messageToDelete: 'Do you want to save the change?'
 })
 const optionsInvoice = ref({
@@ -1579,34 +1579,6 @@ onMounted(() => {
       </div>
     </div>
     <div class="col-12 md:order-1 md:col-12 xl:col-6 lg:col-12 mt-0 px-1 py-0">
-      <div v-if="false" class="flex justify-content-between align-items-center">
-        <div class="font-bold">
-          <h3 class="mb-0 ">
-            Collection Management
-          </h3>
-        </div>
-        <div v-if="false" class="flex  align-items-center">
-          <div
-            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="my-2 ml-2 flex justify-content-end px-0"
-          >
-            <Button
-              v-tooltip.left="'Share File'" label="Share File" icon="pi pi-share-alt"
-              class="h-2.5rem w-8rem" severity="primary" @click="clearForm"
-            />
-          </div>
-          <div
-            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="my-2 ml-2 flex justify-content-end px-0"
-          >
-            <Button
-              v-tooltip.left="'Export'" label="Export" icon="pi pi-download" class="h-2.5rem w-6rem"
-              severity="primary" @click="clearForm"
-            />
-          </div>
-        </div>
-      </div>
-
       <!-- Accordion y campos del payment -->
 
       <div v-if="showClientView" class="card p-0 m-0">
@@ -1773,7 +1745,6 @@ onMounted(() => {
                         placeholder=""
                         @change="($event) => {
                           filterToSearch.hotel = $event;
-                          console.log($event);
                         }"
                         @load="async($event) => {
                           const filter: FilterCriteria[] = [
@@ -1881,298 +1852,11 @@ onMounted(() => {
         </div>
       </div>
 
-      <OverlayPanel ref="op" append-to="body" :show-close-icon="false" :dismissable="false" style="width: 40%">
-        <div class="card p-0 m-0">
-          <!-- Encabezado Completo -->
-          <div class="font-bold text-lg bg-primary custom-card-header px-4">
-            Client View
-          </div>
-
-          <!-- Contenedor de Contenido -->
-          <div style="display: flex; height: 23%;" class="responsive-height">
-            <!-- Sección Izquierda -->
-            <div class="p-0 m-0 py-0 px-0 " style="flex: 1;">
-              <div class="grid p-0 py-0 px-0 m-0">
-                <!-- Selector de Cliente -->
-                <div class="col-12 md:col-12 lg:col-12 xl:col-12 flex pb-0  w-full">
-                  <div class="flex flex-column gap-2 py-0 w-full">
-                    <div class="flex align-items-center gap-2 px-0 py-0 ">
-                      <label class="filter-label font-bold ml-3" for="client">Client<span
-                        class="text-red"
-                      >*</span></label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll"
-                          id="autocomplete"
-                          :multiple="false"
-                          field="name"
-                          item-value="id"
-                          class="w-full custom-input"
-                          :model="filterToSearch.client"
-                          :suggestions="clientList"
-                          placeholder=""
-                          @load="($event) => getClientList($event)"
-                          @change="($event) => {
-                            filterToSearch.client = $event
-                            filterToSearch.agency = []
-                            filterToSearch.clientName = $event?.onlyName ? $event?.onlyName : ''
-                            filterToSearch.clientStatus = $event?.status ? $event?.status : ''
-                          // filterToSearch.client = $event.filter(element => element?.id !== 'All');
-                          // filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : [];
-
-                          }"
-                        >
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
-                          <template #chip="{ value }">
-                            <div>{{ value?.code }}</div>
-                          </template>
-                        </DebouncedAutoCompleteComponent>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Selector de Agencia -->
-                <div class="col-12 pb-0">
-                  <div class="flex flex-column gap-2 w-full">
-                    <div class="flex align-items-center gap-2 px-0 py-0">
-                      <label class="filter-label font-bold " for="agency">Agency<span
-                        class="text-red"
-                      >*</span></label>
-                      <div class="w-full ">
-                        <DebouncedMultiSelectComponent
-                          v-if="!loadingSaveAll"
-                          id="autocomplete-agency"
-                          field="name"
-                          item-value="id"
-                          :max-selected-labels="3"
-                          class="w-full agency-input"
-                          :model="filterToSearch.agency"
-                          :loading="objLoading.loadingAgency"
-                          :suggestions="agencyList"
-                          placeholder=""
-                          @change="($event) => {
-                            filterToSearch.agency = $event;
-                            const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0);
-                            filterToSearch.creditDays = totalCreditDays
-                            filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
-                            filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
-                            filterToSearch.email = $event[0]?.email ? $event[0]?.email : ''
-                          }"
-                          @load="async ($event) => {
-                            const filter: FilterCriteria[] = [
-                              {
-                                key: 'client.id',
-                                logicalOperation: 'AND',
-                                operator: 'EQUALS',
-                                value: filterToSearch.client?.id ? filterToSearch.client?.id : '',
-                              },
-                              {
-                                key: 'status',
-                                operator: 'EQUALS',
-                                value: 'ACTIVE',
-                                logicalOperation: 'AND',
-                              },
-                              {
-                                key: 'autoReconcile',
-                                operator: 'EQUALS',
-                                value: true,
-                                logicalOperation: 'AND',
-                              },
-                            ]
-                            await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
-                              query: $event,
-                              keys: ['name', 'code'],
-                            }, filter)
-                          }"
-                        >
-                        <!-- <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>{{ value?.code }}</div>
-                        </template> -->
-                        </DebouncedMultiSelectComponent>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Selector de Hotel -->
-                <div class="col-12 pb-0">
-                  <div class="flex flex-column gap-2 w-full">
-                    <div class="flex align-items-center gap-2 px-0 py-0">
-                      <label class="filter-label font-bold ml-3" for="hotel">Hotel<span
-                        class="text-red"
-                      >*</span></label>
-                      <div class="w-full">
-                        <DebouncedMultiSelectComponent
-                          v-if="!loadingSaveAll"
-                          id="autocomplete-hotel"
-                          field="name"
-                          item-value="id"
-                          class="w-full hotel-input"
-                          :model="filterToSearch.hotel"
-                          :loading="objLoading.loadingHotel"
-                          :suggestions="hotelList"
-                          placeholder=""
-                          @change="($event) => {
-                            filterToSearch.hotel = $event;
-                            console.log($event);
-                          }"
-                          @load="async($event) => {
-                            const filter: FilterCriteria[] = [
-                              {
-                                key: 'status',
-                                logicalOperation: 'AND',
-                                operator: 'EQUALS',
-                                value: 'ACTIVE',
-                              },
-                            ]
-                            const objQueryToSearch = {
-                              query: $event,
-                              keys: ['name', 'code'],
-                            }
-                            await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
-                          }"
-                        >
-                        <!-- <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>{{ value?.code }}</div>
-                        </template> -->
-                        </DebouncedMultiSelectComponent>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex col-12 justify-content-end mt-2 py-2 xl:mt-0 py-2 pb-3">
-                  <Button
-                    v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search"
-                    :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
-                  />
-                  <Button
-                    v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                    :loading="loadingSearch" @click="clearFilterToSearch"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- Divisor Vertical -->
-            <div style="width: 4px; background-color: #d3d3d3; height: auto; margin: 0;" />
-
-            <!-- Sección Derecha -->
-            <div class="px-2 py-0 m-0 my-0 mt-0" style="flex: 1; padding: 16px;">
-              <div class="grid py-0 my-0 px-0" style="max-width: 1200px; margin: auto;">
-                <!-- Fila para Cliente y Agencia -->
-                <div class="col-12 mb-0 ">
-                  <div class="flex items-center w-full" style="flex-wrap: nowrap;">
-                    <!-- Usar flex para alinear en una fila -->
-                    <label
-                      for="client" class="font-bold mb-0 mt-2 required"
-                      style="margin-right: 8px; flex: 0 0 auto;"
-                    >Client Name</label>
-                    <InputText
-                      id="client" v-model="filterToSearch.clientName" class="w-full "
-                      style="flex: 1;"
-                    />
-                  </div>
-                </div>
-
-                <div class="col-12 mb-0 py-0">
-                  <div class="flex items-center w-full" style="flex-wrap: nowrap;">
-                    <!-- Usar flex para alinear en una fila -->
-                    <label
-                      for="client" class="font-bold mb-0 mr-1 mt-2 required"
-                      style="margin-right: 8px; flex: 0 0 auto;"
-                    >Client Status</label>
-                    <InputText
-                      id="client" v-model="filterToSearch.clientStatus" class="w-full "
-                      style="flex: 1;"
-                    />
-                  </div>
-                </div>
-                <div class="col-12 mb-0 ">
-                  <div class="flex items-center w-full" style="flex-wrap: nowrap;">
-                    <!-- Usar flex para alinear en una fila -->
-                    <label
-                      for="credit" class="font-bold mb-0 ml-0 mt-2 "
-                      style="margin-right: 9px; flex: 0 0 auto;"
-                    >Credit
-                      Days</label>
-                    <InputText
-                      id="client" v-model="filterToSearch.creditDays" class="w-full  "
-                      style="flex: 1;"
-                    />
-                  </div>
-                </div>
-                <div v-if="false" class="col-12 my-0 py-0 pb-0 xl:col-12 mb-2">
-                  <div class="flex items-center w-full " style="flex-wrap: nowrap;">
-                    <label for="language" class="font-bold mb-0 ml-3 mt-2">Language</label>
-                    <div style="flex: 1; display: flex; gap: 8px; flex-wrap: nowrap;">
-                      <InputText id="language1" v-model="filterToSearch.language" class="w-full" />
-                      <InputText
-                        id="timezone" v-model="currentTime" placeholder="Time Zone 12:10"
-                        class="w-full pr-1 timezone-input"
-                        style="background-color: var(--primary-color); color: white;" readonly
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </OverlayPanel>
-
-      <!-- Aqui termina -->
-      <div v-if="false" class="grid grid-nogutter px-0 py-0 my-0 mt-0">
-        <div class="col-12 flex align-items-center">
-          <!-- Usar flex para alinear en la misma fila -->
-          <div class="col-11 md:col-11 lg:col-11 xl:col-11 sm:col-11 py-0 px-0">
-            <div class="card py-1 p-0 my-0 mr-1 ">
-              <div
-                class="header-content text-lg font-bold  "
-                style="background-color: var(--primary-color); color: white; padding: 8px; border-top-left-radius: 8px; border-top-right-radius: 8px;"
-              >
-                Payment View
-              </div>
-            </div>
-          </div>
-          <div
-            class="col-1 md:col-1 lg:col-1 sm:col-1 xl:col-1 flex align-items-center justify-content-end px-0 mx-0 py-0 mx-0 my-0 p-0 w-auto"
-          >
-            <Button
-              v-tooltip.left="'More'" label="+More" style="height: 70%;text-decoration: underline;"
-              severity="primary" class="mr-2 py-2 text-lg" @click="goToPayment()"
-            />
-
-            <!-- Añadido margen derecho para separación -->
-          </div>
-        </div>
-      </div>
-
       <div class="flex justify-content-between mt-0">
         <div class="flex align-items-center gap-2">
           <div class="p-2 font-bold">
             Payment View
           </div>
-          <!-- <Divider class="p-0 m-0" layout="vertical" style="height: 0.2rem" />
-          <ButtonGroup>
-            <Button
-              v-tooltip.left="'More'"
-              label="Show Client View"
-              severity="primary" text class="" @click="toggle"
-            />
-            <Button
-              v-tooltip.left="'Show'"
-              severity="primary" :icon="showClientView ? 'pi pi-eye-slash' : 'pi pi-eye'" class="" @click="onOffModalClientView"
-            />
-          </ButtonGroup> -->
         </div>
         <div class="flex align-items-center gap-2">
           <div
@@ -2295,157 +1979,11 @@ onMounted(() => {
     </div>
     <!-- Section Invoice -->
     <div class="col-12 md:order-0 md:col-12 xl:col-6 lg:col-12 px-1 py-0">
-      <div v-if="false" class="flex justify-content-end align-items-center">
-        <div class="flex justify-content-end align-items-center">
-          <div
-            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="my-2 flex justify-content-end px-0"
-          >
-            <Button
-              v-tooltip.left="'Email'" label="Email" icon="pi pi-envelope" class="h-2.5rem w-6rem"
-              severity="primary" @click="clearForm"
-            />
-          </div>
-          <div
-            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="my-2 ml-2 flex justify-content-end px-0"
-          >
-            <Button
-              v-tooltip.left="'Print'" label="Print" icon="pi pi-print" class="h-2.5rem w-5rem"
-              severity="primary" @click="clearForm"
-            />
-          </div>
-          <div
-            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="my-2 ml-2 flex justify-content-end px-0"
-          >
-            <Button
-              v-tooltip.left="'Export'" label="Export" icon="pi pi-download" class="h-2.5rem w-6rem"
-              severity="primary" @click="clearForm"
-            />
-          </div>
-        </div>
-      </div>
-
       <div v-if="showClientDetail" class="card px-1 m-0 py-0">
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Agency Contact
         </div>
-        <TabView v-if="false" id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
-          <TabPanel v-if="false">
-            <template #header>
-              <div
-                class=" tab-header flex align-items-center gap-2 p-1 tab-header"
-                :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`"
-              >
-                <span class="font-bold">Client Main Info</span>
-              </div>
-            </template>
-            <div class="grid m-0 p-0 mb-0 my-0 py-0">
-              <div class="col-12 xl:col-6 p-0 py-0 mb-0 my-1 mt-0">
-                <div class="flex items-center w-full mb-0 mt-0" style="flex-wrap: nowrap;">
-                  <label
-                    for="primaryPhone" class="font-bold ml-3 mt-2"
-                    style="margin-right: 9px; flex: 0 0 auto;"
-                  >Primary Phone</label>
-                  <IconField class="w-full" icon-position="left">
-                    <InputIcon class="pi pi-phone text-blue-500" />
-                    <InputText
-                      id="primaryPhone" v-model="filterToSearch.primaryPhone"
-                      class="w-full" style="flex: 1;"
-                    />
-                  </IconField>
-                </div>
-
-                <div class="flex items-center w-full mb-2 mt-2" style="flex-wrap: nowrap;">
-                  <label
-                    for="alternativePhone" class="font-bold ml-1 mb-0 mr-0 pl-0 mt-2"
-                    style="margin-right: 9px; flex: 0 0 auto;"
-                  >Alternative Phone</label>
-                  <IconField class="w-full" icon-position="left">
-                    <InputIcon class="pi pi-phone text-blue-500" />
-                    <InputText
-                      id="alternativePhone" v-model="filterToSearch.alternativePhone"
-                      class="w-full ml-0" style="flex: 1;"
-                    />
-                  </IconField>
-                </div>
-
-                <div class="flex items-center w-full mb-0 mt-2" style="flex-wrap: nowrap;">
-                  <label
-                    for="email" class="font-bold mb-0 pl-2 mt-2 ml-8"
-                    style="margin-right: 9px; flex: 0 0 auto;"
-                  >Email</label>
-                  <IconField class="w-full" icon-position="left">
-                    <InputIcon class="pi pi-envelope text-blue-500" />
-                    <InputText
-                      id="email" v-model="filterToSearch.email" class="w-full"
-                      style="flex: 1;"
-                    />
-                  </IconField>
-                </div>
-              </div>
-
-              <div class="col-12 xl:col-6 p-0 px-2 my-1">
-                <div class="flex items-center w-full mb-2 mt-1" style="flex-wrap: nowrap;">
-                  <label
-                    for="contactName" class="font-bold mb-0 mt-1 ml-6 mx-2"
-                    style="margin-right: 9px; flex: 0 0 auto;"
-                  >Contact Name</label>
-                  <InputText
-                    id="contactName" v-model="filterToSearch.contactName" class="w-full"
-                    style="flex: 1;"
-                  />
-                </div>
-
-                <div class="flex items-center w-full mb-2 mt-1" style="flex-wrap: nowrap;">
-                  <label
-                    for="country" class="font-bold mb-0 ml-6 mt-1"
-                    style="margin-right: 9px; flex: 0 0 auto;"
-                  >Country</label>
-                  <InputText
-                    id="country" v-model="filterToSearch.country" class="w-full"
-                    style="flex: 1;"
-                  />
-                </div>
-              </div>
-            </div>
-          </TabPanel>
-
-          <TabPanel v-if="false">
-            <template #header>
-              <div
-                class="flex align-items-center gap-2 p-1 tab-header"
-                :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`"
-              >
-                <span class="font-bold">Agency Contact</span>
-              </div>
-            </template>
-            <div class="grid py-1 ">
-              <div class="col 12 xl:col-11 md:col-11 lg:col-11 ">
-                <DynamicTable
-                  :data="listItemsAgency" :columns="columnsAgency" :options="optionsAgency"
-                  :pagination="paginationAgency" @on-confirm-create="clearForm"
-                  @open-edit-dialog="getItemById($event)" @update:clicked-item="getItemById($event)"
-                  @on-change-pagination="payloadOnChangePage = $event"
-                  @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
-                  @on-sort-field="onSortField"
-                />
-              </div>
-
-              <div
-                class="col 12 xl:col-1 md:col-1 lg:col-1 py-3 flex justify-content-end align-items-start"
-              >
-                <Button
-                  v-tooltip.left="'Agency Contact'" icon="pi pi-user-plus"
-                  class="p-button-text p-button-lg pl-3 pr-6" @click="clearForm"
-                />
-              </div>
-            </div>
-          </TabPanel>
-        </TabView>
-
-        <div class="w-full" style="height: 12.1rem; min-height: 12.1rem; max-height: 12.1rem;">
+        <div class="w-full" style="height: 13rem; min-height: 12.1rem;">
           <DynamicTable
             component-table-id="componentTableIdInCollection"
             :data="listItemsAgency" :columns="columnsAgency" :options="optionsAgency"
@@ -2456,7 +1994,7 @@ onMounted(() => {
             @on-sort-field="onSortField"
           >
             <template #emptyTable="{ data }">
-              <div class="flex flex-column flex-wrap align-items-center justify-content-center py-4">
+              <div class="flex flex-column flex-wrap align-items-center justify-content-center py-3">
                 <span v-if="!optionsAgency?.loading" class="flex flex-column align-items-center justify-content-center">
                   <div class="row">
                     <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
@@ -2474,223 +2012,44 @@ onMounted(() => {
         </div>
       </div>
 
-      <OverlayPanel ref="op2" append-to="body" :show-close-icon="false" :dismissable="false" style="width: 40%">
-        <div class="card px-1 m-0 py-0">
-          <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-            Client Details
-          </div>
-          <TabView v-if="false" id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
-            <TabPanel v-if="false">
-              <template #header>
-                <div
-                  class=" tab-header flex align-items-center gap-2 p-1 tab-header"
-                  :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`"
-                >
-                  <span class="font-bold">Client Main Info</span>
-                </div>
-              </template>
-              <div class="grid m-0 p-0 mb-0 my-0 py-0">
-                <div class="col-12 xl:col-6 p-0 py-0 mb-0 my-1 mt-0">
-                  <div class="flex items-center w-full mb-0 mt-0" style="flex-wrap: nowrap;">
-                    <label
-                      for="primaryPhone" class="font-bold ml-3 mt-2"
-                      style="margin-right: 9px; flex: 0 0 auto;"
-                    >Primary Phone</label>
-                    <IconField class="w-full" icon-position="left">
-                      <InputIcon class="pi pi-phone text-blue-500" />
-                      <InputText
-                        id="primaryPhone" v-model="filterToSearch.primaryPhone"
-                        class="w-full" style="flex: 1;"
-                      />
-                    </IconField>
-                  </div>
-
-                  <div class="flex items-center w-full mb-2 mt-2" style="flex-wrap: nowrap;">
-                    <label
-                      for="alternativePhone" class="font-bold ml-1 mb-0 mr-0 pl-0 mt-2"
-                      style="margin-right: 9px; flex: 0 0 auto;"
-                    >Alternative Phone</label>
-                    <IconField class="w-full" icon-position="left">
-                      <InputIcon class="pi pi-phone text-blue-500" />
-                      <InputText
-                        id="alternativePhone" v-model="filterToSearch.alternativePhone"
-                        class="w-full ml-0" style="flex: 1;"
-                      />
-                    </IconField>
-                  </div>
-
-                  <div class="flex items-center w-full mb-0 mt-2" style="flex-wrap: nowrap;">
-                    <label
-                      for="email" class="font-bold mb-0 pl-2 mt-2 ml-8"
-                      style="margin-right: 9px; flex: 0 0 auto;"
-                    >Email</label>
-                    <IconField class="w-full" icon-position="left">
-                      <InputIcon class="pi pi-envelope text-blue-500" />
-                      <InputText
-                        id="email" v-model="filterToSearch.email" class="w-full"
-                        style="flex: 1;"
-                      />
-                    </IconField>
-                  </div>
-                </div>
-
-                <div class="col-12 xl:col-6 p-0 px-2 my-1">
-                  <div class="flex items-center w-full mb-2 mt-1" style="flex-wrap: nowrap;">
-                    <label
-                      for="contactName" class="font-bold mb-0 mt-1 ml-6 mx-2"
-                      style="margin-right: 9px; flex: 0 0 auto;"
-                    >Contact Name</label>
-                    <InputText
-                      id="contactName" v-model="filterToSearch.contactName" class="w-full"
-                      style="flex: 1;"
-                    />
-                  </div>
-
-                  <div class="flex items-center w-full mb-2 mt-1" style="flex-wrap: nowrap;">
-                    <label
-                      for="country" class="font-bold mb-0 ml-6 mt-1"
-                      style="margin-right: 9px; flex: 0 0 auto;"
-                    >Country</label>
-                    <InputText
-                      id="country" v-model="filterToSearch.country" class="w-full"
-                      style="flex: 1;"
-                    />
-                  </div>
-                </div>
-              </div>
-            </TabPanel>
-
-            <TabPanel v-if="false">
-              <template #header>
-                <div
-                  class="flex align-items-center gap-2 p-1 tab-header"
-                  :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`"
-                >
-                  <span class="font-bold">Agency Contact</span>
-                </div>
-              </template>
-              <div class="grid py-1 ">
-                <div class="col 12 xl:col-11 md:col-11 lg:col-11 ">
-                  <DynamicTable
-                    :data="listItemsAgency" :columns="columnsAgency" :options="optionsAgency"
-                    :pagination="paginationAgency" @on-confirm-create="clearForm"
-                    @open-edit-dialog="getItemById($event)" @update:clicked-item="getItemById($event)"
-                    @on-change-pagination="payloadOnChangePage = $event"
-                    @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
-                    @on-sort-field="onSortField"
-                  />
-                </div>
-
-                <div
-                  class="col 12 xl:col-1 md:col-1 lg:col-1 py-3 flex justify-content-end align-items-start"
-                >
-                  <Button
-                    v-tooltip.left="'Agency Contact'" icon="pi pi-user-plus"
-                    class="p-button-text p-button-lg pl-3 pr-6" @click="clearForm"
-                  />
-                </div>
-              </div>
-            </TabPanel>
-          </TabView>
-          <div class="flex align-items-center justify-content-between">
-            <span class="font-bold mb-0 mx-1">Agency Contact</span>
-            <Button
-              v-tooltip.left="'Agency Contact'" icon="pi pi-user-plus"
-              class="p-button-text mr-2 mb-0" @click="clearForm"
-            />
-          </div>
-          <!-- <Divider class="mb-1 mt-0" /> -->
-          <DynamicTable
-            :data="listItemsAgency" :columns="columnsAgency" :options="optionsAgency"
-            :pagination="paginationAgency" @on-confirm-create="clearForm"
-            @open-edit-dialog="getItemById($event)" @update:clicked-item="getItemById($event)"
-            @on-change-pagination="payloadOnChangePage = $event"
-            @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
-            @on-sort-field="onSortField"
-          />
-        </div>
-      </OverlayPanel>
-
-      <div v-if="false" class="grid grid-nogutter px-0 py-0 mt-0">
-        <div class="col-12 flex align-items-center">
-          <!-- Usar flex para alinear en la misma fila -->
-          <div class="col-11 md:col-11 lg:col-11 xl:col-11 py-0 px-0">
-            <div v-if="false" class="card py-1 p-0 my-0">
-              <div
-                v-if="false"
-                class="header-content text-lg mr-0 font-bold"
-                style="background-color: var(--primary-color); color: white; padding: 8px; border-top-left-radius: 8px; border-top-right-radius: 8px;"
-              >
-                Invoice View
-              </div>
-            </div>
-            <div class="p-2 font-bold">
-              Invoice View
-            </div>
-          </div>
-          <div
-            class="col-1 md:col-1 lg:col-1 sm:col-1 xl:col-1 flex align-items-center justify-content-end px-1 my-0 p-0 w-auto"
-          >
-            <Button
-              v-tooltip.left="'More'" label="+More" style="height: 70%;text-decoration: underline;"
-              severity="primary" class="mr-2 py-2 text-lg" @click="goToInvoice()"
-            />
-            <!-- Añadido margen derecho para separación -->
-          </div>
-        </div>
-      </div>
-
       <div class="flex justify-content-between mt-0">
         <div class="flex align-items-center gap-2">
           <div class="p-2 font-bold">
             Invoice View
           </div>
-          <!-- <ButtonGroup>
-            <Button
-              v-tooltip.left="'Show Client Detail'"
-              label="Show Client Detail"
-              severity="primary" text class="" @click="toggle2"
-            />
-            <Button
-              v-tooltip.left="'Show'"
-              severity="primary" :icon="showClientDetail ? 'pi pi-eye-slash' : 'pi pi-eye'" class="" @click="onOffModalClientDetail"
-            />
-          </ButtonGroup> -->
         </div>
-        <div>
-          <div class="flex align-items-center gap-2">
-            <div
-              v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-              class="my-2 flex justify-content-end px-0"
-            >
-              <Button
-                v-tooltip.left="'Email'" text label="Email" icon="pi pi-envelope" class="h-2.5rem w-6rem"
-                severity="primary" @click="clearForm"
-              />
-            </div>
-            <div
-              v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-              class="my-2 ml-2 flex justify-content-end px-0"
-            >
-              <Button
-                v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="h-2.5rem w-5rem"
-                severity="primary" @click="clearForm"
-              />
-            </div>
-            <div
-              v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-              class="my-2 ml-2 flex justify-content-end px-0"
-            >
-              <Button
-                v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="h-2.5rem w-6rem"
-                severity="primary" @click="clearForm"
-              />
-            </div>
+        <div class="flex align-items-center gap-2">
+          <div
+            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
+            class="flex justify-content-end px-0"
+          >
             <Button
-              v-tooltip.left="'More'" label="+More"
-              severity="primary" text class="" @click="goToInvoice()"
+              v-tooltip.left="'Email'" text label="Email" icon="pi pi-envelope" class="w-6rem"
+              severity="primary" @click="clearForm"
             />
           </div>
+          <div
+            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
+            class="ml-2 flex justify-content-end px-0"
+          >
+            <Button
+              v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
+              severity="primary" @click="clearForm"
+            />
+          </div>
+          <div
+            v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
+            class="ml-2 flex justify-content-end px-0"
+          >
+            <Button
+              v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
+              severity="primary" @click="clearForm"
+            />
+          </div>
+          <Button
+            v-tooltip.left="'More'" label="+More"
+            severity="primary" text class="" @click="goToInvoice()"
+          />
         </div>
       </div>
 
