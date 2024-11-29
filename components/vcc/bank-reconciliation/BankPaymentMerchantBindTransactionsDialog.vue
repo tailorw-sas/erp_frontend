@@ -539,9 +539,12 @@ onMounted(async () => {
       </template>
     </DynamicTable>
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
-      <Badge
-        v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
-      />
+      <div>
+        <Badge v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected" class="mr-1"/>
+        <Badge
+          v-tooltip.top="'Bank Payment Amount'" :value="`Bank Payment Amount: $${props.currentBankPayment?.amount ? formatNumber(props.currentBankPayment?.amount) : '0.00'}`"
+        />
+      </div>
       <div>
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
