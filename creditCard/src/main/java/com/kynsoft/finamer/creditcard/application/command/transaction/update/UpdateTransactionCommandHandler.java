@@ -28,12 +28,18 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
 
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
 
-    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService) {
+    private final IManageBankReconciliationService bankReconciliationService;
+
+    private final IHotelPaymentService hotelPaymentService;
+
+    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageBankReconciliationService bankReconciliationService, IHotelPaymentService hotelPaymentService) {
         this.transactionService = transactionService;
         this.agencyService = agencyService;
         this.languageService = languageService;
         this.transactionStatusService = transactionStatusService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.bankReconciliationService = bankReconciliationService;
+        this.hotelPaymentService = hotelPaymentService;
     }
 
     @Override
@@ -65,17 +71,29 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
             update.setUpdate(1);
         }
 
+        boolean updateAmount = false;
         if (dto.isAdjustment() && command.getAmount() != null) {
             if (dto.getTransactionCategory().getOnlyApplyNet()) {
-                UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate);
+                updateAmount = UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate);
             } else {
-                UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate);
-                UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate);
+                if (UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate)){
+                    updateAmount = true;
+                }
+                if (UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate)){
+                    updateAmount = true;
+                }
             }
         }
 
         if (update.getUpdate() > 0){
             this.transactionService.update(dto);
+            if (updateAmount){
+                if (dto.getReconciliation() != null) {
+                    this.bankReconciliationService.updateDetails(dto.getReconciliation().getId());
+                } else if (dto.getHotelPayment() != null){
+                    this.hotelPaymentService.updateAmounts(dto.getHotelPayment().getId());
+                }
+            }
         }
     }
 

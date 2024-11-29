@@ -48,18 +48,20 @@ public class UnbindHotelPaymentTransactionsCommandHandler implements ICommandHan
 
     private void updateHotelPaymentAmounts(HotelPaymentDto hotelPaymentDto) {
         hotelPaymentDto.setNetAmount(
-                hotelPaymentDto.getTransactions().stream().map(dto ->
-                        dto.isAdjustment()
-                                ? dto.getTransactionSubCategory().getNegative()
-                                ? -dto.getNetAmount()
-                                : dto.getNetAmount()
-                                : dto.getNetAmount()
-                ).reduce(0.0, Double::sum));
+            hotelPaymentDto.getTransactions().stream().map(dto ->
+                dto.isAdjustment()
+                    ? dto.getTransactionSubCategory().getNegative()
+                        ? -dto.getNetAmount()
+                        : dto.getNetAmount()
+                    : dto.getNetAmount()
+            ).reduce(0.0, Double::sum));
+
         hotelPaymentDto.setCommission(
                 hotelPaymentDto.getTransactions().stream()
                         .map(TransactionDto::getCommission)
                         .reduce(0.0, Double::sum)
         );
+
         hotelPaymentDto.setAmount(hotelPaymentDto.getTransactions().stream()
                 .map(TransactionDto::getAmount)
                 .reduce(0.0, Double::sum));
