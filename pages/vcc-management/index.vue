@@ -226,7 +226,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'T.Amount', type: 'number' },
-  { field: 'checkIn', header: 'Trans Date', type: 'date' },
+  { field: 'transactionDate', header: 'Trans Date', type: 'date' },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
@@ -316,7 +316,7 @@ async function getList() {
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate) })
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
