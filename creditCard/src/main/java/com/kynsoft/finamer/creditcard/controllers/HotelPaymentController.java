@@ -1,5 +1,8 @@
 package com.kynsoft.finamer.creditcard.controllers;
 
+import com.kynsof.share.core.domain.request.PageableUtil;
+import com.kynsof.share.core.domain.request.SearchRequest;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.addTransactions.AddHotelPaymentTransactionsCommand;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.addTransactions.AddHotelPaymentTransactionsMessage;
@@ -7,11 +10,10 @@ import com.kynsoft.finamer.creditcard.application.command.hotelPayment.addTransa
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.CreateHotelPaymentCommand;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.CreateHotelPaymentMessage;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.CreateHotelPaymentRequest;
+import com.kynsoft.finamer.creditcard.application.query.hotelPayment.search.GetSearchHotelPaymentQuery;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/hotel-payment")
@@ -38,5 +40,14 @@ public class HotelPaymentController {
         AddHotelPaymentTransactionsMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<?> search(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchHotelPaymentQuery query = new GetSearchHotelPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
     }
 }
