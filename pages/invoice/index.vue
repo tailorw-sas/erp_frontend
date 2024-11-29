@@ -2050,9 +2050,9 @@ const legend = ref(
 <template>
   <div class=" col-12 align-items-center grid w-full">
     <div class="flex align-items-center justify-content-between w-full">
-      <h3 class="mb-0 w-6">
+      <h5 class="mb-0 w-6">
         Invoice Management
-      </h3>
+      </h5>
       <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
         <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))"
           v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
