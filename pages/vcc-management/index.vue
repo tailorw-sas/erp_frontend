@@ -20,6 +20,7 @@ const isAdmin = (data.value?.user as any)?.isAdmin === true
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
+const resendLinkDialogVisible = ref(false)
 const transactionHistoryDialogVisible = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const newRefundDialogVisible = ref(false)
@@ -723,18 +724,8 @@ function onSortField(event: any) {
 }
 
 async function resendLink() {
-  try {
-    if (contextMenuTransaction.value.id) {
-      options.value.loading = true
-      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-  }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-  }
-  finally {
-    options.value.loading = false
+  if (contextMenuTransaction.value.id) {
+    resendLinkDialogVisible.value = true
   }
 }
 
@@ -1192,6 +1183,7 @@ onMounted(() => {
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
     <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
+    <VCCResendLink :open-dialog="resendLinkDialogVisible" :transaction-id="contextMenuTransaction?.id" @on-close-dialog="($event) => { resendLinkDialogVisible = false }" />
     <div v-if="transactionHistoryDialogVisible">
       <TransactionStatusHistoryDialog :close-dialog="() => { transactionHistoryDialogVisible = false }" :open-dialog="transactionHistoryDialogVisible" :selected-transaction="contextMenuTransaction" :s-class-map="sClassMap" />
     </div>
