@@ -287,7 +287,38 @@ watch(fieldValues, (newVal) => {
             </span>
 
             <span v-else-if="field.dataType === 'fileupload'">
-              <FileUpload
+              <InputGroup>
+                <span v-if="!loadingSave" class="w-full">
+                  <InputText
+                    v-if="typeof fieldValues[field.field] === 'object'"
+                    v-model="fieldValues[field.field].name"
+                    class="w-full"
+                    placeholder="Upload a file"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                  />
+                  <InputText
+                    v-if="typeof fieldValues[field.field] === 'string'"
+                    v-model="fieldValues[field.field]"
+                    class="w-full"
+                    placeholder="Upload a file"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                  />
+                </span>
+                <Skeleton v-else height="7rem" />
+                <FileUpload
+                  v-if="!loadingSave"
+                  mode="basic"
+                  :max-file-size="100000000"
+                  :multiple="false"
+                  auto
+                  custom-upload
+                  accept="application/pdf"
+                  style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                  @uploader="customBase64Uploader($event, fieldValues, field.field)"
+                />
+              </InputGroup>
+
+              <!-- <FileUpload
                 v-if="!loadingSave" :max-file-size="1000000" :multiple="false" auto custom-upload
                 @uploader="customBase64Uploader($event, fieldValues, field.field)"
               >
@@ -314,9 +345,7 @@ watch(fieldValues, (newVal) => {
                     </li>
                   </ul>
                 </template>
-              </FileUpload>
-
-              <Skeleton v-else height="7rem" />
+              </FileUpload> -->
 
             </span>
 
