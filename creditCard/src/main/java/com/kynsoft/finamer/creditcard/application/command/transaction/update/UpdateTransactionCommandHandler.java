@@ -48,6 +48,8 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setReservationNumber, command.getReservationNumber(), dto.getReservationNumber(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setReferenceNumber, command.getReferenceNumber(), dto.getReferenceNumber(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setHotelContactEmail, command.getHotelContactEmail(), dto.getHotelContactEmail(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setGuestName, command.getGuestName(), dto.getGuestName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setEmail, command.getEmail(), dto.getEmail(), update::setUpdate);
 
         if (command.getTransactionStatus() != null && !command.getTransactionStatus().equals(dto.getStatus().getId())) {
             ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getTransactionStatus());
