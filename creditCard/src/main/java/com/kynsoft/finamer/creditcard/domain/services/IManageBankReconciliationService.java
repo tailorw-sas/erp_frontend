@@ -19,4 +19,6 @@ public interface IManageBankReconciliationService {
     ManageBankReconciliationDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    void updateDetails(UUID bankReconciliationId);
 }
