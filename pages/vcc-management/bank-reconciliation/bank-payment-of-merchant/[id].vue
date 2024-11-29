@@ -903,7 +903,7 @@ onMounted(async () => {
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Bind Transaction"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
         @update:list-items="($event) => bindTransactions($event)"
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"

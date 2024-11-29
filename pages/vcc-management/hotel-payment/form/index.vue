@@ -781,7 +781,7 @@ onMounted(() => {
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <BankPaymentMerchantBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Transaction Items" :selected-items="computedLocalBindTransactionList"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Bind Transaction" :selected-items="computedLocalBindTransactionList"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
         @update:list-items="($event) => bindTransactions($event)"
         @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
