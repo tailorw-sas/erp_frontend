@@ -214,6 +214,11 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
             value: false,
             logicalOperation: 'AND'
           }, {
+            key: 'manual',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          }, {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -232,6 +237,11 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
           }, {
             key: 'subcategory',
             operator: 'LIKE',
+            value: false,
+            logicalOperation: 'AND'
+          }, {
+            key: 'manual',
+            operator: 'EQUALS',
             value: false,
             logicalOperation: 'AND'
           }, {
