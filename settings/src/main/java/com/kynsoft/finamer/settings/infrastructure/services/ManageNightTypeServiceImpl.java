@@ -105,4 +105,16 @@ public class ManageNightTypeServiceImpl implements IManageNightTypeService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageNightTypeDto> findAllToReplicate() {
+        List<ManageNightType> objects = this.repositoryQuery.findAll();
+        List<ManageNightTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageNightType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }
