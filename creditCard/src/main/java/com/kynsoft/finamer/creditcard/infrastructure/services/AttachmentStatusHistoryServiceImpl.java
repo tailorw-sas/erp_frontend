@@ -79,13 +79,14 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
     public UUID create(AttachmentDto attachmentDto, String action) {
         AttachmentStatusHistoryDto dto = new AttachmentStatusHistoryDto(
                 UUID.randomUUID(),
-                "An attachment to the transaction was " + action +". The file name: " + attachmentDto.getFilename(),
+                "An attachment was " + action +". The file name: " + attachmentDto.getFilename(),
                 attachmentDto.getAttachmentId(),
                 attachmentDto.getTransaction(),
                 attachmentDto.getEmployee(),
                 attachmentDto.getEmployeeId(),
                 null,
-                null
+                null,
+                attachmentDto.getHotelPayment()
         );
 
         AttachmentStatusHistory data = new AttachmentStatusHistory(dto);

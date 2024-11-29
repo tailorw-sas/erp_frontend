@@ -3,13 +3,13 @@ package com.kynsoft.finamer.creditcard.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.EHotelPaymentStatus;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.EPaymentTransactionStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface IManagePaymentTransactionStatus {
+public interface IManagePaymentTransactionStatusService {
 
     ManagePaymentTransactionStatusDto create(ManagePaymentTransactionStatusDto dto);
 
@@ -31,7 +31,7 @@ public interface IManagePaymentTransactionStatus {
 
     Long countByAppliedAndNotId(UUID id);
 
-    ManagePaymentTransactionStatusDto findByEReconcileTransactionStatus(EHotelPaymentStatus hotelPaymentStatus);
+    ManagePaymentTransactionStatusDto findByEPaymentTransactionStatus(EPaymentTransactionStatus hotelPaymentStatus);
 
     List<ManagePaymentTransactionStatusDto> findByIds(List<UUID> ids);
 }

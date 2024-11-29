@@ -116,6 +116,11 @@ public class AttachmentServiceImpl implements IAttachmentService {
         this.repositoryCommand.saveAll(attachments);
     }
 
+    @Override
+    public List<AttachmentDto> findAllByHotelPaymentId(UUID hotelPaymentId) {
+        return this.repositoryQuery.findAllByHotelPaymentId(hotelPaymentId).stream().map(Attachment::toAggregate).toList();
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

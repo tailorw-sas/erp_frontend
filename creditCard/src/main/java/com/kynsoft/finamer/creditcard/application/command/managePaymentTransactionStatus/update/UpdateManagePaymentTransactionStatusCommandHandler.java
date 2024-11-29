@@ -8,7 +8,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.rules.managePaymentTransactionStatus.*;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 @Component
 public class UpdateManagePaymentTransactionStatusCommandHandler implements ICommandHandler<UpdateManagePaymentTransactionStatusCommand> {
 
-    private final IManagePaymentTransactionStatus service;
+    private final IManagePaymentTransactionStatusService service;
 
-    public UpdateManagePaymentTransactionStatusCommandHandler(IManagePaymentTransactionStatus service) {
+    public UpdateManagePaymentTransactionStatusCommandHandler(IManagePaymentTransactionStatusService service) {
         this.service = service;
     }
 

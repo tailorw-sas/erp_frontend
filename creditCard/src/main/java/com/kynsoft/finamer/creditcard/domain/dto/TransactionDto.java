@@ -50,6 +50,7 @@ public class TransactionDto {
     private LocalDateTime paymentDate;
     private ManageBankReconciliationDto reconciliation;
     private List<AttachmentDto> attachments = new ArrayList<>();
+    private HotelPaymentDto hotelPayment;
 
     //uso -> toAggregateParent
     public TransactionDto(

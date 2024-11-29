@@ -21,10 +21,11 @@ public class CreateAttachmentCommand implements ICommand {
     private String employee;
     private UUID employeeId;
     private UUID paymentResourceType;
+    private UUID hotelPayment;
 
     public CreateAttachmentCommand(
             String filename, String file, String remark, UUID type, Long transaction,
-            String employee, UUID employeeId, UUID paymentResourceType) {
+            String employee, UUID employeeId, UUID paymentResourceType, UUID hotelPayment) {
 
         this.id = UUID.randomUUID();
         this.file = file;
@@ -35,11 +36,14 @@ public class CreateAttachmentCommand implements ICommand {
         this.employee = employee;
         this.employeeId =employeeId;
         this.paymentResourceType = paymentResourceType;
+        this.hotelPayment = hotelPayment;
     }
 
     public static CreateAttachmentCommand fromRequest(CreateAttachmentRequest request) {
         return new CreateAttachmentCommand(
-                request.getFilename(), request.getFile(), request.getRemark(), request.getType(), request.getTransaction(), request.getEmployee(), request.getEmployeeId(), request.getPaymentResourceType());
+                request.getFilename(), request.getFile(), request.getRemark(),
+                request.getType(), request.getTransaction(), request.getEmployee(),
+                request.getEmployeeId(), request.getPaymentResourceType(), request.getHotelPayment());
     }
 
     @Override

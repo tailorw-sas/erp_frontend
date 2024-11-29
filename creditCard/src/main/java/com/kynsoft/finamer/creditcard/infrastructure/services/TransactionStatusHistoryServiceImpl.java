@@ -8,6 +8,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.TransactionStatusHistory.TransactionStatusHistoryResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionStatusHistory;
@@ -81,6 +82,18 @@ public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHi
     @Override
     public List<TransactionStatusHistoryDto> findByTransactionId(Long transactionId) {
         return this.repositoryQuery.findByTransactionId(transactionId).stream().map(TransactionStatusHistory::toAggregate).collect(Collectors.toList());
+    }
+
+    @Override
+    public TransactionStatusHistoryDto create(TransactionDto dto) {
+        return this.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                dto,
+                "The transaction status change to "+dto.getStatus().getCode() + "-" +dto.getStatus().getName()+".",
+                null,
+                null,
+                dto.getStatus()
+        ));
     }
 
     private PaginatedResponse getPaginatedResponse(Page<TransactionStatusHistory> data) {

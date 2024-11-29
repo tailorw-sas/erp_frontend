@@ -6,6 +6,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.EReconcileTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.TransactionCheckInCloseOperationRule;
+import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -54,6 +55,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
         if (command.getTransactions() != null) {
             for (Long transactionId : command.getTransactions()) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
+                RulesChecker.checkRule(new TransactionReconciliationOrPaymentRule(transactionDto));
                 transactionList.add(transactionDto);
             }
         }

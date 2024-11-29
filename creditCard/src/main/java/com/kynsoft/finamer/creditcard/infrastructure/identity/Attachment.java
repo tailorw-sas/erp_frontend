@@ -49,6 +49,10 @@ public class Attachment implements Serializable {
     private Transaction transaction;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_payment")
+    private HotelPayment hotelPayment;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "resource_type")
     private ManageResourceType paymentResourceType;
 
@@ -69,6 +73,7 @@ public class Attachment implements Serializable {
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
         this.paymentResourceType = dto.getPaymentResourceType() != null ? new ManageResourceType(dto.getPaymentResourceType()) : null;
+        this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
     }
 
     public AttachmentDto toAggregate() {
@@ -83,7 +88,8 @@ public class Attachment implements Serializable {
                 employee, 
                 employeeId, 
                 createdAt, 
-                paymentResourceType != null ? paymentResourceType.toAggregate() : null
+                paymentResourceType != null ? paymentResourceType.toAggregate() : null,
+                hotelPayment != null ? hotelPayment.toAggregateSimple() : null
         );
     }
 
@@ -99,7 +105,8 @@ public class Attachment implements Serializable {
                 employee, 
                 employeeId, 
                 createdAt, 
-                paymentResourceType != null ? paymentResourceType.toAggregate() : null
+                paymentResourceType != null ? paymentResourceType.toAggregate() : null,
+                null
         );
     }
 }
