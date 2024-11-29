@@ -157,15 +157,17 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
+    validation: z.string().trim().min(1, 'File is required'),
   },
   {
     field: 'fileName',
     header: 'Filename',
     dataType: 'text',
-    class: 'field col-12 required',
+    class: 'field col-12',
     headerClass: 'mb-1',
     disabled: true,
-    validation: z.string().trim().min(1, 'This is a required field')
+    hidden: true,
+    validation: z.string().trim()
   },
   {
     field: 'remark',
@@ -213,7 +215,7 @@ const objApis = ref({
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px' },
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
+  // { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
@@ -221,7 +223,7 @@ const Columns: IColumn[] = [
 ]
 const columnsAttachment: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
+  // { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
@@ -256,13 +258,14 @@ const options = ref({
   loading: false,
   showDelete: false,
   showFilters: true,
+  showPagination: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -272,7 +275,7 @@ const payloadOnChangePageHistory = ref<PageState>()
 const payloadLocal = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: 'ASC'
@@ -281,7 +284,7 @@ const payloadLocal = ref<IQueryRequest>({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: 'ASC'
@@ -655,19 +658,57 @@ async function createItemLocal(item: any) {
       item.id = listItemsLocal.value.length + 1
       const payload: { [key: string]: any } = { ...item }
       payload.employee = userData?.value?.user?.userId
-      if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-        const file = payload.path.files[0]
-        if (file) {
-          const objFile = await getUrlOrIdByFile(file)
-          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+
+      if ('files' in payload.path) {
+        if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+          const file = payload.path.files[0]
+          if (file) {
+            if (payload.fileName === null || payload.fileName === '') {
+              payload.fileName = file.name
+            }
+            const objFile = await getUrlOrIdByFile(file)
+            payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+          }
+          else {
+            payload.path = ''
+          }
+        }
+      }
+      else {
+        if (typeof payload.path === 'object' && payload.path !== null) {
+          const file = payload.path
+          if (file) {
+            if (payload.fileName === null || payload.fileName === '') {
+              payload.fileName = file.name
+            }
+            const objFile = await getUrlOrIdByFile(file)
+            payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+          }
+          else {
+            payload.path = ''
+          }
         }
         else {
           payload.path = ''
         }
       }
-      else {
-        payload.path = ''
-      }
+
+      // if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+      //   const file = payload.path.files[0]
+      //   if (file) {
+      //     if (payload.fileName === null || payload.fileName === '') {
+      //       payload.fileName = file.name
+      //     }
+      //     const objFile = await getUrlOrIdByFile(file)
+      //     payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      //   }
+      //   else {
+      //     payload.path = ''
+      //   }
+      // }
+      // else {
+      //   payload.path = ''
+      // }
       listItemsLocal.value = [...listItemsLocal.value, payload]
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
       haveError.value = false
@@ -714,20 +755,40 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-
-    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-      const file = payload.path.files[0]
-      if (file) {
-        const objFile = await getUrlOrIdByFile(file)
-        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    if ('files' in payload.path) {
+      if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+        const file = payload.path.files[0]
+        if (file) {
+          if (payload.fileName === null || payload.fileName === '') {
+            payload.fileName = file.name
+          }
+          const objFile = await getUrlOrIdByFile(file)
+          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+        }
+        else {
+          payload.path = ''
+        }
+      }
+    }
+    else {
+      if (typeof payload.path === 'object' && payload.path !== null) {
+        const file = payload.path
+        if (file) {
+          if (payload.fileName === null || payload.fileName === '') {
+            payload.fileName = file.name
+          }
+          const objFile = await getUrlOrIdByFile(file)
+          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+        }
+        else {
+          payload.path = ''
+        }
       }
       else {
         payload.path = ''
       }
     }
-    else {
-      payload.path = ''
-    }
+
     payload.attachmentType = item.attachmentType?.id
     payload.resourceType = item.resourceType?.id
     payload.status = 'ACTIVE'
@@ -825,6 +886,7 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       successOperation = false
+      loadingSaveAll.value = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
@@ -892,6 +954,7 @@ async function getItemById(id: string) {
         item.value.file = response.file
         item.value.remark = response.remark
         item.value.invoice = response.invoice
+        item.value.path = response.fileName
         pathFileLocal.value = response.path
         updateFieldProperty(fieldsV2, 'remark', 'disabled', true)
       }
@@ -927,6 +990,7 @@ async function getItemByIdLocal(idItemLocal: string) {
         // item.value.file = itemLocal.file
         item.value.remark = objToEdit.remark
         // item.value.invoice = itemLocal.invoice
+        item.value.path = objToEdit.fileName
         pathFileLocal.value = objToEdit.path
 
         formReload.value += 1
@@ -1168,15 +1232,17 @@ onMounted(async () => {
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
     @hide="closeDialog"
   >
+    <template #header>
+      <div class="inline-flex align-items-center justify-content-center gap-2">
+        <span class="font-bold white-space-nowrap">{{ header }}</span>
+        <strong class="mx-2">-</strong>
+        <strong class="mr-1">Payment:</strong>
+        <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+      </div>
+    </template>
     <template #default>
       <div class="grid p-fluid formgrid">
         <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
-          <div v-if="true" class="font-bold mb-3 flex justify-content-end">
-            <div class="bg-primary px-3" style="border-radius: 5px; padding-top: 10px; padding-bottom: 10px">
-              <strong class="mr-2">Payment:</strong>
-              <span>{{ externalProps.selectedPayment.paymentId }}</span>
-            </div>
-          </div>
           <Accordion v-if="false" :active-index="0" class="mb-2 card p-0">
             <AccordionTab>
               <template #header>
@@ -1331,8 +1397,39 @@ onMounted(async () => {
                 </template>
 
                 <template #field-path="{ item: data, onUpdate }">
+                  <InputGroup>
+                    <InputText
+                      v-model="data.fileName"
+                      style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                      placeholder="Upload File"
+                      disabled
+                    />
+                    <FileUpload
+                      v-if="!loadingSaveAll"
+                      mode="basic"
+                      :max-file-size="100000000"
+                      :disabled="idItem !== '' || idItem === null"
+                      :multiple="false"
+                      auto
+                      custom-upload
+                      style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                      accept="application/pdf"
+                      @uploader="($event: any) => {
+                        customBase64Uploader($event, fieldsV2, 'path');
+                        onUpdate('path', $event)
+                        if ($event && $event.files.length > 0) {
+                          onUpdate('fileName', $event?.files[0]?.name)
+                          onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                        }
+                        else {
+                          onUpdate('fileName', '')
+                        }
+                      }"
+                    />
+                  </InputGroup>
+
                   <FileUpload
-                    v-if="!loadingSaveAll" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
+                    v-if="false" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)
@@ -1343,7 +1440,6 @@ onMounted(async () => {
                       else {
                         onUpdate('fileName', '')
                       }
-
                     }"
                   >
                     <template #header="{ chooseCallback }">
@@ -1456,3 +1552,11 @@ onMounted(async () => {
     </template>
   </Dialog>
 </template>
+
+<style scoped lang="scss">
+  .custom-divider {
+    width: 2px; /* Cambia el grosor aquí */
+    background-color: white; /* Cambia el color aquí */
+    height: 1px; /* Se ajustará automáticamente al contenido */
+  }
+</style>
