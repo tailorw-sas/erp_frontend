@@ -1441,8 +1441,6 @@ function onRowContextMenu(event: any) {
 }
 
 function onRowContextMenuInvoice(event: any) {
-  console.log(event)
-
   if (event && event.data) {
     objItemSelectedForRightClickInvoice.value = event.data
   }
@@ -1573,9 +1571,9 @@ onMounted(() => {
   <div class="grid p-0 m-0 my-0 py-0 px-0 mx-0">
     <div class="col-12 py-0 px-1">
       <div class="font-bold p-0 m-0">
-        <h3 class="mb-0 p-0 ">
+        <h5 class="mb-0 p-0 ">
           Collection Management
-        </h3>
+        </h5>
       </div>
     </div>
     <div class="col-12 md:order-1 md:col-12 xl:col-6 lg:col-12 mt-0 px-1 py-0">
