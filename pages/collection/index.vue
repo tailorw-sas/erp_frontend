@@ -1912,60 +1912,60 @@ onMounted(() => {
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
-              <Column
+              <!-- <Column
                 :colspan="6"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
-              />
+              /> -->
               <!-- <Column
                 :footer="`Total Deposit #: ${''}`" :colspan="0"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               /> -->
               <Column
-                :footer="`Total #: ${pagination.totalElements}`" :colspan="0"
+                :footer="`Total #: ${pagination.totalElements}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
-                :footer="`Total $: ${formatNumber(subTotals.paymentAmount)}`" :colspan="0"
+                :footer="`Total $: ${formatNumber(subTotals.paymentAmount)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="" :colspan="0"
+                footer="" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
             </Row>
             <Row>
-              <Column
+              <!-- <Column
                 :colspan="6"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
-              />
+              /> -->
               <Column
-                :footer="`Total Deposit $: ${formatNumber(subTotals.depositBalance)}`" :colspan="0"
+                :footer="`Total Deposit $: ${formatNumber(subTotals.depositBalance)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
-                :footer="`Total Applied $: ${formatNumber(subTotals.applied)}`" :colspan="0"
+                :footer="`Total Applied $: ${formatNumber(subTotals.applied)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;"
               />
               <Column
-                :footer="`Total N.A $: ${formatNumber(subTotals.noApplied)}`" :colspan="0"
+                :footer="`Total N.A $: ${formatNumber(subTotals.noApplied)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
             </Row>
             <Row>
-              <Column
+              <!-- <Column
                 :colspan="6"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
-              />
+              /> -->
               <Column
-                :footer="`Total Deposit %:  ${formatNumber(subTotals.depositBalancePorcentage, 2, 2)}`" :colspan="0"
+                :footer="`Total Deposit %:  ${formatNumber(subTotals.depositBalancePorcentage, 2, 2)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                :footer="`Total Applied %:  ${formatNumber(subTotals.appliedPorcentage, 2, 2)}`" :colspan="0"
+                :footer="`Total Applied %:  ${formatNumber(subTotals.appliedPorcentage, 2, 2)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
-                :footer="`Total N.A %:  ${formatNumber(subTotals.noAppliedPorcentage, 2, 2)}`" :colspan="0"
+                :footer="`Total N.A %:  ${formatNumber(subTotals.noAppliedPorcentage, 2, 2)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <!-- <Column
@@ -2077,7 +2077,7 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
               <Column
-                footer="Total #:" :colspan="4"
+                footer="Total #:" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
@@ -2095,7 +2095,7 @@ onMounted(() => {
             </Row>
             <Row>
               <Column
-                footer="Total 30 Days #:" :colspan="4"
+                footer="Total 30 Days #:" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;"
               />
               <Column
@@ -2113,7 +2113,7 @@ onMounted(() => {
             </Row>
             <Row>
               <Column
-                footer="Total 30 Days $:" :colspan="4"
+                footer="Total 30 Days $:" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
@@ -2131,7 +2131,7 @@ onMounted(() => {
             </Row>
             <Row>
               <Column
-                footer="Total 30 Days %:" :colspan="4"
+                footer="Total 30 Days %:" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;"
               />
               <Column
