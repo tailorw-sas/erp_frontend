@@ -98,4 +98,5 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
     private interface EntityFinder<T> {
         T findById(UUID id);
     }
+
 }
