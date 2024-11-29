@@ -77,7 +77,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'onlyApplyNet',
-    header: 'Only Apply Net Amount (VCC Module)',
+    header: 'Only Apply Net Amount',
     dataType: 'check',
     class: 'field col-12 required',
   },
@@ -295,7 +295,7 @@ async function getItemById(id: string) {
       if (response) {
         item.value.id = response.id
         item.value.name = response.name
-        item.value.description = response.description
+        item.value.description = response.description || ''
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.negative = response.negative
@@ -581,8 +581,7 @@ onMounted(() => {
                   updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !$event)
                 }"
               />
-              <label for="remarkRequired" class="ml-2">
-                Remark Required
+              <label for="remarkRequired" class="ml-2 font-bold">Remark Required
                 <span :class="fields.find(field => field.field === 'remarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>
             </template>
