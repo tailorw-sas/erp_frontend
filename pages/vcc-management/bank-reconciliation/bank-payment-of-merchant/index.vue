@@ -138,7 +138,7 @@ const columns: IColumn[] = [
   { field: 'referenceId', header: 'Id', type: 'text' },
   { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
-  { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'referenceNumber', header: 'Reference', type: 'text', maxWidth: '250px' },
   { field: 'categoryType', header: 'Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'subCategoryType', header: 'Sub Category Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-vcc-transaction-type' } },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
