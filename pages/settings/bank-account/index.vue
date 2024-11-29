@@ -588,9 +588,9 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Manage Bank Account
-    </h3>
+    </h5>
     <IfCan :perms="['BANK-ACCOUNT:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />

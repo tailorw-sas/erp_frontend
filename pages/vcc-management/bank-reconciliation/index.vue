@@ -537,9 +537,9 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Management Bank Reconciliation
-    </h3>
+    </h5>
     <IfCan :perms="['BANK-RECONCILIATION:CREATE']">
       <div class="my-2 flex justify-content-end px-0">
         <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />

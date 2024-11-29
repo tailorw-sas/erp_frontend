@@ -519,9 +519,9 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Hotel Payment Management
-    </h3>
+    </h5>
     <div class="my-2 flex justify-content-end px-0">
       <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
     </div>

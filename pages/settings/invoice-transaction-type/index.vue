@@ -117,7 +117,7 @@ const item = ref<GenericObject>({
   isAgencyRateAmount: false,
   isNegative: false,
   isPolicyCredit: false,
-  defaults:false,
+  defaults: false,
   isRemarkRequired: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
@@ -132,7 +132,7 @@ const itemTemp = ref<GenericObject>({
   isNegative: false,
   isPolicyCredit: false,
   isRemarkRequired: false,
-  defaults:false,
+  defaults: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
 })
@@ -466,9 +466,9 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Manage Invoice Transaction Type
-    </h3>
+    </h5>
     <IfCan :perms="['INVOICE-TRANSACTION-TYPE:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />

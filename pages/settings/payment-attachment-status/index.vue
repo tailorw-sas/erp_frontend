@@ -516,7 +516,7 @@ async function getForSelectNavigateList(query: string = '') {
   catch (error) {
     console.error('Error loading payment attachment status list:', error)
   }
-  finally{
+  finally {
     loadingData.value = false
   }
 }
@@ -622,9 +622,9 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Manage Payment Attachment Status
-    </h3>
+    </h5>
     <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
@@ -734,7 +734,7 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-navigate="{ item: data, onUpdate }">
-          <!--   <DebouncedAutoCompleteComponent
+              <!--   <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -747,8 +747,8 @@ onMounted(() => {
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
---> 
-<DebouncedMultiSelectComponent
+-->
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
