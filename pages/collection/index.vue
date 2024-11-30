@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import dayjs from 'dayjs'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -35,6 +36,7 @@ const attachmentListInvoice = ref<any[]>([])
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 const paymentSelectedForAttachment = ref<GenericObject>({})
+const optionsForShareFile = ref<'create' | 'edit'>('create')
 
 // Share Files
 const shareFilesDialogOpen = ref<boolean>(false)
@@ -264,6 +266,31 @@ const idItemToLoadFirstTime = ref('')
 const hotelList = ref<any[]>([])
 const clientList = ref<any[]>([])
 
+const exportDialogOpen = ref(false)
+
+const confApiPaymentExportToExcel = reactive({
+  moduleApi: 'payment',
+  uriApi: 'payment/excel-exporter',
+})
+const loadingExportToExcel = ref(false)
+const openModalExportToExcel = ref(false)
+const fieldExportToExcel = ref<FieldDefinitionType[]>([
+  {
+    field: 'exportSumary',
+    header: 'Export Sumary',
+    dataType: 'check',
+    disabled: true,
+    class: 'field col-12 md:col-6 required mb-3',
+  },
+  {
+    field: 'fileName',
+    header: 'File Name',
+    dataType: 'text',
+    class: 'field col-12 mb-2 flex align-items-center',
+    headerClass: 'mr-6',
+  },
+])
+
 const confApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency-type',
@@ -453,6 +480,12 @@ const paginationAgency = ref<IPagination>({
   totalElements: 0,
   totalPages: 0,
   search: ''
+})
+
+const objExportToExcel = ref<GenericObject>({
+  search: payload.value,
+  fileName: '',
+  exportSumary: true
 })
 // -------------------------------------------------------------------------------------------------------
 
@@ -1252,8 +1285,6 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
     objLoading.value.loadingHotel = false
   }
   finally {
-    console.log(hotelList.value)
-
     objLoading.value.loadingHotel = false
   }
 }
@@ -1464,8 +1495,16 @@ function updateAttachment(attachment: any) {
 }
 
 function handleShareFilesDialogOpen() {
+  optionsForShareFile.value = 'edit'
   shareFilesDialogOpen.value = true
 }
+
+function handleShareFilesDialogOpenForCreate() {
+  paymentSelectedForShareFiles.value = {}
+  optionsForShareFile.value = 'create'
+  shareFilesDialogOpen.value = true
+}
+
 function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
 }
@@ -1532,6 +1571,60 @@ function toggle2(event: Event) {
     op2.value.toggle(event)
   }
 }
+
+async function openDialogExportToExcel() {
+  openModalExportToExcel.value = true
+}
+
+async function closeDialogExportToExcel() {
+  openModalExportToExcel.value = false
+}
+
+async function paymentExportToExcel(event: any) {
+  try {
+    loadingExportToExcel.value = true
+    let nameOfPdf = ''
+    const payloadTemp: { fileName: string, search: IQueryRequest } = {
+      fileName: event.fileName,
+      search: payload.value
+    }
+
+    const response: any = await GenericService.create(confApiPaymentExportToExcel.moduleApi, confApiPaymentExportToExcel.uriApi, payloadTemp)
+
+    // Asignar el nombre al archivo Excel
+    nameOfPdf = event.fileName ? event.fileName : `export-summary-${dayjs().format('YYYY-MM-DD')}-excel.xlsx`
+
+    // Convertir Base64 a Blob
+    const byteCharacters = atob(response.excel) // Decodifica la cadena Base64
+    const byteNumbers = Array.from({ length: byteCharacters.length }).fill(null).map((_, i) => byteCharacters.charCodeAt(i))
+    const byteArray = new Uint8Array(byteNumbers)
+    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+
+    // Crear URL y descargar el archivo
+    const url = window.URL.createObjectURL(blob)
+
+    if (url) {
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nameOfPdf
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    }
+
+    loadingExportToExcel.value = false
+  }
+  catch (error) {
+    loadingExportToExcel.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was failed', life: 3000 })
+  }
+  finally {
+    loadingExportToExcel.value = false
+    openModalExportToExcel.value = false
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1863,7 +1956,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Share File'" text label="Share File" icon="pi pi-share-alt"
-              class="w-8rem" severity="primary" @click="clearForm"
+              class="w-8rem" severity="primary" @click="handleShareFilesDialogOpenForCreate"
             />
           </div>
           <div
@@ -1872,7 +1965,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
-              severity="primary" @click="clearForm"
+              severity="primary" @click="openDialogExportToExcel"
             />
           </div>
           <Button
@@ -2023,7 +2116,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Email'" text label="Email" icon="pi pi-envelope" class="w-6rem"
-              severity="primary" @click="clearForm"
+              severity="primary" @click="() => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } })"
             />
           </div>
           <div
@@ -2032,7 +2125,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
-              severity="primary" @click="clearForm"
+              severity="primary" @click="navigateTo('/invoice/print', { open: { target: '_blank' } })"
             />
           </div>
           <div
@@ -2041,7 +2134,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
-              severity="primary" @click="clearForm"
+              severity="primary" @click="() => { exportDialogOpen = true }"
             />
           </div>
           <Button
@@ -2191,7 +2284,7 @@ onMounted(() => {
 
   <div v-if="shareFilesDialogOpen">
     <PaymentShareFilesDialog
-      is-create-or-edit-payment="edit"
+      :is-create-or-edit-payment="optionsForShareFile"
       :add-item="addAttachment"
       :close-dialog="() => {
         shareFilesDialogOpen = false
@@ -2232,6 +2325,79 @@ onMounted(() => {
       </div>
     </template>
   </ContextMenu>
+
+  <!-- Export To Excel -->
+  <Dialog
+    v-model:visible="openModalExportToExcel"
+    modal
+    class="mx-3 sm:mx-0"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :style="{ width: '340px' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
+    }"
+    @hide="closeDialogExportToExcel()"
+  >
+    <template #header>
+      <div class="flex justify-content-between">
+        <h5 class="m-0">
+          Export Setting
+        </h5>
+      </div>
+    </template>
+    <template #default>
+      <div class="p-fluid pt-3">
+        <EditFormV2
+          :key="formReload"
+          class="mt-3"
+          :fields="fieldExportToExcel"
+          :item="objExportToExcel"
+          :show-actions="true"
+          :loading-save="loadingSaveAll"
+          @cancel="closeDialogExportToExcel"
+          @submit="paymentExportToExcel($event)"
+        >
+          <template #field-exportSumary="{ item: data, onUpdate }">
+            <label for="exportSumary" class="mr-2 font-bold">
+              Export Sumary
+            </label>
+            <Checkbox
+              id="exportSumary"
+              v-model="data.exportSumary"
+              :binary="true"
+              disabled
+              @update:model-value="($event) => {
+                onUpdate('exportSumary', $event)
+              }"
+            />
+          </template>
+
+          <template #form-footer="props">
+            <Button v-tooltip.top="'Save'" :loading="loadingExportToExcel" class="w-3rem ml-1 sticky" icon="pi pi-save" @click="props.item.submitForm($event)" />
+            <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" />
+          </template>
+        </EditFormV2>
+      </div>
+    </template>
+  </Dialog>
+
+  <!-- Export To Excel To Invoice -->
+  <div v-if="exportDialogOpen">
+    <ExportDialog
+      :total="paginationInvoice.totalElements"
+      :close-dialog="() => { exportDialogOpen = false }"
+      :open-dialog="exportDialogOpen"
+      :payload="payloadInv"
+    />
+  </div>
 </template>
 
 <style lang="scss">

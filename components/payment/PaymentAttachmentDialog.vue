@@ -106,6 +106,14 @@ const idItem = ref('')
 
 const toast = useToast()
 
+const validationSchema = z.union([
+  z.string().trim().min(1, 'File is required'), // Permite un string
+  z.object({ // Permite un objeto con la estructura deseada
+    name: z.string().min(1), // Ejemplo: el objeto debe tener un campo `name`
+    size: z.number().positive(), // Ejemplo: un campo `size` con un número positivo
+  }),
+])
+
 const fieldsV2: Array<FieldDefinitionType> = [
   {
     field: 'resource',
@@ -157,7 +165,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'File is required'),
+    validation: validationSchema,
   },
   {
     field: 'fileName',
