@@ -26,7 +26,7 @@ const props = defineProps({
 const Columns: IColumn[] = [
   { field: 'bankReconciliationId', header: 'Id', type: 'text', width: '70px' },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px' },
-  // { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
   { field: 'description', header: 'Remark', type: 'text', width: '200px' },
   { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px' },
 ]
@@ -165,13 +165,6 @@ onMounted(() => {
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
             @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />
-          <div class=" flex w-full justify-content-end ">
-            <Button
-              v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
-                closeDialog()
-              }"
-            />
-          </div>
         </div>
       </div>
     </template>

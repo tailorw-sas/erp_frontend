@@ -17,6 +17,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
+const { data: userData } = useAuth()
 const route = useRoute()
 const toast = useToast()
 const { status, data } = useAuth()
@@ -623,6 +624,8 @@ async function updateItem(item: { [key: string]: any }) {
     payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.remark = item.remark || ''
     payload.amount = item.amount || ''
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
     payload.reconcileStatus = typeof item.reconcileStatus === 'object' ? item.reconcileStatus.id : item.reconcileStatus
     const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     if (response && response.id) {
