@@ -298,6 +298,10 @@ async function getItemById(id: string) {
         item.value.paidDate = response.paidDate ? dayjs(response.paidDate).toDate() : null
         item.value.remark = response.remark
         paymentAmount.value = response.detailsAmount
+        // Deshabilitar remark si el estado es completado o cancelado
+        if (response.reconcileStatus && (response.reconcileStatus.completed || response.reconcileStatus.cancelled)) {
+          updateFieldProperty(fields, 'remark', 'disabled', true)
+        }
       }
       formReload.value += 1
     }
@@ -325,7 +329,7 @@ async function getList() {
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
@@ -788,7 +792,7 @@ onMounted(async () => {
             v-model="data.amount"
             show-clear
             mode="decimal"
-            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
+            :disabled="data.reconcileStatus?.completed || data.reconcileStatus?.cancelled"
             :min-fraction-digits="2"
             :max-fraction-digits="4"
             @update:model-value="($event) => {
@@ -804,7 +808,7 @@ onMounted(async () => {
             v-model="data.paidDate"
             date-format="yy-mm-dd"
             :max-date="new Date()"
-            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
+            :disabled="(listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false) || data.reconcileStatus?.completed || data.reconcileStatus?.cancelled"
             @update:model-value="($event) => {
               onUpdate('paidDate', $event)
             }"
@@ -817,7 +821,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :disabled="idItem !== ''"
+            disabled
             :model="data.hotel"
             :suggestions="HotelList"
             @change="($event) => {
@@ -835,6 +839,7 @@ onMounted(async () => {
             :options="StatusList"
             :loading="loadingStatusNavigateOptions"
             option-label="name"
+            :disabled="data.reconcileStatus?.completed || data.reconcileStatus?.cancelled"
             return-object
             class="align-items-center"
             @update:model-value="($event) => {
@@ -850,7 +855,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :disabled="idItem !== ''"
+            disabled
             :model="data.merchantBankAccount"
             :suggestions="[...MerchantBankAccountList]"
             @change="($event) => {
