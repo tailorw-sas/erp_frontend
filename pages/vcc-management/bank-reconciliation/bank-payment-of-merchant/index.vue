@@ -15,6 +15,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
+const { data: userData } = useAuth()
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
@@ -418,6 +419,8 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.merchantBankAccount = Object.prototype.hasOwnProperty.call(payload.merchantBankAccount, 'id') ? payload.merchantBankAccount.id : payload.merchantBankAccount
     payload.detailsAmount = subTotals.value.amount
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
     delete payload.reconciliationId
 
     if (LocalBindTransactionList.value.length > 0) {

@@ -7,6 +7,7 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
 import { formatCardNumber } from '~/components/vcc/vcc_utils'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
 const props = defineProps({
   bankReconciliationId: {
@@ -21,6 +22,7 @@ const listItems = ref<any[]>([])
 const toast = useToast()
 const contextMenu = ref()
 const contextMenuTransaction = ref()
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 
 const menuListItems = [
   {
@@ -170,6 +172,8 @@ async function getList() {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
+  const count = { amount: 0, commission: 0, net: 0 }
+  subTotals.value = { ...count }
   try {
     options.value.loading = true
     listItems.value = []
@@ -177,7 +181,7 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
@@ -209,6 +213,30 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
         iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
       }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.amount -= iterator.amount
+        }
+        else {
+          count.amount += iterator.amount
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.commission -= iterator.commission
+        }
+        else {
+          count.commission += iterator.commission
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.net -= iterator.netAmount
+        }
+        else {
+          count.net += iterator.netAmount
+        }
+      }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate) })
@@ -223,6 +251,7 @@ async function getList() {
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
 }
 
@@ -269,7 +298,19 @@ onMounted(() => {
       @on-list-item="resetListItems"
       @on-sort-field="onSortField"
       @on-row-right-click="onRowRightClick"
-    />
+    >
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+            <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :footer="formatNumber(subTotals.commission)" />
+            <Column :footer="formatNumber(subTotals.net)" />
+            <Column :colspan="3" />
+          </Row>
+        </ColumnGroup>
+      </template>
+    </DynamicTable>
     <ContextMenu ref="contextMenu" :model="menuListItems">
       <template #itemicon="{ item }">
         <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
