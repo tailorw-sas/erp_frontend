@@ -72,6 +72,18 @@ const idItem = ref('')
 
 const toast = useToast()
 
+// Esquema para un archivo válido
+const fileSchema = z.object({
+  name: z.string().nonempty('File name is required'),
+  size: z.number().positive('File size must be positive'),
+  type: z.string().nonempty('File type is required'),
+})
+
+// Esquema para un archivo o múltiples archivos
+const validationSchema = z.union([
+  fileSchema.nullable(), // Un solo archivo
+  z.array(fileSchema).nonempty('At least one file is required').nullable(),
+])
 const fieldsV2: Array<FieldDefinitionType> = [
 
   {
@@ -129,26 +141,109 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
+    validation: z.object({
+      name: z.string().nonempty('File name is required'),
+    })
   },
   {
     field: 'fileName',
     header: 'Filename',
     dataType: 'text',
-    class: 'field col-12 required',
+    class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     disabled: true,
-    validation: z.string().trim().min(1, 'The filename field is required')
+    validation: z.string().trim() // .min(1, 'The filename field is required')
   },
 ]
+
+const fieldsV2ForCreate: Array<FieldDefinitionType> = [
+
+  {
+    field: 'paymentId',
+    header: 'Resource',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true,
+    hidden: true
+  },
+  {
+    field: 'shareFileYear',
+    header: 'Year',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'shareFileMonth',
+    header: 'Month',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'hotel',
+    header: 'Hotel Code',
+    dataType: 'select',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: false,
+    validation: validateEntityStatus('hotel'),
+  },
+  {
+    field: 'agency',
+    header: 'Agency Code',
+    dataType: 'select',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true,
+    validation: validateEntityStatus('agency'),
+  },
+  {
+    field: 'path',
+    header: 'Path',
+    dataType: 'fileupload',
+    class: 'field col-12 required',
+    headerClass: 'mb-1',
+    validation: z.object({
+      name: z.string().nonempty('File name is required'),
+    })
+  },
+  {
+    field: 'fileName',
+    header: 'Filename',
+    dataType: 'text',
+    class: 'field col-12',
+    headerClass: 'mb-1',
+    hidden: true,
+    disabled: true,
+    validation: z.string().trim() // .min(1, 'The filename field is required')
+  },
+]
+const agencyList = ref<any[]>([])
+const hotelList = ref<any[]>([])
+const objApis = ref({
+  paymentSource: { moduleApi: 'settings', uriApi: 'manage-payment-source' },
+  client: { moduleApi: 'settings', uriApi: 'manage-client' },
+  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
+  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
+  bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
+  paymentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
+  attachmentStatus: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' },
+  employee: { moduleApi: 'settings', uriApi: 'manage-employee' },
+})
 
 const item = ref<GenericObject>({
 
   paymentId: externalProps.selectedPayment.id || '',
   shareFileYear: dayjs().format('YYYY') || '',
   shareFileMonth: dayjs().format('MMMM') || '',
-  hotel: `${externalProps.selectedPayment.hotel.name}` || '',
-  agency: `${externalProps.selectedPayment.agency.name}` || '',
-  fileName: externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
+  hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
+  agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
+  fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
 
@@ -156,11 +251,32 @@ const itemTemp = ref<GenericObject>({
   paymentId: externalProps.selectedPayment.id || '',
   shareFileYear: dayjs().format('YYYY') || '',
   shareFileMonth: dayjs().format('MMMM') || '',
-  hotel: `${externalProps.selectedPayment.hotel.name}` || '',
-  agency: `${externalProps.selectedPayment.agency.name}` || '',
-  fileName: externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
+  hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
+  agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
+  fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
+
+// const itemForCreate = ref<GenericObject>({
+
+// paymentId: externalProps.selectedPayment.id || '',
+// shareFileYear: dayjs().format('YYYY') || '',
+// shareFileMonth: dayjs().format('MMMM') || '',
+// hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
+// agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
+// fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
+// path: '',
+// })
+
+// const itemTempForCreate = ref<GenericObject>({
+// paymentId: externalProps.selectedPayment.id || '',
+// shareFileYear: dayjs().format('YYYY') || '',
+// shareFileMonth: dayjs().format('MMMM') || '',
+// hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
+// agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
+// fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
+// path: '',
+// })
 
 const Columns: IColumn[] = [
   { field: 'shareFileYear', header: 'Year', type: 'text', width: '100px', sortable: false, showFilter: false },
@@ -243,12 +359,14 @@ async function getList() {
     listItems.value = []
     let shareFileList: any[] = []
 
-    payload.value.filter.push({
-      key: 'payment.id',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: externalProps.selectedPayment?.id
-    })
+    if (externalProps.isCreateOrEditPayment === 'edit') {
+      payload.value.filter.push({
+        key: 'payment.id',
+        logicalOperation: 'AND',
+        operator: 'EQUALS',
+        value: externalProps.selectedPayment?.id
+      })
+    }
     const response = await GenericService.searchShareFile(options.value.moduleApi, options.value.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -338,7 +456,7 @@ async function updateItem(item: { [key: string]: any }) {
   formData.append('file', file)
   formData.append('paymentId', payload.paymentId)
   formData.append('fileName', payload.fileName)
-  // await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
+  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -390,6 +508,65 @@ async function saveItem(item: { [key: string]: any }) {
   else {
     loadingSaveAll.value = false
   }
+}
+
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+  defaults?: boolean
+}
+
+interface ListItem {
+  id: string
+  name: string
+  code: string
+  status: boolean | string
+  defaults?: boolean
+}
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    code: data.code,
+    status: data.status,
+    defaults: data?.defaults || false
+  }
+}
+
+async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+}
+
+interface DataListItemHotel {
+  id: string
+  name: string
+  code: string
+  status: string
+  defaults?: boolean
+  applyByTradingCompany?: boolean
+}
+
+interface ListItemHotel {
+  id: string
+  name: string
+  status: boolean | string
+  defaults?: boolean
+  applyByTradingCompany?: boolean
+}
+function mapFunctionHotel(data: DataListItemHotel): ListItemHotel {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    defaults: data?.defaults || false,
+    applyByTradingCompany: data.applyByTradingCompany
+  }
+}
+
+async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  hotelList.value = await getDataList<DataListItemHotel, ListItemHotel>(moduleApi, uriApi, filter, queryObj, mapFunctionHotel, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
 async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
@@ -523,7 +700,10 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 })
 onMounted(async () => {
   paymentSelect.value = externalProps.selectedPayment
-  console.log(externalProps.selectedPayment)
+  if (externalProps.isCreateOrEditPayment === 'create') {
+    item.value.hotel = null
+    item.value.agency = null
+  }
   await getList()
 })
 </script>
@@ -594,6 +774,7 @@ onMounted(async () => {
             </div>
             <div class="card">
               <EditFormV2
+                v-if="$props.isCreateOrEditPayment === 'edit'"
                 :key="formReload"
                 :fields="fieldsV2"
                 :item="item"
@@ -605,8 +786,47 @@ onMounted(async () => {
                 @submit="saveItem($event)"
               >
                 <template #field-path="{ item: data, onUpdate }">
+                  <InputGroup>
+                    <InputText
+                      v-model="data.fileName"
+                      style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                      placeholder="Upload File"
+                      disabled
+                    />
+                    <FileUpload
+                      v-if="!loadingSaveAll"
+                      mode="basic"
+                      :max-file-size="100000000"
+                      :disabled="idItem !== '' || idItem === null"
+                      :multiple="false"
+                      auto
+                      custom-upload
+                      style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                      accept="application/pdf"
+                      @uploader="($event: any) => {
+                        if ('files' in $event) {
+                          if ($event && $event.files.length > 0) {
+                            onUpdate('path', $event.files[0])
+                            onUpdate('fileName', $event?.files[0]?.name)
+                            onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                          }
+                          else {
+                            onUpdate('fileName', '')
+                          }
+                        }
+                        else {
+                          if (typeof $event === 'object' && $event !== null) {
+                            onUpdate('path', $event)
+                            onUpdate('fileName', $event.name)
+                            onUpdate('fileSize', formatSize($event.size))
+                          }
+                        }
+                        // customBase64Uploader($event, fieldsV2, 'path');
+                      }"
+                    />
+                  </InputGroup>
                   <FileUpload
-                    v-if="!loadingSaveAll"
+                    v-if="false"
                     :max-file-size="10000000"
                     :disabled="idItem !== '' || idItem === null"
                     :multiple="false"
@@ -656,6 +876,144 @@ onMounted(async () => {
                       </div>
                     </template>
                   </FileUpload>
+                </template>
+
+                <template #form-footer="props">
+                  <!-- <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:SAVE-SHARE-FILES'] : ['PAYMENT-MANAGEMENT:EDIT-SHARE-FILES']"> -->
+                  <Button
+                    v-tooltip.top="'Save'"
+                    :loading="loadingSaveAll"
+                    :disabled="disabledBtnSave(props)" class="w-3rem sticky" icon="pi pi-save"
+                    @click="props.item.submitForm($event)"
+                  />
+                  <!-- </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-SHARE-FILES']"> -->
+                  <!-- <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" /> -->
+                  <!-- </IfCan> -->
+                  <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
+                </template>
+                <!-- Save, View File, Show History, Add, Delete y Cancel -->
+              </EditFormV2>
+              <EditFormV2
+                v-else
+                :key="formReload"
+                :fields="fieldsV2ForCreate"
+                :item="item"
+                :show-actions="true"
+                :loading-save="loadingSaveAll"
+                @on-confirm-create="clearForm"
+                @cancel="clearForm"
+                @delete="requireConfirmationToDelete($event)"
+                @submit="saveItem($event)"
+              >
+                <template #field-path="{ item: data, onUpdate }">
+                  <InputGroup>
+                    <InputText
+                      v-model="data.fileName"
+                      style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                      placeholder="Upload File"
+                      disabled
+                    />
+                    <FileUpload
+                      v-if="!loadingSaveAll"
+                      mode="basic"
+                      :max-file-size="100000000"
+                      :disabled="idItem !== '' || idItem === null"
+                      :multiple="false"
+                      auto
+                      custom-upload
+                      style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                      accept="application/pdf"
+                      @uploader="($event: any) => {
+                        if ('files' in $event) {
+                          if ($event && $event.files.length > 0) {
+                            onUpdate('path', $event.files[0])
+                            onUpdate('fileName', $event?.files[0]?.name)
+                            onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                          }
+                          else {
+                            onUpdate('fileName', '')
+                          }
+                        }
+                        else {
+                          if (typeof $event === 'object' && $event !== null) {
+                            onUpdate('path', $event)
+                            onUpdate('fileName', $event.name)
+                            onUpdate('fileSize', formatSize($event.size))
+                          }
+                        }
+                        // customBase64Uploader($event, fieldsV2, 'path');
+                      }"
+                    />
+                  </InputGroup>
+                </template>
+
+                <template #field-hotel="{ item: data, onUpdate, fields: listFields, field }">
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveAll"
+                    id="autocomplete"
+                    field="name"
+                    item-value="id"
+                    :model="data.hotel"
+                    :suggestions="[...hotelList]"
+                    :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
+                    @change="async ($event) => {
+                      onUpdate('hotel', $event)
+                    }"
+                    @load="async($event) => {
+                      const filter: FilterCriteria[] = [
+                        {
+                          key: 'status',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                        },
+                      ]
+                      const objQueryToSearch = {
+                        query: $event,
+                        keys: ['name', 'code'],
+                      }
+                      await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                    }"
+                  />
+                  <Skeleton v-else height="2rem" class="mb-2" />
+                </template>
+
+                <!-- Agency -->
+                <template #field-agency="{ item: data, onUpdate }">
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveAll"
+                    id="autocomplete"
+                    field="name"
+                    item-value="id"
+                    :model="data.agency"
+                    :suggestions="[...agencyList]"
+                    @change="($event) => {
+                      onUpdate('agency', $event)
+                    }"
+                    @load="async($event) => {
+                      const objQueryToSearch = {
+                        query: $event,
+                        keys: ['name', 'code'],
+                      }
+                      const filter: FilterCriteria[] = [
+                        // {
+                        //   key: 'client.id',
+                        //   logicalOperation: 'AND',
+                        //   operator: 'EQUALS',
+                        //   value: data.client?.id,
+                        // },
+                        {
+                          key: 'status',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                        },
+                      ]
+                      await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, objQueryToSearch, filter)
+                    }"
+                  />
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #form-footer="props">
