@@ -19,6 +19,7 @@ import { v4 } from 'uuid'
 import { ENUM_INVOICE_STATUS } from '~/utils/Enums'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import type { UndoImportInvoiceResponse } from './undo-import.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -41,6 +42,7 @@ const listItems = ref<any[]>([])
 const listPrintItems = ref<any[]>([])
 const formReload = ref(0)
 const invoiceTypeList = ref<any[]>([])
+const openDialog = ref(false)
 
 const totalInvoiceAmount = ref(0)
 const totalDueAmount = ref(0)
@@ -147,6 +149,11 @@ const confagencyListApi = reactive({
 const confinvoiceTypeListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-type',
+})
+
+const confApiApplyUndo = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/undo',
 })
 
 function generateRandomCode() {
@@ -282,7 +289,9 @@ const invoiceAllContextMenuItems = ref([
       width: '24px',
       height: '24px',
       iconSvg:'',
-      command: () => { },
+      command: () => { 
+        doubleFactorForUndo()
+       },
       default: true,
       showItem: false,
     },
@@ -851,6 +860,12 @@ function doubleFactor() {
 
 function doubleFactorTotal() {
   doubleFactorTotalOpen.value = true
+  entryCode.value = '';
+  randomCode.value = generateRandomCode();
+}
+
+function doubleFactorForUndo() {  
+  openDialog.value = true
   entryCode.value = '';
   randomCode.value = generateRandomCode();
 }
@@ -1961,7 +1976,7 @@ function onRowRightClick(event: any) {
   }
 
   // Payments
-  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
+  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
     findMenuItemByLabelSetShow('Payments', invoiceContextMenuItems.value, true)
   }
 
@@ -1993,6 +2008,47 @@ function onRowRightClick(event: any) {
   // Mostrar solo si es para estos estados
   attachmentInvoice.value = event.data
   invoiceContextMenu.value.show(event.originalEvent)
+}
+
+async function applyUndo() {
+  try {
+    loadingSaveAll.value = true
+    if (selectedInvoiceObj.value && selectedInvoiceObj.value.id) {
+      const payload = {
+        ids: [selectedInvoiceObj.value.id]
+      }
+      const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload) as UndoImportInvoiceResponse
+      loadingSaveAll.value = false
+      openDialog.value = false
+      if (response.errors.length === 0) {
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: `Undo successfully applied to ${response.satisfactoryQuantity} records.`,
+          life: 6000
+        })
+        await getList()
+      }
+      else {
+        for (const element of response.errors) {
+          const objInvoiceTemp = listItems.value.find((item: any) => item.id === element?.invoiceId)
+          if (objInvoiceTemp) {
+            objInvoiceTemp.reverseStatus = `Error undoing the import of invoice ${element?.invoiceNo}. Please try again.`
+          }
+        }
+      }
+    }
+  }
+  catch (error) {
+    loadingSaveAll.value = false
+    console.error('Error applying undo:', error)
+  }
+}
+
+function handleClose() {
+  openDialog.value = false
+  entryCode.value = ''
+  randomCode.value = generateRandomCode()
 }
 // -------------------------------------------------------------------------------------------------------
 
@@ -2645,11 +2701,69 @@ const legend = ref(
 
     </Dialog>
 
+    
+  </div>
+  <div v-if="openDialog">
+    <Dialog
+      v-model:visible="openDialog" modal class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '26%' }" :pt="{
+        root: {
+          class: 'custom-dialog',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+  
+      }" @hide="openDialog = false"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Do you want to undo import this booking: {{ selectedInvoiceObj.invoiceId }} ?
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-2 pb-0">
+          <div class="flex align-items-center mt-3 mb-2">
+            <div class="mr-2 px-3">
+              <span class="font-bold text-2xl">{{ randomCode }}</span>
+            </div>
+            <div>
+              <InputText
+                id="entry-code" v-model="entryCode" type="text"
+                placeholder="Enter code" class="w-15rem h-3rem"
+              />
+            </div>
+          </div>
+          <div class="flex justify-content-end mb-0">
+            <Button
+              :disabled="entryCode !== randomCode"
+              class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
+              icon="pi pi-save"
+              :loading="loadingSaveAll"
+              @click="applyUndo"
+            />
+  
+            <Button
+              v-tooltip.top="'Cancel'" severity="secondary" class="h-2rem w-3rem p-button mt-3 px-2" icon="pi pi-times"
+              @click="handleClose"
+            />
+          </div>
+        </div>
+      </template>
+    </Dialog>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <InvoiceHistoryDialog :selected-attachment="''" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      header="Invoice Status History" :open-dialog="attachmentHistoryDialogOpen"
-      :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
+    <InvoiceHistoryDialog 
+      :selected-attachment="''" 
+      :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      :header="`Invoice Status History - Invoice: ${attachmentInvoice?.invoiceId}`" 
+      :open-dialog="attachmentHistoryDialogOpen"
+      :selected-invoice="attachmentInvoice?.id" 
+      :selected-invoice-obj="attachmentInvoice" 
+      :is-creation-dialog="false" 
+      />
   </div>
 
   <div v-if="exportDialogOpen">

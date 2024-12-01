@@ -1955,7 +1955,7 @@ onMounted(() => {
     modal
     class="mx-3 sm:mx-0"
     content-class="border-round-bottom border-top-1 surface-border"
-    :style="{ width: 'auto' }"
+    :style="{ width: '50%' }"
     :pt="{
       root: {
         class: 'custom-dialog-history',
@@ -1963,16 +1963,13 @@ onMounted(() => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      // mask: {
-      //   style: 'backdrop-filter: blur(5px)',
-      // },
     }"
     @hide="closeModalPaymentDetailApplied()"
     >
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Payment Details
+            Payment Details - Booking ID: {{ selectedBooking.bookingId }}
           </h5>
         </div>
       </template>

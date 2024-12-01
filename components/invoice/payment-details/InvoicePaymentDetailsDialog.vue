@@ -34,26 +34,37 @@ const dialogVisible = ref(props.openDialog)
 const listPaymentDetails = ref<any[]>([])
 const payloadOnChangePagePayments = ref<PageState>()
 
+// const columnsPayments = ref<IColumn[]>([
+//   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
+//   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
+//   { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '100px', type: 'text' },
+//   { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
+//   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
+//   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
+//   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
+//   { field: 'reservationNumber', header: 'Reservation No.', tooltip: 'Reservation', width: 'auto', type: 'text' },
+//   { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: 'auto', type: 'text' },
+//   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
+//   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
+//   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
+//   { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
+//   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
+//   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
+//   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+//   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
+//   { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'text' },
+//   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
+// ])
+
 const columnsPayments = ref<IColumn[]>([
-  { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
-  { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
-  { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '100px', type: 'text' },
-  { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
-  { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
-  // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
-  // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No.', tooltip: 'Reservation', width: 'auto', type: 'text' },
-  { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: 'auto', type: 'text' },
-  // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
-  // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
-  { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
-  { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
-  // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
-  { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
-  { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
-  { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
-  { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'text' },
-  { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
+  { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
 
 const optionsOfTablePayments = ref({
@@ -233,7 +244,7 @@ onMounted(async () => {
     modal
     class="mx-3 sm:mx-0"
     content-class="border-round-bottom border-top-1 surface-border"
-    :style="{ width: 'auto', maxWidth: '98%' }"
+    :style="{ width: '50%', maxWidth: '98%' }"
     :pt="{
       root: {
         class: 'custom-dialog-history',
@@ -247,19 +258,19 @@ onMounted(async () => {
     <template #header>
       <div class="flex justify-content-between">
         <h5 class="m-0">
-          Payment Details
+          Payment Details - Invoice Id: {{ props.selectedInvoice.invoiceId }}
         </h5>
       </div>
     </template>
     <template #default>
       <div class="p-fluid pt-3">
         <!-- // Label -->
-        <div class="flex justify-content-end mb-2">
+        <!-- <div class="flex justify-content-end mb-2">
           <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Invoice Id:</strong>
             <span class="w-auto text-white font-semibold">{{ props.selectedInvoice.invoiceId ?? '' }}</span>
           </div>
-        </div>
+        </div> -->
 
         <DynamicTable
           class="card p-0"

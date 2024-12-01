@@ -147,7 +147,7 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
-    console.log(event);
+    console.log(event)
     Payload.value.sortBy = getSortField(event.sortField)
     Payload.value.sortType = event.sortOrder
     getList()
@@ -155,7 +155,6 @@ function OnSortField(event: any) {
 }
 
 function getSortField(field: any) {
-
   switch (field) {
     case 'status':
       return 'invoiceStatus'
@@ -163,9 +162,7 @@ function getSortField(field: any) {
     case 'invoiceId':
       return 'invoice.invoiceId'
 
-
     default: return field
-
   }
 }
 
@@ -192,14 +189,10 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, 
-        //@ts-ignore
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId,
+        // @ts-expect-error
         status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus || iterator?.invoice?.status] }]
-
-
     }
-
-    console.log(ListItems.value);
   }
   catch (error) {
     console.error(error)
@@ -218,13 +211,13 @@ async function getAttachmentTypeList() {
   try {
     const payload
       = {
-      filter: [],
-      query: '',
-      pageSize: 200,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
+        filter: [],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
 
     attachmentTypeList.value = []
     const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
@@ -306,23 +299,44 @@ onMounted(() => {
 </script>
 
 <template>
-  <Dialog v-model:visible="dialogVisible" modal
+  <Dialog
+    v-model:visible="dialogVisible"
+    modal
     :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header"
-    class="p-4 h-fit w-fit" content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    style="width: 800px;" @hide="closeDialog">
+    class="p-4 h-fit w-fit"
+    content-class="border-round-bottom border-top-1 surface-border h-fit"
+    :block-scroll="true"
+    style="width: 800px;" :pt="{
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
+    @hide="closeDialog"
+  >
+    <template #header>
+      <div class="flex justify-content-between">
+        <h5 class="m-0">
+          {{ props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header }}
+        </h5>
+      </div>
+    </template>
     <div class=" h-fit overflow-hidden mt-4">
       <div class="flex flex-row align-items-center">
         <div class="flex flex-column" style="width: 700px;overflow: auto;">
-          <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="incomeColumns"
+          <DynamicTable
+            :data="isCreationDialog ? listItems as any : ListItems" :columns="incomeColumns"
             :options="options" :pagination="Pagination" @on-confirm-create="clearForm"
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-            @on-list-item="ResetListItems" @on-sort-field="OnSortField" />
+            @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+          />
           <div class=" flex w-full justify-content-end ">
-            <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+            <Button
+              v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
-              clearForm()
-              closeDialog()
-            }" />
+                clearForm()
+                closeDialog()
+              }"
+            />
           </div>
         </div>
       </div>
