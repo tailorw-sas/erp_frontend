@@ -1099,7 +1099,7 @@ onMounted(async () => {
             id="autocomplete" 
             field="fullName" 
             item-value="id" 
-            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED"
+            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED || invoiceStatus === InvoiceStatus.CANCELED || invoiceStatus === 'CANCELED' "
             :model="data.hotel" 
             :suggestions="hotelList" 
             @change="($event) => {

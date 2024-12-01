@@ -23,7 +23,7 @@ const forceUpdate = ref(false)
 const active = ref(0)
 const saveButton = ref(null)
 const onSaveButtonByRef = ref(false)
-
+const invoiceIdForRedirect = ref('')
 const route = useRoute()
 
 // @ts-expect-error
@@ -648,8 +648,6 @@ function handleDialogOpen() {
     default:
       break
   }
-
-  console.log(bookingDialogOpen)
 }
 
 async function getHotelList(query = '') {
@@ -1592,6 +1590,7 @@ async function getBookingItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
       if (response) {
+        invoiceIdForRedirect.value = response?.invoice?.id
         if (response.hotelCreationDate) {
           const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
           item2.value.hotelCreationDate = new Date(`${date}T00:00:00`)
@@ -1748,6 +1747,49 @@ async function reloadBookingItem(id: string) {
   getAdjustmentList()
 }
 
+// function formatHotelBookingNumber(value: string): string {
+//   // Elimina espacios iniciales, finales y reduce múltiples espacios a uno solo
+//   const sanitizedValue = value.replace(/\s+/g, ' ').trim()
+
+//   // Divide el texto en partes según los espacios
+//   const parts = sanitizedValue.split(' ')
+
+//   // Validación básica para mantener el formato "I/G NUMERO NUMERO"
+//   if (parts.length === 3 && /^[IG]$/i.test(parts[0])) {
+//     const [prefix, middle, suffix] = parts
+//     return `${prefix.toUpperCase()} ${middle} ${suffix}`
+//   }
+
+//   // Si no cumple con la estructura esperada, devuelve el valor limpio
+//   return sanitizedValue
+// }
+
+function formatHotelBookingNumber(value: string): string {
+  // Limpiar el texto de espacios extra y mantener solo letras y números
+  const cleanedValue = value.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+
+  // Limitar la longitud total a máximo 8 caracteres
+  const maxLength = 8
+  const truncatedValue = cleanedValue.slice(0, maxLength)
+
+  // Aplicar el formato
+  let formattedValue = ''
+
+  if (truncatedValue.length >= 1) {
+    formattedValue += truncatedValue.charAt(0) // Letra inicial
+  }
+
+  if (truncatedValue.length > 1) {
+    formattedValue += ` ${truncatedValue.slice(1, Math.min(6, truncatedValue.length))}` // Primer número (máx 5 dígitos)
+  }
+
+  if (truncatedValue.length > 6) {
+    formattedValue += ` ${truncatedValue.slice(6)}` // Últimos 2 dígitos
+  }
+
+  return formattedValue.trim()
+}
+
 // watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 //   if (!newValue) {
 //     clearForm()
@@ -1758,6 +1800,7 @@ async function reloadBookingItem(id: string) {
 // })
 
 onMounted(async () => {
+  console.log(route)
   // filterToSearch.value.criterial = ENUM_FILTER[0]
   // //@ts-ignore
   // await getItemById(route.params.id.toString())
@@ -1840,6 +1883,23 @@ onMounted(async () => {
             show-clear
             :disabled="fields.find((f) => f.field === field)?.disabled"
             @update:model-value="onUpdate('hotelAmount', $event)"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+        <template #field-hotelBookingNumber="{ onUpdate, item: data, fields, field }">
+          <InputText
+            v-if="!loadingSaveAll"
+            v-model="data.hotelBookingNumber"
+            show-clear
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            @input="(event) => {
+              return `${event.target._value}${event.data}`
+            }"
+            @update:model-value="($event) => {
+              if (!$event || $event.length <= 8) return
+              const value = formatHotelBookingNumber($event)
+              onUpdate('hotelBookingNumber', value)
+            }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -2077,7 +2137,7 @@ onMounted(async () => {
                 severity="secondary"
                 class="w-3rem mx-1"
                 icon="pi pi-times"
-                @click="navigateTo('/invoice')"
+                @click="navigateTo(`/invoice/edit/${invoiceIdForRedirect}`)"
               />
             </div>
           </div>

@@ -987,7 +987,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
-onMounted(async () => {
+onMounted(async () => {  
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (route.params && 'id' in route.params && route.params.id) {
     await getItemById(route.params.id.toString())
@@ -1114,7 +1114,7 @@ onMounted(async () => {
             id="autocomplete" 
             field="fullName" 
             item-value="id" 
-            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED"
+            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED || invoiceStatus === InvoiceStatus.CANCELED || invoiceStatus === 'CANCELED' "
             :model="data.hotel" 
             :suggestions="hotelList" 
             @change="($event) => {
