@@ -200,7 +200,21 @@ const Pagination = ref<IPagination>({
 function openUndo() {
   openDialog.value = true
 }
+const invoiceIdofSelectedItems = ref('')
+
+function formatIds(idString: string, limit = 5) {
+  const ids = idString.split(', ').map(id => id.trim())
+  if (ids.length <= limit) {
+    return ids.join(', ')
+  }
+  const displayedIds = ids.slice(0, limit)
+  const remainingCount = ids.length - limit
+  return `${displayedIds.join(', ')} (+${remainingCount})`
+}
 async function onMultipleSelect(data: any) {
+  const invoiceIds = listItems.value.filter(item => data.includes(item.id)).map(item => item.invoiceId).join(', ')
+  invoiceIdofSelectedItems.value = formatIds(invoiceIds)
+
   selectedElements.value = [...data]
 }
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -882,7 +896,7 @@ onMounted(async () => {
             <template #header>
               <div class="flex justify-content-between">
                 <h5 class="m-0">
-                  Do you want to undo import this booking ?
+                  Do you want to undo import this bookings: {{ invoiceIdofSelectedItems }} ?
                 </h5>
               </div>
             </template>
