@@ -340,7 +340,6 @@ async function getAdjustmentList() {
     totalAmount.value = 0
 
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
-    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
