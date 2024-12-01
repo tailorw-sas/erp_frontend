@@ -1185,7 +1185,13 @@ function updateAdjustment(adjustment: any) {
 }
 
 function addAttachment(attachment: any) {
-  attachmentList.value = [...attachmentList.value, attachment]
+  const isDuplicate = attachmentList.value.some(
+    item => JSON.stringify(item) === JSON.stringify(attachment)
+  )
+
+  if (!isDuplicate) {
+    attachmentList.value = [...attachmentList.value, attachment]
+  }
 }
 
 function deleteAttachment(id: string) {
