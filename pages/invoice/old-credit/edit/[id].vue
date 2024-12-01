@@ -663,6 +663,10 @@ async function getItemById(id: string) {
         item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
 
         item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
+        const newDate = new Date(response.invoiceDate)
+        newDate.setDate(newDate.getDate() + 1)
+        item.value.invoiceDate = newDate || null
+
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
@@ -691,6 +695,16 @@ async function getItemById(id: string) {
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
         isInCloseOperation.value = response.isInCloseOperation
+
+        if (response?.agency?.client?.id) {
+          const objClient = await GenericService.getById('settings', 'manage-client', response?.agency?.client?.id) 
+          if (objClient) {
+            item.value.agency.client = {
+              ...item.value.agency?.client,
+              status: objClient?.status,
+            }
+          }
+        }
       }
 
       formReload.value += 1
