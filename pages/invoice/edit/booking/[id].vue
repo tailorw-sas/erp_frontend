@@ -24,6 +24,8 @@ const active = ref(0)
 const saveButton = ref(null)
 const onSaveButtonByRef = ref(false)
 const invoiceIdForRedirect = ref('')
+const invoiceNumberTemp = ref('')
+const bookingNumberTemp = ref('')
 const route = useRoute()
 
 // @ts-expect-error
@@ -827,8 +829,6 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
-      console.log(response)
-
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -921,7 +921,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
 
   await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
-  navigateTo('/invoice')
+  navigateTo(`/invoice/edit/${invoiceIdForRedirect.value}`)
 }
 
 async function updateItemByRef(item: { [key: string]: any }) {
@@ -986,7 +986,8 @@ async function saveItem(item: { [key: string]: any }) {
       else {
         await updateItem(item)
       }
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking ${bookingNumberTemp.value} of Invoice ${invoiceNumberTemp.value} has been successfully updated.`, life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -1591,6 +1592,8 @@ async function getBookingItemById(id: string) {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
       if (response) {
         invoiceIdForRedirect.value = response?.invoice?.id
+        invoiceNumberTemp.value = response?.invoice?.invoiceId
+        bookingNumberTemp.value = response?.bookingId
         if (response.hotelCreationDate) {
           const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
           item2.value.hotelCreationDate = new Date(`${date}T00:00:00`)
