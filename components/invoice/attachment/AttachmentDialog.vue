@@ -291,6 +291,7 @@ async function getList() {
     options.value.loading = true
     loadingSearch.value = true
     ListItems.value = []
+    const newListItems = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload.value)
 
@@ -301,17 +302,36 @@ async function getList() {
     Pagination.value.totalElements = totalElements
     // Pagination.value.totalPages = totalPages
 
+    const existingIds = new Set(ListItems.value.map(item => item.id))
+
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, {
-        ...iterator,
-        loadingEdit: false,
-        loadingDelete: false,
-        type: {
-          ...iterator?.type,
-          name: `${iterator?.type?.code}-${iterator?.type?.name}`
-        }
-      }]
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push(
+          {
+            ...iterator,
+            loadingEdit: false,
+            loadingDelete: false,
+            type: {
+              ...iterator?.type,
+              name: `${iterator?.type?.code}-${iterator?.type?.name}`
+            }
+          }
+        )
+        existingIds.add(iterator.id)
+      }
+      // ListItems.value = [...ListItems.value, {
+      //   ...iterator,
+      //   loadingEdit: false,
+      //   loadingDelete: false,
+      //   type: {
+      //     ...iterator?.type,
+      //     name: `${iterator?.type?.code}-${iterator?.type?.name}`
+      //   }
+      // }]
     }
+
+    ListItems.value = [...ListItems.value, ...newListItems]
 
     if (ListItems.value.length > 0) {
       idItemToLoadFirstTime.value = ListItems.value[0].id
@@ -469,6 +489,7 @@ async function getResourceTypeList(query = '') {
 // }
 
 async function createItem(item: { [key: string]: any }) {
+  if (!item) { return }
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
@@ -530,6 +551,7 @@ async function saveItem(item: { [key: string]: any }) {
   if (!item?.type?.id) {
     return typeError.value = true
   }
+  if (loadingSaveAll.value) { return }
   loadingSaveAll.value = true
   let successOperation = true
 
@@ -1062,6 +1084,7 @@ onMounted(async () => {
                 >
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                    :loading="loadingSaveAll"
                     :disabled="disabledBtnSave(props)"
                     @click="saveItem(props.item.fieldValues)"
                   />
