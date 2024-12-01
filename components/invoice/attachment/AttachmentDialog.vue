@@ -488,6 +488,9 @@ async function createItem(item: { [key: string]: any }) {
 }
 
 async function updateItem(item: { [key: string]: any }) {
+  if (!item) { return }
+  if (!idItem.value) { return }
+  if (loadingSaveAll.value) { return }
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
