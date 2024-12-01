@@ -177,170 +177,181 @@ const computedShowCloneTotal = computed(() => {
 
 const invoiceContextMenu = ref()
 const invoiceAllContextMenuItems = ref([
-  {
-    label: 'Change Agency',
-    icon: 'pi pi-arrow-right-arrow-left',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      changeAgencyDialogOpen.value = true
+    {
+      label: 'Selected Invoice:',
+      icon: 'pi pi-folder',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {},
+      default: true,
+      disabled: true,
+      showItem: true,
+    },    
+    {
+      label: 'Change Agency',
+      icon: 'pi pi-arrow-right-arrow-left',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        changeAgencyDialogOpen.value = true
+      },
+      default: true,
+      showItem: false,
     },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'New Credit',
-    icon: 'pi pi-credit-card',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      navigateTo(`invoice/credit/create?selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
+    {
+      label: 'New Credit',
+      icon: 'pi pi-credit-card',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        navigateTo(`invoice/credit/create?selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
+      },
+      default: true,
+      disabled: computedShowMenuItemNewCedit,
+      showItem: true,
     },
-    default: true,
-    disabled: computedShowMenuItemNewCedit,
-    showItem: true,
-  },
-  {
-    label: 'Status History',
-    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
-    viewBox: '0 -960 960 960',
-    width: '19px',
-    height: '19px',
-    icon:'',
-    command: handleAttachmentHistoryDialogOpen,
-    default: true,
-    disabled: computedShowMenuItemShowHistory,
-    showItem: true,
-  },
-  {
-    label: 'Document',
-    icon: 'pi pi-paperclip',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    viewBox:'',
-    command: () => {
-      attachmentDialogOpen.value = true
+    {
+      label: 'Status History',
+      iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+      viewBox: '0 -960 960 960',
+      width: '19px',
+      height: '19px',
+      icon:'',
+      command: handleAttachmentHistoryDialogOpen,
+      default: true,
+      disabled: computedShowMenuItemShowHistory,
+      showItem: true,
     },
-    default: true,
-    disabled: computedShowMenuItemAttachment,
-    showItem: true,
-  },
-  {
-    label: 'Print',
-    icon: 'pi pi-print',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      exportAttachments()
-      // if (attachmentInvoice.value?.hasAttachments) {
-      // }
+    {
+      label: 'Document',
+      icon: 'pi pi-paperclip',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      viewBox:'',
+      command: () => {
+        attachmentDialogOpen.value = true
+      },
+      default: true,
+      disabled: computedShowMenuItemAttachment,
+      showItem: true,
     },
-    default: true,
-    disabled: computedShowMenuItemPrint,
-    showItem: true,
-  },
-  {
-    label: 'Clone',
-    icon: 'pi pi-copy',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => doubleFactor(),
-    default: true,
-   // disabled: computedShowClone,
-    showItem: false,
-  },
-  {
-    label: 'Adjustment',
-    icon: 'pi pi-wrench',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
+    {
+      label: 'Print',
+      icon: 'pi pi-print',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        exportAttachments()
+        // if (attachmentInvoice.value?.hasAttachments) {
+        // }
+      },
+      default: true,
+      disabled: computedShowMenuItemPrint,
+      showItem: true,
     },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Undo Import',
-    icon: 'pi pi-file-import',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Payments',
-    icon: 'pi pi-money-bill',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      paymentsDialogOpen.value = true
+    {
+      label: 'Clone',
+      icon: 'pi pi-copy',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => doubleFactor(),
+      default: true,
+     // disabled: computedShowClone,
+      showItem: false,
     },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Clone Complete',
-    icon: 'pi pi-clone',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      doubleFactorTotal()
+    {
+      label: 'Adjustment',
+      icon: 'pi pi-wrench',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+      },
+      default: true,
+      showItem: false,
     },
-    default: true,
-   
-  },
-  {
-    label: 'Re-Send',
-    icon: 'pi pi-send',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { SendInvoiceByType() },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Send',
-    icon: 'pi pi-send',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { SendInvoiceByType() },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'From Invoice',
-    icon: 'pi pi-receipt',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { onFromInvoice() },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Clone Total',
-    icon: 'pi pi-clone',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      doubleFactorTotal()
+    {
+      label: 'Undo Import',
+      icon: 'pi pi-file-import',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { },
+      default: true,
+      showItem: false,
     },
-    default: true,
-    disabled: computedShowCloneTotal
-  },
+    {
+      label: 'Payments',
+      icon: 'pi pi-money-bill',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        paymentsDialogOpen.value = true
+      },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'Clone Complete',
+      icon: 'pi pi-clone',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        doubleFactorTotal()
+      },
+      default: true,
+     
+    },
+    {
+      label: 'Re-Send',
+      icon: 'pi pi-send',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { SendInvoiceByType() },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'Send',
+      icon: 'pi pi-send',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { SendInvoiceByType() },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'From Invoice',
+      icon: 'pi pi-receipt',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { onFromInvoice() },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'Clone Total',
+      icon: 'pi pi-clone',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        doubleFactorTotal()
+      },
+      default: true,
+      disabled: computedShowCloneTotal
+    },
 ])
 
 const invoiceContextMenuItems = ref<any[]>([])
@@ -1943,6 +1954,12 @@ function onRowRightClick(event: any) {
     }
   }
 
+  
+  const changeSelectedInvoiceTitleItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Selected Invoice:')
+  if (changeSelectedInvoiceTitleItem) {
+    changeSelectedInvoiceTitleItem.label = `Selected Invoice: ${event.data.invoiceId}`
+  }
+
   // Payments
   if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
     findMenuItemByLabelSetShow('Payments', invoiceContextMenuItems.value, true)
@@ -1968,6 +1985,9 @@ function onRowRightClick(event: any) {
   // if (event?.data?.status === InvoiceStatus.PROCECSED) {
   //   findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
   // }
+
+
+
 
   invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.showItem)]
   // Mostrar solo si es para estos estados
@@ -2559,8 +2579,11 @@ const legend = ref(
       }"  @hide="doubleFactorOpen = false">
       <template #header>
         <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Do you want to clone this invoice ?
+          <h5 v-if="selectedInvoiceObj.invoiceId"  class="m-0">
+            Do you want to clone the invoice {{selectedInvoiceObj.invoiceId}}?
+          </h5>
+          <h5 v-else class="m-0">
+            Do you want to clone this invoice?
           </h5>
         </div>
       </template>
@@ -2585,7 +2608,7 @@ const legend = ref(
   </div>
   <div v-if="doubleFactorTotalOpen">
     <Dialog v-model:visible="doubleFactorTotalOpen" :id-item="idItem" modal class="mx-3 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '25%' }" :pt="{
+      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '30%' }" :pt="{
         root: {
           class: 'custom-dialog',
         },
@@ -2596,8 +2619,11 @@ const legend = ref(
       }" @hide="doubleFactorTotalOpen = false">
       <template #header>
         <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Do you want to clone this invoice?
+          <h5 v-if="selectedInvoiceObj.invoiceId"  class="m-0">
+            Do you want to clone complete the invoice {{selectedInvoiceObj.invoiceId}}?
+          </h5>
+          <h5 v-else class="m-0">
+            Do you want to clone complete this invoice?
           </h5>
         </div>
       </template>

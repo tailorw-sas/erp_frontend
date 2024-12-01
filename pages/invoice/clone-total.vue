@@ -513,7 +513,7 @@ async function saveItem(item: { [key: string]: any }) {
     // }
 
     // await new Promise(resolve => setTimeout(resolve, 5000))
-    // navigateTo('/invoice')
+    navigateTo('/invoice')
   }
 }
 
