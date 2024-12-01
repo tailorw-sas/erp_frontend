@@ -487,17 +487,17 @@ const optionsAdjustment = ref({
 const columnsRoomRate: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'checkIn', header: 'Check In', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
-  { field: 'checkOut', header: 'Check Out', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
-  { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
-  { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
+  { field: 'checkIn', header: 'Check In', type: 'date-editable', width: '10%', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
+  { field: 'checkOut', header: 'Check Out', type: 'date-editable', width: '10%', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
+  { field: 'adults', header: 'Adults', type: 'text', width: '10%', sortable: false, editable: true },
+  { field: 'children', header: 'Children', type: 'text', width: '10%', sortable: false, editable: true },
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: false },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'rateAdult', header: 'Rate Adult', type: 'text', sortable: false, editable: false },
   { field: 'rateChildren', header: 'Rate Children', type: 'text', sortable: false, editable: false },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false, editable: true },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false, editable: true },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', width: '10%', sortable: false, editable: true },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', width: '10%', sortable: false, editable: true },
 ]
 const columnsAdjustment: IColumn[] = [
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: false },
