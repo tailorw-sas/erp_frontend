@@ -22,7 +22,8 @@ public class CreateManageClientCommandHandler implements ICommandHandler<CreateM
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                command.getIsNightType()
+                command.getIsNightType(),
+                command.getStatus()
         ));
 
     }
