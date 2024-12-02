@@ -5,9 +5,11 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +34,9 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
 
     private final IHotelPaymentService hotelPaymentService;
 
-    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageBankReconciliationService bankReconciliationService, IHotelPaymentService hotelPaymentService) {
+    private final IParameterizationService parameterizationService;
+
+    public UpdateTransactionCommandHandler(ITransactionService transactionService, IManageAgencyService agencyService, IManageLanguageService languageService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageBankReconciliationService bankReconciliationService, IHotelPaymentService hotelPaymentService, IParameterizationService parameterizationService) {
         this.transactionService = transactionService;
         this.agencyService = agencyService;
         this.languageService = languageService;
@@ -40,6 +44,7 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         this.transactionStatusHistoryService = transactionStatusHistoryService;
         this.bankReconciliationService = bankReconciliationService;
         this.hotelPaymentService = hotelPaymentService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -73,16 +78,7 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
 
         boolean updateAmount = false;
         if (dto.isAdjustment() && command.getAmount() != null) {
-            if (dto.getTransactionCategory().getOnlyApplyNet()) {
-                updateAmount = UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate);
-            } else {
-                if (UpdateIfNotNull.updateDouble(dto::setNetAmount, command.getAmount(), dto.getNetAmount(), update::setUpdate)){
-                    updateAmount = true;
-                }
-                if (UpdateIfNotNull.updateDouble(dto::setAmount, command.getAmount(), dto.getAmount(), update::setUpdate)){
-                    updateAmount = true;
-                }
-            }
+            updateAmount = changeAmounts(dto, command.getAmount(), update);
         }
 
         if (update.getUpdate() > 0){
@@ -117,4 +113,33 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         T findById(UUID id);
     }
 
+    private boolean changeAmounts(TransactionDto transactionDto, Double amount, ConsumerUpdate update){
+        if (transactionDto.getReconciliation() != null) {
+            ManageBankReconciliationDto bankReconciliationDto = transactionDto.getReconciliation();
+
+            //sustituir el amount de la transaction por el nuevo para calcular el details
+            Double newDetails =
+                    (bankReconciliationDto.getDetailsAmount() - (transactionDto.getTransactionSubCategory().getNegative() ? -transactionDto.getNetAmount() : transactionDto.getNetAmount()))
+                            + (transactionDto.getTransactionSubCategory().getNegative() ? -amount : amount);
+
+            RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(
+                    bankReconciliationDto.getAmount(),
+                    newDetails,
+                    this.parameterizationService
+            ));
+        }
+
+        boolean updateAmount = false;
+        if (transactionDto.getTransactionCategory().getOnlyApplyNet()) {
+            updateAmount = UpdateIfNotNull.updateDouble(transactionDto::setNetAmount, amount, transactionDto.getNetAmount(), update::setUpdate);
+        } else {
+            if (UpdateIfNotNull.updateDouble(transactionDto::setNetAmount, amount, transactionDto.getNetAmount(), update::setUpdate)){
+                updateAmount = true;
+            }
+            if (UpdateIfNotNull.updateDouble(transactionDto::setAmount, amount, transactionDto.getAmount(), update::setUpdate)){
+                updateAmount = true;
+            }
+        }
+        return updateAmount;
+    }
 }
