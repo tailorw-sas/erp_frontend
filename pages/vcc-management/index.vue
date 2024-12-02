@@ -684,34 +684,6 @@ async function parseDataTableFilter(payloadFilter: any) {
   getList()
 }
 
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
-}
-
 function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'status') {
@@ -855,13 +827,23 @@ const disabledSearch = computed(() => {
   return false
 })
 
-async function findCollectionStatusMenuOptions(status: string) {
-  const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
-  if (collection) {
-    const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
-    // se agregan los elementos que pertenecen al navigate de dicho status
-    const navigates = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
-    menuListItems.value = [...menuListItems.value, ...navigates]
+async function findCollectionStatusMenuOptions(status: any) {
+  const collectionItems: any[] = allMenuListItems.filter((element: any) => element.isCollection)
+
+  for (let i = 0; i < collectionItems.length; i++) {
+    const element = collectionItems[i]
+    if (element.type === MenuType.refund && !status.isCancelled) {
+      const refund = collectionStatusList.value.find(item => item?.refundStatus)
+      if (refund && refund.visible) {
+        menuListItems.value.push(element)
+      }
+    }
+    if (element.type === MenuType.cancelled && !status.isCancelled) {
+      const cancelled = collectionStatusList.value.find(item => item?.cancelledStatus)
+      if (cancelled && cancelled.visible) {
+        menuListItems.value.push(element)
+      }
+    }
   }
 }
 
@@ -882,14 +864,14 @@ async function onRowRightClick(event: any) {
   contextMenuTransaction.value = event.data
   menuListItems.value = [] // Elementos que se van a mostrar en el menu
   menuListItems.value = allMenuListItems.filter((e: any) => e.default) // Agregar elementos por defecto
-  // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
-  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status?.name)
+  // Agrega a la lista las opciones las que son de tipo collection (cancelled and refund)
+  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
     const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
     // aqui se valida que hayan fondos disponibles para la devolucion
     setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
   }
-  // Agregar opciones que no son tipo coleccion:
+  // Agregar opciones que no son tipo coleccion
   findNoCollectionStatusMenuOptions()
   if (menuListItems.value.length > 0) {
     menuListItems.value = menuListItems.value.sort((a, b) => a.index - b.index)
