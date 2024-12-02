@@ -8,7 +8,6 @@ import Divider from 'primevue/divider'
 import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
-import { parseFormattedNumber } from '~/utils/helpers'
 
 const props = defineProps({
   openDialog: {
@@ -202,9 +201,9 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   item.value.transactionId = String(props.parentTransaction.id)
   item.value.reference = props.parentTransaction.referenceNumber
-  item.value.grossAmount = parseFormattedNumber(props.parentTransaction.amount)
+  item.value.grossAmount = props.parentTransaction.amount
   item.value.transactionCommission = String(props.parentTransaction.commission)
-  item.value.netAmount = parseFormattedNumber(props.parentTransaction.netAmount)
+  item.value.netAmount = props.parentTransaction.netAmount
   item.value.selectedAmount = {
     type: '',
     total: 0,
@@ -262,10 +261,10 @@ function saveSubmit(event: Event) {
 
 function handleRefundTypeChange(value: any) {
   if (value === 'gross') {
-    item.value.selectedAmount.total = parseFormattedNumber(props.parentTransaction.amount)
+    item.value.selectedAmount.total = props.parentTransaction.amount
   }
   else {
-    item.value.selectedAmount.total = parseFormattedNumber(props.parentTransaction.netAmount)
+    item.value.selectedAmount.total = props.parentTransaction.netAmount
   }
   if (!item.value.selectedAmount.type) {
     item.value.selectedAmount.type = 'TOTAL'
