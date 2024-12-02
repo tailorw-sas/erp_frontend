@@ -1,4 +1,3 @@
-import { client } from 'node:process'
 import { z } from 'zod'
 
 interface FieldProperty {
@@ -93,4 +92,22 @@ export function validateEntitiesForSelectMultiple(fieldName: string) {
         message: `This ${fieldName} has inactive elements`
       })
   )
+}
+
+// Esta funcion es para validar el campo File que usamos en los formularios,
+// el cual puede ser un string(Para que acepte la URL cuando hacemos el getBYId que ya no viene un file sino la referencia al archivo)
+// o un array
+export function validateFiles(size: number = 100, acceptTypes: string[] = ['image/jpeg', 'image/png', 'application/pdf']) {
+  const fileSchema = z.object({
+    name: z.string().min(1, 'The file must have a name'),
+    size: z.number().max(size * 1024 * 1024, `The file must be less than ${size} MB`), // Tamaño máximo 5 MB
+    type: z.enum(acceptTypes as [string, ...string[]]),
+  })
+  const stringSchema = z.string().trim()
+  const dataSchema = z.object({
+    files: z
+      .array(fileSchema)
+      .nonempty('The files array must contain at least one file'), // El array no puede estar vacío
+  })
+  return z.union([stringSchema, dataSchema])
 }
