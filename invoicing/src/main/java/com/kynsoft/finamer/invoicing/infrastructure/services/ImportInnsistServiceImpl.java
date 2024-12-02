@@ -77,13 +77,13 @@ public class ImportInnsistServiceImpl {
 
         Predicate<ImportInnsistBookingKafka> predicateVirtualHotel = booking -> booking.isVirtualHotel();
         List<ImportInnsistBookingKafka> importListVirtualHotel = importList.stream().filter(predicateVirtualHotel).collect(Collectors.toList());
-        this.createInvoiceGroupingByHotelInvoiceNumber(request.getEmployee().toString(), importListVirtualHotel, errors);
+        this.createInvoiceGroupingByHotelInvoiceNumber(request.getEmployee(), importListVirtualHotel, errors);
 
         Predicate<ImportInnsistBookingKafka> predicateNotVirtualHotel = booking -> !booking.isVirtualHotel();
         List<ImportInnsistBookingKafka> importListNotVirtualHotel = importList.stream().filter(predicateNotVirtualHotel).collect(Collectors.toList());
 
-        this.createInvoiceGroupingByCoupon(request.getEmployee().toString(), importListNotVirtualHotel, errors);
-        this.createInvoiceGroupingByBooking(request.getEmployee().toString(), importListNotVirtualHotel, errors);
+        this.createInvoiceGroupingByCoupon(request.getEmployee(), importListNotVirtualHotel, errors);
+        this.createInvoiceGroupingByBooking(request.getEmployee(), importListNotVirtualHotel, errors);
 
         ImportInnisistErrors innisistErrors = new ImportInnisistErrors(request.getImportInnsitProcessId(), errors);
         this.producerResponseImportInnsistService.create(innisistErrors);
