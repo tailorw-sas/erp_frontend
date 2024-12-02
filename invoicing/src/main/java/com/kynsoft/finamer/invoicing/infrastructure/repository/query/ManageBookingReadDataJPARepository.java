@@ -24,6 +24,9 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     @Query(value = "SELECT CASE WHEN EXISTS (SELECT 1 FROM booking mb JOIN invoice  ON mb.manage_invoice=invoice.id  WHERE SPLIT_PART(TRIM(mb.hotelbookingnumber), ' ', 3) = :lastChars AND invoice.manage_hotel = :hotelId AND invoice.invoiceStatus != 'CANCELED') THEN true ELSE false END", nativeQuery = true)
     boolean existsByExactLastChars(@Param("lastChars") String lastChars, @Param("hotelId") UUID hotelId);
 
+    @Query(value = "SELECT CASE WHEN EXISTS (SELECT 1 FROM booking mb JOIN invoice  ON mb.manage_invoice=invoice.id  WHERE mb.hotelInvoiceNumber = :hotelInvoiceNumber AND invoice.manage_hotel = :hotelId AND invoice.invoiceStatus != 'CANCELED') THEN true ELSE false END", nativeQuery = true)
+    boolean existsByHotelInvoiceNumber(@Param("hotelInvoiceNumber") String hotelInvoiceNumber, @Param("hotelId") UUID hotelId);
+
     boolean existsByHotelBookingNumber(String bookingNumber);
 
     Optional<Booking> findManageBookingByHotelBookingNumber(String hotelBookingNumber);

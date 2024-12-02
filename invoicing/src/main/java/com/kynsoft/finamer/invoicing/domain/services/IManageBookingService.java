@@ -35,4 +35,6 @@ public interface IManageBookingService {
     List<ManageBookingDto> findAllToReplicate();
 
     void deleteInvoice(ManageBookingDto dto);
+
+    boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId);
 }

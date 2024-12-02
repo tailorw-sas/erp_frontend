@@ -7,7 +7,8 @@ import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafk
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistRoomRateKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
-import com.kynsoft.finamer.invoicing.domain.excel.bean.ImportInnsistGroupBy;
+import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
+import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByVirtualHotel;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.ProducerResponseImportInnsistService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
@@ -74,11 +75,15 @@ public class ImportInnsistServiceImpl {
         List<Errors> errors = new ArrayList<>();
         List<ImportInnsistBookingKafka> importList = updateWithGenerationType(request, errors);
 
-        if (!errors.isEmpty()) {
-            return new ImportInnisistErrors(request.getImportInnsitProcessId(), errors);
-        }
-        this.createInvoiceGroupingByCoupon(request.getEmployee().toString(), importList, errors);
-        this.createInvoiceGroupingByBooking(request.getEmployee().toString(), importList);
+        Predicate<ImportInnsistBookingKafka> predicateVirtualHotel = booking -> booking.isVirtualHotel();
+        List<ImportInnsistBookingKafka> importListVirtualHotel = importList.stream().filter(predicateVirtualHotel).collect(Collectors.toList());
+        this.createInvoiceGroupingByHotelInvoiceNumber(request.getEmployee(), importListVirtualHotel, errors);
+
+        Predicate<ImportInnsistBookingKafka> predicateNotVirtualHotel = booking -> !booking.isVirtualHotel();
+        List<ImportInnsistBookingKafka> importListNotVirtualHotel = importList.stream().filter(predicateNotVirtualHotel).collect(Collectors.toList());
+
+        this.createInvoiceGroupingByCoupon(request.getEmployee(), importListNotVirtualHotel, errors);
+        this.createInvoiceGroupingByBooking(request.getEmployee(), importListNotVirtualHotel, errors);
 
         ImportInnisistErrors innisistErrors = new ImportInnisistErrors(request.getImportInnsitProcessId(), errors);
         this.producerResponseImportInnsistService.create(innisistErrors);
@@ -96,52 +101,105 @@ public class ImportInnsistServiceImpl {
             try {
                 ManageAgencyDto manageAgencyDto = agencyService.findByCode(importInnsistBookingKafka.getManageAgencyCode());
                 importInnsistBookingKafka.setGenerationType(manageAgencyDto.getGenerationType().name());
+                ManageHotelDto hotel = manageHotelService.findByCode(importInnsistBookingKafka.getManageHotelCode());
+                importInnsistBookingKafka.setVirtualHotel(hotel.isVirtual());
                 importList.add(importInnsistBookingKafka);
             } catch (Exception e) {
-                errors.add(new Errors(importInnsistBookingKafka.getId().toString(), "La Agencia con codigo " + importInnsistBookingKafka.getManageAgencyCode() + " no fue encontrada."));
-            }
-            try {
-                ManageHotelDto hotelDto = manageHotelService.findByCode(importInnsistBookingKafka.getManageHotelCode());
-                if (this.bookingService.existsByExactLastChars(importInnsistBookingKafka.getHotelBookingNumber()
-                                       .split("\\s+")[importInnsistBookingKafka.getHotelBookingNumber()
-                                       .split("\\s+").length - 1], hotelDto.getId())) {
-                    errors.add(new Errors(importInnsistBookingKafka.getId().toString(), "El Hotel Booking Number " + importInnsistBookingKafka.getHotelBookingNumber() + " ya existe."));
-                }
-            } catch (Exception e) {
-                errors.add(new Errors(importInnsistBookingKafka.getId().toString(), "La Hotel con codigo " + importInnsistBookingKafka.getManageHotelCode() + " no fue encontrado."));
             }
         }
         return importList;
     }
 
-    private void createInvoiceGroupingByCoupon(String employee, List<ImportInnsistBookingKafka> importList, List<Errors> errors) {
-        Map<ImportInnsistGroupBy, List<ImportInnsistBookingKafka>> grouped;
+    private void createInvoiceGroupingByHotelInvoiceNumber(String employee, List<ImportInnsistBookingKafka> importList, List<Errors> errors) {
+        Map<GroupByVirtualHotel, List<ImportInnsistBookingKafka>> grouped;
 
         grouped = importList.stream().collect(Collectors.groupingBy(
-                booking -> new ImportInnsistGroupBy(
+                booking -> new GroupByVirtualHotel(
                         booking.getManageAgencyCode(),
                         booking.getManageHotelCode(),
-                        booking.getCouponNumber(),
-                        EGenerationType.ByCoupon.name()
+                        booking.getHotelInvoiceNumber()
                 )
         ));
 
         if (!grouped.isEmpty()) {
             grouped.forEach((key, value) -> {
-                ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
+                //Aqui tengo que tener una logica que pregunte si el hotelBooking number ya existe para no insertar. Agregar todos esos ID a la lista de errores.
+                //Crear un metodo que sea comun para lo anterior y que espere una lista.
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee);
+                if (this.bookingService.existsByExactLastChars(value.get(0).getHotelBookingNumber()
+                        .split("\\s+")[value.get(0).getHotelBookingNumber()
+                        .split("\\s+").length - 1], hotel.getId())) {
+                    addErrorHotelBookingNumber(errors, value);
+                }
+                if (this.bookingService.existsByHotelInvoiceNumber(value.get(0).getHotelInvoiceNumber().toString(), hotel.getId())) {
+                    addErrorHotelInvoiceNumber(errors, value);
+                }
+                else {
+
+                    ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
+                    this.createInvoiceWithBooking(agency, hotel, value, employee);
+                }
             });
         }
     }
 
-    private void createInvoiceGroupingByBooking(String employee, List<ImportInnsistBookingKafka> importList) {
+    private void addErrorHotelBookingNumber(List<Errors> errors, List<ImportInnsistBookingKafka> list) {
+        list.forEach(key -> {
+            errors.add(new Errors(key.getId().toString(), "Item already exists: Hotel Booking Number " + key.getHotelBookingNumber()));
+        });
+    }
+
+    private void addErrorHotelInvoiceNumber(List<Errors> errors, List<ImportInnsistBookingKafka> list) {
+        list.forEach(key -> {
+            errors.add(new Errors(key.getId().toString(), "Item already exists: Hotel Invoice Number " + key.getHotelInvoiceNumber()));
+        });
+    }
+
+    private void createInvoiceGroupingByCoupon(String employee, List<ImportInnsistBookingKafka> importList, List<Errors> errors) {
+        Map<GroupBy, List<ImportInnsistBookingKafka>> grouped;
+        Predicate<ImportInnsistBookingKafka> byBooking = booking -> booking.getGenerationType().equals(EGenerationType.ByCoupon.name());
+        List<ImportInnsistBookingKafka> process = importList.stream().filter(byBooking).collect(Collectors.toList());
+
+        grouped = process.stream().collect(Collectors.groupingBy(
+                booking -> new GroupBy(
+                        booking.getManageAgencyCode(),
+                        booking.getManageHotelCode(),
+                        booking.getCouponNumber()
+                )
+        ));
+
+        if (!grouped.isEmpty()) {
+            grouped.forEach((key, value) -> {
+                //Aqui tengo que tener una logica que pregunte si el hotelBooking number ya existe para no insertar. Agregar todos esos ID a la lista de errores.
+                //Crear un metodo que sea comun para lo anterior y que espere una lista.
+                ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
+                if (this.bookingService.existsByExactLastChars(value.get(0).getHotelBookingNumber()
+                        .split("\\s+")[value.get(0).getHotelBookingNumber()
+                        .split("\\s+").length - 1], hotel.getId())) {
+                    addErrorHotelBookingNumber(errors, value);
+                } else {
+                    ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
+                    this.createInvoiceWithBooking(agency, hotel, value, employee);
+                }
+            });
+        }
+    }
+
+    private void createInvoiceGroupingByBooking(String employee, List<ImportInnsistBookingKafka> importList, List<Errors> errors) {
         Predicate<ImportInnsistBookingKafka> byBooking = booking -> booking.getGenerationType().equals(EGenerationType.ByBooking.name());
         List<ImportInnsistBookingKafka> process = importList.stream().filter(byBooking).collect(Collectors.toList());
         process.forEach(innsist -> {
-            ManageAgencyDto agency = agencyService.findByCode(innsist.getManageAgencyCode());
+            //Aqui tengo que tener una logica que pregunte si el hotelBookingNumber ya existe para no insertar. Lo pongo en una lista y lo paso al metod.
             ManageHotelDto hotel = manageHotelService.findByCode(innsist.getManageHotelCode());
-            this.createInvoiceWithBooking(agency, hotel, List.of(innsist), employee);
+
+            if (this.bookingService.existsByExactLastChars(innsist.getHotelBookingNumber()
+                    .split("\\s+")[innsist.getHotelBookingNumber()
+                    .split("\\s+").length - 1], hotel.getId())) {
+                addErrorHotelBookingNumber(errors, List.of(innsist));
+            } else {
+                ManageAgencyDto agency = agencyService.findByCode(innsist.getManageAgencyCode());
+                this.createInvoiceWithBooking(agency, hotel, List.of(innsist), employee);
+            }
         });
     }
 
@@ -158,6 +216,7 @@ public class ImportInnsistServiceImpl {
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
         manageInvoiceDto.setIsManual(false);
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
+        manageInvoiceDto.setDueDate(manageInvoiceDto.getInvoiceDate().toLocalDate());
 
         List<ManageBookingDto> bookingDtos = createBooking(bookingRowList);
         manageInvoiceDto.setBookings(bookingDtos);
@@ -167,20 +226,20 @@ public class ImportInnsistServiceImpl {
         manageInvoiceDto.setDueAmount(invoiceAmount);
         manageInvoiceDto.setOriginalAmount(invoiceAmount);
 
+        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
         if (hotel.isVirtual()) {
             manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
+
+            invoiceNumber = setInvoiceNumber(hotel, invoiceNumber);
+            manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber());
         } else {
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
+
+            invoiceNumber = setInvoiceNumber(hotel, invoiceNumber);
         }
 
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
-        }
         manageInvoiceDto.setInvoiceNumber(invoiceNumber);
-        invoiceService.update(manageInvoiceDto);
+        invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
 
         //TODO: aqui se envia a crear el invoice con sun booking en payment
@@ -188,6 +247,15 @@ public class ImportInnsistServiceImpl {
             this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
         } catch (Exception e) {
         }
+    }
+
+    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
+        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
+        } else {
+            invoiceNumber += "-" + hotel.getCode();
+        }
+        return invoiceNumber;
     }
 
     private List<ManageBookingDto> createBooking(List<ImportInnsistBookingKafka> bookingRowList) {
@@ -251,7 +319,7 @@ public class ImportInnsistServiceImpl {
         manageBookingDto.setLastName(Objects.nonNull(importInnsistBookingKafka.getLastName()) ? importInnsistBookingKafka.getLastName() : "");
         manageBookingDto.setFullName(buildFullName(importInnsistBookingKafka));
         manageBookingDto.setHotelBookingNumber(Objects.nonNull(importInnsistBookingKafka.getHotelBookingNumber()) ? importInnsistBookingKafka.getHotelBookingNumber() : "");
-        manageBookingDto.setHotelInvoiceNumber(Objects.nonNull(importInnsistBookingKafka.getHotelInvoiceNumber()) ? importInnsistBookingKafka.getHotelInvoiceNumber() : "");
+        manageBookingDto.setHotelInvoiceNumber(importInnsistBookingKafka.getHotelInvoiceNumber() != null ? importInnsistBookingKafka.getHotelInvoiceNumber().toString() : "");
         manageBookingDto.setDescription(Objects.nonNull(importInnsistBookingKafka.getDescription()) ? importInnsistBookingKafka.getDescription() : "");
         manageBookingDto.setRoomNumber(importInnsistBookingKafka.getRoomNumber());
         manageBookingDto.setBookingDate(importInnsistBookingKafka.getBookingDate());

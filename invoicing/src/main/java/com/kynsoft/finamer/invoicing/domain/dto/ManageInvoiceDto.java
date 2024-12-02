@@ -53,6 +53,8 @@ public class ManageInvoiceDto {
     private int aging;
     private boolean cloneParent;
 
+    private Long hotelInvoiceNumber;
+
     public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
                             Double invoiceAmount, Double dueAmount, ManageHotelDto hotel,
                             ManageAgencyDto agency, EInvoiceType invoiceType, EInvoiceStatus status,
