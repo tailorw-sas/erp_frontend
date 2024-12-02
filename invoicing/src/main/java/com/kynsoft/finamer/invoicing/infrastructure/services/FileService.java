@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
@@ -102,12 +103,16 @@ public class FileService {
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         dataRow.createCell(0).setCellValue(entity.getInvoiceDate().toLocalDate().toString());
 
-        dataRow.createCell(1).setCellValue(entity.getInvoiceNumber());
+        dataRow.createCell(1).setCellValue(deleteHotelInfo(entity.getInvoiceNumber()));
 
         dataRow.createCell(2).setCellValue(entity.getBookings().get(0).getFullName());
 
-        dataRow.createCell(3).setCellValue("Booking #");
+        String couponNumber = "";
+        for (ManageBookingDto booking : entity.getBookings()) {
+            couponNumber = couponNumber + booking.getCouponNumber();
+        }
 
+        dataRow.createCell(3).setCellValue(couponNumber);
         dataRow.createCell(4).setCellValue(decimalFormat.format(entity.getInvoiceAmount()));
 
         dataRow.createCell(5).setCellValue(decimalFormat.format(entity.getInvoiceAmount() - entity.getDueAmount()));
@@ -118,6 +123,9 @@ public class FileService {
 
     }
 
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
+    }
     /**
      * Adicionando el balance.
      * @param entity
