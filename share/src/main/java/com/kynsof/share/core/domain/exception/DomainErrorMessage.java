@@ -382,7 +382,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     TRANSACTION_CLOSE_OPERATION_OUT_OF_RANGE(1160, Series.DOMAIN_ERROR, "Transaction Date is out of close operation"),
     TRANSACTION_MUST_HAVE_ATTACHMENT_TYPE(1161, Series.DOMAIN_ERROR,"The transaction must have at least one attachment of type default."),
     TRANSACTION_RECONCILIATION_OR_PAYMENT_RELATION(1162, Series.DOMAIN_ERROR,"This transaction already belongs to another relationship."),
-    HOTEL_PAYMENT_NOT_FOUND(1163, Series.DOMAIN_ERROR,"Hotel payment not found.");
+    HOTEL_PAYMENT_NOT_FOUND(1163, Series.DOMAIN_ERROR,"Hotel payment not found."),
+    TRANSACTION_ALREADY_IN_THIS_RELATION(1164, Series.DOMAIN_ERROR,"This transaction already belongs to this relationship.");
 
     private static final DomainErrorMessage[] VALUES;
 
