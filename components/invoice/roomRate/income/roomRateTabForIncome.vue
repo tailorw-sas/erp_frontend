@@ -466,7 +466,8 @@ const confratePlanApi = reactive({
 
 const Columns: IColumn[] = [
 
-  { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'bookingId', header: 'Booking id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
 
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
@@ -938,7 +939,7 @@ watch(() => props.bookingObj, () => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column
-              footer="Totals:" :colspan="!isDetailView ? 6 : 7"
+              footer="Totals:" :colspan="!isDetailView ? 7 : 8"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column :footer="Number.parseFloat(totalHotelAmount.toFixed(2))" footer-style="font-weight: 700" />

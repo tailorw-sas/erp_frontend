@@ -458,7 +458,8 @@ const confratePlanApi = reactive({
 
 const Columns: IColumn[] = [
 
-  { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'bookingId', header: 'Booking id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
 
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
