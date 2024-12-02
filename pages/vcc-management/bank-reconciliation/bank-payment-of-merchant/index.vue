@@ -100,7 +100,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'amount',
-    header: 'Amount',
+    header: 'Reconciliation Amount',
     dataType: 'number',
     disabled: false,
     minFractionDigits: 2,
