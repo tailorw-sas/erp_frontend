@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 
 const props = defineProps({
 
@@ -73,6 +74,7 @@ const disableDeleteBtn = ref(props.disableDeleteBtn)
 const documentOptionHasBeenUsed = ref(props.documentOptionHasBeenUsed)
 
 const route = useRoute()
+const pathFileLocal = ref('')
 
 const filterToSearch = ref({
   criteria: 'invoice.invoiceId',
@@ -132,64 +134,69 @@ const itemTemp = ref<GenericObject>({
 })
 const toast = useToast()
 
-const Fields: Array<Container> = [
+const validationSchema = z.union([
+  z.string().trim().min(1, 'File is required'),
+  z.object({
+    name: z.string().min(1),
+    size: z.number().positive(),
+  }),
+])
+
+const Fields: Array<FieldDefinitionType> = [
+
   {
-    childs: [
-      {
-        field: 'resource',
-        header: 'Resource',
-        dataType: 'number',
-        class: 'field mb-3 col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
-      {
-        field: 'resourceType',
-        header: 'Resource Type',
-        dataType: 'select',
-        class: 'field mb-3 col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
+    field: 'resource',
+    header: 'Resource',
+    dataType: 'number',
+    class: 'field mb-3 col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'resourceType',
+    header: 'Resource Type',
+    dataType: 'select',
+    class: 'field mb-3 col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
 
-      {
-        field: 'type',
-        header: 'Attachment Type',
-        dataType: 'select',
-        class: 'field mb-3 col-12 md: required',
-        headerClass: 'mb-1',
-        validation: z.object({
-          id: z.string(),
-          name: z.string(),
-        })
-          .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
-      },
+  {
+    field: 'type',
+    header: 'Attachment Type',
+    dataType: 'select',
+    class: 'field mb-3 col-12 md: required',
+    headerClass: 'mb-1',
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+      .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
+  },
 
-      {
-        field: 'file',
-        header: 'Path',
-        dataType: 'fileupload',
-        class: 'field mb-3 col-12 required',
-        headerClass: 'mb-1',
-      },
-      {
-        field: 'filename',
-        header: 'Filename',
-        dataType: 'text',
-        class: 'field mb-3 col-12 required',
-        headerClass: 'mb-1',
-      },
-      {
-        field: 'remark',
-        header: 'Remark',
-        dataType: 'textarea',
-        class: 'field col-12 ',
-        headerClass: 'mb-1',
-      },
-    ],
-    containerClass: 'w-full',
-    field: ''
-  }
+  {
+    field: 'file',
+    header: 'Path',
+    dataType: 'fileupload',
+    class: 'field mb-3 col-12 required',
+    headerClass: 'mb-1',
+    validation: validateFiles(),
+  },
+  {
+    field: 'filename',
+    header: 'Filename',
+    dataType: 'text',
+    class: 'field mb-3 col-12',
+    headerClass: 'mb-1',
+    hidden: true
+  },
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'textarea',
+    class: 'field col-12 ',
+    headerClass: 'mb-1',
+  },
 
 ]
 
@@ -494,16 +501,32 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
 
-    const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+    // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
 
     payload.invoice = props.selectedInvoice
 
-    payload.file = file
+    // payload.file = file
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
 
     payload.type = item.type?.id
+    if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
+      const file = payload.file.files[0]
+      if (file) {
+        const objFile = await getUrlOrIdByFile(file)
+        payload.file = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      }
+      else {
+        payload.file = ''
+      }
+    }
+    else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+      payload.file = pathFileLocal.value
+    }
+    else {
+      payload.file = ''
+    }
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
   }
 }
@@ -522,6 +545,22 @@ async function updateItem(item: { [key: string]: any }) {
   payload.employeeId = userData?.value?.user?.userId
 
   payload.type = item.type?.id
+  if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
+    const file = payload.file.files[0]
+    if (file) {
+      const objFile = await getUrlOrIdByFile(file)
+      payload.file = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    }
+    else {
+      payload.file = ''
+    }
+  }
+  else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+    payload.file = pathFileLocal.value
+  }
+  else {
+    payload.file = ''
+  }
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
@@ -696,6 +735,7 @@ async function getItemById(id: string) {
         item.value.resource = response.invoice.invoiceId
         item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType] || ''}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType] || ''}`}`
         selectedAttachment.value = response.attachmentId
+        pathFileLocal.value = response.file
       }
 
       formReload.value += 1
@@ -729,21 +769,26 @@ function formatSize(bytes: number) {
 }
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
 }
 
 function showHistory() {
@@ -845,6 +890,11 @@ function disabledFields(): boolean {
 
 function disabledBtnCreate(): boolean {
   return false
+}
+
+async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
+  const file = event.files[0]
+  listFields[fieldKey] = file
 }
 
 watch(() => props.selectedInvoiceObj, () => {
@@ -953,16 +1003,17 @@ onMounted(async () => {
               {{ idItem ? "Edit" : "Add" }}
             </div>
             <div class="card">
-              <EditFormV2WithContainer
+              <EditFormV2
                 :key="formReload"
-                :fields-with-containers="Fields"
+                :fields="Fields"
                 :item="item"
                 :show-actions="true"
                 :loading-save="loadingSaveAll"
-                class=" w-full"
+                @on-confirm-create="clearForm"
+                @submit-form="requireConfirmationToSave"
                 @cancel="clearForm"
                 @delete="requireConfirmationToDelete($event)"
-                @submit="saveItem(item)"
+                @submit="requireConfirmationToSave($event)"
               >
                 <template #field-resourceType="{ item: data, onUpdate }">
                   <DebouncedAutoCompleteComponent
@@ -1020,8 +1071,88 @@ onMounted(async () => {
                     required</span>
                 </template>
 
-                <template #field-file="{ onUpdate, item: data }">
+                <template #field-file="{ item: data, onUpdate }">
+                  <InputGroup>
+                    <InputText
+                      v-if="!loadingSaveAll"
+                      v-model="data.filename"
+                      style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                      placeholder="Upload File"
+                      disabled
+                    />
+                    <Skeleton v-else height="2rem" width="100%" class="mb-2" style="border-radius: 4px;" />
+                    <FileUpload
+                      v-if="!loadingSaveAll"
+                      mode="basic"
+                      :max-file-size="100000000"
+                      :disabled="idItem !== '' || idItem === null"
+                      :multiple="false"
+                      auto
+                      custom-upload
+                      style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                      @uploader="($event: any) => {
+                        customBase64Uploader($event, Fields, 'file');
+                        onUpdate('file', $event)
+                        if ($event && $event.files.length > 0) {
+                          onUpdate('filename', $event?.files[0]?.name)
+                          onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                        }
+                        else {
+                          onUpdate('fileName', '')
+                        }
+                      }"
+                    />
+                  </InputGroup>
+
                   <FileUpload
+                    v-if="false" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
+                    @uploader="($event: any) => {
+                      customBase64Uploader($event, fieldsV2, 'path');
+                      onUpdate('path', $event)
+                      if ($event && $event.files.length > 0) {
+                        onUpdate('fileName', $event?.files[0]?.name)
+                        onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                      }
+                      else {
+                        onUpdate('fileName', '')
+                      }
+                    }"
+                  >
+                    <template #header="{ chooseCallback }">
+                      <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                        <div class="flex gap-2">
+                          <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                          <Button
+                            :disabled="idItem !== '' || idItem === null"
+                            icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
+                              onUpdate('path', null);
+                              onUpdate('fileName', '');
+
+                            }"
+                          />
+                        </div>
+                      </div>
+                    </template>
+                    <template #content="{ files }">
+                      <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
+                        <li class="p-3 surface-border flex align-items-start sm:align-items-center">
+                          <div class="flex flex-column">
+                            <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
+                            <span class="text-900 font-medium">
+                              <Badge severity="warning">
+                                {{ formatSize(data.path?.files[0].size) }}
+                              </Badge>
+                            </span>
+                          </div>
+                        </li>
+                      </ul>
+                    </template>
+                  </FileUpload>
+                </template>
+
+                <!-- <template #field-file="{ onUpdate, item: data }">
+                  <FileUpload
+                    v-if="false"
                     accept="application/pdf"
                     :max-file-size="300 * 1024 * 1024"
                     :multiple="false"
@@ -1069,10 +1200,11 @@ onMounted(async () => {
                       </div>
                     </template>
                   </FileUpload>
-                </template>
+                </template> -->
                 <template #field-filename="{ item: data }">
                   <InputText v-model="data.filename" field="filename" show-clear :disabled="true" />
                 </template>
+
                 <template #field-remark="{ item: data }">
                   <Textarea
                     v-model="data.remark"
@@ -1089,7 +1221,7 @@ onMounted(async () => {
                       v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
                       :loading="loadingSaveAll"
                       :disabled="disabledBtnSave(props)"
-                      @click="saveItem(props.item.fieldValues)"
+                      @click="props.item.submitForm($event)"
                     />
                   </IfCan>
 
@@ -1136,7 +1268,7 @@ onMounted(async () => {
                     }"
                   />
                 </template>
-              </EditFormV2WithContainer>
+              </EditFormV2>
             </div>
           </div>
         </div>
