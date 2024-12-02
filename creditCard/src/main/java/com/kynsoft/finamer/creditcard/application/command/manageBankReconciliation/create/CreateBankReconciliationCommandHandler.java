@@ -100,7 +100,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
                 created,
                 "The reconcile status is "+reconcileTransactionStatusDto.getCode()+"-"+reconcileTransactionStatusDto.getName()+".",
                 null,
-                null,
+                command.getEmployee(),
                 reconcileTransactionStatusDto
         ));
     }

@@ -70,7 +70,7 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
                     dto,
                     "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                     null,
-                    null,
+                    command.getEmployee(),
                     transactionStatusDto
             ));
             update.setUpdate(1);
