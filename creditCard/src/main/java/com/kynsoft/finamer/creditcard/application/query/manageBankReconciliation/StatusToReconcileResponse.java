@@ -13,10 +13,14 @@ public class StatusToReconcileResponse {
     private UUID id;
     private String code;
     private String name;
+    private boolean completed;
+    private boolean cancelled;
 
     public StatusToReconcileResponse(ManageReconcileTransactionStatusDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.completed = dto.isCompleted();
+        this.cancelled = dto.isCancelled();
     }
 }
