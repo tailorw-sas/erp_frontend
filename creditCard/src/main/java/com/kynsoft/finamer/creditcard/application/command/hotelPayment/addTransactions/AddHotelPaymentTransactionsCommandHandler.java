@@ -2,6 +2,8 @@ package com.kynsoft.finamer.creditcard.application.command.hotelPayment.addTrans
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
@@ -41,6 +43,11 @@ public class AddHotelPaymentTransactionsCommandHandler implements ICommandHandle
                 hotelPaymentDto.setNetAmount(hotelPaymentDto.getNetAmount() + transactionDto.getNetAmount());
                 hotelPaymentDto.setCommission(hotelPaymentDto.getCommission() + transactionDto.getCommission());
                 hotelPaymentDto.setAmount(hotelPaymentDto.getAmount() + transactionDto.getAmount());
+            } else{
+                throw new BusinessException(
+                        DomainErrorMessage.TRANSACTION_ALREADY_IN_THIS_RELATION,
+                        DomainErrorMessage.TRANSACTION_ALREADY_IN_THIS_RELATION.getReasonPhrase()
+                );
             }
         }
 

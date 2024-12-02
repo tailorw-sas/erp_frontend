@@ -2,6 +2,8 @@ package com.kynsoft.finamer.creditcard.application.command.manageBankReconciliat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
@@ -56,6 +58,11 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
                 bankReconciliationTransactions.add(transactionDto);
                 bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() + transactionDto.getNetAmount());
                 cont++;
+            } else{
+                throw new BusinessException(
+                        DomainErrorMessage.TRANSACTION_ALREADY_IN_THIS_RELATION,
+                        DomainErrorMessage.TRANSACTION_ALREADY_IN_THIS_RELATION.getReasonPhrase()
+                );
             }
         }
 
