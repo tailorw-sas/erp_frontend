@@ -21,6 +21,11 @@ const props = defineProps({
   transaction: {
     type: Object,
     required: false
+  },
+  disableAmountField: {
+    type: Boolean,
+    required: false,
+    default: false,
   }
 })
 const emits = defineEmits<{
@@ -118,6 +123,7 @@ function onClose(isCancel: boolean) {
 
 function clearForm() {
   item.value = { ...itemTemp.value }
+  updateFieldProperty(fields, 'netAmount', 'disabled', props.disableAmountField)
   formReload.value++
 }
 
@@ -259,6 +265,7 @@ watch(() => item.value, async (newValue) => {
 })
 
 watch(() => props.openDialog, async (newValue) => {
+  console.log(props.transaction)
   dialogVisible.value = newValue
   if (newValue) {
     clearForm()

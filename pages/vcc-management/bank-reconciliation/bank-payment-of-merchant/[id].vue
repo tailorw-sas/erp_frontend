@@ -216,9 +216,8 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0) : 0
-  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
+const computedDisabledItemsByStatus = computed(() => {
+  return item.value?.reconcileStatus && (item.value?.reconcileStatus?.completed || item.value?.reconcileStatus?.cancelled)
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -725,7 +724,7 @@ async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
   menuListItems.value = [...allMenuListItems]
-  if (!await canEditBankReconciliation()) {
+  if (!await canEditBankReconciliation() || computedDisabledItemsByStatus.value) {
     menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
   }
   if (menuListItems.value.length > 0) {
@@ -789,13 +788,13 @@ onMounted(async () => {
         @force-save="forceSave = $event"
         @submit="handleSave($event)"
       >
-        <template #field-amount="{ item: data, onUpdate, fields: listFields, field }">
+        <template #field-amount="{ item: data, onUpdate }">
           <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.amount"
             show-clear
             mode="decimal"
-            :disabled="data.reconcileStatus?.completed || data.reconcileStatus?.cancelled"
+            :disabled="computedDisabledItemsByStatus"
             :min-fraction-digits="2"
             :max-fraction-digits="4"
             @update:model-value="($event) => {
@@ -811,7 +810,7 @@ onMounted(async () => {
             v-model="data.paidDate"
             date-format="yy-mm-dd"
             :max-date="new Date()"
-            :disabled="(listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false) || data.reconcileStatus?.completed || data.reconcileStatus?.cancelled"
+            :disabled="(listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false) || computedDisabledItemsByStatus"
             @update:model-value="($event) => {
               onUpdate('paidDate', $event)
             }"
@@ -842,7 +841,7 @@ onMounted(async () => {
             :options="StatusList"
             :loading="loadingStatusNavigateOptions"
             option-label="name"
-            :disabled="data.reconcileStatus?.completed || data.reconcileStatus?.cancelled"
+            :disabled="computedDisabledItemsByStatus"
             return-object
             class="align-items-center"
             @update:model-value="($event) => {
@@ -902,9 +901,9 @@ onMounted(async () => {
       />
       <div>
         <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
-          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
-          <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
-          <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+          <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" :disabled="computedDisabledItemsByStatus" />
+          <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" :disabled="computedDisabledItemsByStatus" />
         </IfCan>
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
       </div>
@@ -926,10 +925,12 @@ onMounted(async () => {
       }"
     />
     <VCCEditAdjustmentTransaction
-      :open-dialog="editAdjustmentTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="($event) => {
+      :open-dialog="editAdjustmentTransactionDialogVisible" :transaction-id="selectedTransactionId" :disable-amount-field="computedDisabledItemsByStatus"
+      @on-close-dialog="($event) => {
         editAdjustmentTransactionDialogVisible = false
         if (!$event) {
           getList()
+          getItemById(idItem)
         }
       }"
     />
