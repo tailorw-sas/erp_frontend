@@ -737,25 +737,35 @@ function processValidation($event: any, data: any) {
     </template>
 
     <template #footer>
-      <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
-        <Button
-          v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType"
-          v-tooltip.top="'Apply Payment'"
-          link class="w-auto ml-1 sticky"
-          :disabled="Number(amountLocalTemp) === 0 || Number(amountLocalTemp) === 0.00 || Number(amountLocalTemp) <= 0.01"
-          @click="applyPayment($event)"
-        >
-          <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
-          <span class="ml-2 font-bold">
-            Apply Payment
-          </span>
-        </Button>
-      </IfCan>
-      <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
-      </IfCan> -->
-      <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-      <!-- <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" /> -->
-      <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
+      <div class="flex justify-content-between w-full">
+        <div class="flex align-items-center">
+          <slot name="infoOfInvoiceToApply" />
+          <!-- <strong>
+            Invoice to apply:
+          </strong> -->
+        </div>
+        <div class="flex align-items-center">
+          <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
+            <Button
+              v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType"
+              v-tooltip.top="'Apply Payment'"
+              link class="w-auto ml-1 sticky"
+              :disabled="Number(amountLocalTemp) === 0 || Number(amountLocalTemp) === 0.00 || Number(amountLocalTemp) <= 0.01"
+              @click="applyPayment($event)"
+            >
+              <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
+              <span class="ml-2 font-bold">
+                Apply Payment
+              </span>
+            </Button>
+          </IfCan>
+          <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
+          </IfCan> -->
+          <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
+          <!-- <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" /> -->
+          <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
+        </div>
+      </div>
     </template>
   </Dialog>
 </template>

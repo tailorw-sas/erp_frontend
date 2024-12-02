@@ -66,8 +66,16 @@ const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
   applyPayment: false,
   booking: '',
-  amount: 0
+  amount: 0,
+  invoiceNo: '',
 })
+
+const payloadToApplyPaymentTemp = {
+  applyPayment: false,
+  booking: '',
+  amount: 0,
+  invoiceNo: '',
+}
 
 interface SubTotals {
   depositAmount: number
@@ -244,8 +252,9 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: false },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: false, showFilter: false },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -960,6 +969,12 @@ function openModalWithContentMenu($event) {
 }
 
 function openDialogPaymentDetails(event: any) {
+  payloadToApplyPayment.value = {
+    applyPayment: false,
+    booking: '',
+    amount: 0,
+    invoiceNo: ''
+  }
   if (event) {
     itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
     const objToEdit = paymentDetailsList.value.find(x => x.id === event.id)
@@ -2617,7 +2632,13 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
                   // Verificar si el ID ya existe en la lista
                   if (!existingIds.has(iterator.id)) {
-                    newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+                    newListItems.push({
+                      ...iterator,
+                      invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+                      loadingEdit: false,
+                      loadingDelete: false
+                    }
+                    )
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
                 }
@@ -2683,7 +2704,13 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
-                  newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+                  newListItems.push({
+                    ...iterator,
+                    invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+                    loadingEdit: false,
+                    loadingDelete: false
+                  }
+                  )
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
               }
@@ -2773,7 +2800,13 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
 
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
-                  newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+                  newListItems.push({
+                    ...iterator,
+                    invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+                    loadingEdit: false,
+                    loadingDelete: false
+                  }
+                  )
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
               }
@@ -3124,7 +3157,10 @@ function onRowContextMenu(event: any) {
 }
 
 async function onRowDoubleClickInDataTableApplyPayment(event: any) {
+  console.log('event', event)
+
   if (isApplyPaymentFromTheForm.value) {
+    payloadToApplyPayment.value.invoiceNo = event?.invoiceNo
     payloadToApplyPayment.value.amount = event?.bookingBalance
     payloadToApplyPayment.value.booking = event?.id
     payloadToApplyPayment.value.applyPayment = true
@@ -3158,6 +3194,9 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
 function closeModalApplyPayment() {
   detailItemForApplyPayment.value = null
   openDialogApplyPayment.value = false
+  // payloadToApplyPayment.value = {
+
+  // }
 }
 
 function disableAgency(data: any) {
@@ -3757,7 +3796,13 @@ const checkboxValue1 = ref(false)
         @update:visible="onCloseDialog($event)"
         @save="saveAndReload($event)"
         @update:amount="amountOfDetailItem = $event"
-      />
+      >
+        <template #infoOfInvoiceToApply>
+          <div v-if="payloadToApplyPayment.invoiceNo">
+            <strong>Invoice to apply:</strong> {{ payloadToApplyPayment.invoiceNo }}
+          </div>
+        </template>
+      </DialogPaymentDetailForm>
     </div>
 
     <div v-show="onOffDialogPaymentDetailEdit">
