@@ -45,8 +45,9 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
     public void handle(UpdateBankReconciliationCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Bank Reconciliation ID cannot be null."));
         ManageBankReconciliationDto dto = this.bankReconciliationService.findById(command.getId());
-        RulesChecker.checkRule(new TransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), dto.getHotel().getId()));
-
+        if (command.getPaidDate() != null) {
+            RulesChecker.checkRule(new TransactionCheckInCloseOperationRule(this.closeOperationService, command.getPaidDate(), dto.getHotel().getId()));
+        }
         ConsumerUpdate update = new ConsumerUpdate();
         UpdateIfNotNull.updateLocalDateTime(dto::setPaidDate, command.getPaidDate(), dto.getPaidDate(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRemark, command.getRemark(), dto.getRemark(), update::setUpdate);
@@ -63,7 +64,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
             command.setAdjustmentTransactionIds(adjustmentIds);
         }
 
-        if (command.getReconcileStatus() != null && command.getReconcileStatus() != dto.getReconcileStatus().getId()){
+        if (command.getReconcileStatus() != null && !command.getReconcileStatus().equals(dto.getReconcileStatus().getId())){
             ManageReconcileTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getReconcileStatus());
             updateStatus(dto, transactionStatusDto, command.getEmployee());
         }
@@ -134,7 +135,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
                         dto,
                         "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
                         null,
-                        null,
+                        employee,
                         transactionStatusDto
                 ));
             } else {
@@ -151,7 +152,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
                     dto,
                     "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
                     null,
-                    null,
+                    employee,
                     transactionStatusDto
             ));
         }

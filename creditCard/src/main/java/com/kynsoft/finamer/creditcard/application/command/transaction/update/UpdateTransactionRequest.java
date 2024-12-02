@@ -24,4 +24,5 @@ public class UpdateTransactionRequest {
     private Double amount;
     private String guestName;
     private String email;
+    private String employee;
 }

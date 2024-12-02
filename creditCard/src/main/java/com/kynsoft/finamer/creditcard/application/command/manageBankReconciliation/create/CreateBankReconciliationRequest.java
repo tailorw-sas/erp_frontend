@@ -20,4 +20,5 @@ public class CreateBankReconciliationRequest {
     private String remark;
     private Set<Long> transactions;
     private List<CreateBankReconciliationAdjustmentRequest> adjustmentTransactions;
+    private String employee;
 }
