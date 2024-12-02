@@ -362,7 +362,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_CREATED(1140, Series.DOMAIN_ERROR,"Another item already exists with created default."),
     MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_CANCELLED(1141, Series.DOMAIN_ERROR,"Another item already exists with cancelled default."),
     MANAGE_RECONCILE_TRANSACTION_STATUS_CHECK_COMPLETED(1142, Series.DOMAIN_ERROR,"Another item already exists with completed default."),
-    MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS(1143, Series.DOMAIN_ERROR, "The transaction could not be completed because the sum of the amount of the transaction details must be equal to the amount in the Bank Payment."),
+    MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS(1143, Series.DOMAIN_ERROR, "The transaction could not be completed because the sum of the amount of the transaction details must be equal to the Reconciliation Amount in the Bank Payment."),
     MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS(1144, Series.DOMAIN_ERROR, "Manage Bank Reconciliation cannot be changed to cancelled status."),
     MANUAL_TRANSACTION_REFERENCE_NUMBER_CANNOT_BE_EMPTY(1145, Series.DOMAIN_ERROR, "The reference number cannot be empty."),
     MANAGE_TRANSACTION_RESEND_LINK_INVALID(1146, Series.DOMAIN_ERROR,"Guest name and email are required to send the payment link."),
