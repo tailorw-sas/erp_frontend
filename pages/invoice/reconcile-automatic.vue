@@ -105,6 +105,7 @@ const options = ref({
   showFilters: true,
   selectAllItemByDefault: false,
   expandableRows: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -301,20 +302,16 @@ async function getErrorList() {
 
 async function ApplyImport() {
   loadingSaveAll.value = true
-  options.value.loading = true
-  let successOperation = true
+  const successOperation = true
   uploadComplete.value = true
   try {
+    options.value.loading = true
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
       return
     }
     const uuid = uuidv4()
     idItem.value = uuid
-    // const base64String: any = await fileToBase64(inputFile.value)
-    // const base64 = base64String.split('base64,')[1]
-    // const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
-    // formData.append('invoiceIds', JSON.stringify(selectedElements.value)) // Para el caso de enviar un array de IDs mediante formData
     let invoiceIdsTemp: string[] = []
     const file = await inputFile.value
     const formData = new FormData()
@@ -338,25 +335,24 @@ async function ApplyImport() {
     formData.append('employeeId', userData?.value?.user?.userId || '')
     formData.append('importProcessId', uuid)
     await GenericService.importReconcileAuto(confApi.moduleApi, confApi.uriApi, formData)
+
+    if (successOperation) {
+      await validateStatusImport()
+      await getErrorList()
+      if (reviewError.value) {
+        await getList()
+      }
+    }
   }
   catch (error: any) {
     successOperation = false
     uploadComplete.value = false
     options.value.loading = false
   }
-
-  if (successOperation) {
-    await validateStatusImport()
-    // if (!haveErrorImportStatus.value) {
-
-    await getErrorList()
-    if (reviewError.value) {
-      await getList()
-    }
-    // }
+  finally {
+    loadingSaveAll.value = false
+    options.value.loading = false
   }
-  loadingSaveAll.value = false
-  options.value.loading = false
 }
 
 async function validateStatusImport() {
@@ -780,7 +776,6 @@ onMounted(async () => {
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
                         id="autocomplete"
                         field="name"
                         item-value="id"
@@ -788,7 +783,6 @@ onMounted(async () => {
                         :suggestions="agencyList"
                         :loading="multiSelectLoading.agency"
                         @change="($event) => {
-
                           filterToSearch.agency = $event
                         }"
                         @load="($event) => getAgencyList($event)"
@@ -817,7 +811,6 @@ onMounted(async () => {
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
                         id="autocomplete"
                         field="name"
                         item-value="id"
@@ -948,9 +941,15 @@ onMounted(async () => {
       </div>
 
       <DynamicTable
-        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="clearForm"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
         @update:clicked-item="onMultipleSelect($event)"
       >
         <template #column-status="{ data: item }">

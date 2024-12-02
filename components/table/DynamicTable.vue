@@ -32,7 +32,7 @@ const props = defineProps({
       moduleApi: string
       uriApi: string
       loading: boolean
-      actionsAsMenu: boolean
+      actionsAsMenu?: boolean
       showAcctions?: boolean
       showCreate?: boolean
       showEdit?: boolean
@@ -48,6 +48,7 @@ const props = defineProps({
       showPagination?: boolean
       showCustomEmptyTable?: boolean
       scrollHeight?: string | undefined
+      showSelectedItems?: boolean
     }>,
     required: true,
   },
@@ -964,29 +965,37 @@ defineExpose({ clearSelectedItems })
         <slot name="datatable-footer" />
       </DataTable>
     </div>
-    <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-0 card p-0 mb-0">
+    <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-2 card py-0">
       <div v-if="props.showLocalPagination">
         <slot name="pagination" />
       </div>
-      <Paginator
-        v-else-if="props.pagination"
-        :rows="Number(props.pagination.limit) || 50"
-        :total-records="props.pagination.totalElements"
-        :rows-per-page-options="[10, 20, 30, 50]"
-        @page="onChangePageOrLimit($event)"
-      />
-      <Divider v-if="props.pagination" layout="vertical" />
-      <div class="flex align-items-center mx-3">
-        <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
-          <span>
-            Total:
-          </span>
-          <slot name="pagination-total" :total="props.pagination?.totalElements">
-            <span class="font-bold">
-              {{ props.pagination?.totalElements }}
-            </span>
-          </slot>
-        </Badge>
+      <div v-else class="flex justify-content-between align-items-center w-full py-0">
+        <div v-if="true" class="grid w-full grid-nogutter py-0">
+          <div v-if="true" class="col-12 md:col-4 flex align-items-center py-0">
+            <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
+          </div>
+          <div v-if="true" class="col-12 md:col-4 py-0 flex align-items-center justify-content-center">
+            <Paginator
+              :rows="Number(props.pagination.limit) || 50"
+              :total-records="props.pagination.totalElements"
+              :rows-per-page-options="[10, 20, 30, 50]"
+              @page="onChangePageOrLimit($event)"
+            />
+            <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
+            <div class="flex align-items-center mx-3">
+              <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
+                <span>
+                  Total:
+                </span>
+                <slot name="pagination-total" :total="props.pagination?.totalElements">
+                  <span class="font-bold">
+                    {{ props.pagination?.totalElements }}
+                  </span>
+                </slot>
+              </Badge>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </BlockUI>

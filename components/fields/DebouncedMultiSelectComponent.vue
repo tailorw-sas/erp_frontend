@@ -21,7 +21,7 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'Select options'
+    default: 'Type to search'
   },
   id: {
     type: String,
