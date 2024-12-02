@@ -64,7 +64,7 @@ public class InvoiceReconcileAutomaticController {
                     }
 
                 });
-        //Hacer la llamada al metodo para generar el pdf de el array de invoiceUuids
+        //Hacer la llamada al metodo para generar el pdf de el array de invoiceIds
         byte[] pdfBytes = new byte[1024 * 1024];
 
         try {
