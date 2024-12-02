@@ -787,7 +787,7 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 10000 })
     }
     catch (error: any) {
       successOperation = false

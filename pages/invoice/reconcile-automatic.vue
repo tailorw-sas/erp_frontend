@@ -12,7 +12,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 
 const { data: userData } = useAuth()
 const multiSelectLoading = ref({
- agency: false,
+  agency: false,
   hotel: false,
 })
 const idItemToLoadFirstTime = ref('')
@@ -27,7 +27,6 @@ const loadingSearch = ref(false)
 const fileUpload = ref()
 const loadingSaveAll = ref(false)
 
-
 const errorList = ref<any[]>([])
 const reviewError = ref(false)
 
@@ -35,7 +34,7 @@ const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   allFromAndTo: false,
-  agency:[] ,
+  agency: [],
   hotel: [],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
@@ -315,10 +314,26 @@ async function ApplyImport() {
     // const base64String: any = await fileToBase64(inputFile.value)
     // const base64 = base64String.split('base64,')[1]
     // const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    // formData.append('invoiceIds', JSON.stringify(selectedElements.value)) // Para el caso de enviar un array de IDs mediante formData
+    let invoiceIdsTemp: string[] = []
     const file = await inputFile.value
     const formData = new FormData()
+    const hasSomeObject = selectedElements.value.some(
+      item => typeof item === 'object' || item === null || Array.isArray(item)
+    )
+
+    if (hasSomeObject) {
+      for (const item of selectedElements.value) {
+        if (typeof item === 'object' && item !== null) {
+          invoiceIdsTemp.push(item.id)
+        }
+      }
+    }
+    else {
+      invoiceIdsTemp = [...selectedElements.value]
+    }
     formData.append('file', file)
-    formData.append('invoiceIds', selectedElements.value.toString())
+    formData.append('invoiceIds', JSON.stringify(invoiceIdsTemp.toString()))
     formData.append('employee', userData?.value?.user?.name || '')
     formData.append('employeeId', userData?.value?.user?.userId || '')
     formData.append('importProcessId', uuid)
@@ -450,7 +465,7 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
-  finally{
+  finally {
     multiSelectLoading.value.hotel = false
   }
 }
@@ -764,23 +779,22 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
-                
-              <DebouncedMultiSelectComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="filterToSearch.agency"
-                :suggestions="agencyList"
-                :loading="multiSelectLoading.agency"
-                @change="($event) => {
-                 
-                  filterToSearch.agency = $event
-                }"
-                @load="($event) => getAgencyList($event)"
-              />
-           
-                   <!--  <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        :loading="multiSelectLoading.agency"
+                        @change="($event) => {
+
+                          filterToSearch.agency = $event
+                        }"
+                        @load="($event) => getAgencyList($event)"
+                      />
+
+                      <!--  <DebouncedAutoCompleteComponent
                         id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
                         :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
@@ -796,27 +810,27 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
-                      --> 
+                      -->
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
-                <DebouncedMultiSelectComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="filterToSearch.hotel"
-                :suggestions="hotelList"
-                :loading="multiSelectLoading.hotel"
-                @change="($event) => {
-                 
-                  filterToSearch.hotel = $event
-                }"
-                @load="($event) => getHotelList($event)"
-              />
-                   <!-- <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.hotel"
+                        :suggestions="hotelList"
+                        :loading="multiSelectLoading.hotel"
+                        @change="($event) => {
+
+                          filterToSearch.hotel = $event
+                        }"
+                        @load="($event) => getHotelList($event)"
+                      />
+                      <!-- <DebouncedAutoCompleteComponent
                         id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
                         :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => {
