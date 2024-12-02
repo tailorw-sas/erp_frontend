@@ -359,6 +359,12 @@ async function getHotelList(query = '') {
             logicalOperation: 'OR'
           },
           {
+            key: 'isVirtual',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: false,
+          },
+          {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -1350,8 +1356,12 @@ onMounted(async () => {
       </template>
       <template #field-hotel="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :model="data.hotel" :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
+          v-if="!loadingSaveAll"
+          id="autocomplete"
+          field="fullName"
+          item-value="id"
+          :model="data.hotel"
+          :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
           :suggestions="hotelList" @change="($event) => {
             hotelError = false
             onUpdate('hotel', $event)
