@@ -13,6 +13,11 @@ const props = defineProps({
   bankReconciliationId: {
     type: String,
     required: true
+  },
+  hideBindTransactionMenu: {
+    type: Boolean,
+    required: false,
+    default: false,
   }
 })
 
@@ -24,8 +29,13 @@ const contextMenu = ref()
 const contextMenuTransaction = ref()
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 
-const menuListItems = [
+enum MenuType {
+  unBind
+}
+
+const allMenuListItems = [
   {
+    type: MenuType.unBind,
     label: 'Unbind Transaction',
     icon: 'pi pi-dollar',
     iconSvg: 'M304.1 405.9c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-59.3 59.3-155.7 59.3-215 0-59.3-59.3-59.3-155.7 0-215l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-28.1 28.1-28.1 73.8 0 101.8 28.1 28.1 73.8 28.1 101.8 0l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6zm-56.6-260.2c4.7 4.7 12.3 4.7 17 0l44.7-44.7c28.1-28.1 73.8-28.1 101.8 0 28.1 28.1 28.1 73.8 0 101.8l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6c4.7 4.7 12.3 4.7 17 0l44.7-44.7c59.3-59.3 59.3-155.7 0-215-59.3-59.3-155.7-59.3-215 0l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6zm234.8 359.3l22.6-22.6c9.4-9.4 9.4-24.6 0-33.9L63.6 7c-9.4-9.4-24.6-9.4-33.9 0L7 29.7c-9.4 9.4-9.4 24.6 0 33.9l441.4 441.4c9.4 9.4 24.6 9.4 33.9 0z',
@@ -36,6 +46,8 @@ const menuListItems = [
     disabled: false,
   }
 ]
+
+const menuListItems = ref<any[]>([])
 
 const sClassMap: IStatusClass[] = [
   { status: 'Sent', class: 'vcc-text-sent' },
@@ -258,7 +270,13 @@ async function getList() {
 async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  contextMenu.value.show(event.originalEvent)
+  menuListItems.value = [...allMenuListItems]
+  if (props.hideBindTransactionMenu) {
+    menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
+  }
+  if (menuListItems.value.length > 0) {
+    contextMenu.value.show(event.originalEvent)
+  }
 }
 
 async function unbindTransactions() {
