@@ -19,12 +19,12 @@ const endOfMonth = ref<any>(null)
 const filterAllDateRange = ref(false)
 const loadingSearch = ref(false)
 const multiSelectLoading = ref({
- agency: false,
+  agency: false,
   hotel: false,
 })
 const loadingSaveAll = ref(false)
 
-//const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -121,6 +121,7 @@ const options = ref({
   selectAllItemByDefault: false,
   showFilters: true,
   expandableRows: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -349,7 +350,7 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
-  finally{
+  finally {
     multiSelectLoading.value.hotel = false
   }
 }
@@ -584,7 +585,7 @@ async function getAgencyList(query: string) {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
-  finally{
+  finally {
     multiSelectLoading.value.agency = false
   }
 }
@@ -843,22 +844,21 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
-                           
-              <DebouncedMultiSelectComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="filterToSearch.agency"
-                :suggestions="agencyList"
-                :loading="multiSelectLoading.agency"
-                @change="($event) => {
-                 
-                  filterToSearch.agency = $event
-                }"
-                @load="($event) => getAgencyList($event)"
-              />
-                   <!--  <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        :loading="multiSelectLoading.agency"
+                        @change="($event) => {
+
+                          filterToSearch.agency = $event
+                        }"
+                        @load="($event) => getAgencyList($event)"
+                      />
+                      <!--  <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
@@ -875,26 +875,26 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
-                      --> 
+                      -->
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="filterToSearch.hotel"
-                :suggestions="hotelList"
-                :loading="multiSelectLoading.hotel"
-                @change="($event) => {
-                 
-                  filterToSearch.hotel = $event
-                }"
-                @load="($event) => getHotelList($event)"
-              />
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.hotel"
+                        :suggestions="hotelList"
+                        :loading="multiSelectLoading.hotel"
+                        @change="($event) => {
+
+                          filterToSearch.hotel = $event
+                        }"
+                        @load="($event) => getHotelList($event)"
+                      />
                     <!--  <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"

@@ -100,6 +100,7 @@ const options = ref({
   selectionMode: 'multiple' as 'multiple' | 'single',
   showFilters: true,
   expandableRows: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
