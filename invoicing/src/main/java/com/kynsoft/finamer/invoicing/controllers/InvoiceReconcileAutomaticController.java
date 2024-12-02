@@ -44,45 +44,39 @@ public class InvoiceReconcileAutomaticController {
 
     ) {
         // Dividir los IDs de facturas
-        String[] invoiceIds = invoiceIdString.split(",");
+        String[] invoiceIds = invoiceIdString != null ? invoiceIdString.split(",") : new String[0];
 
         // Se retira el "RETURN" DataBufferUtils.join(filePart.content()) hasta que se arregle lo de JasperReports
-        DataBufferUtils.join(filePart.content())
+        return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {
-                    // Convertir el DataBuffer a bytes
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
-                    // Crear la solicitud y el comando
                     InvoiceReconcileAutomaticRequest request = new InvoiceReconcileAutomaticRequest(importProcessId, employeeId, employee, invoiceIds, bytes);
                     InvoiceReconcileAutomaticCommand command = new InvoiceReconcileAutomaticCommand(request);
                     try {
                         IMessage message = mediator.send(command);
-                        return Mono.just(ResponseEntity.ok(message));
+                        return Mono.just(message);
                     } catch (Exception e) {
                         return Mono.error(e);
                     }
-
+                })
+                .flatMap(message -> {
+                    byte[] pdfBytes = new byte[1024 * 1024];
+                    try {
+                        InvoiceReconcilePdfCommand command = new InvoiceReconcilePdfCommand(invoiceIds, pdfBytes);
+                        InvoiceReconcilePdfMessage request = this.mediator.send(command);
+                        byte[] pdfData = request.getPdfData();
+                        return Mono.just(
+                                ResponseEntity.ok()
+                                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdfData)
+                        );
+                    } catch (Exception e) {
+                        return Mono.error(e);
+                    }
                 });
-        //Hacer la llamada al metodo para generar el pdf de el array de invoiceUuids
-        byte[] pdfBytes = new byte[1024 * 1024];
-
-        try {
-          InvoiceReconcilePdfCommand command = new InvoiceReconcilePdfCommand(invoiceIds, pdfBytes);
-          InvoiceReconcilePdfMessage request = this.mediator.send(command);
-
-          byte[] pdfData = request.getPdfData();
-
-        return Mono.just(
-                ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
-                        .contentType(MediaType.APPLICATION_PDF)
-                        .body(pdfData)
-        );
-        } catch (Exception e) {
-            return Mono.just(ResponseEntity.status(500).body("Internal Server Error"));
-
-       }
     }
 
     @PostMapping(path = "/import-search-auto")

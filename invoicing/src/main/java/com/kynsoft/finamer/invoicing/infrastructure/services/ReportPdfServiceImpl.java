@@ -22,34 +22,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ReportPdfServiceImpl {
 
     private final Logger log = LoggerFactory.getLogger(ReportPdfServiceImpl.class);
     private final ManageInvoiceServiceImpl invoiceService;
-    private final ManageBookingServiceImpl bookingService;
-    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService,
-                                ManageBookingServiceImpl bookingService){
+    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService){
 
         this.invoiceService = invoiceService;
-        this.bookingService = bookingService;
-
     }
-    public ManageInvoiceDto findById(UUID id) {
-        ManageInvoiceDto invoiceDto = invoiceService.findById(id);
-        List<ManageBookingDto> bookings= bookingService.findByManageInvoicing(id);
-        invoiceDto.setBookings(bookings);
-        return invoiceDto;
-
-    }
-
 
     public byte[] generatePdf(String id) throws IOException { // Changed to IOException
 
         // Convertir String de vuelta a UUID
-        UUID invoiceUuid = UUID.fromString(id);
+        Long invoiceId = Long.parseLong(id);
         // Variables that are used in the creation of the pdf
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos); // Write to ByteArrayOutputStream
@@ -62,7 +49,7 @@ public class ReportPdfServiceImpl {
         styleHeader.setFontSize(10);
         Style styleCell = new Style();
         styleCell.setFontSize(8);
-        ManageInvoiceDto invoiceDto = this.findById(invoiceUuid);
+        ManageInvoiceDto invoiceDto = invoiceService.findByInvoiceId(invoiceId);
         List<ManageBookingDto> bookings = invoiceDto.getBookings();
 
         double total = 0;
