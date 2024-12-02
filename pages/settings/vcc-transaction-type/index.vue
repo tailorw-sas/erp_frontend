@@ -63,12 +63,12 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'check',
     class: 'field col-12 required',
   },
-  {
-    field: 'policyCredit',
-    header: 'Policy Credit',
-    dataType: 'check',
-    class: 'field col-12 required',
-  },
+  // {
+  //   field: 'policyCredit',
+  //   header: 'Policy Credit',
+  //   dataType: 'check',
+  //   class: 'field col-12 required',
+  // },
   {
     field: 'subcategory',
     header: 'Subcategory',
@@ -131,7 +131,7 @@ const item = ref<GenericObject>({
   status: true,
   isDefault: false,
   negative: false,
-  policyCredit: false,
+  // policyCredit: false,
   remarkRequired: false,
   subcategory: false,
   onlyApplyNet: false,
@@ -147,7 +147,7 @@ const itemTemp = ref<GenericObject>({
   status: true,
   isDefault: false,
   negative: false,
-  policyCredit: false,
+  // policyCredit: false,
   remarkRequired: false,
   subcategory: false,
   onlyApplyNet: false,
@@ -303,7 +303,7 @@ async function getItemById(id: string) {
         item.value.subcategory = response.subcategory
         item.value.onlyApplyNet = response.onlyApplyNet
         item.value.manual = response.manual
-        item.value.policyCredit = response.policyCredit
+        // item.value.policyCredit = response.policyCredit
         item.value.remarkRequired = response.remarkRequired
         item.value.minNumberOfCharacter = response.minNumberOfCharacter
         item.value.defaultRemark = response.defaultRemark
