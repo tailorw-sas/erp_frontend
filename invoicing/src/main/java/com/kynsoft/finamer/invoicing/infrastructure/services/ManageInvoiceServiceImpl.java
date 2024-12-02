@@ -89,13 +89,22 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         InvoiceUtils.establishDueDate(dto);
         InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
-        Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
-        String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
-        entity.setInvoiceNumber(invoiceNumber);
-        entity.setInvoiceNo(lastInvoiceNo);
-        dto.setInvoiceNo(lastInvoiceNo);
-        String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
-        entity.setInvoiceNumberPrefix(invoicePrefix);
+        if (dto.getHotel().isVirtual()) {
+            String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
+            entity.setInvoiceNumber(invoiceNumber);
+            entity.setInvoiceNo(dto.getHotelInvoiceNumber());
+            dto.setInvoiceNo(dto.getHotelInvoiceNumber());
+            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
+            entity.setInvoiceNumberPrefix(invoicePrefix);
+        } else {
+            Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
+            String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
+            entity.setInvoiceNumber(invoiceNumber);
+            entity.setInvoiceNo(lastInvoiceNo);
+            dto.setInvoiceNo(lastInvoiceNo);
+            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
+            entity.setInvoiceNumberPrefix(invoicePrefix);
+        }
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
@@ -135,10 +144,10 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable,List<FilterCriteria> filterCriteria) {
+    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAll(specifications,pageable).map(Invoice::toAggregate);
+        return repositoryQuery.findAll(specifications, pageable).map(Invoice::toAggregate);
     }
 
     @Override
@@ -451,6 +460,5 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public boolean existManageInvoiceByInvoiceId(long invoiceId) {
         return repositoryQuery.existsByInvoiceId(invoiceId);
     }
-
 
 }

@@ -214,4 +214,9 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return objectDtos;
     }
 
+    @Override
+    public boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId) {
+        return this.repositoryQuery.existsByHotelInvoiceNumber(hotelInvoiceNumber, hotelId);
+    }
+
 }
