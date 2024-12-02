@@ -222,7 +222,6 @@ const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
-  { field: 'methodType', header: 'Method Type', type: 'text' },
   { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', maxWidth: '220px' },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
@@ -729,6 +728,8 @@ async function cancelTransaction() {
       const cancelledStatus = await findCancelledStatus()
       if (cancelledStatus && cancelledStatus.length > 0) {
         payload.transactionStatus = cancelledStatus[0].id
+        payload.employee = data?.value?.user?.name
+        payload.employeeId = data?.value?.user?.userId
         delete payload.event
         const response: any = await GenericService.update('creditcard', 'transactions', contextMenuTransaction.value.id, payload)
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
@@ -1151,7 +1152,7 @@ onMounted(() => {
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
               <Column :footer="formatNumber(subTotals.commission)" />
               <Column :footer="formatNumber(subTotals.net)" />
