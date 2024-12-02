@@ -47,7 +47,7 @@ public class InvoiceReconcileAutomaticController {
         String[] invoiceIds = invoiceIdString.split(",");
 
         // Se retira el "RETURN" DataBufferUtils.join(filePart.content()) hasta que se arregle lo de JasperReports
-        DataBufferUtils.join(filePart.content())
+        return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {
                     // Convertir el DataBuffer a bytes
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
@@ -64,25 +64,7 @@ public class InvoiceReconcileAutomaticController {
                     }
 
                 });
-        //Hacer la llamada al metodo para generar el pdf de el array de invoiceIds
-        byte[] pdfBytes = new byte[1024 * 1024];
 
-        try {
-            InvoiceReconcilePdfCommand command = new InvoiceReconcilePdfCommand(invoiceIds, pdfBytes);
-            InvoiceReconcilePdfMessage request = this.mediator.send(command);
-
-            byte[] pdfData = request.getPdfData();
-
-            return Mono.just(
-                    ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
-                            .contentType(MediaType.APPLICATION_PDF)
-                            .body(pdfData)
-            );
-        } catch (Exception e) {
-            return Mono.just(ResponseEntity.status(500).body("Internal Server Error"));
-
-        }
     }
 
     @PostMapping(path = "/import-search-auto")
