@@ -122,6 +122,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
             this.releaseResource();
 
         }catch (Exception e){
+            e.printStackTrace();
             log.error(e.getMessage());
             this.createImportProcessStatusEvent(
                     InvoiceReconcileAutomaticImportProcessDto.builder()
