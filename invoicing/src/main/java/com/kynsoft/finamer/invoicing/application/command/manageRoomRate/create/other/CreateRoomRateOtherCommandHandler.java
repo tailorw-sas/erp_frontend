@@ -92,7 +92,7 @@ public class CreateRoomRateOtherCommandHandler implements ICommandHandler<Create
         //Actualizando la invoice
         ManageInvoiceDto invoiceDto = this.invoiceService.findById(updateBookingDto.getInvoice().getId());
         command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(invoiceDto));
-        command.getMediator().send(new UpdateInvoiceCalculateDueAmountCommand(invoiceDto, command.getInvoiceAmount()));
+        //command.getMediator().send(new UpdateInvoiceCalculateDueAmountCommand(invoiceDto, command.getInvoiceAmount()));
         this.invoiceService.update(invoiceDto);
 
         try {
