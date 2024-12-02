@@ -10,6 +10,9 @@ import com.kynsoft.finamer.creditcard.application.command.hotelPayment.addTransa
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.CreateHotelPaymentCommand;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.CreateHotelPaymentMessage;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.CreateHotelPaymentRequest;
+import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTransactions.UnbindHotelPaymentTransactionsCommand;
+import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTransactions.UnbindHotelPaymentTransactionsMessage;
+import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTransactions.UnbindHotelPaymentTransactionsRequest;
 import com.kynsoft.finamer.creditcard.application.query.hotelPayment.search.GetSearchHotelPaymentQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -49,5 +52,13 @@ public class HotelPaymentController {
         GetSearchHotelPaymentQuery query = new GetSearchHotelPaymentQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/unbind")
+    public ResponseEntity<?> unbind(@RequestBody UnbindHotelPaymentTransactionsRequest request) {
+        UnbindHotelPaymentTransactionsCommand command = UnbindHotelPaymentTransactionsCommand.fromRequest(request);
+        UnbindHotelPaymentTransactionsMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
     }
 }

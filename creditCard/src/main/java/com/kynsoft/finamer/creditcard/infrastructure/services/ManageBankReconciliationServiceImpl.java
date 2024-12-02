@@ -8,11 +8,9 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.manageBankReconciliation.ManageBankReconciliationResponse;
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageBankReconciliationService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageBankReconciliation;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageBankReconciliationWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageBankReconciliationReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,6 +80,23 @@ public class ManageBankReconciliationServiceImpl implements IManageBankReconcili
         Page<ManageBankReconciliation> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public void updateDetails(UUID bankReconciliationId) {
+        ManageBankReconciliationDto bankReconciliationDto = this.findById(bankReconciliationId);
+        bankReconciliationDto.setDetailsAmount(
+            bankReconciliationDto.getTransactions().stream().map(dto ->
+                dto.isAdjustment()
+                    ? dto.getTransactionSubCategory().getNegative()
+                        ? -dto.getNetAmount()
+                        : dto.getNetAmount()
+                    : dto.getNetAmount()
+            ).reduce(0.0, Double::sum));
+
+        ManageBankReconciliation entity = new ManageBankReconciliation(bankReconciliationDto);
+        entity.setUpdatedAt(LocalDateTime.now());
+        this.repositoryCommand.save(entity);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageBankReconciliation> data) {

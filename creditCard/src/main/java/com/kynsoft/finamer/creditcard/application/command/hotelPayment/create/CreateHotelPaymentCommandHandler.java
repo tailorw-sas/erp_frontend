@@ -4,10 +4,12 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.EPaymentTransactionStatus;
+import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.TransactionCheckInCloseOperationRule;
 import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,19 +28,26 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
 
     private final IManagePaymentTransactionStatusService paymentTransactionStatusService;
 
-    public CreateHotelPaymentCommandHandler(IHotelPaymentService hotelPaymentService, IManageHotelService hotelService, ITransactionService transactionService, IManageBankAccountService bankAccountService, IHotelPaymentAdjustmentService hotelPaymentAdjustmentService, IManagePaymentTransactionStatusService paymentTransactionStatusService) {
+    private final ICreditCardCloseOperationService closeOperationService;
+
+    public CreateHotelPaymentCommandHandler(IHotelPaymentService hotelPaymentService, IManageHotelService hotelService, ITransactionService transactionService, IManageBankAccountService bankAccountService, IHotelPaymentAdjustmentService hotelPaymentAdjustmentService, IManagePaymentTransactionStatusService paymentTransactionStatusService, ICreditCardCloseOperationService closeOperationService) {
         this.hotelPaymentService = hotelPaymentService;
         this.hotelService = hotelService;
         this.transactionService = transactionService;
         this.bankAccountService = bankAccountService;
         this.hotelPaymentAdjustmentService = hotelPaymentAdjustmentService;
         this.paymentTransactionStatusService = paymentTransactionStatusService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(CreateHotelPaymentCommand command) {
         ManageBankAccountDto bankAccountDto = this.bankAccountService.findById(command.getManageBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getManageHotel());
+        RulesChecker.checkRule(new TransactionCheckInCloseOperationRule(
+                this.closeOperationService,
+                LocalDateTime.now(), command.getManageHotel()
+        ));
 
         Set<TransactionDto> transactionList = new HashSet<>();
         if (command.getTransactions() != null) {
@@ -68,7 +77,7 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
         HotelPaymentDto created = this.hotelPaymentService.create(new HotelPaymentDto(
                 command.getId(),
                 0L,
-                command.getTransactionDate(),
+                LocalDateTime.now(),
                 hotelDto,
                 bankAccountDto,
                 amounts,

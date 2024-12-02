@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.HotelPaymentResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.services.IHotelPaymentService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.HotelPayment;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.HotelPaymentWriteDataJPARepository;
@@ -68,6 +69,34 @@ public class HotelPaymentServiceImpl implements IHotelPaymentService {
     public HotelPaymentDto findById(UUID id) {
         return this.repositoryQuery.findById(id).map(HotelPayment::toAggregate).orElseThrow(()->
                 new BusinessNotFoundException(new GlobalBusinessException( DomainErrorMessage.HOTEL_PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.HOTEL_PAYMENT_NOT_FOUND.getReasonPhrase()))));
+    }
+
+    @Override
+    public void updateAmounts(UUID id) {
+        HotelPaymentDto hotelPaymentDto = this.findById(id);
+
+        hotelPaymentDto.setNetAmount(
+            hotelPaymentDto.getTransactions().stream().map(dto ->
+                dto.isAdjustment()
+                    ? dto.getTransactionSubCategory().getNegative()
+                        ? -dto.getNetAmount()
+                        : dto.getNetAmount()
+                    : dto.getNetAmount()
+            ).reduce(0.0, Double::sum));
+
+        hotelPaymentDto.setCommission(
+                hotelPaymentDto.getTransactions().stream()
+                        .map(TransactionDto::getCommission)
+                        .reduce(0.0, Double::sum)
+        );
+
+        hotelPaymentDto.setAmount(hotelPaymentDto.getTransactions().stream()
+                .map(TransactionDto::getAmount)
+                .reduce(0.0, Double::sum));
+
+        HotelPayment entity = new HotelPayment(hotelPaymentDto);
+        entity.setUpdatedAt(LocalDateTime.now());
+        this.repositoryCommand.save(entity);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<HotelPayment> data) {

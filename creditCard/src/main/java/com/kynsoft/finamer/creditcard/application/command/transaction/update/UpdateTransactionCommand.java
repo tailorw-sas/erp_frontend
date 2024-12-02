@@ -23,13 +23,16 @@ public class UpdateTransactionCommand implements ICommand {
     private String hotelContactEmail;
     private UUID transactionStatus;
     private Double amount;
+    private String guestName;
+    private String email;
 
     public static UpdateTransactionCommand fromRequest(UpdateTransactionRequest request, Long id){
         return new UpdateTransactionCommand(
                 id, request.getAgency(), request.getLanguage(),
                 request.getCheckIn(), request.getReservationNumber(),
                 request.getReferenceNumber(), request.getHotelContactEmail(),
-                request.getTransactionStatus(), request.getAmount()
+                request.getTransactionStatus(), request.getAmount(), request.getGuestName(),
+                request.getEmail()
         );
     }
 

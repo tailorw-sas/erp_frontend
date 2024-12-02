@@ -19,4 +19,6 @@ public interface IHotelPaymentService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     HotelPaymentDto findById(UUID id);
+
+    void updateAmounts(UUID id);
 }
