@@ -59,6 +59,7 @@ const filterToSearch = ref<IData>({
 
 const $primevue = usePrimeVue()
 const formReload = ref(0)
+const formReloadToCreate = ref(0)
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 const { data: userData } = useAuth()
@@ -141,9 +142,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.object({
-      name: z.string().nonempty('File name is required'),
-    })
+    validation: validateFiles(1)
   },
   {
     field: 'fileName',
@@ -208,9 +207,7 @@ const fieldsV2ForCreate: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.object({
-      name: z.string().nonempty('File name is required'),
-    })
+    validation: validateFiles(1)
   },
   {
     field: 'fileName',
@@ -438,7 +435,7 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
 
     if (typeof payload.path === 'object' && payload.path !== null) {
-      const file = payload.path// .files[0]
+      const file = payload.path.files[0]
       const formData = new FormData()
       formData.append('file', file)
       formData.append('paymentId', payload.paymentId)
@@ -656,6 +653,29 @@ function disabledBtnSave(propsValue: any): boolean {
   }
 }
 
+function requireConfirmationToSave(item: any) {
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
+}
+
 // function requireConfirmationToSave(item: any) {
 //   const { event } = item
 //   confirm.require({
@@ -783,7 +803,7 @@ onMounted(async () => {
                 @on-confirm-create="clearForm"
                 @cancel="clearForm"
                 @delete="requireConfirmationToDelete($event)"
-                @submit="saveItem($event)"
+                @submit="requireConfirmationToSave($event)"
               >
                 <template #field-path="{ item: data, onUpdate }">
                   <InputGroup>
@@ -794,7 +814,6 @@ onMounted(async () => {
                       disabled
                     />
                     <FileUpload
-                      v-if="!loadingSaveAll"
                       mode="basic"
                       :max-file-size="100000000"
                       :disabled="idItem !== '' || idItem === null"
@@ -804,24 +823,15 @@ onMounted(async () => {
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
                       accept="application/pdf"
                       @uploader="($event: any) => {
-                        if ('files' in $event) {
-                          if ($event && $event.files.length > 0) {
-                            onUpdate('path', $event.files[0])
-                            onUpdate('fileName', $event?.files[0]?.name)
-                            onUpdate('fileSize', formatSize($event?.files[0]?.size))
-                          }
-                          else {
-                            onUpdate('fileName', '')
-                          }
+                        customBase64Uploader($event, fieldsV2, 'path');
+                        onUpdate('path', $event)
+                        if ($event && $event.files.length > 0) {
+                          onUpdate('fileName', $event?.files[0]?.name)
+                          onUpdate('fileSize', formatSize($event?.files[0]?.size))
                         }
                         else {
-                          if (typeof $event === 'object' && $event !== null) {
-                            onUpdate('path', $event)
-                            onUpdate('fileName', $event.name)
-                            onUpdate('fileSize', formatSize($event.size))
-                          }
+                          onUpdate('fileName', '')
                         }
-                        // customBase64Uploader($event, fieldsV2, 'path');
                       }"
                     />
                   </InputGroup>
@@ -896,7 +906,7 @@ onMounted(async () => {
               </EditFormV2>
               <EditFormV2
                 v-else
-                :key="formReload"
+                :key="formReloadToCreate"
                 :fields="fieldsV2ForCreate"
                 :item="item"
                 :show-actions="true"
@@ -904,7 +914,7 @@ onMounted(async () => {
                 @on-confirm-create="clearForm"
                 @cancel="clearForm"
                 @delete="requireConfirmationToDelete($event)"
-                @submit="saveItem($event)"
+                @submit="requireConfirmationToSave($event)"
               >
                 <template #field-path="{ item: data, onUpdate }">
                   <InputGroup>
@@ -915,7 +925,6 @@ onMounted(async () => {
                       disabled
                     />
                     <FileUpload
-                      v-if="!loadingSaveAll"
                       mode="basic"
                       :max-file-size="100000000"
                       :disabled="idItem !== '' || idItem === null"
@@ -925,24 +934,15 @@ onMounted(async () => {
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
                       accept="application/pdf"
                       @uploader="($event: any) => {
-                        if ('files' in $event) {
-                          if ($event && $event.files.length > 0) {
-                            onUpdate('path', $event.files[0])
-                            onUpdate('fileName', $event?.files[0]?.name)
-                            onUpdate('fileSize', formatSize($event?.files[0]?.size))
-                          }
-                          else {
-                            onUpdate('fileName', '')
-                          }
+                        customBase64Uploader($event, fieldsV2, 'path');
+                        onUpdate('path', $event)
+                        if ($event && $event.files.length > 0) {
+                          onUpdate('fileName', $event?.files[0]?.name)
+                          onUpdate('fileSize', formatSize($event?.files[0]?.size))
                         }
                         else {
-                          if (typeof $event === 'object' && $event !== null) {
-                            onUpdate('path', $event)
-                            onUpdate('fileName', $event.name)
-                            onUpdate('fileSize', formatSize($event.size))
-                          }
+                          onUpdate('fileName', '')
                         }
-                        // customBase64Uploader($event, fieldsV2, 'path');
                       }"
                     />
                   </InputGroup>

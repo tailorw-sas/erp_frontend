@@ -165,7 +165,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: validationSchema,
+    validation: validateFiles(1),
   },
   {
     field: 'fileName',
@@ -1407,13 +1407,14 @@ onMounted(async () => {
                 <template #field-path="{ item: data, onUpdate }">
                   <InputGroup>
                     <InputText
+                      v-if="!loadingSaveAll"
                       v-model="data.fileName"
                       style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
                       placeholder="Upload File"
                       disabled
                     />
+                    <Skeleton v-else height="2rem" style="border-radius: 4px;;" />
                     <FileUpload
-                      v-if="!loadingSaveAll"
                       mode="basic"
                       :max-file-size="100000000"
                       :disabled="idItem !== '' || idItem === null"
