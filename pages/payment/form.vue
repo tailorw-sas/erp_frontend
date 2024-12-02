@@ -65,7 +65,8 @@ const showCanceledDetails = ref(false)
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
   applyPayment: false,
-  booking: ''
+  booking: '',
+  amount: 0
 })
 
 interface SubTotals {
@@ -1910,34 +1911,47 @@ async function updateItem(item: { [key: string]: any }) {
 async function saveAndReload(item: { [key: string]: any }) {
   item.applyPayment = payloadToApplyPayment.value.applyPayment || false
   item.booking = payloadToApplyPayment.value.booking || ''
-  try {
-    // if (payloadToApplyPayment.value.applyPayment) {
-    //   item.applyPayment = true
-    //   item.booking = payloadToApplyPayment.value.booking
-    // }
-    if (actionOfModal.value === 'apply-deposit') {
-      // item.paymentDetail = item.id
-
-      await createPaymentDetails(item)
-    }
-    else if (item?.id && actionOfModal.value === 'split-deposit') {
-      await createPaymentDetails(item)
-    }
-    else if (item?.id) {
-      await updatePaymentDetails(item)
+  let stopAcction = false
+  if (payloadToApplyPayment.value.applyPayment) {
+    if (Number(item.amount) > Number(payloadToApplyPayment.value.amount)) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The amount is greater than the booking balance', life: 3000 })
+      stopAcction = true
     }
     else {
+      stopAcction = false
+    }
+  }
+
+  if (stopAcction === false) {
+    try {
       // if (payloadToApplyPayment.value.applyPayment) {
       //   item.applyPayment = true
       //   item.booking = payloadToApplyPayment.value.booking
       // }
-      await createPaymentDetails(item)
+      if (actionOfModal.value === 'apply-deposit') {
+        // item.paymentDetail = item.id
+
+        await createPaymentDetails(item)
+      }
+      else if (item?.id && actionOfModal.value === 'split-deposit') {
+        await createPaymentDetails(item)
+      }
+      else if (item?.id) {
+        await updatePaymentDetails(item)
+      }
+      else {
+        // if (payloadToApplyPayment.value.applyPayment) {
+        //   item.applyPayment = true
+        //   item.booking = payloadToApplyPayment.value.booking
+        // }
+        await createPaymentDetails(item)
+      }
+      itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+      await getItemById(idItem.value)
     }
-    itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
-    await getItemById(idItem.value)
-  }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    catch (error: any) {
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
   }
 }
 
@@ -3111,6 +3125,7 @@ function onRowContextMenu(event: any) {
 
 async function onRowDoubleClickInDataTableApplyPayment(event: any) {
   if (isApplyPaymentFromTheForm.value) {
+    payloadToApplyPayment.value.amount = event?.bookingBalance
     payloadToApplyPayment.value.booking = event?.id
     payloadToApplyPayment.value.applyPayment = true
     openDialogApplyPayment.value = false

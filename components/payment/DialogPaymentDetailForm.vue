@@ -573,7 +573,7 @@ function processValidation($event: any, data: any) {
     id="dialogPaymentDetailForm"
     v-model:visible="onOffDialog"
     modal
-    :closable="false"
+    :closable="true"
     header="Payment Details"
     :style="{ width: '50rem' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
@@ -585,6 +585,7 @@ function processValidation($event: any, data: any) {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
     }"
+    @hide="closeDialog"
   >
     <template #header>
       <div class="flex justify-content-between align-items-center justify-content-between w-full">
@@ -753,7 +754,7 @@ function processValidation($event: any, data: any) {
       <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
       </IfCan> -->
       <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-      <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
+      <!-- <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" /> -->
       <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
     </template>
   </Dialog>
