@@ -82,7 +82,7 @@ public class BookingRow {
         manageBookingDto.setFirstName(Objects.nonNull(this.firstName) ? this.firstName : "");
         manageBookingDto.setLastName(Objects.nonNull(this.lastName) ? this.lastName : "");
         manageBookingDto.setFullName(buildFullName());
-        manageBookingDto.setHotelBookingNumber(Objects.nonNull(this.hotelBookingNumber) ? this.hotelBookingNumber : "");
+        manageBookingDto.setHotelBookingNumber(Objects.nonNull(this.hotelBookingNumber) ? removeBlankSpaces(this.hotelBookingNumber) : "");
         manageBookingDto.setHotelInvoiceNumber(Objects.nonNull(this.hotelInvoiceNumber) ? this.hotelInvoiceNumber : "");
         manageBookingDto.setDescription(Objects.nonNull(this.remarks) ? this.remarks : "");
         manageBookingDto.setRoomNumber(this.roomNumber);
@@ -91,6 +91,10 @@ public class BookingRow {
         // manageBookingDto.setAmountPax();
         manageBookingDto.setBookingDate(DateUtil.parseDateToDateTime(this.bookingDate));
         return manageBookingDto;
+    }
+
+    private String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
     }
 
     private String buildFullName(){
