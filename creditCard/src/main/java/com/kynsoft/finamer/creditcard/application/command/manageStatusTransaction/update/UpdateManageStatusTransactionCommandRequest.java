@@ -9,4 +9,5 @@ import lombok.*;
 public class UpdateManageStatusTransactionCommandRequest {
 
     private String session;
+    private String employee;
 }

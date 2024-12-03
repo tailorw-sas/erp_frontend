@@ -12,6 +12,7 @@ import lombok.*;
 public class UpdateManageStatusTransactionBlueCommand implements ICommand {
     private UpdateManageStatusTransactionBlueCommandRequest request;
     private String result;
+    private String employee;
 
     public ICommandMessage getMessage() {
         return new UpdateManageStatusTransactionBlueCommandMessage(result);
