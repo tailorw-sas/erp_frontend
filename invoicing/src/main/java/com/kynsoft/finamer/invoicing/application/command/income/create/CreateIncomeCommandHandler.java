@@ -10,7 +10,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -85,7 +84,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 command.getId(),
                 0L,
                 0L,
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME),
+                this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME)),
                 this.invoiceDate(hotelDto.getId()),
                 command.getDueDate(),
                 command.getManual(),
@@ -116,6 +115,15 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList);
         }
 
+    }
+
+    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
+        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
+        } else {
+            invoiceNumber += "-" + hotel.getCode();
+        }
+        return invoiceNumber;
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {

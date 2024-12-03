@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
@@ -85,6 +86,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     @Transactional
     public void handle(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
+
+        RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
+
         RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
                 this.closeOperationService,
                 command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
