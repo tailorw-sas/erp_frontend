@@ -43,6 +43,9 @@ public class CreateManageTransactionStatusCommandHandler implements ICommandHand
         if (command.isReconciledStatus()){
             RulesChecker.checkRule(new ManageTransactionReconciledStatusMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isPaidStatus()){
+            RulesChecker.checkRule(new ManageTransactionPaidStatusMustBeUniqueRule(this.service, command.getId()));
+        }
 
         List<ManageTransactionStatusDto> navigate = this.service.findByIds(command.getNavigate().stream().toList());
 
@@ -60,7 +63,8 @@ public class CreateManageTransactionStatusCommandHandler implements ICommandHand
                 command.isReceivedStatus(),
                 command.isCancelledStatus(),
                 command.isDeclinedStatus(),
-                command.isReconciledStatus()
+                command.isReconciledStatus(),
+                command.isPaidStatus()
         ));
     }
 }

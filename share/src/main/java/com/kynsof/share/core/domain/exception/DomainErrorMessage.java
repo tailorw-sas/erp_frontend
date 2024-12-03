@@ -383,7 +383,10 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     TRANSACTION_MUST_HAVE_ATTACHMENT_TYPE(1161, Series.DOMAIN_ERROR,"The transaction must have at least one attachment of type default."),
     TRANSACTION_RECONCILIATION_OR_PAYMENT_RELATION(1162, Series.DOMAIN_ERROR,"This transaction already belongs to another relationship."),
     HOTEL_PAYMENT_NOT_FOUND(1163, Series.DOMAIN_ERROR,"Hotel payment not found."),
-    TRANSACTION_ALREADY_IN_THIS_RELATION(1164, Series.DOMAIN_ERROR,"This transaction already belongs to this relationship.");
+    TRANSACTION_ALREADY_IN_THIS_RELATION(1164, Series.DOMAIN_ERROR,"This transaction already belongs to this relationship."),
+    MANAGE_TRANSACTION_STATUS_PAID_NOT_FOUND(1165, Series.DOMAIN_ERROR,"There is no transaction status of type paid by default."),
+    MANAGE_TRANSACTION_STATUS_CHECK_PAID(1166, Series.DOMAIN_ERROR,"Another item already exists with paid status."),
+    HOTEL_PAYMENT_CANCELLED_STATUS(1167, Series.DOMAIN_ERROR, "Hotel Payment cannot be changed to cancelled status because it has associated transactions.");
 
     private static final DomainErrorMessage[] VALUES;
 

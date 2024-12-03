@@ -51,27 +51,32 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
         ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
-        //si no encuentra la parametrization que agarre 2 decimales por defecto
-        int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+        // Solo calcular la comission si es Received
+        if (transactionStatusDto.isReceivedStatus()) {
+            int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
 
-        double commission= 0.0;
-        try {
-            commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
-        } catch (Exception e) {
-            ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
-            processErrorLogDto.setTransactionId(transactionDto.getTransactionUuid());
-            processErrorLogDto.setError(e.getMessage());
-            this.processErrorLogService.create(processErrorLogDto);
+            double commission= 0.0;
+            try {
+                commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
+            } catch (Exception e) {
+                ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
+                processErrorLogDto.setTransactionId(transactionDto.getTransactionUuid());
+                processErrorLogDto.setError(e.getMessage());
+                this.processErrorLogService.create(processErrorLogDto);
+            }
+            //independientemente del valor de la commission el netAmount tiene dos decimales
+            double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
+            transactionDto.setCommission(commission);
+            transactionDto.setNetAmount(netAmount);
         }
-        //independientemente del valor de la commission el netAmount tiene dos decimales
-        double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
+
+        //si no encuentra la parametrization que agarre 2 decimales por defecto
+
 
         //Comenzar a actualizar lo referente a la transaccion en las diferntes tablas
         //1- Actualizar data in vcc_transaction
         transactionDto.setCardNumber(command.getRequest().getCardNumber());
         transactionDto.setCreditCardType(creditCardTypeDto);
-        transactionDto.setCommission(commission);
-        transactionDto.setNetAmount(netAmount);
         transactionDto.setPaymentDate(command.getRequest().getPaymentDate());
         transactionDto.setStatus(transactionStatusDto);
         if (transactionStatusDto.isReceivedStatus()){
@@ -83,7 +88,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
                 transactionDto,
                 "The transaction change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                 null,
-                null,
+                command.getRequest().getEmployee(),
                 transactionStatusDto
         ));
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction

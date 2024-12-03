@@ -19,4 +19,5 @@ public class UpdateManageStatusTransactionBlueCommandRequest {
     private String isoCode;
     private ETransactionResultStatus status;
     private LocalDateTime paymentDate;
+    private String employee;
 }
