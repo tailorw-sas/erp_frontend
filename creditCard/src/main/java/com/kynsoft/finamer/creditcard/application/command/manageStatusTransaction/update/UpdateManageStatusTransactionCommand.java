@@ -13,6 +13,7 @@ import lombok.*;
 public class UpdateManageStatusTransactionCommand implements ICommand {
     private CardNetTransactionDataResponse result;
     private String session;
+    private String employee;
 
     @Override
     public ICommandMessage getMessage() {

@@ -118,7 +118,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
                     transactionDto,
                     "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                     null,
-                    null,
+                    command.getEmployee(),
                     transactionStatusDto
             ));
 

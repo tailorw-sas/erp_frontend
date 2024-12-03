@@ -83,7 +83,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
                 transactionDto,
                 "The transaction change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                 null,
-                null,
+                command.getEmployee(),
                 transactionStatusDto
         ));
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction
