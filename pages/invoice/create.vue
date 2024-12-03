@@ -620,12 +620,14 @@ async function createItem(item: { [key: string]: any }) {
     }
 
     for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-      attachments.push({
-        ...attachmentList.value[i],
-        type: attachmentList.value[i]?.type?.id,
-        file: fileurl,
-      })
+      if (attachmentList.value[i]?.file?.files.length > 0) {
+        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+        attachments.push({
+          ...attachmentList.value[i],
+          type: attachmentList.value[i]?.type?.id,
+          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        })
+      }
     }
 
     const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
