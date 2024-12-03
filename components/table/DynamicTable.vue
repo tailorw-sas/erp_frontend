@@ -969,32 +969,34 @@ defineExpose({ clearSelectedItems })
       <div v-if="props.showLocalPagination">
         <slot name="pagination" />
       </div>
-      <div v-else class="flex justify-content-between align-items-center w-full py-0">
-        <div v-if="true" class="grid w-full grid-nogutter py-0">
-          <div v-if="true" class="col-12 md:col-4 flex align-items-center py-0">
-            <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
-          </div>
-          <div v-if="true" class="col-12 md:col-4 py-0 flex align-items-center justify-content-center">
-            <Paginator
-              :rows="Number(props.pagination.limit) || 50"
-              :total-records="props.pagination.totalElements"
-              :rows-per-page-options="[10, 20, 30, 50]"
-              @page="onChangePageOrLimit($event)"
-            />
-            <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
-            <div class="flex align-items-center mx-3">
-              <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
-                <span>
-                  Total:
-                </span>
-                <slot name="pagination-total" :total="props.pagination?.totalElements">
-                  <span class="font-bold">
-                    {{ props.pagination?.totalElements }}
-                  </span>
-                </slot>
-              </Badge>
-            </div>
-          </div>
+      <div v-else class="flex justify-content-between align-items-center w-full">
+        <!-- cantidad de elementos seleccionados -->
+        <div class="flex align-items-center w-15rem">
+          <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
+        </div>
+        <!-- paginacion -->
+        <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
+        <div class="flex align-items-center">
+          <Paginator
+            :rows="Number(props.pagination.limit) || 50"
+            :total-records="props.pagination.totalElements"
+            :rows-per-page-options="[10, 20, 30, 50]"
+            @page="onChangePageOrLimit($event)"
+          />
+          <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
+            <span>
+              Total:
+            </span>
+            <slot name="pagination-total" :total="props.pagination?.totalElements">
+              <span class="font-bold">
+                {{ props.pagination?.totalElements }}
+              </span>
+            </slot>
+          </Badge>
+        </div>
+        <!-- Other actions -->
+        <div class="flex align-items-center w-15rem">
+          <slot name="pagination-right" />
         </div>
       </div>
     </div>
