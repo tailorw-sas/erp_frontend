@@ -585,72 +585,19 @@ async function createItem(item: { [key: string]: any }) {
     roomRates = roomRateList.value
 
     for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-      attachments.push({
-        ...attachmentList.value[i],
-        type: attachmentList.value[i]?.type?.id,
-        file: fileurl,
-      })
+      if (attachmentList.value[i]?.file?.files.length > 0) {
+        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+        attachments.push({
+          ...attachmentList.value[i],
+          type: attachmentList.value[i]?.type?.id,
+          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        })
+      }
     }
 
     const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
     return response
   }
-}
-
-async function createItemCredit(item: any) {
-  loadingSaveAll.value = true
-
-  const bookings: { id: any, amount: number }[] = []
-  const attachments = []
-
-  bookingList.value?.forEach((booking) => {
-    if (booking?.invoiceAmount !== 0) {
-      bookings.push({
-        id: booking?.id,
-        amount: toNegative(booking?.invoiceAmount)
-      })
-    }
-  })
-
-  for (let i = 0; i < attachmentList.value.length; i++) {
-    const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-    attachments.push({
-      // ...attachmentList.value[i],
-      type: attachmentList.value[i]?.type?.id,
-      file: fileurl,
-      filename: attachmentList.value[i]?.filename,
-      remark: attachmentList.value[i]?.remark,
-      paymentResourceType: attachmentList.value[i]?.resourceType.id // '67c10e87-89c0-4a3a-abe3-5cebc400d280'
-
-    })
-  }
-
-  const payload = {
-    invoice: route.query.selected,
-    invoiceDate: dayjs(item.invoiceDate).startOf('day').toISOString(),
-    employee: userData?.value?.user?.userId || '',
-    employeeName: userData?.value?.user?.name || '',
-    bookings,
-    attachments
-  }
-
-  const response = await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
-  return response
-}
-
-async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-  payload.invoiceId = item.invoiceId
-  payload.invoiceNumber = item.invoiceNumber
-  payload.invoiceDate = item.invoiceDate
-  payload.isManual = item.isManual
-  payload.invoiceAmount = item.invoiceAmount
-  payload.hotel = item.hotel.id
-  payload.agency = item.agency.id
-  payload.invoiceType = item.invoiceType?.id
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
