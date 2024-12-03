@@ -75,29 +75,36 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(
                     Character.getNumericValue(transactionResponse.getCreditCardNumber().charAt(0))
             );
-            ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
-
-            //si no encuentra la parametrization que agarre 2 decimales por defecto
-            int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
-
-            double commission= 0.0;
-            try {
-                commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
-            } catch (Exception e) {
-                ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
-                processErrorLogDto.setSession(cardnetJobDto.getSession());
-                processErrorLogDto.setTransactionId(cardnetJobDto.getTransactionId());
-                processErrorLogDto.setError(e.getMessage());
-                this.processErrorLogService.create(processErrorLogDto);
-            }
-            //independientemente del valor de la commission el netAmount tiene dos decimales
-            double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant
+
             CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(transactionResponse.getResponseCode());
             ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(pairedStatus.transactionStatus());
-            transactionResponse.setMerchantStatus(pairedStatus.toDTO());
 
+            // Solo calcular la comission si es Received
+            if (transactionStatusDto.isReceivedStatus()) {
+                ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
+                //si no encuentra la parametrization que agarre 2 decimales por defecto
+                int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+                double commission= 0.0;
+                try {
+                    commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
+                } catch (Exception e) {
+                    ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
+                    processErrorLogDto.setSession(cardnetJobDto.getSession());
+                    processErrorLogDto.setTransactionId(cardnetJobDto.getTransactionId());
+                    processErrorLogDto.setError(e.getMessage());
+                    this.processErrorLogService.create(processErrorLogDto);
+                }
+                //independientemente del valor de la commission el netAmount tiene dos decimales
+                double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
+                transactionDto.setCommission(commission);
+                transactionDto.setNetAmount(netAmount);
+                transactionDto.setTransactionDate(LocalDateTime.now());
+            }
+
+            transactionResponse.setMerchantStatus(pairedStatus.toDTO());
             TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
 
             // 1- Actualizar data en vcc_transaction
@@ -105,12 +112,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 //            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
             transactionDto.setCreditCardType(creditCardTypeDto);
             transactionDto.setStatus(transactionStatusDto);
-            transactionDto.setCommission(commission);
-            transactionDto.setNetAmount(netAmount);
             transactionDto.setPaymentDate(LocalDateTime.now());
-            if (transactionStatusDto.isReceivedStatus()){
-                transactionDto.setTransactionDate(LocalDateTime.now());
-            }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
             this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
