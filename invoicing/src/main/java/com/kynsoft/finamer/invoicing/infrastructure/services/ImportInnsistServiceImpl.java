@@ -276,7 +276,7 @@ public class ImportInnsistServiceImpl {
             double bookingAmount = calculateBookingAmount(rates);
             bookingDto.setInvoiceAmount(bookingAmount);
             bookingDto.setDueAmount(bookingAmount);
-
+            bookingDto.setHotelAmount(bookingAmount);
             return bookingDto;
         }).toList();
     }
