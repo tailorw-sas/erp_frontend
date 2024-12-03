@@ -273,7 +273,10 @@ public class ImportInnsistServiceImpl {
 
             List<ManageRoomRateDto> rates = createRoomRateDto(bookingRow.getRoomRates());
             bookingDto.setRoomRates(rates);
-            bookingDto.setInvoiceAmount(calculateBookingAmount(rates));
+            double bookingAmount = calculateBookingAmount(rates);
+            bookingDto.setInvoiceAmount(bookingAmount);
+            bookingDto.setDueAmount(bookingAmount);
+            bookingDto.setHotelAmount(bookingAmount);
 
             return bookingDto;
         }).toList();
