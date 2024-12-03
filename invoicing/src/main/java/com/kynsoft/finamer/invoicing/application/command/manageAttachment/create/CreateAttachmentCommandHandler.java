@@ -125,7 +125,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
-
+ 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee, String fileName) {
 
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
@@ -133,6 +133,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         dto.setInvoice(invoiceDto);
         dto.setDescription("An attachment to the invoice was inserted. The file name: " + fileName);
         dto.setEmployee(employee);
+        dto.setInvoiceStatus(invoiceDto.getStatus());
 
         this.invoiceStatusHistoryService.create(dto);
 
