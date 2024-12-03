@@ -13,10 +13,15 @@ import com.kynsoft.finamer.creditcard.application.command.hotelPayment.create.Cr
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTransactions.UnbindHotelPaymentTransactionsCommand;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTransactions.UnbindHotelPaymentTransactionsMessage;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTransactions.UnbindHotelPaymentTransactionsRequest;
+import com.kynsoft.finamer.creditcard.application.command.hotelPayment.update.UpdateHotelPaymentCommand;
+import com.kynsoft.finamer.creditcard.application.command.hotelPayment.update.UpdateHotelPaymentMessage;
+import com.kynsoft.finamer.creditcard.application.command.hotelPayment.update.UpdateHotelPaymentRequest;
 import com.kynsoft.finamer.creditcard.application.query.hotelPayment.search.GetSearchHotelPaymentQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/hotel-payment")
@@ -58,6 +63,15 @@ public class HotelPaymentController {
     public ResponseEntity<?> unbind(@RequestBody UnbindHotelPaymentTransactionsRequest request) {
         UnbindHotelPaymentTransactionsCommand command = UnbindHotelPaymentTransactionsCommand.fromRequest(request);
         UnbindHotelPaymentTransactionsMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping(path = "/{id}")
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateHotelPaymentRequest request) {
+
+        UpdateHotelPaymentCommand command = UpdateHotelPaymentCommand.fromRequest(id, request);
+        UpdateHotelPaymentMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);
     }

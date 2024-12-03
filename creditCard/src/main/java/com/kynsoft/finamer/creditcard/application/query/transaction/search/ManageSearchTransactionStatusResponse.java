@@ -22,6 +22,7 @@ public class ManageSearchTransactionStatusResponse implements IResponse {
     private Boolean isDeclined;
     private Boolean isSent;
     private Boolean isCancelled;
+    private Boolean isPaid;
 
     public ManageSearchTransactionStatusResponse(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
@@ -31,6 +32,7 @@ public class ManageSearchTransactionStatusResponse implements IResponse {
         this.isDeclined = dto.isDeclinedStatus();
         this.isSent = dto.isSentStatus();
         this.isCancelled = dto.isCancelledStatus();
+        this.isPaid = dto.isPaidStatus();
     }
 
 }
