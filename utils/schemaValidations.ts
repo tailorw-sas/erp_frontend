@@ -101,7 +101,7 @@ export function validateFiles(size: number = 100, acceptTypes: string[] = ['imag
   const fileSchema = z.object({
     name: z.string().min(1, 'The file must have a name'),
     size: z.number().max(size * 1024 * 1024, `The file must be less than ${size} MB`), // Tamaño máximo 5 MB
-    type: z.enum(acceptTypes as [string, ...string[]]),
+    type: z.string().refine(value => acceptTypes.includes(value), { message: 'The file type is not allowed' }),
   })
   const stringSchema = z.string().trim()
   const dataSchema = z.object({
