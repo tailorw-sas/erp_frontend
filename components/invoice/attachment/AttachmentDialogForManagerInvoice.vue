@@ -1092,6 +1092,7 @@ onMounted(async () => {
                     <Button
                       v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
                       :disabled="disabledBtnSave(props)"
+                      :loading="loadingSaveAll"
                       @click="props.item.submitForm($event)"
                     />
                   </IfCan>
