@@ -14,7 +14,6 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
@@ -89,14 +88,14 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         InvoiceUtils.establishDueDate(dto);
         InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
-//        if (dto.getHotel().isVirtual()) {
-//            String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
-//            entity.setInvoiceNumber(invoiceNumber);
-//            entity.setInvoiceNo(dto.getHotelInvoiceNumber());
-//            dto.setInvoiceNo(dto.getHotelInvoiceNumber());
-//            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
-//            entity.setInvoiceNumberPrefix(invoicePrefix);
-//        } else {
+        if (dto.getHotel().isVirtual()) {
+            String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
+            entity.setInvoiceNumber(invoiceNumber);
+            entity.setInvoiceNo(dto.getHotelInvoiceNumber());
+            dto.setInvoiceNo(dto.getHotelInvoiceNumber());
+            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
+            entity.setInvoiceNumberPrefix(invoicePrefix);
+        } else {
             Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
             String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
             entity.setInvoiceNumber(invoiceNumber);
@@ -104,7 +103,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             dto.setInvoiceNo(lastInvoiceNo);
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
             entity.setInvoiceNumberPrefix(invoicePrefix);
-//        }
+        }
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
