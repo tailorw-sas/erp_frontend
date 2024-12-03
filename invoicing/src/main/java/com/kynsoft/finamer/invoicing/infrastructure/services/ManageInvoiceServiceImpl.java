@@ -89,14 +89,14 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         InvoiceUtils.establishDueDate(dto);
         InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
-        if (dto.getHotel().isVirtual()) {
-            String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
-            entity.setInvoiceNumber(invoiceNumber);
-            entity.setInvoiceNo(dto.getHotelInvoiceNumber());
-            dto.setInvoiceNo(dto.getHotelInvoiceNumber());
-            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
-            entity.setInvoiceNumberPrefix(invoicePrefix);
-        } else {
+//        if (dto.getHotel().isVirtual()) {
+//            String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
+//            entity.setInvoiceNumber(invoiceNumber);
+//            entity.setInvoiceNo(dto.getHotelInvoiceNumber());
+//            dto.setInvoiceNo(dto.getHotelInvoiceNumber());
+//            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
+//            entity.setInvoiceNumberPrefix(invoicePrefix);
+//        } else {
             Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
             String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
             entity.setInvoiceNumber(invoiceNumber);
@@ -104,7 +104,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             dto.setInvoiceNo(lastInvoiceNo);
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
             entity.setInvoiceNumberPrefix(invoicePrefix);
-        }
+//        }
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
