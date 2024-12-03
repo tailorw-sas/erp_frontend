@@ -487,6 +487,7 @@ const options = ref({
   actionsAsMenu: true,
   selectionMode: 'multiple',
   selectAllItemByDefault: false,
+  showSelectedItems: true,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
 })
 // selectionMode: 'multiple',
