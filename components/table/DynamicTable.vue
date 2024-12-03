@@ -45,6 +45,7 @@ const props = defineProps({
       selectionMode?: 'single' | 'multiple' | undefined
       expandableRows?: boolean
       selectAllItemByDefault?: boolean
+      selectFirstItemByDefault?: boolean
       showPagination?: boolean
       showCustomEmptyTable?: boolean
       scrollHeight?: string | undefined
@@ -533,9 +534,16 @@ watch(() => props.data, async (newValue) => {
         props.selectedItems?.some(selected => selected.id === item.id)
       )
     }
-    else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
-      clickedItem.value = props.data[0]
+    else if ('selectFirstItemByDefault' in props.options) {
+      if (props.options?.selectFirstItemByDefault) {
+        if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+          clickedItem.value = props.data[0]
+        }
+      }
     }
+    // else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+    //   clickedItem.value = props.data[0]
+    // }
   }
 })
 
@@ -548,8 +556,12 @@ onMounted(() => {
   if (props.options?.selectAllItemByDefault) {
     clickedItem.value = props.data
   }
-  else if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
-    clickedItem.value = props.data[0]
+  else if ('selectFirstItemByDefault' in props.options) {
+    if (props.options?.selectFirstItemByDefault) {
+      if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+        clickedItem.value = props.data[0]
+      }
+    }
   }
 })
 
