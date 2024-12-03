@@ -1,8 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
-import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentDto;
 import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentStatusHistoryDto;
-import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
