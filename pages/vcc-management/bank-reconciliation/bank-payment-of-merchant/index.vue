@@ -408,7 +408,14 @@ function unbindTransactions() {
   const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  subTotals.value.amount -= contextMenuTransaction.value.netAmount
+  // Se debe sumar si es una transaccion de ajuste tipo debito
+  if (contextMenuTransaction.value.adjustment && contextMenuTransaction.value.transactionSubCategory.negative) {
+    subTotals.value.amount += contextMenuTransaction.value.netAmount
+  }
+  else {
+    // Se resta si es un ajuste de credito o si es una cc
+    subTotals.value.amount -= contextMenuTransaction.value.netAmount
+  }
   subTotals.value.amount = Number.parseFloat(subTotals.value.amount.toFixed(2))
 }
 
