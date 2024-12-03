@@ -584,7 +584,13 @@ defineExpose({ clearSelectedItems })
     </template>
   </Toolbar>
 
-  <BlockUI :blocked="options?.loading || parentComponentLoading">
+  <BlockUI :blocked="options?.loading || parentComponentLoading" class="block-ui-container">
+    <div
+      v-if="options?.loading"
+      class="flex flex-column align-items-center justify-content-center full-size"
+    >
+      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+    </div>
     <div class="card p-0 mb-0">
       <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
@@ -617,6 +623,14 @@ defineExpose({ clearSelectedItems })
         @row-expand="onRowExpand"
         @row-collapse="onRowCollapse"
       >
+        <template #loading>
+          <!-- Loading customers data. Please wait. -->
+          <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+            <span class="flex flex-column align-items-center justify-content-center">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+            </span>
+          </div>
+        </template>
         <template #empty>
           <div v-if="'showCustomEmptyTable' in props?.options ? props.options.showCustomEmptyTable : false">
             <slot name="emptyTable" :data="{ messageForEmptyTable }" />
@@ -630,9 +644,9 @@ defineExpose({ clearSelectedItems })
                 <p>{{ messageForEmptyTable }}</p>
               </div>
             </span>
-            <span v-else class="flex flex-column align-items-center justify-content-center">
-              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-            </span>
+          <!-- <span v-else class="flex flex-column align-items-center justify-content-center">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+          </span> -->
           </div>
         </template>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
@@ -977,42 +991,43 @@ defineExpose({ clearSelectedItems })
         <slot name="datatable-footer" />
       </DataTable>
     </div>
-    <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-2 card py-0">
-      <div v-if="props.showLocalPagination">
-        <slot name="pagination" />
+  </BlockUI>
+
+  <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-2 card py-0">
+    <div v-if="props.showLocalPagination">
+      <slot name="pagination" />
+    </div>
+    <div v-else class="flex justify-content-between align-items-center w-full">
+      <!-- cantidad de elementos seleccionados -->
+      <div class="flex align-items-center w-15rem">
+        <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
       </div>
-      <div v-else class="flex justify-content-between align-items-center w-full">
-        <!-- cantidad de elementos seleccionados -->
-        <div class="flex align-items-center w-15rem">
-          <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
-        </div>
-        <!-- paginacion -->
-        <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
-        <div class="flex align-items-center">
-          <Paginator
-            :rows="Number(props.pagination.limit) || 50"
-            :total-records="props.pagination.totalElements"
-            :rows-per-page-options="[10, 20, 30, 50]"
-            @page="onChangePageOrLimit($event)"
-          />
-          <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
-            <span>
-              Total:
+      <!-- paginacion -->
+      <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
+      <div class="flex align-items-center">
+        <Paginator
+          :rows="Number(props.pagination.limit) || 50"
+          :total-records="props.pagination.totalElements"
+          :rows-per-page-options="[10, 20, 30, 50]"
+          @page="onChangePageOrLimit($event)"
+        />
+        <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
+          <span>
+            Total:
+          </span>
+          <slot name="pagination-total" :total="props.pagination?.totalElements">
+            <span class="font-bold">
+              {{ props.pagination?.totalElements }}
             </span>
-            <slot name="pagination-total" :total="props.pagination?.totalElements">
-              <span class="font-bold">
-                {{ props.pagination?.totalElements }}
-              </span>
-            </slot>
-          </Badge>
-        </div>
-        <!-- Other actions -->
-        <div class="flex align-items-center w-15rem">
-          <slot name="pagination-right" />
-        </div>
+          </slot>
+        </Badge>
+      </div>
+      <!-- Other actions -->
+      <div class="flex align-items-center w-15rem">
+        <slot name="pagination-right" />
       </div>
     </div>
-  </BlockUI>
+  </div>
 
   <!-- Dialog Delete -->
   <DialogDelete
@@ -1026,6 +1041,17 @@ defineExpose({ clearSelectedItems })
 </template>
 
 <style lang="scss" scoped>
+.block-ui-container {
+  position: relative; /* Asegura que los hijos puedan posicionarse dentro del contenedor */
+}
+
+.full-size {
+  position: absolute; /* Permite ocupar todo el espacio del contenedor padre */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 .truncate {
   white-space: nowrap;
   overflow: hidden;

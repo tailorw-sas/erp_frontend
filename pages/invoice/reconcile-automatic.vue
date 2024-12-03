@@ -300,6 +300,13 @@ async function getErrorList() {
   }
 }
 
+function ApplyImport2() {
+  options.value.loading = true
+  setTimeout(() => {
+    options.value.loading = false
+  }, 10000)
+}
+
 async function ApplyImport() {
   loadingSaveAll.value = true
   const successOperation = true
