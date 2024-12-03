@@ -318,12 +318,16 @@ public class ImportInnsistServiceImpl {
         manageBookingDto.setFirstName(Objects.nonNull(importInnsistBookingKafka.getFirstName()) ? importInnsistBookingKafka.getFirstName() : "");
         manageBookingDto.setLastName(Objects.nonNull(importInnsistBookingKafka.getLastName()) ? importInnsistBookingKafka.getLastName() : "");
         manageBookingDto.setFullName(buildFullName(importInnsistBookingKafka));
-        manageBookingDto.setHotelBookingNumber(Objects.nonNull(importInnsistBookingKafka.getHotelBookingNumber()) ? importInnsistBookingKafka.getHotelBookingNumber() : "");
+        manageBookingDto.setHotelBookingNumber(Objects.nonNull(importInnsistBookingKafka.getHotelBookingNumber()) ? removeBlankSpaces(importInnsistBookingKafka.getHotelBookingNumber()) : "");
         manageBookingDto.setHotelInvoiceNumber(importInnsistBookingKafka.getHotelInvoiceNumber() != null ? importInnsistBookingKafka.getHotelInvoiceNumber().toString() : "");
         manageBookingDto.setDescription(Objects.nonNull(importInnsistBookingKafka.getDescription()) ? importInnsistBookingKafka.getDescription() : "");
         manageBookingDto.setRoomNumber(importInnsistBookingKafka.getRoomNumber());
         manageBookingDto.setBookingDate(importInnsistBookingKafka.getBookingDate());
         return manageBookingDto;
+    }
+
+    private String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
     }
 
     private ManageRoomRateDto toAggregateRoomRateDto(ImportInnsistRoomRateKafka importInnsistRoomRateKafka) {
