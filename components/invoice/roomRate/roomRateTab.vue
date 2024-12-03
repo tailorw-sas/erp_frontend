@@ -937,7 +937,7 @@ watch(() => props.bookingObj, () => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column
-              footer="Totals:" :colspan="!isDetailView ? 7 : 8"
+              footer="Totals:" :colspan="!isDetailView ? 6 : 7"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
