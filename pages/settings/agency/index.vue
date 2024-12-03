@@ -426,6 +426,7 @@ const options = ref({
   uriApi: 'manage-agency',
   loading: false,
   actionsAsMenu: false,
+  selectFirstItemByDefault: true,
   messageToDelete: 'Are you sure you want to delete the agency: {{name}}?'
 })
 const payloadOnChangePage = ref<PageState>()
@@ -464,7 +465,9 @@ async function getList() {
     return
   }
   try {
-    idItemToLoadFirstTime.value = ''
+    if (options.value.selectFirstItemByDefault) {
+      idItemToLoadFirstTime.value = ''
+    }
     options.value.loading = true
     listItems.value = []
     const newListItems = []
@@ -494,7 +497,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && options.value.selectFirstItemByDefault) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -661,7 +664,11 @@ async function createItem(item: { [key: string]: any }) {
     payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
     payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    const response = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+
+    if (response && options.value.selectFirstItemByDefault === false) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -677,7 +684,11 @@ async function updateItem(item: { [key: string]: any }) {
   payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
   payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  const response = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+
+  if (response && options.value.selectFirstItemByDefault === false) {
+    idItemToLoadFirstTime.value = response.id
+  }
 }
 
 async function deleteItem(id: string) {

@@ -687,21 +687,26 @@ function formatSize(bytes: number) {
 }
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
 }
 
 function showHistory() {
@@ -932,7 +937,7 @@ onMounted(async () => {
                 :loading-save="loadingSaveAll"
                 @cancel="clearForm"
                 @delete="requireConfirmationToDelete($event)"
-                @submit="requireConfirmationToSave(item)"
+                @submit="requireConfirmationToSave($event)"
               >
                 <template #field-resourceType="{ item: data, onUpdate }">
                   <DebouncedAutoCompleteComponent
