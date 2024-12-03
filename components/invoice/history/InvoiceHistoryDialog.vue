@@ -189,9 +189,18 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId,
-        // @ts-expect-error
-        status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus || iterator?.invoice?.status] }]
+      ListItems.value = [
+        ...ListItems.value,
+        {
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          invoiceId: iterator?.invoice?.invoiceId,
+          // @ts-expect-error
+          status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus]
+        }
+      ]
+      // status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus || iterator?.invoice?.status] }]
     }
   }
   catch (error) {
