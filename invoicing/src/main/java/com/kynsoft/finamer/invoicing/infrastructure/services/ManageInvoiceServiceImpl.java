@@ -14,6 +14,7 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
@@ -88,7 +89,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         InvoiceUtils.establishDueDate(dto);
         InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
-        if (dto.getHotel().isVirtual()) {
+        if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
             String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumber(invoiceNumber);
             entity.setInvoiceNo(dto.getHotelInvoiceNumber());
