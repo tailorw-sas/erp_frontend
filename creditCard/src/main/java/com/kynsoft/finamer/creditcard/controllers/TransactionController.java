@@ -147,7 +147,6 @@ public class TransactionController {
     public ResponseEntity<?> processMerchantBlueResponse(@RequestBody UpdateManageStatusTransactionBlueCommandRequest request) {
         UpdateManageStatusTransactionBlueCommand updateManageStatusTransactionBlueCommand = UpdateManageStatusTransactionBlueCommand.builder()
                 .request(request)
-                .employee(request.getEmployee())
                 .build();
 
         UpdateManageStatusTransactionBlueCommandMessage response = mediator.send(updateManageStatusTransactionBlueCommand);
