@@ -73,6 +73,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
                 RulesChecker.checkRule(new ManageInvoiceValidateChangeStatusRule(dto.getStatus()));
                 dto.setStatus(EInvoiceStatus.CANCELED);
                 dto.setManageInvoiceStatus(this.invoiceStatusService.findByCanceledStatus());
+                this.updateInvoiceStatusHistory(dto, command.getEmployee());
             }
         }
 
@@ -142,8 +143,9 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
         dto.setInvoice(invoiceDto);
-        dto.setDescription("The income data was updated.");
+        dto.setDescription("The invoice data was updated.");
         dto.setEmployee(employee);
+        dto.setInvoiceStatus(EInvoiceStatus.CANCELED);
 
         this.invoiceStatusHistoryService.create(dto);
 
