@@ -24,4 +24,5 @@ public class UpdateManageTransactionStatusRequest {
     private boolean cancelledStatus;
     private boolean declinedStatus;
     private boolean reconciledStatus;
+    private boolean paidStatus;
 }

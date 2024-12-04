@@ -15,4 +15,5 @@ public class AddHotelPaymentTransactionsRequest {
     private UUID hotelPaymentId;
     private Set<Long> transactionIds;
     private List<CreateHotelPaymentAdjustmentRequest> adjustmentRequests;
+    private String employee;
 }

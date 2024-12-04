@@ -2,14 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageRoomCategory.upda
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageRoomCategoryKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageRoomCategoryKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageRoomCategoryDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageRoomCategoryService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomCategory.ProducerUpdateManageRoomCategoryService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomCategory.ProducerReplicateManageRoomCategoryService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -18,12 +18,12 @@ import java.util.function.Consumer;
 public class UpdateManageRoomCategoryCommandHandler implements ICommandHandler<UpdateManageRoomCategoryCommand> {
 
     private final IManageRoomCategoryService service;
-    private final ProducerUpdateManageRoomCategoryService producerUpdateManageRoomCategoryService;
+    private final ProducerReplicateManageRoomCategoryService producerReplicateManageRoomCategoryService;
 
     public UpdateManageRoomCategoryCommandHandler(IManageRoomCategoryService service,
-                                                  ProducerUpdateManageRoomCategoryService producerUpdateManageRoomCategoryService) {
+            ProducerReplicateManageRoomCategoryService producerReplicateManageRoomCategoryService) {
         this.service = service;
-        this.producerUpdateManageRoomCategoryService = producerUpdateManageRoomCategoryService;
+        this.producerReplicateManageRoomCategoryService = producerReplicateManageRoomCategoryService;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class UpdateManageRoomCategoryCommandHandler implements ICommandHandler<U
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         dto.setDescription(command.getDescription());
         this.service.update(dto);
-        this.producerUpdateManageRoomCategoryService.update(new UpdateManageRoomCategoryKafka(dto.getId(), dto.getName(), dto.getStatus().name()));
+        this.producerReplicateManageRoomCategoryService.create(new ReplicateManageRoomCategoryKafka(dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name()));
 
     }
 

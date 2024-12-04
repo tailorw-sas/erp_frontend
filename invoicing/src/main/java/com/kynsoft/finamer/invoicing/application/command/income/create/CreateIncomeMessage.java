@@ -16,7 +16,11 @@ public class CreateIncomeMessage implements ICommandMessage {
     public CreateIncomeMessage(UUID id, Long invoiceId, String invoiceNumber) {
         this.id = id;
         this.invoiceId = invoiceId;
-        this.invoiceNumber = invoiceNumber;
+        this.invoiceNumber = deleteHotelInfo(invoiceNumber);
+    }
+
+    private String deleteHotelInfo(String input) {
+        return input.replaceAll("-(.*?)-", "-");
     }
 
 }

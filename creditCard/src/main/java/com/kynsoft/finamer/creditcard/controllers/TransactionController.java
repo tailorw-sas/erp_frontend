@@ -136,6 +136,7 @@ public class TransactionController {
     public ResponseEntity<?> processMerchantCardNetResponse(@RequestBody UpdateManageStatusTransactionCommandRequest request) {
         UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
                 .session(request.getSession())
+                .employee(request.getEmployee())
                 .build();
 
         UpdateManageStatusTransactionCommandMessage response = mediator.send(updateManageStatusTransactionCommandRequest);
