@@ -105,4 +105,16 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageRatePlanDto> findAllToReplicate() {
+        List<ManageRatePlan> objects = this.repositoryQuery.findAll();
+        List<ManageRatePlanDto> objectDtos = new ArrayList<>();
+
+        for (ManageRatePlan object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }
