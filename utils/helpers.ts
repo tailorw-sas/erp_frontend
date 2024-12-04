@@ -433,3 +433,8 @@ export function formatCurrency(value: any) {
 
   return numericValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
+
+export async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
+  const file = event.files[0]
+  listFields[fieldKey] = file
+}
