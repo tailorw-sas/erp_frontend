@@ -218,12 +218,7 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+    validation: validateEntityForAgency('agency')
   },
 
   {
