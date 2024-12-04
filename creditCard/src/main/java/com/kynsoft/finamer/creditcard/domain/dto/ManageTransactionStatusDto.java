@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -31,4 +32,17 @@ public class ManageTransactionStatusDto {
     private boolean declinedStatus;
     private boolean reconciledStatus;
     private boolean paidStatus;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ManageTransactionStatusDto that = (ManageTransactionStatusDto) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

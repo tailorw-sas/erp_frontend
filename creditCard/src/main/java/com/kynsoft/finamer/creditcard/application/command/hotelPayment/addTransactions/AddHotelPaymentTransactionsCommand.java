@@ -21,16 +21,18 @@ public class AddHotelPaymentTransactionsCommand implements ICommand {
     private double netAmounts;
     private double commissions;
     private double amounts;
+    private String employee;
 
-    public AddHotelPaymentTransactionsCommand(UUID hotelPaymentId, Set<Long> transactionIds, List<CreateHotelPaymentAdjustmentRequest> adjustmentRequests) {
+    public AddHotelPaymentTransactionsCommand(UUID hotelPaymentId, Set<Long> transactionIds, List<CreateHotelPaymentAdjustmentRequest> adjustmentRequests, String employee) {
         this.hotelPaymentId = hotelPaymentId;
         this.transactionIds = transactionIds;
         this.adjustmentRequests = adjustmentRequests;
+        this.employee = employee;
     }
 
     public static AddHotelPaymentTransactionsCommand fromRequest(AddHotelPaymentTransactionsRequest request) {
         return new AddHotelPaymentTransactionsCommand(
-                request.getHotelPaymentId(), request.getTransactionIds(), request.getAdjustmentRequests()
+                request.getHotelPaymentId(), request.getTransactionIds(), request.getAdjustmentRequests(), request.getEmployee()
         );
     }
 

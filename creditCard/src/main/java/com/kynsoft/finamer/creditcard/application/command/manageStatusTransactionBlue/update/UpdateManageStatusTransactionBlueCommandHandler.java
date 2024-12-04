@@ -10,7 +10,6 @@ import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Component
 public class UpdateManageStatusTransactionBlueCommandHandler implements ICommandHandler<UpdateManageStatusTransactionBlueCommand> {
@@ -78,19 +77,15 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         transactionDto.setCardNumber(command.getRequest().getCardNumber());
         transactionDto.setCreditCardType(creditCardTypeDto);
         transactionDto.setPaymentDate(command.getRequest().getPaymentDate());
-        transactionDto.setStatus(transactionStatusDto);
         if (transactionStatusDto.isReceivedStatus()){
             transactionDto.setTransactionDate(LocalDateTime.now());
         }
+        if (!transactionStatusDto.equals(transactionDto.getStatus())){
+            transactionDto.setStatus(transactionStatusDto);
+            this.transactionStatusHistoryService.create(transactionDto, command.getRequest().getEmployee());
+        }
         this.transactionService.update(transactionDto);
-        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                UUID.randomUUID(),
-                transactionDto,
-                "The transaction change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                null,
-                command.getRequest().getEmployee(),
-                transactionStatusDto
-        ));
+
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction
         transactionPaymentLogsDto.setMerchantResponse(command.getRequest().getMerchantResponse());
         transactionPaymentLogsDto.setIsProcessed(true);
