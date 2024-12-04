@@ -87,13 +87,13 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     @Transactional
     public void handle(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
-//
-//        RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
-//
-//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-//                this.closeOperationService,
-//                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
-//                hotelDto.getId()));
+
+        RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
+
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                this.closeOperationService,
+                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
+                hotelDto.getId()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
         RulesChecker.checkRule(new InvoiceValidateClienteRule(agencyDto.getClient()));
