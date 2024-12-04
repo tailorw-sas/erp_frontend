@@ -161,6 +161,7 @@ const options = ref({
   selectionMode: 'multiple' as 'multiple' | 'single',
   selectAllItemByDefault: true,
   showFilters: true,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
