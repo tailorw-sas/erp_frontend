@@ -1254,15 +1254,26 @@ onMounted(async () => {
       </EditFormV2>
     </div>
     <div v-if="attachmentDialogOpen">
-      <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
-        :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
-        :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+      <AttachmentDialog 
+        :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+        :is-creation-dialog="false" 
+        header="Manage Invoice Attachment" 
+        :open-dialog="attachmentDialogOpen"
+        :selected-invoice="selectedInvoice" 
+        :selected-invoice-obj="item" 
+      />
     </div>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <AttachmentHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
-      :selected-invoice-obj="item" :is-creation-dialog="false" />
+    <AttachmentHistoryDialog 
+      selected-attachment="" 
+      :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      header="Attachment Status History" 
+      :open-dialog="attachmentHistoryDialogOpen" 
+      :selected-invoice="selectedInvoice"
+      :selected-invoice-obj="item" 
+      :is-creation-dialog="false"
+    />
   </div>
   <div v-if="exportAttachmentsDialogOpen">
     <PrintInvoiceDialog 

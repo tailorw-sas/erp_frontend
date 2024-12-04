@@ -926,8 +926,9 @@ watch(() => props.bookingObj, () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
+            <!-- !isDetailView ? 6 : 7 -->
             <Column
-              footer="Totals:" :colspan="!isDetailView ? 6 : 7"
+              footer="Totals:" :colspan="7"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
