@@ -1254,7 +1254,6 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
         <!-- Agency -->
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
