@@ -492,7 +492,7 @@ async function deleteItem(id: string) {
       props.deleteItem(id)
     }
     else {
-      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
 
       getList()
     }
@@ -651,33 +651,33 @@ function showHistory() {
 
 function downloadFile() {
   if (listItemsLocal.value?.length > 0) {
-          // Selecciona el primer elemento automáticamente
-          item.value = { ...listItemsLocal.value[0] }; // Asigna el primer elemento a item.value
-          idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id; // Carga el ID del primer elemento
-        }
-        
+    // Selecciona el primer elemento automáticamente
+    item.value = { ...listItemsLocal.value[0] } // Asigna el primer elemento a item.value
+    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id // Carga el ID del primer elemento
+  }
+
   if (props.isCreationDialog && item.value.file) {
-    const url = URL.createObjectURL(item.value.file);
-    
+    const url = URL.createObjectURL(item.value.file)
+
     // Abre el PDF en una nueva ventana
-    const newWindow = window.open(url, '_blank');
+    const newWindow = window.open(url, '_blank')
     if (!newWindow) {
-      alert('Por favor, habilita las ventanas emergentes para este sitio.');
+      alert('Por favor, habilita las ventanas emergentes para este sitio.')
     }
-    
+
     // Libera el objeto URL después de usarlo
     newWindow.onload = () => {
-      URL.revokeObjectURL(url);
-    };
-    
-    return;
+      URL.revokeObjectURL(url)
+    }
+
+    return
   }
 
   if (item.value && item.value.file) {
     // Abre el archivo en una nueva ventana
-    const newWindow = window.open(item.value.file, '_blank');
+    const newWindow = window.open(item.value.file, '_blank')
     if (!newWindow) {
-      alert('Por favor, habilita las ventanas emergentes para este sitio.');
+      alert('Por favor, habilita las ventanas emergentes para este sitio.')
     }
   }
 }
@@ -709,7 +709,7 @@ function downloadFile() {
     link.click()
     document.body.removeChild(link)
   }
-}*/
+} */
 
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
@@ -737,31 +737,31 @@ watch(PayloadOnChangePage, (newValue) => {
 })
 
 // Función que actualiza la propiedad de un campo específico
-  // Función que actualiza la propiedad de un campo específico
-  const updateFieldProperty = (fields: Container[], fieldName: string, property: string, value: any) => {
-      fields.forEach(field => {
-        if (field.childs) {
-          field.childs.forEach((child: any) => { // Especificar el tipo de child
-            if (child.field === fieldName) {
-              child[property] = value; // Actualiza la propiedad deseada
-            }
-          });
+// Función que actualiza la propiedad de un campo específico
+function updateFieldProperty(fields: Container[], fieldName: string, property: string, value: any) {
+  fields.forEach((field) => {
+    if (field.childs) {
+      field.childs.forEach((child: any) => { // Especificar el tipo de child
+        if (child.field === fieldName) {
+          child[property] = value // Actualiza la propiedad deseada
         }
-      });
-    };
+      })
+    }
+  })
+}
 
-    watch(() => idItem.value, (newValue) => {
-      if (newValue === '') {
-        updateFieldProperty(Fields, 'filename', 'disabled', false);
-        updateFieldProperty(Fields, 'remark', 'disabled', false);
-        
-        updateFieldProperty(Fields, 'type', 'disabled', true);
-        
-      } else {
-        updateFieldProperty(Fields, 'filename', 'disabled', true);
-        updateFieldProperty(Fields, 'remark', 'disabled', true);
-      }
-    });
+watch(() => idItem.value, (newValue) => {
+  if (newValue === '') {
+    updateFieldProperty(Fields, 'filename', 'disabled', false)
+    updateFieldProperty(Fields, 'remark', 'disabled', false)
+
+    updateFieldProperty(Fields, 'type', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(Fields, 'filename', 'disabled', true)
+    updateFieldProperty(Fields, 'remark', 'disabled', true)
+  }
+})
 
 onMounted(async () => {
   await getResourceTypeList()
@@ -785,7 +785,6 @@ onMounted(async () => {
     if (listItemsLocal.value?.length > 0) {
       idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id
     }
-    
 
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
@@ -880,7 +879,7 @@ onMounted(async () => {
                   item-value="id"
                   :model="data.type"
                   :disabled=" idItem !== '' || !isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
-              
+
                   :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
@@ -907,7 +906,8 @@ onMounted(async () => {
               }
 
               <template #field-file="{ onUpdate, item: data }">
-                <FileUpload :disabled="idItem !== ''" 
+                <FileUpload
+                  :disabled="idItem !== ''"
                   accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
                   custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
@@ -950,7 +950,7 @@ onMounted(async () => {
               </template>
               <template #form-footer="props">
                 <IfCan
-                  :perms="idItem   ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']"
+                  :perms="idItem ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']"
                 >
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
