@@ -197,7 +197,7 @@ async function getList() {
           loadingDelete: false,
           invoiceId: iterator?.invoice?.invoiceId,
           // @ts-expect-error
-          status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus]
+          status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus === 'CANCELED' ? 'CANCELLED' : iterator?.invoiceStatus]
         }
       ]
       // status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus || iterator?.invoice?.status] }]
