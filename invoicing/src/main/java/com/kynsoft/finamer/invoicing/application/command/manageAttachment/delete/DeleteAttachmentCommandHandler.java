@@ -5,9 +5,11 @@ import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.invoicing.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import org.springframework.stereotype.Component;
 
@@ -19,17 +21,20 @@ public class DeleteAttachmentCommandHandler implements ICommandHandler<DeleteAtt
     private final IManageAttachmentService service;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageInvoiceService invoiceService;
+    private final IManageEmployeeService employeeService;
 
-    public DeleteAttachmentCommandHandler(IManageAttachmentService service, IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageInvoiceService invoiceService) {
+    public DeleteAttachmentCommandHandler(IManageAttachmentService service, IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageInvoiceService invoiceService, IManageEmployeeService employeeService) {
         this.service = service;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.invoiceService = invoiceService;
+        this.employeeService = employeeService;
     }
 
     @Override
     public void handle(DeleteAttachmentCommand command) {
         ManageAttachmentDto delete = this.service.findById(command.getId());
         ManageInvoiceDto invoiceDto = this.invoiceService.findById(delete.getInvoice().getId());
+        ManageEmployeeDto employeeDto = this.employeeService.findById(command.getEmployee());
 
         if (delete.getType().isAttachInvDefault()){
             int cont = 0;
@@ -45,7 +50,8 @@ public class DeleteAttachmentCommandHandler implements ICommandHandler<DeleteAtt
         }
 
         service.delete(delete);
-        this.updateAttachmentStatusHistory(delete.getInvoice(), delete.getFilename(), delete.getAttachmentId(), delete.getEmployee(), delete.getEmployeeId());
+        //this.updateAttachmentStatusHistory(delete.getInvoice(), delete.getFilename(), delete.getAttachmentId(), delete.getEmployee(), delete.getEmployeeId());
+        this.updateAttachmentStatusHistory(delete.getInvoice(), delete.getFilename(), delete.getAttachmentId(), employeeDto.getFirstName() + " " + employeeDto.getLastName(), employeeDto.getId());
 
     }
 
