@@ -1012,6 +1012,7 @@ onMounted(async () => {
                       :disabled="idItem !== '' || idItem === null"
                       :multiple="false"
                       auto
+                      accept="application/pdf"
                       custom-upload
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
                       @uploader="($event: any) => {

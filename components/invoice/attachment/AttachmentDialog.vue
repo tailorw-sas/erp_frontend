@@ -180,7 +180,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field mb-3 col-12 required',
     headerClass: 'mb-1',
-    validation: validateFiles(),
+    validation: validateFiles(100, ['application/pdf']),
   },
   {
     field: 'filename',
@@ -1089,6 +1089,7 @@ onMounted(async () => {
                       :multiple="false"
                       auto
                       custom-upload
+                      accept="application/pdf"
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
                       @uploader="($event: any) => {
                         customBase64Uploader($event, Fields, 'file');
