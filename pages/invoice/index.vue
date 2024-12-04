@@ -1935,7 +1935,7 @@ function onRowRightClick(event: any) {
   if (event.data?.invoiceType === InvoiceType.INVOICE) {
     // Mostrar Clone solo si es de tipo Invoice y esta como showClone el status en el nomenclador Invoice Status
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status) &&
-      event.data?.invoiceStatus?.showClone) {
+      event.data?.invoiceStatus?.showClone && !event.data?.hotel?.virtual) {
       findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
     }
 
@@ -1947,7 +1947,7 @@ function onRowRightClick(event: any) {
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
       && event?.data?.dueAmount === event?.data?.invoiceAmount && event.data?.isInCloseOperation) {  
-      if ((typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+      if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
         findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
       }      
     }
