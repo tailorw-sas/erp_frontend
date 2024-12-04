@@ -302,7 +302,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: false,
-    validation: validateEntityStatus('agency'),
+    validation: validateEntityForAgency('agency'),
   },
   {
     field: 'invoiceStatus',
@@ -964,6 +964,29 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
+interface DataListItemAgency {
+  id: string
+  name: string
+  code: string
+  status: string
+  client: any
+}
+
+interface ListItemAgency {
+  id: string
+  name: string
+  status: boolean | string
+  client: any
+}
+function mapFunctionAgency(data: DataListItemAgency): ListItemAgency {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    client: data.client
+  }
+}
+
 // async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
 // invoiceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
 // }
@@ -1072,7 +1095,7 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
     }
   ]
 
-  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+  agencyList.value = await getDataList<DataListItemAgency, ListItemAgency>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunctionAgency)
 }
 
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {

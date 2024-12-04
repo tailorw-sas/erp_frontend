@@ -182,7 +182,6 @@ const Fields = ref<FieldDefinitionType[]>([
     validation: z.object({
       id: z.string(),
       name: z.string(),
-
     })
       .required()
       .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })

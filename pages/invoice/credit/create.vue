@@ -122,7 +122,8 @@ const CreditFields = ref<FieldDefinitionType[]>([
     header: 'Agency',
     dataType: 'select',
     class: 'field col-12 md:col-4 required',
-    disabled: true
+    disabled: true,
+    validation: validateEntityForAgency('agency')
   },
   {
     field: 'invoiceDate',
@@ -582,21 +583,22 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  saveItem(item)
+  // const { event } = item
+  // confirm.require({
+  //   target: event.currentTarget,
+  //   group: 'headless',
+  //   header: 'Save the record',
+  //   message: 'Do you want to save the change?',
+  //   rejectLabel: 'Cancel',
+  //   acceptLabel: 'Accept',
+  //   accept: () => {
+  //     saveItem(item)
+  //   },
+  //   reject: () => {
+  //     // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+  //   }
+  // })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -744,7 +746,7 @@ async function getItemById(id: any) {
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
-        item.value.invoiceAmount = toNegative(response.invoiceAmount)
+        item.value.invoiceAmount = toNegative(response.invoiceAmount).toString()
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
@@ -1059,6 +1061,7 @@ onMounted(async () => {
       container-class="grid pt-3"
       @cancel="clearForm"
       @delete="requireConfirmationToDelete($event)"
+      @submit="requireConfirmationToSave($event)"
     >
       <template #field-invoiceDate="{ item: data, onUpdate }">
         <Calendar
@@ -1214,9 +1217,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="() => {
-                    saveItem(props.item.fieldValues)
-                  }"
+                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="props.item.submitForm($event)"
                 />
               </IfCan>
 
