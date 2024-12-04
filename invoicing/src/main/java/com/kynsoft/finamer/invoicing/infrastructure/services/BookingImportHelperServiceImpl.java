@@ -5,6 +5,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
+import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByVirtualHotel;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
@@ -107,6 +108,26 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     }
 
+    private void createInvoiceGroupingForVirtualHotel(String importProcessId,String employee){
+        Map<GroupByVirtualHotel, List<BookingRow>> grouped;
+       List<BookingImportCache> importList= repository.findAllByImportProcessId(importProcessId);
+        grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
+                booking -> new GroupByVirtualHotel(
+                        booking.getManageAgencyCode(),
+                        booking.getManageHotelCode(),
+                        Long.parseLong(booking.getHotelInvoiceNumber())
+                )
+        ));
+        if (!grouped.isEmpty()) {
+            grouped.forEach((key, value) -> {
+                ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
+                ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
+                this.createInvoiceWithBooking(agency, hotel, value,employee);
+
+            });
+        }
+    }
+
     private void createInvoiceGroupingByCoupon(String importProcessId,String employee) {
         Map<GroupBy, List<BookingRow>> grouped;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
@@ -156,14 +177,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         } else {
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
         }
-
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
-        }
-        manageInvoiceDto.setInvoiceNumber(invoiceNumber);
+        manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, String.valueOf(manageInvoiceDto.getHotelInvoiceNumber())));
         manageInvoiceDto =invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto,employee);
 
@@ -174,6 +188,19 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
     }
 
+    private String createInvoiceNumber(ManageHotelDto hotel,String hotelInvoiceNumber) {
+        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
+        if (hotel.isVirtual()) {
+            invoiceNumber+="-"+hotelInvoiceNumber;
+        }else {
+            if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+                invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
+            } else {
+                invoiceNumber += "-" + hotel.getCode();
+            }
+        }
+        return invoiceNumber;
+    }
     private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList) {
         return bookingRowList.stream().map(bookingRow -> {
             ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
