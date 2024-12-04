@@ -388,7 +388,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_TRANSACTION_STATUS_CHECK_PAID(1166, Series.DOMAIN_ERROR,"Another item already exists with paid status."),
     HOTEL_PAYMENT_CANCELLED_STATUS(1167, Series.DOMAIN_ERROR, "Hotel Payment cannot be changed to cancelled status because it has associated transactions."),
     MANUAL_INVOICE_NOT_VIRTUAL_HOTEL(1168, Series.DOMAIN_ERROR,"It is not possible to create manual invoices for virtual hotels."),
-    INVOICE_AGENCY_WITH_CLIENT_INACTIVE(1169, Series.DOMAIN_ERROR,"The selected agency belongs to an inactive client.");
+    INVOICE_AGENCY_WITH_CLIENT_INACTIVE(1169, Series.DOMAIN_ERROR,"The selected agency belongs to an inactive client."),
+    HOTEL_PAYMENT_STATUS_HISTORY_NOT_FOUND(1169, Series.DOMAIN_ERROR, "Hotel Payment Status History not found.");
 
     private static final DomainErrorMessage[] VALUES;
 
