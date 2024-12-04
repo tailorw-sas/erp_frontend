@@ -85,13 +85,13 @@ public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHi
     }
 
     @Override
-    public TransactionStatusHistoryDto create(TransactionDto dto) {
+    public TransactionStatusHistoryDto create(TransactionDto dto, String employee) {
         return this.create(new TransactionStatusHistoryDto(
                 UUID.randomUUID(),
                 dto,
                 "The transaction status change to "+dto.getStatus().getCode() + "-" +dto.getStatus().getName()+".",
                 null,
-                null,
+                employee,
                 dto.getStatus()
         ));
     }

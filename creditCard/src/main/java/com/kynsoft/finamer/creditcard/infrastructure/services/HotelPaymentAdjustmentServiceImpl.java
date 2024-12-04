@@ -42,7 +42,7 @@ public class HotelPaymentAdjustmentServiceImpl implements IHotelPaymentAdjustmen
 
     @Override
     @Transactional
-    public List<Long> createAdjustments(List<CreateHotelPaymentAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList) {
+    public List<Long> createAdjustments(List<CreateHotelPaymentAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList, String employee) {
         adjustmentRequest.forEach(obj -> {
             RulesChecker.checkRule(new AdjustmentTransactionReferenceNumberMustBeNullRule(obj.getReferenceNumber()));
             RulesChecker.checkRule(new AdjustmentTransactionAmountRule(obj.getAmount()));
@@ -74,7 +74,7 @@ public class HotelPaymentAdjustmentServiceImpl implements IHotelPaymentAdjustmen
             ));
             transactionList.add(transactionDto);
             ids.add(transactionDto.getId());
-            this.transactionStatusHistoryService.create(transactionDto);
+            this.transactionStatusHistoryService.create(transactionDto, employee);
         }
         return ids;
     }

@@ -8,5 +8,5 @@ import java.util.Set;
 
 public interface IHotelPaymentAdjustmentService {
 
-    List<Long> createAdjustments(List<CreateHotelPaymentAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList);
+    List<Long> createAdjustments(List<CreateHotelPaymentAdjustmentRequest> adjustmentRequest, Set<TransactionDto> transactionList, String emlpoyee);
 }

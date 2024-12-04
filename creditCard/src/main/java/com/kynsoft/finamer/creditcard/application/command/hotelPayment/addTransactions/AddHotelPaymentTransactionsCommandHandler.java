@@ -52,7 +52,7 @@ public class AddHotelPaymentTransactionsCommandHandler implements ICommandHandle
         }
 
         if (command.getAdjustmentRequests() != null && !command.getAdjustmentRequests().isEmpty()) {
-            List<Long> adjustmentIds = this.hotelPaymentAdjustmentService.createAdjustments(command.getAdjustmentRequests(), hotelPaymentTransactions);
+            List<Long> adjustmentIds = this.hotelPaymentAdjustmentService.createAdjustments(command.getAdjustmentRequests(), hotelPaymentTransactions, command.getEmployee());
             command.setAdjustmentIds(adjustmentIds);
         }
 
