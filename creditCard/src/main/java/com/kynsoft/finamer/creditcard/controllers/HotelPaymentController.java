@@ -16,7 +16,9 @@ import com.kynsoft.finamer.creditcard.application.command.hotelPayment.unbindTra
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.update.UpdateHotelPaymentCommand;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.update.UpdateHotelPaymentMessage;
 import com.kynsoft.finamer.creditcard.application.command.hotelPayment.update.UpdateHotelPaymentRequest;
+import com.kynsoft.finamer.creditcard.application.query.hotelPayment.getById.FindHotelPaymentByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.hotelPayment.search.GetSearchHotelPaymentQuery;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.HotelPaymentResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -72,6 +74,14 @@ public class HotelPaymentController {
 
         UpdateHotelPaymentCommand command = UpdateHotelPaymentCommand.fromRequest(id, request);
         UpdateHotelPaymentMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<?> getById(@PathVariable UUID id) {
+        FindHotelPaymentByIdQuery query = new FindHotelPaymentByIdQuery(id);
+        HotelPaymentResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

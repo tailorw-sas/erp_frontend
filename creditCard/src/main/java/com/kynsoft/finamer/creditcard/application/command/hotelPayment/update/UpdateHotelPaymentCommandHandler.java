@@ -10,10 +10,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageBankAccountDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
-import com.kynsoft.finamer.creditcard.domain.services.IHotelPaymentService;
-import com.kynsoft.finamer.creditcard.domain.services.IManageBankAccountService;
-import com.kynsoft.finamer.creditcard.domain.services.IManagePaymentTransactionStatusService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
+import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -30,11 +27,14 @@ public class UpdateHotelPaymentCommandHandler implements ICommandHandler<UpdateH
 
     private final ITransactionService transactionService;
 
-    public UpdateHotelPaymentCommandHandler(IHotelPaymentService hotelPaymentService, IManageBankAccountService bankAccountService, IManagePaymentTransactionStatusService transactionStatusService, ITransactionService transactionService) {
+    private final IHotelPaymentStatusHistoryService hotelPaymentStatusHistoryService;
+
+    public UpdateHotelPaymentCommandHandler(IHotelPaymentService hotelPaymentService, IManageBankAccountService bankAccountService, IManagePaymentTransactionStatusService transactionStatusService, ITransactionService transactionService, IHotelPaymentStatusHistoryService hotelPaymentStatusHistoryService) {
         this.hotelPaymentService = hotelPaymentService;
         this.bankAccountService = bankAccountService;
         this.transactionStatusService = transactionStatusService;
         this.transactionService = transactionService;
+        this.hotelPaymentStatusHistoryService = hotelPaymentStatusHistoryService;
     }
 
     @Override
@@ -67,11 +67,13 @@ public class UpdateHotelPaymentCommandHandler implements ICommandHandler<UpdateH
             hotelPaymentDto.setStatus(transactionStatusDto);
             hotelPaymentDto.setTransactions(updatedTransactions);
             update.setUpdate(1);
+            this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employee);
 
         } else if (transactionStatusDto.isCancelled()) {
             if (hotelPaymentDto.getTransactions() == null || hotelPaymentDto.getTransactions().isEmpty()){
                 hotelPaymentDto.setStatus(transactionStatusDto);
                 update.setUpdate(1);
+                this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employee);
             } else {
                 throw new BusinessException(
                         DomainErrorMessage.HOTEL_PAYMENT_CANCELLED_STATUS,

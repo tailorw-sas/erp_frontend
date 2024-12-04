@@ -22,4 +22,5 @@ public class CreateHotelPaymentRequest {
     private String remark;
     private Set<Long> transactions;
     private List<CreateHotelPaymentAdjustmentRequest> adjustmentTransactions;
+    private String employee;
 }
