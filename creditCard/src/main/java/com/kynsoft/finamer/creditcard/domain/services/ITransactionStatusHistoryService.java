@@ -22,5 +22,5 @@ public interface ITransactionStatusHistoryService {
 
     List<TransactionStatusHistoryDto> findByTransactionId(Long transactionId);
 
-    TransactionStatusHistoryDto create(TransactionDto dto);
+    TransactionStatusHistoryDto create(TransactionDto dto, String employee);
 }

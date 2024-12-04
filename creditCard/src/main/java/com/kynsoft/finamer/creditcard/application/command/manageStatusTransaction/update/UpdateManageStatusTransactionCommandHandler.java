@@ -11,9 +11,7 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -111,18 +109,13 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionDto.setCardNumber(transactionResponse.getCreditCardNumber());
 //            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
             transactionDto.setCreditCardType(creditCardTypeDto);
-            transactionDto.setStatus(transactionStatusDto);
             transactionDto.setPaymentDate(LocalDateTime.now());
+            if (!transactionStatusDto.equals(transactionDto.getStatus())){
+                transactionDto.setStatus(transactionStatusDto);
+                this.transactionStatusHistoryService.create(transactionDto, command.getEmployee());
+            }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
-            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                    UUID.randomUUID(),
-                    transactionDto,
-                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                    null,
-                    command.getEmployee(),
-                    transactionStatusDto
-            ));
 
             // 2- Actualizar data en vcc_cardnet_job
             cardnetJobDto.setIsProcessed(true);
