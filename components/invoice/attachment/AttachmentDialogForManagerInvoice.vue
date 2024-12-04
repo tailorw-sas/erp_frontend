@@ -538,7 +538,7 @@ async function deleteItem(id: string) {
       props.deleteItem(id)
     }
     else {
-      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
 
       await getList()
     }

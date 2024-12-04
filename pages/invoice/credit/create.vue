@@ -507,16 +507,16 @@ async function createItemCredit(item: any) {
   })
 
   for (let i = 0; i < attachmentList.value.length; i++) {
-    const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-    attachments.push({
-      // ...attachmentList.value[i],
-      type: attachmentList.value[i]?.type?.id,
-      file: fileurl,
-      filename: attachmentList.value[i]?.filename,
-      remark: attachmentList.value[i]?.remark,
-      paymentResourceType: attachmentList.value[i]?.resourceType.id // '67c10e87-89c0-4a3a-abe3-5cebc400d280'
-
-    })
+    if (attachmentList.value[i]?.file?.files.length > 0) {
+      const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+      attachments.push({
+        type: attachmentList.value[i]?.type?.id,
+        file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        filename: attachmentList.value[i]?.filename,
+        remark: attachmentList.value[i]?.remark,
+        paymentResourceType: attachmentList.value[i]?.resourceType.id
+      })
+    }
   }
 
   const payload = {

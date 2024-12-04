@@ -177,7 +177,6 @@ const Fields: Array<Container> = [
         dataType: 'textarea',
         class: 'field col-12 ',
         headerClass: 'mb-1',
-        
 
       },
 
@@ -480,7 +479,7 @@ async function updateItem(item: { [key: string]: any }) {
 async function deleteItem(id: string) {
   try {
     loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
     clearForm()
     getList()
   }
@@ -641,8 +640,8 @@ function showHistory() {
 function downloadFile() {
   if (listItemsLocal.value?.length > 0) {
     // Selecciona el primer elemento automáticamente
-    item.value = { ...listItemsLocal.value[0] }; // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id; // Carga el ID del primer elemento
+    item.value = { ...listItemsLocal.value[0] } // Asigna el primer elemento a item.value
+    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id // Carga el ID del primer elemento
   }
 
   if (item.value) {
@@ -660,34 +659,32 @@ watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
 
-
 // Función que actualiza la propiedad de un campo específico
-  // Función que actualiza la propiedad de un campo específico
-  const updateFieldProperty = (fields: Container[], fieldName: string, property: string, value: any) => {
-      fields.forEach(field => {
-        if (field.childs) {
-          field.childs.forEach((child: any) => { // Especificar el tipo de child
-            if (child.field === fieldName) {
-              child[property] = value; // Actualiza la propiedad deseada
-            }
-          });
+// Función que actualiza la propiedad de un campo específico
+function updateFieldProperty(fields: Container[], fieldName: string, property: string, value: any) {
+  fields.forEach((field) => {
+    if (field.childs) {
+      field.childs.forEach((child: any) => { // Especificar el tipo de child
+        if (child.field === fieldName) {
+          child[property] = value // Actualiza la propiedad deseada
         }
-      });
-    };
+      })
+    }
+  })
+}
 
-    watch(() => idItem.value, (newValue) => {
-      if (newValue === '') {
-        updateFieldProperty(Fields, 'filename', 'disabled', false);
-        updateFieldProperty(Fields, 'remark', 'disabled', false);
-        
-        updateFieldProperty(Fields, 'type', 'disabled', true);
-        
-      } else {
-        updateFieldProperty(Fields, 'filename', 'disabled', true);
-        updateFieldProperty(Fields, 'remark', 'disabled', true);
-      }
-    });
+watch(() => idItem.value, (newValue) => {
+  if (newValue === '') {
+    updateFieldProperty(Fields, 'filename', 'disabled', false)
+    updateFieldProperty(Fields, 'remark', 'disabled', false)
 
+    updateFieldProperty(Fields, 'type', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(Fields, 'filename', 'disabled', true)
+    updateFieldProperty(Fields, 'remark', 'disabled', true)
+  }
+})
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
@@ -697,7 +694,6 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
     await getItemById(newValue)
   }
 })
-
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
@@ -808,8 +804,8 @@ onMounted(async () => {
                   field="fullName"
                   item-value="id"
                   :model="data.type"
-                   :disabled="idItem !== '' || (isCreationDialog ? ListItems.some((item: any) => item.type?.attachInvDefault) : !listItemsLocal.some((item: any) => item.type?.attachInvDefault))"
-                   :suggestions="attachmentTypeList" @change="($event) => {
+                  :disabled="idItem !== '' || (isCreationDialog ? ListItems.some((item: any) => item.type?.attachInvDefault) : !listItemsLocal.some((item: any) => item.type?.attachInvDefault))"
+                  :suggestions="attachmentTypeList" @change="($event) => {
                     onUpdate('type', $event)
                     typeError = false
                   }"
@@ -835,7 +831,8 @@ onMounted(async () => {
               }
 
               <template #field-file="{ onUpdate, item: data }">
-                <FileUpload  :disabled="idItem !== ''"  
+                <FileUpload
+                  :disabled="idItem !== ''"
                   accept="application/pdf"
                   :max-file-size="300 * 1024 * 1024" :multiple="false" auto custom-upload @uploader="(event: any) => {
                     const file = event.files[0]
@@ -899,7 +896,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                   <Button
-                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="listItemsLocal.length ===0 && ListItems.length ===0"
+                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="listItemsLocal.length === 0 && ListItems.length === 0"
                     @click="downloadFile"
                   />
                 </IfCan>
