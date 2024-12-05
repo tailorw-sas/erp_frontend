@@ -290,7 +290,12 @@ const applyPaymentPagination = ref<IPagination>({
 })
 const applyPaymentOnChangePage = ref<PageState>()
 // ------------------------------------------------------------------------------------------------
-
+const sClassMap: IStatusClass[] = [
+  { status: 'Transit', class: 'text-transit' },
+  { status: 'Cancelled', class: 'text-cancelled' },
+  { status: 'Confirmed', class: 'text-confirmed' },
+  { status: 'Applied', class: 'text-applied' },
+]
 // History
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
@@ -298,10 +303,11 @@ const employeeList = ref<any[]>([])
 const historyColumns = ref<IColumn[]>([
   { field: 'paymentHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'createdAt', header: 'Date', type: 'date', width: '120px' },
-  { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [] },
-  { field: 'description', header: 'Description', type: 'text', width: '200px' },
-  { field: 'paymentStatus', header: 'Status', type: 'text', width: '60px', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' } },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '120px', sortable: false, showFilter: false },
+  { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [], sortable: false, showFilter: false },
+  { field: 'description', header: 'Description', type: 'text', width: '200px', sortable: false, showFilter: false },
+  // { field: 'paymentStatus', header: 'Status', type: 'text', width: '60px', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' } },
+  { field: 'paymentStatus', header: 'Status', type: 'slot-text', width: '60px', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' }, sortable: false, showFilter: false },
 ])
 
 const historyOptions = ref({
@@ -312,12 +318,13 @@ const historyOptions = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 const payloadHistory = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: 'ASC'
@@ -2449,7 +2456,11 @@ async function historyGetList() {
 
     for (const iterator of dataList) {
       iterator.paymentId = iterator.payment?.paymentId.toString()
-      iterator.paymentStatus = iterator.status
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        if (iterator?.status && iterator?.status?.includes('-')) {
+          iterator.paymentStatus = iterator?.status?.split('-')[1]
+        }
+      }
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
         if (iterator?.employee?.firstName && iterator?.employee?.lastName) {
@@ -3879,7 +3890,15 @@ const checkboxValue1 = ref(false)
             @on-change-pagination="histotyPayloadOnChangePage = $event"
             @on-change-filter="historyParseDataTableFilter"
             @on-sort-field="historyOnSortField"
-          />
+          >
+            <template #column-paymentStatus="{ data, column }">
+              <Badge
+                v-tooltip.top="data.paymentStatus.toString()"
+                :value="data.paymentStatus"
+                :class="column.statusClassMap?.find(e => e.status === data.paymentStatus)?.class"
+              />
+            </template>
+          </DynamicTable>
         </div>
       </template>
     </Dialog>
