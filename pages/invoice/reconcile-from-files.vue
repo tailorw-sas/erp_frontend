@@ -63,7 +63,7 @@ async function onChangeAttachFile(event: any) {
   }
 }
 
-/*async function onChangeAttachFile(event: any) {
+/* async function onChangeAttachFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     const files: File[] = Array.from(event.target.files);
     const pdfFiles = files.filter(file => file.type === 'application/pdf');
@@ -231,7 +231,7 @@ async function importFile() {
   let successOperation = true
   uploadComplete.value = true
   let count = 0
-
+  listItems.value = []
   try {
     const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
 
