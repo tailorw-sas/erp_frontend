@@ -227,11 +227,11 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
   let count = 0
   listItems.value = []
+  options.value.loading = true
   try {
     const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
 
