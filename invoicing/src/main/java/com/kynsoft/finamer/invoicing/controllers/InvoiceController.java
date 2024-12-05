@@ -24,6 +24,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialCl
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualRequest1;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
@@ -211,7 +212,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/new-credit")
-    public ResponseEntity<?> newCredit(@RequestBody CreateNewCreditRequest request){
+    public ResponseEntity<?> newCredit(@RequestBody CreateNewCreditRequest request) {
         CreateNewCreditCommand command = CreateNewCreditCommand.fromRequest(request);
         CreateNewCreditMessage response = this.mediator.send(command);
 
@@ -219,7 +220,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request){
+    public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request) {
         SendInvoiceCommand command = SendInvoiceCommand.fromRequest(request);
         SendInvoiceMessage response = this.mediator.send(command);
 
@@ -227,7 +228,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/reconcile-manual")
-    public ResponseEntity<?> generateInvoicePdf(@RequestBody ReconcileManualRequest request){
+    public ResponseEntity<?> generateInvoicePdf(@RequestBody ReconcileManualRequest request) {
 
         ReconcileManualCommand command = ReconcileManualCommand.fromRequest(request);
         ReconcileManualMessage response = this.mediator.send(command);
@@ -259,15 +260,15 @@ public class InvoiceController {
     }
 
     @PostMapping("/reconcile-pdf-manual-test")
-    public ResponseEntity<byte[]> generatePdf(@RequestBody List<UUID> ids) {
+    public ResponseEntity<byte[]> generatePdf(@RequestBody ReconcileManualRequest1 res) {
 
         try {
             // Generar el buffer de manera dinámica
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(ids, outputStream.toByteArray());
-            byte[] pdf= pdfService.concatenateManualPDFs(pdfRequest);
-           /* InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
+            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(res.getInvoices(), outputStream.toByteArray());
+            byte[] pdf = pdfService.concatenateManualPDFs(pdfRequest);
+            /* InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
 
             // Enviar el comando y obtener el mensaje
             InvoiceReconcileManualPdfMessage message = mediator.send(pdfCommand);

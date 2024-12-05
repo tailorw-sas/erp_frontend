@@ -32,11 +32,11 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
     private final Logger log = LoggerFactory.getLogger(ReportPdfServiceImpl.class);
     private final ManageInvoiceServiceImpl invoiceService;
-    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService){
+
+    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService) {
 
         this.invoiceService = invoiceService;
     }
-
 
     private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException { // Changed to IOException
 
@@ -77,7 +77,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
 
-        for(ManageBookingDto booking : bookings) {
+        for (ManageBookingDto booking : bookings) {
             // Add data row file 1
             table.addCell(new Cell());
             table.addCell(new Cell());
@@ -88,11 +88,11 @@ public class ReportPdfServiceImpl implements IReportPdfService {
             table.addCell(new Cell());
         }
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -106,21 +106,22 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
 
         // Add data row file 3
-        for(ManageBookingDto booking : bookings) {
+        for (ManageBookingDto booking : bookings) {
             table.addCell(new Cell().add(new Paragraph(booking.getCouponNumber()).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph((booking.getHotelBookingNumber()!=null ? booking.getHotelBookingNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getHotelBookingNumber() != null ? booking.getHotelBookingNumber() : "")).addStyle(styleCell)));
             table.addCell(new Cell().add(new Paragraph((booking.getContract() != null ? booking.getContract() : "")).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph((booking.getNightType().getName()!=null ? booking.getNightType().getName() : "")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getNightType() != null ? booking.getNightType().getName() : "")).addStyle(styleCell)));
             table.addCell(new Cell());
             table.addCell(new Cell());
             table.addCell(new Cell());
         }
+
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -134,30 +135,30 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
 
         // Add data row file 5
-        for(ManageBookingDto booking : bookings) {
-        if(booking.getRoomType() != null) {
-          table.addCell(new Cell().add(new Paragraph((booking.getRoomType().getName() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
-         }else{
-          table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
-        }
-        if(booking.getRoomType() != null) {
-          table.addCell(new Cell().add(new Paragraph((booking.getRatePlan().getName()!=null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
-        }else{
-          table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
-        }
-          table.addCell(new Cell().add(new Paragraph((booking.getRoomNumber()!=null ? booking.getRoomNumber() : "")).addStyle(styleCell)));
-          table.addCell(new Cell());
-          table.addCell(new Cell());
-          table.addCell(new Cell());
-          table.addCell(new Cell());
+        for (ManageBookingDto booking : bookings) {
+            if (booking.getRoomType() != null) {
+                table.addCell(new Cell().add(new Paragraph((booking.getRoomType().getName() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
+            } else {
+                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+            }
+            if (booking.getRoomType() != null) {
+                table.addCell(new Cell().add(new Paragraph((booking.getRatePlan().getName() != null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
+            } else {
+                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+            }
+            table.addCell(new Cell().add(new Paragraph((booking.getRoomNumber() != null ? booking.getRoomNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
         }
 
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -171,22 +172,22 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
 
         // Add data row file 7
-        for(ManageBookingDto booking : bookings) {
-        table.addCell(new Cell().add(new Paragraph((booking.getFullName()!=null ? booking.getFullName() : "")).addStyle(styleCell)));
-        table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph((booking.getHotelInvoiceNumber()!=null ? booking.getHotelInvoiceNumber() : "")).addStyle(styleCell)));
-        table.addCell(new Cell());
-        table.addCell(new Cell());
-        table.addCell(new Cell());
-        table.addCell(new Cell());
+        for (ManageBookingDto booking : bookings) {
+            table.addCell(new Cell().add(new Paragraph((booking.getFullName() != null ? booking.getFullName() : "")).addStyle(styleCell)));
+            table.addCell(new Cell());
+            table.addCell(new Cell().add(new Paragraph((booking.getHotelInvoiceNumber() != null ? booking.getHotelInvoiceNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
         }
 
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -200,7 +201,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell().add(new Paragraph("Currency").addStyle(styleHeader)));
 
         // Add data row file 9
-        for(ManageBookingDto booking : bookings) {
+        for (ManageBookingDto booking : bookings) {
             List<ManageRoomRateDto> roomRates = booking.getRoomRates();
             for (ManageRoomRateDto roomRate : roomRates) {
                 total = total + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0);
@@ -230,7 +231,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph("$ "+ total).addStyle(styleCell)));
+        table.addCell(new Cell().add(new Paragraph("$ " + total).addStyle(styleCell)));
         table.addCell(new Cell().add(new Paragraph(moneyType).addStyle(styleCell)));
 
         document.add(table);
@@ -240,7 +241,6 @@ public class ReportPdfServiceImpl implements IReportPdfService {
     }
 
     // Método para combinar PDFs generados desde una lista de IDs
-
     @Override
     public byte[] concatenatePDFs(String[] ids) throws IOException {
         // Crear un PdfDocument de salida
@@ -272,22 +272,22 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         // Crear un PdfDocument de salida
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfDocument mergedPdf = new PdfDocument(new PdfWriter(outputStream));
-       try{
-        for (UUID invoice : request.getInvoices()) {
-            ManageInvoiceDto invoiceDto = invoiceService.findById(invoice);
-            // Generar el PDF para el INVOICING ID  actual
-            byte[] pdfBytes = generatePdf(invoiceDto);
+        try {
+            for (UUID invoice : request.getInvoices()) {
+                ManageInvoiceDto invoiceDto = invoiceService.findById(invoice);
+                // Generar el PDF para el INVOICING ID  actual
+                byte[] pdfBytes = generatePdf(invoiceDto);
 
-            // Leer el PDF desde los bytes generados
-            PdfDocument sourcePdf = new PdfDocument(new PdfReader(new ByteArrayInputStream(pdfBytes)));
+                // Leer el PDF desde los bytes generados
+                PdfDocument sourcePdf = new PdfDocument(new PdfReader(new ByteArrayInputStream(pdfBytes)));
 
-            // Copiar páginas al PDF combinado
-            sourcePdf.copyPagesTo(1, sourcePdf.getNumberOfPages(), mergedPdf);
-            sourcePdf.close();
-        }
-       } catch (IOException | PdfException e) {
-        // Maneja la excepción apropiadamente
-        throw new RuntimeException("Error procesando el PDF", e);
+                // Copiar páginas al PDF combinado
+                sourcePdf.copyPagesTo(1, sourcePdf.getNumberOfPages(), mergedPdf);
+                sourcePdf.close();
+            }
+        } catch (IOException | PdfException e) {
+            // Maneja la excepción apropiadamente
+            throw new RuntimeException("Error procesando el PDF", e);
         }
 
         // Cerrar el PDF combinado
