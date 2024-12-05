@@ -1230,13 +1230,13 @@ function searchAndFilter() {
       }]
     }
   }
-  else {
-    const invoiceIdTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId')?.id
-    const invoiceNumberTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceNumberPrefix')?.id
-    if (filterToSearch.value.criteria?.id !== invoiceIdTemp && filterToSearch.value.criteria?.id !== invoiceNumberTemp) {
-      return hotelError.value = true
-    }
-  }
+  // else {
+  //   const invoiceIdTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId')?.id
+  //   const invoiceNumberTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceNumberPrefix')?.id
+  //   if (filterToSearch.value.criteria?.id !== invoiceIdTemp && filterToSearch.value.criteria?.id !== invoiceNumberTemp) {
+  //     return hotelError.value = true
+  //   }
+  // }
   getList()
 }
 
