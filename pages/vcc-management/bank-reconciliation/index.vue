@@ -740,7 +740,6 @@ onMounted(() => {
           />
         </template>
         <template #expansion="{ data: item }">
-          <!--          <pre>{{item}}</pre> -->
           <BankPaymentTransactions
             :bank-reconciliation-id="item.id" :hide-bind-transaction-menu="item.reconcileStatus && (item.reconcileStatus.completed || item.reconcileStatus.cancelled)"
             @update:details-amount="($event) => {
