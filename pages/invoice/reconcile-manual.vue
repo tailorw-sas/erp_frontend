@@ -443,6 +443,7 @@ async function saveItem() {
 }
 */
 async function saveItem() {
+  options.value.loading = true
   loadingSaveAll.value = true
 
   // Llamar a reconcileManual y guardar la respuesta
@@ -458,6 +459,7 @@ async function saveItem() {
       life: 10000
     })
     loadingSaveAll.value = false // Detener el loading en caso de error
+    options.value.loading = false
     return // Salir de la función si hay un error
   }
 
@@ -498,6 +500,7 @@ async function saveItem() {
   }
 
   loadingSaveAll.value = false // Detener el loading al final de la función
+  options.value.loading = false
 }
 
 async function getErrors(errorsResponse: any) {
@@ -845,7 +848,6 @@ onMounted(async () => {
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
                         id="autocomplete"
                         field="name"
                         item-value="id"
@@ -882,7 +884,6 @@ onMounted(async () => {
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
                         id="autocomplete"
                         field="name"
                         item-value="id"
@@ -1019,7 +1020,7 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="selectedElements.length === 0"
+          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="selectedElements.length === 0"
           @click="saveItem()"
         />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
