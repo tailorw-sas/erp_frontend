@@ -51,7 +51,7 @@ public class HotelPaymentAdjustmentServiceImpl implements IHotelPaymentAdjustmen
         List<Long> ids = new ArrayList<>();
         for (CreateHotelPaymentAdjustmentRequest request : adjustmentRequest) {
             ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
-            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECEIVE);
+            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECONCILED);
             ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(request.getTransactionCategory());
             ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(request.getTransactionSubCategory());
 
