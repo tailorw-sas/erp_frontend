@@ -181,6 +181,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
         }
         manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
+        manageInvoiceDto.setHotelInvoiceNumber(Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()));
         manageInvoiceDto = invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
 
