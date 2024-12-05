@@ -10,7 +10,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.TransactionCheckInCloseOperationRule;
-import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
+import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionInReconciliationRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -96,7 +96,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         for (Long transactionId : newTransactions) {
             if(!reconcileTransactions.contains(transactionId)) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
-                RulesChecker.checkRule(new TransactionReconciliationOrPaymentRule(transactionDto));
+                RulesChecker.checkRule(new TransactionInReconciliationRule(transactionDto));
                 reconciliation.setDetailsAmount(reconciliation.getDetailsAmount() + transactionDto.getNetAmount());
                 transactionList.add(transactionDto);
             }
