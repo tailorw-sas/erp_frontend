@@ -72,7 +72,7 @@ const columns: IColumn[] = [
   { field: 'netAmount', header: 'T.Amount', type: 'number' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
   { field: 'categoryType', header: 'Trans Cat Type', type: 'text' },
-  { field: 'status', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, showFilter: false },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, showFilter: false },
 ]
 
 const options = ref({
@@ -112,7 +112,8 @@ function searchAndFilter() {
       key: 'hotelPayment.id',
       operator: 'EQUALS',
       value: props.hotelPaymentId,
-      logicalOperation: 'AND'
+      logicalOperation: 'AND',
+      type: 'filterSearch'
     }],
     query: '',
     pageSize: 50,
@@ -132,50 +133,10 @@ function onSortField(event: any) {
   }
 }
 
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
-}
-
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
 }
 
@@ -204,9 +165,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'agency') && iterator.agency) {
         iterator.agency = `${iterator.agency.code} - ${iterator.agency.name}`
       }
@@ -317,6 +275,13 @@ onMounted(() => {
       @on-sort-field="onSortField"
       @on-row-right-click="onRowRightClick"
     >
+      <template #column-status="{ data, column }">
+        <Badge
+            v-tooltip.top="data.status.name.toString()"
+            :value="data.status.name"
+            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+        />
+      </template>
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
