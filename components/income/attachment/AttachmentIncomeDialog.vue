@@ -722,6 +722,18 @@ function downloadFile() {
   }
 }
 
+function disabledBtnSave(propsValue: any): boolean {
+  if (item.value && item.value.id) {
+    return true
+  }
+  else if (propsValue.item.fieldValues.file) {
+    return false
+  }
+  else {
+    return true
+  }
+}
+
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 
@@ -971,7 +983,7 @@ onMounted(() => {
               <template #form-footer="footProps">
                 <Button
                   v-tooltip.top="'Save'"
-                  :loading="loadingSaveAll" class="w-3rem sticky" icon="pi pi-save" :disabled="idItem !== ''"
+                  :loading="loadingSaveAll" class="w-3rem sticky" icon="pi pi-save" :disabled="disabledBtnSave(footProps)"
                   @click="footProps.item.submitForm($event)"
                 />
                 <Button
