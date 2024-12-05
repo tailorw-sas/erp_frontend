@@ -23,4 +23,7 @@ public interface ManageResourceTypeReadDataJPARepository extends JpaRepository<M
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
     Optional<ManageResourceType> findResourceTypeByCode(String code);
+
+    @Query("SELECT b FROM ManageResourceType b WHERE b.vcc = true AND b.status = 'ACTIVE'")
+    Optional<ManageResourceType> findByVcc();
 }

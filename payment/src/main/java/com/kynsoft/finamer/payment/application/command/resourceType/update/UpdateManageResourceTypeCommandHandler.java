@@ -55,7 +55,7 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
         if (update.getUpdate() > 0) {
             this.service.update(resourceTypeDto);
-            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName(), resourceTypeDto.isInvoice(), resourceTypeDto.isVcc()));
+            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName(), resourceTypeDto.isInvoice(), resourceTypeDto.isVcc(), resourceTypeDto.getStatus().name()));
         }
 
     }

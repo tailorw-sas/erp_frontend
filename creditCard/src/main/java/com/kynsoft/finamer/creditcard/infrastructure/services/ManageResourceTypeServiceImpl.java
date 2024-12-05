@@ -89,12 +89,20 @@ public class ManageResourceTypeServiceImpl implements IManageResourceTypeService
         return getPaginatedResponse(data);
     }
 
+    @Override
+    public ResourceTypeDto findByVcc() {
+        return this.repositoryQuery.findByVcc().map(ManageResourceType::toAggregate).orElseThrow(
+                ()-> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())))
+        );
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManageResourceType> data) {
         List<GetSearchResourceTypeResponse> responses = data.stream()
                 .map(resourceType -> GetSearchResourceTypeResponse.builder()
                         .name(resourceType.getName())
                         .code(resourceType.getCode())
                         .id(resourceType.getId())
+                        .status(resourceType.getStatus())
                         .build()
                 ).toList();
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());

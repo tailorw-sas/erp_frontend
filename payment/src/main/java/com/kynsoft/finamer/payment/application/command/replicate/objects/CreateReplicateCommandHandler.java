@@ -33,7 +33,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                
                 case MANAGE_RESOURCE_TYPE -> {
                     for (ResourceTypeDto paymentSourceDto : this.resourceTypeService.findAllToReplicate()) {
-                        this.producerReplicateResourceTypeService.create(new ReplicatePaymentResourceTypeKafka(paymentSourceDto.getId(), paymentSourceDto.getCode(), paymentSourceDto.getName(), paymentSourceDto.isInvoice(), paymentSourceDto.isVcc()));
+                        this.producerReplicateResourceTypeService.create(new ReplicatePaymentResourceTypeKafka(paymentSourceDto.getId(), paymentSourceDto.getCode(), paymentSourceDto.getName(), paymentSourceDto.isInvoice(), paymentSourceDto.isVcc(), paymentSourceDto.getStatus().name()));
                     }
                 }
                 
