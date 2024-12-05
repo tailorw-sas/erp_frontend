@@ -89,17 +89,17 @@ const sClassMap: IStatusClass[] = [
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'id', header: 'Id', type: 'text' },
+  { field: 'hotelPaymentId', header: 'Id', type: 'text' },
   { field: 'transactionDate', header: 'Trans Date', type: 'date' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
+  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'merchantBankAccountNumber', header: 'Bank Account Number', type: 'text', sortable: true },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'total', header: 'Total', type: 'text' },
+  { field: 'netAmount', header: 'Total', type: 'text' },
   { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
 ]
 
-const subTotals: any = ref({ amount: 0, details: 0 })
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
   { id: 'id', name: 'Hotel Payment Id', filterOnlyByField: true },
@@ -146,7 +146,7 @@ function goToPaymentOfMerchantInNewTab(item: any) {
 }
 
 async function getList() {
-  const count = { amount: 0, details: 0 }
+  const count = { amount: 0, commission: 0, net: 0 }
   subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -170,23 +170,23 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'reconcileStatus')) {
-        iterator.statusName = iterator.reconcileStatus?.name
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.statusName = iterator.status?.name
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
-        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageHotel') && iterator.hotel) {
+        iterator.manageHotel = { id: iterator.manageHotel.id, name: `${iterator.manageHotel.code} - ${iterator.manageHotel.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = formatNumber(iterator.amount)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'detailsAmount')) {
-        count.details += iterator.detailsAmount
-        iterator.detailsAmount = formatNumber(iterator.detailsAmount)
+      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        count.commission += iterator.commission
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'merchantBankAccount')) {
-        const merchantNames = iterator.merchantBankAccount.managerMerchant.map((item: any) => item.description).join(' - ')
-        iterator.merchantBankAccount = { id: iterator.merchantBankAccount.id, name: `${merchantNames} - ${iterator.merchantBankAccount.description} - ${iterator.merchantBankAccount.accountNumber}` }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        count.net += iterator.netAmount
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBankAccount')) {
+        iterator.merchantBankAccountNumber = iterator.manageBankAccount?.accountNumber
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -245,7 +245,7 @@ function searchAndFilter() {
     // Date
     if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {
-        key: 'paidDate',
+        key: 'transactionDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -254,7 +254,7 @@ function searchAndFilter() {
     }
     if (filterToSearch.value.to) {
       newPayload.filter = [...newPayload.filter, {
-        key: 'paidDate',
+        key: 'transactionDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -688,8 +688,8 @@ onMounted(() => {
       >
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
-          <BankPaymentTransactions
-            :bank-reconciliation-id="item.id" @update:details-amount="($event) => {
+          <HotelPaymentTransactions
+            :hotel-payment-id="item.id" @update:details-amount="($event) => {
               item.detailsAmount = formatNumber($event)
             }"
           />

@@ -5,8 +5,6 @@ import type { Ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import ContextMenu from 'primevue/contextmenu'
 import { v4 } from 'uuid'
-import BankPaymentMerchantBindTransactionsDialog
-  from '~/components/vcc/bank-reconciliation/BankPaymentMerchantBindTransactionsDialog.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
@@ -21,7 +19,7 @@ const HotelList = ref<any[]>([])
 const BankAccountList = ref<any[]>([])
 const StatusList = ref<any[]>([])
 const LocalBindTransactionList = ref<any[]>([])
-const collectionStatusRefundReceivedList = ref<any[]>([])
+const collectionStatusList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const loadingDefaultStatus = ref(false)
 const forceSave = ref(false)
@@ -53,7 +51,7 @@ const menuListItems = [
 
 const confApi = reactive({
   moduleApi: 'creditcard',
-  uriApi: 'bank-reconciliation',
+  uriApi: 'hotel-payment',
 })
 
 const confStatusListApi = reactive({
@@ -63,16 +61,16 @@ const confStatusListApi = reactive({
 
 const item = ref({
   paymentId: '0',
-  bankAccount: null,
-  hotel: null,
+  manageBankAccount: null,
+  manageHotel: null,
   remark: '',
   status: null
 } as GenericObject)
 
 const itemTemp = ref({
   paymentId: '0',
-  bankAccount: null,
-  hotel: null,
+  manageBankAccount: null,
+  manageHotel: null,
   remark: '',
   status: null
 })
@@ -87,7 +85,7 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
   },
   {
-    field: 'hotel',
+    field: 'manageHotel',
     header: 'Hotel',
     dataType: 'select',
     class: 'field col-12 md:col-4 required',
@@ -95,7 +93,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('hotel'),
   },
   {
-    field: 'bankAccount',
+    field: 'manageBankAccount',
     header: 'Bank Account',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
@@ -401,7 +399,7 @@ async function loadDefaultStatus() {
 }
 
 async function getBankAccountList(query: string) {
-  if (!item.value.hotel) {
+  if (!item.value.manageHotel) {
     return
   }
   try {
@@ -414,7 +412,7 @@ async function getBankAccountList(query: string) {
       }, {
         key: 'manageHotel.id',
         operator: 'EQUALS',
-        value: item.value.hotel.id,
+        value: item.value.manageHotel.id,
         logicalOperation: 'AND'
       }, {
         key: 'status',
@@ -457,10 +455,10 @@ function unbindTransactions() {
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = { ...item }
-    payload.paidDate = payload.paidDate ? dayjs(payload.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
-    payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
-    payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
-    payload.detailsAmount = subTotals.value.amount
+    payload.transactionDate = dayjs().format('YYYY-MM-DDTHH:mm:ss')
+    payload.status = Object.prototype.hasOwnProperty.call(payload.status, 'id') ? payload.status.id : payload.status
+    payload.manageHotel = Object.prototype.hasOwnProperty.call(payload.manageHotel, 'id') ? payload.manageHotel.id : payload.manageHotel
+    payload.manageBankAccount = Object.prototype.hasOwnProperty.call(payload.manageBankAccount, 'id') ? payload.manageBankAccount.id : payload.manageBankAccount
 
     if (LocalBindTransactionList.value.length > 0) {
       payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
@@ -488,15 +486,10 @@ async function createItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (isGreaterThanTwoDecimals(subTotals.value.amount, item.amount)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
-    return
-  }
-  // let successOperation = true
   loadingSaveAll.value = true
   try {
     await createItem(item)
-    await navigateTo({ path: `/vcc-management/bank-reconciliation/bank-payment-of-merchant/${idItem.value}`, params: { id: idItem.value } })
+    await navigateTo({ path: `/vcc-management/hotel-payment/bank-payment-of-merchant/${idItem.value}`, params: { id: idItem.value } })
   }
   catch (error: any) {
     loadingSaveAll.value = false
@@ -505,15 +498,6 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
-}
-
-function isGreaterThanTwoDecimals(num1: number, num2: number): boolean {
-  // Redondear ambos números a dos decimales
-  const roundedNum1 = Math.round(num1 * 100) / 100
-  const roundedNum2 = Math.round(num2 * 100) / 100
-
-  // Comparar los números redondeados
-  return roundedNum1 > roundedNum2
 }
 
 async function handleSave(event: any) {
@@ -682,40 +666,40 @@ onMounted(() => {
           <Skeleton v-else height="2rem" />
         </template>
         <!-- Agency -->
-        <template #field-hotel="{ item: data, onUpdate }">
+        <template #field-manageHotel="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
-            :model="data.hotel"
+            :model="data.manageHotel"
             :suggestions="HotelList"
             @change="($event) => {
-              if (item.hotel && $event.id !== item.hotel.id) {
+              if (item.manageHotel && $event.id !== item.manageHotel.id) {
                 clearTransactions()
                 // Limpiar selector de bank account
-                onUpdate('bankAccount', null)
-                item.bankAccount = null
+                onUpdate('manageBankAccount', null)
+                item.manageBankAccount = null
               }
-              onUpdate('hotel', $event)
-              item.hotel = $event
+              onUpdate('manageHotel', $event)
+              item.manageHotel = $event
             }"
             @load="($event) => getHotelList($event)"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-bankAccount="{ item: data, onUpdate }">
+        <template #field-manageBankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
-            :disabled="!data.hotel"
-            :model="data.bankAccount"
+            :disabled="!data.manageHotel"
+            :model="data.manageBankAccount"
             :suggestions="[...BankAccountList]"
             @change="($event) => {
-              onUpdate('bankAccount', $event)
-              item.bankAccount = $event
+              onUpdate('manageBankAccount', $event)
+              item.manageBankAccount = $event
             }"
             @load="($event) => getBankAccountList($event)"
           />
@@ -773,18 +757,18 @@ onMounted(() => {
         v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
       /> -->
       <div>
-        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
+        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" />
       </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">
-      <BankPaymentMerchantBindTransactionsDialog
+      <HotelPaymentBindTransactionsDialog
         :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Bind Transaction" :selected-items="computedLocalBindTransactionList"
-        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
+        :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusList"
         @update:list-items="($event) => bindTransactions($event)"
-        @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
+        @update:status-list="($event) => collectionStatusList = $event"
       />
     </div>
     <VCCEditManualTransaction
