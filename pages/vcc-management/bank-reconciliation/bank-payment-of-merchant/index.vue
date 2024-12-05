@@ -718,7 +718,7 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
         :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Bind Transaction" :selected-items="computedLocalBindTransactionList"
         :open-dialog="transactionsToBindDialogOpen" :current-bank-payment="item" :valid-collection-status-list="collectionStatusRefundReceivedList"
         @update:list-items="($event) => bindTransactions($event)"
-        @update:status-list="($event) => collectionStatusList = $event"
+        @update:status-list="($event) => collectionStatusRefundReceivedList = $event"
       />
     </div>
     <VCCEditManualTransaction

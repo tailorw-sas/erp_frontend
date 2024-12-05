@@ -713,6 +713,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
+            disabled
             :model="data.manageHotel"
             :suggestions="HotelList"
             @change="($event) => {

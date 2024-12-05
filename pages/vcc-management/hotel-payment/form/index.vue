@@ -25,7 +25,7 @@ const loadingDefaultStatus = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
-const subTotals: any = ref({ amount: 0 })
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const selectedTransactionId = ref('')
@@ -224,17 +224,6 @@ async function updateCurrentAdjustmentTransaction(transaction: any) {
     const index = LocalBindTransactionList.value.findIndex((item: any) => item.id === transaction.id)
     if (index !== -1) {
       formatAdjustmentEdit(transaction)
-      subTotals.value.amount = 0
-      // Recalcular sumatoria local
-      for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
-        const localTransaction = LocalBindTransactionList.value[i]
-        if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
-          subTotals.value.amount -= localTransaction.netAmount
-        }
-        else {
-          subTotals.value.amount += localTransaction.netAmount
-        }
-      }
     }
   }
 }
@@ -441,15 +430,13 @@ async function getBankAccountList(query: string) {
 
 function clearTransactions() {
   LocalBindTransactionList.value = []
-  subTotals.value.amount = []
+  subTotals.value = { amount: 0, commission: 0, net: 0 }
 }
 
 function unbindTransactions() {
   const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  subTotals.value.amount -= contextMenuTransaction.value.netAmount
-  subTotals.value.amount = Number.parseFloat(subTotals.value.amount.toFixed(2))
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -516,12 +503,6 @@ function formatAdjustment(data: any) {
   const newAdjustment = JSON.parse(JSON.stringify(data))
   newAdjustment.id = v4() // id temporal para poder eliminar de forma local
   newAdjustment.checkIn = dayjs().format('YYYY-MM-DD')
-  if (newAdjustment.transactionSubCategory.negative) {
-    subTotals.value.amount -= data.netAmount
-  }
-  else {
-    subTotals.value.amount += data.netAmount
-  }
   newAdjustment.commission = 0
   newAdjustment.netAmount = data.netAmount
   newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.netAmount
@@ -551,8 +532,6 @@ function bindTransactions(event: any[]) {
   removeUnbindSelectedTransactions(event)
   const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
   LocalBindTransactionList.value = [...event, ...adjustmentList]
-  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + item.netAmount, 0)
-  subTotals.value.amount = totalAmount
 }
 
 function removeUnbindSelectedTransactions(newTransactions: any[]) {
@@ -607,8 +586,21 @@ function onChangeLocalPagination(event: any) {
 }
 
 watch(() => LocalBindTransactionList.value, async (newValue) => {
-  if (newValue && !idItem.value) {
-    pagination.value.totalElements = newValue?.length ?? 0
+  pagination.value.totalElements = newValue?.length ?? 0
+  subTotals.value = { amount: 0, commission: 0, net: 0 }
+  // recalcular totales si cambia la lista
+  for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
+    const localTransaction = LocalBindTransactionList.value[i]
+    if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
+      subTotals.value.amount -= localTransaction.amount
+      subTotals.value.commission -= localTransaction.commission
+      subTotals.value.net -= localTransaction.netAmount
+    }
+    else {
+      subTotals.value.amount += localTransaction.amount
+      subTotals.value.commission += localTransaction.commission
+      subTotals.value.net += localTransaction.netAmount
+    }
   }
 })
 
@@ -708,8 +700,10 @@ onMounted(() => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :footer="formatNumber(subTotals.commission)" />
+            <Column :footer="formatNumber(subTotals.net)" />
           </Row>
         </ColumnGroup>
       </template>
