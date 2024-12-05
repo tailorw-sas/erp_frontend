@@ -970,7 +970,8 @@ onMounted(() => {
               </template>
               <template #form-footer="footProps">
                 <Button
-                  v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save" :disabled="idItem !== ''"
+                  v-tooltip.top="'Save'"
+                  :loading="loadingSaveAll" class="w-3rem sticky" icon="pi pi-save" :disabled="idItem !== ''"
                   @click="footProps.item.submitForm($event)"
                 />
                 <Button
