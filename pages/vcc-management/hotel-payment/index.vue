@@ -93,9 +93,9 @@ const columns: IColumn[] = [
   { field: 'transactionDate', header: 'Trans Date', type: 'date' },
   { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
   { field: 'merchantBankAccountNumber', header: 'Bank Account Number', type: 'text', sortable: true },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'netAmount', header: 'Total', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'Total', type: 'number' },
   { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
 ]
 
@@ -139,9 +139,9 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
-function goToPaymentOfMerchantInNewTab(item: any) {
+function goToEditHotelPaymentInNewTab(item: any) {
   const id = item.hasOwnProperty('id') ? item.id : item
-  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant/${id}`
+  const url = `/vcc-management/hotel-payment/form/${id}`
   navigateTo({ path: url, params: { id } }, { open: { target: '_blank' } })
 }
 
@@ -684,7 +684,7 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
-        @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
+        @on-row-double-click="goToEditHotelPaymentInNewTab($event)"
       >
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->

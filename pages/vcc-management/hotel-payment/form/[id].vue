@@ -2,7 +2,9 @@
 import { reactive, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import type { Ref } from 'vue'
+import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
+import { useRoute } from 'vue-router'
 import ContextMenu from 'primevue/contextmenu'
 import { v4 } from 'uuid'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -11,33 +13,43 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
-import type { FilterCriteria } from '~/composables/list'
 
+const { data: userData } = useAuth()
+const route = useRoute()
 const toast = useToast()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+const authStore = useAuthStore()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
-const BankAccountList = ref<any[]>([])
+const MerchantBankAccountList = ref<any[]>([])
 const StatusList = ref<any[]>([])
-const LocalBindTransactionList = ref<any[]>([])
+const BindTransactionList = ref<any[]>([])
+const BankAccountList = ref<any[]>([])
 const collectionStatusList = ref<any[]>([])
 const loadingSaveAll = ref(false)
-const loadingDefaultStatus = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
-const subTotals: any = ref({ amount: 0 })
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
+const paymentAmount = ref(0)
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const selectedTransactionId = ref('')
-const selectedTransaction = ref()
-const editAdjustmentTransactionDialogVisible = ref(false)
 const newAdjustmentTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
+const editAdjustmentTransactionDialogVisible = ref(false)
 const contextMenu = ref()
 const contextMenuTransaction = ref()
+const currentSavedPaymentStatus = ref() // Guardar estado actual en backend para listar las opciones de posibles estados a seleccionar
 
-const menuListItems = [
+enum MenuType {
+  unBind
+}
+
+const allMenuListItems = [
   {
+    type: MenuType.unBind,
     label: 'Unbind Transaction',
     icon: 'pi pi-dollar',
     iconSvg: 'M304.1 405.9c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-59.3 59.3-155.7 59.3-215 0-59.3-59.3-59.3-155.7 0-215l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17l-44.7 44.7c-28.1 28.1-28.1 73.8 0 101.8 28.1 28.1 73.8 28.1 101.8 0l44.7-44.7c4.7-4.7 12.3-4.7 17 0l39.6 39.6zm-56.6-260.2c4.7 4.7 12.3 4.7 17 0l44.7-44.7c28.1-28.1 73.8-28.1 101.8 0 28.1 28.1 28.1 73.8 0 101.8l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6c4.7 4.7 12.3 4.7 17 0l44.7-44.7c59.3-59.3 59.3-155.7 0-215-59.3-59.3-155.7-59.3-215 0l-44.7 44.7c-4.7 4.7-4.7 12.3 0 17l39.6 39.6zm234.8 359.3l22.6-22.6c9.4-9.4 9.4-24.6 0-33.9L63.6 7c-9.4-9.4-24.6-9.4-33.9 0L7 29.7c-9.4 9.4-9.4 24.6 0 33.9l441.4 441.4c9.4 9.4 24.6 9.4 33.9 0z',
@@ -48,6 +60,8 @@ const menuListItems = [
     disabled: false,
   }
 ]
+
+const menuListItems = ref<any[]>([])
 
 const confApi = reactive({
   moduleApi: 'creditcard',
@@ -60,7 +74,7 @@ const confStatusListApi = reactive({
 })
 
 const item = ref({
-  paymentId: '0',
+  hotelPaymentId: '',
   manageBankAccount: null,
   manageHotel: null,
   remark: '',
@@ -68,7 +82,7 @@ const item = ref({
 } as GenericObject)
 
 const itemTemp = ref({
-  paymentId: '0',
+  hotelPaymentId: '',
   manageBankAccount: null,
   manageHotel: null,
   remark: '',
@@ -77,7 +91,7 @@ const itemTemp = ref({
 
 const fields: Array<FieldDefinitionType> = [
   {
-    field: 'paymentId',
+    field: 'hotelPaymentId',
     header: 'Id',
     dataType: 'text',
     disabled: true,
@@ -137,9 +151,9 @@ const options = ref({
   uriApi: 'transactions',
   loading: false,
   actionsAsMenu: false,
-  showFilters: false,
   messageToDelete: 'Do you want to save the change?',
 })
+const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
@@ -155,24 +169,18 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
-const paginationFirstLocal = ref(0) // Índice inicial de la página actual
 
-const paginatedData = computed(() => {
-  const start = paginationFirstLocal.value
-  const end = start + pagination.value.limit
-  return LocalBindTransactionList.value.slice(start, end)
-})
-
-const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0) : 0
-  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
-})
-
-const computedLocalBindTransactionList = computed(() => {
-  return LocalBindTransactionList.value.filter((item: any) => !item.adjustment)
+const computedDisabledItemsByStatus = computed(() => {
+  return false
+  // return item.value?.reconcileStatus && (item.value?.reconcileStatus?.completed || item.value?.reconcileStatus?.cancelled)
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+
+async function canEditHotelPayment() {
+  return (status.value === 'authenticated' && (isAdmin || authStore.can(['BANK-RECONCILIATION:EDIT'])))
+}
+
 async function openNewAdjustmentTransactionDialog() {
   newAdjustmentTransactionDialogVisible.value = true
 }
@@ -191,7 +199,7 @@ async function onMultipleSelect(data: any) {
 
   // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
   const selectedPreviously = selectedElements.value.filter((item: any) =>
-    currentPageSelectedIds.has(item.id) || !paginatedData.value.some((pageItem: any) => pageItem.id === item.id)
+    currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
   )
   // Agregar nuevos elementos seleccionados en la página actual
   const newElements = data.filter((item: any) => !selectedIds.has(item.id))
@@ -208,58 +216,59 @@ function clearForm() {
   formReload.value++
 }
 
-async function updateCurrentManualTransaction() {
-  const transaction = await getCurrentTransactionList()
-  if (transaction) {
-    const index = LocalBindTransactionList.value.findIndex((item: any) => item.id === selectedTransactionId.value)
-    if (index !== -1) {
-      // Reemplazar el objeto en la lista
-      LocalBindTransactionList.value[index] = transaction
-    }
-  }
-}
-
-async function updateCurrentAdjustmentTransaction(transaction: any) {
-  if (transaction) {
-    const index = LocalBindTransactionList.value.findIndex((item: any) => item.id === transaction.id)
-    if (index !== -1) {
-      formatAdjustmentEdit(transaction)
-      subTotals.value.amount = 0
-      // Recalcular sumatoria local
-      for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
-        const localTransaction = LocalBindTransactionList.value[i]
-        if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
-          subTotals.value.amount -= localTransaction.netAmount
+// Obtener datos del payment of merchant
+async function getItemById(id: string) {
+  if (id) {
+    idItem.value = id
+    loadingSaveAll.value = true
+    try {
+      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      if (response) {
+        item.value.id = id
+        item.value.hotelPaymentId = response.hotelPaymentId
+        item.value.remark = response.remark
+        if (response.manageBankAccount) {
+          response.manageBankAccount.name = `${response.manageBankAccount.accountNumber}${(response.manageBankAccount.description ? ` - ${response.manageBankAccount.description}` : '')}`
+          item.value.manageBankAccount = response.manageBankAccount
+          MerchantBankAccountList.value = [response.manageBankAccount]
         }
-        else {
-          subTotals.value.amount += localTransaction.netAmount
+        if (response.manageHotel) {
+          response.manageHotel.name = `${response.manageHotel.code} - ${response.manageHotel.name}`
+          item.value.manageHotel = response.manageHotel
+          HotelList.value = [response.manageHotel]
+        }
+        currentSavedPaymentStatus.value = response.reconcileStatus
+        if (response.status) {
+          response.status.fullName = `${response.status.code} - ${response.status.name}`
+          item.value.status = response.status
+          StatusList.value = [response.status]
         }
       }
+      formReload.value += 1
+    }
+    catch (error) {
+      if (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be loaded', life: 3000 })
+      }
+    }
+    finally {
+      loadingSaveAll.value = false
     }
   }
 }
 
-async function getCurrentTransactionList() {
+async function getList() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
+  const count = { amount: 0, commission: 0, net: 0 }
+  subTotals.value = { ...count }
   try {
     options.value.loading = true
-    const payload = {
-      filter: [{
-        key: 'id',
-        operator: 'EQUALS',
-        value: selectedTransactionId.value,
-        logicalOperation: 'AND'
-      }],
-      query: '',
-      sortBy: 'createdAt',
-      sortType: 'ASC',
-      pageSize: 20,
-      page: 0,
-    }
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
+    BindTransactionList.value = []
+    const newListItems = []
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
@@ -268,6 +277,8 @@ async function getCurrentTransactionList() {
     pagination.value.limit = size
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(BindTransactionList.value.map((item: any) => item.id))
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'merchant') && iterator.hotel) {
@@ -292,15 +303,45 @@ async function getCurrentTransactionList() {
         iterator.id = String(iterator.id)
         iterator.referenceId = String(iterator.id)
       }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.amount -= iterator.amount
+        }
+        else {
+          count.amount += iterator.amount
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.commission -= iterator.commission
+        }
+        else {
+          count.commission += iterator.commission
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
+        if (iterator.subCategoryType && iterator.subCategoryType.negative) {
+          count.net -= iterator.netAmount
+        }
+        else {
+          count.net += iterator.netAmount
+        }
+      }
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate) })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
     }
 
-    return dataList[0] ?? null
+    BindTransactionList.value = [...BindTransactionList.value, ...newListItems]
   }
   catch (error) {
     console.error(error)
   }
   finally {
     options.value.loading = false
+    subTotals.value = { ...count }
   }
 }
 
@@ -347,55 +388,41 @@ async function getHotelList(query: string) {
   }
 }
 
-async function getStatusList(isDefault: boolean = false, filter?: FilterCriteria[]) {
+async function getStatusList(query: string) {
   try {
-    if (isDefault) {
-      loadingDefaultStatus.value = true
-    }
     const payload = {
-      filter: filter ?? [],
+      filter: [{
+        key: 'name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }],
       query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
       pageSize: 20,
       page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
     }
-
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
     StatusList.value = []
     for (const iterator of dataList) {
-      StatusList.value = [...StatusList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status ?? 'ACTIVE', fullName: `${iterator.code} - ${iterator.name}` }]
+      StatusList.value = [...StatusList.value, { id: iterator.id, code: iterator.code, name: iterator.name, fullName: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
-    console.error('Error loading Attachment Type list:', error)
+    console.error('Error loading hotel list:', error)
   }
-  finally {
-    if (isDefault) {
-      loadingDefaultStatus.value = false
-    }
-  }
-}
-
-async function loadDefaultStatus() {
-  const filter: FilterCriteria[] = [
-    {
-      key: 'inProgress',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: true,
-    },
-    {
-      key: 'status',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'ACTIVE',
-    },
-  ]
-  await getStatusList(true, filter)
-  item.value.status = StatusList.value.length > 0 ? StatusList.value[0] : null
-  formReload.value++
 }
 
 async function getBankAccountList(query: string) {
@@ -439,31 +466,15 @@ async function getBankAccountList(query: string) {
   }
 }
 
-function clearTransactions() {
-  LocalBindTransactionList.value = []
-  subTotals.value.amount = []
-}
-
-function unbindTransactions() {
-  const transactionId = String(contextMenuTransaction.value.id)
-  LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
-  selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  subTotals.value.amount -= contextMenuTransaction.value.netAmount
-  subTotals.value.amount = Number.parseFloat(subTotals.value.amount.toFixed(2))
-}
-
-async function createItem(item: { [key: string]: any }) {
-  if (item) {
-    const payload: { [key: string]: any } = { ...item }
-    payload.transactionDate = dayjs().format('YYYY-MM-DDTHH:mm:ss')
-    payload.status = Object.prototype.hasOwnProperty.call(payload.status, 'id') ? payload.status.id : payload.status
-    payload.manageHotel = Object.prototype.hasOwnProperty.call(payload.manageHotel, 'id') ? payload.manageHotel.id : payload.manageHotel
-    payload.manageBankAccount = Object.prototype.hasOwnProperty.call(payload.manageBankAccount, 'id') ? payload.manageBankAccount.id : payload.manageBankAccount
-
-    if (LocalBindTransactionList.value.length > 0) {
-      payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
-      const adjustmentTransactions = LocalBindTransactionList.value.filter((t: any) => t.adjustment)
-      payload.adjustmentTransactions = adjustmentTransactions.map((elem: any) => ({
+async function bindTransactions(transactions: any[]) {
+  try {
+    loadingSaveAll.value = true
+    const payload: { [key: string]: any } = {}
+    payload.bankReconciliationId = idItem.value
+    if (transactions.length > 0) {
+      payload.transactionIds = transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
+      const adjustmentTransactions = transactions.filter((t: any) => t.adjustment)
+      payload.adjustmentRequests = adjustmentTransactions.map((elem: any) => ({
         agency: typeof elem.agency === 'object' ? elem.agency.id : elem.agency,
         transactionCategory: typeof elem.transactionCategory === 'object' ? elem.transactionCategory.id : elem.transactionCategory,
         transactionSubCategory: typeof elem.transactionSubCategory === 'object' ? elem.transactionSubCategory.id : elem.transactionSubCategory,
@@ -472,24 +483,24 @@ async function createItem(item: { [key: string]: any }) {
         referenceNumber: elem.referenceNumber
       }))
     }
-    const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    if (response && response.id) {
+    const response: any = await GenericService.create(confApi.moduleApi, `${confApi.uriApi}/add-transactions`, payload)
+    if (response) {
+      if (response.detailsAmount) {
+        paymentAmount.value = response.detailsAmount
+      }
       // Guarda el id del elemento creado
-      idItem.value = response.id
-      LocalBindTransactionList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was created successfully`, life: 10000 })
+      const newIds = [...response.adjustmentIds || [], ...response.transactionIds || []]
+      if (newIds.length === 1) {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${newIds[0]} was bounded successfully`, life: 10000 })
+      }
+      else {
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transactions ${newIds.join(', ')} were bounded successfully`, life: 10000 })
+      }
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
     }
-  }
-}
-
-async function saveItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  try {
-    await createItem(item)
-    await navigateTo({ path: `/vcc-management/hotel-payment/form/${idItem.value}`, params: { id: idItem.value } })
+    getList()
   }
   catch (error: any) {
     loadingSaveAll.value = false
@@ -498,6 +509,82 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
+}
+
+async function unbindTransactions() {
+  try {
+    loadingSaveAll.value = true
+    const transactionsIds = [contextMenuTransaction.value.id]
+    const payload: { [key: string]: any } = {}
+    payload.bankReconciliation = idItem.value
+    payload.transactionsIds = transactionsIds
+
+    const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
+    if (response) {
+      paymentAmount.value = response.detailsAmount
+    }
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
+    selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
+    getList()
+  }
+  catch (error: any) {
+    loadingSaveAll.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    loadingSaveAll.value = false
+  }
+}
+
+async function updateItem(item: { [key: string]: any }) {
+  if (item) {
+    const payload: { [key: string]: any } = {}
+    payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.remark = item.remark || ''
+    payload.amount = item.amount || ''
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
+    payload.reconcileStatus = typeof item.reconcileStatus === 'object' ? item.reconcileStatus.id : item.reconcileStatus
+    const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
+    if (response && response.id) {
+      // Guarda el id del elemento creado
+      idItem.value = response.id
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+    }
+  }
+}
+
+async function saveItem(item: { [key: string]: any }) {
+  // console.log(paymentAmount.value, item)
+  if (isGreaterThanTwoDecimals(paymentAmount.value, item.amount)) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
+    return
+  }
+  // let successOperation = true
+  loadingSaveAll.value = true
+  try {
+    await updateItem(item)
+    await getItemById(idItem.value)
+  }
+  catch (error: any) {
+    loadingSaveAll.value = false
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    loadingSaveAll.value = false
+  }
+}
+
+function isGreaterThanTwoDecimals(num1: number, num2: number): boolean {
+  // Redondear ambos números a dos decimales
+  const roundedNum1 = Math.round(num1 * 100) / 100
+  const roundedNum2 = Math.round(num2 * 100) / 100
+
+  // Comparar los números redondeados
+  return roundedNum1 > roundedNum2
 }
 
 async function handleSave(event: any) {
@@ -509,55 +596,14 @@ async function handleSave(event: any) {
 
 function bindAdjustment(data: any) {
   const newAdjustment = formatAdjustment(data)
-  LocalBindTransactionList.value = [...LocalBindTransactionList.value, newAdjustment]
+  bindTransactions([newAdjustment])
 }
 
 function formatAdjustment(data: any) {
-  const newAdjustment = JSON.parse(JSON.stringify(data))
-  newAdjustment.id = v4() // id temporal para poder eliminar de forma local
-  newAdjustment.checkIn = dayjs().format('YYYY-MM-DD')
-  if (newAdjustment.transactionSubCategory.negative) {
-    subTotals.value.amount -= data.netAmount
-  }
-  else {
-    subTotals.value.amount += data.netAmount
-  }
-  newAdjustment.commission = 0
-  newAdjustment.netAmount = data.netAmount
-  newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.netAmount
-  newAdjustment.adjustment = true
-  if (data.transactionCategory) {
-    newAdjustment.categoryType = data.transactionCategory
-  }
-  if (data.transactionSubCategory) {
-    newAdjustment.subCategoryType = data.transactionSubCategory
-  }
-  return newAdjustment
-}
-
-function formatAdjustmentEdit(data: any) {
-  const editedAdjustment = JSON.parse(JSON.stringify(data))
-  const prevAdjustment = LocalBindTransactionList.value.find(item => item.id === data.id)
-  prevAdjustment.commission = 0
-  prevAdjustment.netAmount = data.netAmount
-  prevAdjustment.amount = prevAdjustment.categoryType.onlyApplyNet ? 0 : data.netAmount
-  prevAdjustment.agency = data.agency
-  prevAdjustment.referenceNumber = data.referenceNumber
-  prevAdjustment.reservationNumber = data.reservationNumber
-  return editedAdjustment
-}
-
-function bindTransactions(event: any[]) {
-  removeUnbindSelectedTransactions(event)
-  const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
-  LocalBindTransactionList.value = [...event, ...adjustmentList]
-  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + item.netAmount, 0)
-  subTotals.value.amount = totalAmount
-}
-
-function removeUnbindSelectedTransactions(newTransactions: any[]) {
-  const ids = new Set(newTransactions.map(item => item.id))
-  selectedElements.value = selectedElements.value.filter(item => ids.has(item.id) || !item.id)
+  data.id = v4() // id temporal para poder eliminar de forma local
+  data.checkIn = dayjs().format('YYYY-MM-DD')
+  data.adjustment = true
+  return data
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -570,57 +616,82 @@ async function parseDataTableFilter(payloadFilter: any) {
     }
   }
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  // TODO: FALTA HACER FILTRADO LOCAL
-  // Aqui primero el filtro debe ser local y luego ya si con el api
+  getList()
 }
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'merchant') {
+      event.sortField = 'merchant.code'
+    }
+    if (event.sortField === 'creditCardType') {
+      event.sortField = 'creditCardType.code'
+    }
+    if (event.sortField === 'categoryType') {
+      event.sortField = 'transactionCategory.code'
+    }
+    if (event.sortField === 'subCategoryType') {
+      event.sortField = 'transactionSubCategory.code'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
 }
 
+async function onRowRightClick(event: any) {
+  contextMenu.value.hide()
+  contextMenuTransaction.value = event.data
+  menuListItems.value = [...allMenuListItems]
+  if (!await canEditHotelPayment() || computedDisabledItemsByStatus.value) {
+    menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
+  }
+  if (menuListItems.value.length > 0) {
+    contextMenu.value.show(event.originalEvent)
+  }
+}
+
 function onDoubleClick(item: any) {
+  const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
   if (item.manual || item.parent) {
-    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
     selectedTransactionId.value = id
     editManualTransactionDialogVisible.value = true
   }
   if (item.adjustment) {
-    selectedTransaction.value = item
+    selectedTransactionId.value = id
     editAdjustmentTransactionDialogVisible.value = true
   }
 }
 
-async function onRowRightClick(event: any) {
-  contextMenu.value.hide()
-  contextMenuTransaction.value = event.data
-  contextMenu.value.show(event.originalEvent)
-}
-
-function onChangeLocalPagination(event: any) {
-  paginationFirstLocal.value = event.first
-  pagination.value.limit = event.rows
-}
-
-watch(() => LocalBindTransactionList.value, async (newValue) => {
-  if (newValue && !idItem.value) {
-    pagination.value.totalElements = newValue?.length ?? 0
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  if (idItem.value) { // Aplicar paginacion onLine
+    getList()
   }
 })
 
-onMounted(() => {
-  loadDefaultStatus()
+onMounted(async () => {
+  if (route?.params?.id || '') {
+    const id = route.params?.id?.toString()
+    idItem.value = id
+    getItemById(id)
+    payload.value.filter = [{
+      key: 'hotelPayment.id',
+      operator: 'EQUALS',
+      value: idItem.value,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }]
+    getList()
+  }
 })
 </script>
 
 <template>
   <div style="max-height: 100vh; height: 90vh">
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      New Hotel Payment
+      Edit Hotel Payment
     </div>
     <div class="card p-4 mb-0">
       <EditFormV2
@@ -645,12 +716,6 @@ onMounted(() => {
             :model="data.manageHotel"
             :suggestions="HotelList"
             @change="($event) => {
-              if (item.manageHotel && $event.id !== item.manageHotel.id) {
-                clearTransactions()
-                // Limpiar selector de bank account
-                onUpdate('manageBankAccount', null)
-                item.manageBankAccount = null
-              }
               onUpdate('manageHotel', $event)
               item.manageHotel = $event
             }"
@@ -677,11 +742,11 @@ onMounted(() => {
         </template>
         <template #field-status="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll && !loadingDefaultStatus" id="autocomplete"
-            field="fullName" item-value="id" disabled :model="data.status" :suggestions="StatusList"
+            v-if="!loadingSaveAll" id="autocomplete"
+            field="fullName" item-value="id" :model="data.status" :suggestions="StatusList"
             @change="($event) => {
               onUpdate('status', $event)
-            }" @load="($event) => getStatusList()"
+            }" @load="($event) => getStatusList($event)"
           >
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
@@ -693,12 +758,12 @@ onMounted(() => {
     </div>
     <!-- <pre>{{ selectedElements }}</pre> -->
     <DynamicTable
-      :data="paginatedData"
+      :data="BindTransactionList"
       :columns="columns"
       :options="options"
       :pagination="pagination"
-      show-local-pagination
       :selected-items="selectedElements"
+      @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
@@ -708,34 +773,27 @@ onMounted(() => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :footer="formatNumber(subTotals.commission)" />
+            <Column :footer="formatNumber(subTotals.net)" />
           </Row>
         </ColumnGroup>
       </template>
-      <template #pagination>
-        <Paginator
-          :rows="Number(pagination.limit) || 50"
-          :total-records="pagination.totalElements"
-          :rows-per-page-options="[10, 20, 30, 50]"
-          @page="onChangeLocalPagination($event)"
-        />
-      </template>
     </DynamicTable>
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <!-- <Badge
-        v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
-      /> -->
       <div>
-        <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
-        <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
-        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+        <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
+          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+          <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
+          <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
+        </IfCan>
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" />
       </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">
       <HotelPaymentBindTransactionsDialog
-        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Bind Transaction" :selected-items="computedLocalBindTransactionList"
+        :close-dialog="() => { transactionsToBindDialogOpen = false }" header="Bind Transaction"
         :open-dialog="transactionsToBindDialogOpen" :current-hotel-payment="item" :valid-collection-status-list="collectionStatusList"
         @update:list-items="($event) => bindTransactions($event)"
         @update:status-list="($event) => collectionStatusList = $event"
@@ -745,21 +803,23 @@ onMounted(() => {
       :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="($event) => {
         editManualTransactionDialogVisible = false
         if (!$event) {
-          updateCurrentManualTransaction()
+          getList()
+        }
+      }"
+    />
+    <VCCEditAdjustmentTransaction
+      :open-dialog="editAdjustmentTransactionDialogVisible" :transaction-id="selectedTransactionId" :disable-amount-field="computedDisabledItemsByStatus"
+      @on-close-dialog="($event) => {
+        editAdjustmentTransactionDialogVisible = false
+        if (!$event) {
+          getList()
+          getItemById(idItem)
         }
       }"
     />
     <VCCNewAdjustmentTransaction
       is-local :open-dialog="newAdjustmentTransactionDialogVisible"
       @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" @on-save-local="($event) => bindAdjustment($event)"
-    />
-    <VCCEditAdjustmentTransaction
-      :open-dialog="editAdjustmentTransactionDialogVisible" :transaction-id="selectedTransactionId" :transaction="selectedTransaction" @on-close-dialog="($event) => {
-        editAdjustmentTransactionDialogVisible = false
-        if (!$event) {
-          getList()
-        }
-      }" @on-save-local="($event) => updateCurrentAdjustmentTransaction($event)"
     />
     <ContextMenu ref="contextMenu" :model="menuListItems">
       <template #itemicon="{ item }">
