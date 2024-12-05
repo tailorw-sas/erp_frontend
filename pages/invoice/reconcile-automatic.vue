@@ -986,6 +986,7 @@ onMounted(async () => {
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check"
+          :loading="options.loading"
           :disabled="!importModel.importFile || selectedElements.length === 0" @click="ApplyImport"
         />
         <Button

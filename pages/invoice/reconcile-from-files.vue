@@ -436,7 +436,7 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Apply'" class="w-3rem  mx-1" icon="pi pi-check" :disabled="uploadComplete"
+          v-tooltip.top="'Apply'" class="w-3rem  mx-1" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete"
           @click="importFile"
         />
 
