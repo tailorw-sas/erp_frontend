@@ -19,7 +19,7 @@ const props = defineProps({
     type: Function as any,
     required: true
   },
-  currentBankPayment: {
+  currentHotelPayment: {
     type: Object,
     required: true
   },
@@ -276,7 +276,7 @@ onMounted(async () => {
   payload.value.filter = [{
     key: 'hotel.id',
     operator: 'EQUALS',
-    value: props.currentBankPayment.manageHotel.id,
+    value: props.currentHotelPayment.manageHotel.id,
     logicalOperation: 'AND',
     type: 'filterSearch'
   }, {
@@ -346,9 +346,6 @@ onMounted(async () => {
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
       <div>
         <Badge v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected" class="mr-1"/>
-        <Badge
-          v-tooltip.top="'Bank Payment Amount'" :value="`Bank Payment Amount: $${props.currentBankPayment?.amount ? formatNumber(props.currentBankPayment?.amount) : '0.00'}`"
-        />
       </div>
       <div>
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
