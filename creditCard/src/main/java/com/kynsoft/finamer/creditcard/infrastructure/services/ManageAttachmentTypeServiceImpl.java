@@ -117,4 +117,11 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
+    @Override
+    public ManageAttachmentTypeDto findByDefault() {
+        return this.repositoryQuery.findByDefault().map(ManageAttachmentType::toAggregate).orElseThrow(()->
+                new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("default", DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())))
+        );
+    }
+
 }
