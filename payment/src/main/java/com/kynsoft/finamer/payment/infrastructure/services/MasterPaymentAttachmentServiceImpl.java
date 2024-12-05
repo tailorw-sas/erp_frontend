@@ -46,9 +46,11 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
     @Override
     public void create(List<MasterPaymentAttachmentDto> dtos) {
         List<MasterPaymentAttachment> masterPaymentAttachments = new ArrayList<>();
+        long maxId = this.findMaxId();
         for (MasterPaymentAttachmentDto dto : dtos) {
-            dto.setAttachmentId(this.findMaxId());
+            dto.setAttachmentId(maxId);
             masterPaymentAttachments.add(new MasterPaymentAttachment(dto));
+            maxId ++;
         }
         this.repositoryCommand.saveAll(masterPaymentAttachments);
     }

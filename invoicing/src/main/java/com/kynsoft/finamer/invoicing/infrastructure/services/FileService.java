@@ -57,11 +57,13 @@ public class FileService {
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(invoiceIds.get(i));
             hotelName = invoiceDto.getHotel().getName();
             agencyName = invoiceDto.getAgency().getName();
-            XSSFRow row = sheet.createRow(rowNumber);
-
-            addPaymentData(invoiceDto, row);
+            
+            for (ManageBookingDto booking : invoiceDto.getBookings()) {
+                XSSFRow row = sheet.createRow(rowNumber);
+                addPaymentData(invoiceDto, booking, row);
+                rowNumber++;
+            }
             totalBalance = totalBalance + invoiceDto.getDueAmount();
-            rowNumber++;
         }
 
         //Esto viene de la invoice
@@ -95,41 +97,40 @@ public class FileService {
 
     /**
      * Adicionando la informacion de las facturas.
+     *
      * @param entity
-     * @param dataRow 
+     * @param dataRow
      */
-    private void addPaymentData(ManageInvoiceDto entity, XSSFRow dataRow) {
+    private void addPaymentData(ManageInvoiceDto entity, ManageBookingDto booking, XSSFRow dataRow) {
 
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         dataRow.createCell(0).setCellValue(entity.getInvoiceDate().toLocalDate().toString());
 
         dataRow.createCell(1).setCellValue(deleteHotelInfo(entity.getInvoiceNumber()));
 
-        dataRow.createCell(2).setCellValue(entity.getBookings().get(0).getFullName());
+        dataRow.createCell(2).setCellValue(booking.getFullName());
 
-        String couponNumber = "";
-        for (ManageBookingDto booking : entity.getBookings()) {
-            couponNumber = couponNumber + booking.getCouponNumber();
-        }
+        String couponNumber = booking.getCouponNumber();
 
         dataRow.createCell(3).setCellValue(couponNumber);
-        dataRow.createCell(4).setCellValue(decimalFormat.format(entity.getInvoiceAmount()));
+        dataRow.createCell(4).setCellValue(decimalFormat.format(booking.getInvoiceAmount()));
 
-        dataRow.createCell(5).setCellValue(decimalFormat.format(entity.getInvoiceAmount() - entity.getDueAmount()));
+        dataRow.createCell(5).setCellValue(decimalFormat.format(booking.getInvoiceAmount() - booking.getDueAmount()));
 
-        dataRow.createCell(6).setCellValue(decimalFormat.format(entity.getDueAmount()));
+        dataRow.createCell(6).setCellValue(decimalFormat.format(booking.getDueAmount()));
 
         dataRow.createCell(7).setCellValue("");
-
     }
 
     private String deleteHotelInfo(String input) {
         return input.replaceAll("-(.*?)-", "-");
     }
+
     /**
      * Adicionando el balance.
+     *
      * @param entity
-     * @param dataRow 
+     * @param dataRow
      */
     private void addBalance(Double balance, XSSFRow dataRow) {
 
