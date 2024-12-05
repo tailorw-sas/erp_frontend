@@ -85,8 +85,8 @@ async function invoicePrint() {
     }
     // En caso de que solo este marcado el paymentAndDetails
 
-    nameOfPdf = invoiceSupport.value ? `invoice-support-${dayjs().format('YYYY-MM-DD')}.pdf` : `invoice-and-bookings-${dayjs().format('YYYY-MM-DD')}.pdf`
-
+    // nameOfPdf = invoiceSupport.value ? `invoice-support-${dayjs().format('YYYY-MM-DD')}.pdf` : `invoice-and-bookings-${dayjs().format('YYYY-MM-DD')}.pdf`
+    nameOfPdf = `${props.invoice?.hotel?.code}-${props.invoice?.invoiceId}.pdf`
     const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
 
     const url = window.URL.createObjectURL(new Blob([response]))
