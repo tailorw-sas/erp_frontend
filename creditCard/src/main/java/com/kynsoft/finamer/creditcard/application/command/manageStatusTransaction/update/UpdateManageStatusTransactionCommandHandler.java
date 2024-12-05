@@ -172,7 +172,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
                 file,
                 "",
                 attachmentTypeDto,
-                transactionDto,
+                null,
                 employee,
                 null,
                 null,
