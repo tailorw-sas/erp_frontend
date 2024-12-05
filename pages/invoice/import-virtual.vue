@@ -171,10 +171,10 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
   listItems.value = []
+  options.value.loading = true
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })

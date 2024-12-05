@@ -167,9 +167,10 @@ async function onChangeAttachFile(event: any) {
 
 async function importAntiIncome() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
+  listItems.value = []
+  options.value.loading = true
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
@@ -432,6 +433,7 @@ onMounted(async () => {
         <Button
           v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
           :disabled="uploadComplete || !importModel.transactionType || !inputFile || !attachFile"
+          :loading="options.loading"
           @click="importAntiIncome"
         />
         <Button

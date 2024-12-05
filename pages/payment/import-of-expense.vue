@@ -144,9 +144,10 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
+  listItems.value = []
+  options.value.loading = true
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
@@ -306,7 +307,7 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete || !inputFile" @click="importFile" />
+        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete || !inputFile" @click="importFile" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
