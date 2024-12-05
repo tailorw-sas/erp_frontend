@@ -311,6 +311,7 @@ async function ApplyImport() {
   loadingSaveAll.value = true
   const successOperation = true
   uploadComplete.value = true
+  errorList.value = []
   try {
     options.value.loading = true
     if (!inputFile.value) {

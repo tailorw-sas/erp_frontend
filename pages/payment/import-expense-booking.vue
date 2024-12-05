@@ -187,9 +187,10 @@ async function onChangeAttachFile(event: any) {
 
 async function importExpenseBooking() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
+  listItems.value = []
+  options.value.loading = true
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
@@ -457,6 +458,7 @@ onMounted(async () => {
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
+          :loading="options.loading"
           :disabled="uploadComplete || !importModel.hotel || !inputFile || !fileNames"
           @click="importExpenseBooking"
         />
