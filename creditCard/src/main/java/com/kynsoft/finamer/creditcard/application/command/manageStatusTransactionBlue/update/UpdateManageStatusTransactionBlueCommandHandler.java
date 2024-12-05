@@ -23,11 +23,12 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
     private final IProcessErrorLogService processErrorLogService;
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
     private final IManageMerchantConfigService merchantConfigService;
+    private final IVoucherService voucherService;
 
     public UpdateManageStatusTransactionBlueCommandHandler(ITransactionService transactionService, ManageCreditCardTypeServiceImpl creditCardTypeService,
                                                            ManageTransactionStatusServiceImpl transactionStatusService,
                                                            TransactionPaymentLogsService transactionPaymentLogsService,
-                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageMerchantConfigService merchantConfigService) {
+                                                           ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageMerchantConfigService merchantConfigService, IVoucherService voucherService) {
         this.transactionService = transactionService;
         this.creditCardTypeService = creditCardTypeService;
         this.transactionStatusService = transactionStatusService;
@@ -37,6 +38,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         this.processErrorLogService = processErrorLogService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
         this.merchantConfigService = merchantConfigService;
+        this.voucherService = voucherService;
     }
 
     @Override
@@ -94,6 +96,6 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         //Enviar correo (voucher) de confirmacion a las personas implicadas
         transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
-
+        this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getRequest().getEmployee());
     }
 }
