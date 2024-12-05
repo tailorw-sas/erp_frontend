@@ -21,7 +21,8 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                command.isVcc()
+                command.isVcc(),
+                command.getStatus()
         ));
     }
 }

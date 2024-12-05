@@ -1,10 +1,8 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
 import com.kynsoft.finamer.creditcard.domain.dto.ResourceTypeDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,16 +39,20 @@ public class ManageResourceType {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     public ManageResourceType(ResourceTypeDto dto) {
         this.id = dto.getId();
         this.name = dto.getName();
         this.code = dto.getCode();
         this.vcc = dto.isVcc();
+        this.status = dto.getStatus();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
-                id, code, name, vcc
+                id, code, name, vcc, status
         );
     }
 }
