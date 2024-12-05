@@ -277,9 +277,9 @@ onMounted(() => {
     >
       <template #column-status="{ data, column }">
         <Badge
-            v-tooltip.top="data.status.name.toString()"
-            :value="data.status.name"
-            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+          v-tooltip.top="data.status.name.toString()"
+          :value="data.status.name"
+          :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
         />
       </template>
       <template #datatable-footer>

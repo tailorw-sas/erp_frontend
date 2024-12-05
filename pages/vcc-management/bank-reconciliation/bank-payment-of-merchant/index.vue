@@ -26,7 +26,7 @@ const loadingSaveAll = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
-const subTotals: any = ref({ amount: 0 })
+const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const selectedTransactionId = ref('')
@@ -242,17 +242,6 @@ async function updateCurrentAdjustmentTransaction(transaction: any) {
     const index = LocalBindTransactionList.value.findIndex((item: any) => item.id === transaction.id)
     if (index !== -1) {
       formatAdjustmentEdit(transaction)
-      subTotals.value.amount = 0
-      // Recalcular sumatoria local
-      for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
-        const localTransaction = LocalBindTransactionList.value[i]
-        if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
-          subTotals.value.amount -= localTransaction.netAmount
-        }
-        else {
-          subTotals.value.amount += localTransaction.netAmount
-        }
-      }
     }
   }
 }
@@ -401,22 +390,13 @@ async function getMerchantBankAccountList(query: string) {
 
 function clearTransactions() {
   LocalBindTransactionList.value = []
-  subTotals.value.amount = []
+  subTotals.value = { amount: 0, commission: 0, net: 0 }
 }
 
 function unbindTransactions() {
   const transactionId = String(contextMenuTransaction.value.id)
   LocalBindTransactionList.value = LocalBindTransactionList.value.filter((item: any) => item.id !== transactionId)
   selectedElements.value = selectedElements.value.filter((item: any) => item.id !== transactionId)
-  // Se debe sumar si es una transaccion de ajuste tipo debito
-  if (contextMenuTransaction.value.adjustment && contextMenuTransaction.value.transactionSubCategory.negative) {
-    subTotals.value.amount += contextMenuTransaction.value.netAmount
-  }
-  else {
-    // Se resta si es un ajuste de credito o si es una cc
-    subTotals.value.amount -= contextMenuTransaction.value.netAmount
-  }
-  subTotals.value.amount = Number.parseFloat(subTotals.value.amount.toFixed(2))
 }
 
 async function createItem(item: { [key: string]: any }) {
@@ -425,7 +405,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.paidDate = payload.paidDate ? dayjs(payload.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.merchantBankAccount = Object.prototype.hasOwnProperty.call(payload.merchantBankAccount, 'id') ? payload.merchantBankAccount.id : payload.merchantBankAccount
-    payload.detailsAmount = subTotals.value.amount
+    payload.detailsAmount = subTotals.value.net
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
     delete payload.reconciliationId
@@ -456,7 +436,7 @@ async function createItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (isGreaterThanTwoDecimals(subTotals.value.amount, item.amount)) {
+  if (isGreaterThanTwoDecimals(subTotals.value.net, item.amount)) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
     return
   }
@@ -500,12 +480,6 @@ function formatAdjustment(data: any) {
   const newAdjustment = JSON.parse(JSON.stringify(data))
   newAdjustment.id = v4() // id temporal para poder eliminar de forma local
   newAdjustment.checkIn = dayjs().format('YYYY-MM-DD')
-  if (newAdjustment.transactionSubCategory.negative) {
-    subTotals.value.amount -= data.netAmount
-  }
-  else {
-    subTotals.value.amount += data.netAmount
-  }
   newAdjustment.commission = 0
   newAdjustment.netAmount = data.netAmount
   newAdjustment.amount = data.transactionCategory.onlyApplyNet ? 0 : data.netAmount
@@ -535,8 +509,6 @@ function bindTransactions(event: any[]) {
   removeUnbindSelectedTransactions(event)
   const adjustmentList = [...LocalBindTransactionList.value].filter((item: any) => item.adjustment)
   LocalBindTransactionList.value = [...event, ...adjustmentList]
-  const totalAmount = LocalBindTransactionList.value.reduce((sum, item) => sum + item.netAmount, 0)
-  subTotals.value.amount = totalAmount
 }
 
 function removeUnbindSelectedTransactions(newTransactions: any[]) {
@@ -591,8 +563,21 @@ function onChangeLocalPagination(event: any) {
 }
 
 watch(() => LocalBindTransactionList.value, async (newValue) => {
-  if (newValue && !idItem.value) {
-    pagination.value.totalElements = newValue?.length ?? 0
+  pagination.value.totalElements = newValue?.length ?? 0
+  subTotals.value = { amount: 0, commission: 0, net: 0 }
+  // recalcular totales si cambia la lista
+  for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
+    const localTransaction = LocalBindTransactionList.value[i]
+    if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
+      subTotals.value.amount -= localTransaction.amount
+      subTotals.value.commission -= localTransaction.commission
+      subTotals.value.net -= localTransaction.netAmount
+    }
+    else {
+      subTotals.value.amount += localTransaction.amount
+      subTotals.value.commission += localTransaction.commission
+      subTotals.value.net += localTransaction.netAmount
+    }
   }
 })
 </script>
@@ -701,8 +686,10 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="9" footer-style="text-align:right" />
+            <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :footer="formatNumber(subTotals.commission)" />
+            <Column :footer="formatNumber(subTotals.net)" />
           </Row>
         </ColumnGroup>
       </template>
