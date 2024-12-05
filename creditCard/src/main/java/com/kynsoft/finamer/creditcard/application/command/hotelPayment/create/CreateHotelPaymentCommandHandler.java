@@ -94,4 +94,5 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
         this.hotelPaymentStatusHistoryService.create(created, command.getEmployee());
         command.setHotelPaymentId(created.getHotelPaymentId());
     }
+
 }
