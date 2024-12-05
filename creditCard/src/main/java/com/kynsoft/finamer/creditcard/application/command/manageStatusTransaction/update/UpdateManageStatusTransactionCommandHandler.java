@@ -13,10 +13,6 @@ import com.kynsoft.finamer.creditcard.infrastructure.utils.CreditCardUploadAttac
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -33,14 +29,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final IParameterizationService parameterizationService;
     private final IProcessErrorLogService processErrorLogService;
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
-    private final IPdfVoucherService pdfVoucherService;
-    private final CreditCardUploadAttachmentUtil creditCardUploadAttachmentUtil;
-    private final IManageAttachmentTypeService attachmentTypeService;
-    private final IManageResourceTypeService resourceTypeService;
+    private final IVoucherService voucherService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
                                                        ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
-                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IPdfVoucherService pdfVoucherService, CreditCardUploadAttachmentUtil creditCardUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService) {
+                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IPdfVoucherService pdfVoucherService, CreditCardUploadAttachmentUtil creditCardUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IVoucherService voucherService) {
 
         this.transactionService = transactionService;
         this.statusTransactionService = statusTransactionService;
@@ -53,10 +46,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         this.parameterizationService = parameterizationService;
         this.processErrorLogService = processErrorLogService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
-        this.pdfVoucherService = pdfVoucherService;
-        this.creditCardUploadAttachmentUtil = creditCardUploadAttachmentUtil;
-        this.attachmentTypeService = attachmentTypeService;
-        this.resourceTypeService = resourceTypeService;
+        this.voucherService = voucherService;
     }
 
     @Override
@@ -141,46 +131,10 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 
             //Enviar correo (voucher) de confirmacion a las personas implicadas
             transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
-            createAndUploadVoucher(transactionDto, merchantConfigDto, command.getEmployee());
+            this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getEmployee());
             command.setResult(transactionResponse);
         } else {
             throw new BusinessException(DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR, DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR.getReasonPhrase());
         }
-    }
-
-    private void createAndUploadVoucher(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String employee){
-        try {
-            byte[] attachment = this.pdfVoucherService.generatePdf(transactionDto, merchantConfigDto);
-            String filename = "transaction_"+transactionDto.getId()+".pdf";
-            String file = "";
-            LinkedHashMap<String, String> response = this.creditCardUploadAttachmentUtil.uploadAttachmentContent(filename, attachment);
-            file = response.get("url");
-            this.attachVoucherToTransaction(transactionDto, file, filename, employee);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void attachVoucherToTransaction(TransactionDto transactionDto, String file, String filename, String employee){
-        List<AttachmentDto> attachments = transactionDto.getAttachments() != null ? transactionDto.getAttachments() : new ArrayList<>();
-        ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findByDefault();
-        ResourceTypeDto resourceTypeDto = this.resourceTypeService.findByVcc();
-        AttachmentDto newAttachment = new AttachmentDto(
-                UUID.randomUUID(),
-                0L,
-                filename,
-                file,
-                "",
-                attachmentTypeDto,
-                null,
-                employee,
-                null,
-                null,
-                resourceTypeDto,
-                null
-        );
-        attachments.add(newAttachment);
-        transactionDto.setAttachments(attachments);
-        this.transactionService.update(transactionDto);
     }
 }
