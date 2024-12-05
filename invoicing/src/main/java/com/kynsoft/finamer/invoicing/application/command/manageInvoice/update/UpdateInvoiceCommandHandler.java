@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -57,8 +60,9 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
         ConsumerUpdate update = new ConsumerUpdate();
         if (command.getInvoiceDate() != null && !command.getInvoiceDate().equals(dto.getInvoiceDate())) {
-            RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoiceDate().toLocalDate(), dto.getHotel().getId()));
-            this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(), update::setUpdate);
+            dto.setInvoiceDate(invoiceDate(dto.getHotel().getId(), command.getInvoiceDate()));
+//            RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoiceDate().toLocalDate(), dto.getHotel().getId()));
+//            this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(), update::setUpdate);
         }
 
         if (!command.getAgency().equals(dto.getAgency().getId())) {
@@ -149,6 +153,16 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
         this.invoiceStatusHistoryService.create(dto);
 
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
+            //return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
 }
