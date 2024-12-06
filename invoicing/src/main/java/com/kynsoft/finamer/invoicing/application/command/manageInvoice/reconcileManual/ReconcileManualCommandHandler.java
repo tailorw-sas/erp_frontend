@@ -81,6 +81,9 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 fileContent = Optional.of(fileContentResponse);
                 //fileContent = this.createInvoiceReconcileAutomaticSupportAttachmentContent(invoiceDto.getId().toString());
             } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+                System.err.println("Error: " + e.getCause().getLocalizedMessage());
+                System.err.println("Error: " + e.getCause().getMessage());
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto,
                         "The pdf could not be generated."
