@@ -84,22 +84,20 @@ const itemTemp = ref<GenericObject>({
 const toast = useToast()
 
 const Columns: IColumn[] = [
-  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px' },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
-
-  { field: 'description', header: 'Remark', type: 'text', width: '200px' },
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   // { field: 'status', header: 'Status', type: 'text', width: '100px', sortable: false },
 ]
 
 const incomeColumns: IColumn[] = [
-  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px' },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
-  { field: 'status', header: 'Status', type: 'text', width: '100px' },
-
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
+  { field: 'invoiceStatus', header: 'Status', type: 'slot-text', width: '100px', sortable: false, showFilter: false },
 ]
 
 const dialogVisible = ref(props.openDialog)
@@ -111,12 +109,13 @@ const options = ref({
   showDelete: false,
   showFilters: false,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -126,7 +125,7 @@ const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -337,19 +336,32 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? 'Income Status History' : header" class="p-4 h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    style="width: 800px;" @hide="closeDialog"
+    v-model:visible="dialogVisible"
+    modal
+    :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? 'Income Status History' : header"
+    class="p-4"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :block-scroll="true"
+    style="width: 50%;"
+    @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex justify-content-between">
+        <h5 class="m-0">
+          {{ props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? 'Income Status History' : header }} - Invoice ID: {{ props.selectedInvoiceObj?.invoiceId }}
+        </h5>
+      </div>
+    </template>
+
     <div class=" h-fit overflow-hidden mt-4">
       <div class="flex flex-row align-items-center">
-        <div class="flex flex-column" style="max-width: 900px;overflow: auto;">
+        <div class="flex flex-column" style="width: 100%;overflow: auto;">
           <DynamicTable
             :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? incomeColumns : Columns"
             :options="options" :pagination="Pagination" @on-confirm-create="clearForm"
             @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
           />
-          <div class=" flex w-full justify-content-end ">
+          <div v-if="false" class=" flex w-full justify-content-end ">
             <Button
               v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
