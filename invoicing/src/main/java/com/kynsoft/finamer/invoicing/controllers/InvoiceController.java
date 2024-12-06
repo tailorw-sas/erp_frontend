@@ -5,7 +5,6 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfCommand;
-import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfMessage;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
@@ -24,7 +23,6 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialCl
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualRequest;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualRequest1;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
@@ -46,7 +44,6 @@ import com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendList.Se
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.toPayment.search.GetSearchInvoiceToPaymentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
-import com.kynsoft.finamer.invoicing.infrastructure.services.ReportPdfServiceImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -55,7 +52,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -63,10 +59,7 @@ import java.util.UUID;
 public class InvoiceController {
 
     private final IMediator mediator;
-    private final ReportPdfServiceImpl pdfService;
-
-    public InvoiceController(IMediator mediator, ReportPdfServiceImpl pdfService) {
-        this.pdfService = pdfService;
+    public InvoiceController(IMediator mediator) {
         this.mediator = mediator;
     }
 
@@ -228,11 +221,13 @@ public class InvoiceController {
     }
 
     @PostMapping("/reconcile-manual")
-    public ResponseEntity<?> generateInvoicePdf(@RequestBody ReconcileManualRequest request) {
+    public ResponseEntity<byte[]> generateInvoicePdf(@RequestBody ReconcileManualRequest request) {
 
+        //Realizar el reconcile manual
         ReconcileManualCommand command = ReconcileManualCommand.fromRequest(request);
         ReconcileManualMessage response = this.mediator.send(command);
 
+        //Intentar devolver el pdf
         try {
             // Generar el buffer de manera dinámica
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -240,16 +235,11 @@ public class InvoiceController {
             InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(request.getInvoices(), outputStream.toByteArray());
             InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
 
-            // Enviar el comando y obtener el mensaje
-            InvoiceReconcileManualPdfMessage message = mediator.send(pdfCommand);
-
-            // Validar los datos del PDF
-            byte[] pdfData = pdfCommand.getRequest().getPdfData();
-            // Responder con el PDF
+            // Retornar el PDF
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
                     .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdfData);
+                    .body(pdfCommand.getRequest().getPdfData());
 
         } catch (Exception e) {
             // Manejar errores
@@ -258,28 +248,29 @@ public class InvoiceController {
         }
 
     }
-
+/*
+    //Probar el metodo para generar PDFs a partir de un listado de invoicings UUIDs
     @PostMapping("/reconcile-pdf-manual-test")
-    public ResponseEntity<byte[]> generatePdf(@RequestBody ReconcileManualRequest1 res) {
+    public ResponseEntity<byte[]> generatePdf(@RequestBody List<UUID> ids) {
 
         try {
             // Generar el buffer de manera dinámica
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(res.getInvoices(), outputStream.toByteArray());
-            byte[] pdf = pdfService.concatenateManualPDFs(pdfRequest);
-            /* InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
+            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(ids, outputStream.toByteArray());
+            *//*byte[] pdf = pdfService.concatenateManualPDFs(pdfRequest);*//*
+             InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
 
             // Enviar el comando y obtener el mensaje
             InvoiceReconcileManualPdfMessage message = mediator.send(pdfCommand);
 
             // Validar los datos del PDF
-            byte[] pdfData = pdfCommand.getRequest().getPdfData();*/
+
             // Responder con el PDF
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
                     .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdf);
+                    .body(pdfCommand.getRequest().getPdfData());
 
         } catch (Exception e) {
             // Manejar errores
@@ -287,6 +278,6 @@ public class InvoiceController {
                     .body(null);
         }
 
-    }
+    }*/
 
 }
