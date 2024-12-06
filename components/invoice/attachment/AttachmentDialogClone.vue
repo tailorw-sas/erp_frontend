@@ -905,7 +905,87 @@ onMounted(async () => {
               listFields[fieldKey] = file
               }
 
-              <template #field-file="{ onUpdate, item: data }">
+              <template #field-file="{ item: data, onUpdate }">
+                <InputGroup>
+                  <InputText
+                    v-if="!loadingSaveAll"
+                    v-model="data.filename"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                    placeholder="Upload File"
+                    disabled
+                  />
+                  <Skeleton v-else height="2rem" width="100%" class="mb-2" style="border-radius: 4px;" />
+                  <FileUpload
+                    v-if="!loadingSaveAll"
+                    mode="basic"
+                    :max-file-size="100000000"
+                    :disabled="idItem !== '' || idItem === null"
+                    :multiple="false"
+                    auto
+                    accept="application/pdf"
+                    custom-upload
+                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                    @uploader="($event: any) => {
+                      customBase64Uploader($event, Fields, 'file');
+                      onUpdate('file', $event)
+                      if ($event && $event.files.length > 0) {
+                        onUpdate('filename', $event?.files[0]?.name)
+                        onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                      }
+                      else {
+                        onUpdate('fileName', '')
+                      }
+                    }"
+                  />
+                </InputGroup>
+
+                <FileUpload
+                  v-if="false" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
+                  @uploader="($event: any) => {
+                    customBase64Uploader($event, fieldsV2, 'path');
+                    onUpdate('path', $event)
+                    if ($event && $event.files.length > 0) {
+                      onUpdate('fileName', $event?.files[0]?.name)
+                      onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                    }
+                    else {
+                      onUpdate('fileName', '')
+                    }
+                  }"
+                >
+                  <template #header="{ chooseCallback }">
+                    <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                      <div class="flex gap-2">
+                        <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                        <Button
+                          :disabled="idItem !== '' || idItem === null"
+                          icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
+                            onUpdate('path', null);
+                            onUpdate('fileName', '');
+
+                          }"
+                        />
+                      </div>
+                    </div>
+                  </template>
+                  <template #content="{ files }">
+                    <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
+                      <li class="p-3 surface-border flex align-items-start sm:align-items-center">
+                        <div class="flex flex-column">
+                          <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
+                          <span class="text-900 font-medium">
+                            <Badge severity="warning">
+                              {{ formatSize(data.path?.files[0].size) }}
+                            </Badge>
+                          </span>
+                        </div>
+                      </li>
+                    </ul>
+                  </template>
+                </FileUpload>
+              </template>
+
+              <template #field-file1="{ onUpdate, item: data }">
                 <FileUpload
                   :disabled="idItem !== ''"
                   accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
