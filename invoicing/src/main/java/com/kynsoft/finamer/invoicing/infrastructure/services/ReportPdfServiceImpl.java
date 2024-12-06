@@ -69,7 +69,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.setBorder(Border.NO_BORDER);
 
         // Add header row
-        table.addHeaderCell(new Cell().add(new Paragraph("Hotel: " + invoiceDto.getHotel().getName()).addStyle(styleHeader)));
+        table.addHeaderCell(new Cell().add(new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getName() : "").addStyle(styleHeader)));
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell().add(new Paragraph("Create Date").addStyle(styleHeader)));
@@ -107,7 +107,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         // Add data row file 3
         for (ManageBookingDto booking : bookings) {
-            table.addCell(new Cell().add(new Paragraph((booking.getCouponNumber()!=null ? booking.getCouponNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getCouponNumber()!= null ? booking.getCouponNumber() : "")).addStyle(styleCell)));
             table.addCell(new Cell().add(new Paragraph((booking.getHotelBookingNumber() != null ? booking.getHotelBookingNumber() : "")).addStyle(styleCell)));
             table.addCell(new Cell().add(new Paragraph((booking.getContract() != null ? booking.getContract() : "")).addStyle(styleCell)));
             table.addCell(new Cell().add(new Paragraph((booking.getNightType() != null ? booking.getNightType().getName() : "")).addStyle(styleCell)));
@@ -137,12 +137,12 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         // Add data row file 5
         for (ManageBookingDto booking : bookings) {
             if (booking.getRoomType() != null) {
-                table.addCell(new Cell().add(new Paragraph((booking.getRoomType().getName() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((booking.getRoomType() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
             } else {
                 table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
             }
             if (booking.getRoomType() != null) {
-                table.addCell(new Cell().add(new Paragraph((booking.getRatePlan().getName() != null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((booking.getRatePlan() != null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
             } else {
                 table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
             }
@@ -213,7 +213,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                 table.addCell(new Cell().add(new Paragraph(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph("$ " + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0)).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph((roomRate.getRemark() != null && !roomRate.getRemark().isEmpty()  ? roomRate.getRemark() : "$")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((roomRate.getRemark() != null ? roomRate.getRemark() : "$")).addStyle(styleCell)));
             }
         }
         // Add data row file 10
