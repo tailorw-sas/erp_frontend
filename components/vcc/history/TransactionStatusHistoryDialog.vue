@@ -24,11 +24,11 @@ const props = defineProps({
 })
 
 const Columns: IColumn[] = [
-  { field: 'transactionId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px' },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
-  { field: 'description', header: 'Remark', type: 'text', width: '200px' },
-  { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px' },
+  { field: 'transactionId', header: 'Id', type: 'text', width: '70px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px', sortable: false, showFilter: false },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
+  { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px', sortable: false, showFilter: false },
 ]
 
 const dialogVisible = ref(props.openDialog)
@@ -40,12 +40,13 @@ const options = ref({
   showDelete: false,
   showFilters: false,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -55,7 +56,7 @@ const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 10000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -95,7 +96,6 @@ async function getList() {
     ListItems.value = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
@@ -104,7 +104,16 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, transactionId: iterator?.transaction?.id, statusName: iterator?.transactionStatus?.name }]
+      ListItems.value = [
+        ...ListItems.value,
+        {
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          transactionId: iterator?.transaction?.id,
+          statusName: iterator?.transactionStatus?.name
+        }
+      ]
     }
   }
   catch (error) {
@@ -152,7 +161,7 @@ onMounted(() => {
     <template #header>
       <div class="flex justify-content-between">
         <h5 class="m-0">
-          {{ options.tableName }}
+          {{ options.tableName }} - Transaction ID: {{ props.selectedTransaction.id }}
         </h5>
       </div>
     </template>
