@@ -54,6 +54,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Agency Rate Amount',
     dataType: 'check',
     class: 'field col-12 required',
+    hidden: true
   },
   {
     field: 'isNegative',
