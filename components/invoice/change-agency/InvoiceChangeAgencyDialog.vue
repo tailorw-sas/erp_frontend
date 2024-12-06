@@ -222,10 +222,17 @@ onMounted(async () => {
     @hide="onClose(true)"
   >
     <template #header>
-      <div class="flex justify-content-between">
-        <h5 class="m-0">
-          Change Agency
-        </h5>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            Change Agency
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Invoice: {{ props.selectedInvoice.invoiceId }}
+          </h5>
+        </div>
       </div>
     </template>
     <template #default>
@@ -255,7 +262,7 @@ onMounted(async () => {
           @on-row-double-click="onRowDoubleClickInDataTableForChangeAgency"
         />
       </div>
-      <div class="flex justify-content-end">
+      <div v-if="false" class="flex justify-content-end">
         <div>
           <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
           <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="onClose()" />

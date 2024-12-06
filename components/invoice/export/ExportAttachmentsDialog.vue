@@ -182,10 +182,24 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal header="Invoice to print" class="p-4 h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 800px;"
+    v-model:visible="dialogVisible" modal header="Invoice to print" class="p-4"
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 500px;"
     @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            Invoice to print
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Invoice: {{ props.invoice.invoiceId }}
+          </h5>
+        </div>
+      </div>
+    </template>
     <div class=" h-fit overflow-hidden mt-4">
       <div class="flex gap-2 flex-column align-items-start h-fit ">
         <div class="flex flex-column gap-5" />
@@ -212,6 +226,7 @@ onMounted(() => {
           }"
         />
         <Button
+          v-if="false"
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
             closeDialog()

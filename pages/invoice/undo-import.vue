@@ -924,6 +924,7 @@ onMounted(async () => {
                   />
 
                   <Button
+                    v-if="false"
                     v-tooltip.top="'Cancel'" severity="secondary" class="h-2rem w-3rem p-button mt-3 px-2" icon="pi pi-times"
                     @click="handleClose"
                   />
