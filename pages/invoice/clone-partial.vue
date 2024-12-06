@@ -745,7 +745,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
 
     // Agregar los attachments localmente al payload
     for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
+      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file.files[0])
       attachments.push({
         ...attachmentList.value[i],
         type: attachmentList.value[i]?.type?.id,

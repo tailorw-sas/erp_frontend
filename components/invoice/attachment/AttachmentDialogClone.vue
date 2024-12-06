@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 
 const props = defineProps({
 
@@ -84,6 +85,7 @@ const loadingSaveAll = ref(false)
 const confirm = useConfirm()
 const resourceTypeList = ref<any[]>([])
 const loadingSearch = ref(false)
+const pathFileLocal = ref('')
 
 const loadingDelete = ref(false)
 
@@ -117,70 +119,63 @@ const itemTemp = ref<GenericObject>({
 })
 const toast = useToast()
 
-const Fields: Array<Container> = [
+const Fields: Array<FieldDefinitionType> = [
   {
-    childs: [
-      {
-        field: 'resource',
-        header: 'Resource',
-        dataType: 'number',
-        class: 'field mb-3 col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
-      {
-        field: 'resourceType',
-        header: 'Resource Type',
-        dataType: 'select',
-        class: 'field mb-3 col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
+    field: 'resource',
+    header: 'Resource',
+    dataType: 'number',
+    class: 'field mb-3 col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'resourceType',
+    header: 'Resource Type',
+    dataType: 'select',
+    class: 'field mb-3 col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
 
-      {
-        field: 'type',
-        header: 'Attachment Type',
-        dataType: 'select',
-        class: 'field mb-3 col-12 md: required',
-        headerClass: 'mb-1',
-        validation: z.object({
-          id: z.string(),
-          name: z.string(),
+  {
+    field: 'type',
+    header: 'Attachment Type',
+    dataType: 'select',
+    class: 'field mb-3 col-12 md: required',
+    headerClass: 'mb-1',
+    validation: z.object({
+      id: z.string(),
+      name: z.string(),
 
-        })
-          .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
+    })
+      .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
 
-      },
+  },
 
-      {
-        field: 'file',
-        header: 'Path',
-        dataType: 'fileupload',
-        class: 'field mb-3 col-12 required',
-        headerClass: 'mb-1',
+  {
+    field: 'file',
+    header: 'Path',
+    dataType: 'fileupload',
+    class: 'field mb-3 col-12 required',
+    headerClass: 'mb-1',
+    validation: validateFiles(100, ['application/pdf']),
+  },
+  {
+    field: 'filename',
+    header: 'Filename',
+    dataType: 'text',
+    class: 'field mb-3 col-12',
+    headerClass: 'mb-1',
+    hidden: true
+  },
+  {
+    field: 'remark',
+    header: 'Remark',
+    dataType: 'textarea',
+    class: 'field col-12 ',
+    headerClass: 'mb-1',
 
-      },
-      {
-        field: 'filename',
-        header: 'Filename',
-        dataType: 'text',
-        class: 'field mb-3 col-12 required',
-        headerClass: 'mb-1',
-
-      },
-      {
-        field: 'remark',
-        header: 'Remark',
-        dataType: 'textarea',
-        class: 'field col-12 ',
-        headerClass: 'mb-1',
-
-      },
-
-    ],
-    containerClass: 'w-full'
-  }
-
+  },
 ]
 
 const attachmentHistoryDialogOpen = ref<boolean>(false)
@@ -457,16 +452,32 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
 
-    const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+    // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
 
     payload.invoice = props.selectedInvoice
 
-    payload.file = file
+    // payload.file = file
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
 
     payload.type = item.type?.id
+    if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
+      const file = payload.file.files[0]
+      if (file) {
+        const objFile = await getUrlOrIdByFile(file)
+        payload.file = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      }
+      else {
+        payload.file = ''
+      }
+    }
+    else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+      payload.file = pathFileLocal.value
+    }
+    else {
+      payload.file = ''
+    }
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
   }
 }
@@ -474,14 +485,30 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+  // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
 
-  payload.file = file
+  // payload.file = file
 
   payload.employee = userData?.value?.user?.name
   payload.employeeId = userData?.value?.user?.userId
 
   payload.type = item.type?.id
+  if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
+    const file = payload.file.files[0]
+    if (file) {
+      const objFile = await getUrlOrIdByFile(file)
+      payload.file = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    }
+    else {
+      payload.file = ''
+    }
+  }
+  else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+    payload.file = pathFileLocal.value
+  }
+  else {
+    payload.file = ''
+  }
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
@@ -595,6 +622,7 @@ async function getItemById(id: string) {
         item.value.resource = response.invoice.invoiceId
         item.value.resourceType = `${`${OBJ_ENUM_INVOICE_TYPE_CODE[response.invoice.invoiceType] || ''}-${OBJ_ENUM_INVOICE[response.invoice.invoiceType] || ''}`}`
         selectedAttachment.value = response.attachmentId
+        pathFileLocal.value = response.file
       }
 
       formReload.value += 1
@@ -628,21 +656,26 @@ function formatSize(bytes: number) {
 }
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    saveItem(item)
+  }
+  else {
+    const { event } = item
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        saveItem(item)
+      },
+      reject: () => {
+        // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+      }
+    })
+  }
 }
 
 function showHistory() {
@@ -732,7 +765,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
-  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 50
   getList()
 })
 
@@ -800,18 +833,17 @@ onMounted(async () => {
     v-model:visible="dialogVisible" modal :header="header" class="h-fit w-fit"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" @hide="closeDialog"
   >
+    <template #header>
+      <div class="inline-flex align-items-center justify-content-center gap-2">
+        <span class="font-bold white-space-nowrap">{{ header }}</span>
+        <!-- <strong class="mx-2">-</strong>
+        <strong class="mr-1">Invoice:</strong>
+        <strong>{{ selectedInvoiceObj.invoiceId }}</strong> -->
+      </div>
+    </template>
     <div class=" w-fit h-fit overflow-auto p-2">
       <div class="flex lg:flex-row flex-column align-items-start">
         <div class="flex flex-column" style="max-width: 900px;">
-          <div class="  mb-2 flex justify-content-end">
-            <div
-              class="bg-primary w-fit flex gap-2 justify-center align-content-center align-items-center"
-              style="border-radius: 5px; padding: 11px;"
-            >
-              <span class="font-bold">Invoice: </span>
-              <span>{{ filterToSearch.search }} </span>
-            </div>
-          </div>
           <div style="max-width: 700px; overflow: auto;">
             <DynamicTable
               :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
@@ -837,10 +869,17 @@ onMounted(async () => {
             {{ idItem ? "Edit" : "Add" }}
           </div>
           <div class="card">
-            <EditFormV2WithContainer
-              :key="formReload" :fields-with-containers="Fields" :item="item"
-              :show-actions="true" :loading-save="loadingSaveAll" class=" w-full " @cancel="clearForm"
-              @delete="requireConfirmationToDelete($event)" @submit="saveItem(item)"
+            <EditFormV2
+              :key="formReload"
+              :fields="Fields"
+              :item="item"
+              :show-actions="true"
+              :loading-save="loadingSaveAll"
+              @on-confirm-create="clearForm"
+              @submit-form="requireConfirmationToSave"
+              @cancel="clearForm"
+              @delete="requireConfirmationToDelete($event)"
+              @submit="requireConfirmationToSave($event)"
             >
               <template #field-resourceType="{ item: data, onUpdate }">
                 <DebouncedAutoCompleteComponent
@@ -1035,7 +1074,7 @@ onMounted(async () => {
                   <Button
                     v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
                     :disabled="!props.item?.fieldValues?.file || idItem !== '' || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
-                    @click="saveItem(props.item.fieldValues)"
+                    @click="props.item.submitForm($event)"
                   />
                 </IfCan>
 
@@ -1079,7 +1118,7 @@ onMounted(async () => {
                   }"
                 />
               </template>
-            </EditFormV2WithContainer>
+            </EditFormV2>
           </div>
         </div>
       </div>
