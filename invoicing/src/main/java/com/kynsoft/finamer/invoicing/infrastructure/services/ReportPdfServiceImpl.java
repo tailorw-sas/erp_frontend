@@ -205,7 +205,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
             List<ManageRoomRateDto> roomRates = booking.getRoomRates();
             for (ManageRoomRateDto roomRate : roomRates) {
                 total = total + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0);
-                moneyType = roomRate.getRemark();
+                moneyType = roomRate.getRemark() != null ? roomRate.getRemark() : "";
 
                 table.addCell(new Cell().add(new Paragraph((roomRate.getCheckIn() != null ? roomRate.getCheckIn().format(formatter) : "Not date")).addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph((roomRate.getCheckOut() != null ? roomRate.getCheckOut().format(formatter) : "Not date")).addStyle(styleCell)));
