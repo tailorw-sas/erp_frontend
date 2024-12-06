@@ -142,7 +142,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         reconcileAutomaticValidatorFactory.prepareValidator(request.getFileContent());
         Arrays.stream(request.getInvoiceIds()).forEach(id->{
             log.info("id --->"+id);
-            log.info("id - length ----->",id.length());
+            log.info("id - length ----->{}",id.length());
         });
         List<ManageInvoiceDto> selectedInvoice = manageInvoiceService.findByIds(Arrays.stream(request.getInvoiceIds()).map(id->UUID.fromString(id.trim())).toList());
 

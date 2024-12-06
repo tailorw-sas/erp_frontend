@@ -52,7 +52,7 @@ public class InvoiceReconcileAutomaticController {
         log.info("Invoice id recividos {}", invoiceIds);
         Arrays.stream(invoiceIds).peek(id->{
             log.info("Invoice split {}",id);
-            log.info("Invoice split length{}",id.length());
+            log.info("Invoice split length {}",id.length());
         });
 
 
