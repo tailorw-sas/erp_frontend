@@ -112,7 +112,7 @@ const options = ref({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'invoiceId',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -749,7 +749,7 @@ const disabledSearch = computed(() => {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getList()
 })

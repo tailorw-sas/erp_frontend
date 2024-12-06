@@ -2653,7 +2653,7 @@ const legend = ref(
           <div class="flex justify-content-end mb-0">
             <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
               icon="pi pi-save" @click="handleApplyClick" />
-            <Button class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2" icon="pi pi-times ml-1 mr-1 "
+            <Button v-if="false" class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2" icon="pi pi-times ml-1 mr-1 "
             @click="doubleFactorOpen = false"  />
 
           </div>
@@ -2693,7 +2693,7 @@ const legend = ref(
           <div class="flex justify-content-end mb-0">
             <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
               icon="pi pi-save" @click="handleTotalApplyClick" />
-            <Button  class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
+            <Button v-if="false"  class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
               icon="pi pi-times ml-1 mr-1 "   @click="doubleFactorTotalOpen = false" />
 
           </div>

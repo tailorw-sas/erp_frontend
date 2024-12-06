@@ -87,7 +87,7 @@ const options = ref({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -96,7 +96,7 @@ const payload = ref<IQueryRequest>({
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 10,
+  limit: 50,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -270,7 +270,7 @@ async function goToList() {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getErrorList()
 })
