@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processs
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorQuery;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.reconcileError.automatic.InvoiceReconcileAutomaticImportErrorRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/manage-invoice")
 public class InvoiceReconcileAutomaticController {
@@ -45,6 +49,12 @@ public class InvoiceReconcileAutomaticController {
     ) {
         // Dividir los IDs de facturas
         String[] invoiceIds = invoiceIdString.split(",");
+        log.info("Invoice id recividos {}", invoiceIds);
+        Arrays.stream(invoiceIds).peek(id->{
+            log.info("Invoice split {}",id);
+            log.info("Invoice split length{}",id.length());
+        });
+
 
         // Se retira el "RETURN" DataBufferUtils.join(filePart.content()) hasta que se arregle lo de JasperReports
         return DataBufferUtils.join(filePart.content())

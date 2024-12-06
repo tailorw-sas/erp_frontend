@@ -140,8 +140,11 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private List<ManageInvoiceDto> readExcel(InvoiceReconcileAutomaticRequest request) throws Exception {
         List<ManageInvoiceDto> validInvoice = new ArrayList<>();
         reconcileAutomaticValidatorFactory.prepareValidator(request.getFileContent());
-        Arrays.stream(request.getInvoiceIds()).forEach(id->log.info("id --->"+id));
-        List<ManageInvoiceDto> selectedInvoice = manageInvoiceService.findByIds(Arrays.stream(request.getInvoiceIds()).map(UUID::fromString).toList());
+        Arrays.stream(request.getInvoiceIds()).forEach(id->{
+            log.info("id --->"+id);
+            log.info("id - length ----->",id.length());
+        });
+        List<ManageInvoiceDto> selectedInvoice = manageInvoiceService.findByIds(Arrays.stream(request.getInvoiceIds()).map(id->UUID.fromString(id.trim())).toList());
 
         for (ManageInvoiceDto manageInvoiceDto : selectedInvoice) {
             if (reconcileAutomaticValidatorFactory.validate(manageInvoiceDto, request.getImportProcessId())) {
