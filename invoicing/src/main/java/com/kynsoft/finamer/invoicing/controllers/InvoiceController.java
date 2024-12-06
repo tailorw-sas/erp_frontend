@@ -221,31 +221,32 @@ public class InvoiceController {
     }
 
     @PostMapping("/reconcile-manual")
-    public ResponseEntity<byte[]> generateInvoicePdf(@RequestBody ReconcileManualRequest request) {
+    public ResponseEntity<?> generateInvoicePdf(@RequestBody ReconcileManualRequest request) {
 
         //Realizar el reconcile manual
         ReconcileManualCommand command = ReconcileManualCommand.fromRequest(request);
         ReconcileManualMessage response = this.mediator.send(command);
 
+        return ResponseEntity.ok(response);
         //Intentar devolver el pdf
-        try {
-            // Generar el buffer de manera dinámica
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(request.getInvoices(), outputStream.toByteArray());
-            InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
-
-            // Retornar el PDF
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdfCommand.getRequest().getPdfData());
-
-        } catch (Exception e) {
-            // Manejar errores
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
-        }
+//        try {
+//            // Generar el buffer de manera dinámica
+//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//
+//            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(request.getInvoices(), outputStream.toByteArray());
+//            InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
+//
+//            // Retornar el PDF
+//            return ResponseEntity.ok()
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
+//                    .contentType(MediaType.APPLICATION_PDF)
+//                    .body(pdfCommand.getRequest().getPdfData());
+//
+//        } catch (Exception e) {
+//            // Manejar errores
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(null);
+//        }
 
     }
 /*
