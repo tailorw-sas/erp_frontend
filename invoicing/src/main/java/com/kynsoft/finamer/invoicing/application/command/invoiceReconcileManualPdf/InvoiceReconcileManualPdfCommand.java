@@ -3,19 +3,20 @@ package com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManual
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
-public class InvoiceReconcileManualPdfCommand implements ICommand {
-
+@Setter
+public class InvoiceReconcileManualPdfCommand implements ICommand{
     private final InvoiceReconcileManualPdfRequest request;
-  public InvoiceReconcileManualPdfCommand(InvoiceReconcileManualPdfRequest request) {
-        this.request = request;
 
-  }
-  @Override
-  public ICommandMessage getMessage() {
-        return null;
+    public InvoiceReconcileManualPdfCommand(InvoiceReconcileManualPdfRequest request) {
+        this.request = request;
     }
 
+    @Override
+    public ICommandMessage getMessage() {
+        return new InvoiceReconcileManualPdfMessage(request.getPdfData());
+    }
 }
 

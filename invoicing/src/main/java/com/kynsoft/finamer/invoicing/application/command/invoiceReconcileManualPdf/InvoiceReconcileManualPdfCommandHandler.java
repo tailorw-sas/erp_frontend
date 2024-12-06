@@ -8,20 +8,21 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class InvoiceReconcileManualPdfCommandHandler implements ICommandHandler<InvoiceReconcileManualPdfCommand> {
-  private final IReportPdfService reportPdfService;
 
-    public InvoiceReconcileManualPdfCommandHandler(IReportPdfService reportPdfService) {
-        this.reportPdfService = reportPdfService;
+    private final IReportPdfService pdfService;
+
+    public InvoiceReconcileManualPdfCommandHandler(IReportPdfService pdfService) {
+        this.pdfService = pdfService;
     }
 
     @Override
-        public void handle(InvoiceReconcileManualPdfCommand command) {
+    public void handle(InvoiceReconcileManualPdfCommand command) {
         try {
-            reportPdfService.concatenateManualPDFs(command.getRequest());
-        }catch (Exception e) {
+            command.getRequest().setPdfData(pdfService.concatenateManualPDFs(command.getRequest()));
+        } catch (Exception e) {
             log.error(e.toString());
         }
-    }
 
+    }
 
 }
