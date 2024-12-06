@@ -897,7 +897,7 @@ onMounted(async () => {
             <template #header>
               <div class="flex justify-content-between">
                 <h5 class="m-0">
-                  Do you want to undo import this bookings: {{ invoiceIdofSelectedItems }} ?
+                  Do you want to undo import this invoice: {{ invoiceIdofSelectedItems }} ?
                 </h5>
               </div>
             </template>
