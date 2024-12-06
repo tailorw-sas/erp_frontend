@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
 
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,5 @@ public class ResourceTypeDto {
     private String code;
     private String name;
     private boolean vcc;
+    private Status status;
 }

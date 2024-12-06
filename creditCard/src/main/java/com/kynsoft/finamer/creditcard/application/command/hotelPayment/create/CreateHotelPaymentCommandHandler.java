@@ -5,7 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.EPaymentTransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.TransactionCheckInCloseOperationRule;
-import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
+import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionInHotelPaymentRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -56,7 +56,7 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
         if (command.getTransactions() != null) {
             for (Long transactionId : command.getTransactions()) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
-                RulesChecker.checkRule(new TransactionReconciliationOrPaymentRule(transactionDto));
+                RulesChecker.checkRule(new TransactionInHotelPaymentRule(transactionDto));
                 transactionList.add(transactionDto);
             }
         }
@@ -73,7 +73,13 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
                 : transactionDto.getNetAmount()
         ).reduce(0.0, Double::sum);
 
-        double amounts = transactionList.stream().map(TransactionDto::getAmount).reduce(0.0, Double::sum);
+        double amounts = transactionList.stream().map(transactionDto ->
+            transactionDto.isAdjustment()
+                ? transactionDto.getTransactionSubCategory().getNegative()
+                    ? -transactionDto.getAmount()
+                    : transactionDto.getAmount()
+                : transactionDto.getAmount()
+        ).reduce(0.0, Double::sum);
         double commissions = transactionList.stream().map(TransactionDto::getCommission).reduce(0.0, Double::sum);
 
         ManagePaymentTransactionStatusDto paymentTransactionStatusDto = this.paymentTransactionStatusService.findByEPaymentTransactionStatus(EPaymentTransactionStatus.IN_PROGRESS);
@@ -94,4 +100,5 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
         this.hotelPaymentStatusHistoryService.create(created, command.getEmployee());
         command.setHotelPaymentId(created.getHotelPaymentId());
     }
+
 }

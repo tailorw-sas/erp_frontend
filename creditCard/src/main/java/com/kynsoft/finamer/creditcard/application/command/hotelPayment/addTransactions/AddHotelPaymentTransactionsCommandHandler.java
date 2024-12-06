@@ -6,7 +6,7 @@ import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
+import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionInHotelPaymentRule;
 import com.kynsoft.finamer.creditcard.domain.services.IHotelPaymentAdjustmentService;
 import com.kynsoft.finamer.creditcard.domain.services.IHotelPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
@@ -38,7 +38,7 @@ public class AddHotelPaymentTransactionsCommandHandler implements ICommandHandle
         for (Long transactionId : command.getTransactionIds()) {
             if (!hotelPaymentTransactionsIds.contains(transactionId)) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
-                RulesChecker.checkRule(new TransactionReconciliationOrPaymentRule(transactionDto));
+                RulesChecker.checkRule(new TransactionInHotelPaymentRule(transactionDto));
                 hotelPaymentTransactions.add(transactionDto);
                 hotelPaymentDto.setNetAmount(hotelPaymentDto.getNetAmount() + transactionDto.getNetAmount());
                 hotelPaymentDto.setCommission(hotelPaymentDto.getCommission() + transactionDto.getCommission());
@@ -63,7 +63,14 @@ public class AddHotelPaymentTransactionsCommandHandler implements ICommandHandle
                     : transactionDto.getNetAmount()
                 : transactionDto.getNetAmount()
         ).reduce(0.0, Double::sum);
-        double amounts = hotelPaymentTransactions.stream().map(TransactionDto::getAmount).reduce(0.0, Double::sum);
+
+        double amounts = hotelPaymentTransactions.stream().map(transactionDto ->
+                transactionDto.isAdjustment()
+                        ? transactionDto.getTransactionSubCategory().getNegative()
+                        ? -transactionDto.getAmount()
+                        : transactionDto.getAmount()
+                        : transactionDto.getAmount()
+        ).reduce(0.0, Double::sum);
         double commissions = hotelPaymentTransactions.stream().map(TransactionDto::getCommission).reduce(0.0, Double::sum);
 
         hotelPaymentDto.setTransactions(hotelPaymentTransactions);

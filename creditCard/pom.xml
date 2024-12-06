@@ -172,6 +172,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext7-core</artifactId>
+            <version>7.2.6</version>  <!-- Asegúrate de usar la última versión disponible -->
+            <type>pom</type>
+        </dependency>
     </dependencies>
 
     <build>

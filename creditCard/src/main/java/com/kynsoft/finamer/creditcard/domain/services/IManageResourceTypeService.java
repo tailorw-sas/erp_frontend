@@ -23,5 +23,5 @@ public interface IManageResourceTypeService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-
+    ResourceTypeDto findByVcc();
 }

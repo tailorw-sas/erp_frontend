@@ -121,7 +121,7 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "bank_reconciliation")
     private ManageBankReconciliation reconciliation;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "transaction", cascade = CascadeType.MERGE)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "transaction", cascade = CascadeType.ALL)
     private List<Attachment> attachments;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")

@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.pa
 import com.kynsof.share.core.domain.kafka.entity.update.UpdatePaymentResourceTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.resourceType.update.UpdateManageResourceTypeCommand;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,8 @@ public class ConsumerReplicateUpdatePaymentResourceTypeService {
             UpdateManageResourceTypeCommand command = new UpdateManageResourceTypeCommand(
                     objKafka.getId(),
                     objKafka.getName(),
-                    objKafka.isVcc()
+                    objKafka.isVcc(),
+                    Status.valueOf(objKafka.getStatus())
             );
             mediator.send(command);
         } catch (Exception ex) {

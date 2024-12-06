@@ -8,7 +8,6 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByVirtualHotel;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
@@ -119,7 +118,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 booking -> new GroupByVirtualHotel(
                         booking.getManageAgencyCode(),
                         booking.getManageHotelCode(),
-                        Long.parseLong(booking.getHotelInvoiceNumber())
+                        Long.valueOf(booking.getHotelInvoiceNumber())
                 )
         ));
         if (!grouped.isEmpty()) {
@@ -182,6 +181,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
         }
         manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
+        manageInvoiceDto.setHotelInvoiceNumber(Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()));
         manageInvoiceDto = invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
 

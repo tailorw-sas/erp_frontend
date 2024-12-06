@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -8,6 +9,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
+import java.io.ByteArrayOutputStream;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -25,6 +27,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
 
     private final InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil;
+    private final IReportPdfService iReportPdfService;
 
     public ReconcileManualCommandHandler(IManageInvoiceService invoiceService, IManageAttachmentTypeService attachmentTypeService,
             IManageResourceTypeService resourceTypeService,
@@ -32,7 +35,9 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
             InvoiceReportProviderFactory invoiceReportProviderFactory,
-            InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil) {
+            InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil,
+            IReportPdfService iReportPdfService) {
+        this.iReportPdfService = iReportPdfService;
         this.invoiceService = invoiceService;
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
@@ -71,8 +76,14 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             }
             Optional<byte[]> fileContent = Optional.empty();
             try {
-                fileContent = this.createInvoiceReconcileAutomaticSupportAttachmentContent(invoiceDto.getId().toString());
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                byte[] fileContentResponse = this.iReportPdfService.concatenateManualPDFs(new InvoiceReconcileManualPdfRequest(List.of(id), outputStream.toByteArray()));
+                fileContent = Optional.of(fileContentResponse);
+                //fileContent = this.createInvoiceReconcileAutomaticSupportAttachmentContent(invoiceDto.getId().toString());
             } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+                System.err.println("Error: " + e.getCause().getLocalizedMessage());
+                System.err.println("Error: " + e.getCause().getMessage());
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto,
                         "The pdf could not be generated."

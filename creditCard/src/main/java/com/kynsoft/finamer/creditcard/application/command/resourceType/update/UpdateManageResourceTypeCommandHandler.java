@@ -1,8 +1,6 @@
 package com.kynsoft.finamer.creditcard.application.command.resourceType.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageResourceTypeService;
 import org.springframework.stereotype.Component;
@@ -22,6 +20,7 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
         resourceTypeDto.setName(command.getName());
         resourceTypeDto.setVcc(command.isVcc());
+        resourceTypeDto.setStatus(command.getStatus());
 
         this.service.update(resourceTypeDto);
     }

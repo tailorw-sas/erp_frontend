@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -24,4 +25,6 @@ public interface ManageAttachmentTypeReadDataJPARepository extends JpaRepository
     @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.defaults = true AND b.id <> :id")
     Long countByDefaultAndNotId(@Param("id") UUID id);
 
+    @Query("SELECT b FROM ManageAttachmentType b WHERE b.defaults = true AND b.status = 'ACTIVE'")
+    Optional<ManageAttachmentType> findByDefault();
 }

@@ -17,4 +17,5 @@ public class UpdatePaymentResourceTypeKafka {
     private String name;
     private boolean invoice;
     private boolean vcc;
+    private String status;
 }

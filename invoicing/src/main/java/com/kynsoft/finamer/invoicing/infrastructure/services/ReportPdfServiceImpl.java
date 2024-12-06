@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.itextpdf.kernel.exceptions.PdfException;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -10,9 +11,11 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
+import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.services.IReportPdfService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,21 +25,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
-public class ReportPdfServiceImpl {
+public class ReportPdfServiceImpl implements IReportPdfService {
 
     private final Logger log = LoggerFactory.getLogger(ReportPdfServiceImpl.class);
     private final ManageInvoiceServiceImpl invoiceService;
-    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService){
+
+    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService) {
 
         this.invoiceService = invoiceService;
     }
 
-    public byte[] generatePdf(String id) throws IOException { // Changed to IOException
+    private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException { // Changed to IOException
 
-        // Convertir String de vuelta a UUID
-        Long invoiceId = Long.parseLong(id);
         // Variables that are used in the creation of the pdf
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos); // Write to ByteArrayOutputStream
@@ -49,7 +52,7 @@ public class ReportPdfServiceImpl {
         styleHeader.setFontSize(10);
         Style styleCell = new Style();
         styleCell.setFontSize(8);
-        ManageInvoiceDto invoiceDto = invoiceService.findByInvoiceId(invoiceId);
+
         List<ManageBookingDto> bookings = invoiceDto.getBookings();
 
         double total = 0;
@@ -66,7 +69,7 @@ public class ReportPdfServiceImpl {
         table.setBorder(Border.NO_BORDER);
 
         // Add header row
-        table.addHeaderCell(new Cell().add(new Paragraph("Hotel: " + invoiceDto.getHotel().getName()).addStyle(styleHeader)));
+        table.addHeaderCell(new Cell().add(new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getName() : "").addStyle(styleHeader)));
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell().add(new Paragraph("Create Date").addStyle(styleHeader)));
@@ -74,22 +77,22 @@ public class ReportPdfServiceImpl {
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
 
-        for(ManageBookingDto booking : bookings) {
+        for (ManageBookingDto booking : bookings) {
             // Add data row file 1
             table.addCell(new Cell());
             table.addCell(new Cell());
             table.addCell(new Cell());
-            table.addCell(new Cell().add(new Paragraph(booking.getHotelCreationDate().format(formatter)).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph(booking.getBookingDate().format(formatter)).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getHotelCreationDate()!=null ? booking.getHotelCreationDate().format(formatter) : "Not date")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getBookingDate()!=null ? booking.getBookingDate().format(formatter) : "Not date")).addStyle(styleCell)));
             table.addCell(new Cell());
             table.addCell(new Cell());
         }
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -103,21 +106,22 @@ public class ReportPdfServiceImpl {
         table.addCell(new Cell());
 
         // Add data row file 3
-        for(ManageBookingDto booking : bookings) {
-            table.addCell(new Cell().add(new Paragraph(booking.getCouponNumber()).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph(booking.getHotelBookingNumber()).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph(booking.getContract()).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph(booking.getNightType().getName()).addStyle(styleCell)));
+        for (ManageBookingDto booking : bookings) {
+            table.addCell(new Cell().add(new Paragraph((booking.getCouponNumber()!= null ? booking.getCouponNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getHotelBookingNumber() != null ? booking.getHotelBookingNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getContract() != null ? booking.getContract() : "")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((booking.getNightType() != null ? booking.getNightType().getName() : "")).addStyle(styleCell)));
             table.addCell(new Cell());
             table.addCell(new Cell());
             table.addCell(new Cell());
         }
+
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -131,22 +135,30 @@ public class ReportPdfServiceImpl {
         table.addCell(new Cell());
 
         // Add data row file 5
-        for(ManageBookingDto booking : bookings) {
-        table.addCell(new Cell().add(new Paragraph(booking.getRoomType().getName()).addStyle(styleCell)));
-        table.addCell(new Cell().add(new Paragraph(booking.getRatePlan().getName()).addStyle(styleCell)));
-        table.addCell(new Cell().add(new Paragraph(booking.getRoomNumber()).addStyle(styleCell)));
-        table.addCell(new Cell());
-        table.addCell(new Cell());
-        table.addCell(new Cell());
-        table.addCell(new Cell());
+        for (ManageBookingDto booking : bookings) {
+            if (booking.getRoomType() != null) {
+                table.addCell(new Cell().add(new Paragraph((booking.getRoomType() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
+            } else {
+                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+            }
+            if (booking.getRoomType() != null) {
+                table.addCell(new Cell().add(new Paragraph((booking.getRatePlan() != null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
+            } else {
+                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+            }
+            table.addCell(new Cell().add(new Paragraph((booking.getRoomNumber() != null ? booking.getRoomNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
         }
 
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -160,22 +172,22 @@ public class ReportPdfServiceImpl {
         table.addCell(new Cell());
 
         // Add data row file 7
-        for(ManageBookingDto booking : bookings) {
-        table.addCell(new Cell().add(new Paragraph(booking.getFullName()).addStyle(styleCell)));
-        table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph(booking.getHotelInvoiceNumber()).addStyle(styleCell)));
-        table.addCell(new Cell());
-        table.addCell(new Cell());
-        table.addCell(new Cell());
-        table.addCell(new Cell());
+        for (ManageBookingDto booking : bookings) {
+            table.addCell(new Cell().add(new Paragraph((booking.getFullName() != null ? booking.getFullName() : "")).addStyle(styleCell)));
+            table.addCell(new Cell());
+            table.addCell(new Cell().add(new Paragraph((booking.getHotelInvoiceNumber() != null ? booking.getHotelInvoiceNumber() : "")).addStyle(styleCell)));
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
+            table.addCell(new Cell());
         }
 
         //2 empty columns
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
-        for(int i = 0; i<7;i++){
+        for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
         }
 
@@ -189,19 +201,19 @@ public class ReportPdfServiceImpl {
         table.addCell(new Cell().add(new Paragraph("Currency").addStyle(styleHeader)));
 
         // Add data row file 9
-        for(ManageBookingDto booking : bookings) {
+        for (ManageBookingDto booking : bookings) {
             List<ManageRoomRateDto> roomRates = booking.getRoomRates();
             for (ManageRoomRateDto roomRate : roomRates) {
-                total = total + roomRate.getHotelAmount();
-                moneyType = roomRate.getRemark();
+                total = total + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0);
+                moneyType = roomRate.getRemark() != null ? roomRate.getRemark() : "";
 
-                table.addCell(new Cell().add(new Paragraph(roomRate.getCheckIn().format(formatter)).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph(roomRate.getCheckOut().format(formatter)).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph(roomRate.getNights().toString()).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph(roomRate.getAdults().toString()).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph(roomRate.getChildren().toString()).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph("$ " + roomRate.getHotelAmount().toString()).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph(roomRate.getRemark()).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((roomRate.getCheckIn() != null ? roomRate.getCheckIn().format(formatter) : "Not date")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((roomRate.getCheckOut() != null ? roomRate.getCheckOut().format(formatter) : "Not date")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((roomRate.getNights() != null ? roomRate.getNights().toString() : "")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "").addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "").addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph("$ " + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0)).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((roomRate.getRemark() != null ? roomRate.getRemark() : "$")).addStyle(styleCell)));
             }
         }
         // Add data row file 10
@@ -219,8 +231,8 @@ public class ReportPdfServiceImpl {
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph("$ "+ total).addStyle(styleCell)));
-        table.addCell(new Cell().add(new Paragraph(moneyType).addStyle(styleCell)));
+        table.addCell(new Cell().add(new Paragraph("$ " + total).addStyle(styleCell)));
+        table.addCell(new Cell().add(new Paragraph(!moneyType.isEmpty() ? moneyType : "$" ).addStyle(styleCell)));
 
         document.add(table);
         document.close();
@@ -228,15 +240,17 @@ public class ReportPdfServiceImpl {
         return baos.toByteArray();
     }
 
-    // Método para combinar PDFs generados desde una lista de UUIDs
+    // Método para combinar PDFs generados desde una lista de IDs
+    @Override
     public byte[] concatenatePDFs(String[] ids) throws IOException {
         // Crear un PdfDocument de salida
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfDocument mergedPdf = new PdfDocument(new PdfWriter(outputStream));
 
         for (String id : ids) {
-            // Generar el PDF para el INVOICING ID  actual
-            byte[] pdfBytes = generatePdf(id);
+            ManageInvoiceDto invoiceDto = invoiceService.findById(UUID.fromString(id));
+            // Generar el PDF para el INVOICEDTO actual
+            byte[] pdfBytes = generatePdf((invoiceDto));
 
             // Leer el PDF desde los bytes generados
             PdfDocument sourcePdf = new PdfDocument(new PdfReader(new ByteArrayInputStream(pdfBytes)));
@@ -244,6 +258,36 @@ public class ReportPdfServiceImpl {
             // Copiar páginas al PDF combinado
             sourcePdf.copyPagesTo(1, sourcePdf.getNumberOfPages(), mergedPdf);
             sourcePdf.close();
+        }
+
+        // Cerrar el PDF combinado
+        mergedPdf.close();
+
+        return outputStream.toByteArray(); // Devuelve el PDF combinado como un array de bytes
+    }
+
+    // Método para combinar PDFs generados desde una lista de UUIDs
+    @Override
+    public byte[] concatenateManualPDFs(InvoiceReconcileManualPdfRequest request) throws IOException {
+        // Crear un PdfDocument de salida
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PdfDocument mergedPdf = new PdfDocument(new PdfWriter(outputStream));
+        try {
+            for (UUID invoice : request.getInvoices()) {
+                ManageInvoiceDto invoiceDto = invoiceService.findById(invoice);
+                // Generar el PDF para el INVOICING ID  actual
+                byte[] pdfBytes = generatePdf(invoiceDto);
+
+                // Leer el PDF desde los bytes generados
+                PdfDocument sourcePdf = new PdfDocument(new PdfReader(new ByteArrayInputStream(pdfBytes)));
+
+                // Copiar páginas al PDF combinado
+                sourcePdf.copyPagesTo(1, sourcePdf.getNumberOfPages(), mergedPdf);
+                sourcePdf.close();
+            }
+        } catch (IOException | PdfException e) {
+            // Maneja la excepción apropiadamente
+            throw new RuntimeException("Error procesando el PDF", e);
         }
 
         // Cerrar el PDF combinado

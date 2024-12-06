@@ -24,4 +24,5 @@ public interface IManageAttachmentTypeService {
 
     Long countByDefaultAndNotId(UUID id);
 
+    ManageAttachmentTypeDto findByDefault();
 }

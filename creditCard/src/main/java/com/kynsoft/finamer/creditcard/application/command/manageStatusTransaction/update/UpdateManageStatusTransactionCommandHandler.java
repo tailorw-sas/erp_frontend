@@ -9,6 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
+import com.kynsoft.finamer.creditcard.infrastructure.utils.CreditCardUploadAttachmentUtil;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -28,10 +29,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final IParameterizationService parameterizationService;
     private final IProcessErrorLogService processErrorLogService;
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
+    private final IVoucherService voucherService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
                                                        ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
-                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService) {
+                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IPdfVoucherService pdfVoucherService, CreditCardUploadAttachmentUtil creditCardUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IVoucherService voucherService) {
 
         this.transactionService = transactionService;
         this.statusTransactionService = statusTransactionService;
@@ -44,6 +46,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         this.parameterizationService = parameterizationService;
         this.processErrorLogService = processErrorLogService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.voucherService = voucherService;
     }
 
     @Override
@@ -128,11 +131,10 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 
             //Enviar correo (voucher) de confirmacion a las personas implicadas
             transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
-
+            this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getEmployee());
             command.setResult(transactionResponse);
         } else {
             throw new BusinessException(DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR, DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR.getReasonPhrase());
         }
     }
-
 }

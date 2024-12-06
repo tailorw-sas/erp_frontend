@@ -7,7 +7,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.rules.manageBankReconciliation.BankReconciliationAmountDetailsRule;
-import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionReconciliationOrPaymentRule;
+import com.kynsoft.finamer.creditcard.domain.rules.transaction.TransactionInReconciliationRule;
 import com.kynsoft.finamer.creditcard.domain.services.IBankReconciliationAdjustmentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageBankReconciliationService;
 import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
@@ -54,7 +54,7 @@ public class AddTransactionsCommandHandler implements ICommandHandler<AddTransac
         for (Long transactionId : command.getTransactionIds()) {
             if (!reconcileTransactions.contains(transactionId)) {
                 TransactionDto transactionDto = this.transactionService.findById(transactionId);
-                RulesChecker.checkRule(new TransactionReconciliationOrPaymentRule(transactionDto));
+                RulesChecker.checkRule(new TransactionInReconciliationRule(transactionDto));
                 bankReconciliationTransactions.add(transactionDto);
                 bankReconciliationDto.setDetailsAmount(bankReconciliationDto.getDetailsAmount() + transactionDto.getNetAmount());
                 cont++;
