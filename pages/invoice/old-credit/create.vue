@@ -190,7 +190,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceType',
     header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5',
+    class: 'field col-12 md:col-3',
     containerFieldClass: '',
     disabled: true
   },
@@ -224,7 +224,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'status',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
+    class: 'field col-12 md:col-2',
     containerFieldClass: '',
     disabled: true
   },
@@ -233,7 +233,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: 'field col-12 md:col-1  flex align-items-center pb-2 required',
+    class: 'field col-12 md:col-1  flex align-items-center pt-4 required',
     disabled: true
   },
 ])
@@ -1174,10 +1174,10 @@ onMounted(async () => {
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     {{ OBJ_INVOICE_TITLE[InvoiceType.OLD_CREDIT] }}
   </div>
-  <div class="p-4">
+  <div class="pt-3">
     <EditFormV2
       :key="formReload" :fields="Fields" :item="item"
-      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
+      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid py-3"
       @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
       @submit="requireConfirmationToSave($event)"
     >

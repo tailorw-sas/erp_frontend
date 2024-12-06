@@ -1825,7 +1825,7 @@ onMounted(async () => {
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       Edit Booking
     </div>
-    <div class="p-4">
+    <div class="pt-3">
       <EditFormV2
         v-if="true"
         :key="formReload"
@@ -1833,7 +1833,7 @@ onMounted(async () => {
         :item="item2"
         :show-actions="true"
         :loading-save="loadingSaveAll"
-        container-class="grid pt-5"
+        container-class="grid py-2"
         @cancel="clearForm"
         @delete="requireConfirmationToDelete($event)"
         @submit="saveItem($event)"
@@ -2039,7 +2039,7 @@ onMounted(async () => {
                 <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
                   <TabPanel>
                     <template #header>
-                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                      <div class="flex align-items-center gap-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
                         <i class="pi pi-receipt" style="font-size: 1.5rem" />
                         <span class="font-bold">
                           Room Rates
@@ -2090,7 +2090,7 @@ onMounted(async () => {
                   </TabPanel>
                   <TabPanel>
                     <template #header>
-                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                      <div class="flex align-items-center gap-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
                         <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
                         <span class="font-bold white-space-nowrap">
                           Adjustments
