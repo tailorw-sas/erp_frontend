@@ -2747,6 +2747,7 @@ const legend = ref(
             />
   
             <Button
+              v-if="false"
               v-tooltip.top="'Cancel'" severity="secondary" class="h-2rem w-3rem p-button mt-3 px-2" icon="pi pi-times"
               @click="handleClose"
             />
@@ -2827,10 +2828,15 @@ const legend = ref(
       @hide="closeModalPrint()"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex align-items-center justify-content-between w-full">
           <h5 class="m-0">
             Invoice to Print
           </h5>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-2">
+              Invoice: {{ props.selectedInvoice.invoiceId }}
+            </h5>
+          </div>
         </div>
       </template>
 

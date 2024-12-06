@@ -959,7 +959,9 @@ watch(() => props.bookingObj, () => {
         ClearForm()
         closeDialog()
       }" container-class="grid pt-3 w-full" class="h-fit p-2 overflow-y-hidden"
-      content-class="w-full h-full" :booking-list="bookingList"
+      content-class="w-full h-full"
+      :booking-list="bookingList"
+      :booking-obj="bookingObj"
     />
   </div>
 </template>
