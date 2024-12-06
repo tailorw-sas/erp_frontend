@@ -2720,7 +2720,7 @@ const legend = ref(
       <template #header>
         <div class="flex justify-content-between">
           <h5 class="m-0">
-            Do you want to undo import this booking: {{ selectedInvoiceObj.invoiceId }} ?
+            Do you want to undo import this invoice: {{ selectedInvoiceObj.invoiceId }} ?
           </h5>
         </div>
       </template>
@@ -2760,7 +2760,7 @@ const legend = ref(
     <InvoiceHistoryDialog 
       :selected-attachment="''" 
       :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      :header="`Invoice Status History - Invoice: ${attachmentInvoice?.invoiceId}`" 
+      :header="`Invoice Status History`" 
       :open-dialog="attachmentHistoryDialogOpen"
       :selected-invoice="attachmentInvoice?.id" 
       :selected-invoice-obj="attachmentInvoice" 

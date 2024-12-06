@@ -101,7 +101,7 @@ const Columns: IColumn[] = [
 ]
 
 const incomeColumns: IColumn[] = [
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  // { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
@@ -334,9 +334,12 @@ onMounted(() => {
     @hide="closeDialog"
   >
     <template #header>
-      <div class="flex justify-content-between">
+      <div class="flex justify-content-between w-full">
         <h5 class="m-0">
           {{ props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header }}
+        </h5>
+        <h5 class="m-0 mr-2">
+          Invoice: {{ props.selectedInvoiceObj?.invoiceId }}
         </h5>
       </div>
     </template>

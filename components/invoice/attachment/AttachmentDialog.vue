@@ -966,11 +966,14 @@ onMounted(async () => {
     @hide="closeDialog"
   >
     <template #header>
-      <div class="inline-flex align-items-center justify-content-center gap-2">
-        <span class="font-bold white-space-nowrap">{{ header }}</span>
-        <strong class="mx-2">-</strong>
-        <strong class="mr-1">Invoice:</strong>
-        <strong>{{ selectedInvoiceObj.invoiceId }}</strong>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <span class="font-bold white-space-nowrap">{{ header }}</span>
+        </div>
+        <div class="flex align-items-center">
+          <strong class="mr-1">Invoice:</strong>
+          <strong>{{ selectedInvoiceObj.invoiceId }}</strong>
+        </div>
       </div>
     </template>
     <template #default>
