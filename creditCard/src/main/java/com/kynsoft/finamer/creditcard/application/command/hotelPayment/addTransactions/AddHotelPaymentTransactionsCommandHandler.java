@@ -63,7 +63,14 @@ public class AddHotelPaymentTransactionsCommandHandler implements ICommandHandle
                     : transactionDto.getNetAmount()
                 : transactionDto.getNetAmount()
         ).reduce(0.0, Double::sum);
-        double amounts = hotelPaymentTransactions.stream().map(TransactionDto::getAmount).reduce(0.0, Double::sum);
+
+        double amounts = hotelPaymentTransactions.stream().map(transactionDto ->
+                transactionDto.isAdjustment()
+                        ? transactionDto.getTransactionSubCategory().getNegative()
+                        ? -transactionDto.getAmount()
+                        : transactionDto.getAmount()
+                        : transactionDto.getAmount()
+        ).reduce(0.0, Double::sum);
         double commissions = hotelPaymentTransactions.stream().map(TransactionDto::getCommission).reduce(0.0, Double::sum);
 
         hotelPaymentDto.setTransactions(hotelPaymentTransactions);

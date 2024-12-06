@@ -73,7 +73,13 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
                 : transactionDto.getNetAmount()
         ).reduce(0.0, Double::sum);
 
-        double amounts = transactionList.stream().map(TransactionDto::getAmount).reduce(0.0, Double::sum);
+        double amounts = transactionList.stream().map(transactionDto ->
+            transactionDto.isAdjustment()
+                ? transactionDto.getTransactionSubCategory().getNegative()
+                    ? -transactionDto.getAmount()
+                    : transactionDto.getAmount()
+                : transactionDto.getAmount()
+        ).reduce(0.0, Double::sum);
         double commissions = transactionList.stream().map(TransactionDto::getCommission).reduce(0.0, Double::sum);
 
         ManagePaymentTransactionStatusDto paymentTransactionStatusDto = this.paymentTransactionStatusService.findByEPaymentTransactionStatus(EPaymentTransactionStatus.IN_PROGRESS);
