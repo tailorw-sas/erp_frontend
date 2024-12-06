@@ -48,13 +48,7 @@ public class InvoiceReconcileAutomaticController {
 
     ) {
         // Dividir los IDs de facturas
-        String[] invoiceIds = invoiceIdString.split(",");
-        log.info("Invoice id recividos {}", invoiceIds);
-        Arrays.stream(invoiceIds).peek(id->{
-            log.info("Invoice split {}",id);
-            log.info("Invoice split length {}",id.length());
-        });
-
+        String[] invoiceIds = invoiceIdString.replace("\"","").trim().split(",");
 
         // Se retira el "RETURN" DataBufferUtils.join(filePart.content()) hasta que se arregle lo de JasperReports
         return DataBufferUtils.join(filePart.content())
