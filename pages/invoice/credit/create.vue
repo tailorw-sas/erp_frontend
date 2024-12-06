@@ -1050,7 +1050,7 @@ onMounted(async () => {
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     {{ OBJ_INVOICE_TITLE[String('CREDIT')] }} {{ item?.invoiceId }}
   </div>
-  <div class="p-4">
+  <div class="pt-4">
     <EditFormV2
       :key="formReload"
       :fields="CreditFields"
@@ -1058,7 +1058,7 @@ onMounted(async () => {
       :show-actions="true"
       :loading-save="loadingSaveAll"
       :loading-delete="loadingDelete"
-      container-class="grid pt-3"
+      container-class="grid pt-1"
       @cancel="clearForm"
       @delete="requireConfirmationToDelete($event)"
       @submit="requireConfirmationToSave($event)"

@@ -216,7 +216,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceType',
     header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5',
+    class: 'field col-12 md:col-3',
     containerFieldClass: '',
     disabled: true
   },
@@ -262,7 +262,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceStatus',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
+    class: 'field col-12 md:col-2',
     containerFieldClass: '',
     disabled: true
   },
@@ -270,7 +270,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-center pb-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    class: `field col-12 md:col-1  flex align-items-center pt-4 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
 ])
@@ -1009,7 +1009,7 @@ onMounted(async () => {
          {{propsParentId?.label}} {{ propsParentId?.id }}
       </div>
     </div>
-    <div class="p-4">
+    <div class="pt-3">
       <EditFormV2 
         :key="formReload" 
         :fields="Fields" 
@@ -1022,7 +1022,7 @@ onMounted(async () => {
         :force-save="forceSave" 
         @force-save="forceSave = $event" 
         @submit="requireConfirmationToSave($event)"
-        container-class="grid pt-3"
+        container-class="grid py-3"
       >
         <template #field-invoiceDate="{ item: data, onUpdate }">
           <Calendar 

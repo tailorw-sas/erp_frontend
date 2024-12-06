@@ -427,7 +427,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <!-- General Footer slot of the form -->
-    <div v-if="showActions" class="col-12 form-footer mt-4 flex justify-content-between md:justify-content-end">
+    <div v-if="showActions" class="col-12 form-footer py-0 py-0 my-0 flex justify-content-between md:justify-content-end">
       <slot name="form-footer" :item="{ fieldValues, submitForm, cancelForm, deleteItem, item }">
         <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSave" @click="submitForm($event)" />
         <Button v-if="!hideDeleteButton" v-tooltip.top="'Delete'" outlined class="w-3rem" severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem($event)" />
