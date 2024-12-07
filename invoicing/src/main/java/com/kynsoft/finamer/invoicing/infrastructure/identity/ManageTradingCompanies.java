@@ -1,19 +1,15 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -35,6 +31,7 @@ public class ManageTradingCompanies implements Serializable {
     private String company;
     private String cif;
     private String address;
+    private String status;
 
     @Column(columnDefinition = "serial", name = "autogen_code")
     @Generated(event = EventType.INSERT)
@@ -44,13 +41,14 @@ public class ManageTradingCompanies implements Serializable {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.isApplyInvoice = dto.getIsApplyInvoice();
-        this.cif=dto.getCif();
-        this.address=dto.getAddress();
-        this.company=dto.getCompany();
+        this.cif = dto.getCif();
+        this.address = dto.getAddress();
+        this.company = dto.getCompany();
+        this.status = dto.getStatus();
     }
 
     public ManageTradingCompaniesDto toAggregate() {
         return new ManageTradingCompaniesDto(
-                id, code, isApplyInvoice, autogen_code,this.cif,this.address,this.company);
+                id, code, isApplyInvoice, autogen_code, this.cif, this.address, this.company, status);
     }
 }

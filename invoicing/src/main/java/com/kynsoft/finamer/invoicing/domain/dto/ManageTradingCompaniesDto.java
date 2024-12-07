@@ -20,5 +20,6 @@ public class ManageTradingCompaniesDto {
     private String cif;
     private String address;
     private String company;
+    private String status;
 
 }

@@ -1,9 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageTradingCompany;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageTradingCompanyKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 
@@ -30,7 +26,7 @@ public class ConsumerReplicateManageTradingCompany {
         try {
 
             CreateManageTradingCompaniesCommand command = new CreateManageTradingCompaniesCommand(objKafka.getId(),
-                    objKafka.getCode(), objKafka.isApplyInvoice(),objKafka.getCif(),objKafka.getAddress(),objKafka.getCompany());
+                    objKafka.getCode(), objKafka.isApplyInvoice(), objKafka.getCif(), objKafka.getAddress(), objKafka.getCompany(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageTradingCompany.class.getName()).log(Level.SEVERE, null, ex);
