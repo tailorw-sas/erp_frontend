@@ -18,10 +18,12 @@ public class ManageLanguageResponse implements IResponse {
     private UUID id;
     private String code;
     private String name;
+    private String status;
 
     public ManageLanguageResponse(ManageLanguageDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.status = dto.getStatus();
     }
 }

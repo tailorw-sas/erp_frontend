@@ -2,14 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageClient.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageClientKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageClientKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageClientDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerClientService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerUpdateManageClientService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageClient.ProducerReplicateManageClientService;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +18,11 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
     private final IManagerClientService service;
 
-    private final ProducerUpdateManageClientService producerUpdateManageClientService;
+    private final ProducerReplicateManageClientService producerReplicateManageClientService;
 
-    public UpdateManageClientCommandHandler(IManagerClientService service, ProducerUpdateManageClientService producerUpdateManageClientService) {
+    public UpdateManageClientCommandHandler(IManagerClientService service, ProducerReplicateManageClientService producerReplicateManageClientService) {
         this.service = service;
-        this.producerUpdateManageClientService = producerUpdateManageClientService;
+        this.producerReplicateManageClientService = producerReplicateManageClientService;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageClientService.update(new UpdateManageClientKafka(test.getId(), test.getName(), command.getStatus().name(), command.getIsNightType()));
+            this.producerReplicateManageClientService.create(new ReplicateManageClientKafka(test.getId(), test.getCode(), test.getName(), test.getStatus().name(), test.getIsNightType()));
         }
 
     }
