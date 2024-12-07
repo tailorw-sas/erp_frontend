@@ -19,8 +19,9 @@ public class CreateManageInvoiceTypeCommand implements ICommand {
     private boolean credit;
     private boolean income;
     private Status status;
+    private boolean enabledToPolicy;
 
-    public CreateManageInvoiceTypeCommand(UUID id, String code, String name, boolean invoice, boolean credit, boolean income, Status status) {
+    public CreateManageInvoiceTypeCommand(UUID id, String code, String name, boolean invoice, boolean credit, boolean income, Status status, boolean enabledToPolicy) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -28,6 +29,7 @@ public class CreateManageInvoiceTypeCommand implements ICommand {
         this.credit = credit;
         this.income = income;
         this.status = status;
+        this.enabledToPolicy = enabledToPolicy;
     }
 
     @Override

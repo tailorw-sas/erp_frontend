@@ -10,7 +10,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,10 +28,12 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
     public CreateAttachmentCommandHandler(IManageAttachmentService attachmentService,
-                                          IManageAttachmentTypeService attachmentTypeService, IManageInvoiceService manageInvoiceService,
-                                          IManageResourceTypeService resourceTypeService,
-                                          IAttachmentStatusHistoryService attachmentStatusHistoryService, IManageInvoiceStatusService invoiceStatusService,
-                                          IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+                                            IManageAttachmentTypeService attachmentTypeService, 
+                                            IManageInvoiceService manageInvoiceService,
+                                            IManageResourceTypeService resourceTypeService,
+                                            IAttachmentStatusHistoryService attachmentStatusHistoryService, 
+                                            IManageInvoiceStatusService invoiceStatusService,
+                                            IInvoiceStatusHistoryService invoiceStatusHistoryService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
         this.manageInvoiceService = manageInvoiceService;
@@ -68,17 +69,17 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
         List<ManageAttachmentDto> attachmentDtoList = invoiceDto.getAttachments();
         boolean defaultAttachment = false;
-        if(attachmentDtoList != null && !attachmentDtoList.isEmpty()){
-            for(ManageAttachmentDto attachmentDto : attachmentDtoList){
-                if(attachmentDto.getType().isAttachInvDefault()){
+        if (attachmentDtoList != null && !attachmentDtoList.isEmpty()) {
+            for (ManageAttachmentDto attachmentDto : attachmentDtoList) {
+                if (attachmentDto.getType().isAttachInvDefault()) {
                     defaultAttachment = true;
                     break;
                 }
             }
-        } else if (attachmentType != null && attachmentType.isAttachInvDefault()){
+        } else if (attachmentType != null && attachmentType.isAttachInvDefault()) {
             defaultAttachment = true;
         }
-        if(defaultAttachment) {
+        if (defaultAttachment) {
             Long attachmentId = attachmentService.create(new ManageAttachmentDto(
                     command.getId(),
                     null,
@@ -86,19 +87,23 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     command.getFile(),
                     command.getRemark(),
                     attachmentType,
-                    invoiceDto, command.getEmployee(), command.getEmployeeId(), null, resourceTypeDto));
-
-            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(),
-                    command.getEmployeeId());
+                    invoiceDto, 
+                    command.getEmployee(), 
+                    command.getEmployeeId(), 
+                    null, 
+                    resourceTypeDto,
+                    false
+            ));
 
             if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
                 invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
-                ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByCode(EInvoiceStatus.RECONCILED.getCode());
+                ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
                 invoiceDto.setManageInvoiceStatus(invoiceStatus);
                 this.manageInvoiceService.update(invoiceDto);
                 this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
             }
-        } else{
+            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
+        } else {
             throw new BusinessException(
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
@@ -107,7 +112,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, String fileName, Long attachmentId,
-                                               String employee, UUID employeeId) {
+            String employee, UUID employeeId) {
 
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
@@ -120,7 +125,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
-
+ 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee, String fileName) {
 
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
@@ -128,6 +133,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         dto.setInvoice(invoiceDto);
         dto.setDescription("An attachment to the invoice was inserted. The file name: " + fileName);
         dto.setEmployee(employee);
+        dto.setInvoiceStatus(invoiceDto.getStatus());
 
         this.invoiceStatusHistoryService.create(dto);
 

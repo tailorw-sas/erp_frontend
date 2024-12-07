@@ -4,8 +4,10 @@ import com.kynsof.identity.domain.dto.ModuleDto;
 import com.kynsof.identity.domain.dto.enumType.ModuleStatus;
 import com.kynsof.identity.domain.interfaces.service.IModuleService;
 import com.kynsof.identity.domain.rules.module.ModuleNameMustBeUniqueRule;
+import com.kynsof.identity.infrastructure.services.kafka.producer.module.ProducerReplicateManageModuleService;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateModuleKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -17,9 +19,11 @@ import java.util.function.Consumer;
 public class UpdateModuleCommandHandler implements ICommandHandler<UpdateModuleCommand> {
 
     private final IModuleService service;
+    private final ProducerReplicateManageModuleService replicateManageModuleService;
 
-    public UpdateModuleCommandHandler(IModuleService service) {
+    public UpdateModuleCommandHandler(IModuleService service, ProducerReplicateManageModuleService replicateManageModuleService) {
         this.service = service;
+        this.replicateManageModuleService = replicateManageModuleService;
     }
 
     @Override
@@ -41,6 +45,7 @@ public class UpdateModuleCommandHandler implements ICommandHandler<UpdateModuleC
 
         if (update.getUpdate() > 0) {
             this.service.update(module);
+            this.replicateManageModuleService.create(new ReplicateModuleKafka(module.getId(), module.getCode(), module.getName(), module.getStatus().name(), null, module.getDescription()));
         }
 
     }

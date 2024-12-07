@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.payment.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.Getter;
@@ -34,11 +35,12 @@ public class CreatePaymentCommand implements ICommand {
 
     private PaymentDto payment;
     private List<CreateAttachmentRequest> attachments;
+    private final IMediator mediator;
 
-    public CreatePaymentCommand(Status status, UUID paymentSource, String reference, LocalDate transactionDate, 
-                                UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount, 
-                                UUID attachmentStatus, Double paymentAmount, String remark, List<CreateAttachmentRequest> attachments,
-                                UUID employee,boolean ignoreBankAccount) {
+    public CreatePaymentCommand(Status status, UUID paymentSource, String reference, LocalDate transactionDate,
+            UUID paymentStatus, UUID client, UUID agency, UUID hotel, UUID bankAccount,
+            UUID attachmentStatus, Double paymentAmount, String remark, List<CreateAttachmentRequest> attachments,
+            UUID employee, boolean ignoreBankAccount, IMediator mediator) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentSource = paymentSource;
@@ -54,10 +56,11 @@ public class CreatePaymentCommand implements ICommand {
         this.remark = remark;
         this.attachments = attachments;
         this.employee = employee;
-        this.ignoreBankAccount =ignoreBankAccount;
+        this.ignoreBankAccount = ignoreBankAccount;
+        this.mediator = mediator;
     }
 
-    public static CreatePaymentCommand fromRequest(CreatePaymentRequest request) {
+    public static CreatePaymentCommand fromRequest(CreatePaymentRequest request, IMediator mediator) {
         return new CreatePaymentCommand(
                 request.getStatus(),
                 request.getPaymentSource(),
@@ -73,7 +76,8 @@ public class CreatePaymentCommand implements ICommand {
                 request.getRemark(),
                 request.getAttachments(),
                 request.getEmployee(),
-                false
+                false,
+                mediator
         );
     }
 

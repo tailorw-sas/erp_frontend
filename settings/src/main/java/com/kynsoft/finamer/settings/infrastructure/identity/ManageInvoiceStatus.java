@@ -53,6 +53,9 @@ public class ManageInvoiceStatus implements Serializable {
     private Boolean enabledToPolicy;
     private Boolean processStatus;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean waitingStatus;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "manage_invoice_status_relations",
@@ -80,13 +83,14 @@ public class ManageInvoiceStatus implements Serializable {
                     .collect(Collectors.toList());
         }
         this.showClone = dto.getShowClone();
+        this.waitingStatus = dto.isWaitingStatus();
     }
 
     public ManageInvoiceStatusDto toAggregateSimple(){
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
-                 null, showClone
+                 null, showClone, waitingStatus
         );
     }
 
@@ -95,7 +99,7 @@ public class ManageInvoiceStatus implements Serializable {
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
                 navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null,
-                showClone
+                showClone, waitingStatus
         );
     }
 }

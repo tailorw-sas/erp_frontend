@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

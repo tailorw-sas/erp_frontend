@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -8,8 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -21,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "master_payment_attachment")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "master_payment_attachment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class MasterPaymentAttachment implements Serializable {
 
     @Id
@@ -30,8 +32,9 @@ public class MasterPaymentAttachment implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(columnDefinition="serial", name = "attachment_gen_id")
-    @Generated(event = EventType.INSERT)
+//    @Column(columnDefinition="serial", name = "attachment_gen_id")
+//    @Generated(event = EventType.INSERT)
+    @Column(name = "attachmentId", nullable = false, updatable = false, unique = true)
     private Long attachmentId;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -40,11 +43,11 @@ public class MasterPaymentAttachment implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "resource_type_id")
-    private ResourceType resourceType;
+    private MaganeResourceType resourceType;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "attachment_type_id")
-    private AttachmentType attachmentType;
+    private ManageAttachmentType attachmentType;
 
     private String fileName;
     private String fileWeight;
@@ -60,9 +63,10 @@ public class MasterPaymentAttachment implements Serializable {
 
     public MasterPaymentAttachment(MasterPaymentAttachmentDto dto) {
         this.id = dto.getId();
+        this.attachmentId = dto.getAttachmentId();
         this.resource = dto.getResource() != null ? new Payment(dto.getResource()) : null;
-        this.resourceType = dto.getResourceType() != null ? new ResourceType(dto.getResourceType()) : null;
-        this.attachmentType = dto.getAttachmentType() != null ? new AttachmentType(dto.getAttachmentType()) : null;
+        this.resourceType = dto.getResourceType() != null ? new MaganeResourceType(dto.getResourceType()) : null;
+        this.attachmentType = dto.getAttachmentType() != null ? new ManageAttachmentType(dto.getAttachmentType()) : null;
         this.fileName = dto.getFileName();
         this.fileWeight = dto.getFileWeight();
         this.path = dto.getPath();
@@ -81,7 +85,7 @@ public class MasterPaymentAttachment implements Serializable {
                 fileWeight != null ? fileWeight : null,
                 path, 
                 remark,
-                attachmentId
+                attachmentId != null ? attachmentId : null
         );
     }
 
@@ -96,7 +100,7 @@ public class MasterPaymentAttachment implements Serializable {
                 fileWeight != null ? fileWeight : null,
                 path, 
                 remark,
-                attachmentId
+                attachmentId != null ? attachmentId : null
         );
     }
 }

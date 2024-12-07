@@ -62,7 +62,11 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageBankAccount.update(new UpdateManageBankAccountKafka(dto.getId(), dto.getAccountNumber(), dto.getStatus().name(), dto.getManageBank().getName(),dto.getManageHotel().getId()));
+            this.producerUpdateManageBankAccount.update(new UpdateManageBankAccountKafka(
+                    dto.getId(), dto.getAccountNumber(), dto.getStatus().name(),
+                    dto.getManageBank().getName(),dto.getManageHotel().getId(),
+                    dto.getManageBank().getId(), dto.getManageAccountType().getId(),
+                    dto.getDescription()));
         }
     }
 

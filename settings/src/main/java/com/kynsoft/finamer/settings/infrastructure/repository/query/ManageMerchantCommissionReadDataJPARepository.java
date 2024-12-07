@@ -21,6 +21,8 @@ public interface ManageMerchantCommissionReadDataJPARepository extends JpaReposi
     @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType")
     List<ManageMerchantCommission> findAllByManagerMerchantAndManageCreditCartType(@Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
 
+    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.id <> :id")
+    List<ManageMerchantCommission> findAllByManagerMerchantAndManageCreditCartTypeById(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
 
     @Query("SELECT COUNT(m) FROM ManageMerchantCommission m "
             + "WHERE m.managerMerchant.id = :managerMerchant "

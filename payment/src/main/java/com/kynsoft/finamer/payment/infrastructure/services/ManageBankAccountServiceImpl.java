@@ -14,6 +14,7 @@ import com.kynsoft.finamer.payment.infrastructure.identity.ManageBankAccount;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageBankAccountWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageBankAccountReadDataJPARepository;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -98,6 +99,12 @@ public class ManageBankAccountServiceImpl implements IManageBankAccountService {
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public List<ManageBankAccountDto> findAllByHotel(UUID hotelId) {
+        Optional<List<ManageBankAccount>> result = repositoryQuery.findAllByHotel(hotelId);
+        return result.map(paymentDetails -> paymentDetails.stream().map(ManageBankAccount::toAggregate).toList()).orElse(Collections.EMPTY_LIST);
     }
 
 }

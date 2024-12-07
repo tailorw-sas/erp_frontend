@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
@@ -10,8 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -28,14 +28,17 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "payment")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Payment implements Serializable {
 
     @Id
     @Column(name = "id")
     private UUID id;
 
-    @Column(columnDefinition = "serial", name = "payment_gen_id")
-    @Generated(event = EventType.INSERT)
+//    @Column(columnDefinition = "serial", name = "payment_gen_id")
+//    @Generated(event = EventType.INSERT)
+    @Column(name = "payment_gen_id", nullable = false, updatable = false, unique = true)
     private Long paymentId;
 
     @Enumerated(EnumType.STRING)
@@ -72,7 +75,7 @@ public class Payment implements Serializable {
     //TODO: este invoice es para relacionar el Payment con el CREDIT padre en el proceso automatico. HU 154
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "invoice_id")
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bank_account_id")
@@ -131,6 +134,7 @@ public class Payment implements Serializable {
 
     public Payment(PaymentDto dto) {
         this.id = dto.getId();
+        this.paymentId = dto.getPaymentId();
         this.status = dto.getStatus();
         this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSource(dto.getPaymentSource()) : null;
         this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatus(dto.getPaymentStatus()) : null;
@@ -151,7 +155,7 @@ public class Payment implements Serializable {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied());
         this.applied = ScaleAmount.scaleAmount(dto.getApplied());
         this.remark = dto.getRemark();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.isApplyPayment();
         this.paymentSupport = dto.isPaymentSupport();
@@ -163,7 +167,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregate() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,
@@ -194,6 +198,40 @@ public class Payment implements Serializable {
         );
     }
 
+    public PaymentDto toAggregateBasicPayment() {
+        return new PaymentDto(
+                id,
+                status,
+                paymentSource != null ? paymentSource.toAggregate() : null,
+                reference,
+                transactionDate,
+                paymentStatus != null ? paymentStatus.toAggregate() : null,
+                client != null ? client.toAggregate() : null,
+                agency != null ? agency.toAggregate() : null,
+                hotel != null ? hotel.toAggregate() : null,
+                bankAccount != null ? bankAccount.toAggregate() : null,
+                attachmentStatus != null ? attachmentStatus.toAggregate() : null,
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                invoice != null ? invoice.toAggregate() : null,
+                attachments != null ? attachments.stream().map(b -> {
+                            return b.toAggregateSimple();
+                        }).collect(Collectors.toList()) : null,
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime,
+                paymentId
+        );
+    }
+
     /**
      * Con este metodo se puede obtener un Payment y sus Detalles.
      *
@@ -202,7 +240,7 @@ public class Payment implements Serializable {
     public PaymentDto toAggregateWihtDetails() {
         return new PaymentDto(
                 id,
-                paymentId,
+                paymentId != null ? paymentId : null,
                 status,
                 paymentSource != null ? paymentSource.toAggregate() : null,
                 reference,

@@ -2,7 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageTradingCompanies.
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageTradingCompanyKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageTradingCompanyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -13,7 +13,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageCityStateService;
 import com.kynsoft.finamer.settings.domain.services.IManageTradingCompaniesService;
 import com.kynsoft.finamer.settings.domain.services.IManagerCountryService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTradigCompany.ProducerUpdateManageTradingCompanyService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTradigCompany.ProducerReplicateManageTradingCompanyService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -28,16 +28,16 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
 
     private final IManageCityStateService cityStateService;
 
-    private final ProducerUpdateManageTradingCompanyService producerUpdateManageTradingCompanyService;
+    private final ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService;
 
-    public UpdateManageTradingCompaniesCommandHandler(IManageTradingCompaniesService service, 
-                                                      IManagerCountryService countryService, 
-                                                      IManageCityStateService cityStateService,
-                                                      ProducerUpdateManageTradingCompanyService producerUpdateManageTradingCompanyService) {
+    public UpdateManageTradingCompaniesCommandHandler(IManageTradingCompaniesService service,
+            IManagerCountryService countryService,
+            IManageCityStateService cityStateService,
+            ProducerReplicateManageTradingCompanyService producerReplicateManageTradingCompanyService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
-        this.producerUpdateManageTradingCompanyService = producerUpdateManageTradingCompanyService;
+        this.producerReplicateManageTradingCompanyService = producerReplicateManageTradingCompanyService;
     }
 
     @Override
@@ -62,8 +62,9 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageTradingCompanyService.update(new UpdateManageTradingCompanyKafka(dto.getId(), dto.getIsApplyInvoice(),
-                    dto.getCif(),dto.getAddress(),dto.getCompany()));
+            this.producerReplicateManageTradingCompanyService
+                    .create(new ReplicateManageTradingCompanyKafka(dto.getId(), dto.getCode(),
+                            command.getIsApplyInvoice(), dto.getCif(), dto.getAddress(), dto.getCompany(), dto.getStatus().name()));
         }
     }
 

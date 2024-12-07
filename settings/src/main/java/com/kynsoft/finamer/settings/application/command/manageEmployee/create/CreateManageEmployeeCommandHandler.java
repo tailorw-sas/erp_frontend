@@ -91,7 +91,7 @@ public class CreateManageEmployeeCommandHandler implements ICommandHandler<Creat
                 reportList
         ));
         this.producerReplicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(command.getId(),
-                command.getFirstName(), command.getLastName(), command.getEmail()));
+                command.getFirstName(), command.getLastName(), command.getEmail(), command.getPhoneExtension()));
 
         List<UUID> permissions = permissionList.stream()
                                                         .map(PermissionDto::getId)

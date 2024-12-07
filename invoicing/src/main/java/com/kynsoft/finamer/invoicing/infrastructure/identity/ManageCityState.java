@@ -42,6 +42,9 @@ public class ManageCityState implements Serializable {
     @JoinColumn(name = "manage_country_id")
     private ManageCountry country;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_time_zone_id")
+    private ManagerTimeZone timeZone;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -59,19 +62,24 @@ public class ManageCityState implements Serializable {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.country = dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
+        this.timeZone = dto.getTimeZone() != null ? new ManagerTimeZone(dto.getTimeZone()) : null;
         this.status = dto.getStatus();
     }
 
     public ManageCityStateDto toAggregate() {
         return new ManageCityStateDto(
                 id, code, name, description, status,
-                country != null ? country.toAggregate() : null);
+                country != null ? country.toAggregate() : null,
+                timeZone != null ? timeZone.toAggregate() : null
+        );
     }
 
     public ManageCityStateDto toAggregateSimple() {
         return new ManageCityStateDto(
                 id, code, name, description, status,
-                null);
+                country != null ? country.toAggregate() : null,
+                timeZone != null ? timeZone.toAggregate() : null
+        );
     }
 
 }

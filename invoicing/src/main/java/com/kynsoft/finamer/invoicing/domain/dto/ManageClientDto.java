@@ -17,4 +17,5 @@ public class ManageClientDto {
     private String code;
     private String name;
     private Boolean isNightType;
+    private String status;
 }

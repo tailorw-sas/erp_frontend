@@ -4,6 +4,7 @@ import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBankAccountDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBankAccountService;
 import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
@@ -35,6 +36,12 @@ public class PaymentImportBankAccountValidator extends ExcelRuleValidator<Paymen
         if (!result) {
             errorFieldList.add(new ErrorField("Bank Account", "The bank account not exist "));
             return false;
+        }else{
+            ManageBankAccountDto manageBankAccountDto =bankAccountService.findByAccountNumber(obj.getBankAccount());
+            if(Status.INACTIVE.name().equals(manageBankAccountDto.getStatus())){
+                errorFieldList.add(new ErrorField("Bank Account", "The bank account is not active "));
+                return false;
+            }
         }
         if (manageHotelService.existByCode(obj.getManageHotelCode())) {
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());

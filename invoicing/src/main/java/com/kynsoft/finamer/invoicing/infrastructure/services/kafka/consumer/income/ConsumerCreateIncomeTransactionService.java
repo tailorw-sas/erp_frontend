@@ -46,8 +46,9 @@ public class ConsumerCreateIncomeTransactionService {
         try {
             mediator.send(createIncomeCommand(objKafka));
             mediator.send(createIncomeAdjustmentCommand(objKafka));
-            producerCreateIncomeTransactionSuccess.create(this.createIncomeTransactionSuccessKafka(objKafka.getId(), objKafka.getRelatedPaymentDetail()));
+            producerCreateIncomeTransactionSuccess.create(this.createIncomeTransactionSuccessKafka(objKafka.getId(),objKafka.getEmployeeId(),objKafka.getRelatedPaymentDetail()));
         } catch (Exception e) {
+            e.printStackTrace();
             CreateIncomeTransactionFailedKafka createIncomeTransactionFailedKafka = new CreateIncomeTransactionFailedKafka(objKafka.getRelatedPaymentDetail());
             producerCreateIncomeTransactionFailed.create(createIncomeTransactionFailedKafka);
         }
@@ -86,7 +87,7 @@ public class ConsumerCreateIncomeTransactionService {
         return newIncomeAdjustmentRequest;
     }
 
-    private CreateIncomeTransactionSuccessKafka createIncomeTransactionSuccessKafka(UUID incomeId, UUID relatedPaymentDetail) {
+    private CreateIncomeTransactionSuccessKafka createIncomeTransactionSuccessKafka(UUID incomeId,UUID employeeId, UUID relatedPaymentDetail) {
         ManageInvoiceDto manageInvoiceDto = manageInvoiceService.findById(incomeId);
         return new CreateIncomeTransactionSuccessKafka(manageInvoiceDto.getId()
                 , manageInvoiceDto.getHotel().getId(),
@@ -100,7 +101,7 @@ public class ConsumerCreateIncomeTransactionService {
                 manageInvoiceDto.getInvoiceAmount(),
                 createManageBookingKafka(manageInvoiceDto.getBookings()),
                 manageInvoiceDto.getInvoiceDate(),
-                relatedPaymentDetail
+                relatedPaymentDetail,employeeId
 
         );
 

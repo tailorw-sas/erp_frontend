@@ -27,4 +27,6 @@ public interface IManageAdjustmentService {
     List<ManageAdjustmentDto> findByIds(List<UUID> ids);
 
     void deleteByIds(List<UUID> ids);
+
+    void deleteInvoice(ManageAdjustmentDto dto);
 }

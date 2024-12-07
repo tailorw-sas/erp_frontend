@@ -56,8 +56,9 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
                 command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
                 false,
                 null, null, null, null, invoiceTypeDto, manageInvoiceStatus, null,  false,
-                null, 0.0);
+                null, 0.0,0);
         creInvoiceDto.setOriginalAmount(command.getInvoiceAmount());
+        creInvoiceDto.setDeleteInvoice(false);
         ManageInvoiceDto invoiceDto = service.create(creInvoiceDto);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         try {

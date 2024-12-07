@@ -10,6 +10,8 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceValidateClienteRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
@@ -50,17 +52,17 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public CreateBulkInvoiceCommandHandler(IManageRatePlanService ratePlanService,
-                                           IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
-                                           IManageRoomCategoryService roomCategoryService,
-                                           IManageInvoiceTransactionTypeService transactionTypeService,
-                                           IManageInvoiceService service, IManageAgencyService agencyService,
-                                           IManageHotelService hotelService,
-                                           IManageInvoiceTypeService iManageInvoiceTypeService,
-                                           IManageInvoiceStatusService manageInvoiceStatusService,
-                                           IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
-                                           IInvoiceCloseOperationService closeOperationService,
-                                           IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+            IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
+            IManageRoomCategoryService roomCategoryService,
+            IManageInvoiceTransactionTypeService transactionTypeService,
+            IManageInvoiceService service, IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageInvoiceTypeService iManageInvoiceTypeService,
+            IManageInvoiceStatusService manageInvoiceStatusService,
+            IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
+            IInvoiceCloseOperationService closeOperationService,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
 
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -85,10 +87,16 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     @Transactional
     public void handle(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
+
+        RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
+
         RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
                 this.closeOperationService,
                 command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
                 hotelDto.getId()));
+
+        ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
+        RulesChecker.checkRule(new InvoiceValidateClienteRule(agencyDto.getClient()));
 
         List<ManageAdjustmentDto> adjustments = new LinkedList<>();
         List<ManageBookingDto> bookings = new LinkedList<>();
@@ -104,7 +112,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
                         command.getBookingCommands().get(i).getHotelBookingNumber()
                                 .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
-                                        .split("\\s+").length - 1],
+                        .split("\\s+").length - 1],
                         command.getInvoiceCommand().getHotel(), command.getBookingCommands().get(i).getHotelBookingNumber()));
             }
 
@@ -169,7 +177,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     nightTypeDto,
                     roomTypeDto,
                     roomCategoryDto, new LinkedList<>(), null, null,
-                    command.getBookingCommands().get(i).getContract()));
+                    command.getBookingCommands().get(i).getContract(),
+                    false
+            ));
 
         }
 
@@ -191,16 +201,17 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     command.getRoomRateCommands().get(i).getRoomNumber(),
                     command.getRoomRateCommands().get(i).getAdults(),
                     command.getRoomRateCommands().get(i).getChildren(),
-//                    this.calculateRateAdult(invoiceAmount, nights, command.getRoomRateCommands().get(i).getAdults()),
+                    //                    this.calculateRateAdult(invoiceAmount, nights, command.getRoomRateCommands().get(i).getAdults()),
                     command.getRoomRateCommands().get(i).getRateAdult(),
-//                    this.calculateRateChild(invoiceAmount, nights, command.getRoomRateCommands().get(i).getChildren()),
+                    //                    this.calculateRateChild(invoiceAmount, nights, command.getRoomRateCommands().get(i).getChildren()),
                     command.getRoomRateCommands().get(i).getRateChild(),
                     command.getRoomRateCommands().get(i).getHotelAmount(),
                     command.getRoomRateCommands().get(i).getRemark(),
                     null,
-                    new LinkedList<>(), 
-//                    nights
-                    null
+                    new LinkedList<>(),
+                    //                    nights
+                    null,
+                    false
             );
 
             if (command.getRoomRateCommands().get(i).getBooking() != null) {
@@ -232,18 +243,18 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     .getTransactionType() != null
                     && !command
                             .getAdjustmentCommands().get(i).getTransactionType().equals("")
-                                    ? transactionTypeService.findById(
-                                            command.getAdjustmentCommands()
-                                                    .get(i)
-                                                    .getTransactionType())
-                                    : null;
+                    ? transactionTypeService.findById(
+                            command.getAdjustmentCommands()
+                                    .get(i)
+                                    .getTransactionType())
+                    : null;
 
             ManagePaymentTransactionTypeDto paymnetTransactionTypeDto = command.getAdjustmentCommands()
                     .get(i).getPaymentTransactionType() != null
-                            ? paymentTransactionTypeService
-                                    .findById(command.getAdjustmentCommands().get(i)
-                                            .getPaymentTransactionType())
-                            : null;
+                    ? paymentTransactionTypeService
+                            .findById(command.getAdjustmentCommands().get(i)
+                                    .getPaymentTransactionType())
+                    : null;
 
             ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                     command.getAdjustmentCommands().get(i).getId(),
@@ -253,7 +264,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     command.getAdjustmentCommands().get(i).getDescription(),
                     transactionTypeDto,
                     paymnetTransactionTypeDto,
-                    null, command.getAdjustmentCommands().get(i).getEmployee());
+                    null, command.getAdjustmentCommands().get(i).getEmployee(),
+                    false
+            );
 
             if (command.getAdjustmentCommands().get(i).getRoomRate() != null) {
                 for (ManageRoomRateDto rateDto : roomRates) {
@@ -287,7 +300,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-            if(attachmentType.isAttachInvDefault()) {
+            if (attachmentType.isAttachInvDefault()) {
                 cont++;
             }
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
@@ -298,11 +311,15 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     command.getAttachmentCommands().get(i).getRemark(),
                     attachmentType,
                     null, command.getAttachmentCommands().get(i).getEmployee(),
-                    command.getAttachmentCommands().get(i).getEmployeeId(), null, null);
+                    command.getAttachmentCommands().get(i).getEmployeeId(),
+                    null,
+                    null,
+                    false
+            );
 
             attachmentDtos.add(attachmentDto);
         }
-        if(cont == 0){
+        if (cont == 0) {
             throw new BusinessException(
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
@@ -312,8 +329,6 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             this.calculateBookingHotelAmount(booking);
 
         }
-
-        ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
 
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType());
 
@@ -348,8 +363,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 command.getInvoiceCommand().getInvoiceAmount(),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null,  false,
-                null, 0.0);
+                false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null, false,
+                null, 0.0,0);
         invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
         ManageInvoiceDto created = service.create(invoiceDto);
 
@@ -357,7 +372,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         command.setInvoiceNo(created.getInvoiceNumber());
 
         //calcular el amount de los bookings
-        for(ManageBookingDto booking : created.getBookings()){
+        for (ManageBookingDto booking : created.getBookings()) {
             this.bookingService.calculateInvoiceAmount(booking);
         }
         //calcular el amount del invoice
@@ -366,7 +381,6 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 //        ManageInvoiceDto updateInvoiceDto = this.service.findById(created.getId());
 //        updateInvoiceDto.setOriginalAmount(updateInvoiceDto.getInvoiceAmount());
 //        this.service.update(updateInvoiceDto);
-
         try {
             this.producerReplicateManageInvoiceService.create(created);
         } catch (Exception e) {
@@ -385,7 +399,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         );
 
         //attachment status history
-        for(ManageAttachmentDto attachment : created.getAttachments()){
+        for (ManageAttachmentDto attachment : created.getAttachments()) {
             this.attachmentStatusHistoryService.create(
                     new AttachmentStatusHistoryDto(
                             UUID.randomUUID(),
@@ -419,11 +433,11 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     }
 
     private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
-        return adults == 0 ? 0.0 : rateAmount/(nights*adults);
+        return adults == 0 ? 0.0 : rateAmount / (nights * adults);
     }
 
     private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
-        return children == 0 ? 0.0 : rateAmount/(nights*children);
+        return children == 0 ? 0.0 : rateAmount / (nights * children);
     }
 
     private Long calculateNights(LocalDateTime checkIn, LocalDateTime checkOut) {

@@ -23,6 +23,7 @@ public class ManageAdjustmentDto {
     private ManagePaymentTransactionTypeDto paymentTransactionType;
     private ManageRoomRateDto roomRate;
     private String employee;
+    private boolean deleteInvoice;
 
     public ManageAdjustmentDto(ManageAdjustmentDto dto) {
         this.id = UUID.randomUUID();

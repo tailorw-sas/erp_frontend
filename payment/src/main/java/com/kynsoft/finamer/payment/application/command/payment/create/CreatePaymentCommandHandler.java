@@ -3,6 +3,9 @@ package com.kynsoft.finamer.payment.application.command.payment.create;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsoft.finamer.payment.application.command.manageEmployee.create.CreateManageEmployeeCommand;
+import com.kynsoft.finamer.payment.application.query.http.setting.manageEmployee.ManageEmployeeRequest;
+import com.kynsoft.finamer.payment.application.query.http.setting.manageEmployee.ManageEmployeeResponse;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -11,14 +14,17 @@ import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIs
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.*;
+import com.kynsoft.finamer.payment.infrastructure.services.http.ManageEmployeeHttpService;
 import java.time.LocalTime;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Transactional
 public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymentCommand> {
 
     private final IManagePaymentSourceService sourceService;
@@ -40,6 +46,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IMasterPaymentAttachmentService masterPaymentAttachmentService;
 
+    private final ManageEmployeeHttpService employeeHttpService;
+
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
                                        IManagePaymentStatusService statusService,
                                        IManageClientService clientService,
@@ -54,7 +62,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                                        IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                        IManageEmployeeService manageEmployeeService,
                                        IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-                                       IMasterPaymentAttachmentService masterPaymentAttachmentService) {
+                                       IMasterPaymentAttachmentService masterPaymentAttachmentService,
+                                       ManageEmployeeHttpService employeeHttpService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -70,9 +79,11 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         this.manageEmployeeService = manageEmployeeService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
+        this.employeeHttpService = employeeHttpService;
     }
 
     @Override
+    @Transactional
     public void handle(CreatePaymentCommand command) {
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentSource(), "paymentSource", "Payment Source ID cannot be null."));
@@ -86,7 +97,15 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAttachmentStatus(), "attachmentStatus", "Attachment Status ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "employee", "Employee ID cannot be null."));
 
-        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
+        ManageEmployeeDto employeeDto = null;
+        try {
+            employeeDto = this.manageEmployeeService.findById(command.getEmployee());
+        } catch (Exception e) {
+            ManageEmployeeResponse response = this.employeeHttpService.sendAccountStatement(new ManageEmployeeRequest(command.getEmployee()));
+            command.getMediator().send(CreateManageEmployeeCommand.fromRequest(response));
+            employeeDto = response.createObject();
+        }
+
         RulesChecker.checkRule(new CheckIfDateIsBeforeCurrentDateRule(command.getTransactionDate()));
         RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(command.getPaymentAmount()));
 
@@ -137,8 +156,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         PaymentDto save = this.paymentService.create(paymentDto);
 
         if (command.getAttachments() != null) {
-            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), save));
-            this.createAttachmentStatusHistory(employeeDto, save);
+            List<MasterPaymentAttachmentDto> list = this.createAttachment(command.getAttachments(), save);
+            paymentDto.setAttachments(list);
+            this.createAttachmentStatusHistory(employeeDto, save, list);
             //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
 
@@ -198,8 +218,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     }
 
     //Este metodo es para agregar el history del Attachemnt. Aqui el estado es el del nomenclador Manage Payment Attachment Status
-    private void createAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
-        List<MasterPaymentAttachmentDto> list = masterPaymentAttachmentService.findAllByPayment(payment.getId());
+    private void createAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, List<MasterPaymentAttachmentDto> list) {
+        //List<MasterPaymentAttachmentDto> list = masterPaymentAttachmentService.findAllByPayment(payment.getId());
         for (MasterPaymentAttachmentDto attachment : list) {
 
             AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();

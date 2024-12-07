@@ -40,6 +40,12 @@ public class CreateManageTransactionStatusCommandHandler implements ICommandHand
         if (command.isDeclinedStatus()){
             RulesChecker.checkRule(new ManageTransactionDeclinedStatusMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isReconciledStatus()){
+            RulesChecker.checkRule(new ManageTransactionReconciledStatusMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isPaidStatus()){
+            RulesChecker.checkRule(new ManageTransactionPaidStatusMustBeUniqueRule(this.service, command.getId()));
+        }
 
         List<ManageTransactionStatusDto> navigate = this.service.findByIds(command.getNavigate().stream().toList());
 
@@ -56,7 +62,9 @@ public class CreateManageTransactionStatusCommandHandler implements ICommandHand
                 command.isRefundStatus(),
                 command.isReceivedStatus(),
                 command.isCancelledStatus(),
-                command.isDeclinedStatus()
+                command.isDeclinedStatus(),
+                command.isReconciledStatus(),
+                command.isPaidStatus()
         ));
     }
 }

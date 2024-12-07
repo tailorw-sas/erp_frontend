@@ -19,7 +19,7 @@ public class ConsumerReplicateManageBankAccountService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-replicate-manage-bank-account", groupId = "payment-entity-replica")
+    @KafkaListener(topics = "finamer-replicate-manage-bank-account", groupId = "invoicing-entity-replica")
     public void listen(ReplicateManageBankAccountKafka objKafka) {
         try {
             CreateManageBankAccountCommand command = new CreateManageBankAccountCommand(objKafka.getId(), objKafka.getAccountNumber(),

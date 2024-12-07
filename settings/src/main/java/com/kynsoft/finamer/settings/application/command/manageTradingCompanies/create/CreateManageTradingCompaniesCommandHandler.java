@@ -64,6 +64,6 @@ public class CreateManageTradingCompaniesCommandHandler
 
         this.producerReplicateManageTradingCompanyService
                 .create(new ReplicateManageTradingCompanyKafka(command.getId(), command.getCode(),
-                        command.getIsApplyInvoice(),command.getCif(),command.getAddress(), command.getCompany()));
+                        command.getIsApplyInvoice(),command.getCif(),command.getAddress(), command.getCompany(), command.getStatus().name()));
     }
 }

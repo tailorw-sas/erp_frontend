@@ -23,11 +23,16 @@ public class ConsumerReplicateManageInvoiceTypeService {
     @KafkaListener(topics = "finamer-replicate-manage-invoice-type", groupId = "invoicing-entity-replica")
     public void listen(ReplicateManageInvoiceTypeKafka objKafka) {
         try {
-
             CreateManageInvoiceTypeCommand command = new CreateManageInvoiceTypeCommand(
-                    objKafka.getId(), objKafka.getCode(), objKafka.getName(),
-                    objKafka.isInvoice(), objKafka.isCredit(), objKafka.isIncome(),
-                    Status.valueOf(objKafka.getStatus()));
+                    objKafka.getId(),
+                    objKafka.getCode(),
+                    objKafka.getName(),
+                    objKafka.isInvoice(),
+                    objKafka.isCredit(),
+                    objKafka.isIncome(),
+                    Status.valueOf(objKafka.getStatus()),
+                    objKafka.getEnabledToPolicy()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageInvoiceTypeService.class.getName()).log(Level.SEVERE, null, ex);

@@ -12,16 +12,21 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
-import com.kynsoft.finamer.creditcard.domain.dto.TemplateDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
+import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
+import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
+import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,28 +38,32 @@ import java.util.*;
 
 @Service
 public class TransactionServiceImpl implements ITransactionService {
-    
-    @Autowired
+
     private final TransactionWriteDataJPARepository repositoryCommand;
-    
-    @Autowired
+
     private final TransactionReadDataJPARepository repositoryQuery;
 
-    @Autowired
-    private final ManageTransactionStatusServiceImpl statusService;
-
-    @Autowired
     private final MailService mailService;
 
-    @Autowired
     private final TemplateEntityServiceImpl templateEntityService;
 
-    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand, TransactionReadDataJPARepository repositoryQuery, ManageTransactionStatusServiceImpl statusService, MailService mailService, TemplateEntityServiceImpl templateEntityService) {
+    private final IManageTransactionStatusService transactionStatusService;
+
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    private final IParameterizationService parameterizationService;
+
+    public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
+                                  TransactionReadDataJPARepository repositoryQuery,
+                                  MailService mailService,
+                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.statusService = statusService;
         this.mailService = mailService;
         this.templateEntityService = templateEntityService;
+        this.transactionStatusService = transactionStatusService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -67,13 +76,18 @@ public class TransactionServiceImpl implements ITransactionService {
     public void update(TransactionDto dto) {
         Transaction entity = new Transaction(dto);
         entity.setUpdateAt(LocalDateTime.now());
-        
+
         this.repositoryCommand.save(entity);
     }
 
     @Override
     public void delete(TransactionDto dto) {
         try {
+            List<TransactionStatusHistoryDto> histories = this.transactionStatusHistoryService.findByTransactionId(dto.getId());
+            histories.forEach(history -> {
+                history.setTransaction(null);
+                this.transactionStatusHistoryService.delete(history.getId());
+            });
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
@@ -105,6 +119,53 @@ public class TransactionServiceImpl implements ITransactionService {
         Page<Transaction> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedSearchResponse(data);
+    }
+
+    @Override
+    public TransactionTotalResume searchTotal(List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+        GenericSpecificationsBuilder<Transaction> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        double totalAmount = 0.0;
+        double commission = 0.0;
+        double netAmount = 0.0;
+
+        // Se comenta iteracion sobre lista de transactions ya que no se va a usar por ahora el total global
+        /*for (Transaction transaction : repositoryQuery.findAll(specifications)) {
+            if (transaction.getAmount() != null) {
+                totalAmount += transaction.getAmount();
+                commission += transaction.getCommission();
+                netAmount += transaction.getNetAmount();
+            }
+        }*/
+        ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
+
+        //si no encuentra la parametrization que agarre 2 decimales por defecto
+        int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+        return new TransactionTotalResume(BankerRounding.round(totalAmount, decimals),
+                BankerRounding.round(commission, decimals), BankerRounding.round(netAmount, decimals));
+    }
+
+    @Override
+    @Transactional
+    public Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee) {
+        Set<TransactionDto> transactionsDto = new HashSet<>();
+        for (Long transactionId : transactionIds) {
+            TransactionDto transactionDto = this.findById(transactionId);
+            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(status);
+            transactionDto.setStatus(transactionStatusDto);
+            this.update(transactionDto);
+            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                    UUID.randomUUID(),
+                    transactionDto,
+                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                    null,
+                    employee,
+                    transactionStatusDto
+            ));
+            transactionsDto.add(transactionDto);
+        }
+        return transactionsDto;
     }
 
     @Override
@@ -155,7 +216,7 @@ public class TransactionServiceImpl implements ITransactionService {
     private PaginatedResponse getPaginatedSearchResponse(Page<Transaction> data) {
         List<TransactionSearchResponse> responseList = new ArrayList<>();
         for (Transaction entity : data.getContent()) {
-            responseList.add(new TransactionSearchResponse(entity.toAggregate()));
+            responseList.add(new TransactionSearchResponse(entity.toAggregate(), entity.getHasAttachments()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
@@ -163,7 +224,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
     //Conformar el correo para confirmar que la transaccion fue Recivida
     @Override
-    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto){
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto){
         if(transactionDto.getEmail() != null){
             TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
@@ -177,7 +238,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
             // Variables para el template de email, cambiar cuando keimer genere la plantilla
             List<MailJetVar> vars = Arrays.asList(
-                    new MailJetVar("commerce", "Finamer Do"),
+                    new MailJetVar("commerce", merchantConfigDto.getName()),
                     new MailJetVar("merchant", transactionDto.getMerchant().getDescription()),
                     new MailJetVar("hotel", transactionDto.getHotel().getName()),
                     new MailJetVar("number_id", transactionDto.getId()),
@@ -218,7 +279,8 @@ public class TransactionServiceImpl implements ITransactionService {
         // Variables para el template de email
         List<MailJetVar> vars = Arrays.asList(
                 new MailJetVar("payment_link", paymentLink),
-                new MailJetVar("invoice_amount", transactionDto.getAmount().toString())
+                new MailJetVar("invoice_amount", transactionDto.getAmount().toString()),
+                new MailJetVar("reference_number", transactionDto.getReferenceNumber())
         );
         request.setMailJetVars(vars);
 

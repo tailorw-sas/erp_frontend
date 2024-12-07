@@ -23,4 +23,6 @@ public interface IManageTradingCompaniesService {
     List<ManageTradingCompaniesDto> findByIds(List<UUID> ids);
 
     List<ManageTradingCompaniesDto> findAll();
+
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

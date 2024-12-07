@@ -2,7 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageRoomType.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageRoomTypeKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageRoomTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -12,7 +12,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.manageRoomType.ManageRoomTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageRoomTypeService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomType.ProducerUpdateManageRoomTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomType.ProducerReplicateManageRoomTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -25,13 +25,13 @@ public class UpdateManageRoomTypeCommandHandler implements ICommandHandler<Updat
 
     private final IManageHotelService hotelService;
 
-    private final ProducerUpdateManageRoomTypeService producerUpdateManageRoomTypeService;
+    private final ProducerReplicateManageRoomTypeService producerReplicateManageRoomTypeService;
 
     public UpdateManageRoomTypeCommandHandler(IManageRoomTypeService service, IManageHotelService hotelService,
-                                              ProducerUpdateManageRoomTypeService producerUpdateManageRoomTypeService) {
+                                              ProducerReplicateManageRoomTypeService producerReplicateManageRoomTypeService) {
         this.service = service;
         this.hotelService = hotelService;
-        this.producerUpdateManageRoomTypeService = producerUpdateManageRoomTypeService;
+        this.producerReplicateManageRoomTypeService = producerReplicateManageRoomTypeService;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class UpdateManageRoomTypeCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageRoomTypeService.update(new UpdateManageRoomTypeKafka(dto.getId(), dto.getName(), dto.getStatus().name()));
+            this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name()));
         }
     }
 

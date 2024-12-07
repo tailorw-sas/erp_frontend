@@ -2,7 +2,7 @@ package com.kynsoft.finamer.creditcard.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

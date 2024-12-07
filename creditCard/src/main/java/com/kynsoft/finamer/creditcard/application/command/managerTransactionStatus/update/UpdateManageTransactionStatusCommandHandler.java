@@ -44,6 +44,12 @@ public class UpdateManageTransactionStatusCommandHandler implements ICommandHand
         if (command.isDeclinedStatus()){
             RulesChecker.checkRule(new ManageTransactionDeclinedStatusMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isReconciledStatus()){
+            RulesChecker.checkRule(new ManageTransactionReconciledStatusMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isPaidStatus()){
+            RulesChecker.checkRule(new ManageTransactionPaidStatusMustBeUniqueRule(this.service, command.getId()));
+        }
 
         ManageTransactionStatusDto dto = this.service.findById(command.getId());
 
@@ -58,6 +64,8 @@ public class UpdateManageTransactionStatusCommandHandler implements ICommandHand
         UpdateIfNotNull.updateBoolean(dto::setReceivedStatus, command.isReceivedStatus(), dto.isReceivedStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCancelledStatus, command.isCancelledStatus(), dto.isCancelledStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDeclinedStatus, command.isDeclinedStatus(), dto.isDeclinedStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setReconciledStatus, command.isReconciledStatus(), dto.isReconciledStatus(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setPaidStatus, command.isPaidStatus(), dto.isPaidStatus(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         updateNavigate(dto::setNavigate, command.getNavigate(), dto.getNavigate().stream().map(ManageTransactionStatusDto::getId).collect(Collectors.toList()), update::setUpdate);
 

@@ -10,12 +10,13 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
+import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.refundTransaction.RefundTransactionCompareParentAmountRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
@@ -29,11 +30,14 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
     private final IManageMerchantCommissionService manageMerchantCommissionService;
 
-    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService) {
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+
+    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService, ITransactionStatusHistoryService transactionStatusHistoryService) {
         this.service = service;
         this.parameterizationService = parameterizationService;
         this.transactionStatusService = transactionStatusService;
         this.manageMerchantCommissionService = manageMerchantCommissionService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
     }
 
     @Override
@@ -52,20 +56,20 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
             UUID parentMerchantId = parentTransaction.getMerchant().getId();
             UUID parentCreditCardTypeId = parentTransaction.getCreditCardType().getId();
-            LocalDate parentCheckIn = parentTransaction.getCheckIn();
+            LocalDateTime parentCheckIn = parentTransaction.getCheckIn();
 
             ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
             //si no encuentra la parametrization que agarre 2 decimales por defecto
             int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
 
-            commission = manageMerchantCommissionService.calculateCommission(command.getAmount(), parentMerchantId, parentCreditCardTypeId, parentCheckIn, decimals);
+            commission = manageMerchantCommissionService.calculateCommission(command.getAmount(), parentMerchantId, parentCreditCardTypeId, parentCheckIn.toLocalDate(), decimals);
             //independientemente del valor de la commission el netAmount tiene dos decimales
             netAmount = BankerRounding.round(command.getAmount() - commission, 2);
         }
 
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
-
+        double parentAmountAndCommandAmount =  service.findSumOfAmountByParentId(parentTransaction.getId()) + command.getAmount();
         TransactionDto transactionDto = this.service.create(new TransactionDto(
                 UUID.randomUUID(),
                 parentTransaction.getMerchant(),
@@ -94,9 +98,17 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
                 false
         ));
         command.setId(transactionDto.getId());
-        if(this.service.findSumOfAmountByParentId(parentTransaction.getId()) >= parentTransaction.getAmount()){
+        if(parentAmountAndCommandAmount >= parentTransaction.getAmount()){
             parentTransaction.setPermitRefund(false);
             this.service.update(parentTransaction);
         }
+        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
+                UUID.randomUUID(),
+                transactionDto,
+                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
+                null,
+                command.getEmployee(),
+                transactionStatusDto
+        ));
     }
 }

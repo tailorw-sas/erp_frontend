@@ -57,12 +57,13 @@ public class CreateManageCityStateCommandHandler implements ICommandHandler<Crea
         ));
 
         producerReplicateManageCityStateService.create(ReplicateManageCityStateKafka.builder()
-                        .id(command.getId())
-                        .status(command.getStatus().name())
-                        .code(command.getCode())
-                        .name(command.getName())
-                        .country(country.getId())
-                        .description(command.getDescription())
+                .id(command.getId())
+                .status(command.getStatus().name())
+                .code(command.getCode())
+                .name(command.getName())
+                .country(country.getId())
+                .timeZone(timeZone.getId())
+                .description(command.getDescription())
                 .build());
     }
 }

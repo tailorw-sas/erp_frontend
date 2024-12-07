@@ -2,17 +2,16 @@ package com.kynsoft.finamer.settings.application.command.manageAgency.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAgencyKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.*;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerUpdateManageAgencyService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -25,28 +24,28 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     private final IManageAgencyTypeService agencyTypeService;
     private final IManagerB2BPartnerService managerB2BPartnerService;
     private final IManagerClientService managerClientService;
-    private final ProducerUpdateManageAgencyService producerUpdateManageAgencyService;
+    private final ProducerReplicateManageAgencyService producerReplicateManageAgencyService;
 
     public UpdateManageAgencyCommandHandler(IManageAgencyService service,
-                                            IManagerCountryService countryService,
-                                            IManageCityStateService cityStateService,
-                                            IManageAgencyTypeService agencyTypeService,
-                                            IManagerB2BPartnerService managerB2BPartnerService,
-                                            IManagerClientService managerClientService,
-                                            ProducerUpdateManageAgencyService producerUpdateManageAgencyService) {
+            IManagerCountryService countryService,
+            IManageCityStateService cityStateService,
+            IManageAgencyTypeService agencyTypeService,
+            IManagerB2BPartnerService managerB2BPartnerService,
+            IManagerClientService managerClientService,
+            ProducerReplicateManageAgencyService producerReplicateManageAgencyService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
         this.agencyTypeService = agencyTypeService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerClientService = managerClientService;
-        this.producerUpdateManageAgencyService = producerUpdateManageAgencyService;
+        this.producerReplicateManageAgencyService = producerReplicateManageAgencyService;
     }
 
     @Override
     public void handle(UpdateManageAgencyCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Agency Type ID cannot be null."));
-        if(command.getIsDefault()) {
+        if (command.getIsDefault()) {
             RulesChecker.checkRule(new ManageAgencyDefaultMustBeUniqueRule(this.service, command.getId()));
         }
         ManageAgencyDto dto = service.findById(command.getId());
@@ -57,19 +56,18 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             service.update(dto);
-            producerUpdateManageAgencyService.update(new UpdateManageAgencyKafka(dto.getId(), dto.getName(), dto.getClient().getId(), 
-                    dto.getBookingCouponFormat(), command.getStatus().name(),
-                    dto.getAgencyType().getId(),dto.getCif(), dto.getAddress(),
-                    Objects.nonNull(dto.getSentB2BPartner())?dto.getSentB2BPartner().getId():null,
-                    Objects.nonNull(dto.getCityState())?dto.getCityState().getId():null,
-                    Objects.nonNull(dto.getCountry())?dto.getCountry().getId():null,
+            this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(dto.getId(),
+                    dto.getCode(), dto.getName(), dto.getClient().getId(), dto.getBookingCouponFormat(),
+                    dto.getStatus().name(), dto.getGenerationType().name(), dto.getAgencyType().getId(), dto.getCif(), dto.getAddress(),
+                    dto.getSentB2BPartner().getId(),
+                    dto.getCityState().getId(),
+                    dto.getCountry().getId(),
                     dto.getMailingAddress(),
                     dto.getZipCode(),
                     dto.getCity(),
                     dto.getCreditDay(),
                     dto.getAutoReconcile(),
-                    dto.getValidateCheckout(),
-                    dto.getGenerationType().name()
+                    dto.getValidateCheckout()
             ));
         }
     }
@@ -125,6 +123,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
     @FunctionalInterface
     private interface EntityFinder<T> {
+
         T findById(UUID id);
     }
 }

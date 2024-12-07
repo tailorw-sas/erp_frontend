@@ -6,5 +6,6 @@ public enum ImportType {
     PAYMENT_OF_EXPENSE,//Payment of expense
     ANTI_TO_INCOME,//Anti to Income
     EXPENSE_TO_BOOKING,//Expense to Booking
-    PAYMENT_DETAIL//Payment Detail
+    PAYMENT_DETAIL,//Payment Detail
+    AUTOMATIC//HU154 payment que se crean automaticamente
 }

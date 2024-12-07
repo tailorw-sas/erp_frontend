@@ -20,4 +20,5 @@ public class UpdateManagePaymentSourceKafka implements Serializable {
     @JsonProperty("status")
     private String status;
     private Boolean expense;
+    private Boolean isBank;
 }

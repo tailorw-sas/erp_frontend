@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "manage_transaction_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_transaction_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageTransactionStatus implements Serializable {
 
     @Id
@@ -71,6 +75,12 @@ public class ManageTransactionStatus implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean declinedStatus;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean reconciledStatus;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean paidStatus;
+
     public ManageTransactionStatus(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -87,6 +97,8 @@ public class ManageTransactionStatus implements Serializable {
         this.receivedStatus = dto.isReceivedStatus();
         this.cancelledStatus = dto.isCancelledStatus();
         this.declinedStatus = dto.isDeclinedStatus();
+        this.reconciledStatus = dto.isReconciledStatus();
+        this.paidStatus = dto.isPaidStatus();
     }
 
     public ManageTransactionStatusDto toAggregate() {
@@ -95,7 +107,7 @@ public class ManageTransactionStatus implements Serializable {
                 navigate != null ? navigate.stream().map(ManageTransactionStatus::toAggregateSample).toList() : null,
                 enablePayment, visible, status,
                 sentStatus, refundStatus, receivedStatus,
-                cancelledStatus, declinedStatus);
+                cancelledStatus, declinedStatus, reconciledStatus, paidStatus);
     }
 
     public ManageTransactionStatusDto toAggregateSample() {
@@ -103,7 +115,7 @@ public class ManageTransactionStatus implements Serializable {
                 id, code, name, description,
                 null, enablePayment, visible, status,
                 sentStatus, refundStatus, receivedStatus,
-                cancelledStatus, declinedStatus);
+                cancelledStatus, declinedStatus, reconciledStatus, paidStatus);
     }
 
 }

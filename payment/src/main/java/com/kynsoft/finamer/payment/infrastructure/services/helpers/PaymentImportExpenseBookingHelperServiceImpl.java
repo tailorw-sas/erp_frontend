@@ -213,7 +213,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         CreatePaymentCommand createPaymentCommand = new CreatePaymentCommand(Status.ACTIVE, paymentSource.getId(), "",
                 getTransactionDate(hotelId), paymentStatus.getId(),
                 agencyDto.getClient().getId(), agencyDto.getId(), hotelId, null, attachmentStatusDto.getId(), amount,
-                "Expense generated from action of import files", null, employeeId,true);
+                "Expense generated from action of import files", null, employeeId,true, null);
         CreatePaymentMessage createPaymentMessage = serviceLocator.getBean(IMediator.class).send(createPaymentCommand);
         return createPaymentMessage.getPayment().getId();
     }

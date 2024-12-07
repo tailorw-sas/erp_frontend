@@ -50,6 +50,18 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.kynsoft.finamer</groupId>
+            <artifactId>audit-agent-dev</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <!-- Dependencia de iText 7 para crear PDFs -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext7-core</artifactId>
+            <version>7.2.6</version>  <!-- Asegúrate de usar la última versión disponible -->
+            <type>pom</type>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -203,6 +215,10 @@
             <artifactId>mockito-inline</artifactId>
             <version>4.8.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
         </dependency>
 
     </dependencies>

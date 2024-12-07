@@ -44,7 +44,7 @@ public class CardNetJobServiceImpl implements ICardNetJobService {
 
     @Override
     public CardnetJobDto findByTransactionId(UUID id) {
-        Optional<CardnetJob> optional = this.repositoryQuery.findByTransactionId(id);
+        Optional<CardnetJob> optional = this.repositoryQuery.findTopByTransactionIdOrderByCreatedAtDesc(id);
         if(optional.isPresent()){
             return optional.get().toAggregate();
         }else return null;

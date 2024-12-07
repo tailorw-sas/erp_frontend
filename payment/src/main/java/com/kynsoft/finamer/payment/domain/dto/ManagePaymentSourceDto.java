@@ -18,4 +18,5 @@ public class ManagePaymentSourceDto {
     private String name;
     private String status;
     private Boolean expense;
+    private Boolean isBank;
 }

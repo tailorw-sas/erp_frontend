@@ -32,6 +32,8 @@ public class ManageTransactionStatusResponse implements IResponse {
     private boolean receivedStatus;
     private boolean cancelledStatus;
     private boolean declinedStatus;
+    private boolean reconciledStatus;
+    private boolean paidStatus;
 
     public ManageTransactionStatusResponse(ManageTransactionStatusDto dto) {
         this.id = dto.getId();
@@ -51,6 +53,8 @@ public class ManageTransactionStatusResponse implements IResponse {
         this.receivedStatus = dto.isReceivedStatus();
         this.cancelledStatus = dto.isCancelledStatus();
         this.declinedStatus = dto.isDeclinedStatus();
+        this.reconciledStatus = dto.isReconciledStatus();
+        this.paidStatus = dto.isPaidStatus();
     }
 
 }

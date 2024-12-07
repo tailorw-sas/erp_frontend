@@ -10,7 +10,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageTransactionStatusResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionResultStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
@@ -197,11 +196,34 @@ public class ManageTransactionStatusServiceImpl implements IManageTransactionSta
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND,
                                DomainErrorMessage.MANAGE_TRANSACTION_STATUS_DECLINED_NOT_FOUND.getReasonPhrase())
                );
+           } case RECONCILED -> {
+               return this.repositoryQuery.findByReconciledStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECONCILED_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_RECONCILED_NOT_FOUND.getReasonPhrase())
+               );
+           }
+           case PAID -> {
+               return this.repositoryQuery.findByPaidStatus().map(ManageTransactionStatus::toAggregate).orElseThrow(()->
+                       new BusinessException(
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_PAID_NOT_FOUND,
+                               DomainErrorMessage.MANAGE_TRANSACTION_STATUS_PAID_NOT_FOUND.getReasonPhrase())
+               );
            }
        }
        throw new BusinessException(
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND,
                DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND.getReasonPhrase());
+    }
+
+    @Override
+    public Long countByReconciledStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByReconciledStatusAndNotId(id);
+    }
+
+    @Override
+    public Long countByPaidStatusAndNotId(UUID id) {
+        return this.repositoryQuery.countByPaidStatusAndNotId(id);
     }
 
 

@@ -26,4 +26,6 @@ public interface IManageAttachmentService {
     List<ManageAttachmentDto> findAllByInvoiceId(UUID invoiceId);
 
     void create(List<ManageAttachmentDto> dtos);
+
+    void deleteInvoice(ManageAttachmentDto dto);
 }

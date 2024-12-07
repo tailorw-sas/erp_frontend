@@ -12,26 +12,27 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
-import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoice;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -51,7 +52,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final IInvoiceCloseOperationService closeOperationService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
+            ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -85,14 +86,25 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
-        ManageInvoice entity = new ManageInvoice(dto);
-        Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
-        String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
-        entity.setInvoiceNumber(invoiceNumber);
-        entity.setInvoiceNo(lastInvoiceNo);
-        dto.setInvoiceNo(lastInvoiceNo);
-        String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" +lastInvoiceNo;
-        entity.setInvoiceNumberPrefix(invoicePrefix);
+        InvoiceUtils.establishDueDate(dto);
+        InvoiceUtils.calculateInvoiceAging(dto);
+        Invoice entity = new Invoice(dto);
+        if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
+            String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
+            entity.setInvoiceNumber(invoiceNumber);
+            entity.setInvoiceNo(dto.getHotelInvoiceNumber());
+            dto.setInvoiceNo(dto.getHotelInvoiceNumber());
+            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
+            entity.setInvoiceNumberPrefix(invoicePrefix);
+        } else {
+            Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
+            String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
+            entity.setInvoiceNumber(invoiceNumber);
+            entity.setInvoiceNo(lastInvoiceNo);
+            dto.setInvoiceNo(lastInvoiceNo);
+            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
+            entity.setInvoiceNumberPrefix(invoicePrefix);
+        }
 
         return this.repositoryCommand.saveAndFlush(entity).toAggregate();
     }
@@ -101,8 +113,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
         //getPaginatedResponseTest(example);
         //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
@@ -113,8 +125,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public PaginatedResponse sendList(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
         //getPaginatedResponseTest(example);
         //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
@@ -125,10 +137,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageInvoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponseToPayment(data);
+    }
+
+    @Override
+    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        return repositoryQuery.findAll(specifications, pageable).map(Invoice::toAggregate);
     }
 
     @Override
@@ -138,13 +157,131 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         List<ExportInvoiceRow> rows = new ArrayList<>();
         List<String> sheets = new ArrayList<>();
 
-        rows.add(new ExportInvoiceRow(0, "Id", "Inv. No", "Due Date", "Manual", "Amount", "Hotel", "Agency", "Type", "Status", null));
+        rows.add(new ExportInvoiceRow(
+                0,
+                "Has Attachment",
+                "Id",
+                "Type",
+                "Hotel",
+                "Agency Cd",
+                "Agency",
+                "Inv. No",
+                "Gen. Date",
+                "Status",
+                "Manual",
+                "Amount",
+                "Due Amount",
+                "Auto Rec",
+                null
+        ));
 
+        double cant = 0.00;
+        double totalsAmount = 0.00;
+
+        double cantPro = 0.00;
+        double totalsAmountPro = 0.00;
+
+        double cantWai = 0.00;
+        double totalsAmountWai = 0.00;
+
+        double cantRec = 0.00;
+        double totalsAmountRec = 0.00;
+
+        double cantCan = 0.00;
+        double totalsAmountCan = 0.00;
+
+        double cantSen = 0.00;
+        double totalsAmountSen = 0.00;
+
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceSearchResponse invoice = data.get(i);
-            rows.add(new ExportInvoiceRow(0, invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", invoice.getInvoiceNumber(), invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "", invoice.getIsManual() != null ? invoice.getIsManual().toString() : "false", invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", invoice.getAgency() != null ? invoice.getAgency().getCode() + "-" + invoice.getAgency().getName() : "", invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", null));
-
+            cant++;
+            totalsAmount = totalsAmount + invoice.getInvoiceAmount();
+            String status = "";
+            switch (invoice.getStatus()) {
+                case PROCECSED -> {
+                    cantPro++;
+                    totalsAmountPro = totalsAmountPro + invoice.getInvoiceAmount();
+                    status = "PROCESSED";
+                }
+                case RECONCILED -> {
+                    cantRec++;
+                    totalsAmountRec = totalsAmountRec + invoice.getInvoiceAmount();
+                    status = "RECONCILED";
+                }
+                case SENT -> {
+                    cantSen++;
+                    totalsAmountSen = totalsAmountSen + invoice.getInvoiceAmount();
+                    status = "SENT";
+                }
+                case CANCELED -> {
+                    cantCan++;
+                    totalsAmountCan = totalsAmountCan + invoice.getInvoiceAmount();
+                    status = "CANCELED";
+                }
+                default -> {
+                    status = "";
+                    System.out.print("Other Status");
+                }
+            }
+            rows.add(new ExportInvoiceRow(
+                    0,
+                    invoice.getHasAttachments() ? "true" : "false",
+                    invoice.getInvoiceId() != null ? invoice.getInvoiceId().toString() : "", //Id
+                    invoice.getInvoiceType() != null ? InvoiceType.getInvoiceTypeCode(invoice.getInvoiceType()) + "-" + invoice.getInvoiceType() : "", //Type
+                    invoice.getHotel() != null ? invoice.getHotel().getCode() + "-" + invoice.getHotel().getName() : "", //Hotel
+                    invoice.getAgency() != null ? invoice.getAgency().getCode() : "",//Agency,//Agency Cd
+                    invoice.getAgency() != null ? invoice.getAgency().getName() : "",//Agency
+                    invoice.getInvoiceNumber(),//Inv. No
+                    invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
+                    //invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
+                    status, //Status
+                    invoice.getIsManual() ? "1" : "0", //Manual
+                    decimalFormat.format(invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : "0.00"),//Amount
+                    decimalFormat.format(invoice.getDueAmount() != null ? invoice.getDueAmount() : "0.00"),//Due Amount
+                    //invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount().toString() : "", //Amount
+                    //invoice.getDueAmount() != null ? invoice.getDueAmount().toString() : "", //Due Amount
+                    invoice.getAutoRec() ? "1" : "0", //Auto Rec
+                    null
+            ));
         }
+
+        rows.add(new ExportInvoiceRow(
+                0,
+                "",
+                "Totals",
+                "#" + cant,//totals
+                "",
+                "",
+                "Pro #" + cantPro,
+                "Wai #" + cantWai,
+                "Rec #" + cantRec,
+                "Can #" + cantCan,
+                "Sen #" + cantSen,
+                "",
+                "",
+                "",
+                null
+        ));
+
+        rows.add(new ExportInvoiceRow(
+                0,
+                "",
+                "Totals",
+                "$" + totalsAmount,//totals
+                "",
+                "",
+                "Pro $" + decimalFormat.format(totalsAmountPro),
+                "Wai $" + decimalFormat.format(totalsAmountWai),
+                "Rec $" + decimalFormat.format(totalsAmountRec),
+                "Can $" + decimalFormat.format(totalsAmountCan),
+                "Sen $" + decimalFormat.format(totalsAmountSen),
+                "",
+                "",
+                "",
+                null
+        ));
 
         sheets.add("Invoice List");
 
@@ -161,9 +298,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageInvoice> data) {
+    private PaginatedResponse getPaginatedResponse(Page<Invoice> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
-        for (ManageInvoice entity : data.getContent()) {
+        for (Invoice entity : data.getContent()) {
             try {
                 Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
                         && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
@@ -179,12 +316,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
-    private PaginatedResponse getPaginatedSendListResponse(Page<ManageInvoice> data) {
+    private PaginatedResponse getPaginatedSendListResponse(Page<Invoice> data) {
         // Filtramos el contenido de acuerdo a las condiciones
         List<ManageInvoiceSearchResponse> filteredResponseList = data.getContent().stream()
                 .filter(entity -> {
                     ManageAgency agency = entity.getAgency();
-                    List<ManageBooking> bookings = entity.getBookings();
+                    List<Booking> bookings = entity.getBookings();
                     return (agency != null && !agency.getValidateCheckout()) || (bookings != null && !hasPastDueBooking(bookings));
                 })
                 .map(entity -> new ManageInvoiceSearchResponse(entity.toAggregateSearch(), null, null))
@@ -199,22 +336,22 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         // Devolvemos la respuesta paginada con los datos filtrados y calculados
         return new PaginatedResponse(
-                filteredResponseList,              // Lista de datos filtrados
-                totalPages,                        // Total de páginas basado en los datos filtrados
-                totalFilteredElements,             // Total de elementos después del filtrado
-                (long) totalFilteredElements,      // Total de elementos
-                pageSize,                          // Tamaño de la página original
-                data.getNumber()                   // Número de la página actual (0-indexado)
+                filteredResponseList, // Lista de datos filtrados
+                totalPages, // Total de páginas basado en los datos filtrados
+                totalFilteredElements, // Total de elementos después del filtrado
+                (long) totalFilteredElements, // Total de elementos
+                pageSize, // Tamaño de la página original
+                data.getNumber() // Número de la página actual (0-indexado)
         );
     }
 
-    public boolean hasPastDueBooking(List<ManageBooking> bookings) {
+    public boolean hasPastDueBooking(List<Booking> bookings) {
         LocalDate currentDate = LocalDate.now(); // Obtener la fecha actual (sin hora)
         if (bookings != null && !bookings.isEmpty()) {
-            for (ManageBooking booking : bookings) {
-                if (booking.getCheckOut() != null &&
-                        (booking.getCheckOut().toLocalDate().isBefore(currentDate) ||
-                                booking.getCheckOut().toLocalDate().isEqual(currentDate))) {
+            for (Booking booking : bookings) {
+                if (booking.getCheckOut() != null
+                        && (booking.getCheckOut().toLocalDate().isBefore(currentDate)
+                        || booking.getCheckOut().toLocalDate().isEqual(currentDate))) {
                     return true; // Si checkOut es antes o igual a currentDate, devolver true
                 }
             }
@@ -223,10 +360,10 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return false; // Si no se encontró ningún booking con checkOut anterior o igual, devolver false
     }
 
-    private PaginatedResponse getPaginatedResponseToPayment(Page<ManageInvoice> data) {
+    private PaginatedResponse getPaginatedResponseToPayment(Page<Invoice> data) {
         List<ManageInvoiceToPaymentResponse> responseList = new ArrayList<>();
 
-        for (ManageInvoice entity : data.getContent()) {
+        for (Invoice entity : data.getContent()) {
             ManageInvoiceToPaymentResponse response = new ManageInvoiceToPaymentResponse(entity.toAggregate());
             responseList.add(response);
         }
@@ -237,7 +374,16 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public void update(ManageInvoiceDto dto) {
-        ManageInvoice entity = new ManageInvoice(dto);
+        Invoice entity = new Invoice(dto);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
+    }
+
+    @Override
+    public void deleteInvoice(ManageInvoiceDto dto) {
+        Invoice entity = new Invoice(dto);
+        entity.setDeleteInvoice(true);
         entity.setUpdatedAt(LocalDateTime.now());
 
         repositoryCommand.save(entity);
@@ -255,7 +401,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public ManageInvoiceDto findById(UUID id) {
-        Optional<ManageInvoice> optionalEntity = repositoryQuery.findById(id);
+        Optional<Invoice> optionalEntity = repositoryQuery.findById(id);
 
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
@@ -268,7 +414,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public List<ManageInvoiceDto> findByIds(List<UUID> ids) {
-        return repositoryQuery.findAllById(ids).stream().map(ManageInvoice::toAggregate).toList();
+        return repositoryQuery.findAllById(ids).stream().map(Invoice::toAggregate).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
@@ -287,10 +433,10 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public List<ManageInvoiceDto> findAllToReplicate() {
-        List<ManageInvoice> objects = this.repositoryQuery.findAll();
+        List<Invoice> objects = this.repositoryQuery.findAll();
         List<ManageInvoiceDto> objectDtos = new ArrayList<>();
 
-        for (ManageInvoice object : objects) {
+        for (Invoice object : objects) {
             objectDtos.add(object.toAggregate());
         }
 
@@ -305,9 +451,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto findByInvoiceId(long id) {
         return repositoryQuery.findByInvoiceId(id)
-                .map(ManageInvoice::toAggregate)
+                .map(Invoice::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
-                        new ErrorField("invoiceId", "The invoice not found."))));
+                new ErrorField("invoiceId", "The invoice not found."))));
     }
 
     @Override

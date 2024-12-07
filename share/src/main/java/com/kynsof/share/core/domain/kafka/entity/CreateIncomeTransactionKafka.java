@@ -19,6 +19,7 @@ public class CreateIncomeTransactionKafka {
     private UUID hotel;
     private UUID invoiceType;
     private UUID invoiceStatus;
+    private UUID employeeId;
     private Double incomeAmount;
     private String status;
     private Long invoiceNumber;

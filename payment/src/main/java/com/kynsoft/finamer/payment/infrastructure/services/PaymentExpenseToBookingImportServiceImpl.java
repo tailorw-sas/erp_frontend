@@ -59,15 +59,11 @@ public class PaymentExpenseToBookingImportServiceImpl implements IPaymentImportS
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(EPaymentImportProcessStatus.FINISHED.name(), request.getImportProcessId())));
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
-        } catch (ExcelException e) {
-            paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
-                    new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
-                            request.getImportProcessId(), true, e.getMessage())));
-            throw new RuntimeException(e);
         } catch (Exception e) {
+            String exceptionMessage=e instanceof ExcelException ? e.getMessage() :"The import cannot be performed." ;
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
-                            request.getImportProcessId(), true, "The import cannot be performed.")));
+                            request.getImportProcessId(), true,exceptionMessage )));
             throw new RuntimeException(e);
         }
     }

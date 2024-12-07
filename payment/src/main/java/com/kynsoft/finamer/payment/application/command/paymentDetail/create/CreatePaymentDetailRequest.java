@@ -19,4 +19,5 @@ public class CreatePaymentDetailRequest {
 
     private UUID booking;
     private Boolean applyPayment;
+
 }

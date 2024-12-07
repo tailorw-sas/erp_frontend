@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -57,6 +60,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         RulesChecker.checkRule(new ManageBookingCheckBookingAmountAndBookingBalanceRule(dto.getInvoiceAmount(), dto.getDueAmount()));
         ConsumerUpdate update = new ConsumerUpdate();
         if (command.getInvoiceDate() != null && !command.getInvoiceDate().equals(dto.getInvoiceDate())) {
+//            dto.setInvoiceDate(invoiceDate(dto.getHotel().getId(), command.getInvoiceDate()));
             RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, dto.getInvoiceDate().toLocalDate(), dto.getHotel().getId()));
             this.updateLocalDateTime(dto::setInvoiceDate, command.getInvoiceDate(), dto.getInvoiceDate(), update::setUpdate);
         }
@@ -73,6 +77,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
                 RulesChecker.checkRule(new ManageInvoiceValidateChangeStatusRule(dto.getStatus()));
                 dto.setStatus(EInvoiceStatus.CANCELED);
                 dto.setManageInvoiceStatus(this.invoiceStatusService.findByCanceledStatus());
+                this.updateInvoiceStatusHistory(dto, command.getEmployee());
             }
         }
 
@@ -142,11 +147,22 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
         dto.setInvoice(invoiceDto);
-        dto.setDescription("The income data was updated.");
+        dto.setDescription("The invoice data was updated.");
         dto.setEmployee(employee);
+        dto.setInvoiceStatus(EInvoiceStatus.CANCELED);
 
         this.invoiceStatusHistoryService.create(dto);
 
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
+            //return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
 }

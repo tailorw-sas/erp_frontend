@@ -7,6 +7,7 @@ import com.kynsof.identity.domain.rules.module.ModuleDescriptionMustBeNullRule;
 import com.kynsof.identity.domain.rules.module.ModuleNameMustBeNullRule;
 import com.kynsof.identity.domain.rules.module.ModuleNameMustBeUniqueRule;
 import com.kynsof.identity.infrastructure.services.kafka.producer.module.ProducerCreateModuleEventService;
+import com.kynsof.identity.infrastructure.services.kafka.producer.module.ProducerReplicateManageModuleService;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateModuleKafka;
@@ -18,10 +19,12 @@ public class CreateModuleCommandHandler implements ICommandHandler<CreateModuleC
     private final IModuleService service;
 
     private final ProducerCreateModuleEventService createModuleEventService;
+    private final ProducerReplicateManageModuleService replicateManageModuleService;
 
-    public CreateModuleCommandHandler(IModuleService service, ProducerCreateModuleEventService createModuleEventService) {
+    public CreateModuleCommandHandler(IModuleService service, ProducerCreateModuleEventService createModuleEventService, ProducerReplicateManageModuleService replicateManageModuleService) {
         this.service = service;
         this.createModuleEventService = createModuleEventService;
+        this.replicateManageModuleService = replicateManageModuleService;
     }
 
     @Override
@@ -39,6 +42,7 @@ public class CreateModuleCommandHandler implements ICommandHandler<CreateModuleC
                 command.getStatus(),
                 command.getCode())
         );
-        this.createModuleEventService.create(new ReplicateModuleKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
+        this.createModuleEventService.create(new ReplicateModuleKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), null, command.getDescription()));
+        this.replicateManageModuleService.create(new ReplicateModuleKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name(), null, command.getDescription()));
     }
 }

@@ -16,5 +16,7 @@ public class UpdateManageReconcileTransactionStatusRequest {
     private String description;
     private Boolean requireValidation;
     private List<UUID> navigate;
-
+    private boolean created;
+    private boolean cancelled;
+    private boolean completed;
 }

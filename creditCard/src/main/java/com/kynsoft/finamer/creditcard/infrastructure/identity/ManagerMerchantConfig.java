@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigResponseDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
@@ -17,6 +19,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @Entity
 @Table(name = "manager_merchant_config")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manager_merchant_config",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagerMerchantConfig implements Serializable {
 
     @Id

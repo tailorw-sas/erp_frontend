@@ -5,7 +5,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
-import com.kynsoft.finamer.creditcard.infrastructure.identity.ManagerB2BPartnerDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import org.springframework.stereotype.Component;
 
 @Component

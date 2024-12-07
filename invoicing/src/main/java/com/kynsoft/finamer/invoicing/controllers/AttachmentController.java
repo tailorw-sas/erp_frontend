@@ -4,7 +4,6 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.invoiceStatusHistory.update.UpdateInvoiceStatusHistoryCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentRequest;
@@ -38,10 +37,6 @@ public class AttachmentController {
         CreateAttachmentCommand createCommand = CreateAttachmentCommand.fromRequest(request);
         CreateAttachmentMessage response = mediator.send(createCommand);
 
-        UpdateInvoiceStatusHistoryCommand invoiceCommand = new UpdateInvoiceStatusHistoryCommand(request.getInvoice(), request.getEmployee());
-
-        this.mediator.send(invoiceCommand);
-
         return ResponseEntity.ok(response);
     }
 
@@ -54,10 +49,10 @@ public class AttachmentController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable UUID id) {
+    @DeleteMapping(path = "/{id}/employee/{employeeId}")
+    public ResponseEntity<?> deleteById(@PathVariable UUID id, @PathVariable UUID employeeId) {
 
-        DeleteAttachmentCommand command = new DeleteAttachmentCommand(id);
+        DeleteAttachmentCommand command = new DeleteAttachmentCommand(id, employeeId);
         DeleteAttachmentMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);

@@ -25,30 +25,42 @@ public interface ManageTransactionStatusReadDataJPARepository extends JpaReposit
     @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.sentStatus = true AND b.id <> :id")
     Long countBySentStatusAndNotId(@Param("id") UUID id);
 
-    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.sentStatus = true")
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.sentStatus = true AND b.status = 'ACTIVE'")
     Optional<ManageTransactionStatus> findBySentStatus();
 
     @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.refundStatus = true AND b.id <> :id")
     Long countByRefundStatusAndNotId(@Param("id") UUID id);
 
-    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.refundStatus = true")
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.refundStatus = true AND b.status = 'ACTIVE'")
     Optional<ManageTransactionStatus> findByRefundStatus();
 
     @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.receivedStatus = true AND b.id <> :id")
     Long countByReceivedStatusAndNotId(@Param("id") UUID id);
 
-    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.receivedStatus = true")
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.receivedStatus = true AND b.status = 'ACTIVE'")
     Optional<ManageTransactionStatus> findByReceivedStatus();
 
     @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.cancelledStatus = true AND b.id <> :id")
     Long countByCancelledStatusAndNotId(@Param("id") UUID id);
 
-    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.cancelledStatus = true")
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.cancelledStatus = true AND b.status = 'ACTIVE'")
     Optional<ManageTransactionStatus> findByCancelledStatus();
 
     @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.declinedStatus = true AND b.id <> :id")
     Long countByDeclinedStatusAndNotId(@Param("id") UUID id);
 
-    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.declinedStatus = true")
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.declinedStatus = true AND b.status = 'ACTIVE'")
     Optional<ManageTransactionStatus> findByDeclinedStatus();
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.reconciledStatus = true AND b.id <> :id")
+    Long countByReconciledStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.reconciledStatus = true AND b.status = 'ACTIVE'")
+    Optional<ManageTransactionStatus> findByReconciledStatus();
+
+    @Query("SELECT COUNT(b) FROM ManageTransactionStatus b WHERE b.paidStatus = true AND b.id <> :id")
+    Long countByPaidStatusAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT b FROM ManageTransactionStatus b WHERE b.paidStatus = true AND b.status = 'ACTIVE'")
+    Optional<ManageTransactionStatus> findByPaidStatus();
 }

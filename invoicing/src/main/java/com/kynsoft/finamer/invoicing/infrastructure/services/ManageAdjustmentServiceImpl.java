@@ -109,6 +109,15 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
         }
     }
 
+    @Override
+    public void deleteInvoice(ManageAdjustmentDto dto) {
+        ManageAdjustment entity = new ManageAdjustment(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

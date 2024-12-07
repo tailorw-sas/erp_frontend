@@ -11,6 +11,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.service.IFtpService;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
+import com.kynsoft.finamer.invoicing.infrastructure.services.FileService;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -35,6 +36,8 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 @Transactional
@@ -51,6 +54,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IManageAgencyContactService manageAgencyContactService;
     private final AccountStatementService accountStatementService;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final FileService fileService;
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
@@ -59,7 +63,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                      IInvoiceStatusHistoryService invoiceStatusHistoryService,
                                      IManageAgencyContactService manageAgencyContactService,
                                      AccountStatementService accountStatementService,
-                                     IInvoiceCloseOperationService closeOperationService) {
+                                     IInvoiceCloseOperationService closeOperationService,
+                                     FileService fileService) {
 
         this.service = service;
         this.mailService = mailService;
@@ -72,6 +77,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.manageAgencyContactService = manageAgencyContactService;
         this.accountStatementService = accountStatementService;
         this.closeOperationService = closeOperationService;
+        this.fileService = fileService;
     }
 
     @Override
@@ -209,7 +215,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 request.setMailJetVars(vars);
 
                 //Adjuntos
-                List<MailJetAttachment> attachments = getMailJetAttachments(invoicesHotel);
+                List<MailJetAttachment> attachments = getMailJetAttachments(invoicesHotel, employeeDto);
 
                 request.setMailJetAttachments(attachments);
                 mailService.sendMail(request);
@@ -241,16 +247,25 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 //        }
     }
 
-    private List<MailJetAttachment> getMailJetAttachments(List<ManageInvoiceDto> agencyInvoices) {
+    private List<MailJetAttachment> getMailJetAttachments(List<ManageInvoiceDto> agencyInvoices, ManageEmployeeDto employeeDto) {
         List<MailJetAttachment> attachments = new ArrayList<>();
         List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
-        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
-        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
+        //Comenta estas dos lineas y descomenta las lineas de abajo.
+//        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
+//        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
 
+        String base64 = "";
+        try {
+            //Se hace la llamada a lo interno para generar el excel.
+            base64 = this.fileService.convertExcelToBase64(ids, employeeDto);
+        } catch (IOException ex) {
+            Logger.getLogger(SendInvoiceCommandHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
         MailJetAttachment attachment = new MailJetAttachment(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
                 "AccountStatement.xlsx",  // Nombre del archivo
-                sendAccountStatementResponse.getFile()
+//                sendAccountStatementResponse.getFile()
+                base64
         );
         attachments.add(attachment);
         return attachments;

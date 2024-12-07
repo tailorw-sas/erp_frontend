@@ -17,5 +17,6 @@ public class ReplicatePaymentResourceTypeKafka {
     private String code;
     private String name;
     private boolean invoice;
-
+    private boolean vcc;
+    private String status;
 }

@@ -7,6 +7,9 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageReconcileTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.rules.manageReconcileTransactionStatus.ManageReconcileTransactionStatusCancelledMustBeUniqueRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageReconcileTransactionStatus.ManageReconcileTransactionStatusCompletedMustBeUniqueRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageReconcileTransactionStatus.ManageReconcileTransactionStatusCreatedMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.services.IManageReconcileTransactionStatusService;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +30,16 @@ public class UpdateManageReconcileTransactionStatusCommandHandler implements ICo
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Module ID cannot be null."));
 
+        if (command.isCreated()){
+            RulesChecker.checkRule(new ManageReconcileTransactionStatusCreatedMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isCancelled()){
+            RulesChecker.checkRule(new ManageReconcileTransactionStatusCancelledMustBeUniqueRule(this.service, command.getId()));
+        }
+        if (command.isCompleted()){
+            RulesChecker.checkRule(new ManageReconcileTransactionStatusCompletedMustBeUniqueRule(this.service, command.getId()));
+        }
+
         ManageReconcileTransactionStatusDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -35,6 +48,9 @@ public class UpdateManageReconcileTransactionStatusCommandHandler implements ICo
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRequireValidation, command.getRequireValidation(), dto.getRequireValidation(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCreated, command.isCreated(), dto.isCreated(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCancelled, command.isCancelled(), dto.isCancelled(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCompleted, command.isCompleted(), dto.isCompleted(), update::setUpdate);
 
         List<ManageReconcileTransactionStatusDto> manageReconcileTransactionStatusDtoList = service.findByIds(command.getNavigate());
 

@@ -49,8 +49,19 @@ public class ManageInvoiceDto {
     private String sendStatusError;
     private Double originalAmount;
     private ImportType importType;
+    private boolean deleteInvoice;
+    private int aging;
+    private boolean cloneParent;
 
-    public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual, Double invoiceAmount, Double dueAmount, ManageHotelDto hotel, ManageAgencyDto agency, EInvoiceType invoiceType, EInvoiceStatus status, Boolean autoRec, List<ManageBookingDto> bookings, List<ManageAttachmentDto> attachments, Boolean reSend, LocalDate reSendDate, ManageInvoiceTypeDto manageInvoiceType, ManageInvoiceStatusDto manageInvoiceStatus, LocalDateTime createdAt, Boolean isCloned, ManageInvoiceDto parent, Double credits) {
+    private Long hotelInvoiceNumber;
+
+    public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
+                            Double invoiceAmount, Double dueAmount, ManageHotelDto hotel,
+                            ManageAgencyDto agency, EInvoiceType invoiceType, EInvoiceStatus status,
+                            Boolean autoRec, List<ManageBookingDto> bookings, List<ManageAttachmentDto> attachments,
+                            Boolean reSend, LocalDate reSendDate, ManageInvoiceTypeDto manageInvoiceType,
+                            ManageInvoiceStatusDto manageInvoiceStatus, LocalDateTime createdAt, Boolean isCloned,
+                            ManageInvoiceDto parent, Double credits,int aging) {
         this.id = id;
         this.invoiceId = invoiceId;
         this.invoiceNo = invoiceNo;
@@ -75,5 +86,6 @@ public class ManageInvoiceDto {
         this.isCloned = isCloned;
         this.parent = parent;
         this.credits = credits;
+        this.aging =aging;
     }
 }

@@ -7,11 +7,9 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CardNetTransactionDataResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CardNetResponseStatus;
-import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
-import com.kynsoft.finamer.creditcard.domain.services.IManageStatusTransactionService;
-import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
+import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.services.*;
+import com.kynsoft.finamer.creditcard.infrastructure.utils.CreditCardUploadAttachmentUtil;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -29,10 +27,13 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
     private final TransactionPaymentLogsService transactionPaymentLogsService;
     private final ManageMerchantCommissionServiceImpl merchantCommissionService;
     private final IParameterizationService parameterizationService;
+    private final IProcessErrorLogService processErrorLogService;
+    private final ITransactionStatusHistoryService transactionStatusHistoryService;
+    private final IVoucherService voucherService;
 
     public UpdateManageStatusTransactionCommandHandler(ITransactionService transactionService, IManageStatusTransactionService statusTransactionService, IManageMerchantConfigService merchantConfigService,
                                                        ManageCreditCardTypeServiceImpl creditCardTypeService, ManageTransactionStatusServiceImpl transactionStatusService, CardNetJobServiceImpl cardnetJobService,
-                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService) {
+                                                       TransactionPaymentLogsService transactionPaymentLogsService, ManageMerchantCommissionServiceImpl merchantCommissionService, IParameterizationService parameterizationService, IProcessErrorLogService processErrorLogService, ITransactionStatusHistoryService transactionStatusHistoryService, IPdfVoucherService pdfVoucherService, CreditCardUploadAttachmentUtil creditCardUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IVoucherService voucherService) {
 
         this.transactionService = transactionService;
         this.statusTransactionService = statusTransactionService;
@@ -43,6 +44,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         this.transactionPaymentLogsService = transactionPaymentLogsService;
         this.merchantCommissionService = merchantCommissionService;
         this.parameterizationService = parameterizationService;
+        this.processErrorLogService = processErrorLogService;
+        this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.voucherService = voucherService;
     }
 
     @Override
@@ -50,6 +54,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         //Obtener toda la informacion necesaria para los updates
         CardnetJobDto cardnetJobDto = statusTransactionService.findBySession(command.getSession());
         TransactionDto transactionDto = transactionService.findByUuid(cardnetJobDto.getTransactionId());
+        if (!transactionDto.getStatus().isSentStatus() && !transactionDto.getStatus().isDeclinedStatus()) {
+            throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
+        }
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         String url = merchantConfigDto.getAltUrl() + "/" + cardnetJobDto.getSession() + "?sk=" + cardnetJobDto.getSessionKey();
 
@@ -69,31 +76,47 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             ManageCreditCardTypeDto creditCardTypeDto = creditCardTypeService.findByFirstDigit(
                     Character.getNumericValue(transactionResponse.getCreditCardNumber().charAt(0))
             );
-            ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
-
-            //si no encuentra la parametrization que agarre 2 decimales por defecto
-            int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
-
-            double commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn(), decimals);
-            //independientemente del valor de la commission el netAmount tiene dos decimales
-            double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
 
             //Obtener estado de la transacción correspondiente dado el responseCode del merchant
+
             CardNetResponseStatus pairedStatus = CardNetResponseStatus.valueOfCode(transactionResponse.getResponseCode());
             ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByMerchantResponseStatus(pairedStatus.transactionStatus());
-            transactionResponse.setMerchantStatus(pairedStatus.toDTO());
 
+            // Solo calcular la comission si es Received
+            if (transactionStatusDto.isReceivedStatus()) {
+                ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
+                //si no encuentra la parametrization que agarre 2 decimales por defecto
+                int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+
+                double commission= 0.0;
+                try {
+                    commission = merchantCommissionService.calculateCommission(transactionDto.getAmount(), transactionDto.getMerchant().getId(), creditCardTypeDto.getId(), transactionDto.getCheckIn().toLocalDate(), decimals);
+                } catch (Exception e) {
+                    ProcessErrorLogDto processErrorLogDto = new ProcessErrorLogDto();
+                    processErrorLogDto.setSession(cardnetJobDto.getSession());
+                    processErrorLogDto.setTransactionId(cardnetJobDto.getTransactionId());
+                    processErrorLogDto.setError(e.getMessage());
+                    this.processErrorLogService.create(processErrorLogDto);
+                }
+                //independientemente del valor de la commission el netAmount tiene dos decimales
+                double netAmount = BankerRounding.round(transactionDto.getAmount() - commission, 2);
+                transactionDto.setCommission(commission);
+                transactionDto.setNetAmount(netAmount);
+                transactionDto.setTransactionDate(LocalDateTime.now());
+            }
+
+            transactionResponse.setMerchantStatus(pairedStatus.toDTO());
             TransactionPaymentLogsDto transactionPaymentLogsDto = transactionPaymentLogsService.findByTransactionId(transactionDto.getTransactionUuid());
 
             // 1- Actualizar data en vcc_transaction
             transactionDto.setCardNumber(transactionResponse.getCreditCardNumber());
 //            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
             transactionDto.setCreditCardType(creditCardTypeDto);
-            transactionDto.setStatus(transactionStatusDto);
-            transactionDto.setCommission(commission);
-            transactionDto.setNetAmount(netAmount);
             transactionDto.setPaymentDate(LocalDateTime.now());
-
+            if (!transactionStatusDto.equals(transactionDto.getStatus())){
+                transactionDto.setStatus(transactionStatusDto);
+                this.transactionStatusHistoryService.create(transactionDto, command.getEmployee());
+            }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
 
@@ -107,12 +130,11 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
             //Enviar correo (voucher) de confirmacion a las personas implicadas
-            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto);
-
+            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
+            this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getEmployee());
             command.setResult(transactionResponse);
         } else {
             throw new BusinessException(DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR, DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR.getReasonPhrase());
         }
     }
-
 }

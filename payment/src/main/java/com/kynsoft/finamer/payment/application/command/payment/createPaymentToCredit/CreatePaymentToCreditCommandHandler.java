@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.command.payment.createPaymentToCredit;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.attachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.payment.application.command.attachment.create.CreateAttachmentMessage;
 import com.kynsoft.finamer.payment.application.command.attachmentStatusHistory.create.CreateAttachmentStatusHistoryCommand;
@@ -16,6 +17,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.createPayme
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeDeposit.CreatePaymentDetailTypeDepositMessage;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -41,6 +43,9 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
     private final IManageEmployeeService manageEmployeeService;
 
+    private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final IManageBankAccountService manageBankAccountService;
+
     public CreatePaymentToCreditCommandHandler(IManagePaymentSourceService sourceService,
             IManagePaymentStatusService statusService,
             IManageClientService clientService,
@@ -49,7 +54,9 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             IManageHotelService hotelService,
             IPaymentDetailService paymentDetailService,
             IManagePaymentAttachmentStatusService attachmentStatusService,
-            IManageEmployeeService manageEmployeeService) {
+            IManageEmployeeService manageEmployeeService,
+            IPaymentCloseOperationService paymentCloseOperationService,
+            IManageBankAccountService manageBankAccountService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -59,12 +66,16 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         this.paymentDetailService = paymentDetailService;
         this.attachmentStatusService = attachmentStatusService;
         this.manageEmployeeService = manageEmployeeService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
+        this.manageBankAccountService = manageBankAccountService;
     }
 
     @Override
     public void handle(CreatePaymentToCreditCommand command) {
 
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
+        List<ManageBankAccountDto> listBankAccountDtos = this.manageBankAccountService.findAllByHotel(hotelDto.getId());
+        ManageBankAccountDto bankAccountDto = listBankAccountDtos.isEmpty() ? null : listBankAccountDtos.get(0);
 
         //Crear servicio para obtener el que esta marcado con expense
         ManagePaymentSourceDto paymentSourceDto = this.sourceService.findByExpense();
@@ -74,12 +85,12 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByDefaults();
-        this.createPaymentToCreditNegative(hotelDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
-        this.createPaymentToCreditPositive(hotelDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
+        this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
+        this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
     }
 
     //Payment creado con el deposit y apply deposit
-    private void createPaymentToCreditPositive(ManageHotelDto hotelDto,
+    private void createPaymentToCreditPositive(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto,
             ManagePaymentSourceDto paymentSourceDto,
             ManagePaymentStatusDto paymentStatusDto,
             ManageClientDto clientDto,
@@ -94,12 +105,14 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 Status.ACTIVE,
                 paymentSourceDto,
                 deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()),
-                LocalDate.now(),
+                transactionDate(hotelDto.getId()),
+                //LocalDate.now(),
                 paymentStatusDto,
                 clientDto,
                 agencyDto,
                 hotelDto,
-                null,
+                //hotelDto,
+                bankAccountDto,
                 attachmentStatusDto,
                 paymentAmount,
                 0.0,
@@ -109,7 +122,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                paymentAmount,
+                0.0,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -119,6 +132,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
+        //paymentDto.setImportType(ImportType.AUTOMATIC);
+        paymentDto.setApplyPayment(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
 //        if (command.getInvoiceDto().getBookings() != null) {
@@ -147,7 +162,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     //Payment creado con el cash
-    private void createPaymentToCreditNegative(ManageHotelDto hotelDto,
+    private void createPaymentToCreditNegative(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto,
             ManagePaymentSourceDto paymentSourceDto,
             ManagePaymentStatusDto paymentStatusDto,
             ManageClientDto clientDto,
@@ -162,12 +177,13 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 Status.ACTIVE,
                 paymentSourceDto,
                 deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()),
-                LocalDate.now(),
+                //LocalDate.now(),
+                transactionDate(hotelDto.getId()),
                 paymentStatusDto,
                 clientDto,
                 agencyDto,
                 hotelDto,
-                null,
+                bankAccountDto,
                 attachmentStatusDto,
                 paymentAmount,
                 0.0,
@@ -177,7 +193,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                paymentAmount,
+                0.0,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -187,6 +203,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
+        //paymentDto.setImportType(ImportType.AUTOMATIC);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         if (command.getInvoiceDto().getBookings() != null) {
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
@@ -206,6 +223,15 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
         this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
 
+    }
+
+    private LocalDate transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDate.now();
+        }
+        return closeOperationDto.getEndDate();
     }
 
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {

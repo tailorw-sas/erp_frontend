@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "payment_detail")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment_detail",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class PaymentDetail implements Serializable {
 
     @Id
@@ -50,7 +54,7 @@ public class PaymentDetail implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_booking_id")
-    private ManageBooking manageBooking;
+    private Booking manageBooking;
 
     private Long reverseFrom;
 
@@ -125,7 +129,7 @@ public class PaymentDetail implements Serializable {
         this.childrens = dto.getChildrens() != null ? dto.getChildrens() : null;
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
-        this.manageBooking = dto.getManageBooking() != null ? new ManageBooking(dto.getManageBooking()) : null;
+        this.manageBooking = dto.getManageBooking() != null ? new Booking(dto.getManageBooking()) : null;
         this.applayPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom();
         this.reverseFromParentId = dto.getReverseFromParentId();

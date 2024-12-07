@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +25,7 @@ public class TransactionSearchResponse implements IResponse {
     private TransactionHotelSearchResponse hotel;
     private CustomCodeDescriptionStatusResponse merchant;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String referenceNumber;
     private String enrolleCode;
     private String cardNumber;
@@ -40,8 +40,11 @@ public class TransactionSearchResponse implements IResponse {
     private boolean adjustment;
     private ManageAgencyResponse agency;
     private ManageVCCTransactionTypeDto categoryType;
+    private ManageVCCTransactionTypeDto subCategoryType;
+    private boolean hasAttachments;
+    private LocalDateTime transactionDate;
 
-    public TransactionSearchResponse(TransactionDto dto){
+    public TransactionSearchResponse(TransactionDto dto, boolean hasAttachments) {
         this.id = dto.getId();
         this.hotel = dto.getHotel() != null ? new TransactionHotelSearchResponse(dto.getHotel()) : null;
         this.merchant = dto.getMerchant() != null ? new CustomCodeDescriptionStatusResponse(dto.getMerchant().getId(), dto.getMerchant().getCode(), dto.getMerchant().getDescription(), dto.getMerchant().getStatus()) : null;
@@ -61,5 +64,8 @@ public class TransactionSearchResponse implements IResponse {
         this.adjustment = dto.isAdjustment();
         this.agency = dto.getAgency() != null ? new ManageAgencyResponse(dto.getAgency()) : null;
         this.categoryType = dto.getTransactionCategory();
+        this.subCategoryType = dto.getTransactionSubCategory();
+        this.hasAttachments = hasAttachments;
+        this.transactionDate = dto.getTransactionDate();
     }
 }

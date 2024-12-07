@@ -2,6 +2,8 @@ package com.kynsoft.finamer.creditcard.application.command.sendMail;
 
 import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.utils.UrlGetBase;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+
 @Component
 @Transactional
 public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> {
@@ -35,14 +38,18 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
     public void handle(SendMailCommand command) {
         sendEmail(command, command.getId());
     }
+
     private void sendEmail(SendMailCommand command, Long id) {
 
-       TransactionDto transactionDto = transactionService.findById(id);
-       String token = tokenService.generateToken(transactionDto.getTransactionUuid());
+        TransactionDto transactionDto = transactionService.findById(id);
+        if (transactionDto.getGuestName().isEmpty() || transactionDto.getEmail().isEmpty()) {
+            throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_RESEND_LINK_INVALID, DomainErrorMessage.MANAGE_TRANSACTION_RESEND_LINK_INVALID.getReasonPhrase());
+        }
+        String token = tokenService.generateToken(transactionDto.getTransactionUuid());
         if (transactionDto.getEmail() != null) {
             ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
             String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
-            String paymentLink = baseUrl + "payment?token="+ token;
+            String paymentLink = baseUrl + "payment?token=" + token;
             try {
                 transactionService.sendTransactionPaymentLinkEmail(transactionDto, paymentLink);
                 command.setResult(true);
@@ -53,4 +60,4 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
     }
 
 
-    }
+}

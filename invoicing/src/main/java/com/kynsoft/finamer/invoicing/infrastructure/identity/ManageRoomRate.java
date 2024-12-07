@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,12 +23,14 @@ import org.hibernate.generator.EventType;
 @Getter
 @Setter
 @Entity
-@Table(name = "manage_room_rate")
+@Table(name = "room_rate")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageRoomRate {
+
     @Id
     @Column(name = "id")
     private UUID id;
-
 
     @Column(columnDefinition = "serial", name = "room_rate_serial_id")
     @Generated(event = EventType.INSERT)
@@ -44,11 +48,14 @@ public class ManageRoomRate {
     private String remark;
     private Long nights;
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "manage_booking")
-    private ManageBooking booking;
+    @JoinColumn(name = "booking")
+    private Booking booking;
 
     @Column(nullable = true)
     private Boolean deleted = false;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean deleteInvoice;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "roomRate", orphanRemoval = true)
     private List<ManageAdjustment> adjustments;
@@ -80,29 +87,30 @@ public class ManageRoomRate {
         this.remark = dto.getRemark();
         this.hotelAmount = dto.getHotelAmount();
 
-        this.booking = dto.getBooking() != null ? new ManageBooking(dto.getBooking()) : null;
+        this.booking = dto.getBooking() != null ? new Booking(dto.getBooking()) : null;
         this.adjustments = dto.getAdjustments() != null ? dto.getAdjustments().stream().map(a -> {
             ManageAdjustment adjustment = new ManageAdjustment(a);
             adjustment.setRoomRate(this);
             return adjustment;
         }).collect(Collectors.toList()) : null;
 
-        this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
+        this.nights = dto.getCheckIn() != null && dto.getCheckOut() != null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
+        this.deleteInvoice = dto.isDeleteInvoice();
     }
 
     public ManageRoomRateDto toAggregate() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
-                rateAdult, rateChild, hotelAmount, remark, booking !=null ?  booking.toAggregate() : null,
+                rateAdult, rateChild, hotelAmount, remark, booking != null ? booking.toAggregate() : null,
                 adjustments != null ? adjustments.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights);
+                            return b.toAggregateSample();
+                        }).collect(Collectors.toList()) : null, nights, deleteInvoice);
     }
 
     public ManageRoomRateDto toAggregateSample() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
                 rateAdult, rateChild, hotelAmount, remark, null,
                 adjustments != null ? adjustments.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights);
+                            return b.toAggregateSample();
+                        }).collect(Collectors.toList()) : null, nights, deleteInvoice);
     }
 }

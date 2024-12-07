@@ -23,4 +23,6 @@ public class CreateManageTransactionStatusRequest {
     private boolean receivedStatus;
     private boolean cancelledStatus;
     private boolean declinedStatus;
+    private boolean reconciledStatus;
+    private boolean paidStatus;
 }

@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -32,6 +33,8 @@ public interface IPaymentService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    Page<PaymentDto> paymentCollectionSummary(Pageable pageable, List<FilterCriteria> filterCriteria);
+
     PaginatedResponse searchExcelExporter(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<PaymentDto> createBulk(List<PaymentDto> dtoList);
@@ -39,4 +42,6 @@ public interface IPaymentService {
     Long countByAgency(UUID agencyId);
 
     Long countByAgencyOther(UUID agencyId);
+
+    Long findMaxId();
 }

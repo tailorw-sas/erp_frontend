@@ -53,11 +53,22 @@ public class ConsumerUpdateBookingService {
 
             if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 ManageBookingDto bookingParent = this.bookingService.findById(bookingDto.getParent().getId());
-                bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
+                double amountBalance = objKafka.getAmountBalance() * -1;
+                if (bookingParent.getDueAmount() >= amountBalance) {
+                    bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
+                } else {
+                    bookingParent.setDueAmount(bookingParent.getDueAmount() - bookingParent.getDueAmount());
+                }
+                //bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
                 this.bookingService.update(bookingParent);
 
                 ManageInvoiceDto parent = this.invoiceService.findById(invoiceDto.getParent().getId());
-                parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
+                if (parent.getDueAmount() >= amountBalance) {
+                    parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
+                } else {
+                    parent.setDueAmount(parent.getDueAmount() - parent.getDueAmount());
+                }
+                //parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
                 this.invoiceService.update(parent);
             }
         } catch (Exception ex) {

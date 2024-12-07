@@ -4,15 +4,18 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,10 +40,16 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
-                                      IManageHotelService hotelService,
-                                      IManageInvoiceTypeService invoiceTypeService,
-                                      IManageInvoiceStatusService invoiceStatusService,
-                                      IManageInvoiceService manageInvoiceService, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IInvoiceCloseOperationService closeOperationService, IManageAttachmentService attachmentService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+                                        IManageHotelService hotelService,
+                                        IManageInvoiceTypeService invoiceTypeService,
+                                        IManageInvoiceStatusService invoiceStatusService,
+                                        IManageInvoiceService manageInvoiceService, 
+                                        IManageAttachmentTypeService attachmentTypeService, 
+                                        IManageResourceTypeService resourceTypeService, 
+                                        IInvoiceStatusHistoryService invoiceStatusHistoryService, 
+                                        IInvoiceCloseOperationService closeOperationService, 
+                                        IManageAttachmentService attachmentService, 
+                                        IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -58,7 +67,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     public void handle(CreateIncomeCommand command) {
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
+//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
@@ -72,35 +81,35 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         }
 
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(new ManageInvoiceDto(
-                command.getId(), 
-                0L, 
-                0L, 
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME), 
-                command.getInvoiceDate(), 
-                command.getDueDate(), 
-                command.getManual(), 
-                0.0, 
-                0.0, 
-                hotelDto, 
-                agencyDto, 
-                EInvoiceType.INCOME, 
-                EInvoiceStatus.SENT, 
-                Boolean.FALSE, 
-                null, 
-                null, 
-                command.getReSend(), 
-                command.getReSendDate(), 
-                invoiceTypeDto, 
+                command.getId(),
+                0L,
+                0L,
+                this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME)),
+                this.invoiceDate(hotelDto.getId()),
+                command.getDueDate(),
+                command.getManual(),
+                0.0,
+                0.0,
+                hotelDto,
+                agencyDto,
+                EInvoiceType.INCOME,
+                EInvoiceStatus.SENT,
+                Boolean.FALSE,
+                null,
+                null,
+                command.getReSend(),
+                command.getReSendDate(),
+                invoiceTypeDto,
                 invoiceStatusDto,
                 null,
                 false,
-                null, 0.0
+                null, 0.0,0
         ));
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
         this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
-        if(command.getAttachments() != null){
+        if (command.getAttachments() != null) {
             List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList);
@@ -108,7 +117,16 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     }
 
-    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee){
+    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
+        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
+        } else {
+            invoiceNumber += "-" + hotel.getCode();
+        }
+        return invoiceNumber;
+    }
+
+    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
 
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
@@ -121,8 +139,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     }
 
-    private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments){
-        for(ManageAttachmentDto attachment : attachments){
+    private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments) {
+        for (ManageAttachmentDto attachment : attachments) {
             AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
             attachmentStatusHistoryDto.setId(UUID.randomUUID());
             attachmentStatusHistoryDto
@@ -159,18 +177,29 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                     attachment.getEmployee(),
                     attachment.getEmployeeId(),
                     null,
-                    resourceTypeDto));
+                    resourceTypeDto,
+                    false
+            ));
 
             if (attachmentType != null && attachmentType.getDefaults() != null && attachmentType.getDefaults()) {
                 countDefaults++;
             }
         }
 
-        if(countDefaults > 1){
+        if (countDefaults > 1) {
             throw new BusinessException(DomainErrorMessage.INVOICE_ATTACHMENT_TYPE_CHECK_DEFAULT,
                     DomainErrorMessage.INVOICE_ATTACHMENT_TYPE_CHECK_DEFAULT.getReasonPhrase());
         }
         this.attachmentService.create(dtos);
         return dtos;
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }

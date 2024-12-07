@@ -19,7 +19,7 @@ public class ConsumerUpdateManageBankAccountService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-update-manage-bank-account", groupId = "payment-entity-replica")
+    @KafkaListener(topics = "finamer-update-manage-bank-account", groupId = "invoicing-entity-replica")
     public void listen(UpdateManageBankAccountKafka objKafka) {
         try {
             UpdateManageBankAccountCommand command = new UpdateManageBankAccountCommand(objKafka.getId(), objKafka.getAccountNumber(),

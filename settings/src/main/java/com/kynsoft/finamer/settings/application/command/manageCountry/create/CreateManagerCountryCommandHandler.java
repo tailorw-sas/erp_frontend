@@ -54,14 +54,12 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
         ));
         producerReplicateManageCountryService.create(ReplicateManageCountryKafka.builder()
                 .id(command.getId())
+                .language(languageDto.getId())
                 .status(command.getStatus().name())
                 .name(command.getName())
                 .description(command.getDescription())
                 .code(command.getCode())
                 .build()
-
-
-
         );
     }
 }
