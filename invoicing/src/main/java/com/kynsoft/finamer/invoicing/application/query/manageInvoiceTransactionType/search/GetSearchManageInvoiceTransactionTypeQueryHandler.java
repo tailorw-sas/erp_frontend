@@ -2,15 +2,15 @@ package com.kynsoft.finamer.invoicing.application.query.manageInvoiceTransaction
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.invoicing.domain.services.IManageLanguageService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GetSearchManageInvoiceTransactionTypeQueryHandler implements IQueryHandler<GetSearchManageInvoiceTransactionTypeQuery, PaginatedResponse> {
 
-    private final IManageLanguageService service;
+    private final IManageInvoiceTransactionTypeService service;
 
-    public GetSearchManageInvoiceTransactionTypeQueryHandler(IManageLanguageService service) {
+    public GetSearchManageInvoiceTransactionTypeQueryHandler(IManageInvoiceTransactionTypeService service) {
         this.service = service;
     }
 
