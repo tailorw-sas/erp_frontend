@@ -101,7 +101,7 @@ const Columns: IColumn[] = [
 ]
 
 const incomeColumns: IColumn[] = [
-  // { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
