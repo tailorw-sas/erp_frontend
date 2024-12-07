@@ -24,6 +24,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:field', 'reactiveUpdateField', 'clearField', 'submit', 'cancel', 'delete', 'forceSave', 'update:errorsList'])
 
+const formElement: Ref<HTMLDivElement | null> = ref<HTMLDivElement | null>(null)
+const scrollPosition = ref(0)
 const hideCancelLocal = ref(props.hideCancel)
 const $primevue = usePrimeVue()
 const fieldValues = reactive<{ [key: string]: any }>({})
@@ -65,6 +67,9 @@ function deleteItem($event: Event) {
 function submitForm($event: Event = new Event('')) {
   $event.preventDefault()
   if (validateForm()) {
+    if (formElement.value) {
+      scrollPosition.value = formElement.value.scrollTop
+    }
     emit('submit', { ...fieldValues, event: $event })
   }
 }
@@ -129,6 +134,13 @@ function formatSize(bytes: number) {
   return `${formattedSize} ${sizes[i]}`
 }
 
+// Función para manejar el scroll
+function handleScroll(event: Event) {
+  if (!formElement.value) { return }
+  const scrollTop = formElement.value.scrollTop
+  localStorage.setItem('scrollPosition', scrollTop.toString())
+}
+
 watch(errors, (newVal, oldVal) => {
   emit('update:errorsList', errors)
 }, { deep: true })
@@ -143,11 +155,28 @@ watch(() => props.forceSave, () => {
 watch(fieldValues, (newVal) => {
   emit('reactiveUpdateField', newVal)
 })
+
+onMounted(() => {
+  if (formElement.value) {
+    formElement.value.addEventListener('scroll', handleScroll)
+  }
+  if (formElement.value) {
+    const scrollPosition = localStorage.getItem('scrollPosition')
+    formElement.value.scrollTop = scrollPosition ? Number.parseInt(scrollPosition, 10) : 0
+  }
+})
+// Remover el listener al desmontar el componente
+onBeforeUnmount(() => {
+  if (formElement.value) {
+    formElement.value.removeEventListener('scroll', handleScroll)
+  }
+  // localStorage.removeItem('scrollPosition')
+})
 </script>
 
 <template>
   <div :class="formClass || 'p-fluid formgrid grid flex justify-content-center'">
-    <div :class="props.containerClass ? `${props.containerClass} px-3` : 'col-12 p-0'" :style="unRestrictedContentHeight ? { width: '100%' } : { 'max-height': '65vh', 'overflow-y': 'auto', 'width': '100%' }">
+    <div ref="formElement" :class="props.containerClass ? `${props.containerClass} px-3` : 'col-12 p-0'" :style="unRestrictedContentHeight ? { width: '100%' } : { 'max-height': '65vh', 'overflow-y': 'auto', 'width': '100%' }">
       <div
         v-for="(field, index) in fields" v-show="!field.hidden" :key="field.field || index" :style="field.style"
         :class="field.class ? `${field.class} mb-2` : 'mb-2'"
@@ -185,7 +214,7 @@ watch(fieldValues, (newVal) => {
                   :style="{ backgroundImage: `url(${typeof fieldValues[field.field] === 'string' ? fieldValues[field.field] : (fieldValues[field.field].hasOwnProperty('objectURL') ? fieldValues[field.field].objectURL : '')})`, backgroundSize: (objFile !== null && typeof objFile === 'object' && objFile.type === 'image/svg+xml') ? 'contain' : 'cover' }"
                 />
               </div>
-              <Skeleton v-else height="2rem" />
+              <Skeleton v-else height="180px" width="180px" />
               <div class="col-12">
                 <div class="flex justify-content-center align-items-center my-2">
                   <span>
@@ -287,7 +316,38 @@ watch(fieldValues, (newVal) => {
             </span>
 
             <span v-else-if="field.dataType === 'fileupload'">
-              <FileUpload
+              <InputGroup>
+                <span v-if="!loadingSave" class="w-full">
+                  <InputText
+                    v-if="typeof fieldValues[field.field] === 'object'"
+                    v-model="fieldValues[field.field].name"
+                    class="w-full"
+                    placeholder="Upload a file"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                  />
+                  <InputText
+                    v-if="typeof fieldValues[field.field] === 'string'"
+                    v-model="fieldValues[field.field]"
+                    class="w-full"
+                    placeholder="Upload a file"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                  />
+                </span>
+                <Skeleton v-else height="7rem" />
+                <FileUpload
+                  v-if="!loadingSave"
+                  mode="basic"
+                  :max-file-size="100000000"
+                  :multiple="false"
+                  auto
+                  custom-upload
+                  accept="application/pdf"
+                  style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                  @uploader="customBase64Uploader($event, fieldValues, field.field)"
+                />
+              </InputGroup>
+
+              <!-- <FileUpload
                 v-if="!loadingSave" :max-file-size="1000000" :multiple="false" auto custom-upload
                 @uploader="customBase64Uploader($event, fieldValues, field.field)"
               >
@@ -314,9 +374,7 @@ watch(fieldValues, (newVal) => {
                     </li>
                   </ul>
                 </template>
-              </FileUpload>
-
-              <Skeleton v-else height="7rem" />
+              </FileUpload> -->
 
             </span>
 
@@ -369,7 +427,7 @@ watch(fieldValues, (newVal) => {
       </div>
     </div>
     <!-- General Footer slot of the form -->
-    <div v-if="showActions" class="col-12 form-footer mt-4 flex justify-content-between md:justify-content-end">
+    <div v-if="showActions" class="col-12 form-footer py-0 py-0 my-0 flex justify-content-between md:justify-content-end">
       <slot name="form-footer" :item="{ fieldValues, submitForm, cancelForm, deleteItem, item }">
         <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSave" @click="submitForm($event)" />
         <Button v-if="!hideDeleteButton" v-tooltip.top="'Delete'" outlined class="w-3rem" severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem($event)" />

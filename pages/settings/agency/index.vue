@@ -426,6 +426,7 @@ const options = ref({
   uriApi: 'manage-agency',
   loading: false,
   actionsAsMenu: false,
+  selectFirstItemByDefault: true,
   messageToDelete: 'Are you sure you want to delete the agency: {{name}}?'
 })
 const payloadOnChangePage = ref<PageState>()
@@ -464,7 +465,9 @@ async function getList() {
     return
   }
   try {
-    idItemToLoadFirstTime.value = ''
+    if (options.value.selectFirstItemByDefault) {
+      idItemToLoadFirstTime.value = ''
+    }
     options.value.loading = true
     listItems.value = []
     const newListItems = []
@@ -494,7 +497,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && options.value.selectFirstItemByDefault) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -661,7 +664,11 @@ async function createItem(item: { [key: string]: any }) {
     payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
     payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    const response = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+
+    if (response && options.value.selectFirstItemByDefault === false) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -677,7 +684,11 @@ async function updateItem(item: { [key: string]: any }) {
   payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
   payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  const response = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+
+  if (response && options.value.selectFirstItemByDefault === false) {
+    idItemToLoadFirstTime.value = response.id
+  }
 }
 
 async function deleteItem(id: string) {
@@ -1104,19 +1115,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Agency
-    </h3>
+    </h5>
     <IFCan :perms="['AGENCY:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IFCan>
   </div>
   <div class="grid">
     <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-1">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab header="Filters">
             <div class="flex gap-4 flex-column lg:flex-row">

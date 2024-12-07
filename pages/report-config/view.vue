@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import dayjs from 'dayjs'
 import ReportParamPage from './params.vue'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -39,6 +40,7 @@ const listItems = ref<any[]>([])
 
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
+const loadingSaveAllGetReport = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 
@@ -51,62 +53,70 @@ const filterToSearch = ref<IData>({
 const confApi = reactive({
   moduleApi: 'report',
   uriApi: 'jasper-report-template',
+  uriApiReportGenerate: 'reports-test/generate/template'
 })
-
 const ENUM_FILTER = [
   { id: 'templateCode', name: 'Code' },
   { id: 'templateName', name: 'Name' },
 
 ]
 
-const item = ref<GenericObject>({})
+const item = ref<GenericObject>({
+  reportFormatType: REPORT_FORMATS_TYPE[0],
+  jasperReportCode: ''
+})
 
-const itemTemp = ref<GenericObject>({})
+const itemTemp = ref<GenericObject>({
+  reportFormatType: REPORT_FORMATS_TYPE[0],
+  jasperReportCode: ''
+})
 
 const fields = ref<FieldDefinitionType[]>([
-  // {
-  //   field: 'code',
-  //   header: 'Code',
-  //   dataType: 'text',
-  //   class: 'field col-12 md:col-1 required',
-  //   validation: z.string().trim().min(1, 'The code field is required').max(50, 'Maximum 50 characters')
-  // },
-  // {
-  //   field: 'name',
-  //   header: 'Name',
-  //   dataType: 'text',
-  //   class: 'field col-12 md:col-3 required',
-  //   validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
-  // },
-  // {
-  //   field: 'reportParams',
-  //   header: 'Report Params',
-  //   hidden: true,
-  //   dataType: 'text',
-  //   class: 'field col-12',
-  // },
-  // {
-  //   field: 'query',
-  //   header: 'Query',
-  //   dataType: 'text',
-  //   class: 'field col-12 md:col-3 required',
-  //   validation: z.string().trim().min(1, 'The query field is required').max(250, 'Maximum 250 characters')
-  // },
-  // {
-  //   field: 'description',
-  //   header: 'Description',
-  //   dataType: 'text',
-  //   class: 'field col-12 md:col-3 required',
-  //   validation: z.string().trim().min(1, 'The description field is required').max(50, 'Maximum 50 characters')
-  // },
-  // {
-  //   field: 'status',
-  //   header: 'Active',
-  //   dataType: 'check',
-  //   disabled: true,
-  //   class: 'field col-12 md:col-1 required mb-3 mt-3',
-  // },
+  {
+    field: 'reportFormatType',
+    header: 'Format Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-1 required auto',
+    disabled: false,
+    validation: z.object({
+      id: z.string().min(1, 'This is a required field'),
+      name: z.string().min(1, 'This is a required field'),
+    }).nullable().refine(value => value && value.id && value.name, { message: 'This is a required field' }),
+  },
+  {
+    field: 'jasperReportCode',
+    header: 'Report Code',
+    dataType: 'text',
+    disabled: true,
+    hidden: true,
+    class: 'field col-12 md:col-1 auto',
+    validation: z.string().trim()
+    // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
+  },
 ])
+
+const fieldsTemp = [
+  {
+    field: 'reportFormatType',
+    header: 'Format Type',
+    dataType: 'select',
+    class: 'field col-12 md:col-1 required auto',
+    validation: z.object({
+      id: z.string().min(1, 'This is a required field'),
+      name: z.string().min(1, 'This is a required field'),
+    }).nullable().refine(value => value && value.id && value.name, { message: 'This is a required field' }),
+  },
+  {
+    field: 'jasperReportCode',
+    header: 'Report Code',
+    dataType: 'text',
+    disabled: true,
+    hidden: true,
+    class: 'field col-12 md:col-1 auto',
+    validation: z.string().trim()
+    // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
+  },
+]
 // FORM CONFIG -------------------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------------------------------
@@ -223,7 +233,7 @@ async function getList() {
         label: `${element.code} - ${element.name}`,
         icon: 'pi pi-file-pdf',
         // ...element,
-        command: () => loadParamsFieldByReportTemplate(element.id)
+        command: () => loadParamsFieldByReportTemplate(element.id, element.code)
       })
     }
 
@@ -283,6 +293,72 @@ async function getItemById(id: string) {
   }
 }
 
+// {{baseUrl}}/report/api/reports/generate-template
+// {
+//   “parameters”: {
+//     “invoiceIds”: [
+//       “123e4567-e89b-12d3-a456-426614174000”,
+//       “987e6543-b21a-34d5-c678-123456789abc”,
+//       “1a2b3c4d-5e6f-7g8h-9i0j-123456789def”
+//     ],
+//     “paymentDate”: “2024-10-26”
+//   },
+//   “reportFormatType”: “PDF”,
+//   “jasperReportCode”: “AAA21”
+// }
+const isDate = value => !Number.isNaN(Date.parse(value))
+
+function formatToDateTimeZero(date) {
+  const formattedDate = new Date(date).toISOString().split('T')[0]
+  return `${formattedDate}T00:00:00.000Z`
+};
+async function saveItem(objItem: any) {
+  if (objItem) {
+    try {
+      loadingSaveAllGetReport.value = true
+      const payload = {
+        parameters: {},
+        reportFormatType: typeof objItem.value.reportFormatType === 'object' ? objItem.value.reportFormatType.id : objItem.value.reportFormatType,
+        jasperReportCode: objItem.value.jasperReportCode
+      } as any
+
+      payload.parameters = Object.keys(objItem.value).reduce((acc: Record<string, any>, key) => {
+        const value = objItem.value[key]
+
+        if (isDate(value) && typeof value !== 'number') {
+          acc[key] = formatToDateTimeZero(value) // Convertir a formato YYYY-MM-DDT00:00:00.000Z
+        }
+        else if (typeof value === 'object' && value !== null && value.id !== undefined) {
+          acc[key] = value.id
+        }
+        else {
+          acc[key] = value
+        }
+        return acc
+      }, {} as Record<string, any>)
+      delete payload?.parameters?.reportFormatType
+      delete payload?.parameters?.jasperReportCode
+      delete payload?.parameters?.event
+      // const payloadTemp = {
+      //   jasperReportCode: 'KKKK',
+      //   parameters: {
+      //     ReportTitle: 'Reporte de Ventas',
+      //   },
+      //   reportFormatType: 'PDF'
+      // }
+      const response = await GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
+      if (response) {
+        loadPDF(response.base64Report)
+      }
+      loadingSaveAllGetReport.value = false
+    }
+    catch (error) {
+      console.error(error)
+      loadingSaveAllGetReport.value = false
+    }
+  }
+}
+
 function requireConfirmationToSave(item2: any) {
   const { event } = item2
   confirm.require({
@@ -294,7 +370,7 @@ function requireConfirmationToSave(item2: any) {
     acceptLabel: 'Accept',
     accept: () => {
       item.value = { ...item2 }
-      // saveItem(item)
+      saveItem(item)
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
@@ -336,6 +412,8 @@ interface DataList {
   paramName: string
   service: string
   type: string
+  reportClass: string
+  reportValidation: any
 }
 
 interface ListItem {
@@ -346,6 +424,8 @@ interface ListItem {
   label: string
   module: string
   service: string
+  reportClass: string
+  reportValidation: any
 }
 
 function mapFunction(data: DataList): ListItem {
@@ -356,7 +436,9 @@ function mapFunction(data: DataList): ListItem {
     paramName: data.paramName,
     label: data.label,
     module: data.module,
-    service: data.service
+    service: data.service,
+    reportClass: data.reportClass,
+    reportValidation: data.reportValidation
   }
 }
 async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
@@ -369,9 +451,12 @@ async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { 
 //   class: 'field col-12 md:col-1 required',
 //   validation: z.string().trim().min(1, 'The code field is required').max(50, 'Maximum 50 characters')
 // },
-async function loadParamsFieldByReportTemplate(id: string) {
+
+const showForm = ref(false)
+async function loadParamsFieldByReportTemplate(id: string, code: string) {
   if (id) {
     try {
+      showForm.value = false
       const filter: FilterCriteria[] = [
         {
           key: 'jasperReportTemplate.id',
@@ -385,22 +470,93 @@ async function loadParamsFieldByReportTemplate(id: string) {
         keys: ['name', 'username', 'url'],
       }
       const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, filter)
-      fields.value = []
+      fields.value = [...fieldsTemp]
       if (result && result.length > 0) {
         for (const element of result) {
           item.value[element.paramName] = ''
-          fields.value = [...fields.value, {
-            field: element.paramName,
-            header: element.label,
-            dataType: element.componentType,
-            class: 'field col-12 md:col-2',
-          }]
+          if (element.componentType === 'select') {
+            fields.value = [...fields.value, {
+              field: element.paramName,
+              header: element.label,
+              dataType: element.componentType,
+              class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
+              // validation: element.reportValidation ? element.reportValidation : z.object({}).nullable(),
+              objApi: {
+                moduleApi: element.module,
+                uriApi: element.service
+              }
+            }]
+          }
+          else {
+            fields.value = [...fields.value, {
+
+              field: element.paramName,
+              header: element.label,
+              dataType: element.componentType,
+              class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
+              // validation: element.reportValidation ? element.reportValidation : z.string().trim()
+            }]
+          }
         }
       }
+      formReload.value++
+
+      if (code) {
+        item.value.jasperReportCode = code
+      }
+      else {
+        item.value.jasperReportCode = ''
+      }
+
+      showForm.value = true
     }
     catch (error) {
-
+      console.log(error)
     }
+  }
+}
+
+const suggestionsData = ref<any[]>([])
+
+async function getDinamicData(query: string, moduleApi: string, uriApi: string) {
+  try {
+    const payload
+        = {
+          filter: [
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
+          query: '',
+          pageSize: 20,
+          page: 0,
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
+        }
+
+    const response = await GenericService.search(moduleApi, uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      suggestionsData.value = [...suggestionsData.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading agency type list:', error)
   }
 }
 
@@ -412,6 +568,42 @@ async function loadParamsFieldByReportTemplate(id: string) {
 //   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 //   getList()
 // })
+const pdfUrl = ref('')
+function loadPDF(base64Report: string) {
+  pdfUrl.value = ''
+  // Convertir base64 a un ArrayBuffer
+  const byteCharacters = atob(base64Report)
+  const byteNumbers = Array.from({ length: byteCharacters.length })
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+  const byteArray = new Uint8Array(byteNumbers)
+
+  if (item.value?.reportFormatType?.id === 'XLS') {
+    // Crear un Blob del ArrayBuffer con tipo MIME 'application/pdf'
+  // const blob = new Blob([byteArray], { type: 'application/pdf' })
+    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+
+    // Crear una URL del Blob y asignarla a pdfUrl
+    pdfUrl.value = URL.createObjectURL(blob)
+
+    // Abrir el PDF en una nueva ventana
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `report-file-${dayjs().format('YYYY-MM-DD')}.xlsx`
+    link.click()
+  }
+  else if (item.value?.reportFormatType?.id === 'PDF') {
+    // Crear un Blob del ArrayBuffer con tipo MIME 'application/pdf'
+    const blob = new Blob([byteArray], { type: 'application/pdf' })
+
+    // Crear una URL del Blob y asignarla a pdfUrl
+    pdfUrl.value = URL.createObjectURL(blob)
+
+    // Abrir el PDF en una nueva ventana
+    // window.open(pdfUrl.value, '_blank')
+  }
+}
 
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
@@ -430,12 +622,11 @@ onMounted(async () => {
   if (useRuntimeConfig().public.loadTableData) {
     getList()
   }
-  const objQueryToSearch = {
-    query: '',
-    keys: ['name', 'username', 'url'],
-  }
-  const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, [])
-  console.log(result)
+  // const objQueryToSearch = {
+  //   query: '',
+  //   keys: ['name', 'username', 'url'],
+  // }
+  // const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, [])
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -464,7 +655,6 @@ onMounted(async () => {
       </div>
     </div>
     <div class="col-12 md:col-6 xl:col-10">
-      <!-- <pre>{{ listItemsMenu }}</pre> -->
       <div v-if="fields.length > 0">
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Params
@@ -504,51 +694,56 @@ onMounted(async () => {
             </AccordionTab>
           </Accordion>
           <EditFormV2
+            v-if="showForm"
             :key="formReload"
             :fields="fields"
             :item="item"
             :show-actions="false"
             :show-actions-inline="true"
-            :loading-save="loadingSaveAll"
+            :loading-save="loadingSaveAllGetReport"
             container-class="grid pt-3 px-0"
+            @reactive-update-field="item = $event"
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-            <!-- <template #field-paymentSource="{ item: data, onUpdate, fields: listFields, field }">
-             <DebouncedAutoCompleteComponent
-               v-if="!loadingSaveAll"
-               id="autocomplete"
-               field="name"
-               item-value="id"
-               :model="data.paymentSource"
-               :suggestions="[...paymentSourceList]"
-               :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
-               @change="($event) => {
-                 onUpdate('paymentSource', $event)
-               }"
-               @load="async($event) => {
-                 const objQueryToSearch = {
-                   query: $event,
-                   keys: ['name', 'code'],
-                 }
-                 const filter: FilterCriteria[] = [{
-                   key: 'status',
-                   logicalOperation: 'AND',
-                   operator: 'EQUALS',
-                   value: 'ACTIVE',
-                 }]
-                 await getPaymentSourceList(objApis.paymentSource.moduleApi, objApis.paymentSource.uriApi, objQueryToSearch, filter)
-               }"
-             />
-             <Skeleton v-else height="2rem" class="mb-2" />
-           </template> -->
+            <template v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')" :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data[field.field]"
+                :suggestions="[...suggestionsData]"
+                @change="($event) => {
+                  onUpdate(field.field, $event)
+                }"
+                @load="($event) => getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi)"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+
+            <template #field-reportFormatType="{ item: data, onUpdate }">
+              <Dropdown
+                v-if="!loadingSaveAllGetReport"
+                v-model="data.reportFormatType"
+                :options="[...REPORT_FORMATS_TYPE]"
+                option-label="name"
+                @update:model-value="($event) => {
+                  onUpdate('reportFormatType', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
           </EditFormV2>
-          <!-- <pre>{{ item }}</pre> -->
         </div>
       </div>
 
-      <div class="card p-2" />
+      <div v-if="item?.reportFormatType?.id === 'PDF'" class="card p-2">
+        <object :data="pdfUrl" type="application/pdf" width="100%" height="800px">
+          <p>Your browser does not support PDF. <a :href="pdfUrl">Download PDF</a>.</p>
+        </object>
+      </div>
     </div>
     <Toast position="top-center" :base-z-index="5" group="tc" />
     <ConfirmPopup group="headless" />

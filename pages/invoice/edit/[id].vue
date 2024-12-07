@@ -14,6 +14,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import dayjs from 'dayjs'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import { client } from 'process'
 
 
 
@@ -215,7 +216,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceType',
     header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5',
+    class: 'field col-12 md:col-3',
     containerFieldClass: '',
     disabled: true
   },
@@ -242,18 +243,26 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+    validation: validateEntityForAgency('agency')
   },
+  // {
+  //   field: 'agency',
+  //   header: 'Agency',
+  //   dataType: 'select',
+  //   class: 'field col-12 md:col-3 required',
+  //   disabled: String(route.query.type) as any === InvoiceType.CREDIT,
+  //   validation: z.object({
+  //     id: z.string(),
+  //     name: z.string(),
+
+  //   }).required()
+  //     .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+  // },
   {
     field: 'invoiceStatus',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
+    class: 'field col-12 md:col-2',
     containerFieldClass: '',
     disabled: true
   },
@@ -261,7 +270,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-center pb-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    class: `field col-12 md:col-1  flex align-items-center pt-4 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
 ])
@@ -291,8 +300,11 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 
-
-
+const propsParentId = ref({
+  id: '',
+  isCloned: false,
+  label: 'Cloned From:',
+})
 const item = ref<GenericObject>({
   invoiceId: '',
   invoiceNumber: '',
@@ -437,13 +449,19 @@ async function getAgencyList(query = '') {
               logicalOperation: 'AND'
             },
             {
+              key: 'client.status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            },
+            {
               key: 'status',
               operator: 'EQUALS',
               value: 'ACTIVE',
               logicalOperation: 'AND'
             }
           ] : [
-          {
+            {
               key: 'name',
               operator: 'LIKE',
               value: query,
@@ -455,7 +473,6 @@ async function getAgencyList(query = '') {
               value: query,
               logicalOperation: 'OR'
             },
-
             {
               key: 'status',
               operator: 'EQUALS',
@@ -479,6 +496,8 @@ async function getAgencyList(query = '') {
     const { data: dataList } = response
     agencyList.value = []
     for (const iterator of dataList) {
+      console.log(iterator);
+      
       agencyList.value = [
         ...agencyList.value, 
         { 
@@ -486,7 +505,8 @@ async function getAgencyList(query = '') {
           name: iterator.name, 
           code: iterator.code, 
           status: iterator.status, 
-          fullName: `${iterator.code} - ${iterator.name}` 
+          fullName: `${iterator.code} - ${iterator.name}`,
+          client: iterator.client
         }
       ]
     }
@@ -635,9 +655,10 @@ async function getItemById(id: string) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id) 
-           
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)       
       if (response) {
+        propsParentId.value.id = response?.parent?.invoiceId
+        propsParentId.value.isCloned = response?.isCloned
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
         item.value.dueDate = response.dueDate
@@ -647,7 +668,11 @@ async function getItemById(id: string) {
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
 
-        item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
+        // item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
+        const newDate = new Date(response.invoiceDate)
+        newDate.setDate(newDate.getDate() + 1)
+        item.value.invoiceDate = newDate || null
+
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
         invoiceAmount.value = response.invoiceAmount
@@ -673,9 +698,21 @@ async function getItemById(id: string) {
           canceledStatus: response.manageInvoiceStatus.canceledStatus
         } : null
         idClientForAgencyFilter.value = response.agency?.client?.id
+        
         await getInvoiceAgency(response.agency?.id)
         await getInvoiceHotel(response.hotel?.id)
         isInCloseOperation.value = response.isInCloseOperation
+
+        // Esto se debe solucionar haciendo que en la respueta se envie el status del cliente
+        if (response?.agency?.client?.id) {
+          const objClient = await GenericService.getById('settings', 'manage-client', response?.agency?.client?.id) 
+          if (objClient) {
+            item.value.agency.client = {
+              ...item.value.agency?.client,
+              status: objClient?.status,
+            }
+          }
+        }
       }
 
       formReload.value += 1
@@ -748,27 +785,30 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  
   if (idItem.value) {
     try {
       await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-    idItem.value = ''
-  }
-  else {
-    try {
-      await createItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      console.log(item);
+      
+      // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${item?.invoiceNumber?.split('-')[0]}-${item?.invoiceNumber?.split('-')[2]}`} was updated successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 10000 })
     }
     catch (error: any) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
+  // else {
+  //   try {
+  //     await createItem(item)
+  //     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  //   }
+  //   catch (error: any) {
+  //     successOperation = false
+  //     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  //   }
+  // }
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
@@ -777,21 +817,22 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
+  saveItem(item)
   const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  // confirm.require({
+  //   target: event.currentTarget,
+  //   group: 'headless',
+  //   header: 'Save the record',
+  //   message: 'Do you want to save the change?',
+  //   rejectLabel: 'Cancel',
+  //   acceptLabel: 'Accept',
+  //   accept: () => {
+  //     saveItem(item)
+  //   },
+  //   reject: () => {
+  //     // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+  //   }
+  // })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -949,7 +990,7 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
-onMounted(async () => {
+onMounted(async () => {  
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (route.params && 'id' in route.params && route.params.id) {
     await getItemById(route.params.id.toString())
@@ -960,10 +1001,15 @@ onMounted(async () => {
 
 <template>
   <div class="justify-content-center align-center ">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
+    <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-between">
+      <div>
+        {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
+      </div>
+      <div v-if="propsParentId.isCloned">
+         {{propsParentId?.label}} {{ propsParentId?.id }}
+      </div>
     </div>
-    <div class="p-4">
+    <div class="pt-3">
       <EditFormV2 
         :key="formReload" 
         :fields="Fields" 
@@ -975,7 +1021,8 @@ onMounted(async () => {
         @delete="requireConfirmationToDelete($event)"
         :force-save="forceSave" 
         @force-save="forceSave = $event" 
-        container-class="grid pt-3"
+        @submit="requireConfirmationToSave($event)"
+        container-class="grid py-3"
       >
         <template #field-invoiceDate="{ item: data, onUpdate }">
           <Calendar 
@@ -1070,7 +1117,7 @@ onMounted(async () => {
             id="autocomplete" 
             field="fullName" 
             item-value="id" 
-            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED"
+            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED || invoiceStatus === InvoiceStatus.CANCELED || invoiceStatus === 'CANCELED' "
             :model="data.hotel" 
             :suggestions="hotelList" 
             @change="($event) => {
@@ -1143,10 +1190,11 @@ onMounted(async () => {
                     icon="pi pi-save" 
                     :disabled="disableBtnSave()" 
                     :loading="loadingSaveAll" 
-                    @click="() => {
-                        saveItem(props.item.fieldValues)
-                      }"
+                    @click="props.item.submitForm($event)" 
                   />
+                    <!-- @click="() => {
+                        saveItem(props.item.fieldValues)
+                      }" -->
                 </IfCan>
 
                 <Button 
@@ -1206,15 +1254,26 @@ onMounted(async () => {
       </EditFormV2>
     </div>
     <div v-if="attachmentDialogOpen">
-      <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
-        :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
-        :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
+      <AttachmentDialog 
+        :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+        :is-creation-dialog="false" 
+        header="Manage Invoice Attachment" 
+        :open-dialog="attachmentDialogOpen"
+        :selected-invoice="selectedInvoice" 
+        :selected-invoice-obj="item" 
+      />
     </div>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <AttachmentHistoryDialog selected-attachment="" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      header="Attachment Status History" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="selectedInvoice"
-      :selected-invoice-obj="item" :is-creation-dialog="false" />
+    <AttachmentHistoryDialog 
+      selected-attachment="" 
+      :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      header="Attachment Status History" 
+      :open-dialog="attachmentHistoryDialogOpen" 
+      :selected-invoice="selectedInvoice"
+      :selected-invoice-obj="item" 
+      :is-creation-dialog="false"
+    />
   </div>
   <div v-if="exportAttachmentsDialogOpen">
     <PrintInvoiceDialog 

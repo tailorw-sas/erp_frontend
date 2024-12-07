@@ -321,7 +321,7 @@ onMounted(async () => {
       <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
         <TabPanel v-if="route.name !== 'invoice-edit-booking-id'">
           <template #header>
-            <div class="flex align-items-center gap-2 p-2" :style="`${active === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+            <div class="flex align-items-center gap-2" :style="`${active === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-calendar" style="font-size: 1.5rem" />
               <span class="font-bold white-space-nowrap">
                 Bookings
@@ -358,7 +358,7 @@ onMounted(async () => {
         </TabPanel>
         <TabPanel v-if="showTabs">
           <template #header>
-            <div class="flex align-items-center gap-2 p-2" :style="`${active === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+            <div class="flex align-items-center gap-2" :style="`${active === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-receipt" style="font-size: 1.5rem" />
               <span class="font-bold">
                 Room Rates
@@ -396,7 +396,7 @@ onMounted(async () => {
         </TabPanel>
         <TabPanel v-if="showTabs">
           <template #header>
-            <div class="flex align-items-center gap-2 p-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+            <div class="flex align-items-center gap-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
               <span class="font-bold white-space-nowrap">
                 Adjustments

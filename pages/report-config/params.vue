@@ -114,6 +114,21 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12',
     validation: z.string().trim()
   },
+  {
+    field: 'reportClass',
+    header: 'Class',
+    dataType: 'text',
+    class: 'field col-12',
+    validation: z.string().trim()
+  },
+  {
+    field: 'reportValidation',
+    header: 'Validation',
+    dataType: 'textarea',
+    class: 'field col-12',
+    validation: z.string().trim()
+  },
+
 ]
 
 const item = ref<GenericObject>(
@@ -124,7 +139,9 @@ const item = ref<GenericObject>(
     module: '',
     service: '',
     label: '',
-    reportId: ''
+    reportId: '',
+    reportClass: '',
+    reportValidation: '',
   }
 )
 
@@ -136,7 +153,9 @@ const itemTemp = ref<GenericObject>(
     module: '',
     service: '',
     label: '',
-    reportId: props.reportConfig
+    reportId: props.reportConfig,
+    reportClass: '',
+    reportValidation: '',
   }
 )
 
@@ -329,6 +348,14 @@ async function getItemById(id: string) {
         item.value = { ...response }
         item.value.id = response.id
         item.value.componentType = FORM_FIELD_TYPE.find(x => x.id === response.componentType)
+        item.value.paramName = response.paramName || ''
+        item.value.type = response.type
+        item.value.module = response.module || ''
+        item.value.service = response.service || ''
+        item.value.label = response.label || ''
+        item.value.reportClass = response.reportClass || ''
+        item.value.reportValidation = response.reportValidation || ''
+
         item.value.reportId = response.jasperReportTemplate
           ? {
               id: response.jasperReportTemplate.id,

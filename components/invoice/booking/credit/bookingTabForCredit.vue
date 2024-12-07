@@ -742,8 +742,8 @@ const Columns: IColumn[] = [
 { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-{ field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-{ field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: true },
+{ field: 'originalAmount', header: 'Original Amount', type: 'text', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'invoiceAmount', header: 'Booking Amount', type: 'text', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog, editable: true },
 
 ]
 

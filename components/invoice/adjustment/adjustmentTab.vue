@@ -340,7 +340,6 @@ async function getAdjustmentList() {
     totalAmount.value = 0
 
     const response = await GenericService.search(Options.value.moduleApi, Options.value.uriApi, Payload.value)
-    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -696,10 +695,15 @@ onMounted(() => {
       value: props.selectedInvoice,
       logicalOperation: 'AND'
     }, {
+      key: 'roomRate.booking.invoice.cloneParent',
+      operator: 'EQUALS',
+      value: true,
+      logicalOperation: 'OR'
+    }, {
       key: 'roomRate.booking.invoice.isCloned',
       operator: 'EQUALS', // Usamos 'EQUALS' para igualar
       value: false, // Buscamos aquellos que no están clonados
-      logicalOperation: 'AND' // Operación lógica
+      logicalOperation: 'OR' // Operación lógica
     }]
   }
   if (!props.isCreationDialog) {

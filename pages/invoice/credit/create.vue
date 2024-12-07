@@ -122,7 +122,8 @@ const CreditFields = ref<FieldDefinitionType[]>([
     header: 'Agency',
     dataType: 'select',
     class: 'field col-12 md:col-4 required',
-    disabled: true
+    disabled: true,
+    validation: validateEntityForAgency('agency')
   },
   {
     field: 'invoiceDate',
@@ -476,12 +477,14 @@ async function createItem(item: { [key: string]: any }) {
     roomRates = loadedRoomRates.value
 
     for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-      attachments.push({
-        ...attachmentList.value[i],
-        type: attachmentList.value[i]?.type?.id,
-        file: fileurl,
-      })
+      if (attachmentList.value[i]?.file?.files.length > 0) {
+        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+        attachments.push({
+          ...attachmentList.value[i],
+          type: attachmentList.value[i]?.type?.id,
+          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        })
+      }
     }
 
     const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
@@ -505,16 +508,16 @@ async function createItemCredit(item: any) {
   })
 
   for (let i = 0; i < attachmentList.value.length; i++) {
-    const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-    attachments.push({
-      // ...attachmentList.value[i],
-      type: attachmentList.value[i]?.type?.id,
-      file: fileurl,
-      filename: attachmentList.value[i]?.filename,
-      remark: attachmentList.value[i]?.remark,
-      paymentResourceType: attachmentList.value[i]?.resourceType.id // '67c10e87-89c0-4a3a-abe3-5cebc400d280'
-
-    })
+    if (attachmentList.value[i]?.file?.files.length > 0) {
+      const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+      attachments.push({
+        type: attachmentList.value[i]?.type?.id,
+        file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        filename: attachmentList.value[i]?.filename,
+        remark: attachmentList.value[i]?.remark,
+        paymentResourceType: attachmentList.value[i]?.resourceType.id
+      })
+    }
   }
 
   const payload = {
@@ -580,21 +583,22 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  saveItem(item)
+  // const { event } = item
+  // confirm.require({
+  //   target: event.currentTarget,
+  //   group: 'headless',
+  //   header: 'Save the record',
+  //   message: 'Do you want to save the change?',
+  //   rejectLabel: 'Cancel',
+  //   acceptLabel: 'Accept',
+  //   accept: () => {
+  //     saveItem(item)
+  //   },
+  //   reject: () => {
+  //     // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+  //   }
+  // })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -742,7 +746,7 @@ async function getItemById(id: any) {
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
-        item.value.invoiceAmount = toNegative(response.invoiceAmount)
+        item.value.invoiceAmount = toNegative(response.invoiceAmount).toString()
         item.value.hotel = response.hotel
         item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
         item.value.agency = response.agency
@@ -805,8 +809,8 @@ async function getBookingList(clearFilter: boolean = false) {
         loadingEdit: false,
         loadingDelete: false,
         agency: iterator?.invoice?.agency,
+        originalAmount: iterator?.invoiceAmount,
         invoiceAmount: 0,
-        originalAmount: iterator?.invoice?.originalAmount,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
@@ -994,7 +998,13 @@ function updateAdjustment(adjustment: any) {
 }
 
 function addAttachment(attachment: any) {
-  attachmentList.value = [...attachmentList.value, attachment]
+  const isDuplicate = attachmentList.value.some(
+    item => JSON.stringify(item) === JSON.stringify(attachment)
+  )
+
+  if (!isDuplicate) {
+    attachmentList.value = [...attachmentList.value, attachment]
+  }
 }
 
 function deleteAttachment(id: string) {
@@ -1040,7 +1050,7 @@ onMounted(async () => {
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     {{ OBJ_INVOICE_TITLE[String('CREDIT')] }} {{ item?.invoiceId }}
   </div>
-  <div class="p-4">
+  <div class="pt-4">
     <EditFormV2
       :key="formReload"
       :fields="CreditFields"
@@ -1048,9 +1058,10 @@ onMounted(async () => {
       :show-actions="true"
       :loading-save="loadingSaveAll"
       :loading-delete="loadingDelete"
-      container-class="grid pt-3"
+      container-class="grid pt-1"
       @cancel="clearForm"
       @delete="requireConfirmationToDelete($event)"
+      @submit="requireConfirmationToSave($event)"
     >
       <template #field-invoiceDate="{ item: data, onUpdate }">
         <Calendar
@@ -1206,9 +1217,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="() => {
-                    saveItem(props.item.fieldValues)
-                  }"
+                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="props.item.submitForm($event)"
                 />
               </IfCan>
 

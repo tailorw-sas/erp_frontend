@@ -1745,7 +1745,9 @@ function getSortField(field: any) {
 }
 
 // edit booking clone total
-async function openNewEditBooking(item: any) {       
+async function openNewEditBooking(item: any) {  
+  console.log(item);
+       
   if (item.id) {
     idItem.value = item.id
 
@@ -1891,6 +1893,11 @@ function onCellEditComplete(val: any) {
 
 function onEditBookingLocal(item: any) { 
   recalculateFormData(item)
+  isEditBookingCloneDialog.value = false
+}
+
+function onEditBookingLocalWithoutCloseDialog(item: any) { 
+  recalculateFormData(item)
   // isEditBookingCloneDialog.value = false
 }
 
@@ -1929,12 +1936,7 @@ function getMinCheckInAndMaxCheckOut(array) {
 
 const formRealoadForDialogBooking = ref(0)
 
-function recalculateFormData (booking: any = null) {
-  console.log('-------------------------------------');
-  console.log('booking', booking);
-  console.log('-------------------------------------');
-  
-  
+function recalculateFormData (booking: any = null) {   
   const listRoomRateByBookingId = props.roomRateList?.filter((item: any) => item?.booking?.id === selectedBooking.value?.id)
   
   if (listRoomRateByBookingId && listRoomRateByBookingId.length > 0) {
@@ -1948,6 +1950,7 @@ function recalculateFormData (booking: any = null) {
     itemClone.value.adults = Number(totalAdults)
     itemClone.value.hotelAmount = Number(totalHotelAmount)
     itemClone.value.invoiceAmount = Number(totalInvoiceAmount)
+    itemClone.value.dueAmount = Number(totalInvoiceAmount)
 
     const minCheckInAndMaxCheckOut = getMinCheckInAndMaxCheckOut(listRoomRateByBookingId)
     itemClone.value.checkIn = minCheckInAndMaxCheckOut.minCheckIn
@@ -1955,6 +1958,7 @@ function recalculateFormData (booking: any = null) {
   }
 
   if (booking && booking.reactiveBookingObj && booking.reactiveBookingObj?.id) {
+    itemClone.value.hotelInvoiceNumber = booking.reactiveBookingObj.hotelInvoiceNumber
     itemClone.value.description = booking.reactiveBookingObj.description
     itemClone.value.contract = booking.reactiveBookingObj.contract
     itemClone.value.roomNumber = booking.reactiveBookingObj.roomNumber
@@ -2009,7 +2013,7 @@ watch(PayloadOnChangePage, (newValue) => {
 })
 
 watch(objRoomRateUpdateInBookingEdit, (newValue) => {
-  onEditBookingLocal(newValue)
+  onEditBookingLocalWithoutCloseDialog(newValue)
 })
 
 

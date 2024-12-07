@@ -324,7 +324,7 @@ async function loadDefaultsValues() {
           {
             remark: z
               .string()
-              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -363,7 +363,7 @@ async function loadDefaultsValues() {
           {
             remark: z
               .string()
-              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -388,7 +388,7 @@ async function loadDefaultsValues() {
           {
             remark: z
               .string()
-              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -416,7 +416,7 @@ async function loadDefaultsValues() {
           {
             remark: z
               .string()
-              .max(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -505,7 +505,7 @@ function processValidation($event: any, data: any) {
         {
           remark: z
             .string()
-            .max($event.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${$event.minNumberOfCharacter} characters.` })
+            .min($event.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${$event.minNumberOfCharacter} characters.` })
         }
       )
       updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -550,7 +550,7 @@ function processValidation($event: any, data: any) {
       {
         remark: z
           .string()
-          .max($event.minNumberOfCharacter, { message: `The field "Remark" should have a maximum of ${data.transactionType.minNumberOfCharacter} characters.` })
+          .min($event.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${data.transactionType.minNumberOfCharacter} characters.` })
       }
     )
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -573,7 +573,7 @@ function processValidation($event: any, data: any) {
     id="dialogPaymentDetailForm"
     v-model:visible="onOffDialog"
     modal
-    :closable="false"
+    :closable="true"
     header="Payment Details"
     :style="{ width: '50rem' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
@@ -585,6 +585,7 @@ function processValidation($event: any, data: any) {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
     }"
+    @hide="closeDialog"
   >
     <template #header>
       <div class="flex justify-content-between align-items-center justify-content-between w-full">
@@ -621,11 +622,11 @@ function processValidation($event: any, data: any) {
               onUpdate('transactionType', $event)
               if ($event) {
                 onUpdate('remark', '')
-                if ($event.cash || $event.applyDeposit) {
-                  disabledBtnApplyPaymentByTransactionType = true
+                if ($event.deposit) {
+                  disabledBtnApplyPaymentByTransactionType = false
                 }
                 else {
-                  disabledBtnApplyPaymentByTransactionType = false
+                  disabledBtnApplyPaymentByTransactionType = true
                 }
               }
               processValidation($event, data)
@@ -736,25 +737,35 @@ function processValidation($event: any, data: any) {
     </template>
 
     <template #footer>
-      <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
-        <Button
-          v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType"
-          v-tooltip.top="'Apply Payment'"
-          link class="w-auto ml-1 sticky"
-          :disabled="Number(amountLocalTemp) === 0 || Number(amountLocalTemp) === 0.00 || Number(amountLocalTemp) <= 0.01"
-          @click="applyPayment($event)"
-        >
-          <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
-          <span class="ml-2 font-bold">
-            Apply Payment
-          </span>
-        </Button>
-      </IfCan>
-      <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
-      </IfCan> -->
-      <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-      <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" />
-      <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
+      <div class="flex justify-content-between w-full">
+        <div class="flex align-items-center">
+          <slot name="infoOfInvoiceToApply" />
+          <!-- <strong>
+            Invoice to apply:
+          </strong> -->
+        </div>
+        <div class="flex align-items-center">
+          <IfCan :perms="['PAYMENT-MANAGEMENT:APPLY-PAYMENT']">
+            <Button
+              v-if="(action === 'new-detail' || action === 'apply-deposit') && disabledBtnApplyPaymentByTransactionType"
+              v-tooltip.top="'Apply Payment'"
+              link class="w-auto ml-1 sticky"
+              :disabled="Number(amountLocalTemp) === 0 || Number(amountLocalTemp) === 0.00 || Number(amountLocalTemp) <= 0.01"
+              @click="applyPayment($event)"
+            >
+              <Button class="ml-1 w-3rem p-button-primary" icon="pi pi-cog" />
+              <span class="ml-2 font-bold">
+                Apply Payment
+              </span>
+            </Button>
+          </IfCan>
+          <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
+          </IfCan> -->
+          <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
+          <!-- <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" /> -->
+          <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
+        </div>
+      </div>
     </template>
   </Dialog>
 </template>

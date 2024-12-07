@@ -182,7 +182,6 @@ const Fields = ref<FieldDefinitionType[]>([
     validation: z.object({
       id: z.string(),
       name: z.string(),
-
     })
       .required()
       .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
@@ -191,7 +190,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'invoiceType',
     header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5',
+    class: 'field col-12 md:col-3',
     containerFieldClass: '',
     disabled: true
   },
@@ -218,19 +217,14 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: String(route.query.type) as any === InvoiceType.CREDIT,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+    validation: validateEntityForAgency('agency')
   },
 
   {
     field: 'status',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
+    class: 'field col-12 md:col-2',
     containerFieldClass: '',
     disabled: true
   },
@@ -239,7 +233,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: `field col-12 md:col-1  flex align-items-center pb-2 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
+    class: `field col-12 md:col-1  flex align-items-center pt-4 ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? 'required' : ''}`,
     disabled: true
   },
 ])
@@ -359,6 +353,12 @@ async function getHotelList(query = '') {
             logicalOperation: 'OR'
           },
           {
+            key: 'isVirtual',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: false,
+          },
+          {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -376,7 +376,10 @@ async function getHotelList(query = '') {
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { isNightType: iterator?.isNightType, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      hotelList.value = [
+        ...hotelList.value,
+        { isNightType: iterator?.isNightType, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }
+      ]
     }
   }
   catch (error) {
@@ -419,7 +422,17 @@ async function getAgencyList(query = '') {
     const { data: dataList } = response
     agencyList.value = []
     for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { client: iterator?.client, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
+      agencyList.value = [
+        ...agencyList.value,
+        {
+          client: iterator?.client,
+          id: iterator.id,
+          name: iterator.name,
+          code: iterator.code,
+          status: iterator.status,
+          fullName: `${iterator.code} - ${iterator.name}`
+        }
+      ]
     }
   }
   catch (error) {
@@ -614,12 +627,14 @@ async function createItem(item: { [key: string]: any }) {
     }
 
     for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-      attachments.push({
-        ...attachmentList.value[i],
-        type: attachmentList.value[i]?.type?.id,
-        file: fileurl,
-      })
+      if (attachmentList.value[i]?.file?.files.length > 0) {
+        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+        attachments.push({
+          ...attachmentList.value[i],
+          type: attachmentList.value[i]?.type?.id,
+          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        })
+      }
     }
 
     const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
@@ -666,20 +681,6 @@ async function createItemCredit(item: any) {
 
   const response = await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
   return response
-}
-
-async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-  payload.invoiceId = item.invoiceId
-  payload.invoiceNumber = item.invoiceNumber
-  payload.invoiceDate = item.invoiceDate
-  payload.isManual = item.isManual
-  payload.invoiceAmount = item.invoiceAmount
-  payload.hotel = item.hotel.id
-  payload.agency = item.agency.id
-  payload.invoiceType = item.invoiceType?.id
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -751,21 +752,22 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  saveItem(item)
+  // const { event } = item
+  // confirm.require({
+  //   target: event.currentTarget,
+  //   group: 'headless',
+  //   header: 'Save the record',
+  //   message: 'Do you want to save the change?',
+  //   rejectLabel: 'Cancel',
+  //   acceptLabel: 'Accept',
+  //   accept: () => {
+  //     saveItem(item)
+  //   },
+  //   reject: () => {
+  //     // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+  //   }
+  // })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -1224,7 +1226,13 @@ function updateAdjustment(adjustment: any) {
 }
 
 function addAttachment(attachment: any) {
-  attachmentList.value = [...attachmentList.value, attachment]
+  const isDuplicate = attachmentList.value.some(
+    item => JSON.stringify(item) === JSON.stringify(attachment)
+  )
+
+  if (!isDuplicate) {
+    attachmentList.value = [...attachmentList.value, attachment]
+  }
 }
 
 function deleteAttachment(id: string) {
@@ -1280,11 +1288,11 @@ onMounted(async () => {
     {{ OBJ_INVOICE_TITLE[String(route.query.type)] }} {{ route.query.type === InvoiceType.CREDIT ? item?.invoiceId
       : "" }}
   </div>
-  <div class="p-4">
+  <div class="pt-3">
     <EditFormV2
       :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
-      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
-      @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
+      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid py-3"
+      @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
     >
       <!-- ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`, -->
       <template #field-invoiceDate="{ item: data, onUpdate }">
@@ -1344,8 +1352,12 @@ onMounted(async () => {
       </template>
       <template #field-hotel="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
-          v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :model="data.hotel" :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
+          v-if="!loadingSaveAll"
+          id="autocomplete"
+          field="fullName"
+          item-value="id"
+          :model="data.hotel"
+          :disabled="String(route.query.type) as any === InvoiceType.CREDIT"
           :suggestions="hotelList" @change="($event) => {
             hotelError = false
             onUpdate('hotel', $event)
@@ -1422,11 +1434,10 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="() => {
-                    saveItem(props.item.fieldValues)
-                  }"
+                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="props.item.submitForm($event)"
                 />
               </IfCan>
+              <!-- @click="() => saveItem(props.item.fieldValues) -->
 
               <IfCan :perms="['INVOICE-MANAGEMENT:PRINT']">
                 <Button

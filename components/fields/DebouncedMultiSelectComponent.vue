@@ -21,7 +21,7 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'Select options'
+    default: 'Type to search'
   },
   id: {
     type: String,
@@ -77,6 +77,8 @@ watch(() => props.suggestions, (newSuggestions) => {
 <template>
   <MultiSelect
     :id="props.id"
+    class="w-full"
+    style="overflow: hidden"
     :model-value="props.model"
     :options="allSuggestions"
     :option-label="props.field"
@@ -91,15 +93,18 @@ watch(() => props.suggestions, (newSuggestions) => {
       await wait(50) // Espera 50ms
       emit('change', ev)
     }"
+    @before-show="($event) => {
+      emit('load', '')
+    }"
   >
     <template #value>
       <slot name="custom-value" :value="props.model" class="custom-chip">
-        <span v-for="(item, index) in props.model.slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
+        <span v-for="(item, index) in (props.model || []).slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
           <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item[props.field] }}</span>
           <button class="remove-button" aria-label="Remove" @click.stop="removeItem(item)"><i class="pi pi-times-circle" /></button>
         </span>
         <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
-        <span v-if="props.model.length > props.maxSelectedLabels" class="custom-chip">
+        <span v-if="props.model && props.model.length > props.maxSelectedLabels" class="custom-chip">
           <span>{{ `+${props.model.length - props.maxSelectedLabels}` }}</span>
         </span>
       </slot>
@@ -121,16 +126,14 @@ watch(() => props.suggestions, (newSuggestions) => {
   display: inline-flex;
   align-items: center;
   border-radius: 16px; /* Borde redondeado */
-  font-size: 14px;
-  margin: 0px 2px;
+  font-size: 1rem;
+  margin-right: 2px;
   padding: 0.2145rem 0.571rem;
   background: rgba(68, 72, 109, 0.17);
   color: #44486D;
 }
 
-.chip-label {
-  margin-right: 8px;
-}
+.chip-label {}
 
 .remove-button {
   background-color: transparent;
@@ -139,7 +142,12 @@ watch(() => props.suggestions, (newSuggestions) => {
   cursor: pointer;
   display: flex;
   align-items: center;
+  padding: 0 0 0 6px;
   justify-content: center;
+}
+
+.p-multiselect .p-multiselect-label {
+  padding: 0.2145rem 0.571rem !important;
 }
 
 .remove-button:hover {

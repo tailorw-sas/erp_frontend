@@ -9,7 +9,6 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { ENUM_STATUS } from '~/utils/Enums'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { getEventFromTable } from '~/utils/helpers'
 
@@ -30,9 +29,17 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-payment-transaction-status',
 })
+
+const selectedOption = ref('')
+const radioOptions = [
+  { label: 'In Progress', value: 'inProgress' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Applied', value: 'applied' },
+]
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -67,7 +74,12 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'check',
     class: 'field col-12 required mb-3 mt-3',
   },
-
+  {
+    field: 'isStatus',
+    header: 'Is Status',
+    dataType: 'text',
+    class: 'field col-12 mb-3',
+  },
   {
     field: 'description',
     header: 'Description',
@@ -91,6 +103,12 @@ const item = ref<GenericObject>({
   description: '',
   navigate: [],
   requireValidation: false,
+  isStatus: {
+    inProgress: false,
+    completed: false,
+    cancelled: false,
+    applied: false,
+  },
   status: true
 })
 
@@ -100,6 +118,12 @@ const itemTemp = ref<GenericObject>({
   description: '',
   navigate: [],
   requireValidation: false,
+  isStatus: {
+    inProgress: false,
+    completed: false,
+    cancelled: false,
+    applied: false,
+  },
   status: true
 })
 
@@ -124,7 +148,7 @@ const ENUM_FILTER = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Payment Transaction Status',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-payment-transaction-status',
   loading: false,
   actionsAsMenu: false,
@@ -153,6 +177,7 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
   fields[0].disabled = false
+  selectedOption.value = ''
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
 }
@@ -206,7 +231,7 @@ async function getList() {
 }
 async function getForSelectNavigateList(query: string = '') {
   try {
-    loadingData.value=true
+    loadingData.value = true
     navigateListItems.value = []
 
     const payload
@@ -252,8 +277,8 @@ async function getForSelectNavigateList(query: string = '') {
   catch (error) {
     console.error(error)
   }
-  finally{
-    loadingData.value=false
+  finally {
+    loadingData.value = false
   }
 }
 
@@ -297,6 +322,12 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.collected = response.collected
+        item.value.isStatus = {
+          inProgress: response.inProgress,
+          completed: response.completed,
+          cancelled: response.cancelled,
+          applied: response.applied,
+        }
         item.value.requireValidation = response.requireValidation
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
@@ -308,6 +339,8 @@ async function getItemById(id: string) {
         })
         item.value.collected = response.collected
         fields[0].disabled = true
+        selectedOption.value = ''
+        findSelectedOption()
         updateFieldProperty(fields, 'status', 'disabled', false)
         formReload.value += 1
       }
@@ -323,12 +356,29 @@ async function getItemById(id: string) {
   }
 }
 
+function findSelectedOption() {
+  for (const key in item.value.isStatus) {
+    if (item.value.isStatus[key]) {
+      const option = radioOptions.find(opt => opt.value === key)
+      if (option) {
+        selectedOption.value = key
+        break
+      }
+    }
+  }
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
+    payload.inProgress = payload.isStatus.inProgress
+    payload.completed = payload.isStatus.completed
+    payload.cancelled = payload.isStatus.cancelled
+    payload.applied = payload.isStatus.applied
     payload.navigate = payload.navigate ? payload.navigate.map((p: any) => p.id) : []
+    delete payload.isStatus
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -337,7 +387,12 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
+  payload.inProgress = payload.isStatus.inProgress
+  payload.completed = payload.isStatus.completed
+  payload.cancelled = payload.isStatus.cancelled
+  payload.applied = payload.isStatus.applied
   payload.navigate = payload.navigate.map((p: any) => p.id)
+  delete payload.isStatus
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -446,6 +501,26 @@ function onSortField(event: any) {
     parseDataTableFilter(event.filter)
   }
 }
+
+function updateStatusItem(selectedValue: any) {
+  const tempStatus = {
+    inProgress: false,
+    completed: false,
+    cancelled: false,
+    applied: false,
+  }
+  // Resetear los campos a `false`
+  if (item.value.isStatus[selectedValue]) {
+    selectedOption.value = ''
+    tempStatus[selectedValue] = false
+  }
+  else {
+    tempStatus[selectedValue] = true
+  }
+  item.value.isStatus = tempStatus
+  return tempStatus
+}
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criterial && filterToSearch.value.search)
   return false
@@ -485,11 +560,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Payment Transaction Status
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
@@ -570,21 +645,7 @@ onMounted(() => {
             @submit="requireConfirmationToSave($event)"
           >
             <template #field-navigate="{ item: data, onUpdate }">
-           <!--   <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :multiple="true"
-                :model="data.navigate"
-                :suggestions="[...navigateListItems]"
-                @change="($event) => {
-                  onUpdate('navigate', $event)
-                }"
-                @load="($event) => getForSelectNavigateList($event)"
-              />
--->
-<DebouncedMultiSelectComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -599,6 +660,25 @@ onMounted(() => {
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-isStatus="{ item: data, onUpdate }">
+              <div v-if="!loadingSaveAll" class="flex flex-wrap gap-3 mt-1">
+                <div v-for="(option, index) in radioOptions" :key="index" class="flex align-items-center">
+                  <RadioButton
+                    v-model="selectedOption"
+                    :input-id="`option${index}`"
+                    name="status"
+                    :value="option.value"
+                    @click="() => {
+                      const result = updateStatusItem(option.value)
+                      onUpdate('isStatus', result)
+                      data.isStatus = result
+                    }"
+                  />
+                  <label :for="`option${index}`" class="ml-2">{{ option.label }}</label>
+                </div>
+              </div>
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>

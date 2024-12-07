@@ -206,22 +206,22 @@ watch(() => props.visible, async (newValue) => {
 
   if (newValue) {
     if (route?.query?.id) {
-      idItem.value = route.query.id.toString()
-      payload.value.filter = [...payload.value.filter, {
-        key: 'payment.id',
-        operator: 'EQUALS',
-        value: idItem.value,
-        logicalOperation: 'AND'
-      }]
+      idItem.value = route.query.id.toString() || '0'
+      // payload.value.filter = [...payload.value.filter, {
+      //   key: 'payment.id',
+      //   operator: 'EQUALS',
+      //   value: idItem.value,
+      //   logicalOperation: 'AND'
+      // }]
     }
     else {
-      idItem.value = '0'
-      payload.value.filter = [...payload.value.filter, {
-        key: 'payment.id',
-        operator: 'EQUALS',
-        value: idItem.value,
-        logicalOperation: 'AND'
-      }]
+      idItem.value = props.selectedPayment.id || '0'
+      // payload.value.filter = [...payload.value.filter, {
+      //   key: 'payment.id',
+      //   operator: 'EQUALS',
+      //   value: idItem.value,
+      //   logicalOperation: 'AND'
+      // }]
     }
     await getListPaymentDetailSummary()
   }
@@ -229,22 +229,23 @@ watch(() => props.visible, async (newValue) => {
 
 onMounted(async () => {
   if (route?.query?.id) {
-    idItem.value = route.query.id.toString()
-    payload.value.filter = [...payload.value.filter, {
-      key: 'payment.id',
-      operator: 'EQUALS',
-      value: idItem.value,
-      logicalOperation: 'AND'
-    }]
+    idItem.value = route.query.id.toString() || '0'
+
+    // payload.value.filter = [...payload.value.filter, {
+    //   key: 'payment.id',
+    //   operator: 'EQUALS',
+    //   value: idItem.value,
+    //   logicalOperation: 'AND'
+    // }]
   }
   else {
-    idItem.value = '0'
-    payload.value.filter = [...payload.value.filter, {
-      key: 'payment.id',
-      operator: 'EQUALS',
-      value: idItem.value,
-      logicalOperation: 'AND'
-    }]
+    idItem.value = props.selectedPayment.id || '0'
+    // payload.value.filter = [...payload.value.filter, {
+    //   key: 'payment.id',
+    //   operator: 'EQUALS',
+    //   value: idItem.value,
+    //   logicalOperation: 'AND'
+    // }]
   }
   await getListPaymentDetailSummary()
 })

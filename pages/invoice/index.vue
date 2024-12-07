@@ -19,6 +19,7 @@ import { v4 } from 'uuid'
 import { ENUM_INVOICE_STATUS } from '~/utils/Enums'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import type { UndoImportInvoiceResponse } from './undo-import.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -41,6 +42,7 @@ const listItems = ref<any[]>([])
 const listPrintItems = ref<any[]>([])
 const formReload = ref(0)
 const invoiceTypeList = ref<any[]>([])
+const openDialog = ref(false)
 
 const totalInvoiceAmount = ref(0)
 const totalDueAmount = ref(0)
@@ -69,21 +71,20 @@ const itemSend = ref<GenericObject>({
   invoice:null,
 })
 
-const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
+// const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const loadingDelete = ref(false)
 const statusListForFilter = ref<any[]>([])
 const filterToSearch = ref<IData>({
-  criteria: ENUM_INVOICE_CRITERIA[3],
+  criteria: ENUM_INVOICE_CRITERIA.find((i) => i.id === 'invoiceId'),
   search: '',
-  client: [allDefaultItem],
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  client: [],
+  agency: [],
+  hotel: [],
   status: [],
-  invoiceType: [allDefaultItem],
+  invoiceType: [],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
-
-  includeInvoicePaid: true
+  includeInvoicePaid: null
 })
 
 const confApi = reactive({
@@ -115,7 +116,7 @@ const confSendApi = reactive({
 
 
 const disableClient = ref<boolean>(false)
-const disableDates = ref<boolean>(true)
+const disableDates = ref<boolean>(false)
 
 
 const expandedInvoice = ref('')
@@ -150,6 +151,11 @@ const confinvoiceTypeListApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
+const confApiApplyUndo = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/undo',
+})
+
 function generateRandomCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -178,170 +184,183 @@ const computedShowCloneTotal = computed(() => {
 
 const invoiceContextMenu = ref()
 const invoiceAllContextMenuItems = ref([
-  {
-    label: 'Change Agency',
-    icon: 'pi pi-arrow-right-arrow-left',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      changeAgencyDialogOpen.value = true
+    {
+      label: 'Selected Invoice:',
+      icon: 'pi pi-folder',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {},
+      default: true,
+      disabled: true,
+      showItem: true,
+    },    
+    {
+      label: 'Change Agency',
+      icon: 'pi pi-arrow-right-arrow-left',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        changeAgencyDialogOpen.value = true
+      },
+      default: true,
+      showItem: false,
     },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'New Credit',
-    icon: 'pi pi-credit-card',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      navigateTo(`invoice/credit/create?selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
+    {
+      label: 'New Credit',
+      icon: 'pi pi-credit-card',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        navigateTo(`invoice/credit/create?selected=${attachmentInvoice.value.id}`, { open: { target: '_blank' } })
+      },
+      default: true,
+      disabled: computedShowMenuItemNewCedit,
+      showItem: true,
     },
-    default: true,
-    disabled: computedShowMenuItemNewCedit,
-    showItem: true,
-  },
-  {
-    label: 'Status History',
-    iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
-    viewBox: '0 -960 960 960',
-    width: '19px',
-    height: '19px',
-    icon:'',
-    command: handleAttachmentHistoryDialogOpen,
-    default: true,
-    disabled: computedShowMenuItemShowHistory,
-    showItem: true,
-  },
-  {
-    label: 'Document',
-    icon: 'pi pi-paperclip',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    viewBox:'',
-    command: () => {
-      attachmentDialogOpen.value = true
+    {
+      label: 'Status History',
+      iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
+      viewBox: '0 -960 960 960',
+      width: '19px',
+      height: '19px',
+      icon:'',
+      command: handleAttachmentHistoryDialogOpen,
+      default: true,
+      disabled: computedShowMenuItemShowHistory,
+      showItem: true,
     },
-    default: true,
-    disabled: computedShowMenuItemAttachment,
-    showItem: true,
-  },
-  {
-    label: 'Print',
-    icon: 'pi pi-print',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      if (attachmentInvoice.value?.hasAttachments) {
+    {
+      label: 'Document',
+      icon: 'pi pi-paperclip',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      viewBox:'',
+      command: () => {
+        attachmentDialogOpen.value = true
+      },
+      default: true,
+      disabled: computedShowMenuItemAttachment,
+      showItem: true,
+    },
+    {
+      label: 'Print',
+      icon: 'pi pi-print',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
         exportAttachments()
-      }
+        // if (attachmentInvoice.value?.hasAttachments) {
+        // }
+      },
+      default: true,
+      disabled: computedShowMenuItemPrint,
+      showItem: true,
     },
-    default: true,
-    disabled: computedShowMenuItemPrint,
-    showItem: true,
-  },
-  {
-    label: 'Clone',
-    icon: 'pi pi-copy',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => doubleFactor(),
-    default: true,
-   // disabled: computedShowClone,
-    showItem: false,
-  },
-  {
-    label: 'Adjustment',
-    icon: 'pi pi-wrench',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
+    {
+      label: 'Clone',
+      icon: 'pi pi-copy',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => doubleFactor(),
+      default: true,
+     // disabled: computedShowClone,
+      showItem: false,
     },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Undo Import',
-    icon: 'pi pi-file-import',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Payments',
-    icon: 'pi pi-money-bill',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      paymentsDialogOpen.value = true
+    {
+      label: 'Adjustment',
+      icon: 'pi pi-wrench',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+      },
+      default: true,
+      showItem: false,
     },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Clone Complete',
-    icon: 'pi pi-clone',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      doubleFactorTotal()
+    {
+      label: 'Undo Import',
+      icon: 'pi pi-file-import',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { 
+        doubleFactorForUndo()
+       },
+      default: true,
+      showItem: false,
     },
-    default: true,
-   
-  },
-  {
-    label: 'Re-Send',
-    icon: 'pi pi-send',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { SendInvoiceByType() },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Send',
-    icon: 'pi pi-send',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { SendInvoiceByType() },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'From Invoice',
-    icon: 'pi pi-receipt',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => { onFromInvoice() },
-    default: true,
-    showItem: false,
-  },
-  {
-    label: 'Clone Total',
-    icon: 'pi pi-clone',
-    width: '24px',
-    height: '24px',
-    iconSvg:'',
-    command: () => {
-      doubleFactorTotal()
+    {
+      label: 'Payments',
+      icon: 'pi pi-money-bill',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        paymentsDialogOpen.value = true
+      },
+      default: true,
+      showItem: false,
     },
-    default: true,
-    disabled: computedShowCloneTotal
-  },
+    {
+      label: 'Clone Complete',
+      icon: 'pi pi-clone',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        doubleFactorTotal()
+      },
+      default: true,
+     
+    },
+    {
+      label: 'Re-Send',
+      icon: 'pi pi-send',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { SendInvoiceByType() },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'Send',
+      icon: 'pi pi-send',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { SendInvoiceByType() },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'From Invoice',
+      icon: 'pi pi-receipt',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => { onFromInvoice() },
+      default: true,
+      showItem: false,
+    },
+    {
+      label: 'Clone Total',
+      icon: 'pi pi-clone',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: () => {
+        doubleFactorTotal()
+      },
+      default: true,
+      disabled: computedShowCloneTotal
+    },
 ])
 
 const invoiceContextMenuItems = ref<any[]>([])
@@ -384,7 +403,8 @@ async function invoicePrint() {
     // En caso de que solo este marcado el paymentAndDetails
 
     nameOfPdf = invoiceSupport.value ? `invoice-support-${dayjs().format('YYYY-MM-DD')}.pdf` : `invoice-and-bookings-${dayjs().format('YYYY-MM-DD')}.pdf`
-
+    // nameOfPdf = `${props.invoice?.hotel?.code}-${props.invoice?.invoiceId}.pdf`
+    
     const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
 
     const url = window.URL.createObjectURL(new Blob([response]))
@@ -734,8 +754,8 @@ const columns: IColumn[] = [
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
   // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
   // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
@@ -845,6 +865,12 @@ function doubleFactorTotal() {
   randomCode.value = generateRandomCode();
 }
 
+function doubleFactorForUndo() {  
+  openDialog.value = true
+  entryCode.value = '';
+  randomCode.value = generateRandomCode();
+}
+
 
 async function exportToPdf() {
   exportPdfDialogOpen.value = true
@@ -919,8 +945,8 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator?.dueAmount ? formatNumber(iterator?.dueAmount) : 0, 
-          invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator?.invoiceAmount) : 0,
+          dueAmount: iterator?.dueAmount || 0, 
+          invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
@@ -1057,23 +1083,69 @@ function searchAndFilter() {
   }
 
   if (!filterToSearch.value.search) {
-    if (isFirstTimeInOnMounted.value === false) {
-      if (filterToSearch.value.includeInvoicePaid) {
-        payload.value.filter = [...payload.value.filter, {
-          key: 'dueAmount',
-          operator: 'EQUALS',
-          value: 0,
-          logicalOperation: 'AND'
-        }]
-      } else {
-        payload.value.filter = [...payload.value.filter, {
-          key: 'dueAmount',
-          operator: 'GREATER_THAN_OR_EQUAL_TO',
-          value: 1,
-          logicalOperation: 'AND'
-        }]
-      }
+    // if (isFirstTimeInOnMounted.value === false) {}
+      
+    const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
+
+    switch (filterToSearch.value.includeInvoicePaid) {
+      case true:
+        // Elimina el filtro de 'dueAmount' si existe, para que muestre todos
+        if (filterObjIncludeInvoicePaid) {
+          payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
+        }
+        break;
+
+      case false:
+        // Solo muestra los que tienen dueAmount igual a 0
+        if (filterObjIncludeInvoicePaid) {
+          filterObjIncludeInvoicePaid.operator = 'EQUALS';
+          filterObjIncludeInvoicePaid.value = 0;
+        } else {
+          payload.value.filter.push({
+            key: 'dueAmount',
+            operator: 'EQUALS',
+            value: 0,
+            logicalOperation: 'AND'
+          });
+        }
+        break;
+
+      default:
+        // Muestra los elementos que no son 0 (por defecto)
+        if (filterObjIncludeInvoicePaid) {
+          filterObjIncludeInvoicePaid.operator = 'NOT_EQUALS';
+          filterObjIncludeInvoicePaid.value = 0;
+        } else {
+          payload.value.filter.push({
+            key: 'dueAmount',
+            operator: 'NOT_EQUALS',
+            value: 0,
+            logicalOperation: 'AND'
+          });
+        }
+        break;
     }
+
+      // const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
+
+      // if (filterToSearch.value.includeInvoicePaid !== undefined && filterToSearch.value.includeInvoicePaid !== null) {
+      //   const operator = filterToSearch.value.includeInvoicePaid ? 'EQUALS' : 'NOT_EQUALS';
+      //   const filterValue = 0;
+
+      //   if (filterObjIncludeInvoicePaid) {
+      //     filterObjIncludeInvoicePaid.operator = operator;
+      //     filterObjIncludeInvoicePaid.value = filterValue;
+      //   } else {
+      //     payload.value.filter.push({
+      //       key: 'dueAmount',
+      //       operator,
+      //       value: filterValue,
+      //       logicalOperation: 'AND'
+      //     });
+      //   }
+      // } else if (filterObjIncludeInvoicePaid) {
+      //   payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
+      // }
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
       const itemIds = filteredItems?.map((item: any) => item?.id)
@@ -1159,15 +1231,17 @@ function searchAndFilter() {
       }]
     }
   }
-  else {
-    if (filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[3]?.id && filterToSearch.value.criteria?.id !== ENUM_INVOICE_CRITERIA[4]?.id) {
-      return hotelError.value = true
-    }
-  }
+  // else {
+  //   const invoiceIdTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId')?.id
+  //   const invoiceNumberTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceNumberPrefix')?.id
+  //   if (filterToSearch.value.criteria?.id !== invoiceIdTemp && filterToSearch.value.criteria?.id !== invoiceNumberTemp) {
+  //     return hotelError.value = true
+  //   }
+  // }
   getList()
 }
 
-async function clearFilterToSearch() {
+async function clearFilterToSearch() {  
   payload.value = {
     filter: [],
     query: '',
@@ -1177,12 +1251,12 @@ async function clearFilterToSearch() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   filterToSearch.value = {
-    criteria: ENUM_INVOICE_CRITERIA[3],
+    criteria: ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId'),
     search: '',
-    client: [allDefaultItem],
-    agency: [allDefaultItem],
-    hotel: [allDefaultItem],
-    invoiceType: [allDefaultItem],
+    client: [],
+    agency: [],
+    hotel: [],
+    invoiceType: [],
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
     includeInvoicePaid: true
@@ -1351,7 +1425,7 @@ function requireConfirmationToDelete(event: any) {
 //       sortType: ENUM_SHORT_TYPE.ASC
 //     }
 //     let clientTemp: any[] = []
-//     clientList.value = [allDefaultItem]
+//     clientList.value = []
 //     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
 //      const { data: dataList } = response
 //     for (const iterator of dataList) {
@@ -1382,7 +1456,7 @@ interface ListItem {
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
-    name: `${data.name}`,
+    name: `${data.code} - ${data.name}`,
     status: data.status,
     code: data.code,
     description: data.description
@@ -1441,13 +1515,13 @@ function mapFunctionForType(data: DataListItem): ListItem {
 
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
-  clientList.value = [allDefaultItem]
+  clientList.value = []
   clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   clientList.value = [...clientList.value, ...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
-  agencyList.value = [allDefaultItem]
+  agencyList.value = []
   agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   agencyList.value = [...agencyList.value, ...agencyTemp]
 }
@@ -1456,7 +1530,7 @@ async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { 
 }
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let hotelTemp: any[] = []
-  hotelList.value = [allDefaultItem]
+  hotelList.value = []
   hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   hotelList.value = [...hotelList.value, ...hotelTemp]
 }
@@ -1465,7 +1539,7 @@ async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { q
 }
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
-  statusList.value = [allDefaultItem]
+  statusList.value = []
   statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   statusList.value = [...statusList.value, ...statusTemp]
 }
@@ -1510,7 +1584,7 @@ async function getStatusListTemp() {
         ...response.data.map((item: any) => (
           { 
             id: item.id, 
-            name: item.name, 
+            name: `${item.code} - ${item.name}`, 
             code: item.code,
             description: item.description,
             status: item.status 
@@ -1522,7 +1596,7 @@ async function getStatusListTemp() {
         ...response.data.map((item: any) => (
           { 
             id: item.id, 
-            name: item.name, 
+            name: `${item.code} - ${item.name}`, 
             code: item.code,
             description: item.description,
             status: item.status 
@@ -1559,7 +1633,7 @@ async function getStatusListTemp() {
 
 async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let invoiceTypeListTemp: any[] = []
-  invoiceTypeList.value = [allDefaultItem]
+  invoiceTypeList.value = []
   invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForType, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })    
   invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
 }
@@ -1729,6 +1803,20 @@ function onSortField(event: any) {
   }
 }
 
+const checkboxLabel = computed(() => {
+  switch (filterToSearch.value.includeInvoicePaid) {
+    case true:
+      return "Include all invoices";
+    case false:
+      return "Include paid invoices only";
+    case null:
+      return "Exclude paid invoices";
+    default:
+      return "Exclude paid invoices";
+  }
+});
+
+
 function getStatusBadgeBackgroundColor(code: string) {  
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
@@ -1839,15 +1927,16 @@ function onRowRightClick(event: any) {
   selectedInvoice = event.data.id
   selectedInvoiceObj.value = event.data
   setMenuOptions()
-
-  if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)) {
+  // Mostrar New Credit, solo para los invoice, en estados SENT y RECONCILED, cuyo balance sea distinto de cero
+  if (event.data?.invoiceType !== InvoiceType.INVOICE || ![InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
+    || (event.data?.dueAmount === 0 && event.data?.invoiceAmount === 0)) {
     invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.label !== 'New Credit')]
   }
 
   if (event.data?.invoiceType === InvoiceType.INVOICE) {
     // Mostrar Clone solo si es de tipo Invoice y esta como showClone el status en el nomenclador Invoice Status
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status) &&
-      event.data?.invoiceStatus?.showClone) {
+      event.data?.invoiceStatus?.showClone && !event.data?.hotel?.virtual) {
       findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
     }
 
@@ -1855,12 +1944,13 @@ function onRowRightClick(event: any) {
     if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
       findMenuItemByLabelSetShow('Undo Import', invoiceContextMenuItems.value, true)
     }
-
+    
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
-      && event?.data.dueAmount === event?.data.invoiceAmount && event.data.isInCloseOperation &&
-      event?.data.dueAmount > 0) {
-      findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
+      && event?.data?.dueAmount === event?.data?.invoiceAmount && event.data?.isInCloseOperation) {  
+      if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+        findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
+      }      
     }
   }
 
@@ -1880,8 +1970,14 @@ function onRowRightClick(event: any) {
     }
   }
 
+  
+  const changeSelectedInvoiceTitleItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Selected Invoice:')
+  if (changeSelectedInvoiceTitleItem) {
+    changeSelectedInvoiceTitleItem.label = `Selected Invoice: ${event.data.invoiceId}`
+  }
+
   // Payments
-  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
+  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
     findMenuItemByLabelSetShow('Payments', invoiceContextMenuItems.value, true)
   }
 
@@ -1901,15 +1997,59 @@ function onRowRightClick(event: any) {
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
-  // Adjustment
-  if (event?.data?.status === InvoiceStatus.PROCECSED) {
-    findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
-  }
+  // Adjustment (Se comenta temporalmente, no borrar)
+  // if (event?.data?.status === InvoiceStatus.PROCECSED) {
+  //   findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
+  // }
+
+
+
 
   invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.showItem)]
   // Mostrar solo si es para estos estados
   attachmentInvoice.value = event.data
   invoiceContextMenu.value.show(event.originalEvent)
+}
+
+async function applyUndo() {
+  try {
+    loadingSaveAll.value = true
+    if (selectedInvoiceObj.value && selectedInvoiceObj.value.id) {
+      const payload = {
+        ids: [selectedInvoiceObj.value.id]
+      }
+      const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload) as UndoImportInvoiceResponse
+      loadingSaveAll.value = false
+      openDialog.value = false
+      if (response.errors.length === 0) {
+        toast.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: `Undo successfully applied to ${response.satisfactoryQuantity} records.`,
+          life: 6000
+        })
+        await getList()
+      }
+      else {
+        for (const element of response.errors) {
+          const objInvoiceTemp = listItems.value.find((item: any) => item.id === element?.invoiceId)
+          if (objInvoiceTemp) {
+            objInvoiceTemp.reverseStatus = `Error undoing the import of invoice ${element?.invoiceNo}. Please try again.`
+          }
+        }
+      }
+    }
+  }
+  catch (error) {
+    loadingSaveAll.value = false
+    console.error('Error applying undo:', error)
+  }
+}
+
+function handleClose() {
+  openDialog.value = false
+  entryCode.value = ''
+  randomCode.value = generateRandomCode()
 }
 // -------------------------------------------------------------------------------------------------------
 
@@ -1987,9 +2127,9 @@ const legend = ref(
 <template>
   <div class=" col-12 align-items-center grid w-full">
     <div class="flex align-items-center justify-content-between w-full">
-      <h3 class="mb-0 w-6">
+      <h5 class="mb-0 w-6">
         Invoice Management
-      </h3>
+      </h5>
       <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
         <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))"
           v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
@@ -2364,8 +2504,12 @@ const legend = ref(
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">
-                    <Checkbox id="all-check-2" v-model="filterToSearch.includeInvoicePaid" :binary="true" />
-                    <label for="all-check-2" class="font-bold">Include Invoice Paid</label>
+                    <TriStateCheckbox 
+                      id="all-check-2" 
+                      v-model="filterToSearch.includeInvoicePaid"
+                    />
+                    <!-- <label for="all-check-2" class="font-bold">Include Invoice Paid</label> -->
+                    <label for="all-check-2" class="font-bold">{{checkboxLabel}}</label>
                   </div>
                   <div class="flex align-items-center gap-2" />
                 </div>
@@ -2492,8 +2636,11 @@ const legend = ref(
       }"  @hide="doubleFactorOpen = false">
       <template #header>
         <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Do you want to clone this invoice ?
+          <h5 v-if="selectedInvoiceObj.invoiceId"  class="m-0">
+            Do you want to clone the invoice {{selectedInvoiceObj.invoiceId}}?
+          </h5>
+          <h5 v-else class="m-0">
+            Do you want to clone this invoice?
           </h5>
         </div>
       </template>
@@ -2506,7 +2653,7 @@ const legend = ref(
           <div class="flex justify-content-end mb-0">
             <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
               icon="pi pi-save" @click="handleApplyClick" />
-            <Button class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2" icon="pi pi-times ml-1 mr-1 "
+            <Button v-if="false" class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2" icon="pi pi-times ml-1 mr-1 "
             @click="doubleFactorOpen = false"  />
 
           </div>
@@ -2518,7 +2665,7 @@ const legend = ref(
   </div>
   <div v-if="doubleFactorTotalOpen">
     <Dialog v-model:visible="doubleFactorTotalOpen" :id-item="idItem" modal class="mx-3 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '25%' }" :pt="{
+      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '30%' }" :pt="{
         root: {
           class: 'custom-dialog',
         },
@@ -2529,8 +2676,11 @@ const legend = ref(
       }" @hide="doubleFactorTotalOpen = false">
       <template #header>
         <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Do you want to clone this invoice?
+          <h5 v-if="selectedInvoiceObj.invoiceId"  class="m-0">
+            Do you want to clone complete the invoice {{selectedInvoiceObj.invoiceId}}?
+          </h5>
+          <h5 v-else class="m-0">
+            Do you want to clone complete this invoice?
           </h5>
         </div>
       </template>
@@ -2543,7 +2693,7 @@ const legend = ref(
           <div class="flex justify-content-end mb-0">
             <Button :disabled="entryCode !== randomCode" class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
               icon="pi pi-save" @click="handleTotalApplyClick" />
-            <Button  class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
+            <Button v-if="false"  class="mr-2  p-button-text p-button-gray h-2rem w-3rem mt-3 px-2"
               icon="pi pi-times ml-1 mr-1 "   @click="doubleFactorTotalOpen = false" />
 
           </div>
@@ -2552,11 +2702,70 @@ const legend = ref(
 
     </Dialog>
 
+    
+  </div>
+  <div v-if="openDialog">
+    <Dialog
+      v-model:visible="openDialog" modal class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border" :style="{ width: '26%' }" :pt="{
+        root: {
+          class: 'custom-dialog',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+  
+      }" @hide="openDialog = false"
+    >
+      <template #header>
+        <div class="flex justify-content-between">
+          <h5 class="m-0">
+            Do you want to undo import this invoice: {{ selectedInvoiceObj.invoiceId }} ?
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-2 pb-0">
+          <div class="flex align-items-center mt-3 mb-2">
+            <div class="mr-2 px-3">
+              <span class="font-bold text-2xl">{{ randomCode }}</span>
+            </div>
+            <div>
+              <InputText
+                id="entry-code" v-model="entryCode" type="text"
+                placeholder="Enter code" class="w-15rem h-3rem"
+              />
+            </div>
+          </div>
+          <div class="flex justify-content-end mb-0">
+            <Button
+              :disabled="entryCode !== randomCode"
+              class="mr-2 p-button-primary h-2rem  w-3rem mt-3 "
+              icon="pi pi-save"
+              :loading="loadingSaveAll"
+              @click="applyUndo"
+            />
+  
+            <Button
+              v-if="false"
+              v-tooltip.top="'Cancel'" severity="secondary" class="h-2rem w-3rem p-button mt-3 px-2" icon="pi pi-times"
+              @click="handleClose"
+            />
+          </div>
+        </div>
+      </template>
+    </Dialog>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-    <InvoiceHistoryDialog :selected-attachment="''" :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-      header="Invoice Status History" :open-dialog="attachmentHistoryDialogOpen"
-      :selected-invoice="attachmentInvoice?.id" :selected-invoice-obj="attachmentInvoice" :is-creation-dialog="false" />
+    <InvoiceHistoryDialog 
+      :selected-attachment="''" 
+      :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      :header="`Invoice Status History`" 
+      :open-dialog="attachmentHistoryDialogOpen"
+      :selected-invoice="attachmentInvoice?.id" 
+      :selected-invoice-obj="attachmentInvoice" 
+      :is-creation-dialog="false" 
+      />
   </div>
 
   <div v-if="exportDialogOpen">
@@ -2619,10 +2828,15 @@ const legend = ref(
       @hide="closeModalPrint()"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex align-items-center justify-content-between w-full">
           <h5 class="m-0">
             Invoice to Print
           </h5>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-2">
+              Invoice: {{ props.selectedInvoice.invoiceId }}
+            </h5>
+          </div>
         </div>
       </template>
 

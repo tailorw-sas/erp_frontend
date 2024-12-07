@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
+const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
 const fileUpload = ref()
 const inputFile = ref()
@@ -52,7 +53,7 @@ const columns: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
   { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false },
+  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false, minWidth: '150px' },
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -86,7 +87,7 @@ const options = ref({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -95,7 +96,7 @@ const payload = ref<IQueryRequest>({
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 10,
+  limit: 50,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -128,7 +129,7 @@ async function getErrorList() {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+          rowError += `- ${err.message?.trim()}\n`
         }
         rowExpandable.push({ ...iterator.row })
         newListItems.push(
@@ -136,7 +137,7 @@ async function getErrorList() {
             ...iterator.row,
             id: iterator.id,
             fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
-            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n${rowError}`,
             hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
             invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
             rowExpandable,
@@ -170,12 +171,14 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
+  listItems.value = []
+  options.value.loading = true
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
+      options.value.loading = false
       return
     }
     const uuid = uuidv4()
@@ -187,6 +190,7 @@ async function importFile() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_INVOICE_IMPORT_TYPE.VIRTUAL)
+    formData.append('employee', userData?.value?.user?.name || '')
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
@@ -266,7 +270,7 @@ async function goToList() {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getErrorList()
 })
@@ -328,7 +332,7 @@ onMounted(async () => {
         @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.impSta" class="ellipsis-text">
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="import-ellipsis-text">
             <span style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
@@ -356,7 +360,7 @@ onMounted(async () => {
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importFile" />
+        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete || !inputFile" @click="importFile" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>

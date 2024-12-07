@@ -395,7 +395,7 @@ function formatDate(value) {
   return parseAndFormatDate(value)
 }
 
-export function formatNumber(number: any) {
+export function formatNumber(number: any, minDecimals: number = 2, maxDecimals: number = 4) {
   // Asegúrate de que el número sea válido
   if (Number.isNaN(number)) {
     throw new TypeError('El valor proporcionado no es un número.')
@@ -403,8 +403,8 @@ export function formatNumber(number: any) {
 
   // Utiliza Intl.NumberFormat para formatear el número
   return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4
+    minimumFractionDigits: minDecimals,
+    maximumFractionDigits: maxDecimals
   }).format(number)
 }
 
@@ -421,4 +421,20 @@ export function parseFormattedNumber(formattedNumber: string): number {
   }
 
   return parsedNumber
+}
+
+export function formatCurrency(value: any) {
+  if (Number.isNaN(value) || value === null || value === undefined) {
+    return 'Invalid value' // Mensaje de error o valor predeterminado
+  }
+
+  // Convertir a número en caso de que sea un string válido
+  const numericValue = Number(value)
+
+  return numericValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
+
+export async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
+  const file = event.files[0]
+  listFields[fieldKey] = file
 }

@@ -3,21 +3,16 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
-import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type {IColumn, IPagination, IStatusClass} from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 // VARIABLES -----------------------------------------------------------------------------------------
-const toast = useToast()
-const authStore = useAuthStore()
-const { status, data } = useAuth()
-const isAdmin = (data.value?.user as any)?.isAdmin === true
-
 const listItems = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
+const bankReconciliationHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
@@ -30,41 +25,29 @@ const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
+const accordionLoading = ref({
+  hotel: false,
+  merchantBankAccount: false,
+  status: false,
+})
 const contextMenu = ref()
 
-enum MenuType {
-  refund, resendEmail
-}
-
-const allMenuListItems = [
+const menuListItems = [
   {
-    type: MenuType.refund,
-    label: 'Refund',
-    icon: 'pi pi-dollar',
-    command: () => {},
+    label: 'Status History',
+    icon: 'pi pi-history',
+    command: () => { bankReconciliationHistoryDialogVisible.value = true },
     disabled: false,
-    isCollection: true // que pertenecen a un status en el collection status
-  },
-  {
-    type: MenuType.resendEmail,
-    label: 'Resend Payment Link',
-    icon: 'pi pi-send',
-    command: () => resendPaymentLink(),
-    disabled: false,
-    isCollection: false
-  },
+  }
 ]
 
-const menuListItems = ref<any[]>([])
-
-const collectionStatusList = ref<any[]>([])
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const MerchantBankAccountList = ref<any[]>([])
 
 const confStatusListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-transaction-status',
+  moduleApi: 'creditcard',
+  uriApi: 'manage-reconcile-transaction-status',
 })
 
 const confHotelListApi = reactive({
@@ -97,28 +80,57 @@ const sClassMap: IStatusClass[] = [
   { status: 'Created', class: 'vcc-text-created' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
 ]
+
+interface DataListItem {
+  id: string
+  accountNumber: string
+  description: string
+  status: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: string
+}
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
+const hotelFilters: IFilter[] = [{
+  key: 'isApplyByVCC',
+  operator: 'EQUALS',
+  value: true,
+  logicalOperation: 'AND'
+}]
+
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
+
 const columns: IColumn[] = [
   { field: 'reconciliationId', header: 'Id', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
-  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant-bank-account' }, sortable: true },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'detailsAmount', header: 'Details Amount', type: 'text' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: [...hotelFilters, ...activeStatusFilter] }, sortable: true },
+  { field: 'merchantBankAccount', header: 'Bank Account', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant-bank-account', keyValue: 'name', mapFunction, filter: activeStatusFilter }, sortable: true },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
   { field: 'remark', header: 'Remark', type: 'text' },
-  // { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, details: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
-  { id: 'reconciliationId', name: 'Id' },
+  { id: 'reconciliationId', name: 'Bank Reconciliation Id' },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Management Bank Reconciliation',
+  tableName: 'Bank Reconciliation Management',
   moduleApi: 'creditcard',
   uriApi: 'bank-reconciliation',
   loading: false,
@@ -146,10 +158,18 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.accountNumber} - ${data.description}`,
+    status: data.status
+  }
+}
 function goToPaymentOfMerchantInNewTab(item: any) {
   const id = item.hasOwnProperty('id') ? item.id : item
-  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant?id=${encodeURIComponent(id)}`
-  window.open(url, '_blank')
+  const url = `/vcc-management/bank-reconciliation/bank-payment-of-merchant/${id}`
+  navigateTo({ path: url, params: { id } }, { open: { target: '_blank' } })
 }
 
 async function getList() {
@@ -177,19 +197,14 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status?.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'detailsAmount')) {
         count.details += iterator.detailsAmount
-        iterator.detailsAmount = formatNumber(iterator.detailsAmount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'merchantBankAccount')) {
         const merchantNames = iterator.merchantBankAccount.managerMerchant.map((item: any) => item.description).join(' - ')
@@ -301,7 +316,7 @@ function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         newPayload.filter = [...newPayload.filter, {
-          key: 'status.id',
+          key: 'reconcileStatus.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
@@ -326,12 +341,13 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  getList()
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  searchAndFilter()
 }
 
 async function getHotelList(query: string = '') {
   try {
+    accordionLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -376,10 +392,14 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+  finally {
+    accordionLoading.value.hotel = false
+  }
 }
 
 async function getStatusList(query: string = '') {
   try {
+    accordionLoading.value.status = true
     const payload = {
       filter: [
         {
@@ -418,10 +438,14 @@ async function getStatusList(query: string = '') {
   catch (error) {
     console.error('Error loading status list:', error)
   }
+  finally {
+    accordionLoading.value.status = false
+  }
 }
 
 async function getMerchantBankAccountList(query: string) {
   try {
+    accordionLoading.value.merchantBankAccount = true
     const payload = {
       filter: [{
         key: 'accountNumber',
@@ -452,122 +476,36 @@ async function getMerchantBankAccountList(query: string) {
   catch (error) {
     console.error('Error loading merchant bank account list:', error)
   }
+  finally {
+    accordionLoading.value.merchantBankAccount = false
+  }
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
-}
-
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
 }
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'merchantBankAccount') {
+      event.sortField = 'merchantBankAccount.accountNumber'
+    }
+    if (event.sortField === 'reconcileStatus') {
+      event.sortField = 'reconcileStatus.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
 }
 
-async function resendPaymentLink() {
-  try {
-    if (contextMenuTransaction.value.id) {
-      options.value.loading = true
-      await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: contextMenuTransaction.value.id })
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-  }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-  }
-  finally {
-    options.value.loading = false
-  }
-}
-
-async function findCollectionStatusMenuOptions(status: string) {
-  const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
-  if (collection) {
-    const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
-    // se agregan los elementos que pertenecen al navigate de dicho status
-    menuListItems.value = allMenuListItems.filter((element: any) => element.isCollection && navigateOptions.includes(element.label.toLowerCase()))
-  }
-}
-
-function findNoCollectionStatusMenuOptions() {
-  const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
-  for (let i = 0; i < noCollectionItems.length; i++) {
-    const element = noCollectionItems[i]
-    if (element.type === MenuType.resendEmail && contextMenuTransaction.value.methodType === 'LINK') {
-      menuListItems.value.push(element)
-    }
-  }
-}
-
 async function onRowRightClick(event: any) {
-  // console.log(event.data)
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  menuListItems.value = [] // Elementos que se van a mostrar en el menu
-  // Agrega a la lista las opciones que estan presentes en el navigate para el collection status del estado del elemento seleccionado
-  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
-  if (menuListItems.value.length > 0) {
-    const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
-    // aqui se valida que hayan fondos disponibles para la devolucion
-    setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
-  }
-  // Agregar opciones que no son tipo coleccion:
-  findNoCollectionStatusMenuOptions()
-  if (menuListItems.value.length > 0) {
-    contextMenu.value.show(event.originalEvent)
-  }
-}
-
-function setRefundAvailable(isAvailable: boolean) {
-  const menuItem = menuListItems.value.find((item: any) => item.label === 'Refund')
-  if (menuItem) {
-    menuItem.disabled = !isAvailable
-  }
+  contextMenu.value.show(event.originalEvent)
 }
 
 function goToBankPaymentInNewTab(itemId?: string) {
@@ -599,12 +537,14 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
-      Management Bank Reconciliation
-    </h3>
-    <div class="my-2 flex justify-content-end px-0">
-      <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />
-    </div>
+    <h5 class="mb-0">
+      Bank Reconciliation Management
+    </h5>
+    <IfCan :perms="['BANK-RECONCILIATION:CREATE']">
+      <div class="my-2 flex justify-content-end px-0">
+        <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />
+      </div>
+    </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 order-0">
@@ -621,117 +561,115 @@ onMounted(() => {
                 </div>
               </div>
             </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <!-- first filter -->
-              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <!-- <pre>{{ filterToSearch }}</pre> -->
-                      <label for="" class="mr-2 font-bold"> Hotel</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete"
-                          :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                          @load="($event) => getHotelList($event)" @change="($event) => {
-                            if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
-                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                          }"
-                        >
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
-                        </DebouncedAutoCompleteComponent>
-                      </div>
+            <div class="grid">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                    <label class="filter-label font-bold" for="">Hotel:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :max-selected-labels="3"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="accordionLoading.hotel"
+                      @change="($event) => {
+                        if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <label class="filter-label font-bold" for="">Bank Account:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.merchantBankAccount"
+                      :suggestions="MerchantBankAccountList"
+                      :loading="accordionLoading.merchantBankAccount"
+                      @change="($event) => {
+                        if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getMerchantBankAccountList($event)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                    <label class="filter-label font-bold" for="">From:</label>
+                    <div class="w-full" style=" z-index:5 ">
+                      <Calendar
+                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                      />
                     </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold"> Bank Account</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete"
-                          :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.merchantBankAccount" :suggestions="MerchantBankAccountList"
-                          @load="($event) => getMerchantBankAccountList($event)" @change="($event) => {
-                            if (!filterToSearch.merchantBankAccount.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                              filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id === 'All')
-                            }
-                            else {
-                              filterToSearch.merchantBankAccount = $event.filter((element: any) => element?.id !== 'All')
-                            }
-                          }"
-                        />
-                      </div>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <label class="filter-label font-bold" for="">To:</label>
+                    <div class="w-full">
+                      <Calendar
+                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
-
-              <!-- third filter From - To -->
-              <div class="col-12 md:col-3 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center p-0 m-0">
-                  <div class="col-12 md:col-10 p-0 m-0 w-auto">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> From</label>
-                      <div class="w-9rem">
-                        <Calendar
-                          v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                          show-icon icon-display="input" class="w-full" :max-date="new Date()"
-                        />
-                      </div>
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2" style=" z-index:5;">
+                    <label class="filter-label font-bold" for="">Criteria:</label>
+                    <div class="w-full" style=" z-index:5; overflow: hidden  ">
+                      <Dropdown
+                        v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
+                        placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                      />
                     </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
-                      <div class="w-9rem">
-                        <Calendar
-                          v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                          icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
-                        />
-                      </div>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <label class="filter-label font-bold" for="">Search:</label>
+                    <div class="w-full">
+                      <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                     </div>
                   </div>
                 </div>
               </div>
-              <!-- fourth filter -->
-              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <label for="" class="mr-2 font-bold"> Criteria</label>
-                      <div class="w-full">
-                        <Dropdown
-                          v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
-                          placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
-                        />
-                      </div>
-                    </div>
-                    <div class="flex align-items-center">
-                      <label for="" class="w-4rem font-bold">Search</label>
-                      <IconField icon-position="left">
-                        <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                        <InputIcon class="pi pi-search" />
-                      </IconField>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- fifth filter -->
-              <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-                <div class="grid align-items-center justify-content-center">
-                  <div class="col-12">
-                    <div class="flex align-items-center mb-2">
-                      <!-- <pre>{{ filterToSearch }}</pre> -->
-                      <label for="" class="mr-2 font-bold"> Status</label>
-                      <div class="w-full">
-                        <DebouncedAutoCompleteComponent
-                          v-if="!loadingSaveAll" id="autocomplete"
-                          :multiple="true" class="w-full" field="name"
-                          item-value="id" :model="filterToSearch.status" :suggestions="statusList"
-                          @load="($event) => getStatusList($event)" @change="($event) => {
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+                <div class="flex w-full">
+                  <div class="flex flex-row w-full">
+                    <div class="flex flex-column gap-2 w-full">
+                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                        <label class="filter-label font-bold" for="">Status:</label>
+                        <DebouncedMultiSelectComponent
+                          v-if="!loadingSaveAll"
+                          id="autocomplete"
+                          field="name"
+                          item-value="id"
+                          :max-selected-labels="3"
+                          :model="filterToSearch.status"
+                          :suggestions="statusList"
+                          :loading="accordionLoading.status"
+                          @change="($event) => {
                             if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                               filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
                             }
@@ -739,34 +677,39 @@ onMounted(() => {
                               filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
                             }
                           }"
+                          @load="($event) => getStatusList($event)"
                         >
                           <template #option="props">
                             <span>{{ props.item.code }} - {{ props.item.name }}</span>
                           </template>
-                        </DebouncedAutoCompleteComponent>
+                        </DebouncedMultiSelectComponent>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <!-- Button filter -->
-              <div class="col-12 md:col-1 flex align-items-center my-0 py-0 w-auto justify-content-center">
-                <Button
-                  v-tooltip.top="'Filter'"
-                  label=""
-                  class="p-button-lg w-3rem h-3rem mr-2"
-                  icon="pi pi-search"
-                  @click="searchAndFilter"
-                />
-                <Button
-                  v-tooltip.top="'Clear'"
-                  label=""
-                  outlined
-                  class="p-button-lg w-3rem h-3rem"
-                  icon="pi pi-filter-slash"
-                  @click="clearFilterToSearch"
-                />
+              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+                <div class="flex w-full">
+                  <div class="flex flex-row w-full">
+                    <div class="flex align-items-center ml-2">
+                      <Button
+                        v-tooltip.top="'Filter'"
+                        label=""
+                        class="p-button-lg w-3rem h-3rem mr-2"
+                        icon="pi pi-search"
+                        @click="searchAndFilter"
+                      />
+                      <Button
+                        v-tooltip.top="'Clear'"
+                        label=""
+                        outlined
+                        class="p-button-lg w-3rem h-3rem"
+                        icon="pi pi-filter-slash"
+                        @click="clearFilterToSearch"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </AccordionTab>
@@ -789,9 +732,20 @@ onMounted(() => {
         @on-row-right-click="onRowRightClick"
         @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
       >
+        <template #column-reconcileStatus="{ data, column }">
+          <Badge
+            v-tooltip.top="data.reconcileStatus.name.toString()"
+            :value="data.reconcileStatus.name"
+            :class="column.statusClassMap?.find(e => e.status === data.reconcileStatus.name)?.class"
+          />
+        </template>
         <template #expansion="{ data: item }">
-          <!--          <pre>{{item}}</pre> -->
-          <BankPaymentTransactions :bank-reconciliation-id="item.id" />
+          <BankPaymentTransactions
+            :bank-reconciliation-id="item.id" :hide-bind-transaction-menu="item.reconcileStatus && (item.reconcileStatus.completed || item.reconcileStatus.cancelled)"
+            @update:details-amount="($event) => {
+              item.detailsAmount = formatNumber($event)
+            }"
+          />
         </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
@@ -806,5 +760,16 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
+    <div v-if="bankReconciliationHistoryDialogVisible">
+      <BankReconciliationStatusHistoryDialog :close-dialog="() => { bankReconciliationHistoryDialogVisible = false }" :open-dialog="bankReconciliationHistoryDialogVisible" :selected-bank-reconciliation="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
   </div>
 </template>
+
+<style scoped>
+.filter-label {
+  min-width: 55px;
+  max-width: 55px;
+  text-align: end;
+}
+</style>

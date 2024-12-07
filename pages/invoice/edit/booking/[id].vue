@@ -23,7 +23,9 @@ const forceUpdate = ref(false)
 const active = ref(0)
 const saveButton = ref(null)
 const onSaveButtonByRef = ref(false)
-
+const invoiceIdForRedirect = ref('')
+const invoiceNumberTemp = ref('')
+const bookingNumberTemp = ref('')
 const route = useRoute()
 
 // @ts-expect-error
@@ -485,17 +487,17 @@ const optionsAdjustment = ref({
 const columnsRoomRate: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text', sortable: false },
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'checkIn', header: 'Check In', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
-  { field: 'checkOut', header: 'Check Out', type: 'date-editable', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
-  { field: 'adults', header: 'Adults', type: 'text', sortable: false, editable: true },
-  { field: 'children', header: 'Children', type: 'text', sortable: false, editable: true },
+  { field: 'checkIn', header: 'Check In', type: 'date-editable', width: '10%', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
+  { field: 'checkOut', header: 'Check Out', type: 'date-editable', width: '10%', sortable: false, editable: true, props: { isRange: false, calendarMode: CALENDAR_MODE.DATE } },
+  { field: 'adults', header: 'Adults', type: 'text', width: '10%', sortable: false, editable: true },
+  { field: 'children', header: 'Children', type: 'text', width: '10%', sortable: false, editable: true },
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: false },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'rateAdult', header: 'Rate Adult', type: 'text', sortable: false, editable: false },
   { field: 'rateChildren', header: 'Rate Children', type: 'text', sortable: false, editable: false },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false, editable: true },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false, editable: true },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', width: '10%', sortable: false, editable: true },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', width: '10%', sortable: false, editable: true },
 ]
 const columnsAdjustment: IColumn[] = [
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: false },
@@ -648,8 +650,6 @@ function handleDialogOpen() {
     default:
       break
   }
-
-  console.log(bookingDialogOpen)
 }
 
 async function getHotelList(query = '') {
@@ -921,7 +921,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
 
   await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
-  navigateTo('/invoice')
+  navigateTo(`/invoice/edit/${invoiceIdForRedirect.value}`)
 }
 
 async function updateItemByRef(item: { [key: string]: any }) {
@@ -986,7 +986,8 @@ async function saveItem(item: { [key: string]: any }) {
       else {
         await updateItem(item)
       }
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking ${bookingNumberTemp.value} of Invoice ${invoiceNumberTemp.value} has been successfully updated.`, life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -996,7 +997,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   loadingSaveAll.value = false
   if (successOperation) {
-    formReload.value++
+    await getBookingItemById(route?.params?.id as string)
 
     // clearForm()
   }
@@ -1186,7 +1187,7 @@ async function onCellEditRoomRate(event: any) {
     if (saveButton.value) {
       saveButton.value.$el.click()
     }
-    reloadBookingItem(idItem.value)
+    await reloadBookingItem(idItem.value)
   }
   catch (error: any) {
     data[field] = dataTemp
@@ -1434,7 +1435,15 @@ async function getratePlanList(query = '') {
     const { data: dataList } = response
     ratePlanList.value = []
     for (const iterator of dataList) {
-      ratePlanList.value = [...ratePlanList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      ratePlanList.value = [
+        ...ratePlanList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -1472,7 +1481,6 @@ async function getRoomCategoryList(query = '') {
         sortBy: 'createdAt',
         sortType: ENUM_SHORT_TYPE.DESC
       }
-
     const response = await GenericService.search(confroomCategoryApi.moduleApi, confroomCategoryApi.uriApi, payload)
     const { data: dataList } = response
     roomCategoryList.value = []
@@ -1481,7 +1489,7 @@ async function getRoomCategoryList(query = '') {
         ...roomCategoryList.value,
         {
           id: iterator.id,
-          name: iterator.name,
+          name: `${iterator.code} - ${iterator.name}`,
           code: iterator.code,
           status: iterator.status
         }
@@ -1527,7 +1535,7 @@ async function getRoomTypeList(query = '') {
     const { data: dataList } = response
     roomTypeList.value = []
     for (const iterator of dataList) {
-      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
     }
   }
   catch (error) {
@@ -1569,14 +1577,13 @@ async function getNightTypeList(query = '') {
     const { data: dataList } = response
     nightTypeList.value = []
     for (const iterator of dataList) {
-      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
 }
-
 async function getBookingItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -1584,6 +1591,9 @@ async function getBookingItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.booking.moduleApi, confApi.booking.uriApi, id)
       if (response) {
+        invoiceIdForRedirect.value = response?.invoice?.id
+        invoiceNumberTemp.value = response?.invoice?.invoiceId
+        bookingNumberTemp.value = response?.bookingId
         if (response.hotelCreationDate) {
           const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
           item2.value.hotelCreationDate = new Date(`${date}T00:00:00`)
@@ -1619,10 +1629,10 @@ async function getBookingItemById(id: string) {
         item2.value.description = response.description
         item2.value.invoice = response.invoice
         item2.value.invoiceOriginalAmount = response.invoice.originalAmount
-        item2.value.ratePlan = response.ratePlan?.name === '-' ? null : response.ratePlan
-        item2.value.nightType = response.nightType
-        item2.value.roomType = response.roomType?.name === '-' ? null : response.roomType
-        item2.value.roomCategory = response.roomCategory
+        item2.value.ratePlan = response.ratePlan ? { id: response.ratePlan.id, name: `${response.ratePlan.code} - ${response.ratePlan.name}`, code: response.ratePlan.code, status: response.ratePlan.status } : null
+        item2.value.nightType = response.nightType ? { id: response.nightType.id, name: `${response.nightType.code} - ${response.nightType.name}`, code: response.nightType.code, status: response.nightType.status } : null
+        item2.value.roomType = response.roomType ? { id: response.roomType.id, name: `${response.roomType.code} - ${response.roomType.name}`, code: response.roomType.code, status: response.roomType.status } : null
+        item2.value.roomCategory = response.roomCategory ? { id: response.roomCategory.id, name: `${response.roomCategory.code} - ${response.roomCategory.name}`, code: response.roomCategory.code, status: response.roomCategory.status } : null
       }
 
       // Validacion para el campo hotelInvoiceNumber
@@ -1717,7 +1727,7 @@ async function getBookingItemById(id: string) {
       }
       else {
         const objField = fieldsV2.find(field => field.field === 'nightType')
-        updateFieldProperty(fieldsV2, 'nightType', 'validation', z.string().nullable())
+        updateFieldProperty(fieldsV2, 'nightType', 'validation', z.object({}).nullable())
         updateFieldProperty(fieldsV2, 'nightType', 'class', `${objField?.class}`)
       }
 
@@ -1740,6 +1750,49 @@ async function reloadBookingItem(id: string) {
   getAdjustmentList()
 }
 
+// function formatHotelBookingNumber(value: string): string {
+//   // Elimina espacios iniciales, finales y reduce múltiples espacios a uno solo
+//   const sanitizedValue = value.replace(/\s+/g, ' ').trim()
+
+//   // Divide el texto en partes según los espacios
+//   const parts = sanitizedValue.split(' ')
+
+//   // Validación básica para mantener el formato "I/G NUMERO NUMERO"
+//   if (parts.length === 3 && /^[IG]$/i.test(parts[0])) {
+//     const [prefix, middle, suffix] = parts
+//     return `${prefix.toUpperCase()} ${middle} ${suffix}`
+//   }
+
+//   // Si no cumple con la estructura esperada, devuelve el valor limpio
+//   return sanitizedValue
+// }
+
+function formatHotelBookingNumber(value: string): string {
+  // Limpiar el texto de espacios extra y mantener solo letras y números
+  const cleanedValue = value.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+
+  // Limitar la longitud total a máximo 8 caracteres
+  const maxLength = 8
+  const truncatedValue = cleanedValue.slice(0, maxLength)
+
+  // Aplicar el formato
+  let formattedValue = ''
+
+  if (truncatedValue.length >= 1) {
+    formattedValue += truncatedValue.charAt(0) // Letra inicial
+  }
+
+  if (truncatedValue.length > 1) {
+    formattedValue += ` ${truncatedValue.slice(1, Math.min(6, truncatedValue.length))}` // Primer número (máx 5 dígitos)
+  }
+
+  if (truncatedValue.length > 6) {
+    formattedValue += ` ${truncatedValue.slice(6)}` // Últimos 2 dígitos
+  }
+
+  return formattedValue.trim()
+}
+
 // watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 //   if (!newValue) {
 //     clearForm()
@@ -1750,6 +1803,7 @@ async function reloadBookingItem(id: string) {
 // })
 
 onMounted(async () => {
+  console.log(route)
   // filterToSearch.value.criterial = ENUM_FILTER[0]
   // //@ts-ignore
   // await getItemById(route.params.id.toString())
@@ -1771,7 +1825,7 @@ onMounted(async () => {
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       Edit Booking
     </div>
-    <div class="p-4">
+    <div class="pt-3">
       <EditFormV2
         v-if="true"
         :key="formReload"
@@ -1779,7 +1833,7 @@ onMounted(async () => {
         :item="item2"
         :show-actions="true"
         :loading-save="loadingSaveAll"
-        container-class="grid pt-5"
+        container-class="grid py-2"
         @cancel="clearForm"
         @delete="requireConfirmationToDelete($event)"
         @submit="saveItem($event)"
@@ -1835,6 +1889,23 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
+        <template #field-hotelBookingNumber="{ onUpdate, item: data, fields, field }">
+          <InputText
+            v-if="!loadingSaveAll"
+            v-model="data.hotelBookingNumber"
+            show-clear
+            :disabled="fields.find((f) => f.field === field)?.disabled"
+            @input="(event) => {
+              return `${event.target._value}${event.data}`
+            }"
+            @update:model-value="($event) => {
+              if (!$event || $event.length <= 8) return
+              const value = formatHotelBookingNumber($event)
+              onUpdate('hotelBookingNumber', value)
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
         <template #field-dueAmount="{ onUpdate, item: data, fields, field }">
           <InputNumber
             v-if="!loadingSaveAll"
@@ -1884,9 +1955,9 @@ onMounted(async () => {
             }"
             @load="($event) => getratePlanList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1897,9 +1968,9 @@ onMounted(async () => {
               onUpdate('roomCategory', $event)
             }" @load="($event) => getRoomCategoryList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1917,14 +1988,20 @@ onMounted(async () => {
         </template>
         <template #field-roomType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.roomType" :suggestions="roomTypeList" @change="($event) => {
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.roomType"
+            :suggestions="roomTypeList"
+            @change="($event) => {
               onUpdate('roomType', $event)
-            }" @load="($event) => getRoomTypeList($event)"
+            }"
+            @load="($event) => getRoomTypeList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1949,9 +2026,9 @@ onMounted(async () => {
             }"
             @load="($event) => getNightTypeList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -1962,7 +2039,7 @@ onMounted(async () => {
                 <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
                   <TabPanel>
                     <template #header>
-                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                      <div class="flex align-items-center gap-2" :style="`${activeTab === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
                         <i class="pi pi-receipt" style="font-size: 1.5rem" />
                         <span class="font-bold">
                           Room Rates
@@ -1986,6 +2063,17 @@ onMounted(async () => {
                       @on-sort-field="onSortFieldRoomRate"
                       @on-table-cell-edit-complete="onCellEditRoomRate($event)"
                     >
+                      <template #column-checkIn="{ item: objItem }">
+                        <Calendar
+                          v-model="objItem.dataList[objItem.field]"
+                          :manual-input="false"
+                          style="width: 100%"
+                          :max-date="new Date()"
+                          :view="objItem.column.props?.calendarMode || 'month'"
+                          date-format="yy-mm-dd"
+                          @update:model-value="objItem.onCellEditComplete($event, objItem.dataList)"
+                        />
+                      </template>
                       <template #datatable-footer>
                         <ColumnGroup type="footer" class="flex align-items-center">
                           <Row>
@@ -2002,7 +2090,7 @@ onMounted(async () => {
                   </TabPanel>
                   <TabPanel>
                     <template #header>
-                      <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+                      <div class="flex align-items-center gap-2" :style="`${activeTab === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
                         <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
                         <span class="font-bold white-space-nowrap">
                           Adjustments
@@ -2039,27 +2127,6 @@ onMounted(async () => {
                     </DynamicTable>
                   </TabPanel>
                 </TabView>
-
-                <!-- <InvoiceTabView
-                  :requires-flat-rate="requiresFlatRate"
-                  :get-invoice-hotel="getInvoiceHotel"
-                  :get-invoice-agency="getInvoiceAgency"
-                  :invoice-obj-amount="invoiceAmount"
-                  :is-dialog-open="bookingDialogOpen"
-                  :close-dialog="() => { bookingDialogOpen = false }"
-                  :open-dialog="handleDialogOpen"
-                  :selected-booking="selectedBooking"
-                  :force-update="forceUpdate"
-                  :toggle-force-update="update"
-                  :invoice-obj="item2"
-                  :refetch-invoice="refetchInvoice"
-                  :is-creation-dialog="false"
-                  :selected-invoice="selectedInvoice as any"
-                  :active="active"
-                  :set-active="($event) => { active = $event }"
-                  :showTotals="true"
-                  :invoiceType="route.query?.type?.toString()"
-                /> -->
               </div>
             </div>
             <div class="col-12 flex justify-content-end">
@@ -2073,7 +2140,7 @@ onMounted(async () => {
                 severity="secondary"
                 class="w-3rem mx-1"
                 icon="pi pi-times"
-                @click="navigateTo('/invoice')"
+                @click="navigateTo(`/invoice/edit/${invoiceIdForRedirect}`)"
               />
             </div>
           </div>
@@ -2081,7 +2148,7 @@ onMounted(async () => {
       </EditFormV2>
     </div>
 
-    <div v-if="attachmentDialogOpen">
+    <!-- <div v-if="attachmentDialogOpen">
       <AttachmentDialog
         :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
         :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
@@ -2102,9 +2169,10 @@ onMounted(async () => {
       :open-dialog="exportAttachmentsDialogOpen"
       :invoice="item"
     />
-  </div>
+  </div> -->
 
-  <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
+    <!-- <ContextMenu ref="roomRateContextMenu" :model="menuModel" /> -->
+  </div>
 </template>
 
 <style lang="scss">

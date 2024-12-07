@@ -54,6 +54,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Agency Rate Amount',
     dataType: 'check',
     class: 'field col-12 required',
+    hidden: true
   },
   {
     field: 'isNegative',
@@ -117,7 +118,7 @@ const item = ref<GenericObject>({
   isAgencyRateAmount: false,
   isNegative: false,
   isPolicyCredit: false,
-  defaults:false,
+  defaults: false,
   isRemarkRequired: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
@@ -132,7 +133,7 @@ const itemTemp = ref<GenericObject>({
   isNegative: false,
   isPolicyCredit: false,
   isRemarkRequired: false,
-  defaults:false,
+  defaults: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
 })
@@ -465,19 +466,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Invoice Transaction Type
-    </h3>
+    </h5>
     <IfCan :perms="['INVOICE-TRANSACTION-TYPE:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>

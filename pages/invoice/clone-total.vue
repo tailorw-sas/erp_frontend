@@ -513,7 +513,7 @@ async function saveItem(item: { [key: string]: any }) {
     // }
 
     // await new Promise(resolve => setTimeout(resolve, 5000))
-    // navigateTo('/invoice')
+    navigateTo('/invoice')
   }
 }
 
@@ -1361,6 +1361,7 @@ function updateBookingLocal(booking: any) {
       bookingToEdit.couponNumber = booking.couponNumber
       bookingToEdit.folioNumber = booking.folioNumber
       bookingToEdit.hotelBookingNumber = booking.hotelBookingNumber
+      bookingToEdit.hotelInvoiceNumber = booking.hotelInvoiceNumber
       bookingToEdit.firstName = booking.firstName
       bookingToEdit.lastName = booking.lastName
       bookingToEdit.hotelCreationDate = booking.hotelCreationDate
@@ -1504,6 +1505,7 @@ function onSaveRoomRateInBookingEdit(itemObj: any) {
         objBookingSelected.adults = Number(totalAdults)
         objBookingSelected.hotelAmount = Number(totalHotelAmount)
         objBookingSelected.invoiceAmount = Number(totalInvoiceAmount)
+        objBookingSelected.dueAmount = Number(totalInvoiceAmount)
 
         objBookingSelected.checkIn = formatDate(itemObj?.payload?.checkIn)
         objBookingSelected.checkOut = formatDate(itemObj?.payload?.checkOut)
@@ -1539,6 +1541,7 @@ function onSaveRoomRateInBookingEdit(itemObj: any) {
       }
     }
   }
+  calcInvoiceAmount()
 }
 
 watch(invoiceAmount, () => {

@@ -40,7 +40,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Total Amount', type: 'text' },
   { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
   { field: 'remarks', header: 'Remark', type: 'text' },
-  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false },
+  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ const payload = ref<IQueryRequest>({
   }
   ],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -104,7 +104,7 @@ async function getErrorList() {
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
         for (const err of iterator.errorFields) {
-          rowError += `- ${err.message} \n`
+          rowError += `- ${err.message?.trim()}\n`
         }
         const dateTemp = !iterator.row ? null : convertirAFechav2(iterator.row.transactionDate)
         newListItems.push(
@@ -112,7 +112,7 @@ async function getErrorList() {
             ...iterator.row,
             id: iterator.id,
             transactionDate: dateTemp,
-            impSta: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n${rowError}`,
             amount: iterator.row.amount ? formatNumber(iterator.row.amount) : 0,
             loadingEdit: false,
             loadingDelete: false
@@ -144,12 +144,14 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
+  listItems.value = []
+  options.value.loading = true
   try {
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
+      options.value.loading = false
       return
     }
     const uuid = uuidv4()
@@ -240,7 +242,7 @@ async function goToList() {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getErrorList()
 })
@@ -298,14 +300,14 @@ onMounted(async () => {
         @on-list-item="resetListItems" @on-sort-field="onSortField"
       >
         <template #column-impSta="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.impSta" style="color: red;">{{ data.impSta }}</span>
+          <div id="fieldError" v-tooltip.bottom="data.impSta" class="import-ellipsis-text">
+            <span style="color: red;">{{ data.impSta }}</span>
           </div>
         </template>
       </DynamicTable>
 
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :disabled="uploadComplete" @click="importFile" />
+        <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete || !inputFile" @click="importFile" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
@@ -317,13 +319,5 @@ onMounted(async () => {
   background-color: transparent !important;
   border: none !important;
   text-align: left !important;
-}
-
-.ellipsis-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
 }
 </style>

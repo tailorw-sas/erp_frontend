@@ -451,6 +451,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/payment-transaction-status'
           },
+          {
+            label: 'VCC Attachment Type',
+            icon: 'pi pi-fw pi-folder',
+            to: '/vcc-management/attachment-type'
+          },
         ]
       },
       // {
@@ -617,12 +622,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/payment'),
               items: []
             },
-            {
-              label: 'Payment Status',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/payment-status'),
-              items: []
-            },
+            // {
+            //   label: 'Payment Status',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/payment-status'),
+            //   items: []
+            // },
             // {
             //   label: 'Payment Transaction Status',
             //   icon: 'pi pi-fw pi-file',
@@ -658,6 +663,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Invoice Close Operation',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/close-operation/invoice'),
+              items: []
+            },
+            {
+              label: 'Collection',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/collection'),
               items: []
             },
           ]
@@ -955,6 +966,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Payment Transaction Status',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/payment-transaction-status'),
+              items: []
+            },
+            {
+              label: 'VCC Attachment Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/vcc-management/attachment-type'),
               items: []
             }
           ]

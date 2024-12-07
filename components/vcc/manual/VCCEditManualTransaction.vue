@@ -29,6 +29,7 @@ const $primevue = usePrimeVue()
 defineExpose({
   $primevue
 })
+const { data: userData } = useAuth()
 const formReload = ref(0)
 const forceSave = ref(false)
 let submitEvent = new Event('')
@@ -88,15 +89,8 @@ const fields: Array<FieldDefinitionType> = [
     field: 'referenceNumber',
     header: 'Reference Number',
     dataType: 'text',
-    class: 'field col-12 md:col-6',
-    validation: z.string().trim().refine((value) => {
-      if (value === '') {
-        return true
-      }
-      return /^\d+$/.test(value)
-    }, {
-      message: 'Only numeric characters allowed'
-    })
+    class: 'field col-12 md:col-6 required',
+    validation: z.string().trim().min(1, 'The reference number field is required')
   },
   {
     field: 'hotelContactEmail',
@@ -164,9 +158,11 @@ async function save(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   try {
-    payload.checkIn = payload.checkIn ? dayjs(payload.checkIn).format('YYYY-MM-DD') : ''
+    payload.checkIn = payload.checkIn ? `${dayjs(payload.checkIn).format('YYYY-MM-DD')}T00:00:00` : ''
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
     delete payload.event
     const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })

@@ -56,7 +56,11 @@ const props = defineProps({
   bookingList: {
     type: Array,
     required: true
-  }
+  },
+  bookingObj: {
+    type: Object,
+    required: false
+  },
 })
 const route = useRoute()
 const dialogVisible = ref(props.openDialog)
@@ -119,6 +123,20 @@ onMounted(() => {
     :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
     style="width: 600px;" @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            {{ header }}
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Booking ID: {{ props.bookingObj?.bookingId }}
+          </h5>
+        </div>
+      </div>
+    </template>
     <div class="w-full h-full overflow-hidden p-2 mt-3">
       <EditFormV2
         :key="formReload"
@@ -272,7 +290,7 @@ onMounted(() => {
             v-tooltip.top="'Save'" label="Save" class="w-6rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <Button v-if="false" v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
       </EditFormV2>
     </div>

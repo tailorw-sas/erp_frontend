@@ -11,7 +11,10 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import type { IData } from '~/components/table/interfaces/IModelData'
 
 const { data: userData } = useAuth()
-
+const multiSelectLoading = ref({
+  agency: false,
+  hotel: false,
+})
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -24,7 +27,6 @@ const loadingSearch = ref(false)
 const fileUpload = ref()
 const loadingSaveAll = ref(false)
 
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const errorList = ref<any[]>([])
 const reviewError = ref(false)
 
@@ -32,8 +34,8 @@ const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   allFromAndTo: false,
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  agency: [],
+  hotel: [],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 })
@@ -103,13 +105,14 @@ const options = ref({
   showFilters: true,
   selectAllItemByDefault: false,
   expandableRows: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'invoiceId',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -229,7 +232,8 @@ async function getList() {
           loadingDelete: false,
           // invoiceDate: new Date(iterator?.invoiceDate),
           agencyCd: iterator?.agency?.code,
-          dueAmount: iterator?.dueAmount || 0,
+          dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
+          invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
@@ -296,48 +300,67 @@ async function getErrorList() {
   }
 }
 
+function ApplyImport2() {
+  options.value.loading = true
+  setTimeout(() => {
+    options.value.loading = false
+  }, 10000)
+}
+
 async function ApplyImport() {
   loadingSaveAll.value = true
-  options.value.loading = true
-  let successOperation = true
+  const successOperation = true
   uploadComplete.value = true
+  errorList.value = []
   try {
+    options.value.loading = true
     if (!inputFile.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select a file', life: 10000 })
       return
     }
     const uuid = uuidv4()
     idItem.value = uuid
-    // const base64String: any = await fileToBase64(inputFile.value)
-    // const base64 = base64String.split('base64,')[1]
-    // const file = await base64ToFile(base64, inputFile.value.name, inputFile.value.type)
+    let invoiceIdsTemp: string[] = []
     const file = await inputFile.value
     const formData = new FormData()
+    const hasSomeObject = selectedElements.value.some(
+      item => typeof item === 'object' || item === null || Array.isArray(item)
+    )
+
+    if (hasSomeObject) {
+      for (const item of selectedElements.value) {
+        if (typeof item === 'object' && item !== null) {
+          invoiceIdsTemp.push(item.id)
+        }
+      }
+    }
+    else {
+      invoiceIdsTemp = [...selectedElements.value]
+    }
     formData.append('file', file)
-    formData.append('invoiceIds', selectedElements.value.toString())
+    formData.append('invoiceIds', JSON.stringify(invoiceIdsTemp.toString()))
     formData.append('employee', userData?.value?.user?.name || '')
     formData.append('employeeId', userData?.value?.user?.userId || '')
     formData.append('importProcessId', uuid)
     await GenericService.importReconcileAuto(confApi.moduleApi, confApi.uriApi, formData)
+
+    if (successOperation) {
+      await validateStatusImport()
+      await getErrorList()
+      if (reviewError.value) {
+        await getList()
+      }
+    }
   }
   catch (error: any) {
     successOperation = false
     uploadComplete.value = false
     options.value.loading = false
   }
-
-  if (successOperation) {
-    await validateStatusImport()
-    // if (!haveErrorImportStatus.value) {
-
-    await getErrorList()
-    if (reviewError.value) {
-      await getList()
-    }
-    // }
+  finally {
+    loadingSaveAll.value = false
+    options.value.loading = false
   }
-  loadingSaveAll.value = false
-  options.value.loading = false
 }
 
 async function validateStatusImport() {
@@ -406,6 +429,7 @@ async function getInvoiceList(query: string = '') {
 
 async function getHotelList(query: string = '') {
   try {
+    multiSelectLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -437,7 +461,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -445,10 +469,14 @@ async function getHotelList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+  finally {
+    multiSelectLoading.value.hotel = false
+  }
 }
 
-async function getAgencyList(query: string = '') {
+async function getAgencyList(query: string) {
   try {
+    multiSelectLoading.value.agency = true
     const payload = {
       filter: [
         {
@@ -485,13 +513,16 @@ async function getAgencyList(query: string = '') {
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
+    agencyList.value = []
     for (const iterator of dataList) {
       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
   }
   catch (error) {
-    console.error('Error loading hotel list:', error)
+    console.error('Error loading agency list:', error)
+  }
+  finally {
+    multiSelectLoading.value.agency = false
   }
 }
 
@@ -700,8 +731,8 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criterial: ENUM_FILTER[0], // Mantener el primer elemento del enum como valor predeterminado
     search: '', // Dejar el campo de búsqueda en blanco
-    agency: [allDefaultItem], // Restablecer a valor predeterminado
-    hotel: [allDefaultItem], // Restablecer a valor predeterminado
+    agency: [], // Restablecer a valor predeterminado
+    hotel: [], // Restablecer a valor predeterminado
     from: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'from'
     // to: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'to'
     to: dayjs(new Date()).endOf('month').toDate(),
@@ -718,7 +749,7 @@ const disabledSearch = computed(() => {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getList()
 })
@@ -752,7 +783,20 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        :loading="multiSelectLoading.agency"
+                        @change="($event) => {
+                          filterToSearch.agency = $event
+                        }"
+                        @load="($event) => getAgencyList($event)"
+                      />
+
+                      <!--  <DebouncedAutoCompleteComponent
                         id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
                         :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
@@ -768,12 +812,26 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
+                      -->
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.hotel"
+                        :suggestions="hotelList"
+                        :loading="multiSelectLoading.hotel"
+                        @change="($event) => {
+
+                          filterToSearch.hotel = $event
+                        }"
+                        @load="($event) => getHotelList($event)"
+                      />
+                      <!-- <DebouncedAutoCompleteComponent
                         id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
                         :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => {
@@ -789,6 +847,7 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
+                    -->
                     </div>
                   </div>
                 </div>
@@ -890,9 +949,15 @@ onMounted(async () => {
       </div>
 
       <DynamicTable
-        :data="listItems" :columns="columns" :options="options" :pagination="pagination"
-        @on-confirm-create="clearForm" @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems" @on-sort-field="onSortField"
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="clearForm"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
         @update:clicked-item="onMultipleSelect($event)"
       >
         <template #column-status="{ data: item }">
@@ -922,6 +987,7 @@ onMounted(async () => {
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check"
+          :loading="options.loading"
           :disabled="!importModel.importFile || selectedElements.length === 0" @click="ApplyImport"
         />
         <Button

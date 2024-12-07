@@ -5,7 +5,6 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
-import { parseFormattedNumber } from '~/utils/helpers'
 
 const props = defineProps({
   header: {
@@ -26,7 +25,8 @@ const props = defineProps({
   },
   selectedItems: {
     type: Array as PropType<any[]>,
-    required: true
+    required: false,
+    default: () => []
   },
   validCollectionStatusList: {
     type: Array as PropType<any[]>,
@@ -48,6 +48,15 @@ const confStatusListApi = reactive({
   uriApi: 'manage-transaction-status',
 })
 
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
+
 const sClassMap: IStatusClass[] = [
   { status: 'Sent', class: 'vcc-text-sent' },
   { status: 'Created', class: 'vcc-text-created' },
@@ -61,12 +70,14 @@ const sClassMap: IStatusClass[] = [
 
 const columns: IColumn[] = [
   { field: 'id', header: 'Id', type: 'text' },
-  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant' }, sortable: true },
-  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type' }, sortable: true },
-  { field: 'referenceNumber', header: 'Reference', type: 'text' },
+  { field: 'merchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description', filter: activeStatusFilter }, sortable: true },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
+  { field: 'referenceNumber', header: 'Reference', type: 'text', maxWidth: '250px' },
   { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number' },
+  { field: 'status', header: 'Status', type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter } },
 ]
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -97,7 +108,7 @@ const pagination = ref<IPagination>({
 })
 
 const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + parseFormattedNumber(item.amount), 0)
+  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0)
   return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
 })
 
@@ -148,58 +159,21 @@ async function getCollectionStatusList() {
 }
 
 async function getList() {
-  const count = { amount: 0, commission: 0, net: 0 }
-  subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
+  const count = { amount: 0, commission: 0, net: 0 }
+  subTotals.value = { ...count }
   try {
     options.value.loading = true
     BindTransactionList.value = []
     const newListItems = []
 
-    await getCollectionStatusList()
-    const statusIds = collectionStatusRefundReceivedList.value.map((elem: any) => elem.id)
-
-    const merchantIds = props.currentBankPayment.merchantBankAccount.managerMerchant.map((item: any) => item.id)
-    const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
-
-    payload.value.filter = [{
-      key: 'hotel.id',
-      operator: 'EQUALS',
-      value: props.currentBankPayment.hotel.id,
-      logicalOperation: 'AND'
-    }, {
-      key: 'merchant.id',
-      operator: 'IN',
-      value: merchantIds,
-      logicalOperation: 'AND'
-    }, {
-      key: 'creditCardType.id',
-      operator: 'IN',
-      value: creditCardTypeIds,
-      logicalOperation: 'AND'
-    }, {
-      key: 'amount',
-      operator: 'LESS_THAN_OR_EQUAL_TO',
-      value: props.currentBankPayment.amount,
-      logicalOperation: 'AND'
-    }, {
-      key: 'reconciliation',
-      operator: 'IS_NULL',
-      value: '',
-      logicalOperation: 'AND'
-    }, {
-      key: 'status.id',
-      operator: 'IN',
-      value: statusIds,
-      logicalOperation: 'AND'
-    }]
-
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { transactionSearchResponse, transactionTotalResume } = response
+    const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -209,9 +183,6 @@ async function getList() {
     const existingIds = new Set(BindTransactionList.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'merchant') && iterator.hotel) {
         iterator.merchant = { id: iterator.merchant.id, name: `${iterator.merchant.code} - ${iterator.merchant.description}` }
       }
@@ -230,15 +201,12 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
         count.commission += iterator.commission
-        iterator.commission = formatNumber(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
         count.net += iterator.netAmount
-        iterator.netAmount = iterator.netAmount ? formatNumber(iterator.netAmount) : '0.00'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
@@ -290,6 +258,9 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'status') {
+      event.sortField = 'status.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
@@ -302,9 +273,52 @@ watch(payloadOnChangePage, (newValue) => {
   getList()
 })
 
-onMounted(() => {
+onMounted(async () => {
   selectedElements.value = [...props.selectedItems]
   collectionStatusRefundReceivedList.value = [...props.validCollectionStatusList]
+  await getCollectionStatusList()
+  const statusIds = collectionStatusRefundReceivedList.value.map((elem: any) => elem.id)
+
+  const merchantIds = props.currentBankPayment.merchantBankAccount.managerMerchant.map((item: any) => item.id)
+  const creditCardTypeIds = props.currentBankPayment.merchantBankAccount.creditCardTypes.map((item: any) => item.id)
+
+  payload.value.filter = [{
+    key: 'hotel.id',
+    operator: 'EQUALS',
+    value: props.currentBankPayment.hotel.id,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'merchant.id',
+    operator: 'IN',
+    value: merchantIds,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'creditCardType.id',
+    operator: 'IN',
+    value: creditCardTypeIds,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'amount',
+    operator: 'LESS_THAN_OR_EQUAL_TO',
+    value: props.currentBankPayment.amount,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'reconciliation',
+    operator: 'IS_NULL',
+    value: '',
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }, {
+    key: 'status.id',
+    operator: 'IN',
+    value: statusIds,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }]
   getList()
 })
 </script>
@@ -317,7 +331,7 @@ onMounted(() => {
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-history',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -505,20 +519,32 @@ onMounted(() => {
       @on-sort-field="onSortField"
       @update:selected-items="onMultipleSelect($event)"
     >
+      <template #column-status="{ data, column }">
+        <Badge
+          v-tooltip.top="data.status.name.toString()"
+          :value="data.status.name"
+          :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+        />
+      </template>
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
             <Column :footer="formatNumber(subTotals.amount)" />
+            <Column :footer="formatNumber(subTotals.commission)" />
+            <Column :footer="formatNumber(subTotals.net)" />
             <Column :colspan="1" />
           </Row>
         </ColumnGroup>
       </template>
     </DynamicTable>
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
-      <Badge
-        v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected"
-      />
+      <div>
+        <Badge v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected" class="mr-1"/>
+        <Badge
+          v-tooltip.top="'Bank Payment Amount'" :value="`Bank Payment Amount: $${props.currentBankPayment?.amount ? formatNumber(props.currentBankPayment?.amount) : '0.00'}`"
+        />
+      </div>
       <div>
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />

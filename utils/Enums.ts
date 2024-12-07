@@ -25,6 +25,11 @@ export const ENUM_INVOICE_TYPE = [
   { id: 'OLD_CREDIT', name: 'Old Credit', code: 'OLD' }
 ]
 
+export const REPORT_FORMATS_TYPE = [
+  { id: 'PDF', name: 'PDF' },
+  { id: 'XLS', name: 'XLS' },
+]
+
 export enum InvoiceType {
   INVOICE = 'INVOICE',
   INCOME = 'INCOME',
@@ -54,12 +59,12 @@ export const OBJ_ENUM_INVOICE_TYPE_CODE = {
 }
 
 export const ENUM_INVOICE_CRITERIA = [
-  { id: 'bookings.bookingId', name: 'Booking Id' },
-  { id: 'bookings.couponNumber', name: 'Coupon No' },
-  { id: 'bookings.fullName', name: 'Full Name' },
   { id: 'invoiceId', name: 'Invoice Id' },
   { id: 'invoiceNumberPrefix', name: 'Invoice No' },
+  { id: 'bookings.bookingId', name: 'Booking Id' },
+  { id: 'bookings.fullName', name: 'Full Name' },
   { id: 'bookings.hotelBookingNumber', name: 'Reservation No' },
+  { id: 'bookings.couponNumber', name: 'Coupon No' },
 ]
 
 export const ENUM_INVOICE_STATUS = [
@@ -131,12 +136,13 @@ export const ENUM_ROUTEOFADMINISTRATIONS = [
 ]
 
 export const ENUM_USER_TYPE = [
-  { id: 'PROVIDERS', name: 'PROVEEDOR' },
-  { id: 'DOCTORS', name: 'DOCTOR' },
-  { id: 'NURSES', name: 'ENFERMERA' },
-  { id: 'ASSISTANTS', name: 'ASISTENTE' },
-  { id: 'SYSTEM', name: 'SISTEMA' },
-  { id: 'UNDEFINED', name: 'INDEFINIDO' },
+  { id: 'INTERNAL', name: 'INTERNAL' },
+  { id: 'PROVIDERS', name: 'PROVIDERS' },
+  { id: 'DOCTORS', name: 'DOCTORS' },
+  { id: 'NURSES', name: 'NURSES' },
+  { id: 'ASSISTANTS', name: 'ASSISTANTS' },
+  { id: 'SYSTEM', name: 'SYSTEM' },
+  { id: 'UNDEFINED', name: 'UNDEFINED' },
 ]
 
 export const ENUM_GUIDE = [

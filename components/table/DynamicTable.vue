@@ -7,13 +7,17 @@ import type { PageState } from 'primevue/paginator'
 import type { PropType } from 'vue'
 import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
 import { getLastDayOfMonth } from '../../utils/helpers'
-import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
+import type { IColumn, IObjApi, ISortOptions } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
-import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
+import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const props = defineProps({
+  componentTableId: {
+    type: String,
+    required: false,
+  },
   data: {
     type: Array as () => Array<any>,
     required: true,
@@ -28,7 +32,7 @@ const props = defineProps({
       moduleApi: string
       uriApi: string
       loading: boolean
-      actionsAsMenu: boolean
+      actionsAsMenu?: boolean
       showAcctions?: boolean
       showCreate?: boolean
       showEdit?: boolean
@@ -41,7 +45,13 @@ const props = defineProps({
       selectionMode?: 'single' | 'multiple' | undefined
       expandableRows?: boolean
       selectAllItemByDefault?: boolean
-    }>
+      selectFirstItemByDefault?: boolean
+      showPagination?: boolean
+      showCustomEmptyTable?: boolean
+      scrollHeight?: string | undefined
+      showSelectedItems?: boolean
+    }>,
+    required: true,
   },
   pagination: {
     type: Object as PropType<{
@@ -71,6 +81,12 @@ const props = defineProps({
   selectedItems: {
     type: Array as PropType<any[]>,
     required: false,
+  },
+  // Mostrar el componente de paginación
+  showLocalPagination: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
 })
 
@@ -174,6 +190,7 @@ const menuItems = ref([
 const menuItemsDate = ref(ENUM_OPERATOR_DATE)
 const menuItemsString = ref(ENUM_OPERATOR_STRING)
 const menuItemsSelect = ref(ENUM_OPERATOR_SELECT)
+const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
 // const menuItemsBoolean = ref(ENUM_OPERATOR_BOOLEAN)
 
 const selectMultiple1: Ref = ref(null)
@@ -306,7 +323,7 @@ async function deleteItem(id: string, isLocal = false) {
   }
 }
 
-async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = []) {
+async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined, sortOptions?: ISortOptions | undefined) {
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
@@ -314,12 +331,19 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
         filter,
         query: '',
         pageSize: 200,
-        page: 0
+        page: 0,
+        sortBy: sortOptions?.sortBy || 'createdAt',
+        sortType: sortOptions?.sortType || 'DESC'
       }
       if (objApi) {
         const response = await GenericService.search(objApi.moduleApi, objApi.uriApi, payload)
-        for (const iterator of response.data) {
-          listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+        if (mapFunction) {
+          listItems = response.data.map(mapFunction)
+        }
+        else {
+          for (const iterator of response.data) {
+            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+          }
         }
       }
     }
@@ -342,6 +366,9 @@ async function getOptionsList() {
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'slot-text':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -385,7 +412,9 @@ async function getOptionsListOldVersion() {
     for (const iterator of props.columns) {
       switch (iterator.type) {
         case 'text':
-
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -421,7 +450,18 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
-        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, [], iterator.localItems || [])
+        const response = await getList(
+          {
+            moduleApi: iterator.objApi?.moduleApi || '',
+            uriApi: iterator.objApi?.uriApi || '',
+            keyValue: iterator.objApi?.keyValue
+          },
+          iterator.objApi?.filter || [],
+          iterator.localItems || [],
+          iterator.objApi?.mapFunction,
+          iterator.objApi?.sortOption
+        )
+
         objListData[iterator.field] = response
       }
     }
@@ -494,10 +534,21 @@ watch(() => props.data, async (newValue) => {
         props.selectedItems?.some(selected => selected.id === item.id)
       )
     }
-    else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
-      clickedItem.value = props.data[0]
+    else if ('selectFirstItemByDefault' in props.options) {
+      if (props.options?.selectFirstItemByDefault) {
+        if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+          clickedItem.value = props.data[0]
+        }
+      }
     }
+    // else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+    //   clickedItem.value = props.data[0]
+    // }
   }
+})
+
+watch(() => props.selectedItems, async (newValue) => {
+  clickedItem.value = newValue
 })
 
 onMounted(() => {
@@ -505,8 +556,12 @@ onMounted(() => {
   if (props.options?.selectAllItemByDefault) {
     clickedItem.value = props.data
   }
-  else if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
-    clickedItem.value = props.data[0]
+  else if ('selectFirstItemByDefault' in props.options) {
+    if (props.options?.selectFirstItemByDefault) {
+      if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+        clickedItem.value = props.data[0]
+      }
+    }
   }
 })
 
@@ -529,10 +584,17 @@ defineExpose({ clearSelectedItems })
     </template>
   </Toolbar>
 
-  <BlockUI :blocked="options?.loading || parentComponentLoading">
-    <div class="card p-0">
+  <BlockUI :blocked="options?.loading || parentComponentLoading" class="block-ui-container">
+    <div
+      v-if="options?.loading"
+      class="flex flex-column align-items-center justify-content-center full-size"
+    >
+      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+    </div>
+    <div class="card p-0 mb-0">
       <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
+        :id="'componentTableId' in props ? props.componentTableId : ''"
         v-model:filters="filters1"
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
@@ -549,7 +611,7 @@ defineExpose({ clearSelectedItems })
         removable-sort
         :lazy="props.isCustomSorting"
         scrollable
-        scroll-height="60vh"
+        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '60vh'"
         :filters="filters1"
         edit-mode="cell"
         @sort="onSortField"
@@ -561,8 +623,19 @@ defineExpose({ clearSelectedItems })
         @row-expand="onRowExpand"
         @row-collapse="onRowCollapse"
       >
-        <template #empty>
+        <template #loading>
+          <!-- Loading customers data. Please wait. -->
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+            <span class="flex flex-column align-items-center justify-content-center">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+            </span>
+          </div>
+        </template>
+        <template #empty>
+          <div v-if="'showCustomEmptyTable' in props?.options ? props.options.showCustomEmptyTable : false">
+            <slot name="emptyTable" :data="{ messageForEmptyTable }" />
+          </div>
+          <div v-else class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
               <div class="row">
                 <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
@@ -571,9 +644,9 @@ defineExpose({ clearSelectedItems })
                 <p>{{ messageForEmptyTable }}</p>
               </div>
             </span>
-            <span v-else class="flex flex-column align-items-center justify-content-center">
-              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-            </span>
+          <!-- <span v-else class="flex flex-column align-items-center justify-content-center">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+          </span> -->
           </div>
         </template>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
@@ -599,9 +672,9 @@ defineExpose({ clearSelectedItems })
           class="custom-table-head" :class="column.columnClass"
           :style="{
             width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-            minWidth: column?.width ? column?.width : 'auto',
+            minWidth: column?.minWidth ? column?.minWidth : 'auto',
             display: column?.hidden ? 'none' : 'table-cell',
-            // maxWidth: column?.width ? column?.width : 'auto',
+            maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
@@ -639,6 +712,9 @@ defineExpose({ clearSelectedItems })
             </span>
             <span v-else-if="column.type === 'bool'">
               <Badge v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'" :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)" :severity="data[column.field] ? 'success' : 'danger'" class="success" />
+            </span>
+            <span v-else-if="column.type === 'number'">
+              {{ formatNumber(data[column.field]) }}
             </span>
             <span v-else-if="column.type === 'custom-badge'">
               <Badge
@@ -688,6 +764,43 @@ defineExpose({ clearSelectedItems })
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                    <span :class="item.icon" />
+                    <span class="ml-2">{{ item.label }}</span>
+                  </a>
+                </template>
+              </Menu>
+            </div>
+
+            <div v-if="column.type === 'number'" class="flex flex-column">
+              <Dropdown
+                v-if="true"
+                v-model="filterModel.matchMode"
+                :options="menuItemsNumeric"
+                option-label="label"
+                placeholder="Select a operator"
+                class="w-full mb-2"
+              />
+              <InputNumber
+                v-model="filterModel.value"
+                class="p-column-filter w-full"
+                placeholder="Write a number"
+                :min-fraction-digits="2"
+                :max-fraction-digits="4"
+              />
+              <!-- @change="filterCallback()" -->
+              <Button
+                v-if="false"
+                type="button"
+                icon="pi pi-filter"
+                text
+                aria-haspopup="true"
+                :aria-controls="`overlayPanel_${index}`"
+                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
+              />
+
+              <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">
                   <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
@@ -795,12 +908,16 @@ defineExpose({ clearSelectedItems })
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
           <template v-if="column.type === 'date-editable'" #editor="{ data: dataList, field }">
-            <Calendar
-              v-model="dataList[field]" :manual-input="false"
-              style="width: 100%" :view="column.props?.calendarMode || 'month'"
-              date-format="yy-mm-dd"
-              @update:model-value="onCellEditComplete($event, dataList)"
-            />
+            <slot :name="`column-${column.field}`" :item="{ dataList, field, column, onCellEditComplete }">
+              <Calendar
+                v-model="dataList[field]"
+                :manual-input="false"
+                style="width: 100%"
+                :view="column.props?.calendarMode || 'month'"
+                date-format="yy-mm-dd"
+                @update:model-value="onCellEditComplete($event, dataList)"
+              />
+            </slot>
           </template>
           <template v-if="column.editable && column.type === 'text'" #editor="{ data, field }">
             <InputText v-model="data[field]" style="width: 100%" autofocus fluid />
@@ -874,17 +991,26 @@ defineExpose({ clearSelectedItems })
         <slot name="datatable-footer" />
       </DataTable>
     </div>
+  </BlockUI>
 
-    <div class="flex justify-content-center align-items-center mt-3 card p-0">
-      <Paginator
-        v-if="props.pagination"
-        :rows="Number(props.pagination.limit) || 50"
-        :total-records="props.pagination.totalElements"
-        :rows-per-page-options="[10, 20, 30, 50]"
-        @page="onChangePageOrLimit($event)"
-      />
-      <Divider layout="vertical" />
-      <div class="flex align-items-center mx-3">
+  <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-2 card py-0">
+    <div v-if="props.showLocalPagination">
+      <slot name="pagination" />
+    </div>
+    <div v-else class="flex justify-content-between align-items-center w-full">
+      <!-- cantidad de elementos seleccionados -->
+      <div class="flex align-items-center w-15rem">
+        <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
+      </div>
+      <!-- paginacion -->
+      <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
+      <div class="flex align-items-center">
+        <Paginator
+          :rows="Number(props.pagination.limit) || 50"
+          :total-records="props.pagination.totalElements"
+          :rows-per-page-options="[10, 20, 30, 50]"
+          @page="onChangePageOrLimit($event)"
+        />
         <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
           <span>
             Total:
@@ -896,8 +1022,12 @@ defineExpose({ clearSelectedItems })
           </slot>
         </Badge>
       </div>
+      <!-- Other actions -->
+      <div class="flex align-items-center w-15rem">
+        <slot name="pagination-right" />
+      </div>
     </div>
-  </BlockUI>
+  </div>
 
   <!-- Dialog Delete -->
   <DialogDelete
@@ -911,6 +1041,17 @@ defineExpose({ clearSelectedItems })
 </template>
 
 <style lang="scss" scoped>
+.block-ui-container {
+  position: relative; /* Asegura que los hijos puedan posicionarse dentro del contenedor */
+}
+
+.full-size {
+  position: absolute; /* Permite ocupar todo el espacio del contenedor padre */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 .truncate {
   white-space: nowrap;
   overflow: hidden;

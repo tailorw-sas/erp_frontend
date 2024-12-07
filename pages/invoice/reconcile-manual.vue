@@ -18,17 +18,20 @@ const startOfMonth = ref<any>(null)
 const endOfMonth = ref<any>(null)
 const filterAllDateRange = ref(false)
 const loadingSearch = ref(false)
-
+const multiSelectLoading = ref({
+  agency: false,
+  hotel: false,
+})
 const loadingSaveAll = ref(false)
 
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   allFromAndTo: false,
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  agency: [],
+  hotel: [],
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 })
@@ -118,13 +121,14 @@ const options = ref({
   selectAllItemByDefault: false,
   showFilters: true,
   expandableRows: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'invoiceId',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -141,7 +145,6 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
   selectedElements.value = data
-  console.log(selectedElements.value, 'que hay aqui')
 }
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
@@ -183,8 +186,6 @@ async function getList() {
     }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response.data)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -210,7 +211,8 @@ async function getList() {
           loadingDelete: false,
           // invoiceDate: new Date(iterator?.invoiceDate),
           agencyCd: iterator?.agency?.code,
-          dueAmount: iterator?.dueAmount || 0,
+          dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
+          invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
@@ -309,6 +311,7 @@ async function getResource() {
 
 async function getHotelList(query: string = '') {
   try {
+    multiSelectLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -339,13 +342,16 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    multiSelectLoading.value.hotel = false
   }
 }
 
@@ -437,6 +443,7 @@ async function saveItem() {
 }
 */
 async function saveItem() {
+  options.value.loading = true
   loadingSaveAll.value = true
 
   // Llamar a reconcileManual y guardar la respuesta
@@ -452,6 +459,7 @@ async function saveItem() {
       life: 10000
     })
     loadingSaveAll.value = false // Detener el loading en caso de error
+    options.value.loading = false
     return // Salir de la función si hay un error
   }
 
@@ -492,6 +500,7 @@ async function saveItem() {
   }
 
   loadingSaveAll.value = false // Detener el loading al final de la función
+  options.value.loading = false
 }
 
 async function getErrors(errorsResponse: any) {
@@ -532,8 +541,9 @@ async function getErrors(errorsResponse: any) {
   }
 }
 
-async function getAgencyList(query: string = '') {
+async function getAgencyList(query: string) {
   try {
+    multiSelectLoading.value.agency = true
     const payload = {
       filter: [
         {
@@ -570,13 +580,16 @@ async function getAgencyList(query: string = '') {
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
+    agencyList.value = []
     for (const iterator of dataList) {
       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    multiSelectLoading.value.agency = false
   }
 }
 
@@ -785,8 +798,8 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criterial: ENUM_FILTER[0], // Mantener el primer elemento del enum como valor predeterminado
     search: '', // Dejar el campo de búsqueda en blanco
-    agency: [allDefaultItem], // Restablecer a valor predeterminado
-    hotel: [allDefaultItem], // Restablecer a valor predeterminado
+    agency: [], // Restablecer a valor predeterminado
+    hotel: [], // Restablecer a valor predeterminado
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
   }
@@ -802,7 +815,7 @@ const disabledSearch = computed(() => {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getList()
 })
@@ -834,7 +847,20 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        :loading="multiSelectLoading.agency"
+                        @change="($event) => {
+
+                          filterToSearch.agency = $event
+                        }"
+                        @load="($event) => getAgencyList($event)"
+                      />
+                      <!--  <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
@@ -851,12 +877,26 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
+                      -->
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        :model="filterToSearch.hotel"
+                        :suggestions="hotelList"
+                        :loading="multiSelectLoading.hotel"
+                        @change="($event) => {
+
+                          filterToSearch.hotel = $event
+                        }"
+                        @load="($event) => getHotelList($event)"
+                      />
+                    <!--  <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
@@ -873,6 +913,7 @@ onMounted(async () => {
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedAutoCompleteComponent>
+                      -->
                     </div>
                   </div>
                 </div>
@@ -979,7 +1020,7 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="selectedElements.length === 0"
+          v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="selectedElements.length === 0"
           @click="saveItem()"
         />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />

@@ -217,7 +217,6 @@ onMounted(async () => {
             v-if="!loadingSaveAll"
             v-model="data.date"
             date-format="yy-mm-dd"
-            :min-date="minDate"
             :max-date="dayjs().endOf('day').toDate()"
             @update:model-value="($event) => {
 

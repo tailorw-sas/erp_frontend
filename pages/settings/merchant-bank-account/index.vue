@@ -27,6 +27,10 @@ const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
+const multiSelectLoading = ref({
+  merchant: false,
+  ccType: false,
+})
 const confApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'manage-merchant-bank-account',
@@ -96,7 +100,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  managerMerchant: null,
+  managerMerchant: [],
   manageBank: null,
   description: '',
   accountNumber: '',
@@ -162,6 +166,7 @@ function clearForm() {
   formReload.value++
   MerchantList.value = []
   BankList.value = []
+  CreditCardTypeList.value = []
 }
 
 async function getList() {
@@ -425,6 +430,7 @@ async function getBankList(query: string) {
 
 async function getCreditCardTypeList(query: string = '') {
   try {
+    multiSelectLoading.value.ccType = true
     const payload = {
       filter: [
         {
@@ -471,10 +477,14 @@ async function getCreditCardTypeList(query: string = '') {
   catch (error) {
     console.error('Error loading manage credit card type list:', error)
   }
+  finally {
+    multiSelectLoading.value.ccType = false
+  }
 }
 
 async function getMerchantList(query: string) {
   try {
+    multiSelectLoading.value.merchant = true
     const payload = {
       filter: [{
         key: 'description',
@@ -515,6 +525,9 @@ async function getMerchantList(query: string) {
   }
   catch (error) {
     console.error('Error loading merchant list:', error)
+  }
+  finally {
+    multiSelectLoading.value.merchant = false
   }
 }
 
@@ -615,17 +628,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Merchant Bank Account
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2 bg-white">
           <AccordionTab>
             <template #header>
@@ -689,16 +702,17 @@ onMounted(() => {
             @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
           >
             <template #field-managerMerchant="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
-                :multiple="true"
                 :model="data.managerMerchant"
                 :suggestions="MerchantList"
+                :loading="multiSelectLoading.merchant"
                 @change="($event) => {
                   onUpdate('managerMerchant', $event)
+                  data.managerMerchant = $event
                 }"
                 @load="($event) => getMerchantList($event)"
               />
@@ -720,37 +734,20 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-creditCardTypes="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
                 :model="data.creditCardTypes"
-                :suggestions="[...CreditCardTypeList]"
-                :multiple="true"
+                :suggestions="CreditCardTypeList"
+                :loading="multiSelectLoading.ccType"
                 @change="($event) => {
                   onUpdate('creditCardTypes', $event)
+                  data.creditCardTypes = $event
                 }"
                 @load="($event) => getCreditCardTypeList($event)"
               />
-
-              <!-- <MultiSelect
-                v-if="!loadingSaveAll"
-                v-model="data.creditCardTypes"
-                :options="[...CreditCardTypeList]"
-                option-label="name"
-                autocomplete="off"
-                display="chip"
-                filter @update:model-value="($event) => {
-                  onUpdate('creditCardTypes', $event)
-                }"
-              >
-                <template #option="slotProps">
-                  <div class="flex align-items-center">
-                    <div>{{ slotProps.option.name }}</div>
-                  </div>
-                </template>
-              </MultiSelect> -->
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>

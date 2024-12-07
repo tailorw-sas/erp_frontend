@@ -127,7 +127,7 @@ async function onConfirmSignOut() {
 </script>
 
 <template>
-  <div class="layout-topbar">
+  <div class="layout-topbar w-full mb-0">
     <div class="topbar-start">
       <Button type="button" class="topbar-menubutton p-link p-trigger" @click="onMenuButtonClick">
         <i class="pi pi-bars" />

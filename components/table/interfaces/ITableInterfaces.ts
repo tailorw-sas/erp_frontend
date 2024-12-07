@@ -1,9 +1,10 @@
 import type { CALENDAR_MODE } from '~/utils/Enums'
+import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 
 export interface IColumn {
   field: string
   header: string
-  type?: 'text' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge' | 'date-editable' | 'slot-select' | 'slot-icon' | 'slot-text' | 'datetime' | 'datetime-editable'
+  type?: 'text' | 'number' | 'obj' | 'bool' | 'select' | 'local-select' | 'date' | 'image' | 'icon' | 'custom-badge' | 'date-editable' | 'slot-select' | 'slot-icon' | 'slot-text' | 'datetime' | 'datetime-editable' | 'slot-date-editable'
   tooltip?: string
   widthTruncate?: string
   sortable?: boolean
@@ -11,6 +12,8 @@ export interface IColumn {
   showFilter?: boolean
   frozen?: boolean
   width?: string
+  minWidth?: string
+  maxWidth?: string
   icon?: string
   editable?: boolean
   badge?: {
@@ -20,6 +23,9 @@ export interface IColumn {
     moduleApi: string
     uriApi: string
     keyValue?: string
+    mapFunction?: (item: any) => any
+    filter?: IFilter[]
+    sortOption?: ISortOptions
   }
   filter?: {
     // Define aquí los campos de filtro según tu necesidad
@@ -31,6 +37,11 @@ export interface IColumn {
   statusClassMap?: IStatusClass[]
   props?: IProps
   hidden?: boolean
+}
+
+export interface ISortOptions {
+  sortBy?: string
+  sortType?: ENUM_SHORT_TYPE
 }
 
 export interface IProps {

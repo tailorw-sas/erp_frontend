@@ -6,6 +6,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import type { PageState } from 'primevue/paginator'
+import InputNumber from 'primevue/inputnumber'
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -205,14 +206,14 @@ const columns: IColumn[] = [
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'nights', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'number' },
 
 ]
-
 const adjustmentColumns: IColumn[] = [
   { field: 'adjustmentId', header: 'ID', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  // { field: 'amountTemp', header: 'Amount', type: 'text' },
   { field: 'roomRateId', header: 'Room Rate', type: 'text' },
   { field: 'transaction', header: 'Category', type: 'text' },
   { field: 'date', header: 'Transaction Date', type: 'text' },
@@ -230,8 +231,8 @@ const roomRateColumns: IColumn[] = [
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'nights', header: 'Nights', type: 'text' },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'number' },
 ]
 
 const formTitle = computed(() => {
@@ -301,7 +302,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: false,
-    validation: validateEntityStatus('agency'),
+    validation: validateEntityForAgency('agency'),
   },
   {
     field: 'invoiceStatus',
@@ -396,15 +397,26 @@ const itemTemp = ref({
 
 const fieldAdjustments = ref<FieldDefinitionType[]>([
 
+  // {
+  //   field: 'amount',
+  //   header: 'Amount',
+  //   dataType: 'text',
+  //   class: 'field col-12 required',
+  //   validation: z.string().min(1, { message: 'The amount field is required' })
+  //     .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
+  //     .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
+  // },
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 required',
-    validation: z.string().min(1, { message: 'The amount field is required' })
-      .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-      .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
+    validation: z.number()
+      .positive({ message: 'The amount must be a positive number' })
+      .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
+      .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
   },
+
   {
     field: 'date',
     header: 'Date',
@@ -636,7 +648,7 @@ async function validateCloseOperation(hotelId: string, dateList: string[]) {
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = { ...item }
-    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DDTHH:mm:ss') : payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.reSendDate = payload.reSendDate ? dayjs(payload.reSendDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.invoiceDate = payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.invoiceType = Object.prototype.hasOwnProperty.call(payload.invoiceType, 'id') ? payload.invoiceType.id : payload.invoiceType
@@ -674,6 +686,7 @@ async function createItem(item: { [key: string]: any }) {
       idItem.value = response.id
       LocalAttachmentList.value = []
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successfully`, life: 10000 })
+      // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -845,6 +858,7 @@ function saveLocal(itemP: { [key: string]: any }) {
   localAdjustment.date = adjustmentDate
   localAdjustment.employee = userData?.value?.user?.name
   localAdjustment.id = AdjustmentList.value.length
+  localAdjustment.amountTemp = formatNumber(itemAmount)
   if (AdjustmentList.value.length > 0) {
     AdjustmentList.value.push(localAdjustment)
   }
@@ -947,6 +961,29 @@ function mapFunction(data: DataListItem): ListItem {
     id: data.id,
     name: `${data.code} - ${data.name}`,
     status: data.status
+  }
+}
+
+interface DataListItemAgency {
+  id: string
+  name: string
+  code: string
+  status: string
+  client: any
+}
+
+interface ListItemAgency {
+  id: string
+  name: string
+  status: boolean | string
+  client: any
+}
+function mapFunctionAgency(data: DataListItemAgency): ListItemAgency {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    client: data.client
   }
 }
 
@@ -1058,7 +1095,7 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
     }
   ]
 
-  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+  agencyList.value = await getDataList<DataListItemAgency, ListItemAgency>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunctionAgency)
 }
 
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -1175,7 +1212,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" />
         </template>
         <template #field-incomeAmount="{ item: data, onUpdate }">
-          <InputText
+          <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.incomeAmount"
             show-clear :disabled="true"
@@ -1241,7 +1278,6 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
         <!-- Agency -->
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
@@ -1320,8 +1356,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="String(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="String(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1347,8 +1383,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Totals:" :colspan="6" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="String(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="String(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1374,7 +1410,7 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Total:" :colspan="1" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="String(totalAmount)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalAmount)" footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
                 <Column :colspan="5" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>

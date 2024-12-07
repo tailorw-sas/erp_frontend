@@ -68,7 +68,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('transaction subcategory'),
   },
   {
-    field: 'amount',
+    field: 'netAmount',
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 required',
@@ -95,10 +95,11 @@ const fields: Array<FieldDefinitionType> = [
     field: 'referenceNumber',
     header: 'Reference Number',
     dataType: 'text',
-    class: 'field col-12',
-    validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
-      message: 'Only numeric characters allowed'
-    })
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The reference number field is required')
+    // validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
+    //   message: 'Only numeric characters allowed'
+    // })
   },
 ]
 
@@ -106,7 +107,7 @@ const item = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: 0,
+  netAmount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -115,7 +116,7 @@ const itemTemp = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: 0,
+  netAmount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -176,6 +177,8 @@ async function save(item: { [key: string]: any }) {
     payload.transactionCategory = typeof payload.transactionCategory === 'object' ? payload.transactionCategory.id : payload.transactionCategory
     payload.transactionSubCategory = typeof payload.transactionSubCategory === 'object' ? payload.transactionSubCategory.id : payload.transactionSubCategory
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
+    payload.amount = payload.netAmount
+    delete payload.netAmount
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     onClose(false)
@@ -211,6 +214,11 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
             value: false,
             logicalOperation: 'AND'
           }, {
+            key: 'manual',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          }, {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -232,6 +240,11 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
             value: false,
             logicalOperation: 'AND'
           }, {
+            key: 'manual',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          }, {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -248,7 +261,7 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
     CategoryList.value = []
 
     for (const iterator of dataList) {
-      CategoryList.value = [...CategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      CategoryList.value = [...CategoryList.value, { ...iterator, name: `${iterator.code} - ${iterator.name}` }]
     }
     if (isDefault && CategoryList.value.length > 0) {
       item.value.transactionCategory = CategoryList.value[0]
@@ -320,7 +333,7 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
     SubCategoryList.value = []
 
     for (const iterator of dataList) {
-      SubCategoryList.value = [...SubCategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      SubCategoryList.value = [...SubCategoryList.value, { ...iterator, name: `${iterator.code} - ${iterator.name}` }]
     }
     if (isDefault && SubCategoryList.value.length > 0) {
       item.value.transactionSubCategory = SubCategoryList.value[0]

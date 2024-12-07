@@ -100,6 +100,7 @@ const options = ref({
   selectionMode: 'multiple' as 'multiple' | 'single',
   showFilters: true,
   expandableRows: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -178,7 +179,8 @@ async function getPrintList() {
         agencyCd: iterator?.agency?.code,
         hasAttachments: iterator.hasAttachments,
         aging: 0,
-        dueAmount: iterator?.dueAmount || 0,
+        dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
+        invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
         hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
         manageInvoiceType: { ...iterator?.manageInvoiceType, name: `${iterator?.manageInvoiceType?.code || ''}-${iterator?.manageInvoiceType?.name || ''}` }
@@ -556,9 +558,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center " style="font-weight: 700">
               <Row>
                 <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
-
-                <Column :colspan="1" :footer="`$${totalInvoiceAmount.toFixed(2)}`"footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="1" :footer="`$${totalDueAmount.toFixed(2)}`" footer-style="text-align:left; font-weight: 700" />
+                <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
+                <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
                 <Column :colspan="3" footer-style="text-align:right; font-weight: 700" />
               </Row>
             </ColumnGroup>

@@ -463,7 +463,8 @@ const confratePlanApi = reactive({
 
 const Columns: IColumn[] = [
 
-  { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Id', type: 'text', width: '90px', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'bookingId', header: 'Booking id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
 
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
@@ -935,8 +936,9 @@ watch(() => props.bookingObj, () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
+            <!-- footer="Totals:" :colspan="!isDetailView ? 6 : 7" -->
             <Column
-              footer="Totals:" :colspan="!isDetailView ? 6 : 7"
+              footer="Totals:" :colspan="7"
               footer-style="text-align:right; font-weight: 700"
             />
             <Column :footer="formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
@@ -957,7 +959,9 @@ watch(() => props.bookingObj, () => {
         ClearForm()
         closeDialog()
       }" container-class="grid pt-3 w-full" class="h-fit p-2 overflow-y-hidden"
-      content-class="w-full h-full" :booking-list="bookingList"
+      content-class="w-full h-full"
+      :booking-list="bookingList"
+      :booking-obj="bookingObj"
     />
   </div>
 </template>

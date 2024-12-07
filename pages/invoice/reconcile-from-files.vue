@@ -63,7 +63,7 @@ async function onChangeAttachFile(event: any) {
   }
 }
 
-/*async function onChangeAttachFile(event: any) {
+/* async function onChangeAttachFile(event: any) {
   if (event.target.files && event.target.files.length > 0) {
     const files: File[] = Array.from(event.target.files);
     const pdfFiles = files.filter(file => file.type === 'application/pdf');
@@ -155,7 +155,7 @@ const options = ref({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -227,11 +227,11 @@ async function onChangeFile(event: any) {
 
 async function importFile() {
   loadingSaveAll.value = true
-  options.value.loading = true
   let successOperation = true
   uploadComplete.value = true
   let count = 0
-
+  listItems.value = []
+  options.value.loading = true
   try {
     const selectedFiles = importModel.value.attachFile // Usa el modelo correcto
 
@@ -358,7 +358,7 @@ async function goToList() {
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
   getErrorList()
 })
@@ -436,7 +436,7 @@ onMounted(async () => {
 
       <div class="flex align-items-end justify-content-end">
         <Button
-          v-tooltip.top="'Apply'" class="w-3rem  mx-1" icon="pi pi-check" :disabled="uploadComplete"
+          v-tooltip.top="'Apply'" class="w-3rem  mx-1" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete"
           @click="importFile"
         />
 

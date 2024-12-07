@@ -182,16 +182,15 @@ const Fields = ref<FieldDefinitionType[]>([
     validation: z.object({
       id: z.string(),
       name: z.string(),
-
     })
       .required()
-      .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
+      .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` }).nullable()
   },
   {
     field: 'invoiceType',
     header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-3 mb-5',
+    class: 'field col-12 md:col-3',
     containerFieldClass: '',
     disabled: true
   },
@@ -218,19 +217,14 @@ const Fields = ref<FieldDefinitionType[]>([
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     disabled: false,
-    validation: z.object({
-      id: z.string(),
-      name: z.string(),
-
-    }).required()
-      .refine((value: any) => value && value.id && value.name, { message: `The agency field is required` })
+    validation: validateEntityForAgency('agency')
   },
 
   {
     field: 'status',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-2 mb-5',
+    class: 'field col-12 md:col-2',
     containerFieldClass: '',
     disabled: true
   },
@@ -239,7 +233,7 @@ const Fields = ref<FieldDefinitionType[]>([
     field: 'isManual',
     header: 'Manual',
     dataType: 'check',
-    class: 'field col-12 md:col-1  flex align-items-center pb-2 required',
+    class: 'field col-12 md:col-1  flex align-items-center pt-4 required',
     disabled: true
   },
 ])
@@ -585,72 +579,19 @@ async function createItem(item: { [key: string]: any }) {
     roomRates = roomRateList.value
 
     for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-      attachments.push({
-        ...attachmentList.value[i],
-        type: attachmentList.value[i]?.type?.id,
-        file: fileurl,
-      })
+      if (attachmentList.value[i]?.file?.files.length > 0) {
+        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+        attachments.push({
+          ...attachmentList.value[i],
+          type: attachmentList.value[i]?.type?.id,
+          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+        })
+      }
     }
 
     const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
     return response
   }
-}
-
-async function createItemCredit(item: any) {
-  loadingSaveAll.value = true
-
-  const bookings: { id: any, amount: number }[] = []
-  const attachments = []
-
-  bookingList.value?.forEach((booking) => {
-    if (booking?.invoiceAmount !== 0) {
-      bookings.push({
-        id: booking?.id,
-        amount: toNegative(booking?.invoiceAmount)
-      })
-    }
-  })
-
-  for (let i = 0; i < attachmentList.value.length; i++) {
-    const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-    attachments.push({
-      // ...attachmentList.value[i],
-      type: attachmentList.value[i]?.type?.id,
-      file: fileurl,
-      filename: attachmentList.value[i]?.filename,
-      remark: attachmentList.value[i]?.remark,
-      paymentResourceType: attachmentList.value[i]?.resourceType.id // '67c10e87-89c0-4a3a-abe3-5cebc400d280'
-
-    })
-  }
-
-  const payload = {
-    invoice: route.query.selected,
-    invoiceDate: dayjs(item.invoiceDate).startOf('day').toISOString(),
-    employee: userData?.value?.user?.userId || '',
-    employeeName: userData?.value?.user?.name || '',
-    bookings,
-    attachments
-  }
-
-  const response = await GenericService.createInvoiceType(confInvoiceApi.moduleApi, `${confInvoiceApi.uriApi}/new-credit`, payload)
-  return response
-}
-
-async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-  payload.invoiceId = item.invoiceId
-  payload.invoiceNumber = item.invoiceNumber
-  payload.invoiceDate = item.invoiceDate
-  payload.isManual = item.isManual
-  payload.invoiceAmount = item.invoiceAmount
-  payload.hotel = item.hotel.id
-  payload.agency = item.agency.id
-  payload.invoiceType = item.invoiceType?.id
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -714,21 +655,22 @@ async function saveItem(item: { [key: string]: any }) {
 const goToList = async () => await navigateTo('/invoice')
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  saveItem(item)
+  // const { event } = item
+  // confirm.require({
+  //   target: event.currentTarget,
+  //   group: 'headless',
+  //   header: 'Save the record',
+  //   message: 'Do you want to save the change?',
+  //   rejectLabel: 'Cancel',
+  //   acceptLabel: 'Accept',
+  //   accept: () => {
+  //     saveItem(item)
+  //   },
+  //   reject: () => {
+  //     // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
+  //   }
+  // })
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -811,6 +753,8 @@ function sortRoomRate(event: any) {
 }
 
 function addBooking(booking: any) {
+  console.log('Sin entro aqui......add booking')
+
   bookingList.value = [...bookingList.value, {
     ...booking,
     checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
@@ -1183,7 +1127,13 @@ function updateAdjustment(adjustment: any) {
 }
 
 function addAttachment(attachment: any) {
-  attachmentList.value = [...attachmentList.value, attachment]
+  const isDuplicate = attachmentList.value.some(
+    item => JSON.stringify(item) === JSON.stringify(attachment)
+  )
+
+  if (!isDuplicate) {
+    attachmentList.value = [...attachmentList.value, attachment]
+  }
 }
 
 function deleteAttachment(id: string) {
@@ -1224,11 +1174,12 @@ onMounted(async () => {
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     {{ OBJ_INVOICE_TITLE[InvoiceType.OLD_CREDIT] }}
   </div>
-  <div class="p-4">
+  <div class="pt-3">
     <EditFormV2
       :key="formReload" :fields="Fields" :item="item"
-      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid pt-3"
+      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid py-3"
       @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
+      @submit="requireConfirmationToSave($event)"
     >
       <!-- ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`, -->
       <template #field-invoiceDate="{ item: data, onUpdate }">
@@ -1369,9 +1320,7 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="() => {
-                    saveItem(props.item.fieldValues)
-                  }"
+                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="props.item.submitForm($event)"
                 />
               </IfCan>
 
