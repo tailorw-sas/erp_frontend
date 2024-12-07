@@ -536,7 +536,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     for (ManageTradingCompaniesDto manageTradingCompaniesDto : this.tradingCompaniesService.findAll()) {
                         producerReplicateManageTradingCompanyService.create(new ReplicateManageTradingCompanyKafka(manageTradingCompaniesDto.getId(),
                                 manageTradingCompaniesDto.getCode(), manageTradingCompaniesDto.getIsApplyInvoice(),
-                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany()));
+                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany(), manageTradingCompaniesDto.getStatus().name()));
                     }
                 }
                 case MANAGE_CURRENCY -> {
