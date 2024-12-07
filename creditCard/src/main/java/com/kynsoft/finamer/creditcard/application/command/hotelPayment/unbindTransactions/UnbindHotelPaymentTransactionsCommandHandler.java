@@ -62,8 +62,13 @@ public class UnbindHotelPaymentTransactionsCommandHandler implements ICommandHan
                         .reduce(0.0, Double::sum)
         );
 
-        hotelPaymentDto.setAmount(hotelPaymentDto.getTransactions().stream()
-                .map(TransactionDto::getAmount)
-                .reduce(0.0, Double::sum));
+        hotelPaymentDto.setAmount(
+            hotelPaymentDto.getTransactions().stream().map(dto ->
+                dto.isAdjustment()
+                    ? dto.getTransactionSubCategory().getNegative()
+                        ? -dto.getAmount()
+                        : dto.getAmount()
+                    : dto.getAmount()
+            ).reduce(0.0, Double::sum));
     }
 }
