@@ -22,6 +22,7 @@ public class ManageTraidingCompaniesResponse implements IResponse {
     private String cif;
     private String address;
     private String company;
+    private String status;
 
     public ManageTraidingCompaniesResponse(ManageTradingCompaniesDto dto) {
         this.id = dto.getId();
@@ -31,6 +32,7 @@ public class ManageTraidingCompaniesResponse implements IResponse {
         this.cif = dto.getCif();
         this.address = dto.getAddress();
         this.company = dto.getCompany();
+        this.status = dto.getStatus();
     }
 
     
