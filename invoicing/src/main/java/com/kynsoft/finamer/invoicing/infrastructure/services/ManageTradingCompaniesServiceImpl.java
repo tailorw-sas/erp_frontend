@@ -7,9 +7,9 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageTraidingCompaniesResponse;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageTradingCompaniesService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageTradingCompanies;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageTradingCompaniesWriteDataJPARepository;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -91,18 +90,22 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
         return repositoryQuery.findAll().stream().map(ManageTradingCompanies::toAggregate).collect(Collectors.toList());
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
-        for (FilterCriteria filter : filterCriteria) {
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
 
-            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
-                try {
-                    Status enumValue = Status.valueOf((String) filter.getValue());
-                    filter.setValue(enumValue);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
-                }
-            }
+        GenericSpecificationsBuilder<ManageTradingCompanies> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageTradingCompanies> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageTradingCompanies> data) {
+        List<ManageTraidingCompaniesResponse> responses = new ArrayList<>();
+        for (ManageTradingCompanies p : data.getContent()) {
+            responses.add(new ManageTraidingCompaniesResponse(p.toAggregate()));
         }
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
 }
