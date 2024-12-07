@@ -2,14 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageHotel.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageHotelKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageHotelKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.*;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerUpdateManageHotelService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerReplicateManageHotelService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -30,7 +30,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
     private final IManageRegionService regionService;
 
-    private final ProducerUpdateManageHotelService producerUpdateManageHotelService;
+    private final ProducerReplicateManageHotelService producerReplicateManageHotelService;
 
     public UpdateManageHotelCommandHandler(IManageHotelService service, 
                                            IManagerCountryService countryService, 
@@ -38,14 +38,14 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                                            IManagerCurrencyService currencyService, 
                                            IManageTradingCompaniesService tradingCompaniesService, 
                                            IManageRegionService regionService,
-                                           ProducerUpdateManageHotelService producerUpdateManageHotelService) {
+                                           ProducerReplicateManageHotelService producerReplicateManageHotelService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
         this.currencyService = currencyService;
         this.tradingCompaniesService = tradingCompaniesService;
         this.regionService = regionService;
-        this.producerUpdateManageHotelService = producerUpdateManageHotelService;
+        this.producerReplicateManageHotelService = producerReplicateManageHotelService;
     }
 
     @Override
@@ -88,23 +88,24 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageHotelService.update(new UpdateManageHotelKafka(
-                    dto.getId(),
-                    dto.getName(),
-                    dto.getIsApplyByVCC(),
-                    dto.getManageTradingCompanies() != null ? dto.getManageTradingCompanies().getId() : null,
-                    command.getStatus().name(),
-                    command.getIsVirtual(),
-                    command.getRequiresFlatRate(),
-                    command.getApplyByTradingCompany(),
-                    command.getAutoApplyCredit(),
-                    command.getCity(),
-                    command.getBabelCode(),
-                    command.getAddress(),
-                    command.getManageCityState(),
-                    command.getManageCountry(),
-                    command.getManageCurrency()
-            ));
+            this.producerReplicateManageHotelService.create(new ReplicateManageHotelKafka(
+                dto.getId(),
+                dto.getCode(),
+                dto.getName(),
+                dto.getIsApplyByVCC(),
+                dto.getManageTradingCompanies().getId(),
+                dto.getStatus().name(),
+                dto.getRequiresFlatRate(),
+                dto.getIsVirtual(),
+                dto.getApplyByTradingCompany(),
+                dto.getAutoApplyCredit(),
+                dto.getCity(),
+                dto.getBabelCode(),
+                dto.getAddress(),
+                dto.getManageCityState().getId(),
+                dto.getManageCountry().getId(),
+                dto.getManageCurrency().getId()
+        ));
         }
     }
 
