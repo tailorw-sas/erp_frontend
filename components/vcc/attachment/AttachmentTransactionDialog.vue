@@ -560,12 +560,6 @@ function formatSize(bytes: number) {
 }
 
 function downloadFile() {
-  if (ListItems.value?.length > 0) {
-    // Selecciona el primer elemento automáticamente
-    item.value = { ...ListItems.value[0] } // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = ListItems.value[0]?.id // Carga el ID del primer elemento
-  }
-
   if (item.value) {
     const link = document.createElement('a')
     link.href = item.value.file

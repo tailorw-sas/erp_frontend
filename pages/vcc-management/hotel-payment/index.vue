@@ -689,8 +689,8 @@ onMounted(() => {
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
           <HotelPaymentTransactions
-            :hotel-payment-id="item.id" @update:details-amount="($event) => {
-              item.detailsAmount = formatNumber($event)
+            :hotel-payment-id="item.id" @update:list="($event) => {
+              getList()
             }"
           />
         </template>
