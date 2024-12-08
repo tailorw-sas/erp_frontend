@@ -21,7 +21,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:detailsAmount'])
+const emit = defineEmits(['update:list'])
 
 const listItems = ref<any[]>([])
 const toast = useToast()
@@ -241,13 +241,12 @@ async function unbindTransactions() {
   try {
     const transactionsIds = [contextMenuTransaction.value.id]
     const payload: { [key: string]: any } = {}
-    payload.bankReconciliation = props.hotelPaymentId
+    payload.hotelPaymentId = props.hotelPaymentId
     payload.transactionsIds = transactionsIds
 
-    const response: any = await GenericService.create('creditcard', 'bank-reconciliation/unbind', payload)
-    if (response && response.detailsAmount) {
-      emit('update:detailsAmount', response.detailsAmount)
-    }
+    await GenericService.create('creditcard', 'hotel-payment/unbind', payload)
+    // todo: aqui se debe refrescar la lista
+    emit('update:list')
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
     // Emit reload detail amount

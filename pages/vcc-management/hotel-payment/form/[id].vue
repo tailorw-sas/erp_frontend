@@ -470,7 +470,7 @@ async function bindTransactions(transactions: any[]) {
   try {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = {}
-    payload.bankReconciliationId = idItem.value
+    payload.hotelPaymentId = idItem.value
     if (transactions.length > 0) {
       payload.transactionIds = transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
       const adjustmentTransactions = transactions.filter((t: any) => t.adjustment)
@@ -516,13 +516,10 @@ async function unbindTransactions() {
     loadingSaveAll.value = true
     const transactionsIds = [contextMenuTransaction.value.id]
     const payload: { [key: string]: any } = {}
-    payload.bankReconciliation = idItem.value
+    payload.hotelPaymentId = idItem.value
     payload.transactionsIds = transactionsIds
 
-    const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
-    if (response) {
-      paymentAmount.value = response.detailsAmount
-    }
+    await GenericService.create(confApi.moduleApi, 'hotel-payment/unbind', payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
     getList()
@@ -785,7 +782,7 @@ onMounted(async () => {
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <div>
         <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
-          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.manageHotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
           <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
           <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
         </IfCan>
