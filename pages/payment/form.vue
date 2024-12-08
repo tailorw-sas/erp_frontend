@@ -178,6 +178,7 @@ const paymentDetailsList = ref<any[]>([
 const paymentStatusOfGetById = ref({} as GenericObject)
 
 const contextMenu = ref()
+const paymentDetailSelectedInRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClick = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToInvoice = ref({} as GenericObject)
@@ -236,7 +237,7 @@ const allMenuListItems = ref([
     iconSvg: '',
     command: ($event: any) => {},
     disabled: true,
-    visible: true,
+    visible: false,
   },
   {
     id: 'task',
@@ -245,7 +246,7 @@ const allMenuListItems = ref([
     iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
     command: ($event: any) => {},
     disabled: true,
-    visible: true,
+    visible: false,
   },
 ])
 // Apply Payment
@@ -435,9 +436,9 @@ const objApis = ref({
 
 const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
-  { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
-  { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '100px', type: 'text' },
-  { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
+  { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '140px', type: 'text' },
+  { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '140px', type: 'text' },
+  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
@@ -448,7 +449,7 @@ const columns: IColumn[] = [
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
   { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
-  { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
+  { field: 'amount', header: 'D. Amount', tooltip: 'Detail Amount', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
   { field: 'reverseFromParentId', header: 'Reverse From', width: 'auto', type: 'text' },
@@ -3018,6 +3019,7 @@ async function closeDialogPrint() {
 
 function onRowContextMenu(event: any) {
   detailItemForApplyPayment.value = event?.data
+  paymentDetailSelectedInRightClick.value = event?.data
 
   idPaymentDetail.value = event?.data?.id
   let minValueToApplyDeposit = 0
@@ -3801,6 +3803,7 @@ const checkboxValue1 = ref(false)
         :item="itemDetails"
         :title="getNameByActions(actionOfModal)"
         :selected-payment="item"
+        :selected-payment-detail="paymentDetailSelectedInRightClick"
         :is-split-action="isSplitAction"
         :action="actionOfModal"
         @apply-payment="openModalApplyPayment($event)"

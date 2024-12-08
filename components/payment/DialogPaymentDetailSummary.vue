@@ -22,8 +22,9 @@ const messageForEmptyTable = ref('The data does not correspond to the selected c
 
 interface SubTotals {
   amount: number
+  depositBalance: number
 }
-const subTotals = ref<SubTotals>({ amount: 0 })
+const subTotals = ref<SubTotals>({ amount: 0, depositBalance: 0 })
 
 // Table
 const columnsExpandTable: IColumn[] = [
@@ -39,12 +40,12 @@ const columnsExpandTable: IColumn[] = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'paymentDetailId', header: 'ID', width: '80px', type: 'text' },
+  { field: 'paymentDetailId', header: 'Id', width: '80px', type: 'text' },
   { field: 'transactionDate', header: 'Transaction Date', width: '200px', type: 'date' },
   { field: 'createdAt', header: 'Create Date', width: '200px', type: 'date' },
   // { field: 'paymentId', header: 'Payment Id', width: '200px', type: 'text' },
 
-  { field: 'amount', header: 'D. Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
+  { field: 'amount', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
   { field: 'depositBalance', header: 'Deposit Balance', width: '200px', type: 'text' },
   { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
 ]
@@ -92,7 +93,7 @@ const pagination = ref<IPagination>({
 })
 
 async function getListPaymentDetailSummary() {
-  const count: SubTotals = { amount: 0 }
+  const count: SubTotals = { amount: 0, depositBalance: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -147,7 +148,13 @@ async function getListPaymentDetailSummary() {
       }
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
-        iterator.depositBalance = iterator.applyDepositValue ? Number.parseFloat(iterator.applyDepositValue).toString() : '0'
+        count.depositBalance += Number.parseFloat(iterator.applyDepositValue)
+        if (iterator.applyDepositValue !== null && iterator.applyDepositValue !== '' && iterator.applyDepositValue !== undefined && iterator.applyDepositValue !== '0' && iterator.applyDepositValue !== '0.00' && iterator.applyDepositValue !== 0) {
+          iterator.depositBalance = Number.parseFloat(iterator.applyDepositValue) * -1
+        }
+        else {
+          iterator.depositBalance = 0
+        }
       }
 
       // Verificar si el ID ya existe en la lista
@@ -256,7 +263,7 @@ onMounted(async () => {
     id="dialogPaymentDetailSummary"
     v-model:visible="onOffDialog"
     modal
-    :closable="false"
+    :closable="true"
     header="Payment Details"
     :style="{ width: '65%' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
@@ -271,15 +278,16 @@ onMounted(async () => {
       //   style: 'backdrop-filter: blur(5px)',
       // },
     }"
+    @hide="onCloseDialog"
   >
     <template #header>
       <div class="flex justify-content-between align-items-center justify-content-between w-full">
         <h5 class="m-0 py-2">
           {{ props.title }}
         </h5>
-        <div>
+        <div class="font-bold mr-4">
           <strong class="mx-2">Payment:</strong>
-          <span>{{ props.selectedPayment.paymentId }}</span>
+          <strong>{{ props.selectedPayment.paymentId }}</strong>
         </div>
       </div>
     </template>
@@ -321,10 +329,10 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center">
               <Row>
-                <Column footer="Totals:" :colspan="4" footer-style="text-align:right; font-weight: bold;" />
-                <Column :footer="Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-                <Column :colspan="1" />
-                <!-- <Column :colspan="0" /> -->
+                <Column footer="Totals:" :colspan="3" footer-style="text-align:right; font-weight: bold;" />
+                <Column :footer="(-Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)).toString()" footer-style="font-weight: bold;" />
+                <Column :footer="(-Math.abs(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)).toString()" footer-style="font-weight: bold;" />
+                <Column :colspan="0" />
               </Row>
             </ColumnGroup>
           </template>
@@ -332,11 +340,11 @@ onMounted(async () => {
       </div>
     </template>
 
-    <template #footer>
+    <!-- <template #footer>
       <div class="flex justify-content-end align-items-center">
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="onCloseDialog" />
       </div>
-    </template>
+    </template> -->
   </Dialog>
 </template>
 

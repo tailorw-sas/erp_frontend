@@ -84,13 +84,6 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.boolean()
   },
   {
-    field: 'remarkRequired',
-    header: 'Remark Required',
-    dataType: 'check',
-    class: 'field col-12',
-    validation: z.boolean()
-  },
-  {
     field: 'deposit',
     header: 'Deposit',
     dataType: 'check',
@@ -142,6 +135,13 @@ const fields: Array<FieldDefinitionType> = [
     field: 'expenseToBooking',
     header: 'Expense To Booking',
     dataType: 'check',
+    class: 'field col-12',
+    validation: z.boolean()
+  },
+  {
+    field: 'remarkRequired',
+    header: 'Remark Required',
+    dataType: 'check',
     class: 'field col-12 mb-3',
     validation: z.boolean()
   },
@@ -149,7 +149,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'minNumberOfCharacter',
     header: 'Min Number Of Character',
     dataType: 'number',
-    class: 'field col-12 required',
+    class: 'field col-12',
     disabled: true,
     headerClass: 'mb-1',
     validation: z.number().nonnegative('The value cannot be negative')
@@ -158,10 +158,9 @@ const fields: Array<FieldDefinitionType> = [
     field: 'defaultRemark',
     header: 'Default Remark',
     dataType: 'text',
-    class: 'field col-12 required',
+    class: 'field col-12',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'The default remark field is required').max(50, 'Maximum 50 characters'),
-
+    validation: z.string().trim().min(0, 'The default remark field is required').max(50, 'Maximum 50 characters'),
   },
   {
     field: 'description',
