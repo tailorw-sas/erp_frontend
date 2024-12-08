@@ -245,7 +245,6 @@ async function unbindTransactions() {
     payload.transactionsIds = transactionsIds
 
     await GenericService.create('creditcard', 'hotel-payment/unbind', payload)
-    // todo: aqui se debe refrescar la lista
     emit('update:list')
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
