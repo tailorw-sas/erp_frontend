@@ -1086,6 +1086,8 @@ function searchAndFilter() {
         keyTemp === 'paymentDetails.remark'
         || keyTemp === 'paymentDetails.manageBooking.fullName'
         || keyTemp === 'paymentDetails.manageBooking.reservationNumber'
+        || keyTemp === 'paymentDetails.manageBooking.couponNumber'
+        || keyTemp === 'reference'
       )
         ? 'LIKE'
         : 'EQUALS',
@@ -2916,7 +2918,7 @@ function toggle(event: Event, index: number) {
 function havePermissionMenu() {
   for (const rootMenu of itemMenuList.value) {
     if (rootMenu.menuItems.length > 0) {
-      for (const childMenu of rootMenu.menuItems[0].items) {
+      for (const childMenu of rootMenu.menuItems) {
         if (childMenu?.permission && childMenu?.permission?.length > 0) {
           (status.value === 'authenticated' && (isAdmin || authStore.can(childMenu.permission))) ? childMenu.disabled = false : childMenu.disabled = true
         }
@@ -3769,10 +3771,10 @@ onMounted(async () => {
                               value: 'ACTIVE',
                             },
                             // {
-                            //   key: 'code',
+                            //   key: 'transit',
                             //   logicalOperation: 'AND',
-                            //   operator: 'NOT_EQUALS',
-                            //   value: 'TRA',
+                            //   operator: 'EQUALS',
+                            //   value: false,
                             // },
                           ]
                           const objQueryToSearch = {
@@ -3834,13 +3836,14 @@ onMounted(async () => {
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> From</label>
                     <div class="w-9rem">
+                      <!-- :min-date="new Date(startOfMonth)"
+                        :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)" -->
                       <Calendar
                         id="from"
                         v-model="filterToSearch.from"
-                        :min-date="new Date(startOfMonth)"
-                        :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
                         class="w-full"
-                        date-format="dd/mm/yy"
+                        :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
+                        date-format="yy-mm-dd"
                         :disabled="disabledDates"
                       />
                     </div>
@@ -3848,13 +3851,13 @@ onMounted(async () => {
                   <div class="flex align-items-center">
                     <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
                     <div class="w-9rem">
+                      <!-- :max-date="new Date(endOfMonth)" -->
                       <Calendar
                         id="to"
                         v-model="filterToSearch.to"
                         class="w-auto"
                         :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
-                        :max-date="new Date(endOfMonth)"
-                        date-format="dd/mm/yy"
+                        date-format="yy-mm-dd"
                         :disabled="disabledDates"
                       />
                     </div>
@@ -3885,7 +3888,7 @@ onMounted(async () => {
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> Criteria</label>
-                    <div class="w-10rem">
+                    <div class="w-12rem">
                       <Dropdown
                         v-model="filterToSearch.criteria"
                         :options="[...ENUM_FILTER]"
@@ -3900,7 +3903,7 @@ onMounted(async () => {
                   </div>
                   <div class="flex align-items-center">
                     <label for="" class="w-4rem font-bold">Value</label>
-                    <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-10rem" style="max-width: 10rem;" />
+                    <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-12rem" style="max-width: 12rem;" />
                   </div>
                 </div>
               </div>

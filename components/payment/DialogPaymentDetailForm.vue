@@ -10,6 +10,7 @@ const props = defineProps({
   loadingSaveAll: { type: Boolean, default: false },
   selectedPayment: { type: Object, required: true },
   isSplitAction: { type: Boolean, default: false },
+  selectedPaymentDetail: { type: Object, required: true },
   action: {
     type: String as PropType<'new-detail' | 'edit-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment'>,
     default: 'new-detail'
@@ -592,6 +593,10 @@ function processValidation($event: any, data: any) {
         <h5 class="m-0 py-2">
           {{ props.title }}
         </h5>
+        <div v-if="props.action === 'split-deposit' || props.action === 'apply-deposit'" class="font-bold mr-4">
+          <strong class="mx-2">Payment Detail ID:</strong>
+          <span>{{ props.selectedPaymentDetail.paymentDetailId }}</span>
+        </div>
       </div>
     </template>
 

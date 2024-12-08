@@ -165,7 +165,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: validateFiles(1),
+    validation: validateFiles(),
   },
   {
     field: 'fileName',
@@ -1236,7 +1236,7 @@ onMounted(async () => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
+    v-model:visible="dialogVisible" modal :header="header"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
     @hide="closeDialog"
   >
