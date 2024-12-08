@@ -39,8 +39,8 @@ const confHotelApi = reactive({
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
-  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '50px', widthTruncate: '50px', props: { isRange: true, calendarMode: CALENDAR_MODE.MONTH } },
-  { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
+  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '220px', widthTruncate: '50px', props: { isRange: true, calendarMode: CALENDAR_MODE.MONTH } },
+  // { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -131,10 +131,11 @@ function searchAndFilter() {
       }]
     }
   }
+  // filterToSearch.value.active ? 'ACTIVE' : 'INACTIVE',
   payload.value.filter = [...payload.value.filter, {
     key: 'hotel.status',
     operator: 'EQUALS',
-    value: filterToSearch.value.active ? 'ACTIVE' : 'INACTIVE',
+    value: 'ACTIVE',
     logicalOperation: 'AND',
     type: 'filterSearch',
   }]
@@ -378,7 +379,7 @@ onMounted(async () => {
                   </template>
                 </DebouncedAutoCompleteComponent>
               </div>
-              <div class="flex align-items-center">
+              <div v-if="false" class="flex align-items-center">
                 <Checkbox v-model="filterToSearch.active" :binary="true" />
                 <label class="ml-2 font-bold"> Active </label>
               </div>
