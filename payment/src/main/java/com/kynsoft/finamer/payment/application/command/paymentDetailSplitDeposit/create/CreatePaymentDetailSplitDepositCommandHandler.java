@@ -79,7 +79,8 @@ public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHa
                 false
         );
         split.setApplyDepositValue(command.getAmount());
-        Long paymentDetailId = paymentDetailService.create(split);
+        paymentDetailDto.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - command.getAmount());
+        paymentDetailService.create(split);
         paymentDetailService.update(paymentDetailDto);
 
 //        createPaymentAttachmentStatusHistory(employeeDto, paymentDetailDto.getPayment(), paymentDetailId, "Creating Split ANTI with ID: ");
