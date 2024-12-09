@@ -2,6 +2,8 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClo
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAdults.UpdateBookingCalculateBookingAdultsCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAmount.UpdateBookingCalculateBookingAmountCommand;
@@ -46,20 +48,21 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageInvoiceTransactionTypeService invoiceTransactionTypeService;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
-            IManageAgencyService agencyService,
-            IManageHotelService hotelService,
-            IManageAttachmentTypeService attachmentTypeService,
-            IManageBookingService bookingService,
-            IManageInvoiceStatusService invoiceStatusService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
-            IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
-            IInvoiceCloseOperationService closeOperationService) {
+                                    IManageAgencyService agencyService,
+                                    IManageHotelService hotelService,
+                                    IManageAttachmentTypeService attachmentTypeService,
+                                    IManageBookingService bookingService,
+                                    IManageInvoiceStatusService invoiceStatusService,
+                                    ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                    IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
+                                    IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
+                                    IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                    IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                    IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+                                    IInvoiceCloseOperationService closeOperationService, IManagePaymentTransactionTypeService paymentTransactionTypeService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -75,6 +78,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.invoiceTransactionTypeService = invoiceTransactionTypeService;
         this.closeOperationService = closeOperationService;
+        this.paymentTransactionTypeService = paymentTransactionTypeService;
     }
 
     @Override
@@ -85,6 +89,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         ManageInvoiceDto invoiceToClone = this.invoiceService.findById(command.getInvoiceToClone());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
+        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
         //vienen todos los attachments juntos, lo del padre y los nuevos
         for (TotalCloneAttachmentRequest attachmentRequest : command.getAttachments()) {
@@ -112,6 +117,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             attachmentDtos.add(attachmentDto);
         }
 
+        StringBuilder hotelBookingNumber = new StringBuilder();
         for (TotalCloneBookingRequest bookingRequest : command.getBookings()) {
             //no se agregan nuevos booking solo se pueden editar, el id siempre debe venir
             ManageBookingDto bookingToClone = this.bookingService.findById(bookingRequest.getId());
@@ -196,6 +202,16 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     false
             );
             bookings.add(newBooking);
+            if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
+                hotelBookingNumber.append(bookingRequest.getHotelBookingNumber()+", ");
+            }
+        }
+
+        if (!hotelBookingNumber.isEmpty()){
+            throw new BusinessException(
+                    DomainErrorMessage.NIGHT_TYPE_REQUIRED,
+                    "Bookings with Hotel Booking Number: " + hotelBookingNumber +"require the Night Type field."
+            );
         }
 
         //actualizando los bookings con la info de los room rate
@@ -210,7 +226,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             booking.setDueAmount(booking.getInvoiceAmount());
         }
 
-        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType());
         if (hotelDto.getManageTradingCompanies() != null
                 && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
@@ -256,11 +271,10 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         clonedInvoice.setDueAmount(clonedInvoice.getInvoiceAmount());
         clonedInvoice.setOriginalAmount(clonedInvoice.getInvoiceAmount());
 
+        this.setInvoiceToCloneAmounts(invoiceToClone, command.getEmployeeName());
         ManageInvoiceDto created = this.invoiceService.create(clonedInvoice);
         command.setClonedInvoiceId(created.getInvoiceId());
         command.setClonedInvoiceNo(this.deleteHotelInfo(created.getInvoiceNumber()));
-
-        this.setInvoiceToCloneAmounts(invoiceToClone, command.getEmployeeName());
 
         try {
             this.producerReplicateManageInvoiceService.create(created);
@@ -317,7 +331,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         LocalDateTime.now(),
                         "Automatic adjustment generated to closed the invoice, because it was cloned",
                         this.invoiceTransactionTypeService.findByDefaults(),
-                        null,
+                        this.paymentTransactionTypeService.findByDefaults(),
                         null,
                         employee,
                         false

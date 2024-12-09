@@ -20,4 +20,6 @@ public interface IManagePaymentTransactionTypeService {
     ManagePaymentTransactionTypeDto findByCode(String code);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManagePaymentTransactionTypeDto findByDefaults();
 }

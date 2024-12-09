@@ -103,6 +103,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         List<ManageRoomRateDto> roomRates = new LinkedList<>();
         List<ManageAttachmentDto> attachmentDtos = new LinkedList<>();
 
+        StringBuilder hotelBookingNumber = new StringBuilder();
         for (int i = 0; i < command.getBookingCommands().size(); i++) {
 
             if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2
@@ -180,7 +181,16 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     command.getBookingCommands().get(i).getContract(),
                     false
             ));
+            if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
+                hotelBookingNumber.append(command.getBookingCommands().get(i).getHotelBookingNumber()+", ");
+            }
+        }
 
+        if (!hotelBookingNumber.isEmpty()){
+            throw new BusinessException(
+                    DomainErrorMessage.NIGHT_TYPE_REQUIRED,
+                    "Bookings with Hotel Booking Number: " + hotelBookingNumber +"require the Night Type field."
+            );
         }
 
         for (int i = 0; i < command.getRoomRateCommands().size(); i++) {
