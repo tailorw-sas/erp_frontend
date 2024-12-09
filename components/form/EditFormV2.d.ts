@@ -10,6 +10,7 @@ interface FieldDefinition {
   footer?: string | null
   style?: any
   class?: any
+  tabIndex?: number
   headerStyle?: any | null
   headerClass?: any | null
   footerStyle?: any | null
