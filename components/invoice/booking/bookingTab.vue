@@ -408,7 +408,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'date',
     class: 'field col-12 md:col-3 required ',
     headerClass: 'mb-1',
-
     validation: z.date({
       required_error: 'The Hotel Creation Date field is required',
       invalid_type_error: 'The Hotel Creation Date field is required',
@@ -475,14 +474,14 @@ const fieldsV2: Array<FieldDefinitionType> = [
     validation: z.number().min(1, 'The Adults field must be greater than 0').nullable()
   },
   // // Contract
-      {
-        field: 'contract',
-        header: 'Contract',
-        dataType: 'text',
-        class: 'field col-12 md:col-3',
-        headerClass: 'mb-1',
-        //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
-      },
+  {
+    field: 'contract',
+    header: 'Contract',
+    dataType: 'text',
+    class: 'field col-12 md:col-3',
+    headerClass: 'mb-1',
+    //validation: z.string().regex(/^[a-z0-9]+$/i, 'No se permiten caracteres especiales').nullable()
+  },
 
   // // Children
   // {
@@ -1432,7 +1431,7 @@ async function saveBooking(item: { [key: string]: any }) {
 
   
   item.fullName = `${item?.firstName ?? ''} ${item?.lastName ?? ''}`
-   item.ratePlan = ratePlanList.value.find((ratePlan: any) => ratePlan?.id === item?.ratePlan?.id)
+  item.ratePlan = ratePlanList.value.find((ratePlan: any) => ratePlan?.id === item?.ratePlan?.id)
 
   item.roomType = roomTypeList.value.find((roomType: any) => roomType?.id === item?.roomType?.id)
   item.dueAmount = item.invoiceAmount
@@ -1610,6 +1609,8 @@ const computedShowMenuItemAddRoomRate = computed(() => {
   })
 
 function onRowRightClick(event: any) {
+  console.log('event', event);
+  
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
     menuModel.value = [
       {
@@ -1619,8 +1620,18 @@ function onRowRightClick(event: any) {
       },
     ]
   }
-  const bookingAmount = event.data?.invoiceAmount ? Number(event.data?.invoiceAmount.replace(/,/g, '')) : 0
-  const bookingBalance = event.data?.dueAmount ? Number(event.data?.dueAmount.replace(/,/g, '')) : 0
+  let bookingAmount = 0
+  let bookingBalance = 0
+  if (typeof event.data?.invoiceAmount === 'string') {
+    bookingAmount = Number(event.data?.invoiceAmount.replace(/,/g, ''))
+  } else {
+    bookingAmount = event.data?.invoiceAmount
+  }
+  if (typeof event.data?.dueAmount === 'string') {
+    bookingBalance = Number(event.data?.dueAmount.replace(/,/g, ''))
+  } else {
+    bookingBalance = event.data?.dueAmount
+  }
 
   if (!props.isCreationDialog && props.invoiceObj?.invoiceStatus?.processStatus === false && bookingAmount !== bookingBalance) {
     menuModel.value = [

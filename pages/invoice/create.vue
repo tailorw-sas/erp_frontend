@@ -264,6 +264,18 @@ const item = ref<GenericObject>({
   invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
 })
 
+const reactiveItem = ref<GenericObject>({
+  invoiceId: 0,
+  invoiceNumber: '',
+  invoiceDate: new Date(),
+  isManual: true,
+  invoiceAmount: '0.00',
+  hotel: null,
+  agency: null,
+  status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2],
+  invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
+})
+
 const itemTemp = ref<GenericObject>({
   invoiceId: 0,
   invoiceNumber: '',
@@ -1289,10 +1301,21 @@ onMounted(async () => {
       : "" }}
   </div>
   <div class="pt-3">
+    <!-- <pre>{{ reactiveItem }}</pre> -->
     <EditFormV2
-      :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
-      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid py-3"
-      @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
+      :key="formReload"
+      :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields"
+      :item="item"
+      :show-actions="true"
+      :loading-save="loadingSaveAll"
+      :loading-delete="loadingDelete"
+      container-class="grid py-3"
+      @cancel="clearForm"
+      @delete="requireConfirmationToDelete($event)"
+      @submit="requireConfirmationToSave($event)"
+      @reactive-update-field="($event) => {
+        reactiveItem.value = { ...$event }
+      }"
     >
       <!-- ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`, -->
       <template #field-invoiceDate="{ item: data, onUpdate }">
@@ -1427,6 +1450,7 @@ onMounted(async () => {
             :active="active" :set-active="($event) => {
               active = $event
             }"
+            :invoice-reactive-data="reactiveItem"
           />
 
           <div>
