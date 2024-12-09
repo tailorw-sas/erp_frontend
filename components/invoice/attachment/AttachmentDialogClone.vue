@@ -830,8 +830,11 @@ onMounted(async () => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" @hide="closeDialog"
+    v-model:visible="dialogVisible" modal :header="header"
+    class="h-fit w-fit"
+    content-class="border-round-bottom border-top-1 surface-border h-fit"
+    :style="{ width: '80%' }"
+    :block-scroll="true" @hide="closeDialog"
   >
     <template #header>
       <div class="inline-flex align-items-center justify-content-center gap-2">
@@ -841,288 +844,288 @@ onMounted(async () => {
         <strong>{{ selectedInvoiceObj.invoiceId }}</strong> -->
       </div>
     </template>
-    <div class=" w-fit h-fit overflow-auto p-2">
-      <div class="flex lg:flex-row flex-column align-items-start">
-        <div class="flex flex-column" style="max-width: 900px;">
-          <div style="max-width: 700px; overflow: auto;">
-            <DynamicTable
-              :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
-              :pagination="Pagination" @update:clicked-item="getItemById($event)"
-              @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
-              @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-              @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+    <template #default>
+      <div class="grid p-fluid formgrid">
+        <div class="col-12 order-1 md:order-0 md:col-8 pt-5">
+          <DynamicTable
+            :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
+            :pagination="Pagination" @update:clicked-item="getItemById($event)"
+            @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
+            @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
+            @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+          >
+            <template
+              v-if="isCreationDialog"
+              #pagination-total="props"
             >
-              <template
-                v-if="isCreationDialog"
-                #pagination-total="props"
-              >
-                <span class="font-bold font">
-                  {{ listItemsLocal?.length }}
-                </span>
-              </template>
-            </DynamicTable>
-          </div>
+              <span class="font-bold font">
+                {{ listItemsLocal?.length }}
+              </span>
+            </template>
+          </DynamicTable>
         </div>
-
-        <div class="mx-4 mb-4" style="max-width: 360px;">
-          <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-            {{ idItem ? "Edit" : "Add" }}
-          </div>
-          <div class="card">
-            <EditFormV2
-              :key="formReload"
-              :fields="Fields"
-              :item="item"
-              :show-actions="true"
-              :loading-save="loadingSaveAll"
-              @on-confirm-create="clearForm"
-              @submit-form="requireConfirmationToSave"
-              @cancel="clearForm"
-              @delete="requireConfirmationToDelete($event)"
-              @submit="requireConfirmationToSave($event)"
-            >
-              <template #field-resourceType="{ item: data, onUpdate }">
-                <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll"
-                  id="autocomplete"
-                  field="name"
-                  item-value="id"
-                  :model="resourceTypeSelected"
-                  :disabled="resourceTypeSelected"
-                  :suggestions="resourceTypeList"
-                  @change="($event) => {
-                    onUpdate('resourceType', $event)
-                    typeError = false
-                  }"
-                  @load="($event) => getResourceTypeList($event)"
-                >
-                  <template #option="props">
-                    <span>{{ props.item.name }}</span>
-                  </template>
-                  <template #chip="{ value }">
-                    <div>
-                      {{ value?.name }}
-                    </div>
-                  </template>
-                </DebouncedAutoCompleteComponent>
-                <Skeleton v-else height="2rem" class="mb-2" />
-                <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
-                  required</span>
-              </template>
-
-              <template #field-type="{ item: data, onUpdate }">
-                <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll"
-                  id="autocomplete"
-                  field="fullName"
-                  item-value="id"
-                  :model="data.type"
-                  :disabled=" idItem !== '' || !isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
-
-                  :suggestions="attachmentTypeList" @change="($event) => {
-                    onUpdate('type', $event)
-                    typeError = false
-                  }"
-                  @load="($event) => getAttachmentTypeList($event)"
-                >
-                  <template #option="props">
-                    <span>{{ props.item.fullName }}</span>
-                  </template>
-                  <template #chip="{ value }">
-                    <div>
-                      {{ value?.fullName }}
-                    </div>
-                  </template>
-                </DebouncedAutoCompleteComponent>
-                <Skeleton v-else height="2rem" class="mb-2" />
-                <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
-                  required</span>
-              </template>
-              async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
-              const file = event.files[0]
-              objFile.value = file
-              listFields[fieldKey] = file
-              }
-
-              <template #field-file="{ item: data, onUpdate }">
-                <InputGroup>
-                  <InputText
+        <div class="col-12 order-2 md:order-0 md:col-4 pt-5">
+          <div class="mx-4 mb-4">
+            <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+              {{ idItem ? "Edit" : "Add" }}
+            </div>
+            <div class="card">
+              <EditFormV2
+                :key="formReload"
+                :fields="Fields"
+                :item="item"
+                :show-actions="true"
+                :loading-save="loadingSaveAll"
+                @on-confirm-create="clearForm"
+                @submit-form="requireConfirmationToSave"
+                @cancel="clearForm"
+                @delete="requireConfirmationToDelete($event)"
+                @submit="requireConfirmationToSave($event)"
+              >
+                <template #field-resourceType="{ item: data, onUpdate }">
+                  <DebouncedAutoCompleteComponent
                     v-if="!loadingSaveAll"
-                    v-model="data.filename"
-                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
-                    placeholder="Upload File"
-                    disabled
-                  />
-                  <Skeleton v-else height="2rem" width="100%" class="mb-2" style="border-radius: 4px;" />
+                    id="autocomplete"
+                    field="name"
+                    item-value="id"
+                    :model="resourceTypeSelected"
+                    :disabled="resourceTypeSelected"
+                    :suggestions="resourceTypeList"
+                    @change="($event) => {
+                      onUpdate('resourceType', $event)
+                      typeError = false
+                    }"
+                    @load="($event) => getResourceTypeList($event)"
+                  >
+                    <template #option="props">
+                      <span>{{ props.item.name }}</span>
+                    </template>
+                    <template #chip="{ value }">
+                      <div>
+                        {{ value?.name }}
+                      </div>
+                    </template>
+                  </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
+                  <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
+                    required</span>
+                </template>
+
+                <template #field-type="{ item: data, onUpdate }">
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveAll"
+                    id="autocomplete"
+                    field="fullName"
+                    item-value="id"
+                    :model="data.type"
+                    :disabled=" idItem !== '' || !isCreationDialog ? !ListItems.some((item: any) => item.type?.attachInvDefault) : isCreationDialog ? !listItemsLocal.some((item: any) => item.type?.attachInvDefault) : false"
+
+                    :suggestions="attachmentTypeList" @change="($event) => {
+                      onUpdate('type', $event)
+                      typeError = false
+                    }"
+                    @load="($event) => getAttachmentTypeList($event)"
+                  >
+                    <template #option="props">
+                      <span>{{ props.item.fullName }}</span>
+                    </template>
+                    <template #chip="{ value }">
+                      <div>
+                        {{ value?.fullName }}
+                      </div>
+                    </template>
+                  </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
+                  <span v-if="typeError" class="error-message p-error text-xs">The Attachment type field is
+                    required</span>
+                </template>
+                async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
+                const file = event.files[0]
+                objFile.value = file
+                listFields[fieldKey] = file
+                }
+
+                <template #field-file="{ item: data, onUpdate }">
+                  <InputGroup>
+                    <InputText
+                      v-if="!loadingSaveAll"
+                      v-model="data.filename"
+                      style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                      placeholder="Upload File"
+                      disabled
+                    />
+                    <Skeleton v-else height="2rem" width="100%" class="mb-2" style="border-radius: 4px;" />
+                    <FileUpload
+                      v-if="!loadingSaveAll"
+                      mode="basic"
+                      :max-file-size="100000000"
+                      :disabled="idItem !== '' || idItem === null"
+                      :multiple="false"
+                      auto
+                      accept="application/pdf"
+                      custom-upload
+                      style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                      @uploader="($event: any) => {
+                        customBase64Uploader($event, Fields, 'file');
+                        onUpdate('file', $event)
+                        if ($event && $event.files.length > 0) {
+                          onUpdate('filename', $event?.files[0]?.name)
+                          onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                        }
+                        else {
+                          onUpdate('fileName', '')
+                        }
+                      }"
+                    />
+                  </InputGroup>
+
                   <FileUpload
-                    v-if="!loadingSaveAll"
-                    mode="basic"
-                    :max-file-size="100000000"
-                    :disabled="idItem !== '' || idItem === null"
-                    :multiple="false"
-                    auto
-                    accept="application/pdf"
-                    custom-upload
-                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                    v-if="false" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
                     @uploader="($event: any) => {
-                      customBase64Uploader($event, Fields, 'file');
-                      onUpdate('file', $event)
+                      customBase64Uploader($event, fieldsV2, 'path');
+                      onUpdate('path', $event)
                       if ($event && $event.files.length > 0) {
-                        onUpdate('filename', $event?.files[0]?.name)
+                        onUpdate('fileName', $event?.files[0]?.name)
                         onUpdate('fileSize', formatSize($event?.files[0]?.size))
                       }
                       else {
                         onUpdate('fileName', '')
                       }
                     }"
-                  />
-                </InputGroup>
+                  >
+                    <template #header="{ chooseCallback }">
+                      <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                        <div class="flex gap-2">
+                          <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                          <Button
+                            :disabled="idItem !== '' || idItem === null"
+                            icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
+                              onUpdate('path', null);
+                              onUpdate('fileName', '');
 
-                <FileUpload
-                  v-if="false" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
-                  @uploader="($event: any) => {
-                    customBase64Uploader($event, fieldsV2, 'path');
-                    onUpdate('path', $event)
-                    if ($event && $event.files.length > 0) {
-                      onUpdate('fileName', $event?.files[0]?.name)
-                      onUpdate('fileSize', formatSize($event?.files[0]?.size))
-                    }
-                    else {
-                      onUpdate('fileName', '')
-                    }
-                  }"
-                >
-                  <template #header="{ chooseCallback }">
-                    <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                      <div class="flex gap-2">
-                        <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                        <Button
-                          :disabled="idItem !== '' || idItem === null"
-                          icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
-                            onUpdate('path', null);
-                            onUpdate('fileName', '');
-
-                          }"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                  <template #content="{ files }">
-                    <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
-                      <li class="p-3 surface-border flex align-items-start sm:align-items-center">
-                        <div class="flex flex-column">
-                          <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
-                          <span class="text-900 font-medium">
-                            <Badge severity="warning">
-                              {{ formatSize(data.path?.files[0].size) }}
-                            </Badge>
-                          </span>
+                            }"
+                          />
                         </div>
-                      </li>
-                    </ul>
-                  </template>
-                </FileUpload>
-              </template>
-
-              <template #field-file1="{ onUpdate, item: data }">
-                <FileUpload
-                  :disabled="idItem !== ''"
-                  accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
-                  custom-upload @uploader="(event: any) => {
-                    const file = event.files[0]
-                    onUpdate('file', file)
-                    onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
-                  }"
-                >
-                  <template #header="{ chooseCallback }">
-                    <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                      <div class="flex gap-2">
-                        <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                        <Button
-                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file" text
-                          @click="onUpdate('file', null)"
-                        />
                       </div>
-                    </div>
-                  </template>
-                  <template #content="{ files }">
-                    <div class="w-full flex justify-content-center">
-                      <ul v-if="files[0] || data.file" class=" p-0 m-0" style="width: 300px;  overflow: hidden;">
-                        <li class=" surface-border flex align-items-center w-fit">
-                          <div class="flex flex-column w-fit  text-overflow-ellipsis">
-                            <span
-                              class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
-                              style="width: 300px;"
-                            >{{ data.file.name
-                              || data.file.split("/")[data.file.split("/")?.length - 1] }}</span>
-                            <span v-if="data.file.size" class="text-900 font-medium">
+                    </template>
+                    <template #content="{ files }">
+                      <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
+                        <li class="p-3 surface-border flex align-items-start sm:align-items-center">
+                          <div class="flex flex-column">
+                            <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
+                            <span class="text-900 font-medium">
                               <Badge severity="warning">
-                                {{ formatSize(data.file.size) }}
+                                {{ formatSize(data.path?.files[0].size) }}
                               </Badge>
                             </span>
                           </div>
                         </li>
                       </ul>
-                    </div>
-                  </template>
-                </FileUpload>
-              </template>
-              <template #form-footer="props">
-                <IfCan
-                  :perms="idItem ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']"
-                >
-                  <Button
-                    v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-                    :disabled="!props.item?.fieldValues?.file || idItem !== '' || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
-                    @click="props.item.submitForm($event)"
-                  />
-                </IfCan>
+                    </template>
+                  </FileUpload>
+                </template>
 
-                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
+                <template #field-file1="{ onUpdate, item: data }">
+                  <FileUpload
+                    :disabled="idItem !== ''"
+                    accept="application/pdf" :max-file-size="300 * 1024 * 1024" :multiple="false" auto
+                    custom-upload @uploader="(event: any) => {
+                      const file = event.files[0]
+                      onUpdate('file', file)
+                      onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
+                    }"
+                  >
+                    <template #header="{ chooseCallback }">
+                      <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                        <div class="flex gap-2">
+                          <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                          <Button
+                            icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file" text
+                            @click="onUpdate('file', null)"
+                          />
+                        </div>
+                      </div>
+                    </template>
+                    <template #content="{ files }">
+                      <div class="w-full flex justify-content-center">
+                        <ul v-if="files[0] || data.file" class=" p-0 m-0" style="width: 300px;  overflow: hidden;">
+                          <li class=" surface-border flex align-items-center w-fit">
+                            <div class="flex flex-column w-fit  text-overflow-ellipsis">
+                              <span
+                                class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
+                                style="width: 300px;"
+                              >{{ data.file.name
+                                || data.file.split("/")[data.file.split("/")?.length - 1] }}</span>
+                              <span v-if="data.file.size" class="text-900 font-medium">
+                                <Badge severity="warning">
+                                  {{ formatSize(data.file.size) }}
+                                </Badge>
+                              </span>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </template>
+                  </FileUpload>
+                </template>
+                <template #form-footer="props">
+                  <IfCan
+                    :perms="idItem ? ['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'] : ['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']"
+                  >
+                    <Button
+                      v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+                      :loading="loadingSaveAll"
+                      :disabled="!props.item?.fieldValues?.file || idItem !== '' || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
+                      @click="props.item.submitForm($event)"
+                    />
+                  </IfCan>
+
+                  <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']">
+                    <Button
+                      v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" @click="() => {
+                        idItem = ''
+                        item = itemTemp
+                        clearForm()
+                      }"
+                    />
+                  </IfCan>
+
+                  <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
+                    <Button
+                      v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="listItemsLocal.length === 0"
+                      @click="downloadFile"
+                    />
+                  </IfCan>
+
+                  <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY']">
+                    <Button
+                      v-if="selectedInvoiceObj.invoiceType === InvoiceType.INCOME || route.query.type === InvoiceType.INCOME"
+                      v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book" :disabled="!idItem"
+                      @click="showHistory"
+                    />
+                  </IfCan>
+
+                  <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
+                    <Button
+                      v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
+                      :disabled="!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
+                      @click="requireConfirmationToDelete"
+                    />
+                  </IfCan>
                   <Button
-                    v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus" @click="() => {
-                      idItem = ''
-                      item = itemTemp
+                    v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+
                       clearForm()
+                      closeDialog()
                     }"
                   />
-                </IfCan>
-
-                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
-                  <Button
-                    v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="listItemsLocal.length === 0"
-                    @click="downloadFile"
-                  />
-                </IfCan>
-
-                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY']">
-                  <Button
-                    v-if="selectedInvoiceObj.invoiceType === InvoiceType.INCOME || route.query.type === InvoiceType.INCOME"
-                    v-tooltip.top="'Show History'" class="w-3rem mx-2 sticky" icon="pi pi-book" :disabled="!idItem"
-                    @click="showHistory"
-                  />
-                </IfCan>
-
-                <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
-                  <Button
-                    v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                    :disabled="!idItem || (!isCreationDialog && selectedInvoiceObj?.status?.id === InvoiceStatus.RECONCILED)"
-                    @click="requireConfirmationToDelete"
-                  />
-                </IfCan>
-                <Button
-                  v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
-
-                    clearForm()
-                    closeDialog()
-                  }"
-                />
-              </template>
-            </EditFormV2>
+                </template>
+              </EditFormV2>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
   </Dialog>
 
   <div v-if="attachmentHistoryDialogOpen">
