@@ -7,7 +7,7 @@ import { filter, get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinition, FieldDefinitionType } from '~/components/form/EditFormV2'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailForm.vue'
@@ -85,96 +85,7 @@ const subTotals = ref<SubTotals>({ depositAmount: 0 })
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
-const paymentDetailsList = ref<any[]>([
-  // {
-  //   id: '1',
-  //   paymentDetailId: 'PD12345',
-  //   bookingId: 'BKG20231001',
-  //   invoiceNumber: 'INV001234',
-  //   transactionDate: '2024-10-01',
-  //   fullName: 'John Doe',
-  //   reservationNumber: 'RES001',
-  //   couponNumber: 'CUP2023',
-  //   adults: 2,
-  //   children: 1,
-  //   amount: 250.00,
-  //   transactionType: { name: 'Online Payment', code: 'OP001', status: true, cash: false, deposit: true, applyDeposit: false },
-  //   rowClass: 'row-deposit',
-  //   parentId: 'PARENT001',
-  //   reverseFromParentId: 'REV_PARENT001',
-  //   remark: 'Payment processed successfully',
-  // },
-  // {
-  //   id: '2',
-  //   paymentDetailId: 'PD12346',
-  //   bookingId: 'BKG20231002',
-  //   invoiceNumber: 'INV001235',
-  //   transactionDate: '2024-10-02',
-  //   fullName: 'Jane Smith',
-  //   reservationNumber: 'RES002',
-  //   couponNumber: 'CUP2024',
-  //   adults: 1,
-  //   children: 0,
-  //   amount: 150.00,
-  //   transactionType: { name: 'Cash Payment', code: 'CP001', status: true, cash: true, deposit: false, applyDeposit: true },
-  //   parentId: 'PARENT002',
-  //   reverseFromParentId: 'REV_PARENT002',
-  //   remark: 'Paid at reception',
-  // },
-  // {
-  //   id: '3',
-  //   paymentDetailId: 'PD12347',
-  //   bookingId: 'BKG20231003',
-  //   invoiceNumber: 'INV001236',
-  //   transactionDate: '2024-10-03',
-  //   fullName: 'Alice Johnson',
-  //   reservationNumber: 'RES003',
-  //   couponNumber: 'CUP2025',
-  //   adults: 3,
-  //   children: 2,
-  //   amount: 500.00,
-  //   transactionType: { name: 'Credit Card', code: 'CC001', status: true, cash: false, deposit: true, applyDeposit: true },
-  //   rowClass: 'row-deposit',
-  //   parentId: 'PARENT003',
-  //   reverseFromParentId: 'REV_PARENT003',
-  //   remark: 'Split payment with partner',
-  // },
-  // {
-  //   id: '4',
-  //   paymentDetailId: 'PD12348',
-  //   bookingId: 'BKG20231004',
-  //   invoiceNumber: 'INV001237',
-  //   transactionDate: '2024-10-04',
-  //   fullName: 'Bob Brown',
-  //   reservationNumber: 'RES004',
-  //   couponNumber: 'CUP2026',
-  //   adults: 2,
-  //   children: 0,
-  //   amount: 300.00,
-  //   transactionType: { name: 'Bank Transfer', code: 'BT001', status: false, cash: false, deposit: true, applyDeposit: false },
-  //   rowClass: 'row-deposit',
-  //   parentId: 'PARENT004',
-  //   reverseFromParentId: 'REV_PARENT004',
-  //   remark: 'Pending bank confirmation',
-  // },
-  // {
-  //   id: '5',
-  //   paymentDetailId: 'PD12349',
-  //   bookingId: 'BKG20231005',
-  //   invoiceNumber: 'INV001238',
-  //   transactionDate: '2024-10-05',
-  //   fullName: 'Maria Lopez',
-  //   reservationNumber: 'RES005',
-  //   couponNumber: 'CUP2027',
-  //   adults: 4,
-  //   children: 1,
-  //   amount: 700.00,
-  //   transactionType: { name: 'Online Payment', code: 'OP002', status: true, cash: false, deposit: false, applyDeposit: true },
-  //   parentId: 'PARENT005',
-  //   reverseFromParentId: 'REV_PARENT005',
-  //   remark: 'Early check-in applied',
-  // }
-])
+const paymentDetailsList = ref<any[]>([])
 const paymentStatusOfGetById = ref({} as GenericObject)
 
 const contextMenu = ref()
@@ -543,6 +454,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     dataType: 'text',
     class: 'field col-12 md:col-3',
+    tabIndex: 1,
   },
   {
     field: 'client',
@@ -550,6 +462,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     validation: validateEntityStatus('client'),
+    tabIndex: 6,
   },
   {
     field: 'paymentAmount',
@@ -594,6 +507,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-1 required',
     validation: validateEntityStatus('payment source'),
+    tabIndex: 2
   },
   {
     field: 'paymentStatus',
@@ -602,6 +516,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     class: 'field col-12 md:col-1 required',
     validation: validateEntityStatus('payment status'),
+    tabIndex: 3
   },
   {
     field: 'transactionDate',
@@ -609,7 +524,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'date',
     class: 'field col-12 md:col-1 required ',
     headerClass: 'mb-1',
-
+    tabIndex: 4,
     validation: z.date({
       required_error: 'The Bank Deposit Date field is required',
       invalid_type_error: 'The Bank Deposit Date field is required',
@@ -623,6 +538,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-3 required',
     disabled: true,
     validation: validateEntityStatus('agency'),
+    tabIndex: 7
   },
   {
     field: 'paymentBalance',
@@ -663,6 +579,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reference No.',
     dataType: 'text',
     class: 'field col-12 md:col-3',
+    tabIndex: 5
   },
 
   {
@@ -671,6 +588,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
     validation: validateEntityStatus('hotel'),
+    tabIndex: 8
   },
   {
     field: 'bankAccount',
@@ -3313,7 +3231,6 @@ onMounted(async () => {
     loadDefaultsValues()
   }
 })
-const checkboxValue1 = ref(false)
 </script>
 
 <template>
@@ -3343,6 +3260,7 @@ const checkboxValue1 = ref(false)
             v-model="data.paymentAmount"
             show-clear
             mode="decimal"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             :readonly="idItem !== ''"
             :min-fraction-digits="2"
@@ -3363,6 +3281,7 @@ const checkboxValue1 = ref(false)
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             item-value="id"
             :model="data.paymentStatus"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled"
@@ -3426,6 +3345,7 @@ const checkboxValue1 = ref(false)
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             item-value="id"
             :model="data.client"
             :suggestions="[...clientList]"
@@ -3474,6 +3394,7 @@ const checkboxValue1 = ref(false)
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             item-value="id"
             :model="data.paymentSource"
             :suggestions="[...paymentSourceList]"
@@ -3502,6 +3423,7 @@ const checkboxValue1 = ref(false)
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.transactionDate"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             date-format="yy-mm-dd"
             :max-date="new Date()"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
@@ -3512,11 +3434,12 @@ const checkboxValue1 = ref(false)
           <Skeleton v-else height="2rem" />
         </template>
         <!-- Agency -->
-        <template #field-agency="{ item: data, onUpdate }">
+        <template #field-agency="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             :key="formReloadAgency"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             field="name"
             item-value="id"
             :model="data.agency"
@@ -3556,6 +3479,7 @@ const checkboxValue1 = ref(false)
             id="autocomplete"
             field="name"
             item-value="id"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             :model="data.hotel"
             :suggestions="[...hotelList]"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
@@ -3602,12 +3526,13 @@ const checkboxValue1 = ref(false)
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-bankAccount="{ item: data, onUpdate }">
+        <template #field-bankAccount="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             :model="data.bankAccount"
             :disabled="disableBankAccount(data)"
             :suggestions="[...bankAccountList]"
@@ -3639,12 +3564,13 @@ const checkboxValue1 = ref(false)
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #field-attachmentStatus="{ item: data, onUpdate }">
+        <template #field-attachmentStatus="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
             :disabled="true"
             :model="data.attachmentStatus"
             :suggestions="[...attachmentStatusList]"
