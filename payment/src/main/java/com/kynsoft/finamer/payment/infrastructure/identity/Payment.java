@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.hibernate.annotations.Type;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -106,6 +107,8 @@ public class Payment implements Serializable {
     private Double notIdentified;
     private Double notApplied;
     private Double applied;
+
+    @Column(length = 4000)
     private String remark;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
