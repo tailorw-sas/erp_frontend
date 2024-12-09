@@ -62,7 +62,7 @@ const columnsPayments = ref<IColumn[]>([
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
-  { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '140px', sortable: true, showFilter: true },
   { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
@@ -76,13 +76,14 @@ const optionsOfTablePayments = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const payloadPayments = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 10000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -256,22 +257,21 @@ onMounted(async () => {
     @hide="onClose(true)"
   >
     <template #header>
-      <div class="flex justify-content-between">
-        <h5 class="m-0">
-          Payment Details - Invoice Id: {{ props.selectedInvoice.invoiceId }}
-        </h5>
+      <div class="flex justify-content-between align-items-center w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            Payment Details
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Invoice: {{ props.selectedInvoice.invoiceId }}
+          </h5>
+        </div>
       </div>
     </template>
     <template #default>
       <div class="p-fluid pt-3">
-        <!-- // Label -->
-        <!-- <div class="flex justify-content-end mb-2">
-          <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
-            <strong class="mr-2 w-auto">Invoice Id:</strong>
-            <span class="w-auto text-white font-semibold">{{ props.selectedInvoice.invoiceId ?? '' }}</span>
-          </div>
-        </div> -->
-
         <DynamicTable
           class="card p-0"
           :data="listPaymentDetails"
@@ -284,7 +284,7 @@ onMounted(async () => {
           @on-row-double-click="onRowDoubleClickInDataTable"
         />
       </div>
-      <div class="flex justify-content-end">
+      <div v-if="false" class="flex justify-content-end">
         <div>
           <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
           <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="onClose()" />
