@@ -1610,6 +1610,9 @@ const computedShowMenuItemAddRoomRate = computed(() => {
 
 function onRowRightClick(event: any) {
   console.log('event', event);
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+    return;
+  }
   
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
     menuModel.value = [
@@ -1661,8 +1664,6 @@ function onCellEditComplete(val: any) {
     }
     return props.updateItem(val?.newData)
   }
-
-  console.log(val);
 }
 
 
@@ -1872,10 +1873,6 @@ onMounted(() => {
 
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
         // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
-        //   return;
-        // }
-
-        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
         //   return;
         // }
 
