@@ -45,7 +45,7 @@ const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 
 const confStatusListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-payment-transaction-status',
 })
 
@@ -53,6 +53,15 @@ const confHotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
 })
+
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
 
 const legend = ref(
   [
@@ -89,25 +98,27 @@ const sClassMap: IStatusClass[] = [
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
+  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
   { field: 'hotelPaymentId', header: 'Id', type: 'text' },
   { field: 'transactionDate', header: 'Trans Date', type: 'date' },
-  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
+  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
   { field: 'merchantBankAccountNumber', header: 'Bank Account Number', type: 'text', sortable: true },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'Total', type: 'number' },
-  { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
+  { field: 'remark', header: 'Remark', type: 'text', maxWidth: '200px' },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-payment-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
-  { id: 'id', name: 'Hotel Payment Id', filterOnlyByField: true },
-  { id: 'transactionId', name: 'Transaction Id', filterOnlyByField: true },
-  { id: 'reference', name: 'Transaction Reference', filterOnlyByField: false },
-  { id: 'reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false },
-  { id: 'agencyCode', name: 'Agency Code', filterOnlyByField: false },
-  { id: 'remark', name: 'Remark', filterOnlyByField: false },
+  { id: 'hotelPaymentId', name: 'Hotel Payment Id', filterOnlyByField: true, operator: 'EQUALS' },
+  { id: 'transactionId', name: 'Transaction Id', filterOnlyByField: true, operator: 'EQUALS' },
+  { id: 'reference', name: 'Transaction Reference', filterOnlyByField: false, operator: 'LIKE' },
+  { id: 'reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'agencyCode', name: 'Agency Code', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'remark', name: 'Remark', filterOnlyByField: false, operator: 'LIKE' },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
@@ -170,9 +181,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.statusName = iterator.status?.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageHotel') && iterator.hotel) {
         iterator.manageHotel = { id: iterator.manageHotel.id, name: `${iterator.manageHotel.code} - ${iterator.manageHotel.name}` }
       }
@@ -224,7 +232,7 @@ function searchAndFilter() {
   if (filterToSearch.value.criteria && filterToSearch.value.criteria.filterOnlyByField && filterToSearch.value.search) {
     newPayload.filter = [{
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'EQUALS',
+      operator: filterToSearch.value.criteria.operator || 'EQUALS',
       value: filterToSearch.value.search,
       logicalOperation: 'AND',
       type: 'filterSearch'
@@ -233,10 +241,10 @@ function searchAndFilter() {
   else {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Si el criterio no es filterOnlyByField entonces se agrega a la lista de filtros
-    if (filterToSearch.value.criteria && filterToSearch.value.search) {
+    if (filterToSearch.value.criteria && !filterToSearch.value.criteria.filterOnlyByField && filterToSearch.value.search) {
       newPayload.filter = [{
         key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-        operator: 'EQUALS',
+        operator: filterToSearch.value.criteria.operator || 'EQUALS',
         value: filterToSearch.value.search,
         logicalOperation: 'AND',
         type: 'filterSearch'
@@ -436,47 +444,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
-}
-
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
 }
 
 function onSortField(event: any) {
@@ -694,10 +662,31 @@ onMounted(() => {
             }"
           />
         </template>
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0">
+            <!-- <pre>{{ objData }}</pre> -->
+            <Button
+              v-if="objData.hasAttachments"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+              :style="{ color: '#000' }"
+            />
+          </div>
+          <!-- style="color: #616161;" -->
+          <!-- :style="{ 'background-color': '#00b816' }" -->
+        </template>
+        <template #column-status="{ data, column }">
+          <Badge
+            v-tooltip.top="data.status.name.toString()"
+            :value="data.status.name"
+            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+          />
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="5" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
               <Column :footer="formatNumber(subTotals.details)" />
               <Column :footer="formatNumber(subTotals.details)" />
