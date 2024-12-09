@@ -11,7 +11,6 @@ const props = defineProps({
   fieldsv2: {
     type: Array<FieldDefinitionType>,
     required: true,
-
   },
   header: {
     type: String,
@@ -129,11 +128,17 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
-    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
-    style="width: 900px;" @hide="closeDialog"
+    v-model:visible="dialogVisible"
+    modal
+    :header="header"
+    :class="props.class || 'p-4 h-fit'"
+    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'"
+    :block-scroll="true"
+    style="width: 900px;"
+    @hide="closeDialog"
   >
     <div class=" h-full overflow-hidden p-2">
+      <pre>{{ invoiceObj }}</pre>
       <EditFormV2
         v-if="true"
         :key="formReload"
@@ -257,8 +262,13 @@ onMounted(() => {
         </template>
         <template #field-nightType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.nightType" :suggestions="nightTypeList" @change="($event) => {
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.nightType"
+            :suggestions="nightTypeList"
+            @change="($event) => {
               onUpdate('nightType', $event)
             }" @load="($event) => getNightTypeList($event)"
           >
