@@ -23,6 +23,7 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IManagePaymentAttachmentStatusService attachmentStatusService;
 
     public CreateMasterPaymentAttachmentCommandHandler(IMasterPaymentAttachmentService masterPaymentAttachmentService,
             IPaymentService paymentService,
@@ -30,7 +31,8 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
             IManageResourceTypeService manageResourceTypeService,
             IManageEmployeeService manageEmployeeService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IManagePaymentAttachmentStatusService attachmentStatusService) {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.paymentService = paymentService;
         this.manageAttachmentTypeService = manageAttachmentTypeService;
@@ -38,6 +40,7 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
         this.manageEmployeeService = manageEmployeeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.attachmentStatusService = attachmentStatusService;
     }
 
     @Override
@@ -67,11 +70,16 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
                 command.getRemark(),
                 0L
         ));
+
+        String statusHistory = resource.getAttachmentStatus().getCode() + "-" + resource.getAttachmentStatus().getName();
         if (paymentSupport) {
             resource.setPaymentSupport(true);// Si paso la regla es porque no tenia Payment Support agregados.
+            ManagePaymentAttachmentStatusDto attachmentStatusSupport = this.attachmentStatusService.findBySupported();
+            resource.setAttachmentStatus(attachmentStatusSupport);
+            statusHistory = attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName();
             this.paymentService.update(resource);
         }
-        this.updateAttachmentStatusHistory(employeeDto, resource, command.getFileName(), attachmentId);
+        this.updateAttachmentStatusHistory(employeeDto, resource, command.getFileName(), attachmentId, statusHistory);
 //        this.createPaymentAttachmentStatusHistory(employeeDto, resource, command.getFileName());
     }
 
@@ -88,14 +96,15 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
 //        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
 //    }
 
-    private void updateAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, String fileName, Long attachmentId) {
+    private void updateAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, String fileName, Long attachmentId, String statusHistory) {
 
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name: " + fileName);
         attachmentStatusHistoryDto.setEmployee(employeeDto);
         attachmentStatusHistoryDto.setPayment(payment);
-        attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
+        attachmentStatusHistoryDto.setStatus(statusHistory);
+        //attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
         attachmentStatusHistoryDto.setAttachmentId(attachmentId);
 
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
