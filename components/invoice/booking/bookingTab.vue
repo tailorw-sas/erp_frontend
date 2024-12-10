@@ -956,7 +956,7 @@ async function deleteBookingOption(item: any) {
   }
 }
 
-const menuModel = <any>ref()
+const menuModel = <any>ref([])
 
 const Options = ref({
   tableName: 'Invoice',
@@ -1609,11 +1609,26 @@ const computedShowMenuItemAddRoomRate = computed(() => {
   })
 
 function onRowRightClick(event: any) {
-  console.log('event', event);
-  // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  console.log('event', props.invoiceObj);
+  // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.RECONCILED) {
   //   return;
   // }
-  
+
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id === InvoiceStatus.PROCECSED) {
+    menuModel.value = [
+    {
+      label: 'Add Room Rate',
+      command: () => props.openRoomRateDialog(selectedBooking.value),
+      disabled: computedShowMenuItemAddRoomRate
+    },
+    {
+      label: 'Edit booking',
+      command: () => newOpenEditBooking(selectedBooking.value),
+      disabled: computedShowMenuItemEditBooking
+    },
+    ]
+  } 
+
   if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
     menuModel.value = [
       {
@@ -1645,9 +1660,12 @@ function onRowRightClick(event: any) {
       },
     ]
   }
+  
 
   selectedBooking.value = event.data
-  bookingContextMenu.value.show(event.originalEvent)
+  if (menuModel.value.length > 0) {
+    bookingContextMenu.value.show(event.originalEvent)
+  }
 }
 
 function onCellEditComplete(val: any) {
@@ -1813,22 +1831,22 @@ onMounted(() => {
 
   
   menuModel.value = [
-    {
-      label: 'Add Room Rate',
-      command: () => props.openRoomRateDialog(selectedBooking.value),
-      disabled: computedShowMenuItemAddRoomRate
-    },
+    // {
+    //   label: 'Add Room Rate',
+    //   command: () => props.openRoomRateDialog(selectedBooking.value),
+    //   disabled: computedShowMenuItemAddRoomRate
+    // },
     // {
     //   label: 'Edit booking',
     //   command: () => openEditBooking(selectedBooking.value),
     //   disabled: computedShowMenuItemEditBooking
     // },
     // Esto es solo para pruebas
-    {
-      label: 'Edit booking',
-      command: () => newOpenEditBooking(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
-    },
+    // {
+    //   label: 'Edit booking',
+    //   command: () => newOpenEditBooking(selectedBooking.value),
+    //   disabled: computedShowMenuItemEditBooking
+    // },
     // {
     //   label: 'Payment Details Applied',
     //   command: () => openModalPaymentDetail(selectedBooking.value),
@@ -1836,15 +1854,15 @@ onMounted(() => {
     // },
   ]
 
-  if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
-    menuModel.value = [
-      {
-        label: 'Edit booking',
-        command: () => openEditBooking(selectedBooking.value),
-        disabled: computedShowMenuItemEditBooking
-      },
-    ]
-  }
+  // if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {
+  //   menuModel.value = [
+  //     {
+  //       label: 'Edit booking',
+  //       command: () => openEditBooking(selectedBooking.value),
+  //       disabled: computedShowMenuItemEditBooking
+  //     },
+  //   ]
+  // }
 
   if (!props.isCreationDialog) {
     getBookingList()
