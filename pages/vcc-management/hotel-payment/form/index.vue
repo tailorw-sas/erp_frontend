@@ -585,10 +585,9 @@ function onChangeLocalPagination(event: any) {
   pagination.value.limit = event.rows
 }
 
-watch(() => LocalBindTransactionList.value, async (newValue) => {
-  pagination.value.totalElements = newValue?.length ?? 0
+function recalculateTotals() {
   subTotals.value = { amount: 0, commission: 0, net: 0 }
-  // recalcular totales si cambia la lista
+
   for (let i = 0; i < LocalBindTransactionList.value.length; i++) {
     const localTransaction = LocalBindTransactionList.value[i]
     if (localTransaction.adjustment && localTransaction.transactionSubCategory.negative) {
@@ -602,6 +601,12 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       subTotals.value.net += localTransaction.netAmount
     }
   }
+}
+
+watch(() => LocalBindTransactionList.value, async (newValue) => {
+  pagination.value.totalElements = newValue?.length ?? 0
+  // recalcular totales si cambia la lista
+  recalculateTotals()
 })
 
 onMounted(() => {
@@ -753,6 +758,7 @@ onMounted(() => {
         if (!$event) {
           getList()
         }
+        recalculateTotals()
       }" @on-save-local="($event) => updateCurrentAdjustmentTransaction($event)"
     />
     <ContextMenu ref="contextMenu" :model="menuListItems">
