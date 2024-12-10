@@ -132,7 +132,7 @@ onMounted(() => {
         </div>
         <div class="flex align-items-center">
           <h5 class="m-0 mr-4">
-            Booking ID: {{ props.bookingObj?.bookingId }}
+            Booking Id: {{ props.bookingObj?.bookingId }}
           </h5>
         </div>
       </div>
