@@ -919,7 +919,7 @@ defineExpose({ clearSelectedItems })
               />
             </slot>
           </template>
-          <template v-if="column.editable && column.type === 'text'" #editor="{ data, field }">
+          <template v-if="column.editable && (column.type === 'text' || column.type === 'number')" #editor="{ data, field }">
             <InputText v-model="data[field]" style="width: 100%" autofocus fluid />
           </template>
         </Column>
