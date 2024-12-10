@@ -718,7 +718,7 @@ async function searchAndFilter() {
       severity: 'info',
       summary: 'Confirmed',
       detail: `No invoices available in processed status `,
-      life: 0 // Duración del toast en milisegundos
+      life: 1000 // Duración del toast en milisegundos
     })
   }
 }
