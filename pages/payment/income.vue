@@ -412,7 +412,7 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     dataType: 'number',
     class: 'field col-12 required',
     validation: z.number()
-      .positive({ message: 'The amount must be a positive number' })
+      // .positive({ message: 'The amount must be a positive number' })
       .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
       .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
   },
