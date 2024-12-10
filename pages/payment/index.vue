@@ -697,8 +697,8 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
+  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: false, showFilter: false },
+  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: false, showFilter: false, editable: true },
 ])
 
 const applyPaymentOptionsOtherDeduction = ref({
@@ -2201,8 +2201,12 @@ async function applyPaymentGetListForOtherDeductions() {
                   iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                   // iterator.bookingAmount = iterator.invoiceAmount?.toString()
                   // iterator.bookingBalance = iterator.dueAmount?.toString()
-                  iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-                  iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                  // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                  // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+                  iterator.dueAmountTemp = iterator.dueAmount || 0
+                  iterator.bookingAmountTemp = iterator.invoiceAmount || 0
+
                   // for (const booking of iterator.bookings) {
                   //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
                   //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
@@ -2310,8 +2314,11 @@ async function applyPaymentGetListForOtherDeductions() {
                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
                 // iterator.bookingBalance = iterator.dueAmount?.toString()
 
-                iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+                // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                iterator.dueAmountTemp = iterator.dueAmount || 0
+                iterator.bookingAmountTemp = iterator.invoiceAmount || 0
 
                 // for (const booking of iterator.bookings) {
                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
@@ -2449,8 +2456,12 @@ async function applyPaymentGetListForOtherDeductions() {
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
                 // iterator.bookingBalance = iterator.dueAmount?.toString()
-                iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                iterator.dueAmountTemp = iterator.dueAmount || 0
+                iterator.bookingAmountTemp = iterator.invoiceAmount || 0
 
                 // for (const booking of iterator.bookings) {
                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
@@ -2772,13 +2783,28 @@ async function selectRowsOfInvoiceOfOtherDeduction(event: any) {
 async function onCellEditCompleteApplyPaymentOtherDeduction(event: any) {
   const { data, newValue, field } = event
   switch (field) {
-    case 'dueAmountTemp':
-      if (newValue > 0 && newValue <= data[field]) {
-        data[field] = newValue
+    case 'dueAmountTemp': {
+      let valueTemp = 0
+
+      if (typeof newValue === 'string') {
+        valueTemp = Number.parseFloat(newValue.replace(/,/g, ''))
+
+        if (valueTemp > 0 && valueTemp <= data.dueAmount) {
+          data[field] = valueTemp
+        }
+        else {
+          toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${formatNumber(data.dueAmount)}`, life: 4000 })
+        }
       }
-      else {
-        toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${data[field]}`, life: 4000 })
+      else if (typeof newValue === 'number') {
+        if (newValue > 0 && newValue <= data.dueAmount) {
+          data[field] = newValue
+        }
+        else {
+          toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${formatNumber(data.dueAmount)}`, life: 4000 })
+        }
       }
+    }
       break
   }
   // data[field] = newValue
