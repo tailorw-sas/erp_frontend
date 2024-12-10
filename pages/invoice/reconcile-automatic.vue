@@ -712,7 +712,7 @@ async function searchAndFilter() {
     selectedElements.value = [] // Asegurarse de que esté vacío si no hay resultados
   }
 
-  // Verificar si no hay resultados
+  // // Verificar si no hay resultados
   if (!dataList || dataList.value.length === 0) {
     toast.add({
       severity: 'info',
@@ -901,7 +901,7 @@ onMounted(async () => {
                     <div class="flex align-items-center mx-3">
                       <Button
                         v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                        :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
+                        :disabled="disabledSearch" :loading="options.loading" @click="searchAndFilter"
                       />
                       <Button
                         v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
