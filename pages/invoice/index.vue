@@ -1982,13 +1982,17 @@ function onRowRightClick(event: any) {
   }
 
   // Resend
-  if (event?.data?.status === InvoiceStatus.SENT) {
-    findMenuItemByLabelSetShow('Re-Send', invoiceContextMenuItems.value, true)
+  if (event?.data?.status === InvoiceStatus.SENT) { 
+    if (event?.data.dueAmount !== 0 && event?.data.invoiceAmount !== 0) {   
+      findMenuItemByLabelSetShow('Re-Send', invoiceContextMenuItems.value, true)
+    }
   }
 
   // Resend
   if (event?.data?.status === InvoiceStatus.RECONCILED) {
-    findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
+    if (event?.data.dueAmount !== 0 && event?.data.invoiceAmount !== 0) {
+      findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
+    }
   }
 
   // From Invoice // Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit
