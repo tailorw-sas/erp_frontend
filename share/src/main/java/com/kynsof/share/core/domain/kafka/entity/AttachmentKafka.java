@@ -19,4 +19,5 @@ public class AttachmentKafka implements Serializable {
     private String fileWeight;
     private String path;
     private String remark;
+    private boolean support;
 }
