@@ -35,7 +35,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 case MANAGE_INVOICE -> {
                     List<ManageInvoiceDto> list = this.manageInvoiceService.findAllToReplicate();
                     for (ManageInvoiceDto invoice : list) {
-                        this.producerReplicateManageInvoiceService.create(invoice);
+                        this.producerReplicateManageInvoiceService.create(invoice, null);
                     }
                 }
                 case MANAGE_BOOKING -> {

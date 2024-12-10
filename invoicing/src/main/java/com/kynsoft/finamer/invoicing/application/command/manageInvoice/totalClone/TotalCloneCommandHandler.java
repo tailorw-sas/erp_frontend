@@ -277,7 +277,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         command.setClonedInvoiceNo(this.deleteHotelInfo(created.getInvoiceNumber()));
 
         try {
-            this.producerReplicateManageInvoiceService.create(created);
+            this.producerReplicateManageInvoiceService.create(created, null);
         } catch (Exception e) {
         }
 

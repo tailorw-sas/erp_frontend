@@ -244,7 +244,7 @@ public class ImportInnsistServiceImpl {
 
         //TODO: aqui se envia a crear el invoice con sun booking en payment
         try {
-            this.producerReplicateManageInvoiceService.create(manageInvoiceDto);
+            this.producerReplicateManageInvoiceService.create(manageInvoiceDto, null);
         } catch (Exception e) {
         }
     }

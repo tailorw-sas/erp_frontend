@@ -392,7 +392,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 //        updateInvoiceDto.setOriginalAmount(updateInvoiceDto.getInvoiceAmount());
 //        this.service.update(updateInvoiceDto);
         try {
-            this.producerReplicateManageInvoiceService.create(created);
+            this.producerReplicateManageInvoiceService.create(created, null);
         } catch (Exception e) {
         }
 

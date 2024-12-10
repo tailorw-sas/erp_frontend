@@ -88,7 +88,7 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
             command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(invoiceDto));
             this.invoiceService.update(invoiceDto);
             ManageInvoiceDto updateInvoice = this.invoiceService.findById(invoiceDto.getId());
-            this.producerUpdateManageInvoiceService.create(updateInvoice);
+            this.producerUpdateManageInvoiceService.create(updateInvoice, null);
         }
     }
 

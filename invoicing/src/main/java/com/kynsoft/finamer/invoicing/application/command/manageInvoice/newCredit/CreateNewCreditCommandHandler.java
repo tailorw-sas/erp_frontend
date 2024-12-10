@@ -136,6 +136,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         }
 
         int cont = 0;
+        UUID attachmentDefault = null;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
             RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
                     command.getAttachmentCommands().get(i).getFile()
@@ -163,6 +164,9 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                     false
             );
 
+            if (cont == 1) {
+                attachmentDefault = attachmentDto.getId();
+            }
             attachments.add(attachmentDto);
         }
         //debe venir al menos un attachment de tipo attinvdefault
@@ -227,7 +231,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         );
         invoiceDto.setOriginalAmount(invoiceAmount);
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
-        this.producerReplicateManageInvoiceService.create(created);
+        this.producerReplicateManageInvoiceService.create(created, attachmentDefault);
 
         command.setCredit(created.getId());
         command.setInvoiceId(created.getInvoiceId());
