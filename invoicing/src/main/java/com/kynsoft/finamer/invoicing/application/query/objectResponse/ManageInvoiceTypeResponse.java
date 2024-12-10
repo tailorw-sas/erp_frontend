@@ -24,6 +24,7 @@ public class ManageInvoiceTypeResponse {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.income = dto.isIncome();
+
     }
 
 }
