@@ -331,7 +331,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         LocalDateTime.now(),
                         "Automatic adjustment generated to closed the invoice, because it was cloned",
                         this.invoiceTransactionTypeService.findByDefaults(),
-                        this.paymentTransactionTypeService.findByDefaults(),
+                        null,
                         null,
                         employee,
                         false
