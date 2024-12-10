@@ -109,6 +109,11 @@ const transactionTypeApi = reactive({
   keyValue: 'name'
 })
 
+const paymentTransactionTypeApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-payment-transaction-type',
+})
+
 const Fields: Array<Container> = [
   {
     childs: [
@@ -260,6 +265,10 @@ const ENUM_FILTER = [
   { id: 'name', name: 'Name' },
   { id: 'description', name: 'Description' },
 ]
+
+const isIncome = computed(() => {
+  return props.invoiceObj && (props.invoiceObj.invoiceType?.income || false)
+})
 
 async function openEditDialog(item: any) {
   props.openDialog()
@@ -509,7 +518,14 @@ async function saveAdjustment(item: { [key: string]: any }) {
         props.updateItem(item)
       }
       else {
-        item.transactionType = item.transactionType?.id || null
+        // Si es un income se envia el campo paymentTransactionType en lugar de transactionType
+        if (isIncome.value) {
+          item.paymentTransactionType = item.transactionType?.id || null
+          delete item.transactionType
+        }
+        else {
+          item.transactionType = item.transactionType?.id || null
+        }
         await updateAdjustment(item)
       }
     }
@@ -527,7 +543,14 @@ async function saveAdjustment(item: { [key: string]: any }) {
         idItem.value = item.id
       }
       else {
-        item.transactionType = item.transactionType?.id || null
+        // Si es un income se envia el campo paymentTransactionType en lugar de transactionType
+        if (isIncome.value) {
+          item.paymentTransactionType = item.transactionType?.id || null
+          delete item.transactionType
+        }
+        else {
+          item.transactionType = item.transactionType?.id || null
+        }
         const response = await createAdjustment(item)
 
         idItem.value = response?.id
@@ -598,7 +621,10 @@ async function getTransactionTypeList(query = '') {
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
+    const moduleApi = isIncome.value ? paymentTransactionTypeApi.moduleApi : transactionTypeApi.moduleApi
+    const uriApi = isIncome.value ? paymentTransactionTypeApi.uriApi : transactionTypeApi.uriApi
+
+    const response = await GenericService.search(moduleApi, uriApi, payload)
     const { data: dataList } = response
     transactionTypeList.value = []
     for (const iterator of dataList) {
