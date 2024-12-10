@@ -349,12 +349,14 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
+      /* let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
 
       if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
         transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
       }
 
+      iterator.paymentTransactionType = transaction */
+      iterator.paymentTransactionType = iterator.paymentTransactionType || iterator.transaction
       ListItems.value = [...ListItems.value, {
         ...iterator,
         loadingEdit: false,
