@@ -263,7 +263,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.setInvoiceToCloneAmounts(invoiceToClone, command.getEmployeeName());
 
         try {
-            this.producerReplicateManageInvoiceService.create(created);
+            this.producerReplicateManageInvoiceService.create(created, null);
         } catch (Exception e) {
         }
 

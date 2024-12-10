@@ -72,7 +72,7 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
 
         if (update.getUpdate() > 0) {
             this.bookingService.update(dto);
-            this.producerUpdateManageInvoiceService.create(this.invoiceService.findById(dto.getInvoice().getId()));
+            this.producerUpdateManageInvoiceService.create(this.invoiceService.findById(dto.getInvoice().getId()), null);
         }
     }
 

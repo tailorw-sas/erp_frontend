@@ -62,7 +62,7 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
         ManageInvoiceDto invoiceDto = service.create(creInvoiceDto);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         try {
-            this.producerReplicateManageInvoiceService.create(invoiceDto);
+            this.producerReplicateManageInvoiceService.create(invoiceDto, null);
         } catch (Exception e) {
             log.error(e.getMessage());
         }

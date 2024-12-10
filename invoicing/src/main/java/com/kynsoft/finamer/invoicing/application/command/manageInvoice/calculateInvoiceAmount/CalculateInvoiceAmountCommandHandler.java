@@ -34,7 +34,7 @@ public class CalculateInvoiceAmountCommandHandler implements ICommandHandler<Cal
             }
 
             this.service.calculateInvoiceAmount(this.service.findById(command.getId()));
-            this.producerReplicateManageInvoiceService.create(this.service.findById(command.getId()));
+            this.producerReplicateManageInvoiceService.create(this.service.findById(command.getId()), null);
         } catch (Exception ignored) {
             System.out.println(ignored);
         }
