@@ -67,7 +67,12 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  invoiceAmount: { type: Number, required: true }
+  invoiceAmount: { type: Number, required: true },
+  loadingDefaultTransactionType: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
 })
 const dialogVisible = ref(props.openDialog)
 const formFields = ref<FieldDefinitionType[]>([])
@@ -116,6 +121,7 @@ onMounted(() => {
   else {
     invoiceType.value = route.query.type as string
   }
+  props.getTransactionTypeList('', true)
 })
 </script>
 
@@ -174,7 +180,7 @@ onMounted(() => {
 
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingSaveAll && !loadingDefaultTransactionType"
             id="autocomplete"
             field="fullName"
             item-value="id"
@@ -190,6 +196,7 @@ onMounted(() => {
               }
             }" @load="($event) => getTransactionTypeList($event)"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #form-footer="props">

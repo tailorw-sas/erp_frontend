@@ -90,6 +90,7 @@ const formReload = ref(0)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingDelete = ref(false)
+const loadingDefaultTransactionType = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -107,6 +108,11 @@ const transactionTypeApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-invoice-transaction-type',
   keyValue: 'name'
+})
+
+const paymentTransactionTypeApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-payment-transaction-type',
 })
 
 const Fields: Array<Container> = [
@@ -260,6 +266,10 @@ const ENUM_FILTER = [
   { id: 'name', name: 'Name' },
   { id: 'description', name: 'Description' },
 ]
+
+const isIncome = computed(() => {
+  return props.invoiceObj && (props.invoiceObj.invoiceType?.income || false)
+})
 
 async function openEditDialog(item: any) {
   props.openDialog()
@@ -509,7 +519,14 @@ async function saveAdjustment(item: { [key: string]: any }) {
         props.updateItem(item)
       }
       else {
-        item.transactionType = item.transactionType?.id || null
+        // Si es un income se envia el campo paymentTransactionType en lugar de transactionType
+        if (isIncome.value) {
+          item.paymentTransactionType = item.transactionType?.id || null
+          delete item.transactionType
+        }
+        else {
+          item.transactionType = item.transactionType?.id || null
+        }
         await updateAdjustment(item)
       }
     }
@@ -527,7 +544,14 @@ async function saveAdjustment(item: { [key: string]: any }) {
         idItem.value = item.id
       }
       else {
-        item.transactionType = item.transactionType?.id || null
+        // Si es un income se envia el campo paymentTransactionType en lugar de transactionType
+        if (isIncome.value) {
+          item.paymentTransactionType = item.transactionType?.id || null
+          delete item.transactionType
+        }
+        else {
+          item.transactionType = item.transactionType?.id || null
+        }
         const response = await createAdjustment(item)
 
         idItem.value = response?.id
@@ -567,9 +591,9 @@ function requireConfirmationToSaveAdjustment(item: any) {
   })
 }
 
-async function getTransactionTypeList(query = '') {
+async function getTransactionTypeList(query = '', isDefault: boolean = false) {
   try {
-    const payload
+    const payload: IQueryRequest
       = {
         filter: [
           {
@@ -598,7 +622,20 @@ async function getTransactionTypeList(query = '') {
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
+    if (isDefault && isIncome.value) {
+      loadingDefaultTransactionType.value = true
+      payload.filter = [...payload.filter, {
+        key: 'incomeDefault',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }]
+    }
+
+    const moduleApi = isIncome.value ? paymentTransactionTypeApi.moduleApi : transactionTypeApi.moduleApi
+    const uriApi = isIncome.value ? paymentTransactionTypeApi.uriApi : transactionTypeApi.uriApi
+
+    const response = await GenericService.search(moduleApi, uriApi, payload)
     const { data: dataList } = response
     transactionTypeList.value = []
     for (const iterator of dataList) {
@@ -611,9 +648,18 @@ async function getTransactionTypeList(query = '') {
         isRemarkRequired: iterator.isRemarkRequired
       }]
     }
+    if (isDefault && transactionTypeList.value.length > 0) {
+      item.value.transactionType = transactionTypeList.value[0]
+      formReload.value += 1
+    }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultTransactionType.value = false
+    }
   }
 }
 
@@ -759,7 +805,7 @@ onMounted(() => {
 
       }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
       content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
-      :get-transaction-type-list="getTransactionTypeList"
+      :get-transaction-type-list="getTransactionTypeList" :loading-default-transaction-type="loadingDefaultTransactionType"
     />
   </div>
 </template>
