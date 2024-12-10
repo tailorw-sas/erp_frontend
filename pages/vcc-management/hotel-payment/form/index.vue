@@ -476,7 +476,8 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   try {
     await createItem(item)
-    await navigateTo({ path: `/vcc-management/hotel-payment/form/${idItem.value}`, params: { id: idItem.value } })
+    // await navigateTo({ path: `/vcc-management/hotel-payment/form/${idItem.value}`, params: { id: idItem.value } })
+    await navigateTo({ path: `/vcc-management/hotel-payment` })
   }
   catch (error: any) {
     loadingSaveAll.value = false
