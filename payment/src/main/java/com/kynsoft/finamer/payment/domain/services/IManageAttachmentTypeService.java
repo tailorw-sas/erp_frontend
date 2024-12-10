@@ -28,4 +28,6 @@ public interface IManageAttachmentTypeService {
     Long countByAntiToIncomeImportAndNotId(UUID id);
 
     AttachmentTypeDto getByDefault();
+
+    AttachmentTypeDto getByAntiToIncomeImport();
 }
