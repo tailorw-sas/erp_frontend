@@ -1143,10 +1143,14 @@ async function createItem(item: { [key: string]: any }) {
     payload.client = Object.prototype.hasOwnProperty.call(payload.client, 'id') ? payload.client.id : payload.client
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
-    payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
     payload.paymentAmount = Number(payload.paymentAmount)
     payload.employee = userData?.value?.user?.userId || ''
     payload.status = statusToString(payload.status)
+
+    if (payload.bankAccount && typeof payload.bankAccount === 'object' && payload.bankAccount !== null) {
+      payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
+    }
+
     if (attachmentList.value.length > 0) {
       payload.attachments = transformObjects(attachmentList.value)
     }
@@ -1216,7 +1220,9 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      // console.log(error)
+
+      toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
     }
   }
   loadingSaveAll.value = false
@@ -1817,11 +1823,14 @@ async function updateItem(item: { [key: string]: any }) {
   payload.client = Object.prototype.hasOwnProperty.call(payload.client, 'id') ? payload.client.id : payload.client
   payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
   payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
-  payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
   payload.paymentAmount = Number(payload.paymentAmount)
   payload.status = statusToString(payload.status)
   payload.employee = userData?.value?.user?.userId || ''
 
+  if (payload.bankAccount && typeof payload.bankAccount === 'object' && payload.bankAccount !== null) {
+    payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
+  }
+  // payload.bankAccount = Object.prototype.hasOwnProperty.call(payload.bankAccount, 'id') ? payload.bankAccount.id : payload.bankAccount
   // delete payload.paymentSource
   // delete payload.reference
   // delete payload.transactionDate
@@ -1850,6 +1859,9 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveAndReload(item: { [key: string]: any }) {
+  if (item?.amount && item?.amount !== '' && item?.amount !== undefined && typeof item?.amount === 'string') {
+    item.amount = Number(item.amount.replace(/,/g, ''))
+  }
   item.applyPayment = payloadToApplyPayment.value.applyPayment || false
   item.booking = payloadToApplyPayment.value.booking || ''
   let stopAcction = false
@@ -1865,13 +1877,7 @@ async function saveAndReload(item: { [key: string]: any }) {
 
   if (stopAcction === false) {
     try {
-      // if (payloadToApplyPayment.value.applyPayment) {
-      //   item.applyPayment = true
-      //   item.booking = payloadToApplyPayment.value.booking
-      // }
       if (actionOfModal.value === 'apply-deposit') {
-        // item.paymentDetail = item.id
-
         await createPaymentDetails(item)
       }
       else if (item?.id && actionOfModal.value === 'split-deposit') {
@@ -1881,10 +1887,6 @@ async function saveAndReload(item: { [key: string]: any }) {
         await updatePaymentDetails(item)
       }
       else {
-        // if (payloadToApplyPayment.value.applyPayment) {
-        //   item.applyPayment = true
-        //   item.booking = payloadToApplyPayment.value.booking
-        // }
         await createPaymentDetails(item)
       }
       itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
@@ -1932,6 +1934,7 @@ interface DataListItem {
   code: string
   status: string
   defaults?: boolean
+  expense?: boolean
 }
 
 interface ListItem {
@@ -1939,13 +1942,15 @@ interface ListItem {
   name: string
   status: boolean | string
   defaults?: boolean
+  expense?: boolean
 }
 function mapFunction(data: DataListItem): ListItem {
   return {
     id: data.id,
     name: `${data.code} - ${data.name}`,
     status: data.status,
-    defaults: data?.defaults || false
+    defaults: data?.defaults || false,
+    expense: data?.expense || false
   }
 }
 
@@ -3088,8 +3093,6 @@ function onRowContextMenu(event: any) {
 }
 
 async function onRowDoubleClickInDataTableApplyPayment(event: any) {
-  console.log('event', event)
-
   if (isApplyPaymentFromTheForm.value) {
     payloadToApplyPayment.value.invoiceNo = event?.invoiceNo
     payloadToApplyPayment.value.amount = event?.bookingBalance
@@ -3401,6 +3404,29 @@ onMounted(async () => {
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
             @change="($event) => {
               onUpdate('paymentSource', $event)
+
+              // Este codigo se va a implementar en algun momento
+              // if ($event && $event.expense) {
+              //   const decimalSchema = z.object(
+              //     {
+              //       bankAccount: z
+              //         .object({}).nullable(),
+              //     },
+              //   )
+              //   updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+              //   updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
+
+              // }
+              // else {
+              //   const decimalSchema = z.object(
+              //     {
+              //       bankAccount: validateEntityStatus('bank account'),
+              //     },
+              //   )
+              //   updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+              //   updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
+              // }
+
             }"
             @load="async($event) => {
               const objQueryToSearch = {
