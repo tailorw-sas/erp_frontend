@@ -2518,6 +2518,7 @@ function closeModalApplyPaymentOtherDeductions() {
 }
 
 async function openModalApplyPayment() {
+  paymentDetailsTypeDepositSelected.value = []
   openDialogApplyPayment.value = true
   invoiceAmmountSelected.value = 0
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
