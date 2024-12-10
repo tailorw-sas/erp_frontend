@@ -159,10 +159,17 @@ onMounted(() => {
     @hide="closeDialog"
   >
     <template #header>
-      <div class="flex justify-content-between">
-        <h5 class="m-0">
-          {{ options.tableName }} - Transaction ID: {{ props.selectedTransaction.id }}
-        </h5>
+      <div class="flex justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            {{ options.tableName }}
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Transaction ID: {{ props.selectedTransaction.id }}
+          </h5>
+        </div>
       </div>
     </template>
     <template #default>
