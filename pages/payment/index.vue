@@ -4344,8 +4344,14 @@ onMounted(async () => {
                     :model="transactionType"
                     :suggestions="[...transactionTypeList]"
                     @change="($event) => {
-                      transactionType = $event
-                      processValidation($event)
+                      // transactionType = $event
+                      if ($event) {
+                        transactionType = $event
+                        processValidation($event)
+                      }
+                      else {
+                        transactionType = {}
+                      }
                     }"
                     @load="async($event) => {
                       const objQueryToSearch = {
@@ -4488,7 +4494,7 @@ onMounted(async () => {
               v-tooltip.top="'Apply Payment'"
               class="w-3rem mx-1"
               icon="pi pi-check"
-              :disabled="Object.keys(transactionType).length === 0 || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
+              :disabled="('id' in transactionType) === false || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
               :loading="loadingSaveApplyPayment"
               @click="saveApplyPaymentOtherDeduction"
             />
