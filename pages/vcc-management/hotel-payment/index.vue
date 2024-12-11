@@ -147,9 +147,9 @@ const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const ENUM_FILTER = [
   { id: 'hotelPaymentId', name: 'Hotel Payment Id', filterOnlyByField: true, operator: 'EQUALS' },
   { id: 'transactionId', name: 'Transaction Id', filterOnlyByField: true, operator: 'EQUALS' },
-  { id: 'reference', name: 'Transaction Reference', filterOnlyByField: false, operator: 'LIKE' },
-  { id: 'reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false, operator: 'EQUALS' },
-  { id: 'agencyCode', name: 'Agency Code', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'transactions.referenceNumber', name: 'Transaction Reference', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'transactions.reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'transactions.agency.code', name: 'Agency Code', filterOnlyByField: false, operator: 'EQUALS' },
   { id: 'remark', name: 'Remark', filterOnlyByField: false, operator: 'LIKE' },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
