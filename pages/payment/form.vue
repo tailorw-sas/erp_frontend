@@ -364,7 +364,7 @@ const columns: IColumn[] = [
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
   { field: 'reverseFromParentId', header: 'Reverse From', width: 'auto', type: 'text' },
-  { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
+  { field: 'remark', header: 'Remark', width: 'auto', maxWidth: '200px', type: 'text' },
 
 ]
 

@@ -142,7 +142,7 @@ const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
-  { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '100px', maxWidth: '100px', columnClass: 'w-10 overflow-hidden' },
 ]
 
 const dialogVisible = ref(props.openDialog)

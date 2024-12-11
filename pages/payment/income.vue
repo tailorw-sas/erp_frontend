@@ -218,7 +218,7 @@ const adjustmentColumns: IColumn[] = [
   { field: 'transaction', header: 'Category', type: 'text' },
   { field: 'date', header: 'Transaction Date', type: 'text' },
   { field: 'employee', header: 'Employee', type: 'text' },
-  { field: 'remark', header: 'Description', type: 'text' },
+  { field: 'remark', header: 'Description', type: 'text', width: '200px' },
 ]
 
 const roomRateColumns: IColumn[] = [

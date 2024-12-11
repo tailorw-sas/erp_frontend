@@ -36,7 +36,7 @@ const columnsExpandTable: IColumn[] = [
   { field: 'adult', header: 'Adult', width: '120px', type: 'text' },
   { field: 'children', header: 'Children', width: '100px', type: 'text' },
   { field: 'paymentAmount', header: 'Payment Amount', width: '100px', type: 'text' },
-  { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '100px', maxWidth: '200px', type: 'text' },
 ]
 
 const columns: IColumn[] = [
@@ -47,7 +47,7 @@ const columns: IColumn[] = [
 
   { field: 'amount', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
   { field: 'depositBalance', header: 'Deposit Balance', width: '200px', type: 'text' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 const options = ref({
   tableName: 'Payment Details',
