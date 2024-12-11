@@ -353,14 +353,14 @@ const columns: IColumn[] = [
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No.', tooltip: 'Reservation', width: 'auto', type: 'text' },
-  { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: 'auto', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation No.', width: '150px', maxWidth: '150px', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: '140px', maxWidth: '140px', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
   { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
-  { field: 'amount', header: 'D. Amount', tooltip: 'Detail Amount', width: 'auto', type: 'text' },
+  { field: 'amount', header: 'Detail. Amount', tooltip: 'Detail Amount', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
   { field: 'reverseFromParentId', header: 'Reverse From', width: 'auto', type: 'text' },
@@ -3647,7 +3647,7 @@ onMounted(async () => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="" :colspan="8" footer-style="text-align:right; font-weight: bold;">
+            <Column footer="" :colspan="14" footer-style="text-align:right; font-weight: bold;">
               <template #footer>
                 <div class="flex align-items-center gap-4">
                   <div class="flex align-items-center">
@@ -3680,9 +3680,9 @@ onMounted(async () => {
                 </div>
               </template>
             </Column>
-            <Column footer="Totals:" :colspan="0" footer-style="text-align:right; font-weight: bold;" />
+            <!-- <Column footer="Totals:" :colspan="0" footer-style="text-align:right; font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :colspan="4" />
+            <Column :colspan="4" /> -->
           </Row>
         </ColumnGroup>
       </template>
