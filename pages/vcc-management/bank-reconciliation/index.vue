@@ -119,7 +119,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
-  { field: 'remark', header: 'Remark', type: 'text' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '200px' },
   { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 

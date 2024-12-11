@@ -174,7 +174,7 @@ const Columns: IColumn[] = [
   { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px', minWidth: '100px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
-  { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '100px', maxWidth: '200px', columnClass: 'w-10 overflow-hidden' },
 
 ]
 

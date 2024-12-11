@@ -64,7 +64,7 @@ const columnsPayments = ref<IColumn[]>([
   { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '140px', sortable: true, showFilter: true },
   { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'remark', header: 'Remark', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'remark', header: 'Remark', type: 'text', width: '90px', maxWidth: '190px', sortable: true, showFilter: true },
 ])
 
 const optionsOfTablePayments = ref({
