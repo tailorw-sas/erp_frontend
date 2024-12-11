@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingServiceImpl implements ImportBookingService {
@@ -43,9 +45,9 @@ public class BookingServiceImpl implements ImportBookingService {
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public BookingServiceImpl(ValidatorFactory<BookingRow> validatorFactory,
-                              BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
-                              BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
-                              ApplicationEventPublisher applicationEventPublisher
+            BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
+            BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
+            ApplicationEventPublisher applicationEventPublisher
     ) {
         this.validatorFactory = validatorFactory;
         this.bookingImportProcessRedisRepository = bookingImportProcessRedisRepository;
@@ -88,13 +90,13 @@ public class BookingServiceImpl implements ImportBookingService {
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
             bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
         } catch (Exception e) {
-           BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+            BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                     .hasError(true)
                     .exceptionMessage(e.getMessage())
                     .status(EProcessStatus.FINISHED)
                     .total(0)
                     .build();
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this,bookingImportProcessDto));
+            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
         }
 
     }
@@ -104,26 +106,28 @@ public class BookingServiceImpl implements ImportBookingService {
         Page<BookingRowError> importErrorPages = bookingImportRowErrorRedisRepository.
                 findAllByImportProcessId(importBookingErrorRequest.getImportProcessId(),
                         importBookingErrorRequest.getPageable());
-        return new PaginatedResponse(importErrorPages.getContent(),
+        return new PaginatedResponse(
+                importErrorPages.getContent().stream().sorted(Comparator.comparingInt(BookingRowError::getRowNumber)).collect(Collectors.toList()),
+                //importErrorPages.getContent(),
                 importErrorPages.getTotalPages(),
                 importErrorPages.getNumberOfElements(),
                 importErrorPages.getTotalElements(),
                 importErrorPages.getSize(),
-                importErrorPages.getNumber());
+                importErrorPages.getNumber()
+        );
     }
 
     @Override
     public ImportBookingProcessStatusResponse getImportBookingProcessStatus(ImportBookingProcessStatusRequest importBookingProcessStatusRequest) {
-        BookingImportProcessDto statusDtp =
-                bookingImportProcessRedisRepository.findByImportProcessId(importBookingProcessStatusRequest.getImportProcessId())
+        BookingImportProcessDto statusDtp
+                = bookingImportProcessRedisRepository.findByImportProcessId(importBookingProcessStatusRequest.getImportProcessId())
                         .map(BookingImportProcessRedisEntity::toAgreggate).get();
 
         if (statusDtp.isHasError()) {
             throw new ExcelException(statusDtp.getExceptionMessage());
         }
-        return new ImportBookingProcessStatusResponse(statusDtp.getStatus().name(),statusDtp.getTotal() );
+        return new ImportBookingProcessStatusResponse(statusDtp.getStatus().name(), statusDtp.getTotal());
 
     }
-
 
 }
