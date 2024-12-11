@@ -739,7 +739,7 @@ const Columns: IColumn[] = [
 //{ field: 'agency', header: 'Agency', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-{ field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '150px', maxWidth: '150px', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'originalAmount', header: 'Original Amount', type: 'text', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog },
