@@ -27,6 +27,10 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        if (obj.getHotelBookingNumber() == null) {
+            errorFieldList.add(new ErrorField("Hotel Booking No"," Hotel Booking No. must be not empty"));
+            return false;
+        }
         String validate = obj.getHotelBookingNumber()
                         .split("\\s+")[obj.getHotelBookingNumber()
                         .split("\\s+").length - 1];
