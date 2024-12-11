@@ -812,8 +812,8 @@ onMounted(() => {
             <Row>
               <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.details)" />
-              <Column :footer="formatNumber(subTotals.details)" />
+              <Column :footer="formatNumber(subTotals.commission)" />
+              <Column :footer="formatNumber(subTotals.net)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
