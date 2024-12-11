@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import {nextTick, onMounted, reactive, ref, watch} from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
+import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 // VARIABLES -----------------------------------------------------------------------------------------
+const toast = useToast()
 const listItems = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
@@ -32,17 +34,45 @@ const accordionLoading = ref({
 })
 const contextMenu = ref()
 
-const menuListItems = [
+const menuListItems = ref<any[]>([])
+
+enum MenuType {
+  changeComplete, changeCancelled
+}
+
+const allMenuListItems = [
   {
     label: 'Status History',
     icon: 'pi pi-history',
     command: () => { bankReconciliationHistoryDialogVisible.value = true },
     disabled: false,
-  }
+    default: true
+  },
+  {
+    label: 'Change to Completed',
+    type: MenuType.changeComplete,
+    icon: 'pi pi-check-circle',
+    command: () => { changeStatus(MenuType.changeComplete) },
+    disabled: false,
+    default: false
+  },
+  {
+    label: 'Change to Cancelled',
+    type: MenuType.changeCancelled,
+    icon: 'pi pi-times-circle',
+    command: () => { changeStatus(MenuType.changeCancelled) },
+    disabled: false,
+    default: false
+  },
 ]
 
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
+
+const confApi = reactive({
+  moduleApi: 'creditcard',
+  uriApi: 'hotel-payment',
+})
 
 const confStatusListApi = reactive({
   moduleApi: 'creditcard',
@@ -219,7 +249,7 @@ async function resetListItems() {
   getList()
 }
 
-function searchAndFilter() {
+async function searchAndFilter() {
   const newPayload: IQueryRequest = {
     filter: [],
     query: '',
@@ -323,7 +353,8 @@ function searchAndFilter() {
     }
   }
   payload.value = newPayload
-  getList()
+  options.value.loading = false
+  await getList()
 }
 
 function clearFilterToSearch() {
@@ -440,6 +471,73 @@ async function getStatusList(query: string = '') {
   }
 }
 
+async function findStatus(status: MenuType) {
+  try {
+    const payload = {
+      filter: [{
+        key: status === MenuType.changeCancelled ? 'cancelled' : 'completed',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      },],
+      query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    if (dataList.length > 0) {
+      // Retornar el id del status
+      return dataList[0].id
+    }
+  }
+  catch (error) {
+    console.error('Error getting status:', error)
+  }
+}
+
+async function updateStatus(hotelPaymentId: string, statusId: string) {
+  const payload: { [key: string]: any } = {}
+  payload.status = statusId
+  const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, hotelPaymentId, payload)
+  if (response && response.id) {
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })
+  }
+  else {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+  }
+}
+
+async function changeStatus(changeTo: MenuType) {
+  try {
+    options.value.loading = true
+    const hotelPaymentId = contextMenuTransaction.value.id
+    const statusId = await findStatus(changeTo)
+    if (statusId) {
+      try {
+        await updateStatus(hotelPaymentId, statusId)
+        await searchAndFilter()
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      }
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Status could not be found', life: 10000 })
+    }
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
@@ -455,10 +553,32 @@ function onSortField(event: any) {
   }
 }
 
+function setChangeStatusOptions() {
+  const newMenuItems = []
+  const noDefaultItems: any[] = allMenuListItems.filter((element: any) => !element.default)
+  const status = contextMenuTransaction.value.status
+  for (let i = 0; i < noDefaultItems.length; i++) {
+    const element = noDefaultItems[i]
+    if ((element.type === MenuType.changeComplete || element.type === MenuType.changeCancelled) && status.inProgress) {
+      newMenuItems.push(element)
+    }
+  }
+  return newMenuItems
+}
+
 async function onRowRightClick(event: any) {
-  contextMenu.value.hide()
+  menuListItems.value = [] // Limpiar elementos
+  if (contextMenu.value?.visible) {
+    contextMenu.value.hide()
+  }
   contextMenuTransaction.value = event.data
-  contextMenu.value.show(event.originalEvent)
+  const defaultItems = allMenuListItems.filter((e: any) => e.default) // Agregar elementos por defecto
+  const statusMenuItems = setChangeStatusOptions()
+  menuListItems.value = [...defaultItems, ...statusMenuItems]
+  if (menuListItems.value.length > 0) {
+    await nextTick()
+    contextMenu.value.show(event.originalEvent)
+  }
 }
 
 function goToHotelPaymentInNewTab() {
