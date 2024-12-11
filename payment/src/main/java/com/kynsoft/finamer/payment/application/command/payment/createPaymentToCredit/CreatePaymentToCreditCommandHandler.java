@@ -84,7 +84,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
-        ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByDefaults();
+        ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findBySupported();//El credit en su process debe de tener al menos attachemt de tipo support
         this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
         this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
     }
