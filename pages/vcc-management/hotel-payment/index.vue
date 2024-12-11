@@ -613,9 +613,11 @@ onMounted(() => {
     <h5 class="mb-0">
       Hotel Payment Management
     </h5>
-    <div class="my-2 flex justify-content-end px-0">
-      <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
-    </div>
+    <IfCan :perms="['HOTEL-PAYMENT:CREATE']">
+      <div class="my-2 flex justify-content-end px-0">
+        <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
+      </div>
+    </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 order-0">
@@ -812,8 +814,8 @@ onMounted(() => {
             <Row>
               <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.details)" />
-              <Column :footer="formatNumber(subTotals.details)" />
+              <Column :footer="formatNumber(subTotals.commission)" />
+              <Column :footer="formatNumber(subTotals.net)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
