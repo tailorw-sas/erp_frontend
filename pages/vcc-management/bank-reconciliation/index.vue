@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
@@ -505,6 +505,7 @@ function onSortField(event: any) {
 async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
+  await nextTick()
   contextMenu.value.show(event.originalEvent)
 }
 

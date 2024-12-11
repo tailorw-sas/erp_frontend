@@ -172,8 +172,7 @@ const pagination = ref<IPagination>({
 })
 
 const computedDisabledItemsByStatus = computed(() => {
-  return false
-  // return item.value?.reconcileStatus && (item.value?.reconcileStatus?.completed || item.value?.reconcileStatus?.cancelled)
+  return item.value?.status && (item.value?.status?.completed || item.value?.status?.cancelled)
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -243,6 +242,9 @@ async function getItemById(id: string) {
           response.status.fullName = `${response.status.code} - ${response.status.name}`
           item.value.status = response.status
           StatusList.value = [response.status]
+        }
+        if (response.status && (response.status.completed || response.status.cancelled)) {
+          updateFieldProperty(fields, 'remark', 'disabled', true)
         }
       }
       formReload.value += 1
@@ -554,12 +556,11 @@ async function unbindTransactions() {
 async function updateItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = {}
-    payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.remark = item.remark || ''
-    payload.amount = item.amount || ''
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
-    payload.reconcileStatus = typeof item.reconcileStatus === 'object' ? item.reconcileStatus.id : item.reconcileStatus
+    payload.manageBankAccount = Object.prototype.hasOwnProperty.call(item.manageBankAccount, 'id') ? item.manageBankAccount.id : item.manageBankAccount
+    payload.status = Object.prototype.hasOwnProperty.call(item.status, 'id') ? item.status.id : item.status
     const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
@@ -573,11 +574,6 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  // console.log(paymentAmount.value, item)
-  if (isGreaterThanTwoDecimals(paymentAmount.value, item.amount)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
-    return
-  }
   // let successOperation = true
   loadingSaveAll.value = true
   try {
@@ -591,15 +587,6 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
-}
-
-function isGreaterThanTwoDecimals(num1: number, num2: number): boolean {
-  // Redondear ambos números a dos decimales
-  const roundedNum1 = Math.round(num1 * 100) / 100
-  const roundedNum2 = Math.round(num2 * 100) / 100
-
-  // Comparar los números redondeados
-  return roundedNum1 > roundedNum2
 }
 
 async function handleSave(event: any) {
@@ -745,7 +732,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :disabled="!data.manageHotel"
+            :disabled="!data.manageHotel || computedDisabledItemsByStatus"
             :model="data.manageBankAccount"
             :suggestions="[...BankAccountList]"
             @change="($event) => {
@@ -760,6 +747,7 @@ onMounted(async () => {
           <CustomSelectComponent
             v-if="!loadingSaveAll" id="autocomplete" :loading="loadingStatus"
             field="fullName" item-value="id" :model="data.status" :suggestions="StatusList"
+            :disabled="computedDisabledItemsByStatus"
             @change="($event) => {
               console.log($event)
               onUpdate('status', $event)
