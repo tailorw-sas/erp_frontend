@@ -406,7 +406,7 @@ onMounted(async () => {
         @on-sort-field="onSortField"
         @on-cell-edit-complete="saveItem"
       />
-      <div class="flex justify-content-end">
+      <div v-if="false" class="flex justify-content-end">
         <Button class="ml-2" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/') }" />
       </div>
     </div>

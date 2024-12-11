@@ -149,7 +149,7 @@ const fields: Array<FieldDefinitionType> = [
   // },
   {
     field: 'autoApplyCredit',
-    header: 'Auto Apply Credit',
+    header: 'No Auto Apply Credit',
     dataType: 'check',
     class: 'field col-12',
   },

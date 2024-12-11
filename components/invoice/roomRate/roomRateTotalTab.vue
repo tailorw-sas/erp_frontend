@@ -868,7 +868,7 @@ onMounted(() => {
     finalColumns.value = [
 
       { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'bookingId', header: 'Booking id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'bookingId', header: 'Booking Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -878,7 +878,7 @@ onMounted(() => {
       { field: 'roomType', header: 'Room Type', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'ratePlan', header: 'Rate Plan', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }
