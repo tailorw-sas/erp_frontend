@@ -517,7 +517,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
   { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
@@ -527,7 +527,7 @@ const applyPaymentColumns = ref<IColumn[]>([
 const columnsExpandTable: IColumn[] = [
   { field: 'bookingId', header: 'Id', width: '120px', type: 'text', sortable: false },
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
-  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', type: 'text', sortable: false },
+  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', maxWidth: '150px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
   { field: 'couponNumber', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
@@ -694,7 +694,7 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', maxWidth: '120px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: false, showFilter: false },
@@ -4303,7 +4303,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: 'auto' }"
+      :style="{ width: '60%' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
