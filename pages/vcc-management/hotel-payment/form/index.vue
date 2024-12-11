@@ -13,6 +13,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import type { FilterCriteria } from '~/composables/list'
 
+const { data: userData } = useAuth()
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
 const HotelList = ref<any[]>([])
@@ -446,6 +447,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.status = Object.prototype.hasOwnProperty.call(payload.status, 'id') ? payload.status.id : payload.status
     payload.manageHotel = Object.prototype.hasOwnProperty.call(payload.manageHotel, 'id') ? payload.manageHotel.id : payload.manageHotel
     payload.manageBankAccount = Object.prototype.hasOwnProperty.call(payload.manageBankAccount, 'id') ? payload.manageBankAccount.id : payload.manageBankAccount
+    payload.employee = userData?.value?.user?.name
 
     if (LocalBindTransactionList.value.length > 0) {
       payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)
