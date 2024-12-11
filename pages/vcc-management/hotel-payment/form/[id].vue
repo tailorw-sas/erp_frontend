@@ -178,7 +178,7 @@ const computedDisabledItemsByStatus = computed(() => {
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
 async function canEditHotelPayment() {
-  return (status.value === 'authenticated' && (isAdmin || authStore.can(['BANK-RECONCILIATION:EDIT'])))
+  return (status.value === 'authenticated' && (isAdmin || authStore.can(['HOTEL-PAYMENT:EDIT'])))
 }
 
 async function openNewAdjustmentTransactionDialog() {
@@ -789,7 +789,7 @@ onMounted(async () => {
     </DynamicTable>
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <div>
-        <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
+        <IfCan :perms="['HOTEL-PAYMENT:EDIT']">
           <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.manageHotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
           <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
           <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
