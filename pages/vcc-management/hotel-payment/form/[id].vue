@@ -28,6 +28,7 @@ const BindTransactionList = ref<any[]>([])
 const BankAccountList = ref<any[]>([])
 const collectionStatusList = ref<any[]>([])
 const loadingSaveAll = ref(false)
+const loadingStatus = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
@@ -390,23 +391,29 @@ async function getHotelList(query: string) {
 
 async function getStatusList(query: string) {
   try {
+    loadingStatus.value = true
     const payload = {
       filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
+        key: 'inProgress',
+        operator: 'EQUALS',
+        value: true,
         logicalOperation: 'OR'
       }, {
-        key: 'code',
-        operator: 'LIKE',
-        value: query,
+        key: 'cancelled',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'OR'
+      }, {
+        key: 'completed',
+        operator: 'EQUALS',
+        value: true,
         logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
         logicalOperation: 'AND'
-      }],
+      },],
       query: '',
       sortBy: 'createdAt',
       sortType: 'ASC',
@@ -419,9 +426,20 @@ async function getStatusList(query: string) {
     for (const iterator of dataList) {
       StatusList.value = [...StatusList.value, { id: iterator.id, code: iterator.code, name: iterator.name, fullName: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
+    // Para mantener la referencia del model en el selector simple
+    const index = StatusList.value.findIndex((elem: any) => elem.id === item.value.status?.id)
+    if (index >= 0) {
+      StatusList.value[index] = item.value.status
+    }
+    else {
+      StatusList.value.unshift(item.value.status)
+    }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    loadingStatus.value = false
   }
 }
 
@@ -739,17 +757,19 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-status="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete"
+          <CustomSelectComponent
+            v-if="!loadingSaveAll" id="autocomplete" :loading="loadingStatus"
             field="fullName" item-value="id" :model="data.status" :suggestions="StatusList"
             @change="($event) => {
+              console.log($event)
               onUpdate('status', $event)
+              item.status = $event
             }" @load="($event) => getStatusList($event)"
           >
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
-          </DebouncedAutoCompleteComponent>
+          </CustomSelectComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
       </EditFormV2>
