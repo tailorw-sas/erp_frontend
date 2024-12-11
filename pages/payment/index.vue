@@ -649,7 +649,7 @@ const historyColumns = ref<IColumn[]>([
   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'date', width: '120px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [], sortable: false, showFilter: false },
-  { field: 'description', header: 'Description', type: 'text', width: '200px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   { field: 'paymentStatus', header: 'Status', type: 'slot-text', width: '60px', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' }, sortable: false, showFilter: false },
   // { field: 'paymentStatus', header: 'Status', width: '100px', type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true, showFilter: false },
 ])
