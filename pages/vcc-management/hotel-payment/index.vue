@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {nextTick, onMounted, reactive, ref, watch} from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
@@ -9,12 +9,14 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import HotelPaymentStatusHistoryDialog from '~/components/vcc/history/HotelPaymentStatusHistoryDialog.vue'
 // VARIABLES -----------------------------------------------------------------------------------------
+const { data: userData } = useAuth()
 const toast = useToast()
 const listItems = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
-const bankReconciliationHistoryDialogVisible = ref<boolean>(false)
+const hotelPaymentHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
@@ -44,7 +46,7 @@ const allMenuListItems = [
   {
     label: 'Status History',
     icon: 'pi pi-history',
-    command: () => { bankReconciliationHistoryDialogVisible.value = true },
+    command: () => { hotelPaymentHistoryDialogVisible.value = true },
     disabled: false,
     default: true
   },
@@ -506,6 +508,7 @@ async function findStatus(status: MenuType) {
 async function updateStatus(hotelPaymentId: string, statusId: string) {
   const payload: { [key: string]: any } = {}
   payload.status = statusId
+  payload.employee = userData?.value?.user?.name
   const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, hotelPaymentId, payload)
   if (response && response.id) {
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })
@@ -777,7 +780,8 @@ onMounted(() => {
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
           <HotelPaymentTransactions
-            :hotel-payment-id="item.id" @update:list="($event) => {
+            :hotel-payment-id="item.id" :hide-bind-transaction-menu="item.status && (item.status.completed || item.status.cancelled)"
+            @update:list="($event) => {
               getList()
             }"
           />
@@ -817,8 +821,8 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
-    <div v-if="bankReconciliationHistoryDialogVisible">
-      <BankReconciliationStatusHistoryDialog :close-dialog="() => { bankReconciliationHistoryDialogVisible = false }" :open-dialog="bankReconciliationHistoryDialogVisible" :selected-bank-reconciliation="contextMenuTransaction" :s-class-map="sClassMap" />
+    <div v-if="hotelPaymentHistoryDialogVisible">
+      <HotelPaymentStatusHistoryDialog :close-dialog="() => { hotelPaymentHistoryDialogVisible = false }" :open-dialog="hotelPaymentHistoryDialogVisible" :selected-hotel-payment="contextMenuTransaction" :s-class-map="sClassMap" />
     </div>
   </div>
 </template>
