@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import ContextMenu from 'primevue/contextmenu'
@@ -27,6 +27,7 @@ const listItems = ref<any[]>([])
 const toast = useToast()
 const contextMenu = ref()
 const contextMenuTransaction = ref()
+const transactionHistoryDialogVisible = ref<boolean>(false)
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 
 enum MenuType {
@@ -34,6 +35,15 @@ enum MenuType {
 }
 
 const allMenuListItems = [
+  {
+    label: 'Status History',
+    icon: 'pi pi-history',
+    iconSvg: '',
+    width: '14px',
+    height: '14px',
+    command: () => { transactionHistoryDialogVisible.value = true },
+    disabled: false,
+  },
   {
     type: MenuType.unBind,
     label: 'Unbind Transaction',
@@ -233,6 +243,7 @@ async function onRowRightClick(event: any) {
     menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
   }
   if (menuListItems.value.length > 0) {
+    await nextTick()
     contextMenu.value.show(event.originalEvent)
   }
 }
@@ -304,6 +315,9 @@ onMounted(() => {
         </div>
       </template>
     </ContextMenu>
+    <div v-if="transactionHistoryDialogVisible">
+      <TransactionStatusHistoryDialog :close-dialog="() => { transactionHistoryDialogVisible = false }" :open-dialog="transactionHistoryDialogVisible" :selected-transaction="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
   </div>
 </template>
 

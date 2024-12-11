@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import ContextMenu from 'primevue/contextmenu'
@@ -233,6 +233,7 @@ async function onRowRightClick(event: any) {
     menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
   }
   if (menuListItems.value.length > 0) {
+    await nextTick()
     contextMenu.value.show(event.originalEvent)
   }
 }
