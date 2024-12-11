@@ -250,7 +250,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'amount', header: 'Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'amount', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
