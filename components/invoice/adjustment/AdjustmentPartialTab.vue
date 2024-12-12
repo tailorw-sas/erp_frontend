@@ -13,6 +13,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import {formatNumber} from "~/pages/payment/utils/helperFilters";
 
 const props = defineProps({
   isDialogOpen: {
@@ -251,7 +252,7 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'amount', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'amount', header: 'Adjustment Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'roomRateId', header: 'Room Rate Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -749,7 +750,7 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-            <Column :footer="totalAmount" footer-style="font-weight: 700" />
+            <Column :footer="formatNumber(totalAmount)" footer-style="font-weight: 700" />
 
             <Column :colspan="6" />
           </Row>

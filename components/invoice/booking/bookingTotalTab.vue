@@ -1052,9 +1052,9 @@ const Columns: IColumn[] = [
   { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
-  { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
+  { field: 'dueAmount', header: 'Booking Balance', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -2038,9 +2038,9 @@ onMounted(() => {
       { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'dueAmount', header: 'Booking Balance', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }
@@ -2055,8 +2055,8 @@ onMounted(() => {
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
+      { field: 'originalAmount', header: 'Original Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
 
     ]
   }
@@ -2147,21 +2147,21 @@ onMounted(() => {
 
             <Column 
               v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="objBookingsTotals.totalHotelAmount.toString()"
+              :footer="formatNumber(objBookingsTotals.totalHotelAmount)"
               footer-style="font-weight: 700" 
             />
 
             <Column 
               v-if="(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="objBookingsTotals.totalDueAmount.toString()" 
+              :footer="formatNumber(objBookingsTotals.totalDueAmount)"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="objBookingsTotals.totalInvoiceAmount.toString()"
+              :footer="formatNumber(objBookingsTotals.totalInvoiceAmount)"
               footer-style="font-weight: 700"
             />
             <Column v-if="!(route.query.type === InvoiceType.CREDIT && props.isCreationDialog)"
-              :footer="objBookingsTotals.totalInvoiceAmount.toString()" footer-style="font-weight: 700" />
+              :footer="formatNumber(objBookingsTotals.totalInvoiceAmount)" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>
