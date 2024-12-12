@@ -155,6 +155,8 @@ onMounted(() => {
           <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             @update:model-value="($event) => {
               onUpdate('invoiceAmount', $event)
             }"
@@ -234,6 +236,8 @@ onMounted(() => {
           <InputNumber
             v-model="data.hotelAmount"
             show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             @update:model-value="($event) => {
               onUpdate('hotelAmount', $event)
 

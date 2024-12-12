@@ -742,8 +742,8 @@ const Columns: IColumn[] = [
 { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '150px', maxWidth: '150px', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
 { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-{ field: 'originalAmount', header: 'Original Amount', type: 'text', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog },
-{ field: 'invoiceAmount', header: 'Booking Amount', type: 'text', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog, editable: true },
+{ field: 'originalAmount', header: 'Original Amount', type: 'number', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog },
+{ field: 'invoiceAmount', header: 'Booking Amount', type: 'number', width: '150px', sortable: !props.isDetailView && !props.isCreationDialog, editable: true },
 
 ]
 
@@ -1144,7 +1144,7 @@ async function GetItemById(id: string) {
       item.value.firstName = element.firstName
       item.value.lastName = element.lastName
 
-      item.value.invoiceAmount = element.invoiceAmount ? String(element.invoiceAmount) : '0'
+      item.value.invoiceAmount = element.invoiceAmount ? element.invoiceAmount : 0
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
@@ -1153,7 +1153,7 @@ async function GetItemById(id: string) {
       item.value.rateChild = element.rateChild
       item.value.hotelInvoiceNumber = element.hotelInvoiceNumber
       item.value.folioNumber = element.folioNumber
-      item.value.hotelAmount = element.hotelAmount ? String(element?.hotelAmount) : '0'
+      item.value.hotelAmount = element.hotelAmount ? element?.hotelAmount : 0
       item.value.description = element.description
       item.value.invoice = element.invoice
       item.value.ratePlan = element.ratePlan?.name == '-' ? null : element.ratePlan
@@ -1180,7 +1180,7 @@ async function GetItemById(id: string) {
         item.value.firstName = response.firstName
         item.value.lastName = response.lastName
 
-        item.value.invoiceAmount = response.invoiceAmount ? String(response?.invoiceAmount) : '0'
+        item.value.invoiceAmount = response.invoiceAmount ? response?.invoiceAmount : 0
         item.value.roomNumber = response.roomNumber
         item.value.couponNumber = response.couponNumber
         item.value.adults = response.adults
@@ -1189,7 +1189,7 @@ async function GetItemById(id: string) {
         item.value.rateChild = response.rateChild
         item.value.hotelInvoiceNumber = response.hotelInvoiceNumber
         item.value.folioNumber = response.folioNumber
-        item.value.hotelAmount = String(response.hotelAmount)
+        item.value.hotelAmount = response.hotelAmount ? response?.hotelAmount : 0
         item.value.description = response.description
         item.value.invoice = response.invoice
         item.value.ratePlan = response.ratePlan?.name == '-' ? null : response.ratePlan
@@ -1505,8 +1505,8 @@ onMounted(() => {
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'dueAmount', header: 'Booking Balance', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }
@@ -1585,6 +1585,18 @@ onMounted(() => {
         // }
       }">
 
+      <template #column-editable-invoiceAmount="{item: {data, column, field, onCellEditComplete}}">
+        <div>
+          <InputNumber
+            v-model="data[field]"
+            show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
+            @update:model-value="onCellEditComplete($event, data)"
+          />
+        </div>
+      </template> 
+
 
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
@@ -1598,15 +1610,15 @@ onMounted(() => {
             <Column 
               v-if="false"
             
-              :footer="`${Number.parseFloat(totalHotelAmount.toFixed(2))}`"
+              :footer="`${formatNumber(Math.round((totalHotelAmount + Number.EPSILON) * 100) / 100)}`"
               footer-style="font-weight: 700"
             />
             <Column
-              :footer="`${Number.parseFloat(totalOriginalAmount.toFixed(2))}`"
+              :footer="`${formatNumber(Math.round((totalOriginalAmount + Number.EPSILON) * 100) / 100)}`"
               footer-style="font-weight: 700"
             />
             <Column 
-              :footer="`${Number.parseFloat(totalInvoiceAmount.toFixed(2))}`"
+              :footer="`${formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)}`"
               footer-style="font-weight: 700"
             />
             <Column 

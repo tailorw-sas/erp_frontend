@@ -163,7 +163,8 @@ onMounted(() => {
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
             :min-fraction-digits="2"
-            :max-fraction-digits="4" @update:model-value="($event) => {
+            :max-fraction-digits="4"
+            @update:model-value="($event) => {
               let value: any = $event
               value = toNegative(value)
               onUpdate('invoiceAmount', value)
@@ -326,7 +327,8 @@ onMounted(() => {
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
             :min-fraction-digits="2"
-            :max-fraction-digits="4" @update:model-value="onUpdate('invoiceAmount', $event)"
+            :max-fraction-digits="4"
+            @update:model-value="onUpdate('invoiceAmount', $event)"
           />
         </template>
         <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
