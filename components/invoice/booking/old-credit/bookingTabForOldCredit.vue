@@ -310,7 +310,7 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{2,}\s*$/, 'The Hotel Booking No. field has an invalid format')
+        validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{1,}\s*$/, 'The Hotel Booking No. field has an invalid format')
 
       },
       {
@@ -541,6 +541,8 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     validation: z.number().refine((val: number) => {
       if ((Number(val) < 0)) {
         return false
@@ -558,7 +560,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{2,}\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{1,}\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
 
   {
@@ -747,9 +749,9 @@ const Columns: IColumn[] = [
   { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
-  { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
+  { field: 'dueAmount', header: 'Booking Balance', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -1065,6 +1067,9 @@ async function getBookingList(clearFilter: boolean = false) {
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
         originalAmount: iterator?.invoiceAmount
       }]
+
+      console.log(iterator);
+      
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
       }
@@ -1442,11 +1447,14 @@ watch(() => props.listItems, () => {
     totalOriginalAmount.value = 0
     totalDueAmount.value = 0
     props.listItems.forEach((itemObj: any) => {
+      
       totalHotelAmount.value += itemObj?.hotelAmount ? Number(itemObj?.hotelAmount) : 0
       totalInvoiceAmount.value += itemObj?.invoiceAmount ? Number(itemObj?.invoiceAmount) : 0
       totalOriginalAmount.value += itemObj?.originalAmount ? Number(itemObj?.originalAmount) : 0
       totalDueAmount.value += itemObj?.dueAmount ? Number(itemObj?.dueAmount) : 0
-
+      
+      console.log(itemObj);
+      console.log(totalHotelAmount.value);
       // listItem.hotelAmount = listItem.hotelAmount ? formatNumber(listItem.hotelAmount) : 0
       // listItem.invoiceAmount = listItem.invoiceAmount ? formatNumber(listItem.invoiceAmount) : 0
       // listItem.originalAmount = listItem.originalAmount ? formatNumber(listItem.originalAmount) : 0
@@ -1679,7 +1687,7 @@ onMounted(() => {
       :clear-form="ClearForm"
       :require-confirmation-to-save="saveBooking" 
       :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
-      :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" 
+      :header="!item.hotelBookingNumber ? 'New Booking' : 'Edit Booking'" 
       :close-dialog="() => {
         ClearForm()
         closeDialog()

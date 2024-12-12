@@ -162,13 +162,27 @@ onMounted(() => {
           <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
-            @update:model-value="($event) => {
+            :min-fraction-digits="2"
+            :max-fraction-digits="4" @update:model-value="($event) => {
               let value: any = $event
               value = toNegative(value)
               onUpdate('invoiceAmount', value)
             }"
           />
         </template>
+
+        <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
+          <InputNumber
+            v-model="data.hotelAmount"
+            show-clear :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
+            :min-fraction-digits="2"
+            :max-fraction-digits="4"
+            @update:model-value="($event) => {
+              let value: any = $event
+              onUpdate('hotelAmount', value)
+            }"
+          />
+        </template> -->
         <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
@@ -269,7 +283,7 @@ onMounted(() => {
             v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" /> -->
         </template>
       </EditFormV2>
 
@@ -311,7 +325,8 @@ onMounted(() => {
           <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('invoiceAmount', $event)"
+            :min-fraction-digits="2"
+            :max-fraction-digits="4" @update:model-value="onUpdate('invoiceAmount', $event)"
           />
         </template>
         <!-- <template #field-hotelAmount="{ onUpdate, item: data }">

@@ -205,7 +205,9 @@ const Fields = ref<FieldDefinitionType[]>([
   {
     field: 'invoiceAmount',
     header: 'Invoice Amount',
-    dataType: 'text',
+    dataType: 'number',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-3  required',
     disabled: true,
     ...({ valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
