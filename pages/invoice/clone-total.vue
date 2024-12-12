@@ -69,7 +69,7 @@ const { data: userData } = useAuth()
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
-const parentInvoiceId = ref<string>('')
+const parentInvoiceId = ref<any>('')
 const totalAmount = ref(0)
 const loadingSaveAll = ref(false)
 const loadingAttachmentList = ref(false)
@@ -981,7 +981,6 @@ async function getItemById(id: any) {
 
       if (response) {
         item.value.id = response.id
-        parentInvoiceId.value = response.invoiceId
         //  const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
@@ -1581,6 +1580,7 @@ onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
   selectedInvoicing.value = route.query.selected
+  parentInvoiceId.value = route.query.invoiceId || ''
   globalSelectedInvoicing = selectedInvoicing.value
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
@@ -1595,10 +1595,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-between">
-    <div>Clone Complete</div>
-    <div v-if="parentInvoiceId">
-      Invoice Parent Id: {{ parentInvoiceId }}
+  <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-start">
+    <div v-if="!parentInvoiceId">Clone Complete</div>
+    <div v-else>
+      Clone Complete From Invoice {{ parentInvoiceId }}
     </div>
   </div>
   <div class="p-4">

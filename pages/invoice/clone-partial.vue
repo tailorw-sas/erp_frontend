@@ -33,6 +33,7 @@ const { data: userData } = useAuth()
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
+const parentInvoiceId = ref<any>('')
 const selectedInvoicing = ref<any>('')
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
@@ -1362,6 +1363,7 @@ async function getItemById(id: any) {
         item.value.id = response.id
         item.value.invoiceNo = response.invoiceNo
         item.value.invoiceId = response.invoiceId
+        parentInvoiceId.value = response.invoiceId
         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
@@ -1604,6 +1606,7 @@ onMounted(async () => {
 
   selectedInvoicing.value = route.query.selected
   globalSelectedInvoicing = selectedInvoicing.value
+  parentInvoiceId.value = route.query.invoiceId || ''
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
   // if (route.query.type === InvoiceType.CREDIT && route.query.selected) {
@@ -1627,8 +1630,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    Partial Clone
+  <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-start">
+    <div v-if="!parentInvoiceId">
+      Partial Clone
+    </div>
+    <div v-else>
+      Partial Clone From Invoice {{ parentInvoiceId }}
+    </div>
   </div>
   <div class="p-4">
     <EditFormV2
