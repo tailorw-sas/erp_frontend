@@ -4081,10 +4081,17 @@ onMounted(async () => {
       @hide="closeModalChangeAgency()"
     >
       <template #header>
-        <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Change Agency
-          </h5>
+        <div class="flex align-items-center justify-content-between w-full">
+          <div class="flex align-items-center">
+            <h5 class="m-0">
+              Change Agency
+            </h5>
+          </div>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>

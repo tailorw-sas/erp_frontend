@@ -1614,18 +1614,33 @@ function onRowRightClick(event: any) {
   //   return;
   // }
 
+  if (props.isCreationDialog) {
+    menuModel.value = [
+      {
+        label: 'Add Room Rate',
+        command: () => props.openRoomRateDialog(selectedBooking.value),
+        disabled: computedShowMenuItemAddRoomRate
+      },
+      {
+        label: 'Edit booking',
+        command: () => newOpenEditBooking(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
+    ]
+  } 
+
   if (!props.isCreationDialog && props.invoiceObj?.status?.id === InvoiceStatus.PROCECSED) {
     menuModel.value = [
-    {
-      label: 'Add Room Rate',
-      command: () => props.openRoomRateDialog(selectedBooking.value),
-      disabled: computedShowMenuItemAddRoomRate
-    },
-    {
-      label: 'Edit booking',
-      command: () => newOpenEditBooking(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
-    },
+      {
+        label: 'Add Room Rate',
+        command: () => props.openRoomRateDialog(selectedBooking.value),
+        disabled: computedShowMenuItemAddRoomRate
+      },
+      {
+        label: 'Edit booking',
+        command: () => newOpenEditBooking(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
     ]
   } 
 
