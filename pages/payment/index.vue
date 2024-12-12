@@ -239,14 +239,18 @@ const filterToSearchTemp = ref<GenericObject>({
 
 const contextMenu = ref()
 const allMenuListItems = ref([
-  // {
-  //   id: 'applayDeposit',
-  //   label: 'Apply Deposit',
-  //   icon: 'pi pi-dollar',
-  //   command: ($event: any) => openModalWithContentMenu($event),
-  //   disabled: true,
-  //   visible: true,
-  // },
+  {
+    id: 'paymentSelected',
+    label: 'Select Payment:',
+    icon: 'pi pi-folder',
+    command: () => {},
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    disabled: true,
+    visible: true,
+  },
   {
     id: 'statusHistory',
     label: 'Status History',
@@ -2576,6 +2580,12 @@ function onRowContextMenu(event: any) {
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
   objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
+
+  const selectedPaymentItem = allMenuListItems.value.find(item => item.id === 'paymentSelected')
+  if (selectedPaymentItem) {
+    selectedPaymentItem.label = `Selected Payment: ${event.data.paymentId}`
+  }
+
   if (event && event.data && (event.data.paymentStatus && event.data.paymentStatus.cancelled === false && event.data.paymentStatus.applied === false)) {
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
