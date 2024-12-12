@@ -368,7 +368,8 @@ public class ImportInnsistServiceImpl {
                         "The invoice data was inserted.",
                         LocalDateTime.now(),
                         employee,
-                        EInvoiceStatus.PROCECSED
+                        EInvoiceStatus.PROCECSED,
+                        0L
                 )
         );
     }

@@ -245,7 +245,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         "The invoice data was inserted.",
                         null,
                         command.getEmployeeName(),
-                        invoiceStatus
+                        invoiceStatus,
+                        0L
                 )
         );
         for (ManageAttachmentDto attachment : created.getAttachments()) {
