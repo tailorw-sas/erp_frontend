@@ -29,6 +29,7 @@ public class ManageInvoiceTransactionTypeResponse implements IResponse {
     private String defaultRemark;
 
     private boolean defaults;
+    private boolean cloneAdjustmentDefault;
 
     public ManageInvoiceTransactionTypeResponse(ManageInvoiceTransactionTypeDto dto){
         this.id = dto.getId();
@@ -43,5 +44,6 @@ public class ManageInvoiceTransactionTypeResponse implements IResponse {
         this.minNumberOfCharacters = dto.getMinNumberOfCharacters();
         this.defaultRemark = dto.getDefaultRemark();
         this.defaults = dto.isDefaults();
+        this.cloneAdjustmentDefault = dto.isCloneAdjustmentDefault();
     }
 }
