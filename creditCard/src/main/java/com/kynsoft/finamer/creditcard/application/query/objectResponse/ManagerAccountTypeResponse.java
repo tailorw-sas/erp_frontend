@@ -19,6 +19,8 @@ public class ManagerAccountTypeResponse implements IResponse {
     private String name;
     private String description;
     private Status status;
+    private boolean moduleVcc;
+    private boolean modulePayment;
 
     public ManagerAccountTypeResponse(ManagerAccountTypeDto dto) {
         this.id = dto.getId();
@@ -26,6 +28,8 @@ public class ManagerAccountTypeResponse implements IResponse {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.moduleVcc = dto.isModuleVcc();
+        this.modulePayment = dto.isModulePayment();
     }
 
 }
