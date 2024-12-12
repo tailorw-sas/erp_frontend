@@ -542,7 +542,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
     minFractionDigits: 2,
-    maxFractionDigits: 4,
+    maxFractionDigits: 2,
     validation: z.number().refine((val: number) => {
       if ((Number(val) < 0)) {
         return false
@@ -668,7 +668,7 @@ const item = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: 0,
+  invoiceAmount: null,
   roomNumber: 0,
   couponNumber: '',
   adults: 0,
@@ -677,7 +677,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: 0,
+  hotelAmount: null,
   description: '',
   invoice: '',
   ratePlan: null,

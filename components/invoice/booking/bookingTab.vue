@@ -521,6 +521,8 @@ const fieldsV2: Array<FieldDefinitionType> = [
     header: 'Booking Amount',
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
+    minFractionDigits: 2,
+    maxFractionDigits: 2,
     headerClass: 'mb-1',
     ...(route.query.type === InvoiceType.OLD_CREDIT 
     || route.query.type === InvoiceType.CREDIT 
@@ -537,6 +539,8 @@ const fieldsV2: Array<FieldDefinitionType> = [
     field: 'hotelAmount',
     header: 'Hotel Amount',
     dataType: 'number',
+    minFractionDigits: 2,
+    maxFractionDigits: 2,
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
     validation: z.number().refine((val: number) => {
@@ -664,7 +668,7 @@ const item = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: 0,
+  invoiceAmount: null,
   roomNumber: 0,
   couponNumber: '',
   adults: 0,
@@ -673,7 +677,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: 0,
+  hotelAmount: null,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -693,7 +697,7 @@ const itemTemp = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: 0,
+  invoiceAmount: null,
   roomNumber: 0,
   couponNumber: '',
   adults: 0,
@@ -702,7 +706,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: 0,
+  hotelAmount: null,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -744,9 +748,9 @@ const Columns: IColumn[] = [
   { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
-  { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
+  { field: 'dueAmount', header: 'Booking Balance', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -1300,7 +1304,7 @@ async function GetItemById(id: string) {
       item.value.firstName = element.firstName
       item.value.lastName = element.lastName
 
-      item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : '0'
+      item.value.invoiceAmount = element.invoiceAmount ? Number(element.invoiceAmount) : 0
       item.value.roomNumber = element.roomNumber
       item.value.couponNumber = element.couponNumber
       item.value.adults = element.adults
@@ -1838,8 +1842,8 @@ onMounted(() => {
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'originalAmount', header: 'Original Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
+      { field: 'originalAmount', header: 'Original Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog, editable: route.query.type === InvoiceType.CREDIT && props.isCreationDialog },
 
     ]
   }
