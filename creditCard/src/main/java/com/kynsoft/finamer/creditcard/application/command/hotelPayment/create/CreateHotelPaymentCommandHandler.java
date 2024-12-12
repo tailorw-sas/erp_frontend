@@ -47,10 +47,6 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
     public void handle(CreateHotelPaymentCommand command) {
         ManageBankAccountDto bankAccountDto = this.bankAccountService.findById(command.getManageBankAccount());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getManageHotel());
-        RulesChecker.checkRule(new TransactionCheckInCloseOperationRule(
-                this.closeOperationService,
-                LocalDateTime.now(), command.getManageHotel()
-        ));
 
         Set<TransactionDto> transactionList = new HashSet<>();
         if (command.getTransactions() != null) {
@@ -86,7 +82,7 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
         HotelPaymentDto created = this.hotelPaymentService.create(new HotelPaymentDto(
                 command.getId(),
                 0L,
-                LocalDateTime.now(),
+                this.closeOperationService.hotelCloseOperationDateTime(command.getManageHotel()),
                 hotelDto,
                 bankAccountDto,
                 amounts,

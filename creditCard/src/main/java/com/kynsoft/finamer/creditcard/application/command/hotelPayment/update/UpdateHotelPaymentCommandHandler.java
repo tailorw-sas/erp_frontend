@@ -29,12 +29,15 @@ public class UpdateHotelPaymentCommandHandler implements ICommandHandler<UpdateH
 
     private final IHotelPaymentStatusHistoryService hotelPaymentStatusHistoryService;
 
-    public UpdateHotelPaymentCommandHandler(IHotelPaymentService hotelPaymentService, IManageBankAccountService bankAccountService, IManagePaymentTransactionStatusService transactionStatusService, ITransactionService transactionService, IHotelPaymentStatusHistoryService hotelPaymentStatusHistoryService) {
+    private final ICreditCardCloseOperationService creditCardCloseOperationService;
+
+    public UpdateHotelPaymentCommandHandler(IHotelPaymentService hotelPaymentService, IManageBankAccountService bankAccountService, IManagePaymentTransactionStatusService transactionStatusService, ITransactionService transactionService, IHotelPaymentStatusHistoryService hotelPaymentStatusHistoryService, ICreditCardCloseOperationService creditCardCloseOperationService) {
         this.hotelPaymentService = hotelPaymentService;
         this.bankAccountService = bankAccountService;
         this.transactionStatusService = transactionStatusService;
         this.transactionService = transactionService;
         this.hotelPaymentStatusHistoryService = hotelPaymentStatusHistoryService;
+        this.creditCardCloseOperationService = creditCardCloseOperationService;
     }
 
     @Override
@@ -66,6 +69,7 @@ public class UpdateHotelPaymentCommandHandler implements ICommandHandler<UpdateH
             Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(hotelPaymentDto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.PAID, employee);
             hotelPaymentDto.setStatus(transactionStatusDto);
             hotelPaymentDto.setTransactions(updatedTransactions);
+            hotelPaymentDto.setTransactionDate(this.creditCardCloseOperationService.hotelCloseOperationDateTime(hotelPaymentDto.getManageHotel().getId()));
             update.setUpdate(1);
             this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employee);
 
