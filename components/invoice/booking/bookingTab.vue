@@ -1213,9 +1213,9 @@ async function getBookingList(clearFilter: boolean = false) {
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
         originalAmount: iterator?.invoiceAmount,
-        invoiceAmount: formatNumber(iterator?.invoiceAmount),
-        dueAmount: formatNumber(iterator?.dueAmount),
-        hotelAmount: formatNumber(iterator?.hotelAmount),
+        invoiceAmount: iterator?.invoiceAmount,
+        dueAmount: iterator?.dueAmount,
+        hotelAmount: iterator?.hotelAmount,
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
