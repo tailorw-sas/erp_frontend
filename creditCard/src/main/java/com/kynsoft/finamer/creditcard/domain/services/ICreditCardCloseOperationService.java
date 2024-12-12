@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.CreditCardCloseOperationDto;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,4 +27,6 @@ public interface ICreditCardCloseOperationService {
     List<CreditCardCloseOperationDto> findByHotelIds(List<UUID> hotelIds);
 
     CreditCardCloseOperationDto findActiveByHotelId(UUID hotelId);
+
+    LocalDateTime hotelCloseOperationDateTime(UUID hotelId);
 }
