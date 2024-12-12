@@ -48,6 +48,7 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateInteger(dto::setMinNumberOfCharacters, command.getMinNumberOfCharacters(), dto.getMinNumberOfCharacters(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.isDefaults(), dto.isDefaults(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCloneAdjustmentDefault, command.isCloneAdjustmentDefault(), dto.isCloneAdjustmentDefault(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
@@ -55,7 +56,8 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
                     dto.getId(), 
                     dto.getCode(), 
                     dto.getName(), 
-                    dto.isDefaults()
+                    dto.isDefaults(),
+                    dto.isCloneAdjustmentDefault()
             ));
         }
     }

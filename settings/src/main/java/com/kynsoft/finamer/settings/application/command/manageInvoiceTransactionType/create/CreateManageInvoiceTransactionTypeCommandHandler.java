@@ -44,9 +44,10 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
                 command.getIsRemarkRequired(),
                 command.getMinNumberOfCharacters(),
                 command.getDefaultRemark(),
-                command.isDefaults()
+                command.isDefaults(),
+                command.isCloneAdjustmentDefault()
         ));
 
-        this.producerReplicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(command.getId(), command.getCode(), command.getName(), command.isDefaults()));
+        this.producerReplicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(command.getId(), command.getCode(), command.getName(), command.isDefaults(), command.isCloneAdjustmentDefault()));
     }
 }

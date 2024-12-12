@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
@@ -172,9 +173,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
-        manageInvoiceDto.setInvoiceAmount(calculateInvoiceAmount(bookingRowList));
-        manageInvoiceDto.setDueAmount(calculateInvoiceAmount(bookingRowList));
-        manageInvoiceDto.setOriginalAmount(manageInvoiceDto.getInvoiceAmount());
+        manageInvoiceDto.setInvoiceAmount(ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList)));
+        manageInvoiceDto.setDueAmount(ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList)));
+        manageInvoiceDto.setOriginalAmount(ScaleAmount.scaleAmount(manageInvoiceDto.getInvoiceAmount()));
         if (hotel.isVirtual()) {
             manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
         } else {
@@ -233,10 +234,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageRoomRateDto.setChildren(bookingDto.getChildren());
         manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
         manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
-        manageRoomRateDto.setHotelAmount(bookingDto.getHotelAmount());
+        manageRoomRateDto.setHotelAmount(ScaleAmount.scaleAmount(bookingDto.getHotelAmount()));
         manageRoomRateDto.setNights(bookingDto.getNights());
         manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
-        manageRoomRateDto.setInvoiceAmount(bookingDto.getInvoiceAmount());
+        manageRoomRateDto.setInvoiceAmount(ScaleAmount.scaleAmount(bookingDto.getInvoiceAmount()));
         return manageRoomRateDto;
     }
 

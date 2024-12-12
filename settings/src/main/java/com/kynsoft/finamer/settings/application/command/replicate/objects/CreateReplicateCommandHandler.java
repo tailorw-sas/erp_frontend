@@ -381,7 +381,13 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_INVOICE_TRANSACTION_TYPE -> {
                     for (ManageInvoiceTransactionTypeDto invoiceTransactionTypeDto : this.invoiceTransactionTypeService.findAllToReplicate()) {
-                        this.replicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(invoiceTransactionTypeDto.getId(), invoiceTransactionTypeDto.getCode(), invoiceTransactionTypeDto.getName(), invoiceTransactionTypeDto.isDefaults()));
+                        this.replicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(
+                                invoiceTransactionTypeDto.getId(), 
+                                invoiceTransactionTypeDto.getCode(), 
+                                invoiceTransactionTypeDto.getName(), 
+                                invoiceTransactionTypeDto.isDefaults(), 
+                                invoiceTransactionTypeDto.isCloneAdjustmentDefault()
+                        ));
                     }
                 }
                 case MANAGE_PAYMENT_STATUS -> {
