@@ -271,7 +271,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         "The invoice data was inserted.",
                         LocalDateTime.now(),
                         employee,
-                        EInvoiceStatus.PROCECSED
+                        EInvoiceStatus.PROCECSED,
+                        0L
                 )
         );
     }

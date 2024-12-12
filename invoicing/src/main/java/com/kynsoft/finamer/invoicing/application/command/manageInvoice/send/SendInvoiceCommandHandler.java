@@ -117,7 +117,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                 "The invoice data was inserted.",
                                 null,
                                 employee,
-                                EInvoiceStatus.SENT
+                                EInvoiceStatus.SENT,
+                                0L
                         )
                 );
                 this.service.update(manageInvoiceDto);
@@ -321,7 +322,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                 "The invoice data was inserted.",
                                 null,
                                 employee,
-                                EInvoiceStatus.SENT
+                                EInvoiceStatus.SENT,
+                                0L
                         )
                 );
             }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){

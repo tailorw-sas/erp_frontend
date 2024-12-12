@@ -404,7 +404,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         "The invoice data was inserted.",
                         null,
                         command.getEmployee(),
-                        status
+                        status,
+                        0L
                 )
         );
 

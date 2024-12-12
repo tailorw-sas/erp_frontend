@@ -87,7 +87,8 @@ public class InvoiceStatusHistoryServiceImpl implements IInvoiceStatusHistorySer
                 "The invoice data was inserted.",
                 null,
                 employee,
-                invoiceDto.getStatus()
+                invoiceDto.getStatus(),
+                0L
         );
         InvoiceStatusHistory data = new InvoiceStatusHistory(dto);
         return this.repositoryCommand.save(data).getId();

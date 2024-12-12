@@ -289,7 +289,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         "The invoice data was inserted.",
                         null,
                         command.getEmployeeName(),
-                        status
+                        status,
+                        0L
                 )
         );
 
