@@ -137,8 +137,21 @@ onMounted(() => {
     style="width: 900px;"
     @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            {{ header }}
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Invoice: {{ item.hotelBookingNumber }}
+          </h5>
+        </div>
+      </div>
+    </template>
     <div class=" h-full overflow-hidden p-2">
-      <pre>{{ invoiceObj }}</pre>
       <EditFormV2
         v-if="true"
         :key="formReload"
