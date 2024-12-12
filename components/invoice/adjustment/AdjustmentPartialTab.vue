@@ -102,6 +102,7 @@ const formReload = ref(0)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingDelete = ref(false)
+const loadingDefaultTransactionType = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -570,9 +571,9 @@ function requireConfirmationToSaveAdjustment(item: any) {
   })
 }
 
-async function getTransactionTypeList(query = '') {
+async function getTransactionTypeList(query = '', isDefault: boolean = false) {
   try {
-    const payload
+    const payload: IQueryRequest
       = {
         filter: [
           {
@@ -601,6 +602,16 @@ async function getTransactionTypeList(query = '') {
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
+    if (isDefault) {
+      loadingDefaultTransactionType.value = true
+      payload.filter = [...payload.filter, {
+        key: 'cloneAdjustmentDefault',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }]
+    }
+
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
     const { data: dataList } = response
@@ -614,9 +625,18 @@ async function getTransactionTypeList(query = '') {
         fullName: `${iterator?.code}-${iterator?.name}`
       }]
     }
+    if (isDefault && transactionTypeList.value.length > 0) {
+      item.value.transactionType = transactionTypeList.value[0]
+      formReload.value += 1
+    }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultTransactionType.value = false
+    }
   }
 }
 
@@ -754,7 +774,7 @@ onMounted(() => {
 
       }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
       content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
-      :get-transaction-type-list="getTransactionTypeList"
+      :get-transaction-type-list="getTransactionTypeList" :loading-default-transaction-type="loadingDefaultTransactionType"
     />
   </div>
 </template>

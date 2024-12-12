@@ -520,7 +520,7 @@ async function handleApplyClick() {
     const invoiceId = selectedInvoice;
     entryCode.value = '';
     // Redirecciona a la nueva interfaz
-    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}&invoiceId=${selectedInvoiceObj.value.invoiceId}`, { open: { target: '_blank' } });
 
    
    
@@ -583,7 +583,7 @@ async function handleTotalApplyClick() {
   }
 
   */
-  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}&invoiceId=${selectedInvoiceObj.value.invoiceId}`, { open: { target: '_blank' } });
 
   handleDialogCloseTotal();
 }
