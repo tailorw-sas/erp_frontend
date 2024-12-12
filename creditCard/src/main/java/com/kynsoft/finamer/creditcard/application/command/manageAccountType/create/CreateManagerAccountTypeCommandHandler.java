@@ -25,7 +25,9 @@ public class CreateManagerAccountTypeCommandHandler implements ICommandHandler<C
                 command.getCode(),
                 command.getName(),
                 command.getDescription(),
-                command.getStatus()
+                command.getStatus(),
+                command.isModuleVcc(),
+                command.isModulePayment()
         ));
     }
 }

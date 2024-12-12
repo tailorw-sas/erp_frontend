@@ -19,13 +19,17 @@ public class CreateManagerAccountTypeCommand implements ICommand {
     private String name;
     private String description;
     private Status status;
+    private boolean moduleVcc;
+    private boolean modulePayment;
 
-    public CreateManagerAccountTypeCommand(String code, String description, String name, Status status) {
+    public CreateManagerAccountTypeCommand(String code, String description, String name, Status status, boolean moduleVcc, boolean modulePayment) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.name = name;
         this.status = status;
+        this.moduleVcc = moduleVcc;
+        this.modulePayment = modulePayment;
     }
 
     public static CreateManagerAccountTypeCommand fromRequest(CreateManagerAccountTypeRequest request) {
@@ -33,7 +37,9 @@ public class CreateManagerAccountTypeCommand implements ICommand {
                 request.getCode(),
                 request.getDescription(),
                 request.getName(),
-                request.getStatus()
+                request.getStatus(),
+                request.isModuleVcc(),
+                request.isModulePayment()
         );
     }
 
