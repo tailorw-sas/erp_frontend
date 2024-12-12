@@ -25,8 +25,10 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
     private String defaultRemark;
 
     private boolean defaults;
+    private boolean cloneAdjustmentDefault;
 
-    public CreateManageInvoiceTransactionTypeCommand(String code, String description, Status status, String name, Boolean isAgencyRateAmount, Boolean isNegative, Boolean isPolicyCredit, Boolean isRemarkRequired, Integer minNumberOfCharacters, String defaultRemark, boolean defaults) {
+    public CreateManageInvoiceTransactionTypeCommand(String code, String description, Status status, String name, Boolean isAgencyRateAmount, Boolean isNegative, 
+            Boolean isPolicyCredit, Boolean isRemarkRequired, Integer minNumberOfCharacters, String defaultRemark, boolean defaults, boolean cloneAdjustmentDefault) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
@@ -39,6 +41,7 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
         this.minNumberOfCharacters = minNumberOfCharacters;
         this.defaultRemark = defaultRemark;
         this.defaults = defaults;
+        this.cloneAdjustmentDefault = cloneAdjustmentDefault;
     }
 
     public static CreateManageInvoiceTransactionTypeCommand fromRequest(CreateManageInvoiceTransactionTypeRequest request){
@@ -53,7 +56,8 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
                 request.getIsRemarkRequired(),
                 request.getMinNumberOfCharacters(),
                 request.getDefaultRemark(),
-                request.isDefaults()
+                request.isDefaults(),
+                request.isCloneAdjustmentDefault()
         );
     }
 

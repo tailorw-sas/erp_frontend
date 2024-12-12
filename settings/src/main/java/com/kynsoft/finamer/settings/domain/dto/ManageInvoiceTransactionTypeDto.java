@@ -27,4 +27,5 @@ public class ManageInvoiceTransactionTypeDto {
     private String defaultRemark;
 
     private boolean defaults;
+    private boolean cloneAdjustmentDefault;
 }
