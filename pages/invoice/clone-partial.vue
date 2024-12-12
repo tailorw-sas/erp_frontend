@@ -1653,8 +1653,9 @@ onMounted(async () => {
         />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText
-          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+        <InputNumber
+          v-model="invoiceAmount" :min-fraction-digits="2"
+          :max-fraction-digits="4" show-clear :disabled="true" @update:model-value="($event) => {
             invoiceAmountError = false
             onUpdate('invoiceAmount', $event)
           }"

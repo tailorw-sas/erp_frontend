@@ -1596,7 +1596,9 @@ onMounted(async () => {
 
 <template>
   <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-start">
-    <div v-if="!parentInvoiceId">Clone Complete</div>
+    <div v-if="!parentInvoiceId">
+      Clone Complete
+    </div>
     <div v-else>
       Clone Complete From Invoice {{ parentInvoiceId }}
     </div>
@@ -1622,8 +1624,9 @@ onMounted(async () => {
         />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText
-          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+        <InputNumber
+          v-model="invoiceAmount" :min-fraction-digits="2"
+          :max-fraction-digits="4" show-clear :disabled="true" @update:model-value="($event) => {
             invoiceAmountError = false
             onUpdate('invoiceAmount', $event)
           }"

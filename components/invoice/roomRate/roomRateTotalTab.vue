@@ -471,8 +471,8 @@ const Columns: IColumn[] = [
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -877,8 +877,8 @@ onMounted(() => {
       { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'roomType', header: 'Room Type', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'ratePlan', header: 'Rate Plan', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Rate Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }
@@ -933,8 +933,8 @@ watch(() => props.bookingObj, () => {
               footer="Totals:" :colspan="!isDetailView ? 7 : 8"
               footer-style="text-align:right; font-weight: 700"
             />
-            <Column :footer="props.roomRateTotalObj.totalHotelAmount" footer-style="font-weight: 700" />
-            <Column :footer="props.roomRateTotalObj.totalInvoiceAmount" footer-style="font-weight: 700" />
+            <Column :footer="formatNumber(props.roomRateTotalObj.totalHotelAmount)" footer-style="font-weight: 700" />
+            <Column :footer="formatNumber(props.roomRateTotalObj.totalInvoiceAmount)" footer-style="font-weight: 700" />
           </Row>
         </ColumnGroup>
       </template>
