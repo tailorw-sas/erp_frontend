@@ -2,10 +2,7 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import type { PageState } from 'primevue/paginator'
-import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import type { Container } from '~/components/form/EditFormV2WithContainer'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
@@ -72,6 +69,7 @@ const { data: userData } = useAuth()
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
+const parentInvoiceId = ref<string>('')
 const totalAmount = ref(0)
 const loadingSaveAll = ref(false)
 const loadingAttachmentList = ref(false)
@@ -983,7 +981,7 @@ async function getItemById(id: any) {
 
       if (response) {
         item.value.id = response.id
-        //   item.value.invoiceId = response.invoiceId
+        parentInvoiceId.value = response.invoiceId
         //  const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
@@ -1597,8 +1595,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    Clone Complete
+  <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-between">
+    <div>Clone Complete</div>
+    <div v-if="parentInvoiceId">
+      Invoice Parent Id: {{ parentInvoiceId }}
+    </div>
   </div>
   <div class="p-4">
     <EditFormV2
