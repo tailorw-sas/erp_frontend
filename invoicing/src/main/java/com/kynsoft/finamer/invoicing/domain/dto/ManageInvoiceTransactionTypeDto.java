@@ -17,4 +17,5 @@ public class ManageInvoiceTransactionTypeDto {
     private String code;
     private String name;
     private boolean defaults;
+    private boolean cloneAdjustmentDefault;
 }
