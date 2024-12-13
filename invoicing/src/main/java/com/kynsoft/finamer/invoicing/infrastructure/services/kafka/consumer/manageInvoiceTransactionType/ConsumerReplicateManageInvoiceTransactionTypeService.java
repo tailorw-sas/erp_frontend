@@ -24,7 +24,12 @@ public class ConsumerReplicateManageInvoiceTransactionTypeService {
         try {
 
             CreateManageInvoiceTransactionTypeCommand command = new CreateManageInvoiceTransactionTypeCommand(
-                    objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.isDefaults());
+                    objKafka.getId(), 
+                    objKafka.getCode(), 
+                    objKafka.getName(), 
+                    objKafka.isDefaults(), 
+                    objKafka.isCloneAdjustmentDefault()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageInvoiceTransactionTypeService.class.getName()).log(Level.SEVERE,

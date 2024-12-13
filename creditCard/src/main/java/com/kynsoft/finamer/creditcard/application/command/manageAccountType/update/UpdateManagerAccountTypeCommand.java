@@ -17,12 +17,16 @@ public class UpdateManagerAccountTypeCommand implements ICommand {
     private String name;
     private String description;
     private Status status;
+    private boolean moduleVcc;
+    private boolean modulePayment;
 
-    public UpdateManagerAccountTypeCommand(UUID id, String description, String name, Status status) {
+    public UpdateManagerAccountTypeCommand(UUID id, String description, String name, Status status, boolean moduleVcc, boolean modulePayment) {
         this.id = id;
         this.description = description;
         this.name = name;
         this.status = status;
+        this.moduleVcc = moduleVcc;
+        this.modulePayment = modulePayment;
     }
 
     public static UpdateManagerAccountTypeCommand fromRequest(UpdateManagerAccountTypeRequest request, UUID id) {
@@ -30,7 +34,9 @@ public class UpdateManagerAccountTypeCommand implements ICommand {
                 id,
                 request.getDescription(),
                 request.getName(), 
-                request.getStatus()
+                request.getStatus(),
+                request.isModuleVcc(),
+                request.isModulePayment()
         );
     }
 

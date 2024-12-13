@@ -84,7 +84,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
-        ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByDefaults();
+        ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findBySupported();//El credit en su process debe de tener al menos attachemt de tipo support
         this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
         this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
     }
@@ -132,7 +132,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
-        //paymentDto.setImportType(ImportType.AUTOMATIC);
+        paymentDto.setImportType(ImportType.AUTOMATIC);
         paymentDto.setApplyPayment(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
@@ -143,6 +143,9 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking, parentDetailDto, command));
             }
             parentDetailDto.setChildren(updateChildrens);
+        } else {
+            paymentSave.setDepositBalance(paymentAmount);
+            this.paymentService.update(paymentSave);
         }
 
         ManageEmployeeDto employeeDto = null;
@@ -203,7 +206,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         );
 
         paymentDto.setCreateByCredit(true);
-        //paymentDto.setImportType(ImportType.AUTOMATIC);
+        paymentDto.setImportType(ImportType.AUTOMATIC);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         if (command.getInvoiceDto().getBookings() != null) {
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {

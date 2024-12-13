@@ -9,6 +9,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class ProducerReplicateManageInvoiceService {
     }
 
     @Async
-    public void create(ManageInvoiceDto entity) {
+    public void create(ManageInvoiceDto entity, UUID attachmentDefault) {
         try {
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
             if (entity.getBookings() != null) {
@@ -58,14 +59,20 @@ public class ProducerReplicateManageInvoiceService {
 
             List<AttachmentKafka> attachmentKafkas = new ArrayList<>();
             if (entity.getAttachments() != null) {
+                boolean attDefaults = false;
                 for (ManageAttachmentDto attDto : entity.getAttachments()) {
+
+                    if(attDto.getId().equals(attachmentDefault))
+                        attDefaults = true;
+
                     attachmentKafkas.add(new AttachmentKafka(
                             attDto.getId(), 
                             attDto.getEmployeeId(), 
                             attDto.getFilename(), 
                             "", 
                             attDto.getFile(), 
-                            attDto.getRemark()
+                            attDto.getRemark(),
+                            attDefaults
                     ));
                 }
             }

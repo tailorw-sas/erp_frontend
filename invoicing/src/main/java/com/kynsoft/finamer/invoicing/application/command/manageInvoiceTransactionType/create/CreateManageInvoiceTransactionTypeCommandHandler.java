@@ -17,12 +17,12 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
     @Override
     public void handle(CreateManageInvoiceTransactionTypeCommand command) {
 
-
         service.create(new ManageInvoiceTransactionTypeDto(
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                command.isDefaults()
-                ));
+                command.isDefaults(),
+                command.isCloneAdjustmentDefault()
+        ));
     }
 }

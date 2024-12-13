@@ -34,12 +34,15 @@ public class CreateManagerAccountTypeCommandHandler implements ICommandHandler<C
                 command.getCode(),
                 command.getName(),
                 command.getDescription(),
-                command.getStatus()
+                command.getStatus(),
+                command.isModuleVcc(),
+                command.isModulePayment()
         ));
 
         this.producerReplicateAccountTypeService.replicate(new ManageAccountTypeKafka(
                 command.getId(), command.getCode(), command.getName(),
-                command.getDescription(), command.getStatus().name()
+                command.getDescription(), command.getStatus().name(),
+                command.isModuleVcc(), command.isModulePayment()
         ));
     }
 }

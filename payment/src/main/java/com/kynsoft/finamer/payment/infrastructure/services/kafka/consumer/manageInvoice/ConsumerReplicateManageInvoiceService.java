@@ -109,7 +109,8 @@ public class ConsumerReplicateManageInvoiceService {
                                 attDto.getFileName(),
                                 "",
                                 attDto.getPath(),
-                                attDto.getRemark()
+                                attDto.getRemark(),
+                                attDto.isSupport()
                         ));
                     }
                 }
@@ -127,7 +128,8 @@ public class ConsumerReplicateManageInvoiceService {
                                     attDto.getFileName(),
                                     "",
                                     attDto.getPath(),
-                                    attDto.getRemark()
+                                    attDto.getRemark(),
+                                    attDto.isSupport()
                             ));
                         }
                     }

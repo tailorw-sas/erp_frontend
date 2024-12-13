@@ -24,6 +24,7 @@ public class InvoiceStatusHistoryResponse implements IResponse {
     private String employee;
     private LocalDateTime createdAt;
     private EInvoiceStatus invoiceStatus;
+    private Long invoiceHistoryId;
 
     public InvoiceStatusHistoryResponse(InvoiceStatusHistoryDto dto){
         this.id = dto.getId();
@@ -32,5 +33,6 @@ public class InvoiceStatusHistoryResponse implements IResponse {
         this.createdAt = dto.getCreatedAt();
         this.employee = dto.getEmployee();
         this.invoiceStatus = dto.getInvoiceStatus();
+        this.invoiceHistoryId = dto.getInvoiceHistoryId() != null ? dto.getInvoiceHistoryId() : null;
     }
 }

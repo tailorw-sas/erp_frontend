@@ -22,5 +22,6 @@ public class InvoiceStatusHistoryDto {
     private LocalDateTime createdAt;
     private String employee;
     private EInvoiceStatus invoiceStatus;
+    private Long invoiceHistoryId;
 
 }

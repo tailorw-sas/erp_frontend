@@ -325,8 +325,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_ATTACHMENT_URL_CANNOT_BE_EMPTY(1103, Series.DOMAIN_ERROR, "The attachment file cannot be empty."),
     MANAGE_AGENCY_CONTACT_NOT_FOUND(1104, Series.DOMAIN_ERROR, "The source not found."),
     MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_NONNONE(1105, Series.DOMAIN_ERROR,"Another item already exists with non none."),
-    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_PAT_WHIT_ATTACHMENT(1106, Series.DOMAIN_ERROR,"Another item already exists with pat whit attachment."),
-    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_PWA_WHIT_OUT_ATTACHMENT(1107, Series.DOMAIN_ERROR,"Another item already exists with pwa whitout attachment."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_PAT_WHIT_ATTACHMENT(1106, Series.DOMAIN_ERROR,"Another item already exists with Pay With Attachment."),
+    MANAGE_PAYMENT_TRANSACTION_TYPE_CHECK_PWA_WHIT_OUT_ATTACHMENT(1107, Series.DOMAIN_ERROR,"Another item already exists without Pay whitout attachment."),
     MANAGE_TRANSACTION_STATUS_CHECK_SENT(1108, Series.DOMAIN_ERROR,"Another item already exists with sent status."),
     MANAGE_TRANSACTION_STATUS_CHECK_REFUND(1109, Series.DOMAIN_ERROR,"Another item already exists with refund status."),
     MANAGE_TRANSACTION_STATUS_CHECK_RECEIVED(1110, Series.DOMAIN_ERROR,"Another item already exists with received status."),
@@ -389,7 +389,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_PAYMENT_CANCELLED_STATUS(1167, Series.DOMAIN_ERROR, "Hotel Payment cannot be changed to cancelled status because it has associated transactions."),
     MANUAL_INVOICE_NOT_VIRTUAL_HOTEL(1168, Series.DOMAIN_ERROR,"It is not possible to create manual invoices for virtual hotels."),
     INVOICE_AGENCY_WITH_CLIENT_INACTIVE(1169, Series.DOMAIN_ERROR,"The selected agency belongs to an inactive client."),
-    HOTEL_PAYMENT_STATUS_HISTORY_NOT_FOUND(1169, Series.DOMAIN_ERROR, "Hotel Payment Status History not found.");
+    HOTEL_PAYMENT_STATUS_HISTORY_NOT_FOUND(1169, Series.DOMAIN_ERROR, "Hotel Payment Status History not found."),
+    NIGHT_TYPE_REQUIRED(1170, Series.DOMAIN_ERROR,"The Night Type field is required for this client."),;
 
     private static final DomainErrorMessage[] VALUES;
 

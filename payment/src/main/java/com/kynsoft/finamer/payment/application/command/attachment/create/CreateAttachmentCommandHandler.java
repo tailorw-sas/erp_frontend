@@ -33,7 +33,8 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     @Override
     public void handle(CreateAttachmentCommand command) {
         List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
-        AttachmentTypeDto attachmentTypeDto = this.manageAttachmentTypeService.getByDefault();
+        AttachmentTypeDto attachmentTypeSupport = this.manageAttachmentTypeService.getByDefault();
+        AttachmentTypeDto attachmentTypeOtherDto = this.manageAttachmentTypeService.getByAntiToIncomeImport();
         ResourceTypeDto resourceTypeDto = this.manageResourceTypeService.getByDefault();
         for (CreateAttachmentRequest attachment : command.getAttachments()) {
             dtos.add(new MasterPaymentAttachmentDto(
@@ -41,7 +42,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     Status.ACTIVE,
                     command.getPaymentDto(),
                     resourceTypeDto,
-                    attachmentTypeDto,
+                    attachment.isSupport() ? attachmentTypeSupport : attachmentTypeOtherDto,
                     attachment.getFileName(),
                     attachment.getFileWeight(),
                     attachment.getPath(),

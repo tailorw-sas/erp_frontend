@@ -28,6 +28,9 @@ public interface AttachmentTypeReadDataJPARepository extends JpaRepository<Manag
     @Query("SELECT b FROM ManageAttachmentType b WHERE b.defaults = true")
     Optional<ManageAttachmentType> getByDefault();
 
+    @Query("SELECT b FROM ManageAttachmentType b WHERE b.antiToIncomeImport = true")
+    Optional<ManageAttachmentType> getByAntiToIncomeImport();
+
     @Query("SELECT COUNT(b) FROM ManageAttachmentType b WHERE b.antiToIncomeImport = true AND b.id <> :id")
     Long countByAntiToIncomeImportAndNotId(@Param("id") UUID id);
 

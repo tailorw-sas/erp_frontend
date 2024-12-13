@@ -11,4 +11,6 @@ public class CreateManagerAccountTypeRequest {
     private String name;
     private String description;
     private Status status;
+    private boolean moduleVcc;
+    private boolean modulePayment;
 }

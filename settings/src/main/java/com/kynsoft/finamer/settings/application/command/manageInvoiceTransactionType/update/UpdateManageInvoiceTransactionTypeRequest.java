@@ -19,4 +19,5 @@ public class UpdateManageInvoiceTransactionTypeRequest {
     private String defaultRemark;
 
     private boolean defaults;
+    private boolean cloneAdjustmentDefault;
 }

@@ -67,6 +67,9 @@ public class ManageInvoiceTransactionType implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean defaults;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cloneAdjustmentDefault;
+
     public ManageInvoiceTransactionType(ManageInvoiceTransactionTypeDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -80,12 +83,13 @@ public class ManageInvoiceTransactionType implements Serializable {
         this.minNumberOfCharacters = dto.getMinNumberOfCharacters();
         this.defaultRemark = dto.getDefaultRemark();
         this.defaults = dto.isDefaults();
+        this.cloneAdjustmentDefault = dto.isCloneAdjustmentDefault();
     }
 
     public ManageInvoiceTransactionTypeDto toAggregate(){
         return new ManageInvoiceTransactionTypeDto(
                 id, code, description, status, name, isAgencyRateAmount, isNegative, isPolicyCredit,
-                isRemarkRequired, minNumberOfCharacters, defaultRemark, defaults
+                isRemarkRequired, minNumberOfCharacters, defaultRemark, defaults, cloneAdjustmentDefault
         );
     }
 }

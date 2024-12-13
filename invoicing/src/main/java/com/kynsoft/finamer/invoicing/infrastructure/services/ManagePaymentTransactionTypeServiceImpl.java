@@ -81,6 +81,13 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
         return getPaginatedResponse(data);
     }
 
+    @Override
+    public ManagePaymentTransactionTypeDto findByDefaults() {
+        return this.repositoryQuery.findByDefaults().map(ManagePaymentTransactionType::toAggregate).orElseThrow(
+                ()-> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())))
+        );
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

@@ -117,7 +117,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                 "The invoice data was inserted.",
                                 null,
                                 employee,
-                                EInvoiceStatus.SENT
+                                EInvoiceStatus.SENT,
+                                0L
                         )
                 );
                 this.service.update(manageInvoiceDto);
@@ -255,6 +256,12 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 //        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
 
         String base64 = "";
+        String fileName = "";
+        try {
+            fileName = agencyInvoices.get(0).getAgency().getName() + " " + "Account Statement.xlsx";
+        } catch (Exception e) {
+            fileName = "Account Statement.xlsx";
+        }
         try {
             //Se hace la llamada a lo interno para generar el excel.
             base64 = this.fileService.convertExcelToBase64(ids, employeeDto);
@@ -263,7 +270,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
         MailJetAttachment attachment = new MailJetAttachment(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
-                "AccountStatement.xlsx",  // Nombre del archivo
+                //"AccountStatement.xlsx",  // Nombre del archivo
+                fileName,
 //                sendAccountStatementResponse.getFile()
                 base64
         );
@@ -321,7 +329,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                 "The invoice data was inserted.",
                                 null,
                                 employee,
-                                EInvoiceStatus.SENT
+                                EInvoiceStatus.SENT,
+                                0L
                         )
                 );
             }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){

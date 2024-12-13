@@ -181,11 +181,13 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
     private List<MasterPaymentAttachmentDto> createAttachment(List<CreateAttachmentRequest> attachments, PaymentDto paymentDto) {
         List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
+        ManagePaymentAttachmentStatusDto attachmentStatusSupport = this.attachmentStatusService.findBySupported();
+        ManagePaymentAttachmentStatusDto attachmentStatusNonNone = this.attachmentStatusService.findByNonNone();
         Integer countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
         for (CreateAttachmentRequest attachment : attachments) {
             AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
             ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(attachment.getResourceType());
-            dtos.add(new MasterPaymentAttachmentDto(
+            MasterPaymentAttachmentDto newAttachmentDto = new MasterPaymentAttachmentDto(
                     UUID.randomUUID(),
                     Status.ACTIVE,
                     paymentDto,
@@ -196,10 +198,14 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                     attachment.getPath(),
                     attachment.getRemark(),
                     0L
-            ));
+            );
             if (manageAttachmentTypeDto.getDefaults()) {
                 countDefaults++;
+                newAttachmentDto.setStatusHistory(attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName());
+            } else {
+                newAttachmentDto.setStatusHistory(attachmentStatusNonNone.getCode() + "-" + attachmentStatusNonNone.getName());
             }
+            dtos.add(newAttachmentDto);
         }
 
         RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
@@ -207,9 +213,11 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
         if (countDefaults > 0) {
             paymentDto.setPaymentSupport(true);
-            paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
+            paymentDto.setAttachmentStatus(attachmentStatusSupport);
+            //paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
         } else {
-            paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
+            paymentDto.setAttachmentStatus(attachmentStatusNonNone);
+            //paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
             paymentDto.setPaymentSupport(false);
         }
 
@@ -227,7 +235,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name: " + attachment.getFileName());
             attachmentStatusHistoryDto.setEmployee(employeeDto);
             attachmentStatusHistoryDto.setPayment(payment);
-            attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
+            attachmentStatusHistoryDto.setStatus(attachment.getStatusHistory());
+            //attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
             attachmentStatusHistoryDto.setAttachmentId(attachment.getAttachmentId());
 
             this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);

@@ -20,4 +20,5 @@ public class CreateAttachmentRequest {
     private String fileWeight;
     private String path;
     private String remark;
+    private boolean support;
 }
