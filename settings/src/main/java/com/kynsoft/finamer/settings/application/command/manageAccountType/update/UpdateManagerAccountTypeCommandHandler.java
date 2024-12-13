@@ -39,7 +39,8 @@ public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<U
             this.service.update(accountTypeDto);
             this.producerReplicateAccountTypeService.replicate(new ManageAccountTypeKafka(
                     accountTypeDto.getId(), accountTypeDto.getCode(), accountTypeDto.getName(),
-                    accountTypeDto.getDescription(), accountTypeDto.getStatus().name()
+                    accountTypeDto.getDescription(), accountTypeDto.getStatus().name(), accountTypeDto.isModuleVcc(),
+                    accountTypeDto.isModulePayment()
             ));
         }
     }
@@ -47,6 +48,8 @@ public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<U
     private void updateFields(ManagerAccountTypeDto accountTypeDto, UpdateManagerAccountTypeCommand command, ConsumerUpdate update) {
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(accountTypeDto::setDescription, command.getDescription(), accountTypeDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(accountTypeDto::setName, command.getName(), accountTypeDto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(accountTypeDto::setModuleVcc, command.isModuleVcc(), accountTypeDto.isModuleVcc(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(accountTypeDto::setModulePayment, command.isModulePayment(), accountTypeDto.isModulePayment(), update::setUpdate);
         updateStatus(accountTypeDto::setStatus, command.getStatus(), accountTypeDto.getStatus(), update::setUpdate);
     }
 

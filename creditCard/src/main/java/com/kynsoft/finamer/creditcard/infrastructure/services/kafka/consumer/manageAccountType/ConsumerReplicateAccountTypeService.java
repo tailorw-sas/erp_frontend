@@ -27,7 +27,8 @@ public class ConsumerReplicateAccountTypeService {
         try {
             CreateManagerAccountTypeCommand command =new CreateManagerAccountTypeCommand(
                     objKafka.getId(),objKafka.getCode(), objKafka.getName(),
-                    objKafka.getDescription(), Status.valueOf(objKafka.getStatus()));
+                    objKafka.getDescription(), Status.valueOf(objKafka.getStatus()),
+                    objKafka.isModuleVcc(), objKafka.isModulePayment());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateAccountTypeService.class.getName()).log(Level.SEVERE, null, ex);

@@ -38,6 +38,12 @@ public class ManagerAccountType implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean moduleVcc;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean modulePayment;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -50,10 +56,12 @@ public class ManagerAccountType implements Serializable {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.moduleVcc = dto.isModuleVcc();
+        this.modulePayment = dto.isModulePayment();
     }
 
     public ManagerAccountTypeDto toAggregate() {
-        return new ManagerAccountTypeDto(id, code, name, description, status);
+        return new ManagerAccountTypeDto(id, code, name, description, status, moduleVcc, modulePayment);
     }
 
 }

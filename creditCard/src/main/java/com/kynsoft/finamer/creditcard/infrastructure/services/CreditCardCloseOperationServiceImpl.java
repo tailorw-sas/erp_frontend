@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.CreditCardCloseOperationResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.CreditCardCloseOperationDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -134,6 +137,16 @@ public class CreditCardCloseOperationServiceImpl implements ICreditCardCloseOper
             return entity.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public LocalDateTime hotelCloseOperationDateTime(UUID hotelId) {
+        CreditCardCloseOperationDto dto = findActiveByHotelId(hotelId);
+
+        if (DateUtil.getDateForCloseOperation(dto.getBeginDate(), dto.getEndDate())) {
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+        return LocalDateTime.of(dto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
 }
