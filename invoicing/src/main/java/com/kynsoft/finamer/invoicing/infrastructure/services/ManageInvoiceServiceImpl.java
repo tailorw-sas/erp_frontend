@@ -37,6 +37,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -196,6 +197,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         double totalsAmountSen = 0.00;
 
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+        Locale locale = new Locale("en", "US");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss yyyy").withLocale(locale);
         for (int i = 0; i < data.size(); i++) {
             ManageInvoiceSearchResponse invoice = data.get(i);
             cant++;
@@ -236,7 +239,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                     invoice.getAgency() != null ? invoice.getAgency().getCode() : "",//Agency,//Agency Cd
                     invoice.getAgency() != null ? invoice.getAgency().getName() : "",//Agency
                     invoice.getInvoiceNumber(),//Inv. No
-                    invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
+                    invoice.getInvoiceDate() != null ? invoice.getInvoiceDate().format(formatter) : "",//Gen. Date
+                    //invoice.getInvoiceDate() != null ? Date.from(invoice.getInvoiceDate().toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()).toString() : "",//Gen. Date
                     //invoice.getStatus() != null ? InvoiceStatus.getInvoiceStatusCode(invoice.getStatus()) + "-" + invoice.getStatus() : "", //Status
                     status, //Status
                     invoice.getIsManual() ? "1" : "0", //Manual
