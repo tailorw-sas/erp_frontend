@@ -919,7 +919,10 @@ async function getList() {
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
-
+    const payloadOfInvoiceList = {
+      ...payload.value,
+    }
+    localStorage.setItem('payloadOfInvoiceList', JSON.stringify(payloadOfInvoiceList))
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
