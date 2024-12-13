@@ -23,6 +23,7 @@ const LocalBindTransactionList = ref<any[]>([])
 const collectionStatusList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const loadingDefaultStatus = ref(false)
+const loadingDefaultBankAccount = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
@@ -388,11 +389,14 @@ async function loadDefaultStatus() {
   formReload.value++
 }
 
-async function getBankAccountList(query: string) {
+async function getBankAccountList(query: string, isDefault: boolean = false) {
   if (!item.value.manageHotel) {
     return
   }
   try {
+    if (isDefault) {
+      loadingDefaultBankAccount.value = true
+    }
     const payload = {
       filter: [{
         key: 'accountNumber',
@@ -403,6 +407,11 @@ async function getBankAccountList(query: string) {
         key: 'manageHotel.id',
         operator: 'EQUALS',
         value: item.value.manageHotel.id,
+        logicalOperation: 'AND'
+      }, {
+        key: 'manageAccountType.moduleVcc',
+        operator: 'EQUALS',
+        value: true,
         logicalOperation: 'AND'
       }, {
         key: 'status',
@@ -423,9 +432,18 @@ async function getBankAccountList(query: string) {
     for (const iterator of dataList) {
       BankAccountList.value = [...BankAccountList.value, { id: iterator.id, name: `${iterator.accountNumber}${(iterator.description ? ` - ${iterator.description}` : '')}`, status: iterator.status, managerMerchant: iterator.managerMerchant, creditCardTypes: iterator.creditCardTypes }]
     }
+    if (isDefault && BankAccountList.value.length > 0) {
+      item.value.manageBankAccount = BankAccountList.value[0]
+      formReload.value += 1
+    }
   }
   catch (error) {
     console.error('Error loading merchant bank account list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultBankAccount.value = false
+    }
   }
 }
 
@@ -645,14 +663,23 @@ onMounted(() => {
             :model="data.manageHotel"
             :suggestions="HotelList"
             @change="($event) => {
-              if (item.manageHotel && $event.id !== item.manageHotel.id) {
+              const hasHotelChanged = item.manageHotel && $event.id !== item.manageHotel.id
+              // solo procesar si el hotel seleccionado cambió
+              if (hasHotelChanged) {
                 clearTransactions()
                 // Limpiar selector de bank account
+                onUpdate('manageHotel', $event)
+                item.manageHotel = $event
                 onUpdate('manageBankAccount', null)
                 item.manageBankAccount = null
+                getBankAccountList('', true)
               }
-              onUpdate('manageHotel', $event)
-              item.manageHotel = $event
+              // Si esta vacio previamente entonces se actualiza y se manda a obtener la cuenta bancaria por defecto
+              if (!item.manageHotel) {
+                onUpdate('manageHotel', $event)
+                item.manageHotel = $event
+                getBankAccountList('', true)
+              }
             }"
             @load="($event) => getHotelList($event)"
           />
@@ -660,7 +687,7 @@ onMounted(() => {
         </template>
         <template #field-manageBankAccount="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingSaveAll && !loadingDefaultBankAccount"
             id="autocomplete"
             field="name"
             item-value="id"
