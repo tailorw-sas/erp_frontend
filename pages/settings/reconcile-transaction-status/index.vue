@@ -57,16 +57,16 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
-  {
-    field: 'navigate',
-    header: 'Navigate',
-    dataType: 'multi-select',
-    class: 'field col-12',
-    disabled: true,
-    hidden: false,
-    headerClass: 'mt-1',
-    validation: validateEntitiesForSelectMultiple('navigate'),
-  },
+  // {
+  //   field: 'navigate',
+  //   header: 'Navigate',
+  //   dataType: 'multi-select',
+  //   class: 'field col-12',
+  //   disabled: true,
+  //   hidden: false,
+  //   headerClass: 'mt-1',
+  //   validation: validateEntitiesForSelectMultiple('navigate'),
+  // },
   {
     field: 'requireValidation',
     header: 'Require Validation',
@@ -100,7 +100,7 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
-  navigate: [],
+  // navigate: [],
   collected: false,
   isStatus: {
     created: false,
@@ -114,7 +114,7 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
-  navigate: [],
+  // navigate: [],
   collected: false,
   isStatus: {
     created: false,
@@ -308,7 +308,7 @@ async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
-    await getForSelectNavigateList()
+    // await getForSelectNavigateList()
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
@@ -326,14 +326,14 @@ async function getItemById(id: string) {
         }
         selectedOption.value = ''
         findSelectedOption()
-        item.value.navigate = response.navigate.map((nav: any) => {
-          let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
-          if (!enumStatus) {
-            enumStatus = { id: nav.id, name: nav.name, status: nav.status }
-            navigateListItems.value.push(enumStatus)
-          }
-          return enumStatus
-        })
+        // item.value.navigate = response.navigate.map((nav: any) => {
+        //   let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
+        //   if (!enumStatus) {
+        //     enumStatus = { id: nav.id, name: nav.name, status: nav.status }
+        //     navigateListItems.value.push(enumStatus)
+        //   }
+        //   return enumStatus
+        // })
         item.value.collected = response.collected
       }
       fields[0].disabled = true
@@ -371,7 +371,8 @@ async function createItem(item: { [key: string]: any }) {
     payload.created = item.isStatus.created
     payload.completed = item.isStatus.completed
     payload.cancelled = item.isStatus.cancelled
-    payload.navigate = payload.navigate ? payload.navigate.map((p: any) => p.id) : []
+    // payload.navigate = payload.navigate ? payload.navigate.map((p: any) => p.id) : []
+    payload.navigate = []
     delete payload.event
     delete payload.isStatus
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
@@ -385,7 +386,8 @@ async function updateItem(item: { [key: string]: any }) {
   payload.created = item.isStatus.created
   payload.completed = item.isStatus.completed
   payload.cancelled = item.isStatus.cancelled
-  payload.navigate = payload.navigate.map((p: any) => p.id)
+  // payload.navigate = payload.navigate.map((p: any) => p.id)
+  payload.navigate = []
   delete payload.event
   delete payload.isStatus
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
@@ -547,7 +549,7 @@ onMounted(() => {
   if (useRuntimeConfig().public.loadTableData) {
     getList()
   }
-  getForSelectNavigateList()
+  // getForSelectNavigateList()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -625,7 +627,7 @@ onMounted(() => {
             :loading-save="loadingSaveAll" :loading-delete="loadingDelete" @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
           >
-            <template #field-navigate="{ item: data, onUpdate }">
+            <!-- <template #field-navigate="{ item: data, onUpdate }">
               <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
@@ -642,7 +644,7 @@ onMounted(() => {
                 @load="($event) => getForSelectNavigateList($event)"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
-            </template>
+            </template> -->
             <template #field-isStatus="{ item: data, onUpdate }">
               <div v-if="!loadingSaveAll" class="flex flex-wrap gap-3 mt-1">
                 <div v-for="(option, index) in radioOptions" :key="index" class="flex align-items-center">

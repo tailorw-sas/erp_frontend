@@ -286,8 +286,8 @@ async function getItemById(id: string) {
           HotelList.value = [response.hotel]
         }
         currentSavedPaymentStatus.value = response.reconcileStatus
-        StatusList.value = []
-        getCurrentStatusNavigateList() // Cargar los estados que permite el navigate
+        // StatusList.value = []
+        // getCurrentStatusNavigateList() // Cargar los estados que permite el navigate
         if (response.reconcileStatus) {
           response.reconcileStatus.name = `${response.reconcileStatus.code} - ${response.reconcileStatus.name}`
           response.reconcileStatus.status = 'ACTIVE'
@@ -835,7 +835,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-reconcileStatus="{ item: data, onUpdate }">
-          <Dropdown
+          <!--          <Dropdown
             v-if="!loadingSaveAll"
             v-model="data.reconcileStatus"
             :options="StatusList"
@@ -848,6 +848,20 @@ onMounted(async () => {
               onUpdate('reconcileStatus', $event)
               data.reconcileStatus = $event
             }"
+          /> -->
+          <DebouncedAutoCompleteComponent
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :disabled="computedDisabledItemsByStatus"
+            :model="data.reconcileStatus"
+            :suggestions="StatusList"
+            @change="($event) => {
+              onUpdate('reconcileStatus', $event)
+              item.reconcileStatus = $event
+            }"
+            @load="($event) => getStatusList($event)"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
@@ -902,8 +916,8 @@ onMounted(async () => {
       <div>
         <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
           <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
-          <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" :disabled="computedDisabledItemsByStatus" />
-          <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" :disabled="computedDisabledItemsByStatus" />
+          <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
+          <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
         </IfCan>
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
       </div>
