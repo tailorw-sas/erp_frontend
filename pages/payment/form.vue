@@ -990,6 +990,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
         }
         // Split Deposit
         if (actionOfModal.value === 'split-deposit') {
+          paymentDetailSelectedInRightClick.value = { ...objToEditTemp } // Esto es para que salga el id en el titulo del modal
           const amountString = objToEditTemp.amount
           const sanitizedAmount = typeof amountString === 'string' ? amountString.replace(/,/g, '') : amountString // Elimina las comas
           const amountTemp = sanitizedAmount ? Math.abs(Number(sanitizedAmount)) : 0
@@ -3859,7 +3860,7 @@ onMounted(async () => {
           </h5>
           <div class="flex align-items-center">
             <h5 class="m-0 mr-4">
-              Payment Id: {{ paymentDetailForTitle || 0 }}
+              Payment Detail Id: {{ paymentDetailForTitle || 0 }}
             </h5>
           </div>
         </div>
