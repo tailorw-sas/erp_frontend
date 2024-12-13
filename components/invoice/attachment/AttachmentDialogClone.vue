@@ -520,9 +520,9 @@ async function deleteItem(id: string) {
     }
     else {
       await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
-
-      getList()
     }
+    clearForm()
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
@@ -578,6 +578,11 @@ async function saveItem(item: { [key: string]: any }) {
   }
 }
 
+function canNotDeleteLastDefaultItem() {
+  const countDefaultsItems = listItemsLocal.value.filter((item: any) => item.type?.attachInvDefault).length
+  return props.isCreationDialog && countDefaultsItems === 1 && listItemsLocal.value.length > 1
+}
+
 function requireConfirmationToDelete(event: any) {
   confirm.require({
     target: event.currentTarget,
@@ -587,9 +592,16 @@ function requireConfirmationToDelete(event: any) {
     acceptClass: 'p-button-danger',
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
-    accept: () => {
-      deleteItem(idItem.value)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+    accept: async () => {
+      if (item.value.type?.attachInvDefault && canNotDeleteLastDefaultItem()) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item cannot be deleted', life: 3000 })
+      }
+      else {
+        await deleteItem(idItem.value)
+        if (!props.isCreationDialog) {
+          getList()
+        }
+      }
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
