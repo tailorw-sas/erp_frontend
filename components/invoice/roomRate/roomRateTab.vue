@@ -558,7 +558,8 @@ async function getRoomRateList() {
 
       ListItems.value = [...ListItems.value, {
         ...iterator,
-        invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
+        // invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
+        invoiceAmount: iterator?.invoiceAmount || 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
@@ -568,7 +569,8 @@ async function getRoomRateList() {
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        hotelAmount: formatNumber(iterator?.hotelAmount)
+        // hotelAmount: formatNumber(iterator?.hotelAmount)
+        hotelAmount: iterator?.hotelAmount
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
