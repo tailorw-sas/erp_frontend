@@ -727,12 +727,10 @@ function processValidation($event: any, data: any) {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-amount="{ item: data, onUpdate }">
-          <InputNumber
+          <InputText
             v-if="!props.loadingSaveAll"
             v-model="data.amount"
             class="w-full"
-            :min-fraction-digits="2"
-            :max-fraction-digits="2"
             @update:model-value="($event) => {
               onUpdate('amount', $event)
               amountLocalTemp = $event
