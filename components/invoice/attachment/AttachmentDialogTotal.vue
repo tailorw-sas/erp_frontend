@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import {watch} from "vue";
 
 const props = defineProps({
 
@@ -506,9 +507,14 @@ async function updateItem(item: { [key: string]: any }) {
 async function deleteItem(id: string) {
   try {
     loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
+    if (props.isCreationDialog) {
+      emit('deleteListItems', id)
+    }
+    else {
+      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
+    }
     clearForm()
-    getList()
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
   }
   catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
@@ -559,7 +565,13 @@ async function saveItem(item: { [key: string]: any }) {
   }
 }
 
+function canNotDeleteLastDefaultItem() {
+  const countDefaultsItems = listItemsLocal.value.filter((item: any) => item.type?.attachInvDefault).length
+  return props.isCreationDialog && countDefaultsItems === 1 && listItemsLocal.value.length > 1
+}
+
 function requireConfirmationToDelete(event: any) {
+  console.log(item.value)
   confirm.require({
     target: event.currentTarget,
     group: 'headless',
@@ -568,9 +580,16 @@ function requireConfirmationToDelete(event: any) {
     acceptClass: 'p-button-danger',
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
-    accept: () => {
-      deleteItem(idItem.value)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
+    accept: async () => {
+      if (item.value.type?.attachInvDefault && canNotDeleteLastDefaultItem()) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item cannot be deleted', life: 3000 })
+      }
+      else {
+        await deleteItem(idItem.value)
+        if (!props.isCreationDialog) {
+          getList()
+        }
+      }
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
@@ -711,6 +730,15 @@ watch(() => idItem.value, (newValue) => {
   else {
     updateFieldProperty(Fields, 'filename', 'disabled', true)
     updateFieldProperty(Fields, 'remark', 'disabled', true)
+  }
+})
+
+watch(() => props.listItems, async (newValue) => {
+  if (newValue) {
+    listItemsLocal.value = [...newValue]
+    if (props.isCreationDialog) {
+      Pagination.value.totalElements = newValue?.length ?? 0
+    }
   }
 })
 
@@ -938,7 +966,7 @@ onMounted(async () => {
                   <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-DELETE']">
                     <Button
                       v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem mx-1" icon="pi pi-trash"
-                      :disabled="true" @click="requireConfirmationToDelete"
+                      :disabled="!idItem" @click="requireConfirmationToDelete"
                     />
                   </IfCan>
                   <Button

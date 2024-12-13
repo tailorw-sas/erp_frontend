@@ -799,7 +799,7 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
+    v-model:visible="dialogVisible" modal :header="header"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
     :pt="{
       root: {
