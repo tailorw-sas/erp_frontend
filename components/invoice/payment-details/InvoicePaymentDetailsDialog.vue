@@ -61,7 +61,7 @@ const columnsPayments = ref<IColumn[]>([
   { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '90px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
+  { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '140px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '140px', sortable: true, showFilter: true },
   { field: 'amount', header: 'D. Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'remark', header: 'Remark', type: 'text', width: '90px', maxWidth: '190px', sortable: true, showFilter: true },
@@ -260,12 +260,12 @@ onMounted(async () => {
       <div class="flex justify-content-between align-items-center w-full">
         <div class="flex align-items-center">
           <h5 class="m-0">
-            Payment Details
+            Payment Details Applied
           </h5>
         </div>
         <div class="flex align-items-center">
           <h5 class="m-0 mr-4">
-            Invoice: {{ props.selectedInvoice.invoiceId }}
+            Invoice Id: {{ props.selectedInvoice.invoiceId }}
           </h5>
         </div>
       </div>

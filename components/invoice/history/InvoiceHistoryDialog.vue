@@ -58,9 +58,6 @@ const confattachmentTypeListApi = reactive({
 
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
-const confirm = useConfirm()
-
-console.log(invoice.value)
 
 const loadingDelete = ref(false)
 
@@ -101,6 +98,7 @@ const Columns: IColumn[] = [
 ]
 
 const incomeColumns: IColumn[] = [
+  { field: 'invoiceHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
@@ -149,7 +147,6 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
-    console.log(event)
     Payload.value.sortBy = getSortField(event.sortField)
     Payload.value.sortType = event.sortOrder
     getList()
@@ -182,8 +179,6 @@ async function getList() {
     ListItems.value = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload.value)
-    console.log(response)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
