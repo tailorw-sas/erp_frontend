@@ -626,7 +626,7 @@ const fieldPaymentDetails = ref<FieldDefinitionType[]>([
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: false,
     helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
     class: 'field col-12 required',
