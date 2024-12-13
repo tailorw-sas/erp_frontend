@@ -1020,7 +1020,14 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
         }
         // Aplicar depósito
         if (actionOfModal.value === 'apply-deposit') {
-          const oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount.replace(/,/g, ''))) : 0
+          let oldAmount = 0
+
+          if (typeof objToEditTemp.amount === 'string') {
+            oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount.replace(/,/g, ''))) : 0
+          }
+          else {
+            oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount)) : 0
+          }
 
           const childrenTotalValue = itemDetails.value.childrenTotalValue
 
