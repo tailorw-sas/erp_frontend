@@ -417,28 +417,14 @@ const formTitle = computed(() => {
   return idItem.value ? 'Edit Payment' : 'New Payment'
 })
 
-const decimalRegex = /^\d+(\.\d{1,2})?$/
-
-// const initialSchema = z.object(
-//   {
-//     amount: z
-//       .string()
-//       .min(1, { message: 'The amount field is required' })
-//       .regex(decimalRegex, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-//       .refine(value => Number.parseFloat(value) <= item.value.paymentBalance, { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
-//     paymentAmmount: z
-//       .string()
-//       .min(1, { message: 'The payment amount field is required' })
-//       .regex(decimalRegex, { message: 'The payment amount does not meet the correct format of n integer digits and 2 decimal digits' })
-//       .refine(value => Number.parseFloat(value) >= 1, { message: 'The payment amount field must be at least 1' })
-//   },
-// )
-
 const decimalSchema = z.object(
   {
     amount: z
-      .string()
-      .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
+      .number()
+      .refine(value => !Number.isNaN(value) && (value <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
+    // amount: z
+    // .string()
+    // .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
     paymentAmmount: z
       .number({
         invalid_type_error: 'The payment amount field must be a number',
@@ -626,7 +612,7 @@ const fieldPaymentDetails = ref<FieldDefinitionType[]>([
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: false,
     helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
     class: 'field col-12 required',
@@ -644,7 +630,7 @@ const itemDetails = ref({
   id: '',
   payment: '',
   transactionType: null,
-  amount: '0',
+  amount: 0,
   remark: '',
   status: '',
   oldAmount: '',
@@ -658,7 +644,7 @@ const itemDetailsTemp = ref({
   id: '',
   payment: '',
   transactionType: null,
-  amount: '0',
+  amount: 0,
   remark: '',
   status: '',
   oldAmount: '',
@@ -756,7 +742,7 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
   {
     field: 'amount',
     header: 'D. Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
     class: 'field col-12 md:col-6',
     // helpText: `Max amount: ${item.value.paymentBalance.toString()}`,
@@ -796,7 +782,7 @@ const itemDetailsForEdit = ref({
   id: '',
   payment: '',
   transactionType: null,
-  amount: '0',
+  amount: 0,
   remark: '',
   status: '',
   oldAmount: '',
@@ -813,7 +799,7 @@ const itemDetailsTempForEdit = ref({
   id: '',
   payment: '',
   transactionType: null,
-  amount: '0',
+  amount: 0,
   remark: '',
   status: '',
   oldAmount: '',
@@ -918,8 +904,12 @@ function openDialogPaymentDetails(event: any) {
   const decimalSchema = z.object(
     {
       amount: z
-        .string()
-        .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+        .number()
+        .refine(value => !Number.isNaN(value) && (value >= 0.01) && (Number.parseFloat((item.value.paymentBalance - value).toFixed(2)) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+
+      // amount: z
+      // .string()
+      // .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
     },
   )
   const maxAmountTemp = formatNumber(Math.abs(item.value.paymentBalance))
@@ -935,8 +925,10 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
     const objToEdit = JSON.parse(JSON.stringify(objToEditTemp))
 
     if (objToEdit) {
-      objToEdit.amount = Math.abs(objToEdit.amount).toString()
-      objToEdit.oldAmount = objToEdit.amount.toString()
+      objToEdit.amount = Math.abs(objToEdit.amount)
+      objToEdit.oldAmount = objToEdit.amount
+      // objToEdit.amount = Math.abs(objToEdit.amount).toString()
+      // objToEdit.oldAmount = objToEdit.amount.toString()
       objToEdit.amount = formatToTwoDecimalPlaces(objToEdit.amount)
       itemDetails.value = { ...objToEdit }
     }
@@ -953,8 +945,10 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
       const objToEdit = JSON.parse(JSON.stringify(objToEditTemp))
 
       if (objToEdit) {
-        objToEdit.amount = Math.abs(objToEdit.amount).toString()
-        objToEdit.oldAmount = objToEdit.amount.toString()
+        objToEdit.amount = Math.abs(objToEdit.amount)
+        objToEdit.oldAmount = objToEdit.amount
+        // objToEdit.amount = Math.abs(objToEdit.amount).toString()
+        // objToEdit.oldAmount = objToEdit.amount.toString()
         objToEdit.amount = formatToTwoDecimalPlaces(objToEdit.amount)
         itemDetails.value = { ...objToEdit }
         itemDetails.value.paymentDetail = idDetailTemp
@@ -965,8 +959,12 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             const decimalSchema = z.object(
               {
                 amount: z
-                  .string()
-                  .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
+                  .number()
+                  .refine(value => !Number.isNaN(value) && (value > 0), { message: 'The amount must be greater than zero' })
+
+                // amount: z
+                // .string()
+                // .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
               },
             )
             updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
@@ -977,29 +975,23 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             const decimalSchema = z.object(
               {
                 amount: z
-                  .string()
-                  .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+                  .number()
+                  .refine(value => !Number.isNaN(value) && (value >= 0.01) && (Number.parseFloat((item.value.paymentBalance - value).toFixed(2)) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+
+                // amount: z
+                // .string()
+                // .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((item.value.paymentBalance - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
               },
             )
             const paymentBalanceFormattedForNewDetail = formatNumber(Math.abs(item.value.paymentBalance))
             updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
             updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${paymentBalanceFormattedForNewDetail}`)
-            // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
-            // const decimalSchema = z.object(
-            //   {
-            //     amount: z
-            //       .string()
-            //       .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0) && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and lessor equal than Payment Balance' })
-            //   },
-            // )
-            // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
-            // updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${Math.abs(item.value.paymentBalance)}`)
           }
         }
         // Split Deposit
         if (actionOfModal.value === 'split-deposit') {
           const amountString = objToEditTemp.amount
-          const sanitizedAmount = amountString.replace(/,/g, '') // Elimina las comas
+          const sanitizedAmount = typeof amountString === 'string' ? amountString.replace(/,/g, '') : amountString // Elimina las comas
           const amountTemp = sanitizedAmount ? Math.abs(Number(sanitizedAmount)) : 0
 
           const minValueToApply = (amountTemp - 0.01).toFixed(2)
@@ -1008,8 +1000,12 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             {
               remark: z.string(),
               amount: z
-                .string()
-                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((amountTemp - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+                .number()
+                .refine(value => !Number.isNaN(value) && (value >= 0.01) && (Number.parseFloat((amountTemp - value).toFixed(2)) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+
+              // amount: z
+              // .string()
+              // .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat((amountTemp - Number.parseFloat(value)).toFixed(2).toString()) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
             }
           )
           updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
@@ -1037,8 +1033,12 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             {
               remark: z.string(),
               amount: z
-                .string()
-                .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat(value) <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+                .number()
+                .refine(value => !Number.isNaN(value) && (value >= 0.01) && (value <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+
+              // amount: z
+              // .string()
+              // .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) >= 0.01) && (Number.parseFloat(value) <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
             }
           )
           updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
@@ -1057,12 +1057,14 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
         {
           remark: z.string(),
           amount: z
-            .string()
-            .refine(value => !Number.isNaN(Number.parseFloat(value)) && Number.parseFloat(value) >= 0.01 && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+            .number()
+            .refine(value => !Number.isNaN(value) && value >= 0.01 && (value <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+
+          // amount: z
+          // .string()
+          // .refine(value => !Number.isNaN(Number.parseFloat(value)) && Number.parseFloat(value) >= 0.01 && (Number.parseFloat(value) <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
         }
       )
-      // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'validation', decimalSchema.shape.remark)
-      // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', true)
       const paymentBalanceFormatted = formatNumber(item.value.paymentBalance) // Creada solo para mostrar
       updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
       updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${paymentBalanceFormatted}`)
@@ -1539,10 +1541,10 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.depositAmount += iterator.amount
         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
-          ? Number.parseFloat(iterator.amount).toString()
-          : '0'
+          ? Number.parseFloat(iterator.amount)
+          : 0
 
-        iterator.amount = formatNumber(iterator.amount)
+        // iterator.amount = formatNumber(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
@@ -1656,7 +1658,8 @@ async function createPaymentDetails(item: { [key: string]: any }) {
     const payloadTemp: { [key: string]: any } = JSON.parse(JSON.stringify(item))
 
     payload.payment = idItem.value || ''
-    payload.amount = Number.parseFloat(payload.amount)
+    // payload.amount = Number.parseFloat(payload.amount)
+    payload.amount = typeof payload.amount === 'string' ? Number.parseFloat(payload.amount.replace(/,/g, '')) : Number.parseFloat(payload.amount)
     payload.employee = userData?.value?.user?.userId || ''
     payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
     if (payload.remark === '') {
@@ -1670,7 +1673,8 @@ async function createPaymentDetails(item: { [key: string]: any }) {
         payload.paymentDetail = JSON.parse(JSON.stringify(idPaymentDetail.value))
         payload.status = 'ACTIVE'
         payload.payment = idItem.value || ''
-        payload.amount = Number.parseFloat(payload.amount)
+        // payload.amount = Number.parseFloat(payload.amount)
+        payload.amount = typeof payload.amount === 'string' ? Number.parseFloat(payload.amount.replace(/,/g, '')) : Number.parseFloat(payload.amount)
         payload.employee = userData?.value?.user?.userId || ''
         payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
         if (payload.remark === '') {
@@ -1687,7 +1691,8 @@ async function createPaymentDetails(item: { [key: string]: any }) {
         payloadNewDetail.paymentDetail = JSON.parse(JSON.stringify(idPaymentDetail.value))
         payloadNewDetail.status = 'ACTIVE'
         payloadNewDetail.payment = idItem.value || ''
-        payloadNewDetail.amount = Number.parseFloat(payloadNewDetail.amount)
+        // payloadNewDetail.amount = Number.parseFloat(payloadNewDetail.amount)
+        payloadNewDetail.amount = typeof payloadNewDetail.amount === 'string' ? Number.parseFloat(payloadNewDetail.amount.replace(/,/g, '')) : Number.parseFloat(payloadNewDetail.amount)
         payloadNewDetail.employee = userData?.value?.user?.userId || ''
         payloadNewDetail.transactionType = Object.prototype.hasOwnProperty.call(payloadNewDetail.transactionType, 'id') ? payloadNewDetail.transactionType.id : payloadNewDetail.transactionType
         if (payloadNewDetail.remark === '') {
@@ -1705,8 +1710,22 @@ async function createPaymentDetails(item: { [key: string]: any }) {
         break
 
       case 'split-deposit':{
+        let amountTemp = 0
+        if (typeof item.amount === 'string') {
+          if (item.amount.trim() !== '' && !Number.isNaN(item.amount)) {
+            amountTemp = Number.parseFloat(item.amount.replace(/,/g, ''))
+          }
+          else {
+            amountTemp = 0
+          }
+        }
+        else {
+          amountTemp = item.amount
+        }
+
         const payloadSplit = {
-          amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+          // amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
+          amount: amountTemp,
           paymentDetail: JSON.parse(JSON.stringify(idPaymentDetail.value)),
           remark: item.remark === '' ? item.transactionType.defaultRemark : item.remark,
           employee: userData?.value?.user?.userId || '',
@@ -1720,32 +1739,6 @@ async function createPaymentDetails(item: { [key: string]: any }) {
         break
       }
     }
-
-    // if (actionOfModal.value === 'apply-deposit') {
-    //   confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
-    //   delete payload.payment
-    //   await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
-    //   actionOfModal.value = 'new-detail'
-    // }
-    // else if (actionOfModal.value === 'new-detail' || actionOfModal.value === 'deposit-transfer') {
-    //   confApiPaymentDetail.uriApi = 'payment-detail'
-    //   await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payload)
-    //   actionOfModal.value = 'new-detail'
-    // }
-    // else if (actionOfModal.value === 'split-deposit') {
-    //   const payloadSplit = {
-    //     amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-    //     paymentDetail: item.id,
-    //     remark: item.remark,
-    //     transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-    //     status: 'ACTIVE'
-    //   }
-    //   confApiPaymentDetail.uriApi = 'payment-detail/split'
-    //   await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadSplit)
-    //   isSplitAction.value = false
-    //   actionOfModal.value = 'new-detail'
-    // }
-
     onOffDialogPaymentDetail.value = false
     clearFormDetails()
   }
@@ -1764,45 +1757,6 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
         employee: userData?.value?.user?.userId || '',
         remark: payload.remark
       })
-
-      // switch (actionOfModal.value) {
-      //   case 'new-detail':
-      //     confApiPaymentDetail.uriApi = 'payment-detail'
-      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
-      //     break
-      //   case 'deposit-transfer':
-      //     confApiPaymentDetail.uriApi = 'payment-detail'
-      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payload)
-      //     break
-      //   case 'split-deposit': {
-      //     const payloadSplit = {
-      //       amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-      //       paymentDetail: item.id,
-      //       remark: item.remark,
-      //       transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-      //       status: 'ACTIVE'
-      //     }
-      //     confApiPaymentDetail.uriApi = 'payment-detail/split'
-      //     await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, payloadSplit)
-      //     break
-      //   }
-      //   case 'apply-deposit':{
-      //     const payloadApplyDeposit = {
-      //       amount: item.amount.trim() !== '' && !Number.isNaN(item.amount) ? Number(item.amount) : 0,
-      //       paymentDetail: item.id,
-      //       remark: item.remark,
-      //       employee: userData?.value?.user?.userId || '',
-      //       transactionType: Object.prototype.hasOwnProperty.call(item.transactionType, 'id') ? item.transactionType.id : item.transactionType,
-      //       status: 'ACTIVE'
-      //     }
-      //     confApiPaymentDetail.uriApi = 'payment-detail/apply-deposit'
-      //     await GenericService.create(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, payloadApplyDeposit)
-      //     actionOfModal.value = 'new-detail'
-      //     break
-      //   }
-      //   default:
-      //     throw new Error('Invalid action')
-      // }
 
       onOffDialogPaymentDetailEdit.value = false
       loadingSaveAllForEdit.value = false

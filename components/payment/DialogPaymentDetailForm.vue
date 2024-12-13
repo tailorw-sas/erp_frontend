@@ -270,8 +270,8 @@ async function loadDefaultsValues() {
             remark: z
               .string(),
             amount: z
-              .string()
-              .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
+              .number()
+              .refine(value => !Number.isNaN(value) && (value > 0), { message: 'The amount must be greater than zero' })
           },
         )
         updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
@@ -279,9 +279,9 @@ async function loadDefaultsValues() {
       if (item.value.transactionType && item.value.transactionType.cash === true) {
         const decimalSchema = z.object({
           amount: z
-            .string()
+            .number()
             .superRefine((value, ctx) => {
-              const amount = Number.parseFloat(value)
+              const amount = value
 
               const maxPaymentBalance = props.selectedPayment?.paymentBalance
               let count = 0
@@ -342,8 +342,8 @@ async function loadDefaultsValues() {
       const decimalSchema = z.object(
         {
           amount: z
-            .string()
-            .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0 && Number.parseFloat(value) <= props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
+            .number()
+            .refine(value => !Number.isNaN(value) && (value > 0 && value <= props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
         },
       )
       // updateFieldProperty(props.fields, 'remark', 'disabled', false)
@@ -466,15 +466,14 @@ onMounted(async () => {
 
 function processValidation($event: any, data: any) {
   // Validacion del campo Amount
-  const decimalRegex = /^(?!0(\.0{1,2})?$)\d+(\.\d{1,2})?$/
 
   if (props.action === 'new-detail') {
     if ($event.cash === false && $event.deposit === false) {
       const decimalSchema = z.object(
         {
           amount: z
-            .string()
-            .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0), { message: 'The amount must be greater than zero' })
+            .number()
+            .refine(value => !Number.isNaN(value) && (value > 0), { message: 'The amount must be greater than zero' })
         },
       )
       updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
@@ -484,8 +483,8 @@ function processValidation($event: any, data: any) {
       const decimalSchema = z.object(
         {
           amount: z
-            .string()
-            .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) > 0) && (Number.parseFloat(value) <= props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and lessor equal than Payment Balance' })
+            .number()
+            .refine(value => !Number.isNaN(value) && (value > 0) && (value <= props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and lessor equal than Payment Balance' })
         },
       )
       updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
@@ -516,8 +515,8 @@ function processValidation($event: any, data: any) {
     const decimalSchema = z.object(
       {
         amount: z
-          .string()
-          .refine(value => !Number.isNaN(Number.parseFloat(value)) && (Number.parseFloat(value) <= item.value.oldAmount), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
+          .number()
+          .refine(value => !Number.isNaN(value) && (value <= item.value.oldAmount), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
       },
     )
     updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
@@ -527,8 +526,8 @@ function processValidation($event: any, data: any) {
     const decimalSchema = z.object(
       {
         amount: z
-          .string()
-          .refine(value => Number.parseFloat(value) <= Math.abs(props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
+          .number()
+          .refine(value => value <= Math.abs(props.selectedPayment.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' }),
       },
     )
     updateFieldProperty(props.fields, 'amount', 'validation', decimalSchema.shape.amount)
@@ -727,9 +726,11 @@ function processValidation($event: any, data: any) {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-amount="{ item: data, onUpdate }">
-          <InputText
+          <InputNumber
             v-if="!props.loadingSaveAll"
             v-model="data.amount"
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             class="w-full"
             @update:model-value="($event) => {
               onUpdate('amount', $event)
