@@ -2,10 +2,7 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import type { PageState } from 'primevue/paginator'
-import { v4 } from 'uuid'
 import dayjs from 'dayjs'
-import type { Container } from '~/components/form/EditFormV2WithContainer'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
@@ -72,6 +69,7 @@ const { data: userData } = useAuth()
 const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
+const parentInvoiceId = ref<any>('')
 const totalAmount = ref(0)
 const loadingSaveAll = ref(false)
 const loadingAttachmentList = ref(false)
@@ -569,7 +567,7 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
         loadingEdit: false,
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
-        // bookingId: iterator.booking.bookingId,
+        bookingId: iterator.booking.bookingId,
         roomType: { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` },
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
@@ -983,7 +981,6 @@ async function getItemById(id: any) {
 
       if (response) {
         item.value.id = response.id
-        //   item.value.invoiceId = response.invoiceId
         //  const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         //  item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
@@ -1583,6 +1580,7 @@ onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
 
   selectedInvoicing.value = route.query.selected
+  parentInvoiceId.value = route.query.invoiceId || ''
   globalSelectedInvoicing = selectedInvoicing.value
   item.value.invoiceType = ENUM_INVOICE_TYPE.find((element => element.id === route.query.type))
 
@@ -1597,8 +1595,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    Clone Complete
+  <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-start">
+    <div v-if="!parentInvoiceId">
+      Clone Complete
+    </div>
+    <div v-else>
+      Clone Complete From Invoice {{ parentInvoiceId }}
+    </div>
   </div>
   <div class="p-4">
     <EditFormV2
@@ -1621,8 +1624,9 @@ onMounted(async () => {
         />
       </template>
       <template #field-invoiceAmount="{ onUpdate, item: data }">
-        <InputText
-          v-model="invoiceAmount" show-clear :disabled="true" @update:model-value="($event) => {
+        <InputNumber
+          v-model="invoiceAmount" :min-fraction-digits="2"
+          :max-fraction-digits="4" show-clear :disabled="true" @update:model-value="($event) => {
             invoiceAmountError = false
             onUpdate('invoiceAmount', $event)
           }"

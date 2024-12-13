@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
+import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import HotelPaymentStatusHistoryDialog from '~/components/vcc/history/HotelPaymentStatusHistoryDialog.vue'
+import AttachmentHotelPaymentDialog from '~/components/vcc/hotel-payment/attachment/AttachmentHotelPaymentDialog.vue'
+
 // VARIABLES -----------------------------------------------------------------------------------------
+const { data: userData } = useAuth()
+const toast = useToast()
 const listItems = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
-const bankReconciliationHistoryDialogVisible = ref<boolean>(false)
+const hotelPaymentHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
+const attachmentDialogOpen = ref<boolean>(false)
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -32,20 +39,55 @@ const accordionLoading = ref({
 })
 const contextMenu = ref()
 
-const menuListItems = [
+const menuListItems = ref<any[]>([])
+
+enum MenuType {
+  changeComplete, changeCancelled
+}
+
+const allMenuListItems = [
   {
     label: 'Status History',
     icon: 'pi pi-history',
-    command: () => { bankReconciliationHistoryDialogVisible.value = true },
+    command: () => { hotelPaymentHistoryDialogVisible.value = true },
     disabled: false,
-  }
+    default: true
+  },
+  {
+    label: 'Document',
+    icon: 'pi pi-paperclip',
+    command: () => { attachmentDialogOpen.value = true },
+    disabled: false,
+    default: true
+  },
+  {
+    label: 'Change to Completed',
+    type: MenuType.changeComplete,
+    icon: 'pi pi-check-circle',
+    command: () => { changeStatus(MenuType.changeComplete) },
+    disabled: false,
+    default: false
+  },
+  {
+    label: 'Change to Cancelled',
+    type: MenuType.changeCancelled,
+    icon: 'pi pi-times-circle',
+    command: () => { changeStatus(MenuType.changeCancelled) },
+    disabled: false,
+    default: false
+  },
 ]
 
 const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 
+const confApi = reactive({
+  moduleApi: 'creditcard',
+  uriApi: 'hotel-payment',
+})
+
 const confStatusListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-payment-transaction-status',
 })
 
@@ -53,6 +95,15 @@ const confHotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
 })
+
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
 
 const legend = ref(
   [
@@ -89,25 +140,27 @@ const sClassMap: IStatusClass[] = [
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
+  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
   { field: 'hotelPaymentId', header: 'Id', type: 'text' },
   { field: 'transactionDate', header: 'Trans Date', type: 'date' },
-  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
+  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
   { field: 'merchantBankAccountNumber', header: 'Bank Account Number', type: 'text', sortable: true },
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'Total', type: 'number' },
-  { field: 'statusName', header: 'Status', type: 'custom-badge', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status' }, sortable: true },
+  { field: 'remark', header: 'Remark', type: 'text', maxWidth: '200px' },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-payment-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
-  { id: 'id', name: 'Hotel Payment Id', filterOnlyByField: true },
-  { id: 'transactionId', name: 'Transaction Id', filterOnlyByField: true },
-  { id: 'reference', name: 'Transaction Reference', filterOnlyByField: false },
-  { id: 'reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false },
-  { id: 'agencyCode', name: 'Agency Code', filterOnlyByField: false },
-  { id: 'remark', name: 'Remark', filterOnlyByField: false },
+  { id: 'hotelPaymentId', name: 'Hotel Payment Id', filterOnlyByField: true, operator: 'EQUALS' },
+  { id: 'transactionId', name: 'Transaction Id', filterOnlyByField: true, operator: 'EQUALS' },
+  { id: 'transactions.referenceNumber', name: 'Transaction Reference', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'transactions.reservationNumber', name: 'Transaction Reservation Number', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'transactions.agency.code', name: 'Agency Code', filterOnlyByField: false, operator: 'EQUALS' },
+  { id: 'remark', name: 'Remark', filterOnlyByField: false, operator: 'LIKE' },
 ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
@@ -170,9 +223,6 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.statusName = iterator.status?.name
-      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageHotel') && iterator.hotel) {
         iterator.manageHotel = { id: iterator.manageHotel.id, name: `${iterator.manageHotel.code} - ${iterator.manageHotel.name}` }
       }
@@ -211,7 +261,7 @@ async function resetListItems() {
   getList()
 }
 
-function searchAndFilter() {
+async function searchAndFilter() {
   const newPayload: IQueryRequest = {
     filter: [],
     query: '',
@@ -224,7 +274,7 @@ function searchAndFilter() {
   if (filterToSearch.value.criteria && filterToSearch.value.criteria.filterOnlyByField && filterToSearch.value.search) {
     newPayload.filter = [{
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'EQUALS',
+      operator: filterToSearch.value.criteria.operator || 'EQUALS',
       value: filterToSearch.value.search,
       logicalOperation: 'AND',
       type: 'filterSearch'
@@ -233,10 +283,10 @@ function searchAndFilter() {
   else {
     newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Si el criterio no es filterOnlyByField entonces se agrega a la lista de filtros
-    if (filterToSearch.value.criteria && filterToSearch.value.search) {
+    if (filterToSearch.value.criteria && !filterToSearch.value.criteria.filterOnlyByField && filterToSearch.value.search) {
       newPayload.filter = [{
         key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-        operator: 'EQUALS',
+        operator: filterToSearch.value.criteria.operator || 'EQUALS',
         value: filterToSearch.value.search,
         logicalOperation: 'AND',
         type: 'filterSearch'
@@ -315,7 +365,8 @@ function searchAndFilter() {
     }
   }
   payload.value = newPayload
-  getList()
+  options.value.loading = false
+  await getList()
 }
 
 function clearFilterToSearch() {
@@ -432,51 +483,79 @@ async function getStatusList(query: string = '') {
   }
 }
 
+async function findStatus(status: MenuType) {
+  try {
+    const payload = {
+      filter: [{
+        key: status === MenuType.changeCancelled ? 'cancelled' : 'completed',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      },],
+      query: '',
+      sortBy: 'createdAt',
+      sortType: 'ASC',
+      pageSize: 20,
+      page: 0,
+    }
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    if (dataList.length > 0) {
+      // Retornar el id del status
+      return dataList[0].id
+    }
+  }
+  catch (error) {
+    console.error('Error getting status:', error)
+  }
+}
+
+async function updateStatus(hotelPaymentId: string, statusId: string) {
+  const payload: { [key: string]: any } = {}
+  payload.status = statusId
+  payload.employee = userData?.value?.user?.name
+  const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, hotelPaymentId, payload)
+  if (response && response.id) {
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })
+  }
+  else {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
+  }
+}
+
+async function changeStatus(changeTo: MenuType) {
+  try {
+    options.value.loading = true
+    const hotelPaymentId = contextMenuTransaction.value.id
+    const statusId = await findStatus(changeTo)
+    if (statusId) {
+      try {
+        await updateStatus(hotelPaymentId, statusId)
+        await searchAndFilter()
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      }
+    }
+    else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Status could not be found', life: 10000 })
+    }
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
-}
-
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
 }
 
 function onSortField(event: any) {
@@ -487,10 +566,32 @@ function onSortField(event: any) {
   }
 }
 
+function setChangeStatusOptions() {
+  const newMenuItems = []
+  const noDefaultItems: any[] = allMenuListItems.filter((element: any) => !element.default)
+  const status = contextMenuTransaction.value.status
+  for (let i = 0; i < noDefaultItems.length; i++) {
+    const element = noDefaultItems[i]
+    if ((element.type === MenuType.changeComplete || element.type === MenuType.changeCancelled) && status.inProgress) {
+      newMenuItems.push(element)
+    }
+  }
+  return newMenuItems
+}
+
 async function onRowRightClick(event: any) {
-  contextMenu.value.hide()
+  menuListItems.value = [] // Limpiar elementos
+  if (contextMenu.value?.visible) {
+    contextMenu.value.hide()
+  }
   contextMenuTransaction.value = event.data
-  contextMenu.value.show(event.originalEvent)
+  const defaultItems = allMenuListItems.filter((e: any) => e.default) // Agregar elementos por defecto
+  const statusMenuItems = setChangeStatusOptions()
+  menuListItems.value = [...defaultItems, ...statusMenuItems]
+  if (menuListItems.value.length > 0) {
+    await nextTick()
+    contextMenu.value.show(event.originalEvent)
+  }
 }
 
 function goToHotelPaymentInNewTab() {
@@ -522,9 +623,11 @@ onMounted(() => {
     <h5 class="mb-0">
       Hotel Payment Management
     </h5>
-    <div class="my-2 flex justify-content-end px-0">
-      <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
-    </div>
+    <IfCan :perms="['HOTEL-PAYMENT:CREATE']">
+      <div class="my-2 flex justify-content-end px-0">
+        <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
+      </div>
+    </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 order-0">
@@ -689,18 +792,40 @@ onMounted(() => {
         <template #expansion="{ data: item }">
           <!--          <pre>{{item}}</pre> -->
           <HotelPaymentTransactions
-            :hotel-payment-id="item.id" @update:details-amount="($event) => {
-              item.detailsAmount = formatNumber($event)
+            :hotel-payment-id="item.id" :hide-bind-transaction-menu="item.status && (item.status.completed || item.status.cancelled)"
+            @update:list="($event) => {
+              getList()
             }"
+          />
+        </template>
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0">
+            <!-- <pre>{{ objData }}</pre> -->
+            <Button
+              v-if="objData.hasAttachments"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+              :style="{ color: '#000' }"
+            />
+          </div>
+          <!-- style="color: #616161;" -->
+          <!-- :style="{ 'background-color': '#00b816' }" -->
+        </template>
+        <template #column-status="{ data, column }">
+          <Badge
+            v-tooltip.top="data.status.name.toString()"
+            :value="data.status.name"
+            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
           />
         </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="5" footer-style="text-align:right" />
+              <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
               <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.details)" />
-              <Column :footer="formatNumber(subTotals.details)" />
+              <Column :footer="formatNumber(subTotals.commission)" />
+              <Column :footer="formatNumber(subTotals.net)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
@@ -708,8 +833,18 @@ onMounted(() => {
       </DynamicTable>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
-    <div v-if="bankReconciliationHistoryDialogVisible">
-      <BankReconciliationStatusHistoryDialog :close-dialog="() => { bankReconciliationHistoryDialogVisible = false }" :open-dialog="bankReconciliationHistoryDialogVisible" :selected-bank-reconciliation="contextMenuTransaction" :s-class-map="sClassMap" />
+    <div v-if="hotelPaymentHistoryDialogVisible">
+      <HotelPaymentStatusHistoryDialog :close-dialog="() => { hotelPaymentHistoryDialogVisible = false }" :open-dialog="hotelPaymentHistoryDialogVisible" :selected-hotel-payment="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
+    <div v-if="attachmentDialogOpen">
+      <AttachmentHotelPaymentDialog
+        :close-dialog="(refreshTransactions: boolean) => {
+          attachmentDialogOpen = false
+          if (refreshTransactions) {
+            getList()
+          }
+        }" header="Manage Hotel Payment Attachment" :open-dialog="attachmentDialogOpen" :selected-hotel-payment="contextMenuTransaction"
+      />
     </div>
   </div>
 </template>

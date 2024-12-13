@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
@@ -119,7 +119,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
-  { field: 'remark', header: 'Remark', type: 'text' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '200px' },
   { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
@@ -505,6 +505,7 @@ function onSortField(event: any) {
 async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
+  await nextTick()
   contextMenu.value.show(event.originalEvent)
 }
 

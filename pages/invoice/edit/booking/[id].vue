@@ -284,7 +284,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{2,}\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d+\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
 
   // Coupon No.
@@ -987,7 +987,7 @@ async function saveItem(item: { [key: string]: any }) {
         await updateItem(item)
       }
 
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking ${bookingNumberTemp.value} of Invoice ${invoiceNumberTemp.value} has been successfully updated.`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking Id ${bookingNumberTemp.value} of Invoice Id ${invoiceNumberTemp.value} has been successfully updated.`, life: 10000 })
     }
     catch (error: any) {
       successOperation = false

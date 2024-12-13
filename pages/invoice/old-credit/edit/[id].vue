@@ -394,6 +394,12 @@ async function getHotelList(query = '') {
               logicalOperation: 'OR'
             },
             {
+              key: 'isVirtual',
+              logicalOperation: 'AND',
+              operator: 'EQUALS',
+              value: false,
+            },
+            {
               key: 'status',
               operator: 'EQUALS',
               value: 'ACTIVE',

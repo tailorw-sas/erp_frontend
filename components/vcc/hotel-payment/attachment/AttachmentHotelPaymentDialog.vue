@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
-import { v4 } from 'uuid'
 import { ref, watch } from 'vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
-import AttachmentIncomeHistoryDialog from '~/components/income/attachment/AttachmentIncomeHistoryDialog.vue'
 import { updateFieldProperty } from '~/utils/helpers'
-import { applyFiltersAndSort } from '~/pages/payment/utils/helperFilters'
 import type { FilterCriteria } from '~/composables/list'
 
 const props = defineProps({
-
   header: {
     type: String,
     required: true
   },
-
   openDialog: {
     type: Boolean,
     required: true
@@ -28,51 +23,28 @@ const props = defineProps({
     type: Function as any,
     required: true
   },
-  isCreationDialog: {
-    type: Boolean,
-    required: true
-  },
-  listItems: {
-    type: Array<any>,
-    required: false,
-    default: []
-  },
-  addItem: {
-    type: Function as any,
-    required: false
-  },
-  updateItem: {
-    type: Function as any,
-    required: false
-  },
-  selectedInvoice: {
-    type: String,
-    required: true
-  },
-  selectedInvoiceObj: {
+  selectedHotelPayment: {
     type: Object,
     required: true
   }
 })
 
-const emit = defineEmits(['update:listItems', 'deleteListItems'])
-
 const { data: userData } = useAuth()
 
-const invoice = ref<any>(props.selectedInvoiceObj)
+const hotelPayment = ref<any>(props.selectedHotelPayment)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const selectedAttachment = ref<string>('')
 const pathFileLocal = ref('')
 
 const filterToSearch = ref({
-  criteria: 'invoice.invoiceId',
+  criteria: 'hotelPayment.id',
   search: ''
 })
 
 const attachmentTypeList = ref<any[]>([])
 const resourceTypeList = ref<any[]>([])
 const confattachmentTypeListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-attachment-type',
 })
 const confResourceTypeListApi = reactive({
@@ -87,6 +59,7 @@ const confirm = useConfirm()
 const loadingSearch = ref(false)
 const loadingDefaultResourceType = ref(false)
 const loadingDefaultAttachmentType = ref(false)
+const initialTotalAttachments = ref(0)
 
 const idItem = ref('')
 const item = ref<GenericObject>({
@@ -94,9 +67,9 @@ const item = ref<GenericObject>({
   filename: '',
   file: '',
   remark: '',
-  invoice: props.selectedInvoice,
+  hotelPayment: props.selectedHotelPayment?.id,
   attachmentId: '',
-  resource: invoice.value.incomeId,
+  resource: props.selectedHotelPayment?.id,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
@@ -107,9 +80,9 @@ const itemTemp = ref<GenericObject>({
   filename: '',
   file: '',
   remark: '',
-  invoice: props.selectedInvoice,
+  hotelPayment: props.selectedHotelPayment?.id,
   attachmentId: '',
-  resource: invoice.value.incomeId,
+  resource: props.selectedHotelPayment?.id,
   employee: userData?.value?.user?.name,
   employeeId: userData?.value?.user?.userId ?? '',
   resourceType: null
@@ -117,14 +90,14 @@ const itemTemp = ref<GenericObject>({
 const toast = useToast()
 
 const Fields: Array<FieldDefinitionType> = [
-  {
+  /* {
     field: 'resource',
     header: 'Resource',
     dataType: 'number',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
     disabled: true
-  },
+  }, */
   {
     field: 'resourceType',
     header: 'Resource Type',
@@ -149,7 +122,6 @@ const Fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
     headerClass: 'mb-1',
     validation: validateFiles(100, ['application/pdf']),
-
   },
   {
     field: 'filename',
@@ -171,18 +143,16 @@ const Fields: Array<FieldDefinitionType> = [
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px', minWidth: '100px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
-  { field: 'remark', header: 'Remark', type: 'text', width: '100px', maxWidth: '200px', columnClass: 'w-10 overflow-hidden' },
-
+  { field: 'remark', header: 'Remark', type: 'text', width: '100px', maxWidth: '100px', columnClass: 'w-10 overflow-hidden' },
 ]
 
 const dialogVisible = ref(props.openDialog)
 const options = ref({
-  tableName: 'Invoice',
-  moduleApi: 'invoicing',
-  uriApi: 'manage-attachment',
+  tableName: 'VCC Attachments',
+  moduleApi: 'creditcard',
+  uriApi: 'attachment',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -210,13 +180,10 @@ const Payload = ref<IQueryRequest>({
 
 const ListItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
-const listItemsLocal = ref<any[]>([...(props.listItems || [])])
 
 // Validar que no exista dicho attachment type por defecto en la lista
 const computedHasDefaultAttachment = computed(() => {
-  return props.isCreationDialog
-    ? listItemsLocal.value.some(item => item.type?.isDefault)
-    : true // Se toma como true, porque ya se debe haber validado previamente que haya un Invoice Support
+  return ListItems.value.length > 0
 })
 
 const disableAttachmentTypeSelector = computed(() => {
@@ -227,33 +194,11 @@ async function ResetListItems() {
   Payload.value.page = 0
 }
 
-async function parseDataTableFilterLocal(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
-  Payload.value.filter = [...parseFilter || []]
-  listItemsLocal.value = [...applyFiltersAndSort(Payload.value, listItemsLocal.value)]
-}
-
-function onSortFieldLocal(event: any) {
-  if (event) {
-    if (event.sortField === 'type') {
-      event.sortField = 'type.name'
-    }
-    Payload.value.sortBy = event.sortField
-    Payload.value.sortType = event.sortOrder
-    parseDataTableFilterLocal(event.filter)
-  }
-}
-
 function OnSortField(event: any) {
   if (event) {
-    if (!props.isCreationDialog) {
-      Payload.value.sortBy = event.sortField
-      Payload.value.sortType = event.sortOrder
-      getList()
-    }
-    else {
-      onSortFieldLocal(event)
-    }
+    Payload.value.sortBy = event.sortField
+    Payload.value.sortType = event.sortOrder
+    getList()
   }
 }
 
@@ -283,8 +228,8 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'invoice')) {
-        iterator['invoice.invoiceId'] = iterator.invoice.invoiceId
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotelPayment')) {
+        iterator['hotelPayment.id'] = iterator.hotelPayment.id
       }
       ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
     }
@@ -375,7 +320,7 @@ async function loadDefaultResourceType() {
     // Listar solo si el resource type esta en null, ya que no cambia. O si viene en null el status
     const filter: FilterCriteria[] = [
       {
-        key: 'invoice',
+        key: 'vcc',
         logicalOperation: 'AND',
         operator: 'EQUALS',
         value: true,
@@ -396,7 +341,7 @@ async function loadDefaultResourceType() {
 async function loadDefaultAttachmentType() {
   const attachmentFilter: FilterCriteria[] = [
     {
-      key: 'attachInvDefault',
+      key: 'defaults',
       logicalOperation: 'AND',
       operator: 'EQUALS',
       value: true,
@@ -450,11 +395,10 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
-    payload.invoice = props.selectedInvoice
+    payload.hotelPayment = props.selectedHotelPayment?.id
     // payload.file = file
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId ?? ''
-
     if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
       const file = payload.file.files[0]
       if (file) {
@@ -473,17 +417,9 @@ async function createItem(item: { [key: string]: any }) {
     }
 
     delete payload.resourceType
-    if (props.isCreationDialog) {
-      payload.id = v4()
-      payload.type = item.type
-      payload.paymentResourceType = item.resourceType
-      emit('update:listItems', payload)
-    }
-    else {
-      payload.type = item.type?.id
-      payload.paymentResourceType = item.resourceType?.id
-      await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
-    }
+    payload.type = item.type?.id
+    payload.paymentResourceType = item.resourceType?.id
+    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
   }
 }
 
@@ -497,7 +433,6 @@ async function updateItem(item: { [key: string]: any }) {
   payload.employee = userData?.value?.user?.name
   payload.employeeId = userData?.value?.user?.userId ?? ''
   delete payload.resourceType
-
   if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
     const file = payload.file.files[0]
     if (file) {
@@ -520,17 +455,12 @@ async function updateItem(item: { [key: string]: any }) {
 async function deleteItem(id: string) {
   try {
     loadingSaveAll.value = true
-    if (props.isCreationDialog) {
-      emit('deleteListItems', id)
-    }
-    else {
-      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
-    }
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
     clearForm()
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
   }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete attachment', life: 3000 })
     loadingSaveAll.value = false
   }
   finally {
@@ -539,17 +469,14 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (loadingSaveAll.value === true) { return } // Esto es para que no se ejecute dos veces el save
+  if (loadingSaveAll.value === true) {
+    return // Esto es para que no se ejecute dos veces el save
+  }
   loadingSaveAll.value = true
   let successOperation = true
 
   if (idItem.value) {
     try {
-      if (props.isCreationDialog) {
-        await props.updateItem(item)
-        clearForm()
-        return loadingSaveAll.value = false
-      }
       await updateItem(item)
     }
     catch (error: any) {
@@ -560,11 +487,6 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      /* if (props.isCreationDialog) {
-        await props.addItem(item)
-        clearForm()
-        return loadingSaveAll.value = false
-      } */
       await createItem(item)
     }
     catch (error: any) {
@@ -575,15 +497,8 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    if (!props.isCreationDialog) {
-      getList()
-    }
+    getList()
   }
-}
-
-function canNotDeleteLastDefaultItem() {
-  const countDefaultsItems = listItemsLocal.value.filter((item: any) => item.type?.isDefault).length
-  return props.isCreationDialog && countDefaultsItems === 1 && listItemsLocal.value.length > 1
 }
 
 function requireConfirmationToSave(item: any) {
@@ -619,15 +534,8 @@ function requireConfirmationToDelete(event: any) {
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
     accept: async () => {
-      if (item.value.type?.isDefault && canNotDeleteLastDefaultItem()) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Item cannot be deleted', life: 3000 })
-      }
-      else {
-        await deleteItem(idItem.value)
-        if (!props.isCreationDialog) {
-          getList()
-        }
-      }
+      await deleteItem(idItem.value)
+      getList()
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
@@ -643,37 +551,26 @@ async function getItemById(id: string | null | undefined) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
-      if (props.isCreationDialog) {
-        const data = listItemsLocal.value?.find((attachment: any) => attachment?.id === id) as any
-        item.value.id = data.id
-        item.value.type = { ...data.type, fullName: `${data?.type?.code} - ${data?.type?.name}` }
-        item.value.filename = data.filename
-        item.value.file = data.file
-        item.value.remark = data.remark
-        item.value.resourceType = data.paymentResourceType
-        pathFileLocal.value = data.file
-      }
-      else {
-        const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)
 
-        if (response) {
-          item.value.id = response.id
-          item.value.type = { ...response.type, fullName: `${response?.type?.code} - ${response?.type?.name}` }
-          item.value.filename = response.filename
-          item.value.file = response.file
-          item.value.remark = response.remark
-          item.value.invoice = response.invoice
-          item.value.resource = response.invoice.invoiceId
-          item.value.resourceType = { ...response.paymenResourceType, fullName: `${response?.paymenResourceType?.code} - ${response?.paymenResourceType?.name}` }
-          selectedAttachment.value = response.attachmentId
-          pathFileLocal.value = response.file
-        }
+      if (response) {
+        item.value.id = response.id
+        item.value.type = { ...response.type, fullName: `${response?.type?.code} - ${response?.type?.name}` }
+        item.value.filename = response.filename
+        item.value.file = response.file
+        item.value.remark = response.remark
+        item.value.hotelPayment = response.hotelPayment
+        item.value.resource = response.hotelPayment?.id
+        item.value.resourceType = { ...response.paymentResourceType, fullName: `${response?.paymentResourceType?.code} - ${response?.paymentResourceType?.name}` }
+        selectedAttachment.value = response.attachmentId
+        pathFileLocal.value = response.file
       }
+
       formReload.value += 1
     }
     catch (error) {
       if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Attachment could not be loaded', life: 3000 })
       }
     }
     finally {
@@ -700,17 +597,6 @@ function formatSize(bytes: number) {
 }
 
 function downloadFile() {
-  if (listItemsLocal.value?.length > 0) {
-    // Selecciona el primer elemento automáticamente
-    item.value = { ...listItemsLocal.value[0] } // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = listItemsLocal.value[0]?.id // Carga el ID del primer elemento
-  }
-  if (ListItems.value?.length > 0) {
-    // Selecciona el primer elemento automáticamente
-    item.value = { ...ListItems.value[0] } // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = ListItems.value[0]?.id // Carga el ID del primer elemento
-  }
-
   if (item.value) {
     const link = document.createElement('a')
     link.href = item.value.file
@@ -722,38 +608,25 @@ function downloadFile() {
   }
 }
 
-function disabledBtnSave(propsValue: any): boolean {
-  if (item.value && item.value.id) {
-    return true
-  }
-  else if (propsValue.item.fieldValues.file) {
-    return false
-  }
-  else {
-    return true
-  }
+function onCloseDialog() {
+  clearForm()
+  // Se debe actualizar la lista de transacciones si varia el hasAttachments
+  const refreshHotelPayments = (initialTotalAttachments.value > 0 && ListItems.value.length === 0)
+    || (initialTotalAttachments.value === 0 && ListItems.value.length > 0)
+  props.closeDialog(refreshHotelPayments)
 }
 
-watch(() => props.selectedInvoiceObj, () => {
-  invoice.value = props.selectedInvoiceObj
+watch(() => props.selectedHotelPayment, () => {
+  hotelPayment.value = props.selectedHotelPayment
 
-  if (invoice.value?.id) {
+  if (hotelPayment.value?.id) {
     Payload.value.filter = [{
-      key: 'invoice.id',
+      key: 'hotelPayment.id',
       operator: 'EQUALS',
-      value: invoice.value?.id,
+      value: hotelPayment.value?.id,
       logicalOperation: 'AND'
     }]
     getList()
-  }
-})
-
-watch(() => props.listItems, async (newValue) => {
-  if (newValue) {
-    listItemsLocal.value = [...newValue]
-    if (props.isCreationDialog) {
-      Pagination.value.totalElements = newValue?.length ?? 0
-    }
   }
 })
 
@@ -777,30 +650,27 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
-onMounted(() => {
-  const invoice = props.selectedInvoice || props.selectedInvoiceObj?.id
-  if (invoice) {
+onMounted(async () => {
+  const hotelPayment = props.selectedHotelPayment?.id
+  if (hotelPayment) {
     Payload.value.filter = [{
-      key: 'invoice.id',
+      key: 'hotelPayment.id',
       operator: 'EQUALS',
-      value: invoice,
+      value: hotelPayment,
       logicalOperation: 'AND'
     }]
   }
-  if (!props.isCreationDialog && invoice) {
-    getList()
-  }
-  if (props.isCreationDialog) {
-    Pagination.value.totalElements = listItemsLocal.value?.length ?? 0
-  }
   listDefaultData()
+  await getList()
+  initialTotalAttachments.value = ListItems.value.length
 })
 </script>
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
+    v-model:visible="dialogVisible" modal :header="header" class="mx-3 sm:mx-0"
+    content-class="border-round-bottom border-top-1 surface-border"
+    :style="{ width: '80%' }"
     :pt="{
       root: {
         class: 'custom-dialog-history',
@@ -809,22 +679,18 @@ onMounted(() => {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
     }"
-    @hide="closeDialog(ListItems.length)"
+    @hide="onCloseDialog()"
   >
     <template #header>
       <div class="inline-flex align-items-center justify-content-center gap-2">
         <span class="font-bold white-space-nowrap">{{ header }}</span>
-        <strong class="mx-2">-</strong>
-        <strong class="mr-1">Income:</strong>
-        <strong>{{ props.selectedInvoiceObj.incomeId }}</strong>
       </div>
     </template>
-
     <div class="grid p-fluid formgrid">
       <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
-        <div v-if="false" class="flex justify-content-end mb-1">
+        <div class="flex justify-content-end mb-1">
           <div class="pr-4 pl-4 pt-2 pb-2 font-bold bg-container text-white">
-            Income: {{ props.selectedInvoiceObj.incomeId }}
+            Hotel Payment Id: {{ props.selectedHotelPayment?.hotelPaymentId }}
           </div>
         </div>
         <Accordion v-if="false" :active-index="0" class="mb-2 card p-0">
@@ -859,8 +725,8 @@ onMounted(() => {
           </AccordionTab>
         </Accordion>
         <DynamicTable
-          :data="isCreationDialog ? listItemsLocal : ListItems" :columns="Columns" :options="options"
-          :pagination="Pagination" :is-custom-sorting="!isCreationDialog" @update:clicked-item="getItemById($event)"
+          :data="ListItems" :columns="Columns" :options="options"
+          :pagination="Pagination" :is-custom-sorting="true" @update:clicked-item="getItemById($event)"
           @open-edit-dialog="getItemById($event)" @on-confirm-create="clearForm"
           @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
           @on-list-item="ResetListItems" @on-sort-field="OnSortField"
@@ -938,62 +804,20 @@ onMounted(() => {
                     }"
                   />
                 </InputGroup>
-                <FileUpload
-                  v-if="false"
-                  accept="application/pdf" :disabled="idItem !== ''" :max-file-size="1000000"
-                  :multiple="false" auto custom-upload @uploader="(event: any) => {
-                    const file = event.files[0]
-                    onUpdate('file', file)
-                    onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
-                  }"
-                >
-                  <template #header="{ chooseCallback }">
-                    <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                      <div class="flex gap-2">
-                        <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                        <Button
-                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file" text
-                          @click="onUpdate('file', null)"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                  <template #content="{ files }">
-                    <div class="w-full flex justify-content-center">
-                      <ul v-if="files[0] || data.file" class=" p-0 m-0" style="width: 300px;  overflow: hidden;">
-                        <li class=" surface-border flex align-items-center w-fit">
-                          <div class="flex flex-column w-fit  text-overflow-ellipsis">
-                            <span
-                              class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
-                              style="width: 300px;"
-                            >{{ data.file.name
-                              || data.file.split("/")[data.file.split("/")?.length - 1] }}</span>
-                            <span v-if="data.file.size" class="text-900 font-medium">
-                              <Badge severity="warning">
-                                {{ formatSize(data.file.size) }}
-                              </Badge>
-                            </span>
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </template>
-                </FileUpload>
               </template>
               <template #form-footer="footProps">
                 <Button
-                  v-tooltip.top="'Save'"
-                  :loading="loadingSaveAll" class="w-3rem sticky" icon="pi pi-save" :disabled="disabledBtnSave(footProps)"
+                  v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save" :disabled="idItem !== ''"
                   @click="footProps.item.submitForm($event)"
                 />
                 <Button
                   v-tooltip.top="'View File'" class="w-3rem ml-1 sticky" icon="pi pi-eye"
-                  :disabled="listItemsLocal.length === 0 && ListItems.length === 0" @click="downloadFile"
+                  :disabled="ListItems.length === 0" @click="downloadFile"
                 />
-                <Button
-                  v-tooltip.top="'Show History'" :disabled="props.isCreationDialog" class="w-3rem ml-1 sticky"
+                <!--                <Button
+                  v-tooltip.top="'Show History'" class="w-3rem ml-1 sticky"
                   icon="pi pi-book" @click="() => attachmentHistoryDialogOpen = true"
-                />
+                /> -->
                 <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearForm" />
                 <Button
                   v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky"
@@ -1001,10 +825,7 @@ onMounted(() => {
                 />
                 <Button
                   v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times"
-                  @click="() => {
-                    clearForm()
-                    closeDialog(ListItems.length)
-                  }"
+                  @click="onCloseDialog"
                 />
               </template>
             </EditFormV2>
@@ -1012,10 +833,10 @@ onMounted(() => {
         </div>
       </div>
       <div v-if="attachmentHistoryDialogOpen">
-        <AttachmentIncomeHistoryDialog
+        <AttachmentTransactionHistoryDialog
           :selected-attachment="selectedAttachment"
           :close-dialog="() => { attachmentHistoryDialogOpen = false; selectedAttachment = '' }"
-          :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="invoice.id" :selected-invoice-obj="invoice"
+          :open-dialog="attachmentHistoryDialogOpen" :selected-transaction="hotelPayment"
           header="Attachment Status History" :attachment-type="item.type"
         />
       </div>

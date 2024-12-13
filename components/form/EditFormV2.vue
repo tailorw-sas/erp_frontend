@@ -196,7 +196,15 @@ onBeforeUnmount(() => {
           <slot :name="`field-${field.field}-custom`" :field="field" :item="fieldValues" :fields="fields" :on-update="updateField" />
           <slot :name="`field-${field.field}`" :item="fieldValues" :field="field.field" :fields="fields" :on-update="updateField">
             <div v-if="field.dataType === 'image'" class="flex flex-wrap justify-content-center">
-              <FileUpload hidden auto custom-upload accept="image/*" :max-file-size="1000000" @uploader="customBase64Uploader($event, fieldValues, field.field)">
+              <FileUpload
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                hidden
+                auto
+                custom-upload
+                accept="image/*"
+                :max-file-size="1000000"
+                @uploader="customBase64Uploader($event, fieldValues, field.field)"
+              >
                 <template #header="{ chooseCallback }">
                   <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                     <div class="flex gap-2">
@@ -227,7 +235,9 @@ onBeforeUnmount(() => {
 
             <span v-if="field.dataType === 'text' || field.dataType === 'code'">
               <InputText
-                v-if="!loadingSave" v-model="fieldValues[field.field]"
+                v-if="!loadingSave"
+                v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                 show-clear :disabled="field?.disabled"
                 @update:model-value="updateField(field.field, $event)"
               />
@@ -236,7 +246,10 @@ onBeforeUnmount(() => {
 
             <span v-else-if="field.dataType === 'textarea'">
               <Textarea
-                v-if="!loadingSave" v-model="fieldValues[field.field]" rows="5"
+                v-if="!loadingSave"
+                v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                rows="5"
                 :disabled="field?.disabled"
                 show-clear
                 @update:model-value="updateField(field.field, $event)"
@@ -248,7 +261,9 @@ onBeforeUnmount(() => {
               <Calendar
                 v-if="!loadingSave"
                 v-model="fieldValues[field.field]"
-                date-format="yy-mm-dd" :disabled="field?.disabled"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                date-format="yy-mm-dd"
+                :disabled="field?.disabled"
                 @update:model-value="(value) => updateField(field.field, value)"
               />
               <Skeleton v-else height="2rem" />
@@ -258,6 +273,7 @@ onBeforeUnmount(() => {
               <InputNumber
                 v-if="!loadingSave"
                 v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                 :disabled="field?.disabled"
                 mode="decimal"
                 :min-fraction-digits="field?.minFractionDigits ? field.minFractionDigits : 0"
@@ -270,7 +286,9 @@ onBeforeUnmount(() => {
             <span v-else-if="field.dataType === 'password'">
               <Password
                 v-if="!loadingSave"
-                v-model="fieldValues[field.field]" :disabled="field?.disabled"
+                v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                :disabled="field?.disabled"
                 toggle-mask
                 @update:model-value="updateField(field.field, $event)"
               />
@@ -279,7 +297,13 @@ onBeforeUnmount(() => {
 
             <span v-else-if="field.dataType === 'file'">
               <FileUpload
-                v-if="!loadingSave" accept=".jrxml" :max-file-size="1000000" :multiple="false" auto custom-upload
+                v-if="!loadingSave"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                accept=".jrxml"
+                :max-file-size="1000000"
+                :multiple="false"
+                auto
+                custom-upload
                 @uploader="customBase64Uploader($event, fieldValues, field.field)"
               >
                 <!-- <template #header="{ chooseCallback }">
@@ -321,6 +345,7 @@ onBeforeUnmount(() => {
                   <InputText
                     v-if="typeof fieldValues[field.field] === 'object'"
                     v-model="fieldValues[field.field].name"
+                    :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                     class="w-full"
                     placeholder="Upload a file"
                     style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
@@ -328,6 +353,7 @@ onBeforeUnmount(() => {
                   <InputText
                     v-if="typeof fieldValues[field.field] === 'string'"
                     v-model="fieldValues[field.field]"
+                    :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                     class="w-full"
                     placeholder="Upload a file"
                     style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
@@ -336,6 +362,7 @@ onBeforeUnmount(() => {
                 <Skeleton v-else height="7rem" />
                 <FileUpload
                   v-if="!loadingSave"
+                  :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                   mode="basic"
                   :max-file-size="100000000"
                   :multiple="false"
@@ -381,6 +408,7 @@ onBeforeUnmount(() => {
             <span v-else-if="field.dataType === 'check'">
               <Checkbox
                 v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                 :binary="true"
                 :disabled="field?.disabled"
                 @update:model-value="updateField(field.field, $event)"

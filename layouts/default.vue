@@ -117,13 +117,18 @@ catch (error) {
     <ConfirmDialog>
       <template #container="{ message, acceptCallback, rejectCallback }">
         <div class="flex flex-column align-items-center pb-4 surface-overlay" style="width: 30rem; border-radius: 0.8rem;">
-          <span class="custom-border-top p-2 block mb-2 w-full bg-primary" style="color: white; padding: 0.4rem; font-size: 1.2rem;">
-            <p class="ml-2">{{ message.header }}</p>
+          <span class="custom-border-top block mb-2 w-full bg-primary flex align-items-center justify-content-between" style="color: white; padding: 0.4rem; font-size: 1.1rem;">
+            <div class="font-semibold">
+              <p class="ml-2">{{ message.header.includes('|') ? message.header.split('|')[0] : message.header }}</p>
+            </div>
+            <div class="mr-2 font-semibold">
+              <p v-if="message.header.includes('|')">{{ message.header.split('|')[1] }}</p>
+            </div>
           </span>
           <div class="inline-flex justify-content-center align-items-center h-4rem w-4rem mt-2 mb-3">
             <i class="pi pi-exclamation-triangle text-6xl" style="color: #F54108;" />
           </div>
-          <p class="mb-0">
+          <p class="mb-0 font-semibold">
             {{ message.message }}
           </p>
           <div class="flex align-items-center gap-2 mt-4">

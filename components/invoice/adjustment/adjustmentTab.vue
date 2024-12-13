@@ -247,8 +247,8 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'amount', header: 'Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'amount', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Room Rate Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'paymentTransactionType', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'employee', header: 'Employee', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -349,12 +349,14 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
+      /* let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
 
       if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
         transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
       }
 
+      iterator.paymentTransactionType = transaction */
+      iterator.paymentTransactionType = iterator.paymentTransactionType || iterator.transaction
       ListItems.value = [...ListItems.value, {
         ...iterator,
         loadingEdit: false,
@@ -694,7 +696,7 @@ onMounted(() => {
       operator: 'EQUALS',
       value: props.selectedInvoice,
       logicalOperation: 'AND'
-    }, {
+    }/* , {
       key: 'roomRate.booking.invoice.cloneParent',
       operator: 'EQUALS',
       value: true,
@@ -704,7 +706,7 @@ onMounted(() => {
       operator: 'EQUALS', // Usamos 'EQUALS' para igualar
       value: false, // Buscamos aquellos que no están clonados
       logicalOperation: 'OR' // Operación lógica
-    }]
+    } */]
   }
   if (!props.isCreationDialog) {
     getAdjustmentList()

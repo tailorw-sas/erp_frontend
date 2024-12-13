@@ -158,9 +158,11 @@ onMounted(() => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
             show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             @update:model-value="($event) => {
               let value: any = $event
               value = toNegative(value)
@@ -169,9 +171,11 @@ onMounted(() => {
           />
         </template>
         <template #field-hotelAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.hotelAmount"
             show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>

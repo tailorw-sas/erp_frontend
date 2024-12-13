@@ -520,7 +520,7 @@ async function handleApplyClick() {
     const invoiceId = selectedInvoice;
     entryCode.value = '';
     // Redirecciona a la nueva interfaz
-    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+    navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}&invoiceId=${selectedInvoiceObj.value.invoiceId}`, { open: { target: '_blank' } });
 
    
    
@@ -583,7 +583,7 @@ async function handleTotalApplyClick() {
   }
 
   */
-  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}`, { open: { target: '_blank' } });
+  navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}&invoiceId=${selectedInvoiceObj.value.invoiceId}`, { open: { target: '_blank' } });
 
   handleDialogCloseTotal();
 }
@@ -919,7 +919,10 @@ async function getList() {
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
-
+    const payloadOfInvoiceList = {
+      ...payload.value,
+    }
+    localStorage.setItem('payloadOfInvoiceList', JSON.stringify(payloadOfInvoiceList))
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1982,13 +1985,17 @@ function onRowRightClick(event: any) {
   }
 
   // Resend
-  if (event?.data?.status === InvoiceStatus.SENT) {
-    findMenuItemByLabelSetShow('Re-Send', invoiceContextMenuItems.value, true)
+  if (event?.data?.status === InvoiceStatus.SENT) { 
+    if (event?.data.dueAmount !== 0 && event?.data.invoiceAmount !== 0) {   
+      findMenuItemByLabelSetShow('Re-Send', invoiceContextMenuItems.value, true)
+    }
   }
 
   // Resend
   if (event?.data?.status === InvoiceStatus.RECONCILED) {
-    findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
+    if (event?.data.dueAmount !== 0 && event?.data.invoiceAmount !== 0) {
+      findMenuItemByLabelSetShow('Send', invoiceContextMenuItems.value, true)
+    }
   }
 
   // From Invoice // Solo se debe mostrar la opcion si el parentId no es null, o sea, si es un Credit

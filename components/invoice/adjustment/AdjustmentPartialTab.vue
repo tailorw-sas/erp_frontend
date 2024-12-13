@@ -13,6 +13,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import {formatNumber} from "~/pages/payment/utils/helperFilters";
 
 const props = defineProps({
   isDialogOpen: {
@@ -102,6 +103,7 @@ const formReload = ref(0)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingDelete = ref(false)
+const loadingDefaultTransactionType = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
@@ -250,8 +252,8 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'amount', header: 'Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'amount', header: 'Adjustment Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Room Rate Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'employee', header: 'Employee', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -570,9 +572,9 @@ function requireConfirmationToSaveAdjustment(item: any) {
   })
 }
 
-async function getTransactionTypeList(query = '') {
+async function getTransactionTypeList(query = '', isDefault: boolean = false) {
   try {
-    const payload
+    const payload: IQueryRequest
       = {
         filter: [
           {
@@ -601,6 +603,16 @@ async function getTransactionTypeList(query = '') {
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
+    if (isDefault) {
+      loadingDefaultTransactionType.value = true
+      payload.filter = [...payload.filter, {
+        key: 'cloneAdjustmentDefault',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }]
+    }
+
     transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
     const { data: dataList } = response
@@ -614,9 +626,18 @@ async function getTransactionTypeList(query = '') {
         fullName: `${iterator?.code}-${iterator?.name}`
       }]
     }
+    if (isDefault && transactionTypeList.value.length > 0) {
+      item.value.transactionType = transactionTypeList.value[0]
+      formReload.value += 1
+    }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultTransactionType.value = false
+    }
   }
 }
 
@@ -702,9 +723,9 @@ onMounted(() => {
       logicalOperation: 'AND'
     }]
   }
-  //if (!props.isCreationDialog) {
+  // if (!props.isCreationDialog) {
   //  getAdjustmentList()
- // }
+  // }
 })
 </script>
 
@@ -729,7 +750,7 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-            <Column :footer="totalAmount" footer-style="font-weight: 700" />
+            <Column :footer="formatNumber(totalAmount)" footer-style="font-weight: 700" />
 
             <Column :colspan="6" />
           </Row>
@@ -754,7 +775,7 @@ onMounted(() => {
 
       }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
       content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
-      :get-transaction-type-list="getTransactionTypeList"
+      :get-transaction-type-list="getTransactionTypeList" :loading-default-transaction-type="loadingDefaultTransactionType"
     />
   </div>
 </template>

@@ -135,19 +135,22 @@ async function getPrintList() {
     options.value.loading = true
     listPrintItems.value = []
     const newListItems = []
-    const objFilterForInvoiceStatus = payload.value.filter.find(item => item.key === 'invoiceStatus')
+    // const objFilterForInvoiceStatus = payload.value.filter.find(item => item.key === 'invoiceStatus')
 
-    if (objFilterForInvoiceStatus) {
-      objFilterForInvoiceStatus.value = ['SENT', 'RECONCILED']
-    }
-    else {
-      payload.value.filter.push({
-        key: 'invoiceStatus',
-        operator: 'IN',
-        value: ['SENT', 'RECONCILED'],
-        logicalOperation: 'AND'
-      })
-    }
+    // if (objFilterForInvoiceStatus) {
+    //   objFilterForInvoiceStatus.value = ['SENT', 'RECONCILED']
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'invoiceStatus',
+    //     operator: 'IN',
+    //     value: ['SENT', 'RECONCILED'],
+    //     logicalOperation: 'AND'
+    //   })
+    // }
+    payload.value = localStorage.getItem('payloadOfInvoiceList')
+      ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+      : payload.value
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0

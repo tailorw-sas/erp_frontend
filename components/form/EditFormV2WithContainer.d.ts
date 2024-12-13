@@ -16,6 +16,8 @@ interface FieldDefinition {
   footerClass?: any | null
   errorClass?: any | null
   resetValidation?: boolean
+  minFractionDigits?: number
+  maxFractionDigits?: number
   containerFieldClass?: any | null
   showClearButton?: boolean | null
   maxConstraints?: number | null

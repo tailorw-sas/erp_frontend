@@ -29,35 +29,27 @@ interface MenuItem {
 
 const items = ref([
   {
-    items: [
-      {
-        id: 'payment',
-        label: 'Payment',
-        command: () => window.open('/payment/form', '_blank'),
-        disabled: true,
-        permission: ['PAYMENT-MANAGEMENT:CREATE'],
-      },
-      {
-        id: 'income',
-        label: 'Income',
-        command: () => window.open('/payment/income?type=INCOME', '_blank'),
-        disabled: false,
-        permission: [],
-      },
-    ]
-  }
+    id: 'payment',
+    label: 'Payment',
+    command: () => window.open('/payment/form', '_blank'),
+    disabled: false,
+    permission: ['PAYMENT-MANAGEMENT:CREATE'],
+  },
+  {
+    id: 'income',
+    label: 'Income',
+    command: () => window.open('/payment/income?type=INCOME', '_blank'),
+    disabled: false,
+    permission: [],
+  },
 ])
 
 const itemsImport = ref([
-  {
-    items: [
-      { label: 'Payment of bank', command: () => navigateTo('/payment/import-of-bank') },
-      { label: 'Payment of expense', command: () => navigateTo('/payment/import-of-expense') },
-      { label: 'Anti to Income', command: () => navigateTo('/payment/import-anti-income') },
-      { label: 'Expense To Booking', command: () => navigateTo('/payment/import-expense-booking') },
-      { label: 'Payment Detail', command: () => navigateTo('/payment/import-detail') },
-    ]
-  }
+  { label: 'Payment of bank', command: () => navigateTo('/payment/import-of-bank') },
+  { label: 'Payment of expense', command: () => navigateTo('/payment/import-of-expense') },
+  { label: 'Anti to Income', command: () => navigateTo('/payment/import-anti-income') },
+  { label: 'Expense To Booking', command: () => navigateTo('/payment/import-expense-booking') },
+  { label: 'Payment Detail', command: () => navigateTo('/payment/import-detail') },
 ])
 
 const itemsExportToExcel = ref([

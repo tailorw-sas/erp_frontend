@@ -205,7 +205,9 @@ const Fields = ref<FieldDefinitionType[]>([
   {
     field: 'invoiceAmount',
     header: 'Invoice Amount',
-    dataType: 'text',
+    dataType: 'number',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
     class: 'field col-12 md:col-3  required',
     disabled: true,
     ...({ valdation: z.string().refine(val => +val < 0, 'Invoice amount must have negative values') })
@@ -351,6 +353,12 @@ async function getHotelList(query = '') {
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
+          },
+          {
+            key: 'isVirtual',
+            logicalOperation: 'AND',
+            operator: 'EQUALS',
+            value: false,
           },
           {
             key: 'status',
@@ -540,9 +548,14 @@ async function createItem(item: { [key: string]: any }) {
     let roomRates = []
     const attachments = []
 
+    let countBookingWithoutNightType = 0
+    const listOfBookingsWithoutNightType: string[] = []
+
     bookingList.value?.forEach((booking) => {
       if (nightTypeRequired.value && !booking.nightType?.id) {
-        throw new Error('The Night Type field is required for this client')
+        countBookingWithoutNightType++
+        listOfBookingsWithoutNightType.push(booking.hotelBookingNumber)
+        // throw new Error('The Night Type field is required for this client')
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
@@ -561,6 +574,10 @@ async function createItem(item: { [key: string]: any }) {
         })
       }
     })
+
+    if (countBookingWithoutNightType > 0) {
+      throw new Error(`The Night Type field is required for this booking: ${listOfBookingsWithoutNightType.toString()}`)
+    }
 
     for (let i = 0; i < roomRateList.value.length; i++) {
       if (requiresFlatRate.value && +roomRateList.value[i].hotelAmount <= 0) {

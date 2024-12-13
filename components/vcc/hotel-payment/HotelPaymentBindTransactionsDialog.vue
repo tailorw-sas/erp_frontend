@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { type PropType, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
+import dayjs from 'dayjs'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import type { IData } from '~/components/table/interfaces/IModelData'
 
 const props = defineProps({
   header: {
@@ -42,6 +44,11 @@ const collectionStatusReconciledList = ref<any[]>([])
 const loadingSaveAll = ref(false)
 const dialogVisible = ref(props.openDialog)
 const selectedElements = ref<any[]>([])
+
+const filterToSearch = ref<IData>({
+  from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  to: new Date(),
+})
 
 const confStatusListApi = reactive({
   moduleApi: 'creditcard',
@@ -260,6 +267,67 @@ function onSortField(event: any) {
     parseDataTableFilter(event.filter)
   }
 }
+
+async function searchAndFilter() {
+  await getCollectionStatusList() // Solo se llama al servicio la primera vez
+  const statusIds = collectionStatusReconciledList.value.map((elem: any) => elem.id)
+
+  const newPayload: IQueryRequest = {
+    filter: [{
+      key: 'hotel.id',
+      operator: 'EQUALS',
+      value: props.currentHotelPayment.manageHotel.id,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }, {
+      key: 'hotelPayment',
+      operator: 'IS_NULL',
+      value: '',
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }, {
+      key: 'status.id',
+      operator: 'IN',
+      value: statusIds,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
+  newPayload.filter = [...newPayload.filter, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  if (filterToSearch.value.from) {
+    newPayload.filter = [...newPayload.filter, {
+      key: 'transactionDate',
+      operator: 'GREATER_THAN_OR_EQUAL_TO',
+      value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }]
+  }
+  if (filterToSearch.value.to) {
+    newPayload.filter = [...newPayload.filter, {
+      key: 'transactionDate',
+      operator: 'LESS_THAN_OR_EQUAL_TO',
+      value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }]
+  }
+  payload.value = newPayload
+  getList()
+}
+
+function clearFilterToSearch() {
+  filterToSearch.value = {
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    to: new Date(),
+  }
+  searchAndFilter()
+}
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
@@ -270,29 +338,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   selectedElements.value = [...props.selectedItems]
   collectionStatusReconciledList.value = [...props.validCollectionStatusList]
-  await getCollectionStatusList()
-  const statusIds = collectionStatusReconciledList.value.map((elem: any) => elem.id)
-
-  payload.value.filter = [{
-    key: 'hotel.id',
-    operator: 'EQUALS',
-    value: props.currentHotelPayment.manageHotel.id,
-    logicalOperation: 'AND',
-    type: 'filterSearch'
-  }, {
-    key: 'hotelPayment',
-    operator: 'IS_NULL',
-    value: '',
-    logicalOperation: 'AND',
-    type: 'filterSearch'
-  }, {
-    key: 'status.id',
-    operator: 'IN',
-    value: statusIds,
-    logicalOperation: 'AND',
-    type: 'filterSearch'
-  }]
-  getList()
+  searchAndFilter()
 })
 </script>
 
@@ -313,6 +359,41 @@ onMounted(async () => {
     @hide="closeDialog()"
   >
     <div class="mt-4" />
+    <div class="card p-0 mb-0">
+      <Accordion :active-index="0" class="mb-2">
+        <AccordionTab>
+          <template #header>
+            <div class="text-white font-bold custom-accordion-header">
+              Filters
+            </div>
+          </template>
+          <div class="flex gap-4 flex-column lg:flex-row">
+            <div class="flex align-items-center gap-2" style=" z-index:5 ">
+              <label class="filter-label font-bold" for="">From:</label>
+              <div class="w-full" style=" z-index:5 ">
+                <Calendar
+                  v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                  show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                />
+              </div>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <label class="filter-label font-bold" for="">To:</label>
+              <div class="w-full">
+                <Calendar
+                  v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                  icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                />
+              </div>
+            </div>
+            <div class="flex align-items-center">
+              <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" @click="searchAndFilter" />
+              <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" @click="clearFilterToSearch" />
+            </div>
+          </div>
+        </AccordionTab>
+      </Accordion>
+    </div>
     <DynamicTable
       :data="BindTransactionList"
       :columns="columns"
@@ -345,7 +426,7 @@ onMounted(async () => {
     </DynamicTable>
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
       <div>
-        <Badge v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected" class="mr-1"/>
+        <Badge v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected" class="mr-1" />
       </div>
       <div>
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
@@ -355,5 +436,9 @@ onMounted(async () => {
   </Dialog>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
+.filter-label {
+  min-width: 55px;
+  text-align: end;
+}
 </style>

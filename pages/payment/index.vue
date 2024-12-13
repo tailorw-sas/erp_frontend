@@ -239,14 +239,18 @@ const filterToSearchTemp = ref<GenericObject>({
 
 const contextMenu = ref()
 const allMenuListItems = ref([
-  // {
-  //   id: 'applayDeposit',
-  //   label: 'Apply Deposit',
-  //   icon: 'pi pi-dollar',
-  //   command: ($event: any) => openModalWithContentMenu($event),
-  //   disabled: true,
-  //   visible: true,
-  // },
+  {
+    id: 'paymentSelected',
+    label: 'Select Payment:',
+    icon: 'pi pi-folder',
+    command: () => {},
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    disabled: true,
+    visible: true,
+  },
   {
     id: 'statusHistory',
     label: 'Status History',
@@ -465,7 +469,7 @@ const columns: IColumn[] = [
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'number' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
   { field: 'notApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'number' },
-  { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '100px', maxWidth: '200px', type: 'text' },
   { field: 'paymentStatus', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
   // { field: 'totalAmount', header: 'T.Amount', tooltip: 'Total Amount', width: '60px', type: 'text' },
   // { field: 'attachmentStatus', header: 'Attachment Status', width: '100px', type: 'select' },
@@ -517,7 +521,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
   { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
@@ -527,7 +531,7 @@ const applyPaymentColumns = ref<IColumn[]>([
 const columnsExpandTable: IColumn[] = [
   { field: 'bookingId', header: 'Id', width: '120px', type: 'text', sortable: false },
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
-  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', type: 'text', sortable: false },
+  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', maxWidth: '150px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
   { field: 'couponNumber', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
@@ -543,7 +547,7 @@ const columnsPaymentDetailTypeDeposit: IColumn[] = [
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'text' },
   { field: 'amount', header: 'Deposit Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'applyDepositValue', header: 'Deposit. Balance', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
-  { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
+  { field: 'remark', header: 'Remark', width: 'auto', maxWidth: '200px', type: 'text' },
   // { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
   // { field: 'invoiceNumber', header: 'Invoice No', tooltip: 'Invoice No', width: '100px', type: 'text' },
   // { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
@@ -649,7 +653,7 @@ const historyColumns = ref<IColumn[]>([
   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'date', width: '120px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'select', width: '150px', localItems: [], sortable: false, showFilter: false },
-  { field: 'description', header: 'Description', type: 'text', width: '200px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   { field: 'paymentStatus', header: 'Status', type: 'slot-text', width: '60px', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-attachment-status' }, sortable: false, showFilter: false },
   // { field: 'paymentStatus', header: 'Status', width: '100px', type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true, showFilter: false },
 ])
@@ -693,12 +697,12 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
+  { field: 'reservationNumber', header: 'Reservation No.', type: 'text', width: '90px', maxWidth: '120px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false, editable: true },
+  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: false, showFilter: false },
+  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: false, showFilter: false, editable: true },
 ])
 
 const applyPaymentOptionsOtherDeduction = ref({
@@ -1086,6 +1090,8 @@ function searchAndFilter() {
         keyTemp === 'paymentDetails.remark'
         || keyTemp === 'paymentDetails.manageBooking.fullName'
         || keyTemp === 'paymentDetails.manageBooking.reservationNumber'
+        || keyTemp === 'paymentDetails.manageBooking.couponNumber'
+        || keyTemp === 'reference'
       )
         ? 'LIKE'
         : 'EQUALS',
@@ -2199,8 +2205,12 @@ async function applyPaymentGetListForOtherDeductions() {
                   iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                   // iterator.bookingAmount = iterator.invoiceAmount?.toString()
                   // iterator.bookingBalance = iterator.dueAmount?.toString()
-                  iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-                  iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                  // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                  // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+                  iterator.dueAmountTemp = iterator.dueAmount || 0
+                  iterator.bookingAmountTemp = iterator.invoiceAmount || 0
+
                   // for (const booking of iterator.bookings) {
                   //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
                   //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
@@ -2308,8 +2318,11 @@ async function applyPaymentGetListForOtherDeductions() {
                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
                 // iterator.bookingBalance = iterator.dueAmount?.toString()
 
-                iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+                // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                iterator.dueAmountTemp = iterator.dueAmount || 0
+                iterator.bookingAmountTemp = iterator.invoiceAmount || 0
 
                 // for (const booking of iterator.bookings) {
                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
@@ -2447,8 +2460,12 @@ async function applyPaymentGetListForOtherDeductions() {
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
                 // iterator.bookingBalance = iterator.dueAmount?.toString()
-                iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-                iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                iterator.dueAmountTemp = iterator.dueAmount || 0
+                iterator.bookingAmountTemp = iterator.invoiceAmount || 0
 
                 // for (const booking of iterator.bookings) {
                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
@@ -2505,6 +2522,7 @@ function closeModalApplyPaymentOtherDeductions() {
 }
 
 async function openModalApplyPayment() {
+  paymentDetailsTypeDepositSelected.value = []
   openDialogApplyPayment.value = true
   invoiceAmmountSelected.value = 0
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
@@ -2562,6 +2580,12 @@ function onRowContextMenu(event: any) {
   }
   objItemSelectedForRightClickApplyPayment.value = event.data
   objItemSelectedForRightClickPaymentWithOrNotAttachment.value = event.data
+
+  const selectedPaymentItem = allMenuListItems.value.find(item => item.id === 'paymentSelected')
+  if (selectedPaymentItem) {
+    selectedPaymentItem.label = `Selected Payment: ${event.data.paymentId}`
+  }
+
   if (event && event.data && (event.data.paymentStatus && event.data.paymentStatus.cancelled === false && event.data.paymentStatus.applied === false)) {
     const menuItemApplayPayment = allMenuListItems.value.find(item => item.id === 'applyPayment')
     if (menuItemApplayPayment) {
@@ -2770,13 +2794,28 @@ async function selectRowsOfInvoiceOfOtherDeduction(event: any) {
 async function onCellEditCompleteApplyPaymentOtherDeduction(event: any) {
   const { data, newValue, field } = event
   switch (field) {
-    case 'dueAmountTemp':
-      if (newValue > 0 && newValue <= data[field]) {
-        data[field] = newValue
+    case 'dueAmountTemp': {
+      let valueTemp = 0
+
+      if (typeof newValue === 'string') {
+        valueTemp = Number.parseFloat(newValue.replace(/,/g, ''))
+
+        if (valueTemp > 0 && valueTemp <= data.dueAmount) {
+          data[field] = valueTemp
+        }
+        else {
+          toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${formatNumber(data.dueAmount)}`, life: 4000 })
+        }
       }
-      else {
-        toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${data[field]}`, life: 4000 })
+      else if (typeof newValue === 'number') {
+        if (newValue > 0 && newValue <= data.dueAmount) {
+          data[field] = newValue
+        }
+        else {
+          toast.add({ severity: 'error', summary: 'Error', detail: `The amount must be greater than 0 and less than or equal to ${formatNumber(data.dueAmount)}`, life: 4000 })
+        }
       }
+    }
       break
   }
   // data[field] = newValue
@@ -2916,7 +2955,7 @@ function toggle(event: Event, index: number) {
 function havePermissionMenu() {
   for (const rootMenu of itemMenuList.value) {
     if (rootMenu.menuItems.length > 0) {
-      for (const childMenu of rootMenu.menuItems[0].items) {
+      for (const childMenu of rootMenu.menuItems) {
         if (childMenu?.permission && childMenu?.permission?.length > 0) {
           (status.value === 'authenticated' && (isAdmin || authStore.can(childMenu.permission))) ? childMenu.disabled = false : childMenu.disabled = true
         }
@@ -3769,10 +3808,10 @@ onMounted(async () => {
                               value: 'ACTIVE',
                             },
                             // {
-                            //   key: 'code',
+                            //   key: 'transit',
                             //   logicalOperation: 'AND',
-                            //   operator: 'NOT_EQUALS',
-                            //   value: 'TRA',
+                            //   operator: 'EQUALS',
+                            //   value: false,
                             // },
                           ]
                           const objQueryToSearch = {
@@ -3834,13 +3873,14 @@ onMounted(async () => {
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> From</label>
                     <div class="w-9rem">
+                      <!-- :min-date="new Date(startOfMonth)"
+                        :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)" -->
                       <Calendar
                         id="from"
                         v-model="filterToSearch.from"
-                        :min-date="new Date(startOfMonth)"
-                        :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
                         class="w-full"
-                        date-format="dd/mm/yy"
+                        :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
+                        date-format="yy-mm-dd"
                         :disabled="disabledDates"
                       />
                     </div>
@@ -3848,13 +3888,13 @@ onMounted(async () => {
                   <div class="flex align-items-center">
                     <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
                     <div class="w-9rem">
+                      <!-- :max-date="new Date(endOfMonth)" -->
                       <Calendar
                         id="to"
                         v-model="filterToSearch.to"
                         class="w-auto"
                         :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
-                        :max-date="new Date(endOfMonth)"
-                        date-format="dd/mm/yy"
+                        date-format="yy-mm-dd"
                         :disabled="disabledDates"
                       />
                     </div>
@@ -3885,7 +3925,7 @@ onMounted(async () => {
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> Criteria</label>
-                    <div class="w-10rem">
+                    <div class="w-12rem">
                       <Dropdown
                         v-model="filterToSearch.criteria"
                         :options="[...ENUM_FILTER]"
@@ -3900,7 +3940,7 @@ onMounted(async () => {
                   </div>
                   <div class="flex align-items-center">
                     <label for="" class="w-4rem font-bold">Value</label>
-                    <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-10rem" style="max-width: 10rem;" />
+                    <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-12rem" style="max-width: 12rem;" />
                   </div>
                 </div>
               </div>
@@ -4051,10 +4091,17 @@ onMounted(async () => {
       @hide="closeModalChangeAgency()"
     >
       <template #header>
-        <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Change Agency
-          </h5>
+        <div class="flex align-items-center justify-content-between w-full">
+          <div class="flex align-items-center">
+            <h5 class="m-0">
+              Change Agency
+            </h5>
+          </div>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment Id: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -4153,7 +4200,7 @@ onMounted(async () => {
             </div>
             <div class="font-bold mr-5">
               <h5 class="m-0">
-                Payment: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
+                Payment Id: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
               </h5>
             </div>
           </div>
@@ -4273,7 +4320,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: 'auto' }"
+      :style="{ width: '60%' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
@@ -4293,7 +4340,7 @@ onMounted(async () => {
             Select Booking
           </h5>
           <h5 class="m-0 font-bold mr-5">
-            Payment: {{ objItemSelectedForRightClickApplyPaymentOtherDeduction.paymentId }}
+            Payment Id: {{ objItemSelectedForRightClickApplyPaymentOtherDeduction.paymentId }}
           </h5>
         </div>
       </template>
@@ -4314,8 +4361,14 @@ onMounted(async () => {
                     :model="transactionType"
                     :suggestions="[...transactionTypeList]"
                     @change="($event) => {
-                      transactionType = $event
-                      processValidation($event)
+                      // transactionType = $event
+                      if ($event) {
+                        transactionType = $event
+                        processValidation($event)
+                      }
+                      else {
+                        transactionType = {}
+                      }
                     }"
                     @load="async($event) => {
                       const objQueryToSearch = {
@@ -4458,7 +4511,7 @@ onMounted(async () => {
               v-tooltip.top="'Apply Payment'"
               class="w-3rem mx-1"
               icon="pi pi-check"
-              :disabled="Object.keys(transactionType).length === 0 || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
+              :disabled="('id' in transactionType) === false || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
               :loading="loadingSaveApplyPayment"
               @click="saveApplyPaymentOtherDeduction"
             />
@@ -4488,10 +4541,17 @@ onMounted(async () => {
       @hide="openDialogHistory = false"
     >
       <template #header>
-        <div class="flex justify-content-between">
-          <h5 class="m-0">
-            Payment Status History
-          </h5>
+        <div class="flex justify-content-between w-full">
+          <div class="flex align-items-center">
+            <h5 class="m-0">
+              Payment Status History
+            </h5>
+          </div>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment Id: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -4539,10 +4599,15 @@ onMounted(async () => {
       @hide="closeDialogPrint()"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex justify-content-between w-full">
           <h5 class="m-0">
             Payment To Print
           </h5>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment Id: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -4628,7 +4693,7 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
             </template>
           </EditFormV2>
         </div>

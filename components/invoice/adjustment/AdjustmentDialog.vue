@@ -67,7 +67,12 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  invoiceAmount: { type: Number, required: true }
+  invoiceAmount: { type: Number, required: true },
+  loadingDefaultTransactionType: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
 })
 const dialogVisible = ref(props.openDialog)
 const formFields = ref<FieldDefinitionType[]>([])
@@ -116,6 +121,7 @@ onMounted(() => {
   else {
     invoiceType.value = route.query.type as string
   }
+  props.getTransactionTypeList('', true)
 })
 </script>
 
@@ -145,7 +151,8 @@ onMounted(() => {
 
         <template #field-amount="{ item: data, onUpdate }">
           <InputNumber
-            v-model="data.amount" @input="($event: any) => {
+            v-if="!loadingSaveAll"
+            v-model="data.amount" :min-fraction-digits="0" :max-fraction-digits="2" @input="($event: any) => {
               $event = $event.value
               if (isNaN(+$event)){
                 $event = 0
@@ -167,14 +174,15 @@ onMounted(() => {
                   amountError = true
                 }
               }
-            }" :minFractionDigits="0" :max-fraction-digits="2"
+            }"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
           <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === InvoiceType.INVOICE ? 'under' : 'over' }} 0</span>
         </template>
 
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll"
+            v-if="!loadingSaveAll && !loadingDefaultTransactionType"
             id="autocomplete"
             field="fullName"
             item-value="id"
@@ -190,6 +198,7 @@ onMounted(() => {
               }
             }" @load="($event) => getTransactionTypeList($event)"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #form-footer="props">

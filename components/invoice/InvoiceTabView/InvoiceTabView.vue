@@ -119,6 +119,10 @@ const props = defineProps({
   invoiceType: {
     type: String,
     required: false
+  },
+  invoiceReactiveData: {
+    type: Object,
+    required: false
   }
 })
 
@@ -329,6 +333,8 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+          <!-- <pre>{{ invoiceReactiveData }}</pre> -->
+
           <BookingTab
             :refetch-invoice="refetchInvoice"
             :get-invoice-agency="getInvoiceAgency"

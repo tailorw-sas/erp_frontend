@@ -34,6 +34,7 @@ const { data: userData } = useAuth()
 const transaction = ref<any>(props.selectedTransaction)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const selectedAttachment = ref<string>('')
+const pathFileLocal = ref('')
 
 const filterToSearch = ref({
   criteria: 'transaction.id',
@@ -120,14 +121,16 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
+    validation: validateFiles(100, ['application/pdf']),
   },
   {
     field: 'filename',
     header: 'Filename',
     dataType: 'text',
-    class: 'field col-12 required',
+    class: 'field col-12',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'This is a required field')
+    hidden: true,
+    validation: z.string().trim()
   },
   {
     field: 'remark',
@@ -142,7 +145,7 @@ const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
   { field: 'type', header: 'Type', type: 'select', width: '100px' },
   { field: 'filename', header: 'Filename', type: 'text', width: '150px' },
-  { field: 'remark', header: 'Remark', type: 'text', width: '100px', columnClass: 'w-10 overflow-hidden' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '100px', maxWidth: '100px', columnClass: 'w-10 overflow-hidden' },
 ]
 
 const dialogVisible = ref(props.openDialog)
@@ -391,11 +394,28 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-    const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+    // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
     payload.transaction = props.selectedTransaction?.id
-    payload.file = file
+    // payload.file = file
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId ?? ''
+    if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
+      const file = payload.file.files[0]
+      if (file) {
+        const objFile = await getUrlOrIdByFile(file)
+        payload.file = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      }
+      else {
+        payload.file = ''
+      }
+    }
+    else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+      payload.file = pathFileLocal.value
+    }
+    else {
+      payload.file = ''
+    }
+
     delete payload.resourceType
     payload.type = item.type?.id
     payload.paymentResourceType = item.resourceType?.id
@@ -406,13 +426,29 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
-  payload.file = file
+  // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+  // payload.file = file
   payload.type = item.type?.id
   payload.paymentResourceType = item.resourceType?.id
   payload.employee = userData?.value?.user?.name
   payload.employeeId = userData?.value?.user?.userId ?? ''
   delete payload.resourceType
+  if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
+    const file = payload.file.files[0]
+    if (file) {
+      const objFile = await getUrlOrIdByFile(file)
+      payload.file = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    }
+    else {
+      payload.file = ''
+    }
+  }
+  else if (pathFileLocal.value !== null && pathFileLocal.value !== '') {
+    payload.file = pathFileLocal.value
+  }
+  else {
+    payload.file = ''
+  }
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
@@ -527,6 +563,7 @@ async function getItemById(id: string | null | undefined) {
         item.value.resource = response.transaction?.id
         item.value.resourceType = { ...response.paymentResourceType, fullName: `${response?.paymentResourceType?.code} - ${response?.paymentResourceType?.name}` }
         selectedAttachment.value = response.attachmentId
+        pathFileLocal.value = response.file
       }
 
       formReload.value += 1
@@ -560,12 +597,6 @@ function formatSize(bytes: number) {
 }
 
 function downloadFile() {
-  if (ListItems.value?.length > 0) {
-    // Selecciona el primer elemento automáticamente
-    item.value = { ...ListItems.value[0] } // Asigna el primer elemento a item.value
-    idItemToLoadFirstTime.value = ListItems.value[0]?.id // Carga el ID del primer elemento
-  }
-
   if (item.value) {
     const link = document.createElement('a')
     link.href = item.value.file
@@ -650,6 +681,11 @@ onMounted(async () => {
     }"
     @hide="onCloseDialog()"
   >
+    <template #header>
+      <div class="inline-flex align-items-center justify-content-center gap-2">
+        <span class="font-bold white-space-nowrap">{{ header }}</span>
+      </div>
+    </template>
     <div class="grid p-fluid formgrid">
       <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
         <div class="flex justify-content-end mb-1">
@@ -736,46 +772,38 @@ onMounted(async () => {
                 <Skeleton v-else height="2rem" class="mb-2" />
               </template>
               <template #field-file="{ onUpdate, item: data }">
-                <FileUpload
-                  accept="application/pdf" :disabled="idItem !== ''" :max-file-size="1000000"
-                  :multiple="false" auto custom-upload @uploader="(event: any) => {
-                    const file = event.files[0]
-                    onUpdate('file', file)
-                    onUpdate('filename', data.file.name || data.file.split('/')[data.file.split('/')?.length - 1])
-                  }"
-                >
-                  <template #header="{ chooseCallback }">
-                    <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                      <div class="flex gap-2">
-                        <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                        <Button
-                          icon="pi pi-times" class="ml-2" severity="danger" :disabled="!data.file" text
-                          @click="onUpdate('file', null)"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                  <template #content="{ files }">
-                    <div class="w-full flex justify-content-center">
-                      <ul v-if="files[0] || data.file" class=" p-0 m-0" style="width: 300px;  overflow: hidden;">
-                        <li class=" surface-border flex align-items-center w-fit">
-                          <div class="flex flex-column w-fit  text-overflow-ellipsis">
-                            <span
-                              class="text-900 font-semibold text-xl mb-2 text-overflow-clip overflow-hidden"
-                              style="width: 300px;"
-                            >{{ data.file.name
-                              || data.file.split("/")[data.file.split("/")?.length - 1] }}</span>
-                            <span v-if="data.file.size" class="text-900 font-medium">
-                              <Badge severity="warning">
-                                {{ formatSize(data.file.size) }}
-                              </Badge>
-                            </span>
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </template>
-                </FileUpload>
+                <InputGroup>
+                  <InputText
+                    v-if="!loadingSaveAll"
+                    v-model="data.filename"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                    placeholder="Upload File"
+                    disabled
+                  />
+                  <Skeleton v-else height="2rem" width="100%" class="mb-2" style="border-radius: 4px;" />
+                  <FileUpload
+                    v-if="!loadingSaveAll"
+                    mode="basic"
+                    :max-file-size="100000000"
+                    :disabled="idItem !== '' || idItem === null"
+                    :multiple="false"
+                    auto
+                    custom-upload
+                    accept="application/pdf"
+                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                    @uploader="($event: any) => {
+                      customBase64Uploader($event, Fields, 'file');
+                      onUpdate('file', $event)
+                      if ($event && $event.files.length > 0) {
+                        onUpdate('filename', $event?.files[0]?.name)
+                        onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                      }
+                      else {
+                        onUpdate('filename', '')
+                      }
+                    }"
+                  />
+                </InputGroup>
               </template>
               <template #form-footer="footProps">
                 <Button

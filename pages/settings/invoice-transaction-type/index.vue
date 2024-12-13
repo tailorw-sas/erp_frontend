@@ -75,6 +75,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 ',
   },
   {
+    field: 'cloneAdjustmentDefault',
+    header: 'Clone Adjustment Default',
+    dataType: 'check',
+    class: 'field col-12 font-bold',
+  },
+  {
     field: 'isRemarkRequired',
     header: 'Remark Required',
     dataType: 'check',
@@ -122,6 +128,7 @@ const item = ref<GenericObject>({
   isRemarkRequired: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
+  cloneAdjustmentDefault: false
 })
 
 const itemTemp = ref<GenericObject>({
@@ -136,6 +143,7 @@ const itemTemp = ref<GenericObject>({
   defaults: false,
   minNumberOfCharacters: 0,
   defaultRemark: '',
+  cloneAdjustmentDefault: false
 })
 
 const formTitle = computed(() => {
@@ -289,6 +297,7 @@ async function getItemById(id: string) {
         item.value.isRemarkRequired = response.isRemarkRequired
         item.value.minNumberOfCharacters = response.minNumberOfCharacters
         item.value.defaultRemark = response.defaultRemark
+        item.value.cloneAdjustmentDefault = response.cloneAdjustmentDefault
         updateFieldProperty(fields, 'minNumberOfCharacters', 'disabled', !response.isRemarkRequired)
       }
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -561,7 +570,7 @@ onMounted(() => {
                   onUpdate('minNumberOfCharacters', 0)
                 }"
               />
-              <label for="isRemarkRequired" class="ml-2">
+              <label for="isRemarkRequired" class="ml-1">
                 Remark Required
                 <span :class="fields.find(field => field.field === 'isRemarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>

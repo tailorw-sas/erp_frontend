@@ -264,6 +264,18 @@ const item = ref<GenericObject>({
   invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
 })
 
+const reactiveItem = ref<GenericObject>({
+  invoiceId: 0,
+  invoiceNumber: '',
+  invoiceDate: new Date(),
+  isManual: true,
+  invoiceAmount: '0.00',
+  hotel: null,
+  agency: null,
+  status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2],
+  invoiceType: route.query.type === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === route.query.type)),
+})
+
 const itemTemp = ref<GenericObject>({
   invoiceId: 0,
   invoiceNumber: '',
@@ -558,10 +570,14 @@ async function createItem(item: { [key: string]: any }) {
     const bookings: any[] = []
     let roomRates = []
     const attachments = []
-
+    let countBookingWithoutNightType = 0
+    const listOfBookingsWithoutNightType: string[] = []
     bookingList.value?.forEach((booking) => {
+      // Es aqui donde hay que hacer la validacion de recorrer la lista de booking y verificar si alguno necesita un nightType
       if (nightTypeRequired.value && !booking.nightType?.id) {
-        throw new Error('The Night Type field is required for this client')
+        countBookingWithoutNightType++
+        listOfBookingsWithoutNightType.push(booking.hotelBookingNumber)
+        // throw new Error('The Night Type field is required for this client')
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
@@ -603,6 +619,10 @@ async function createItem(item: { [key: string]: any }) {
         }
       }
     })
+
+    if (countBookingWithoutNightType > 0) {
+      throw new Error(`The Night Type field is required for this booking: ${listOfBookingsWithoutNightType.toString()}`)
+    }
 
     for (let i = 0; i < roomRateList.value.length; i++) {
       if (requiresFlatRate.value && +roomRateList.value[i].hotelAmount <= 0) {
@@ -862,13 +882,13 @@ function addBooking(booking: any) {
   roomRateList.value = [...roomRateList.value, {
     checkIn: dayjs(booking?.checkIn).toISOString(),
     checkOut: dayjs(booking?.checkOut).toISOString(),
-    invoiceAmount: String(booking?.invoiceAmount),
+    invoiceAmount: booking?.invoiceAmount,
     roomNumber: booking?.roomNumber,
     adults: booking?.adults,
     children: booking?.children,
     rateAdult: booking?.rateAdult,
     rateChild: booking?.rateChild,
-    hotelAmount: String(booking?.hotelAmount),
+    hotelAmount: booking?.hotelAmount,
     remark: booking?.description,
     booking: booking?.id,
     nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),
@@ -1289,10 +1309,21 @@ onMounted(async () => {
       : "" }}
   </div>
   <div class="pt-3">
+    <!-- <pre>{{ reactiveItem }}</pre> -->
     <EditFormV2
-      :key="formReload" :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields" :item="item"
-      :show-actions="true" :loading-save="loadingSaveAll" :loading-delete="loadingDelete" container-class="grid py-3"
-      @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
+      :key="formReload"
+      :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields"
+      :item="item"
+      :show-actions="true"
+      :loading-save="loadingSaveAll"
+      :loading-delete="loadingDelete"
+      container-class="grid py-3"
+      @cancel="clearForm"
+      @delete="requireConfirmationToDelete($event)"
+      @submit="requireConfirmationToSave($event)"
+      @reactive-update-field="($event) => {
+        reactiveItem.value = { ...$event }
+      }"
     >
       <!-- ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`, -->
       <template #field-invoiceDate="{ item: data, onUpdate }">
@@ -1427,6 +1458,7 @@ onMounted(async () => {
             :active="active" :set-active="($event) => {
               active = $event
             }"
+            :invoice-reactive-data="reactiveItem"
           />
 
           <div>

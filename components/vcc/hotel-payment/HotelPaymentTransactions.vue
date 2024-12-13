@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import ContextMenu from 'primevue/contextmenu'
@@ -21,12 +21,15 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:detailsAmount'])
-
+const emit = defineEmits(['update:list'])
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+const authStore = useAuthStore()
 const listItems = ref<any[]>([])
 const toast = useToast()
 const contextMenu = ref()
 const contextMenuTransaction = ref()
+const transactionHistoryDialogVisible = ref<boolean>(false)
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 
 enum MenuType {
@@ -34,6 +37,15 @@ enum MenuType {
 }
 
 const allMenuListItems = [
+  {
+    label: 'Status History',
+    icon: 'pi pi-history',
+    iconSvg: '',
+    width: '14px',
+    height: '14px',
+    command: () => { transactionHistoryDialogVisible.value = true },
+    disabled: false,
+  },
   {
     type: MenuType.unBind,
     label: 'Unbind Transaction',
@@ -100,6 +112,10 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
+async function canEditHotelPayment() {
+  return (status.value === 'authenticated' && (isAdmin || authStore.can(['HOTEL-PAYMENT:EDIT'])))
+}
 
 async function resetListItems() {
   payload.value.page = 0
@@ -229,10 +245,11 @@ async function onRowRightClick(event: any) {
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
   menuListItems.value = [...allMenuListItems]
-  if (props.hideBindTransactionMenu) {
+  if (props.hideBindTransactionMenu || !await canEditHotelPayment()) {
     menuListItems.value = allMenuListItems.filter((item: any) => item.type !== MenuType.unBind)
   }
   if (menuListItems.value.length > 0) {
+    await nextTick()
     contextMenu.value.show(event.originalEvent)
   }
 }
@@ -241,13 +258,11 @@ async function unbindTransactions() {
   try {
     const transactionsIds = [contextMenuTransaction.value.id]
     const payload: { [key: string]: any } = {}
-    payload.bankReconciliation = props.hotelPaymentId
+    payload.hotelPaymentId = props.hotelPaymentId
     payload.transactionsIds = transactionsIds
 
-    const response: any = await GenericService.create('creditcard', 'bank-reconciliation/unbind', payload)
-    if (response && response.detailsAmount) {
-      emit('update:detailsAmount', response.detailsAmount)
-    }
+    await GenericService.create('creditcard', 'hotel-payment/unbind', payload)
+    emit('update:list')
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     getList()
     // Emit reload detail amount
@@ -306,6 +321,9 @@ onMounted(() => {
         </div>
       </template>
     </ContextMenu>
+    <div v-if="transactionHistoryDialogVisible">
+      <TransactionStatusHistoryDialog :close-dialog="() => { transactionHistoryDialogVisible = false }" :open-dialog="transactionHistoryDialogVisible" :selected-transaction="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
   </div>
 </template>
 

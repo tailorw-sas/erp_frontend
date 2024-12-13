@@ -165,7 +165,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: validateFiles(1),
+    validation: validateFiles(),
   },
   {
     field: 'fileName',
@@ -227,7 +227,7 @@ const Columns: IColumn[] = [
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 const columnsAttachment: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
@@ -235,7 +235,7 @@ const columnsAttachment: IColumn[] = [
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 
 const historyColumns = ref<IColumn[]>([
@@ -1236,16 +1236,17 @@ onMounted(async () => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
+    v-model:visible="dialogVisible" modal :header="header"
+    content-class="border-round-bottom border-top-1 surface-border" :block-scroll="true" :style="{ width: '80%' }"
     @hide="closeDialog"
   >
     <template #header>
-      <div class="inline-flex align-items-center justify-content-center gap-2">
+      <div class="inline-flex align-items-center justify-content-between w-full">
         <span class="font-bold white-space-nowrap">{{ header }}</span>
-        <strong class="mx-2">-</strong>
-        <strong class="mr-1">Payment:</strong>
-        <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+        <div class="flex align-items-center mr-3">
+          <strong class="mr-1">Payment Id:</strong>
+          <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+        </div>
       </div>
     </template>
     <template #default>

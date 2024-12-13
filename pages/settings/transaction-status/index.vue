@@ -38,6 +38,7 @@ const radioOptions = [
   { label: 'Declined', value: 'declined' },
   { label: 'Cancelled', value: 'cancelled' },
   { label: 'Reconciled', value: 'reconciled' },
+  { label: 'Paid', value: 'paid' },
 ]
 
 const fields: Array<FieldDefinitionType> = [
@@ -105,6 +106,7 @@ const item = ref<GenericObject>({
     declined: false,
     cancelled: false,
     reconciled: false,
+    paid: false,
   },
   description: '',
   status: true
@@ -123,6 +125,7 @@ const itemTemp = ref<GenericObject>({
     declined: false,
     cancelled: false,
     reconciled: false,
+    paid: false,
   },
   status: true
 })
@@ -267,7 +270,7 @@ async function getItemById(id: string) {
   try {
     const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
     if (response) {
-      const { id, name, description, status, code, enablePayment, visible, sentStatus, refundStatus, receivedStatus, declinedStatus, cancelledStatus, reconciledStatus } = response
+      const { id, name, description, status, code, enablePayment, visible, sentStatus, refundStatus, receivedStatus, declinedStatus, cancelledStatus, reconciledStatus, paidStatus } = response
 
       item.value = {
         ...item.value,
@@ -285,6 +288,7 @@ async function getItemById(id: string) {
           declined: declinedStatus,
           cancelled: cancelledStatus,
           reconciled: reconciledStatus,
+          paid: paidStatus,
         },
       }
 
@@ -327,6 +331,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.declinedStatus = item.isStatus.declined
     payload.cancelledStatus = item.isStatus.cancelled
     payload.reconciledStatus = item.isStatus.reconciled
+    payload.paidStatus = item.isStatus.paid
     delete payload.event
     delete payload.isStatus
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
@@ -343,6 +348,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.declinedStatus = item.isStatus.declined
   payload.cancelledStatus = item.isStatus.cancelled
   payload.reconciledStatus = item.isStatus.reconciled
+  payload.paidStatus = item.isStatus.paid
   delete payload.event
   delete payload.isStatus
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
@@ -462,6 +468,7 @@ function updateStatusItem(selectedValue: any) {
     declined: false,
     cancelled: false,
     reconciled: false,
+    paid: false,
   }
   // Resetear los campos a `false`
   if (item.value.isStatus[selectedValue]) {

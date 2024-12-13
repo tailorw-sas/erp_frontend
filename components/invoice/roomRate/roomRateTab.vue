@@ -464,7 +464,7 @@ const confratePlanApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'roomRateId', header: 'Id', type: 'text', width: '90px', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'bookingId', header: 'Booking id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '120px', sortable: !props.isDetailView && !props.isCreationDialog },
 
   // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
 
@@ -475,8 +475,8 @@ const Columns: IColumn[] = [
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
 ]
 
@@ -558,7 +558,8 @@ async function getRoomRateList() {
 
       ListItems.value = [...ListItems.value, {
         ...iterator,
-        invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
+        // invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
+        invoiceAmount: iterator?.invoiceAmount || 0,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         loadingEdit: false,
         loadingDelete: false,
@@ -568,7 +569,8 @@ async function getRoomRateList() {
         nightType: { ...iterator.booking.nightType, name: `${iterator?.booking?.nightType?.code || ''}-${iterator?.booking?.nightType?.name || ''}` },
         ratePlan: { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` },
         agency: { ...iterator?.booking?.invoice?.agency, name: `${iterator?.booking?.invoice?.agency?.code || ''}-${iterator?.booking?.invoice?.agency?.name || ''}` },
-        hotelAmount: formatNumber(iterator?.hotelAmount)
+        // hotelAmount: formatNumber(iterator?.hotelAmount)
+        hotelAmount: iterator?.hotelAmount
       }]
 
       if (typeof +iterator.invoiceAmount === 'number') {
@@ -869,7 +871,7 @@ onMounted(() => {
     finalColumns.value = [
 
       { field: 'roomRateId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'bookingId', header: 'Booking id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'bookingId', header: 'Booking Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'fullName', header: 'Full Name', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkIn', header: 'Check In', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'checkOut', header: 'Check Out', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -878,8 +880,8 @@ onMounted(() => {
       { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'roomType', header: 'Room Type', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
       // { field: 'ratePlan', header: 'Rate Plan', type: 'select', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Rate Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }

@@ -28,6 +28,7 @@ const BindTransactionList = ref<any[]>([])
 const BankAccountList = ref<any[]>([])
 const collectionStatusList = ref<any[]>([])
 const loadingSaveAll = ref(false)
+const loadingStatus = ref(false)
 const forceSave = ref(false)
 const refForm: Ref = ref(null)
 const formReload = ref(0)
@@ -171,14 +172,13 @@ const pagination = ref<IPagination>({
 })
 
 const computedDisabledItemsByStatus = computed(() => {
-  return false
-  // return item.value?.reconcileStatus && (item.value?.reconcileStatus?.completed || item.value?.reconcileStatus?.cancelled)
+  return item.value?.status && (item.value?.status?.completed || item.value?.status?.cancelled)
 })
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
 async function canEditHotelPayment() {
-  return (status.value === 'authenticated' && (isAdmin || authStore.can(['BANK-RECONCILIATION:EDIT'])))
+  return (status.value === 'authenticated' && (isAdmin || authStore.can(['HOTEL-PAYMENT:EDIT'])))
 }
 
 async function openNewAdjustmentTransactionDialog() {
@@ -242,6 +242,9 @@ async function getItemById(id: string) {
           response.status.fullName = `${response.status.code} - ${response.status.name}`
           item.value.status = response.status
           StatusList.value = [response.status]
+        }
+        if (response.status && (response.status.completed || response.status.cancelled)) {
+          updateFieldProperty(fields, 'remark', 'disabled', true)
         }
       }
       formReload.value += 1
@@ -390,23 +393,29 @@ async function getHotelList(query: string) {
 
 async function getStatusList(query: string) {
   try {
+    loadingStatus.value = true
     const payload = {
       filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
+        key: 'inProgress',
+        operator: 'EQUALS',
+        value: true,
         logicalOperation: 'OR'
       }, {
-        key: 'code',
-        operator: 'LIKE',
-        value: query,
+        key: 'cancelled',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'OR'
+      }, {
+        key: 'completed',
+        operator: 'EQUALS',
+        value: true,
         logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
         logicalOperation: 'AND'
-      }],
+      },],
       query: '',
       sortBy: 'createdAt',
       sortType: 'ASC',
@@ -419,9 +428,20 @@ async function getStatusList(query: string) {
     for (const iterator of dataList) {
       StatusList.value = [...StatusList.value, { id: iterator.id, code: iterator.code, name: iterator.name, fullName: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
+    // Para mantener la referencia del model en el selector simple
+    const index = StatusList.value.findIndex((elem: any) => elem.id === item.value.status?.id)
+    if (index >= 0) {
+      StatusList.value[index] = item.value.status
+    }
+    else {
+      StatusList.value.unshift(item.value.status)
+    }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
+  }
+  finally {
+    loadingStatus.value = false
   }
 }
 
@@ -470,7 +490,7 @@ async function bindTransactions(transactions: any[]) {
   try {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = {}
-    payload.bankReconciliationId = idItem.value
+    payload.hotelPaymentId = idItem.value
     if (transactions.length > 0) {
       payload.transactionIds = transactions.filter((t: any) => !t.adjustment).map((i: any) => i.id)
       const adjustmentTransactions = transactions.filter((t: any) => t.adjustment)
@@ -516,13 +536,10 @@ async function unbindTransactions() {
     loadingSaveAll.value = true
     const transactionsIds = [contextMenuTransaction.value.id]
     const payload: { [key: string]: any } = {}
-    payload.bankReconciliation = idItem.value
+    payload.hotelPaymentId = idItem.value
     payload.transactionsIds = transactionsIds
 
-    const response: any = await GenericService.create(confApi.moduleApi, 'bank-reconciliation/unbind', payload)
-    if (response) {
-      paymentAmount.value = response.detailsAmount
-    }
+    await GenericService.create(confApi.moduleApi, 'hotel-payment/unbind', payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
     selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
     getList()
@@ -539,12 +556,11 @@ async function unbindTransactions() {
 async function updateItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = {}
-    payload.paidDate = item.paidDate ? dayjs(item.paidDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.remark = item.remark || ''
-    payload.amount = item.amount || ''
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
-    payload.reconcileStatus = typeof item.reconcileStatus === 'object' ? item.reconcileStatus.id : item.reconcileStatus
+    payload.manageBankAccount = Object.prototype.hasOwnProperty.call(item.manageBankAccount, 'id') ? item.manageBankAccount.id : item.manageBankAccount
+    payload.status = Object.prototype.hasOwnProperty.call(item.status, 'id') ? item.status.id : item.status
     const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
@@ -558,11 +574,6 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  // console.log(paymentAmount.value, item)
-  if (isGreaterThanTwoDecimals(paymentAmount.value, item.amount)) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Details amount must not exceed the reconciliation amount.', life: 10000 })
-    return
-  }
   // let successOperation = true
   loadingSaveAll.value = true
   try {
@@ -576,15 +587,6 @@ async function saveItem(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
-}
-
-function isGreaterThanTwoDecimals(num1: number, num2: number): boolean {
-  // Redondear ambos números a dos decimales
-  const roundedNum1 = Math.round(num1 * 100) / 100
-  const roundedNum2 = Math.round(num2 * 100) / 100
-
-  // Comparar los números redondeados
-  return roundedNum1 > roundedNum2
 }
 
 async function handleSave(event: any) {
@@ -730,7 +732,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :disabled="!data.manageHotel"
+            :disabled="!data.manageHotel || computedDisabledItemsByStatus"
             :model="data.manageBankAccount"
             :suggestions="[...BankAccountList]"
             @change="($event) => {
@@ -742,17 +744,20 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-status="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete"
+          <CustomSelectComponent
+            v-if="!loadingSaveAll" id="autocomplete" :loading="loadingStatus"
             field="fullName" item-value="id" :model="data.status" :suggestions="StatusList"
+            :disabled="computedDisabledItemsByStatus"
             @change="($event) => {
+              console.log($event)
               onUpdate('status', $event)
+              item.status = $event
             }" @load="($event) => getStatusList($event)"
           >
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
-          </DebouncedAutoCompleteComponent>
+          </CustomSelectComponent>
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
       </EditFormV2>
@@ -784,8 +789,8 @@ onMounted(async () => {
     </DynamicTable>
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <div>
-        <IfCan :perms="['BANK-RECONCILIATION:EDIT']">
-          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
+        <IfCan :perms="['HOTEL-PAYMENT:EDIT']">
+          <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.manageHotel == null || computedDisabledItemsByStatus" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
           <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
           <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
         </IfCan>

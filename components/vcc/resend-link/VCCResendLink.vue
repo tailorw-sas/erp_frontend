@@ -167,7 +167,7 @@ watch(() => props.openDialog, async (newValue) => {
   <Dialog
     v-model:visible="dialogVisible"
     modal
-    header="Information"
+    header="ReSend Link"
     :style="{ width: '40rem' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
