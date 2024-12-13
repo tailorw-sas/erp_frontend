@@ -143,6 +143,9 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking, parentDetailDto, command));
             }
             parentDetailDto.setChildren(updateChildrens);
+        } else {
+            paymentSave.setDepositBalance(paymentAmount);
+            this.paymentService.update(paymentSave);
         }
 
         ManageEmployeeDto employeeDto = null;
