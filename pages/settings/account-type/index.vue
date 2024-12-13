@@ -51,6 +51,18 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'modulePayment',
+    header: 'Payment Module',
+    dataType: 'check',
+    class: 'field col-12 required mt-3',
+  },
+  {
+    field: 'moduleVcc',
+    header: 'VCC Module',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+  {
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
@@ -70,6 +82,8 @@ const item = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  modulePayment: false,
+  moduleVcc: false,
   status: true
 })
 
@@ -77,6 +91,8 @@ const itemTemp = ref<GenericObject>({
   name: '',
   code: '',
   description: '',
+  modulePayment: false,
+  moduleVcc: false,
   status: true
 })
 
@@ -219,6 +235,8 @@ async function getItemById(id: string) {
         item.value.name = response.name
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
+        item.value.modulePayment = response.modulePayment
+        item.value.moduleVcc = response.moduleVcc
         item.value.code = response.code
       }
       fields[0].disabled = true
