@@ -594,7 +594,7 @@ function processValidation($event: any, data: any) {
           {{ props.title }}
         </h5>
         <div v-if="props.action === 'split-deposit' || props.action === 'apply-deposit'" class="font-bold mr-4">
-          <strong class="mx-2">Payment Detail ID:</strong>
+          <strong class="mx-2">Payment Detail Id:</strong>
           <span>{{ props.selectedPaymentDetail.paymentDetailId }}</span>
         </div>
       </div>

@@ -4599,10 +4599,15 @@ onMounted(async () => {
       @hide="closeDialogPrint()"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex justify-content-between w-full">
           <h5 class="m-0">
             Payment To Print
           </h5>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment Id: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -4688,7 +4693,7 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
             </template>
           </EditFormV2>
         </div>

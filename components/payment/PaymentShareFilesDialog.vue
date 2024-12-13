@@ -730,10 +730,20 @@ onMounted(async () => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header"
+    v-model:visible="dialogVisible" modal
+    :header="header"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
     @hide="closeDialog"
   >
+    <template #header>
+      <div class="inline-flex align-items-center justify-content-between w-full py-0">
+        <span class="font-bold white-space-nowrap">{{ header }}</span>
+        <div class="flex align-items-center mr-3">
+          <strong class="mr-1">Payment Id:</strong>
+          <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+        </div>
+      </div>
+    </template>
     <template #default>
       <div class="flex justify-content-between align-items-center pt-3">
         <h3 class="mb-0" />

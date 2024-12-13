@@ -1237,15 +1237,16 @@ onMounted(async () => {
 <template>
   <Dialog
     v-model:visible="dialogVisible" modal :header="header"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
+    content-class="border-round-bottom border-top-1 surface-border" :block-scroll="true" :style="{ width: '80%' }"
     @hide="closeDialog"
   >
     <template #header>
-      <div class="inline-flex align-items-center justify-content-center gap-2">
+      <div class="inline-flex align-items-center justify-content-between w-full">
         <span class="font-bold white-space-nowrap">{{ header }}</span>
-        <strong class="mx-2">-</strong>
-        <strong class="mr-1">Payment:</strong>
-        <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+        <div class="flex align-items-center mr-3">
+          <strong class="mr-1">Payment Id:</strong>
+          <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+        </div>
       </div>
     </template>
     <template #default>

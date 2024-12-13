@@ -27,6 +27,7 @@ const idItem = ref('')
 const idItemDetail = ref('')
 const idPaymentDetail = ref('')
 const detailItemForApplyPayment = ref<any>(null)
+const paymentDetailForTitle = ref(0)
 const isSplitAction = ref(false)
 const enableSplitAction = ref(false)
 const enableDepositSummaryAction = ref(false)
@@ -168,7 +169,7 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: false, showFilter: false },
   { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -895,6 +896,7 @@ function openModalWithContentMenu($event) {
 }
 
 function openDialogPaymentDetails(event: any) {
+  paymentDetailForTitle.value = 0
   payloadToApplyPayment.value = {
     applyPayment: false,
     booking: '',
@@ -1014,6 +1016,11 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           // updateFieldProperty(fieldPaymentDetails.value, 'remark', 'disabled', false)
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'validation', decimalSchema.shape.amount)
           updateFieldProperty(fieldPaymentDetails.value, 'amount', 'helpText', `Max amount: ${minValueToApplyFormatted}`)
+
+          const paymentDetailObj = paymentDetailsList.value.find(detail => detail.id === idDetailTemp)
+          if (paymentDetailObj) {
+            paymentDetailForTitle.value = paymentDetailObj?.paymentDetailId
+          }
         }
         // Aplicar depósito
         if (actionOfModal.value === 'apply-deposit') {
@@ -2312,7 +2319,7 @@ async function applyUndoApplication(event: any) {
 function reverseTransaction(event: any) {
   confirm.require({
     message: 'Are you sure you want to revert this transaction?',
-    header: 'Question',
+    header: `Question | Payment Detail Id: ${objItemSelectedForRightClickReverseTransaction.value.paymentDetailId}`,
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-danger p-button-outlined',
     rejectLabel: 'Cancel',
@@ -2943,6 +2950,7 @@ async function closeDialogPrint() {
 function onRowContextMenu(event: any) {
   detailItemForApplyPayment.value = event?.data
   paymentDetailSelectedInRightClick.value = event?.data
+  paymentDetailForTitle.value = event?.data.paymentDetailId
 
   idPaymentDetail.value = event?.data?.id
   let minValueToApplyDeposit = 0
@@ -3828,10 +3836,15 @@ onMounted(async () => {
       @hide="openDialogHistory = false"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex justify-content-between align-items-center w-full">
           <h5 class="m-0">
-            Payment Status History - Payment ID: {{ item?.paymentId }}
+            Payment Status History
           </h5>
+          <div class="flex align-items-center mr-3">
+            <h5 class="m-0">
+              Payment Id: {{ item?.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -3879,10 +3892,15 @@ onMounted(async () => {
       @hide="closeModalApplyPayment()"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex justify-content-between w-full">
           <h5 class="m-0">
             Select Booking
           </h5>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment Id: {{ paymentDetailForTitle || 0 }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -3923,10 +3941,15 @@ onMounted(async () => {
       @hide="openPrint = false"
     >
       <template #header>
-        <div class="flex justify-content-between">
+        <div class="flex justify-content-between align-items-center w-full">
           <h5 class="m-0">
             Payment To Print
           </h5>
+          <div class="flex align-items-center">
+            <h5 class="m-0 mr-4">
+              Payment Id: {{ item?.paymentId }}
+            </h5>
+          </div>
         </div>
       </template>
       <template #default>
@@ -4009,7 +4032,7 @@ onMounted(async () => {
             </template>
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
             </template>
           </EditFormV2>
         </div>
