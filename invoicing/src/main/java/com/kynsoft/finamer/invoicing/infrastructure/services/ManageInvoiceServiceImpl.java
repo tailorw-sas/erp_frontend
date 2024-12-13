@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -89,6 +90,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         InvoiceUtils.establishDueDate(dto);
         InvoiceUtils.calculateInvoiceAging(dto);
         Invoice entity = new Invoice(dto);
+        entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
             String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumber(invoiceNumber);
