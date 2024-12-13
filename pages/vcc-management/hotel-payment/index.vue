@@ -10,6 +10,8 @@ import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import HotelPaymentStatusHistoryDialog from '~/components/vcc/history/HotelPaymentStatusHistoryDialog.vue'
+import AttachmentHotelPaymentDialog from '~/components/vcc/hotel-payment/attachment/AttachmentHotelPaymentDialog.vue'
+
 // VARIABLES -----------------------------------------------------------------------------------------
 const { data: userData } = useAuth()
 const toast = useToast()
@@ -18,6 +20,7 @@ const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const hotelPaymentHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
+const attachmentDialogOpen = ref<boolean>(false)
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -47,6 +50,13 @@ const allMenuListItems = [
     label: 'Status History',
     icon: 'pi pi-history',
     command: () => { hotelPaymentHistoryDialogVisible.value = true },
+    disabled: false,
+    default: true
+  },
+  {
+    label: 'Document',
+    icon: 'pi pi-paperclip',
+    command: () => { attachmentDialogOpen.value = true },
     disabled: false,
     default: true
   },
@@ -825,6 +835,16 @@ onMounted(() => {
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <div v-if="hotelPaymentHistoryDialogVisible">
       <HotelPaymentStatusHistoryDialog :close-dialog="() => { hotelPaymentHistoryDialogVisible = false }" :open-dialog="hotelPaymentHistoryDialogVisible" :selected-hotel-payment="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
+    <div v-if="attachmentDialogOpen">
+      <AttachmentHotelPaymentDialog
+        :close-dialog="(refreshTransactions: boolean) => {
+          attachmentDialogOpen = false
+          if (refreshTransactions) {
+            getList()
+          }
+        }" header="Manage Hotel Payment Attachment" :open-dialog="attachmentDialogOpen" :selected-hotel-payment="contextMenuTransaction"
+      />
     </div>
   </div>
 </template>
