@@ -4099,7 +4099,7 @@ onMounted(async () => {
           </div>
           <div class="flex align-items-center">
             <h5 class="m-0 mr-4">
-              Payment: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+              Payment Id: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
             </h5>
           </div>
         </div>
@@ -4200,7 +4200,7 @@ onMounted(async () => {
             </div>
             <div class="font-bold mr-5">
               <h5 class="m-0">
-                Payment: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
+                Payment Id: {{ objItemSelectedForRightClickApplyPayment.paymentId }}
               </h5>
             </div>
           </div>
@@ -4340,7 +4340,7 @@ onMounted(async () => {
             Select Booking
           </h5>
           <h5 class="m-0 font-bold mr-5">
-            Payment: {{ objItemSelectedForRightClickApplyPaymentOtherDeduction.paymentId }}
+            Payment Id: {{ objItemSelectedForRightClickApplyPaymentOtherDeduction.paymentId }}
           </h5>
         </div>
       </template>
@@ -4549,7 +4549,7 @@ onMounted(async () => {
           </div>
           <div class="flex align-items-center">
             <h5 class="m-0 mr-4">
-              Payment: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
+              Payment Id: {{ objItemSelectedForRightClickChangeAgency.paymentId }}
             </h5>
           </div>
         </div>
