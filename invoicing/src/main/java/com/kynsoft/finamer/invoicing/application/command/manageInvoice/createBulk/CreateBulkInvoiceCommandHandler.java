@@ -111,9 +111,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     && !command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
 
                 RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
-                        command.getBookingCommands().get(i).getHotelBookingNumber()
-                                .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
-                        .split("\\s+").length - 1],
+                        //command.getBookingCommands().get(i).getHotelBookingNumber()
+                        //        .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
+                        //.split("\\s+").length - 1],
+                        removeBlankSpaces(command.getBookingCommands().get(i).getHotelBookingNumber()),
                         command.getInvoiceCommand().getHotel(), command.getBookingCommands().get(i).getHotelBookingNumber()));
             }
 
@@ -304,6 +305,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         }
 
         int cont = 0;
+        UUID attachmentDefault = null;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
             RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
                     command.getAttachmentCommands().get(i).getFile()
@@ -327,6 +329,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     false
             );
 
+            if (cont == 1) {
+                attachmentDefault = attachmentDto.getId();
+            }
             attachmentDtos.add(attachmentDto);
         }
         if (cont == 0) {
@@ -396,7 +401,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 //        updateInvoiceDto.setOriginalAmount(updateInvoiceDto.getInvoiceAmount());
 //        this.service.update(updateInvoiceDto);
         try {
-            this.producerReplicateManageInvoiceService.create(created, null);
+            this.producerReplicateManageInvoiceService.create(created, attachmentDefault);
         } catch (Exception e) {
         }
 
@@ -445,6 +450,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             dto.setHotelAmount(HotelAmount);
 
         }
+    }
+
+    private String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
     }
 
     private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
