@@ -1055,7 +1055,7 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
-        originalAmount: iterator?.invoice?.originalAmount
+        originalAmount: iterator?.invoice?.originalAmount ? Number.parseFloat(iterator?.invoice?.originalAmount).toFixed(2) : 0,
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
@@ -1265,7 +1265,6 @@ async function saveBooking(item: { [key: string]: any }) {
     item.invoice = props.selectedInvoice
   }
 
-  console.log(props.nightTypeRequired);
   if (!props.isCreationDialog) {
     await props.getInvoiceAgency(props?.invoiceObj?.agency?.id)
     if (props.nightTypeRequired && !item?.nightType?.id) {
