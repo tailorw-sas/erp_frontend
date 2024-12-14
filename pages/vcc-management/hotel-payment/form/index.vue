@@ -5,6 +5,7 @@ import type { Ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import ContextMenu from 'primevue/contextmenu'
 import { v4 } from 'uuid'
+import { z } from 'zod'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
@@ -116,6 +117,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-6',
     headerClass: 'mb-1',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 

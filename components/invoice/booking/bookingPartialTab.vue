@@ -637,6 +637,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-9',
     headerClass: 'mb-1',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 

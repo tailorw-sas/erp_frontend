@@ -439,6 +439,7 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ])
 

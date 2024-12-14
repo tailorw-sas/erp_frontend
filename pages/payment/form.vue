@@ -589,6 +589,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Remark',
     dataType: 'text',
     class: 'field col-12 md:col-3',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 
   // {
@@ -623,6 +624,7 @@ const fieldPaymentDetails = ref<FieldDefinitionType[]>([
     header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ])
 
@@ -775,6 +777,7 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ])
 
