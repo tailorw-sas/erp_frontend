@@ -6,6 +6,7 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,6 +50,7 @@ public class PaymentResponse implements IResponse {
     private EAttachment eAttachment;
     private boolean paymentSupport;
     private boolean createByCredit;
+    private ImportType importType;
 //    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
     public PaymentResponse(PaymentDto dto) {
@@ -77,6 +79,7 @@ public class PaymentResponse implements IResponse {
         this.eAttachment = dto.getEAttachment();
         this.paymentSupport = dto.isPaymentSupport();
         this.createByCredit = dto.isCreateByCredit();
+        this.importType = dto.getImportType();
 //        if (dto.getAttachments() != null) {
 //            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
 //                attachments.add(new MasterPaymentAttachmentResponse(attachment));
