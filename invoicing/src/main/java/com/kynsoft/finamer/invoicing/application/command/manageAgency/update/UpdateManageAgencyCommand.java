@@ -35,6 +35,7 @@ public class UpdateManageAgencyCommand implements ICommand {
     private Boolean autoReconcile;
     private Boolean validateCheckout;
     private EGenerationType generationType;
+    private String bookingCouponFormat;
 
     @Override
     public ICommandMessage getMessage() {
