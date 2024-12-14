@@ -376,6 +376,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null, false,
                 null, 0.0,0);
         invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
+
         if (status.compareTo(EInvoiceStatus.RECONCILED) == 0) {
             invoiceDto = this.service.changeInvoiceStatus(invoiceDto, invoiceStatus);
         }
