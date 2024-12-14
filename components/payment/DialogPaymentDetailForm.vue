@@ -314,7 +314,8 @@ async function loadDefaultsValues() {
         const decimalSchema = z.object(
           {
             remark: z
-              .string()
+              .string().trim()
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -326,6 +327,7 @@ async function loadDefaultsValues() {
             remark: z
               .string()
               .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -365,6 +367,7 @@ async function loadDefaultsValues() {
             remark: z
               .string()
               .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -378,7 +381,8 @@ async function loadDefaultsValues() {
         const decimalSchema = z.object(
           {
             remark: z
-              .string()
+              .string().trim()
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -390,6 +394,7 @@ async function loadDefaultsValues() {
             remark: z
               .string()
               .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -406,7 +411,8 @@ async function loadDefaultsValues() {
         const decimalSchema = z.object(
           {
             remark: z
-              .string()
+              .string().trim()
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -416,8 +422,9 @@ async function loadDefaultsValues() {
         const decimalSchema = z.object(
           {
             remark: z
-              .string()
+              .string().trim()
               .min(item.value.transactionType.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${item.value.transactionType.minNumberOfCharacter} characters.` })
+              .max(255, 'Maximum 255 characters')
           }
         )
         updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -494,7 +501,8 @@ function processValidation($event: any, data: any) {
       const decimalSchema = z.object(
         {
           remark: z
-            .string()
+            .string().trim()
+            .max(255, 'Maximum 255 characters')
         }
       )
       updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -504,8 +512,9 @@ function processValidation($event: any, data: any) {
       const decimalSchema = z.object(
         {
           remark: z
-            .string()
+            .string().trim()
             .min($event.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${$event.minNumberOfCharacter} characters.` })
+            .max(255, 'Maximum 255 characters')
         }
       )
       updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -539,7 +548,8 @@ function processValidation($event: any, data: any) {
     const decimalSchema = z.object(
       {
         remark: z
-          .string()
+          .string().trim()
+          .max(255, 'Maximum 255 characters')
       }
     )
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -549,8 +559,9 @@ function processValidation($event: any, data: any) {
     const decimalSchema = z.object(
       {
         remark: z
-          .string()
+          .string().trim()
           .min($event.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${data.transactionType.minNumberOfCharacter} characters.` })
+          .max(255, 'Maximum 255 characters')
       }
     )
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -560,7 +571,8 @@ function processValidation($event: any, data: any) {
     const decimalSchema = z.object(
       {
         remark: z
-          .string()
+          .string().trim()
+          .max(255, 'Maximum 255 characters')
       }
     )
     updateFieldProperty(props.fields, 'remark', 'validation', decimalSchema.shape.remark)
