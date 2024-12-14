@@ -54,6 +54,8 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                 update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(),
                 update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(),
+                update::setUpdate);
 
         UpdateIfNotNull.updateEntity(dto::setClient, command.getClient(), dto.getClient() != null ? dto.getClient().getId() : null, update::setUpdate,
                 clientService::findById);

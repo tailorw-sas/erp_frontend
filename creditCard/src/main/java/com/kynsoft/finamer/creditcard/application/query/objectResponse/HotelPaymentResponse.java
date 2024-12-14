@@ -26,6 +26,21 @@ public class HotelPaymentResponse implements IResponse {
     private double netAmount;
     private ManagePaymentTransactionStatusResponse status;
     private String remark;
+    private boolean hasAttachments;
+
+    public HotelPaymentResponse(HotelPaymentDto dto, boolean hasAttachments) {
+        this.id = dto.getId();
+        this.hotelPaymentId = dto.getHotelPaymentId();
+        this.transactionDate = dto.getTransactionDate();
+        this.manageHotel = dto.getManageHotel() != null ? new ManageHotelResponse(dto.getManageHotel()) : null;
+        this.manageBankAccount = dto.getManageBankAccount() != null ? new ManageBankAccountResponse(dto.getManageBankAccount()) : null;
+        this.amount = dto.getAmount();
+        this.commission = dto.getCommission();
+        this.netAmount = dto.getNetAmount();
+        this.status = dto.getStatus() != null ? new ManagePaymentTransactionStatusResponse(dto.getStatus()) : null;
+        this.remark = dto.getRemark();
+        this.hasAttachments = hasAttachments;
+    }
 
     public HotelPaymentResponse(HotelPaymentDto dto) {
         this.id = dto.getId();

@@ -102,7 +102,7 @@ public class HotelPaymentServiceImpl implements IHotelPaymentService {
     private PaginatedResponse getPaginatedResponse(Page<HotelPayment> data) {
         List<HotelPaymentResponse> responseList = new ArrayList<>();
         for (HotelPayment entity : data.getContent()) {
-            responseList.add(new HotelPaymentResponse(entity.toAggregate()));
+            responseList.add(new HotelPaymentResponse(entity.toAggregate(), entity.getHasAttachments()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());

@@ -13,7 +13,10 @@ import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
@@ -25,6 +28,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -465,6 +469,39 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public boolean existManageInvoiceByInvoiceId(long invoiceId) {
         return repositoryQuery.existsByInvoiceId(invoiceId);
+    }
+
+    @Override
+    public ManageInvoiceDto changeInvoiceStatus(ManageInvoiceDto dto, ManageInvoiceStatusDto status) {
+        if (status.isReconciledStatus()) {
+            StringBuilder errorList = new StringBuilder("The following Hotel Booking Numbers do not match: ");
+            String couponFormat = dto.getAgency().getBookingCouponFormat();
+            if (!AgencyCouponFormatUtils.agencyCouponFormatIsValid(couponFormat)) {
+                throw new BusinessNotFoundException(
+                        new GlobalBusinessException(
+                                DomainErrorMessage.BOOKING_COUPON_FORMAT_NOT_VALID,
+                                new ErrorField("bookingCouponFormat", DomainErrorMessage.BOOKING_COUPON_FORMAT_NOT_VALID.getReasonPhrase())));
+            }
+
+            boolean valid = true;
+            List<ManageBookingDto> bookings = dto.getBookings();
+            for (ManageBookingDto bookingDto : bookings) {
+                if (!AgencyCouponFormatUtils.validateCode(bookingDto.getHotelBookingNumber(), couponFormat)) {
+                    valid = false;
+                    errorList.append(" " + bookingDto.getHotelBookingNumber() + ",");
+                }
+            }
+            errorList.replace(errorList.length() - 1, errorList.length(), ".");
+            if (!valid) {
+                throw new BusinessNotFoundException(
+                        new GlobalBusinessException(
+                                DomainErrorMessage.HOTEL_BOOKING_NUMBER_NOT_VALID,
+                                new ErrorField("hotelBookingNumber", errorList.toString())));
+            }
+            dto.setStatus(EInvoiceStatus.RECONCILED);
+            dto.setManageInvoiceStatus(status);
+        }
+        return dto;
     }
 
 }

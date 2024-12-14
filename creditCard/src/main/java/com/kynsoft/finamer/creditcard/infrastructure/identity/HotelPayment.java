@@ -65,6 +65,9 @@ public class HotelPayment {
 
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean hasAttachments;
+
     public HotelPayment(HotelPaymentDto dto){
         this.id = dto.getId();
         this.transactionDate = dto.getTransactionDate();
@@ -108,5 +111,11 @@ public class HotelPayment {
                 remark,
                 null, null
         );
+    }
+
+    @PostLoad
+    public void initDefaultValue() {
+        hasAttachments = (attachments != null && !attachments.isEmpty());
+        transactionDate = transactionDate != null ? transactionDate : createdAt;
     }
 }
