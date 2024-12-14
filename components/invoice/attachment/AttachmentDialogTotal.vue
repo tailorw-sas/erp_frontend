@@ -2,6 +2,7 @@
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { v4 } from 'uuid'
+import { watch } from 'vue'
 import AttachmentHistoryTotal from './AttachmentHistoryTotal.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container } from '~/components/form/EditFormV2WithContainer'
@@ -9,7 +10,6 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
-import {watch} from "vue";
 
 const props = defineProps({
 
@@ -178,7 +178,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'textarea',
     class: 'field col-12 ',
     headerClass: 'mb-1',
-
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 

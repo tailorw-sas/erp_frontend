@@ -161,7 +161,7 @@ const Fields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
+        validation: z.string().trim().max(255, 'Maximum 255 characters')
       },
 
     ],
@@ -207,7 +207,7 @@ const IncomeAttachmentFields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
+        validation: z.string().trim().max(255, 'Maximum 255 characters')
       },
 
     ],
