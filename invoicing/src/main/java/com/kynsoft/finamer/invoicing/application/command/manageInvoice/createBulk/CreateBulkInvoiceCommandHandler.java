@@ -354,13 +354,13 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
                 || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
-            //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.SENT
+
             invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         }
 
         if (status.equals(EInvoiceStatus.PROCECSED) && !attachmentDtos.isEmpty()) {
             status = EInvoiceStatus.RECONCILED;
-            //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.RECONCILED
+
             invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         }
         LocalDate dueDate = command.getInvoiceCommand().getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
@@ -376,6 +376,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null, false,
                 null, 0.0,0);
         invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
+        if (status.compareTo(EInvoiceStatus.RECONCILED) == 0) {
+            invoiceDto = this.service.changeInvoiceStatus(invoiceDto, invoiceStatus);
+        }
         ManageInvoiceDto created = service.create(invoiceDto);
 
         command.setInvoiceId(created.getInvoiceId());
