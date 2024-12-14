@@ -1205,13 +1205,6 @@ function searchAndFilter() {
   getList()
 }
 
-function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp.value))
-  filterToSearch.value.criteria = ENUM_FILTER[0]
-  getList()
-}
-
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   const objFilter = parseFilter?.find((item: IFilter) => item?.key === 'agencyType.id')
@@ -3364,7 +3357,8 @@ async function processValidation($event: any) {
     const decimalSchema = z.object(
       {
         remark: z
-          .string()
+          .string().trim()
+          .max(255, 'Maximum 255 characters')
       }
     )
     updateFieldProperty(fields, 'remark', 'validation', decimalSchema.shape.remark)
@@ -3373,12 +3367,49 @@ async function processValidation($event: any) {
     const decimalSchema = z.object(
       {
         remark: z
-          .string()
+          .string().trim()
           .min($event.minNumberOfCharacter, { message: `The field "Remark" should have a minimum of ${$event.minNumberOfCharacter} characters.` })
+          .max(255, 'Maximum 255 characters')
       }
     )
     updateFieldProperty(fields, 'remark', 'validation', decimalSchema.shape.remark)
   }
+}
+
+async function clearFilterToSearch() {
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp.value))
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+}
+
+async function loadDefaultsConfig() {
+  await clearFilterToSearch()
+
+  startOfMonth.value = getMonthStartAndEnd(new Date()).startOfMonth
+  endOfMonth.value = getMonthStartAndEnd(new Date()).endOfMonth
+  filterToSearch.value.from = dayjs(startOfMonth.value).format('YYYY-MM-DD')
+  filterToSearch.value.to = dayjs(endOfMonth.value).format('YYYY-MM-DD')
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  const objQueryToSearch = {
+    query: '',
+    keys: ['name', 'code'],
+  }
+  await getStatusList(objApis.value.status.moduleApi, objApis.value.status.uriApi, objQueryToSearch)
+  filterToSearch.value.status = statusItemsList.value.filter((item: ListItemForStatus) => item.applied === true || item.confirmed === true)
+
+  const filterForEmployee: FilterCriteria[] = [
+    {
+      key: 'status',
+      logicalOperation: 'AND',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+    },
+  ]
+  await getEmployeeList('settings', 'manage-employee', {
+    query: '',
+    keys: ['name', 'code'],
+  }, filterForEmployee)
+  await getList()
 }
 
 // -------------------------------------------------------------------------------------------------------
@@ -3437,33 +3468,7 @@ onMounted(async () => {
   assingFunctionsToExportMenuInItemMenuList()
   assingFuntionsForPrint()
 
-  startOfMonth.value = getMonthStartAndEnd(new Date()).startOfMonth
-  endOfMonth.value = getMonthStartAndEnd(new Date()).endOfMonth
-  filterToSearch.value.from = dayjs(startOfMonth.value).format('YYYY-MM-DD')
-  filterToSearch.value.to = dayjs(endOfMonth.value).format('YYYY-MM-DD')
-  filterToSearch.value.criteria = ENUM_FILTER[0]
-  // if (useRuntimeConfig().public.loadTableData) {
-  // }
-  await getList()
-  const objQueryToSearch = {
-    query: '',
-    keys: ['name', 'code'],
-  }
-  await getStatusList(objApis.value.status.moduleApi, objApis.value.status.uriApi, objQueryToSearch)
-  filterToSearch.value.status = statusItemsList.value.filter((item: ListItemForStatus) => item.applied === true || item.confirmed === true)
-
-  const filterForEmployee: FilterCriteria[] = [
-    {
-      key: 'status',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'ACTIVE',
-    },
-  ]
-  await getEmployeeList('settings', 'manage-employee', {
-    query: '',
-    keys: ['name', 'code'],
-  }, filterForEmployee)
+  await loadDefaultsConfig()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -4011,7 +4016,7 @@ onMounted(async () => {
                 outlined
                 class="p-button-lg w-3rem h-3rem"
                 icon="pi pi-filter-slash"
-                @click="clearFilterToSearch"
+                @click="loadDefaultsConfig"
               />
             </div>
           </div>
