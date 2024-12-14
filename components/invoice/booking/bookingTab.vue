@@ -1721,7 +1721,7 @@ const columnsPaymentDetailsApplied = ref<IColumn[]>([
 ])
 
 const optionsPaymentDetailsApplied = ref({
-  tableName: 'Payment Details',
+  tableName: 'Payment Details Applied',
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice/search-payment',
   expandableRows: false,
@@ -2018,7 +2018,7 @@ onMounted(() => {
         <div class="flex justify-content-between w-full">
           <div class="flex align-items-center">
             <h5 class="m-0">
-              Payment Details
+              Payment Details Applied
             </h5>
           </div>
           <div class="flex align-items-center">
