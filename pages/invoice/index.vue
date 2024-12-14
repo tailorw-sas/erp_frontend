@@ -296,7 +296,7 @@ const invoiceAllContextMenuItems = ref([
       showItem: false,
     },
     {
-      label: 'Payments',
+      label: 'Payments Details Applied',
       icon: 'pi pi-money-bill',
       width: '24px',
       height: '24px',
@@ -1981,7 +1981,7 @@ function onRowRightClick(event: any) {
 
   // Payments
   if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
-    findMenuItemByLabelSetShow('Payments', invoiceContextMenuItems.value, true)
+    findMenuItemByLabelSetShow('Payments Details Applied', invoiceContextMenuItems.value, true)
   }
 
   // Resend
