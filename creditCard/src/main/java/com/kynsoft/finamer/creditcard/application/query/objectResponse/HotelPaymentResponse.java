@@ -54,4 +54,5 @@ public class HotelPaymentResponse implements IResponse {
         this.status = dto.getStatus() != null ? new ManagePaymentTransactionStatusResponse(dto.getStatus()) : null;
         this.remark = dto.getRemark();
     }
+
 }
