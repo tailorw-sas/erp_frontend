@@ -80,6 +80,13 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
             defaultAttachment = true;
         }
         if (defaultAttachment) {
+            boolean reconciled = false;
+            if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
+                ManageInvoiceStatusDto reconcileStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
+                invoiceDto = this.manageInvoiceService.changeInvoiceStatus(invoiceDto, reconcileStatus);
+                reconciled = true;
+            }
+
             Long attachmentId = attachmentService.create(new ManageAttachmentDto(
                     command.getId(),
                     null,
@@ -94,15 +101,11 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     resourceTypeDto,
                     false
             ));
-
-            if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
-                invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
-                ManageInvoiceStatusDto invoiceStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-                invoiceDto.setManageInvoiceStatus(invoiceStatus);
+            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
+            if (reconciled){
                 this.manageInvoiceService.update(invoiceDto);
                 this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
             }
-            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
         } else {
             throw new BusinessException(
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
@@ -136,6 +139,5 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         dto.setInvoiceStatus(invoiceDto.getStatus());
 
         this.invoiceStatusHistoryService.create(dto);
-
     }
 }

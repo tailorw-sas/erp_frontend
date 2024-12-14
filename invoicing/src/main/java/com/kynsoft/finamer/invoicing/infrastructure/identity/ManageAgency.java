@@ -82,6 +82,8 @@ public class ManageAgency {
 
     private Boolean validateCheckout;
 
+    private String bookingCouponFormat;
+
     public ManageAgency(ManageAgencyDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -100,6 +102,7 @@ public class ManageAgency {
         this.creditDay = dto.getCreditDay();
         this.autoReconcile = dto.getAutoReconcile();
         this.validateCheckout = dto.getValidateCheckout();
+        this.bookingCouponFormat= dto.getBookingCouponFormat();
     }
 
     public ManageAgencyDto toAggregate() {
@@ -113,7 +116,8 @@ public class ManageAgency {
                 city,
                 creditDay,
                 autoReconcile,
-                validateCheckout
+                validateCheckout,
+                bookingCouponFormat
         );
     }
 
@@ -128,7 +132,8 @@ public class ManageAgency {
                 city,
                 creditDay,
                 autoReconcile,
-                validateCheckout
+                validateCheckout,
+                bookingCouponFormat
         );
     }
 }

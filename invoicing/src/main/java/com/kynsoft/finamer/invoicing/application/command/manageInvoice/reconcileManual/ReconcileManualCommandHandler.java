@@ -50,6 +50,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
 
     @Override
     public void handle(ReconcileManualCommand command) {
+        ManageInvoiceStatusDto reconcileStatus = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         List<ReconcileManualErrorResponse> errorResponse = new ArrayList<>();
         for (UUID id : command.getInvoices()) {
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(id);
@@ -129,9 +130,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                     false
             );
             attachments.add(attachmentDto);
-            invoiceDto.setStatus(EInvoiceStatus.RECONCILED);
-            ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-            invoiceDto.setManageInvoiceStatus(invoiceStatusDto);
+            invoiceDto = this.invoiceService.changeInvoiceStatus(invoiceDto, reconcileStatus);
             this.invoiceService.update(invoiceDto);
             this.attachmentStatusHistoryService.create(attachmentDto, invoiceDto);
             this.invoiceStatusHistoryService.create(invoiceDto, command.getEmployeeName());
