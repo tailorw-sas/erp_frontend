@@ -800,7 +800,7 @@ onMounted(async () => {
       <div class="inline-flex align-items-center justify-content-center gap-2">
         <span class="font-bold white-space-nowrap">{{ header }}</span>
         <!-- <strong class="mx-2">-</strong>
-        <strong class="mr-1">Invoice:</strong>
+        <strong class="mr-1">Invoice Id:</strong>
         <strong>{{ selectedInvoiceObj.invoiceId }}</strong> -->
       </div>
     </template>
