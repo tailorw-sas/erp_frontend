@@ -948,8 +948,8 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator?.dueAmount || 0, 
-          invoiceAmount: iterator?.invoiceAmount || 0,
+          dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
+          invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
