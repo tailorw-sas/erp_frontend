@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,6 +32,11 @@ public class ManageResourceType {
     private String code;
 
     private String name;
+    private String description;
+    private Status status;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean defaults;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean invoice;
@@ -47,11 +53,14 @@ public class ManageResourceType {
         this.name = dto.getName();
         this.code = dto.getCode();
         this.invoice = dto.isInvoice();
+        this.status = dto.getStatus();
+        this.defaults = dto.getDefaults();
+        this.description = dto.getDescription();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
-                id, code, name, invoice
+                id, code, name, description, status, defaults, invoice
         );
     }
 }
