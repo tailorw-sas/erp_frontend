@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.query.resourceType;
+package com.kynsoft.finamer.invoicing.application.query.resourceType.search;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;

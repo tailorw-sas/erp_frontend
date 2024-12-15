@@ -13,8 +13,8 @@ import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.sear
 import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.search.GetSearchManageAttachmentTypeResponse;
 import com.kynsoft.finamer.invoicing.application.query.managePaymentTransactionType.search.GetSearchManagePaymentTransactionTypeQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
-import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeQuery;
-import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeResponse;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeQuery;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.invoicing.domain.services.InvoiceReconcileImportService;
