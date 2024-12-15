@@ -10,34 +10,36 @@ import org.springframework.stereotype.Component;
 @Component
 public class CreateReplicateCommandHandler implements ICommandHandler<CreateReplicateCommand> {
 
-   private final IManageResourceTypeService resourceTypeService;
-   private final ProducerReplicateResourceTypeService producerReplicateResourceTypeService;
+    private final IManageResourceTypeService resourceTypeService;
+    private final ProducerReplicateResourceTypeService producerReplicateResourceTypeService;
 
-   
-
-
-
-    public CreateReplicateCommandHandler(IManageResourceTypeService resourceTypeService,  ProducerReplicateResourceTypeService producerReplicateResourceTypeService) {
-    this.resourceTypeService = resourceTypeService;
-    this.producerReplicateResourceTypeService = producerReplicateResourceTypeService;
-}
-
-
-
-
+    public CreateReplicateCommandHandler(IManageResourceTypeService resourceTypeService, ProducerReplicateResourceTypeService producerReplicateResourceTypeService) {
+        this.resourceTypeService = resourceTypeService;
+        this.producerReplicateResourceTypeService = producerReplicateResourceTypeService;
+    }
 
     @Override
     public void handle(CreateReplicateCommand command) {
         for (ObjectEnum object : command.getObjects()) {
             switch (object) {
-               
+
                 case MANAGE_RESOURCE_TYPE -> {
                     for (ResourceTypeDto paymentSourceDto : this.resourceTypeService.findAllToReplicate()) {
-                        this.producerReplicateResourceTypeService.create(new ReplicatePaymentResourceTypeKafka(paymentSourceDto.getId(), paymentSourceDto.getCode(), paymentSourceDto.getName(), paymentSourceDto.isInvoice(), paymentSourceDto.isVcc(), paymentSourceDto.getStatus().name()));
+                        this.producerReplicateResourceTypeService.create(new ReplicatePaymentResourceTypeKafka(
+                                paymentSourceDto.getId(),
+                                paymentSourceDto.getCode(),
+                                paymentSourceDto.getName(),
+                                paymentSourceDto.getDescription(),
+                                paymentSourceDto.isInvoice(),
+                                paymentSourceDto.getDefaults(),
+                                paymentSourceDto.isVcc(),
+                                paymentSourceDto.getStatus().name()
+                        ));
                     }
                 }
-                
-                default -> System.out.println("Número inválido. Por favor, intenta de nuevo con un número del 1 al 7.");
+
+                default ->
+                    System.out.println("Número inválido. Por favor, intenta de nuevo con un número del 1 al 7.");
             }
         }
     }
