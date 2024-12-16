@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
@@ -130,7 +131,21 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                     false
             );
             attachments.add(attachmentDto);
-            invoiceDto = this.invoiceService.changeInvoiceStatus(invoiceDto, reconcileStatus);
+            try {
+                invoiceDto = this.invoiceService.changeInvoiceStatus(invoiceDto, reconcileStatus);
+            } catch (BusinessNotFoundException e){
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto,
+                        e.getBrokenRule().getErrorField().getMessage()
+                ));
+                continue;
+            } catch (Exception e) {
+                errorResponse.add(new ReconcileManualErrorResponse(
+                        invoiceDto,
+                        "The attachment could not be added."
+                ));
+                continue;
+            }
             this.invoiceService.update(invoiceDto);
             this.attachmentStatusHistoryService.create(attachmentDto, invoiceDto);
             this.invoiceStatusHistoryService.create(invoiceDto, command.getEmployeeName());
