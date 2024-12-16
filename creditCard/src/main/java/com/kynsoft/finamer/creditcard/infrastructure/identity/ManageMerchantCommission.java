@@ -4,6 +4,7 @@ import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,9 +44,12 @@ public class ManageMerchantCommission implements Serializable {
     @Enumerated(EnumType.STRING)
     private CalculationType calculationType;
 
+    private String description;
+
     private LocalDate fromDate;
+
+    @Column(nullable = true)
     private LocalDate toDate;
-    private String status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -54,15 +58,16 @@ public class ManageMerchantCommission implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    private Boolean deleted = false;
-    private LocalDateTime deletedAt;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     public ManageMerchantCommission(ManageMerchantCommissionDto dto) {
         this.id = dto.getId();
-        this.managerMerchant = new ManageMerchant(dto.getManagerMerchant());
+        this.managerMerchant = new ManageMerchant(dto.getManageMerchant());
         this.manageCreditCartType = new ManageCreditCardType(dto.getManageCreditCartType());
         this.commission = dto.getCommission();
         this.calculationType = dto.getCalculationType();
+        this.description = dto.getDescription();
         this.fromDate = dto.getFromDate();
         this.toDate = dto.getToDate();
         this.status = dto.getStatus();
@@ -73,7 +78,7 @@ public class ManageMerchantCommission implements Serializable {
                 id,
                 managerMerchant != null ? managerMerchant.toAggregate() : null,
                 manageCreditCartType != null ? manageCreditCartType.toAggregate() : null,
-                commission, calculationType, fromDate, toDate, status);
+                commission, calculationType, description, fromDate, toDate,status);
     }
 
 }
