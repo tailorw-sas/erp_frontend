@@ -160,6 +160,7 @@ async function clearForm() {
 }
 
 async function onChangeFile(event: any) {
+  listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
     invoiceFile.value = inputFile.value.name
@@ -316,7 +317,13 @@ onMounted(async () => {
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input ref="fileUpload" type="file" style="display: none;" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="onChangeFile($event)">
+                    <input
+                      ref="fileUpload"
+                      type="file"
+                      style="display: none;"
+                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                      @change="onChangeFile($event)"
+                    >
                   </div>
                 </div>
               </div>
