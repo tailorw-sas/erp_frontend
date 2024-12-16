@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.resourceType.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentResourceTypeKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdatePaymentResourceTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
@@ -12,7 +13,7 @@ import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceDefaultMust
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceInvoiceMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.resourceType.ResourceVccMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerUpdateResourceTypeService;
+import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.resourceType.ProducerReplicateResourceTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -22,9 +23,9 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
     private final IManageResourceTypeService service;
 
-    private final ProducerUpdateResourceTypeService producer;
+    private final ProducerReplicateResourceTypeService producer;
 
-    public UpdateManageResourceTypeCommandHandler(IManageResourceTypeService service, ProducerUpdateResourceTypeService producer) {
+    public UpdateManageResourceTypeCommandHandler(IManageResourceTypeService service, ProducerReplicateResourceTypeService producer) {
         this.service = service;
         this.producer = producer;
     }
@@ -55,7 +56,16 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
         if (update.getUpdate() > 0) {
             this.service.update(resourceTypeDto);
-            this.producer.update(new UpdatePaymentResourceTypeKafka(resourceTypeDto.getId(), resourceTypeDto.getName(), resourceTypeDto.isInvoice(), resourceTypeDto.isVcc(), resourceTypeDto.getStatus().name()));
+            this.producer.create(new ReplicatePaymentResourceTypeKafka(
+                    resourceTypeDto.getId(), 
+                    resourceTypeDto.getCode(), 
+                    resourceTypeDto.getName(), 
+                    resourceTypeDto.getDescription(),
+                    resourceTypeDto.isInvoice(), 
+                    resourceTypeDto.getDefaults(),
+                    resourceTypeDto.isVcc(), 
+                    resourceTypeDto.getStatus().name()
+            ));
         }
 
     }

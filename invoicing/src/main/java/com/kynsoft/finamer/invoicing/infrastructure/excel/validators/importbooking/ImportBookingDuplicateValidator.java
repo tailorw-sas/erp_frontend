@@ -31,16 +31,21 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
             //errorFieldList.add(new ErrorField("Hotel Booking No"," Hotel Booking No. must be not empty"));
             return false;
         }
-        String validate = obj.getHotelBookingNumber()
-                        .split("\\s+")[obj.getHotelBookingNumber()
-                        .split("\\s+").length - 1];
+//        String validate = obj.getHotelBookingNumber()
+//                        .split("\\s+")[obj.getHotelBookingNumber()
+//                        .split("\\s+").length - 1];
         ManageHotelDto hotel = manageHotelService.findByCode(obj.getManageHotelCode());
         //if (service.existByBookingHotelNumber(obj.getHotelBookingNumber()) ||
-        if (service.existsByExactLastChars(validate, hotel.getId()) ||
+        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId()) ||
                 cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
             errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported"));
             return false;
         }
         return true;
     }
+
+    private String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
+    }
+
 }

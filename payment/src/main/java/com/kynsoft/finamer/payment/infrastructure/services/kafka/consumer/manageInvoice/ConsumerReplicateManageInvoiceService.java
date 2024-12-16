@@ -32,13 +32,12 @@ public class ConsumerReplicateManageInvoiceService {
     private final IManageHotelService manageHotelService;
     private final IManageAgencyService manageAgencyService;
 
-
     public ConsumerReplicateManageInvoiceService(IManageInvoiceService service,
-                                                 IMediator mediator,
-                                                 IManageHotelService hotelService,
-                                                 IManageBookingService serviceBookingService,
-                                                 IManageHotelService manageHotelService,
-                                                 IManageAgencyService manageAgencyService) {
+            IMediator mediator,
+            IManageHotelService hotelService,
+            IManageBookingService serviceBookingService,
+            IManageHotelService manageHotelService,
+            IManageAgencyService manageAgencyService) {
         this.mediator = mediator;
         this.service = service;
         this.hotelService = hotelService;
@@ -49,8 +48,46 @@ public class ConsumerReplicateManageInvoiceService {
 
     @KafkaListener(topics = "finamer-replicate-manage-invoice", groupId = "payment-entity-replica")
     public void listen(ManageInvoiceKafka objKafka) {
-//        try {
         List<ManageBookingDto> bookingDtos = new ArrayList<>();
+        this.createBookingList(objKafka, bookingDtos);
+
+        ManageHotelDto manageHotelDto = manageHotelService.findById(objKafka.getHotel());
+        ManageAgencyDto manageAgencyDto = manageAgencyService.findById(objKafka.getAgency());
+
+        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
+                objKafka.getId(),
+                objKafka.getInvoiceId(),
+                objKafka.getInvoiceNo(),
+                deleteHotelInfo(objKafka.getInvoiceNumber()),
+                EInvoiceType.valueOf(objKafka.getInvoiceType()),
+                objKafka.getInvoiceAmount(),
+                bookingDtos,
+                objKafka.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
+                objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
+                objKafka.getInvoiceDate(),
+                manageHotelDto,
+                manageAgencyDto,
+                objKafka.getAutoRec()
+        );
+
+        this.service.create(invoiceDto);
+
+        if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
+            ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
+            if (!hotelDto.getAutoApplyCredit()) {
+                this.automaticProcessApplyPayment(objKafka, invoiceDto);
+            } else {
+                List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
+                this.addAttachment(objKafka, attachmentKafkas);
+                this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
+            }
+        }
+        if (invoiceDto.getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
+            this.automaticProcessApplyPayment(objKafka, invoiceDto);
+        }
+    }
+
+    private void createBookingList(ManageInvoiceKafka objKafka, List<ManageBookingDto> bookingDtos) {
         if (objKafka.getBookings() != null) {
             for (ManageBookingKafka booking : objKafka.getBookings()) {
                 bookingDtos.add(new ManageBookingDto(
@@ -73,76 +110,35 @@ public class ConsumerReplicateManageInvoiceService {
                 ));
             }
         }
-        ManageHotelDto manageHotelDto = manageHotelService.findById(objKafka.getHotel());
-        ManageAgencyDto manageAgencyDto = manageAgencyService.findById(objKafka.getAgency());
-
-        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
-                objKafka.getId(),
-                objKafka.getInvoiceId(),
-                objKafka.getInvoiceNo(),
-                deleteHotelInfo(objKafka.getInvoiceNumber()),
-                EInvoiceType.valueOf(objKafka.getInvoiceType()),
-                objKafka.getInvoiceAmount(),
-                bookingDtos,
-                objKafka.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
-                objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
-                objKafka.getInvoiceDate(),
-                manageHotelDto,
-                manageAgencyDto,
-                objKafka.getAutoRec()
-        );
-
-        this.service.create(invoiceDto);
-
-            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
-                ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
-                if (!hotelDto.getAutoApplyCredit()) {
-
-                List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
-                if (objKafka.getAttachments() != null) {
-                    for (AttachmentKafka attDto : objKafka.getAttachments()) {
-                        attachmentKafkas.add(new CreateAttachmentRequest(
-                                Status.ACTIVE,
-                                attDto.getEmployee(),
-                                null,
-                                null,
-                                attDto.getFileName(),
-                                "",
-                                attDto.getPath(),
-                                attDto.getRemark(),
-                                attDto.isSupport()
-                        ));
-                    }
-                }
-
-                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, true, mediator));
-                } else {
-                    List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
-                    if (objKafka.getAttachments() != null) {
-                        for (AttachmentKafka attDto : objKafka.getAttachments()) {
-                            attachmentKafkas.add(new CreateAttachmentRequest(
-                                    Status.ACTIVE,
-                                    attDto.getEmployee(),
-                                    null,
-                                    null,
-                                    attDto.getFileName(),
-                                    "",
-                                    attDto.getPath(),
-                                    attDto.getRemark(),
-                                    attDto.isSupport()
-                            ));
-                        }
-                    }
-                    this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
-                }
-            }
-//        } catch (Exception ex) {
-//            Logger.getLogger(ConsumerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
 
     private String deleteHotelInfo(String input) {
         return input.replaceAll("-(.*?)-", "-");
     }
 
+    private void addAttachment(ManageInvoiceKafka objKafka, List<CreateAttachmentRequest> attachmentKafkas) {
+        if (objKafka.getAttachments() != null) {
+            for (AttachmentKafka attDto : objKafka.getAttachments()) {
+                attachmentKafkas.add(new CreateAttachmentRequest(
+                        Status.ACTIVE,
+                        attDto.getEmployee(),
+                        null,
+                        null,
+                        attDto.getFileName(),
+                        "",
+                        attDto.getPath(),
+                        attDto.getRemark(),
+                        attDto.isSupport()
+                ));
+            }
+        }
+    }
+
+    private void automaticProcessApplyPayment(ManageInvoiceKafka objKafka, ManageInvoiceDto invoiceDto) {
+
+        List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
+        this.addAttachment(objKafka, attachmentKafkas);
+
+        this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, true, mediator));
+    }
 }

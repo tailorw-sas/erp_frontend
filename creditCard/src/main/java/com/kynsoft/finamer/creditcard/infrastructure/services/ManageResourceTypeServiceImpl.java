@@ -98,12 +98,7 @@ public class ManageResourceTypeServiceImpl implements IManageResourceTypeService
 
     private PaginatedResponse getPaginatedResponse(Page<ManageResourceType> data) {
         List<GetSearchResourceTypeResponse> responses = data.stream()
-                .map(resourceType -> GetSearchResourceTypeResponse.builder()
-                        .name(resourceType.getName())
-                        .code(resourceType.getCode())
-                        .id(resourceType.getId())
-                        .status(resourceType.getStatus())
-                        .build()
+                .map(resourceType -> new GetSearchResourceTypeResponse(resourceType.toAggregate())
                 ).toList();
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
     }
