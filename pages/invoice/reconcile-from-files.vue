@@ -43,6 +43,7 @@ const fileNames = computed(() => {
 })
 // VARIABLES -----------------------------------------------------------------------------------------
 async function onChangeAttachFile(event: any) {
+  listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
     const files: File[] = Array.from(event.target.files)
     const pdfFiles = files.filter(file => file.type === 'application/pdf')

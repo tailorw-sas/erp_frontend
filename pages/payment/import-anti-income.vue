@@ -148,6 +148,7 @@ async function clearForm() {
 }
 
 async function onChangeFile(event: any) {
+  listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
     importModel.value.importFile = inputFile.value.name
@@ -157,6 +158,7 @@ async function onChangeFile(event: any) {
 }
 
 async function onChangeAttachFile(event: any) {
+  listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
     attachFile.value = event.target.files[0]
     importModel.value.attachFile = attachFile.value.name
