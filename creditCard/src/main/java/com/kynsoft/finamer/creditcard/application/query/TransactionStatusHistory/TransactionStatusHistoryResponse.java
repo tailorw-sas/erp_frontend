@@ -18,6 +18,7 @@ public class TransactionStatusHistoryResponse implements IResponse {
     private LocalDateTime createdAt;
     private String employee;
     private TransactionStatusToStatusHistoryResponse transactionStatus;
+    private Long historyId;
 
     public TransactionStatusHistoryResponse(TransactionStatusHistoryDto dto){
         this.id = dto.getId();
@@ -26,5 +27,6 @@ public class TransactionStatusHistoryResponse implements IResponse {
         this.createdAt = dto.getCreatedAt();
         this.employee = dto.getEmployee();
         this.transactionStatus = dto.getTransactionStatus() != null ? new TransactionStatusToStatusHistoryResponse(dto.getTransactionStatus()) : null;
+        this.historyId = dto.getHistoryId();
     }
 }

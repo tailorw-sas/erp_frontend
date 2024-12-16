@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -41,6 +43,10 @@ public class TransactionStatusHistory implements Serializable {
 
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "serial", name = "transaction_history_gen_id")
+    @Generated(event = EventType.INSERT)
+    private Long historyId;
+
     public TransactionStatusHistory(TransactionStatusHistoryDto dto) {
         this.id = dto.getId();
         this.transaction = dto.getTransaction() != null ? new Transaction(dto.getTransaction()) : null;
@@ -56,7 +62,8 @@ public class TransactionStatusHistory implements Serializable {
                 description,
                 createdAt,
                 employee,
-                transactionStatus != null ? transactionStatus.toAggregate() : null
+                transactionStatus != null ? transactionStatus.toAggregate() : null,
+                historyId
         );
     }
 }

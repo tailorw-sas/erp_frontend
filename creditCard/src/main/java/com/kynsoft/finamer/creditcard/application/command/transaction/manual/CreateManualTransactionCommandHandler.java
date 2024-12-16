@@ -152,7 +152,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                 null,
                 command.getEmployee(),
-                transactionStatusDto
+                transactionStatusDto,
+                0L
         ));
     }
 

@@ -161,7 +161,8 @@ public class TransactionServiceImpl implements ITransactionService {
                     "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                     null,
                     employee,
-                    transactionStatusDto
+                    transactionStatusDto,
+                    0L
             ));
             transactionsDto.add(transactionDto);
         }
