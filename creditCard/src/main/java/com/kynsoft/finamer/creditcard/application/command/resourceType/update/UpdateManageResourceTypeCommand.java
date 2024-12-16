@@ -19,6 +19,15 @@ public class UpdateManageResourceTypeCommand implements ICommand {
     private boolean vcc;
     private Status status;
 
+    public static UpdateManageResourceTypeCommand fromRequest(UpdateManageResourceTypeRequest request, UUID id) {
+        return new UpdateManageResourceTypeCommand(
+                id,
+                request.getName(),
+                request.isVcc(),
+                request.getStatus()
+        );
+    }
+
     @Override
     public ICommandMessage getMessage() {
         return new UpdateManageResourceTypeMessage(id);
