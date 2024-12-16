@@ -2,36 +2,36 @@ package com.kynsoft.finamer.creditcard.application.command.manageMerchant.update
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
-import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 import java.util.function.Consumer;
 
 @Component
-public class UpdateManagerMerchantCommandHandler implements ICommandHandler<UpdateManagerMerchantCommand> {
+public class UpdateManageMerchantCommandHandler implements ICommandHandler<UpdateManageMerchantCommand> {
 
     private final IManageMerchantService service;
     private final IManagerB2BPartnerService serviceB2BPartner;
 
-
-    public UpdateManagerMerchantCommandHandler(IManageMerchantService service,
-                                               IManagerB2BPartnerService serviceB2BPartner) {
+    public UpdateManageMerchantCommandHandler(IManageMerchantService service,
+                                              IManagerB2BPartnerService serviceB2BPartner) {
         this.service = service;
         this.serviceB2BPartner = serviceB2BPartner;
     }
 
     @Override
-    public void handle(UpdateManagerMerchantCommand command) {
+    public void handle(UpdateManageMerchantCommand command) {
 
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manager Merchant ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Merchant ID cannot be null."));
 
         ManageMerchantDto test = this.service.findById(command.getId());
 
@@ -47,7 +47,6 @@ public class UpdateManagerMerchantCommandHandler implements ICommandHandler<Upda
         if (update.getUpdate() > 0) {
             this.service.update(test);
         }
-
     }
 
     private boolean updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {

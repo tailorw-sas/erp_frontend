@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UpdateManagerMerchantCommand implements ICommand {
+public class UpdateManageMerchantCommand implements ICommand {
 
     private UUID id;
     private String code;
@@ -19,17 +19,17 @@ public class UpdateManagerMerchantCommand implements ICommand {
     private Boolean defaultm;
     private Status status;
 
-    public UpdateManagerMerchantCommand(UUID id, String code, String description, UUID b2bPartner, Boolean defaultm, Status status) {
+    public UpdateManageMerchantCommand(UUID id, String code, String description, UUID b2bPartner, Boolean defaultm, Status status) {
         this.id = id;
-        this.code = code;
+        this.code=code;
         this.description = description;
         this.b2bPartner = b2bPartner;
         this.defaultm = defaultm;
         this.status = status;
     }
 
-    public static UpdateManagerMerchantCommand fromRequest(UpdateManagerMerchantRequest request, UUID id) {
-        return new UpdateManagerMerchantCommand(
+    public static UpdateManageMerchantCommand fromRequest(UpdateManageMerchantRequest request, UUID id) {
+        return new UpdateManageMerchantCommand(
                 id,
                 request.getCode(),
                 request.getDescription(),
@@ -41,6 +41,6 @@ public class UpdateManagerMerchantCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new UpdateManagerMerchantMessage(id);
+        return new UpdateManageMerchantMessage(id);
     }
 }

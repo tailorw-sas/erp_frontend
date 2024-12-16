@@ -6,13 +6,13 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-public class UpdateManagerMerchantMessage implements ICommandMessage {
+public class UpdateManageMerchantMessage implements ICommandMessage {
 
     private final UUID id;
 
-    private final String command = "UPDATE_MANAGER_MERCHANT";
+    private final String command = "UPDATE_MANAGE_MERCHANT";
 
-    public UpdateManagerMerchantMessage(UUID id) {
+    public UpdateManageMerchantMessage(UUID id) {
         this.id = id;
     }
 

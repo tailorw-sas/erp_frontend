@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UpdateManagerMerchantRequest {
+public class UpdateManageMerchantRequest {
     private String code;
     private String description;
     private UUID b2bPartner;

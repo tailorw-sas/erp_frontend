@@ -15,7 +15,7 @@ import com.kynsoft.finamer.creditcard.application.query.manageMerchantHotelEnrol
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantHotelEnrolle.search.GetSearchManageMerchantHotelEnrolleQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageTransactionStatus.search.GetSearchManageTransactionStatusQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageVCCTransactionType.search.GetManageVCCTransactionTypeQuery;
-import com.kynsoft.finamer.creditcard.application.query.managerMerchant.search.GetSearchManagerMerchantQuery;
+import com.kynsoft.finamer.creditcard.application.query.manageMerchant.search.GetSearchManageMerchantQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -94,7 +94,7 @@ public class NomenclatorsController {
     public ResponseEntity<?> merchants(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchManagerMerchantQuery query = new GetSearchManagerMerchantQuery(pageable, request.getFilter(), request.getQuery());
+        GetSearchManageMerchantQuery query = new GetSearchManageMerchantQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);

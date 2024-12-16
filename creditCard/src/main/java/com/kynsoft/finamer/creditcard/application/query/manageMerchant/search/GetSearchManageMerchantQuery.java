@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.query.managerMerchant.search;
+package com.kynsoft.finamer.creditcard.application.query.manageMerchant.search;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GetSearchManagerMerchantQuery implements IQuery {
+public class GetSearchManageMerchantQuery implements IQuery {
 
     private Pageable pageable;
     private List<FilterCriteria> filter;
