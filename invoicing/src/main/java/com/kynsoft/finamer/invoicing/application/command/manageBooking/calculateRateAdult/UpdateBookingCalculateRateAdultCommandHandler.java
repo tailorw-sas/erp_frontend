@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateAdult;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.utils.ScaleAmount;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,7 @@ public class UpdateBookingCalculateRateAdultCommandHandler implements ICommandHa
                 .mapToDouble(rate -> Optional.ofNullable(rate.getRateAdult())
                 .orElse(0.0))
                 .sum();
-        command.getBookingDto().setRateAdult(total);
+        command.getBookingDto().setRateAdult(ScaleAmount.scaleAmount(total));
     }
 
 }
