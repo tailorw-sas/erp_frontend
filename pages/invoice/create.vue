@@ -581,7 +581,7 @@ async function createItem(item: { [key: string]: any }) {
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error(`The Hotel amount field of Hotel Booking No.${booking.hotelBookingNumber} must be greater than 0 for this hotel`)
+        throw new Error(`The Hotel amount field of Hotel Booking No. ${booking.hotelBookingNumber} must be greater than 0 for this hotel`)
       }
 
       if (booking?.invoiceAmount !== 0) {
