@@ -20,6 +20,12 @@ public class CreateManageResourceTypeCommand implements ICommand {
     private boolean vcc;
     private Status status;
 
+    public static CreateManageResourceTypeCommand fromRequest(CreateManageResourceTypeRequest request, UUID id) {
+        return new CreateManageResourceTypeCommand(
+               id, request.getCode(), request.getName(), request.isVcc(), request.getStatus()
+        );
+    }
+
     @Override
     public ICommandMessage getMessage() {
         return new CreateManageResourceTypeMessage(id);
