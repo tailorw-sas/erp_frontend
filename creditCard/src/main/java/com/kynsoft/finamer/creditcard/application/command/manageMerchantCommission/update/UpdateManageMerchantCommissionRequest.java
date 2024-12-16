@@ -1,24 +1,18 @@
-package com.kynsoft.finamer.creditcard.domain.dto;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchantCommission.update;
 
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class ManageMerchantCommissionDto {
-
-    private UUID id;
-    private ManageMerchantDto manageMerchant;
-    private ManageCreditCardTypeDto manageCreditCartType;
+public class UpdateManageMerchantCommissionRequest {
+    private UUID managerMerchant;
+    private UUID manageCreditCartType;
     private Double commission;
     private CalculationType calculationType;
     private String description;
