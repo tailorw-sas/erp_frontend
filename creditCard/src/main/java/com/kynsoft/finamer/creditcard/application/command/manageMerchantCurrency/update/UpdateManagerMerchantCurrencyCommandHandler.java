@@ -9,6 +9,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManagerCurrencyDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantCurrencyDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.rules.managerMerchantCurrency.ManagerMerchantCurrencyMustBeUniqueByIdRule;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerCurrencyService;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerMerchantCurrencyService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
@@ -46,6 +47,9 @@ public class UpdateManagerMerchantCurrencyCommandHandler implements ICommandHand
         this.updateManagerMerchant(test::setManagerMerchant, command.getManagerMerchant(), test.getManagerMerchant().getId(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setValue, command.getValue(), test.getValue(), update::setUpdate);
+
+        RulesChecker.checkRule(new ManagerMerchantCurrencyMustBeUniqueByIdRule(this.serviceMerchantCurrency, command.getManagerMerchant(), command.getManagerCurrency(), command.getId()));
+        //UpdateIfNotNull.updateDouble(test::setValue, command.getValue(), test.getValue(), update::setUpdate);
 
         updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
         if (update.getUpdate() > 0) {
