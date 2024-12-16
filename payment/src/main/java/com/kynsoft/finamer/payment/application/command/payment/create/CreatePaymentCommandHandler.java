@@ -87,11 +87,12 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     public void handle(CreatePaymentCommand command) {
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentSource(), "paymentSource", "Payment Source ID cannot be null."));
+        ManagePaymentSourceDto paymentSourceDto = this.sourceService.findById(command.getPaymentSource());
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentStatus(), "paymentStatus", "Payment Status ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getClient(), "client", "Client ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAgency(), "agency", "Agency ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getHotel(), "hotel", "Hotel ID cannot be null."));
-        if (!command.isIgnoreBankAccount())//Se agrega esto con el objetivo de ignorar este check cuando se importa
+        if (!command.isIgnoreBankAccount() || !paymentSourceDto.getExpense())//Se agrega esto con el objetivo de ignorar este check cuando se importa
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "bankAccount", "Bank Account ID cannot be null."));
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAttachmentStatus(), "attachmentStatus", "Attachment Status ID cannot be null."));
@@ -113,7 +114,6 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         PaymentCloseOperationDto closeOperationDto = this.closeOperationService.findByHotelIds(hotelDto.getId());
         RulesChecker.checkRule(new CheckIfTransactionDateIsWithInRangeCloseOperationRule(command.getTransactionDate(), closeOperationDto.getBeginDate(), closeOperationDto.getEndDate()));
 
-        ManagePaymentSourceDto paymentSourceDto = this.sourceService.findById(command.getPaymentSource());
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(command.getPaymentStatus());
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
