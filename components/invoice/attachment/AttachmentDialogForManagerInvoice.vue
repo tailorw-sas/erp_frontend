@@ -100,8 +100,8 @@ const resourceTypeList = ref<any[]>([])
 const resourceTypeSelected = ref<any>(null)
 
 const confResourceTypeApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
 })
 
 const idItem = ref('')

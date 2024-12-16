@@ -77,8 +77,8 @@ const confattachmentTypeListApi = reactive({
   uriApi: 'manage-attachment-type',
 })
 const confResourceTypeApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
 })
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
