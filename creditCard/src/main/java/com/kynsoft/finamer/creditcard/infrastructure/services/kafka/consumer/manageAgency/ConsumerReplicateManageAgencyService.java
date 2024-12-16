@@ -24,7 +24,7 @@ public class ConsumerReplicateManageAgencyService {
             CreateManageAgencyCommand command = new CreateManageAgencyCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.getBookingCouponFormat());
             mediator.send(command);
         } catch (Exception ex) {
-            Logger.getLogger(com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageAgency.ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
