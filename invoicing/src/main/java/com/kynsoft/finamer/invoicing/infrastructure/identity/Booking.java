@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -117,18 +118,18 @@ public class Booking {
         this.checkOut = dto.getCheckOut();
         this.hotelBookingNumber = dto.getHotelBookingNumber();
         this.fullName = dto.getFullName();
-        this.invoiceAmount = dto.getInvoiceAmount();
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? ScaleAmount.scaleAmount(dto.getInvoiceAmount()) : null;
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
-        this.rateAdult = dto.getRateAdult();
-        this.rateChild = dto.getRateChild();
+        this.rateAdult = dto.getRateAdult() != null ? ScaleAmount.scaleAmount(dto.getRateAdult()) : null;
+        this.rateChild = dto.getRateChild() != null ? ScaleAmount.scaleAmount(dto.getRateChild()) : null;
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.folioNumber = dto.getFolioNumber();
-        this.hotelAmount = dto.getHotelAmount();
+        this.hotelAmount = dto.getHotelAmount() != null ? ScaleAmount.scaleAmount(dto.getHotelAmount()) : null;
         this.description = dto.getDescription();
         this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.ratePlan = dto.getRatePlan() != null ? new ManageRatePlan(dto.getRatePlan()) : null;
@@ -144,7 +145,7 @@ public class Booking {
         }).collect(Collectors.toList()) : null;
 
         this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
-        this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : 0.0;
+        this.dueAmount = dto.getDueAmount() != null ? ScaleAmount.scaleAmount(dto.getDueAmount()) : 0.0;
         this.parent = dto.getParent() != null ? new Booking(dto.getParent()) : null;
         this.contract = dto.getContract();
         this.deleteInvoice = dto.isDeleteInvoice();
@@ -153,9 +154,16 @@ public class Booking {
     public ManageBookingDto toAggregate() {
         return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
+                hotelBookingNumber, fullName, firstName, lastName, 
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+                dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : 0.0, 
+                roomNumber, couponNumber, adults,
                 children,
-                rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelInvoiceNumber, folioNumber, 
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
+                description,
                 invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
@@ -168,9 +176,16 @@ public class Booking {
     public ManageBookingDto toAggregateSample() {
         return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
+                hotelBookingNumber, fullName, firstName, lastName, 
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+                dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : null, 
+                roomNumber, couponNumber, adults,
                 children,
-                rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelInvoiceNumber, folioNumber, 
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
+                description,
                 null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,

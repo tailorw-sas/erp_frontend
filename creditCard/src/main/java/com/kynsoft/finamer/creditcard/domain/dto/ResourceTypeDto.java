@@ -20,4 +20,6 @@ public class ResourceTypeDto {
     private String name;
     private boolean vcc;
     private Status status;
+    private boolean defaults;
+    private String description;
 }

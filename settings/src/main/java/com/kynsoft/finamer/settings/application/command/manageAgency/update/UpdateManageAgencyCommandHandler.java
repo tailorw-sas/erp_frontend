@@ -53,6 +53,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         updateFields(dto, command, update);
         updateRelationships(dto, command, update);
+//        updateB2bPartener(dto, command, update);
 
         if (update.getUpdate() > 0) {
             service.update(dto);
@@ -71,6 +72,21 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
             ));
         }
     }
+
+//    private void updateB2bPartener(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
+//        if (command.getSentB2BPartner() == null) {
+//            dto.setSentB2BPartner(null);
+//            update.setUpdate(1);
+//        } else {
+//            if (dto.getSentB2BPartner() == null) {
+//                dto.setSentB2BPartner(this.managerB2BPartnerService.findById(command.getSentB2BPartner()));
+//                update.setUpdate(1);
+//            } else if(!command.getSentB2BPartner().equals(dto.getSentB2BPartner().getId())) {
+//                dto.setSentB2BPartner(this.managerB2BPartnerService.findById(command.getSentB2BPartner()));
+//                update.setUpdate(1);
+//            }
+//        }
+//    }
 
     private void updateFields(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
@@ -100,7 +116,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         updateEntity(dto::setCityState, command.getCityState(), dto.getCityState().getId(), cityStateService::findById, update::setUpdate);
         updateEntity(dto::setClient, command.getClient(), dto.getClient() != null ? dto.getClient().getId() : null, managerClientService::findById, update::setUpdate);
         updateEntity(dto::setCountry, command.getCountry(), dto.getCountry().getId(), countryService::findById, update::setUpdate);
-        updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner().getId(), managerB2BPartnerService::findById, update::setUpdate);
+        //updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner().getId(), managerB2BPartnerService::findById, update::setUpdate);
         updateEnum(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         updateEnum(dto::setGenerationType, command.getGenerationType(), dto.getGenerationType(), update::setUpdate);
         updateEnum(dto::setSentFileFormat, command.getSentFileFormat(), dto.getSentFileFormat(), update::setUpdate);
