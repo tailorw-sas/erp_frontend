@@ -77,7 +77,7 @@ public class ManageRoomRate {
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
         this.roomRateId = dto.getRoomRateId();
-        this.invoiceAmount = dto.getInvoiceAmount();
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? ScaleAmount.scaleAmount(dto.getInvoiceAmount()) : null;
         this.roomNumber = dto.getRoomNumber();
 
         this.adults = dto.getAdults();
@@ -86,7 +86,7 @@ public class ManageRoomRate {
         this.rateChild = dto.getRateChild() != null ? ScaleAmount.scaleAmount(dto.getRateChild()) : null;
 
         this.remark = dto.getRemark();
-        this.hotelAmount = dto.getHotelAmount();
+        this.hotelAmount = dto.getHotelAmount() != null ? ScaleAmount.scaleAmount(dto.getHotelAmount()) : null;
 
         this.booking = dto.getBooking() != null ? new Booking(dto.getBooking()) : null;
         this.adjustments = dto.getAdjustments() != null ? dto.getAdjustments().stream().map(a -> {
@@ -100,20 +100,26 @@ public class ManageRoomRate {
     }
 
     public ManageRoomRateDto toAggregate() {
-        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
+        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, 
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+                roomNumber, adults, children,
                 rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null, 
                 rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
-                hotelAmount, remark, booking != null ? booking.toAggregate() : null,
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
+                remark, booking != null ? booking.toAggregate() : null,
                 adjustments != null ? adjustments.stream().map(b -> {
                             return b.toAggregateSample();
                         }).collect(Collectors.toList()) : null, nights, deleteInvoice);
     }
 
     public ManageRoomRateDto toAggregateSample() {
-        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
+        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, 
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+                roomNumber, adults, children,
                 rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null, 
                 rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null, 
-                hotelAmount, remark, null,
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
+                remark, null,
                 adjustments != null ? adjustments.stream().map(b -> {
                             return b.toAggregateSample();
                         }).collect(Collectors.toList()) : null, nights, deleteInvoice);
