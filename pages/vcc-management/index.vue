@@ -123,7 +123,7 @@ const confStatusListApi = reactive({
   uriApi: 'manage-transaction-status',
 })
 const confMerchantListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
 })
 

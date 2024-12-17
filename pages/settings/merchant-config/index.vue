@@ -30,7 +30,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'merchant-config',
 })
 
@@ -176,7 +176,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Config',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'merchant-config',
   loading: false,
   actionsAsMenu: false,
@@ -313,7 +313,7 @@ async function getMerchantList(query: string = '') {
           sortType: ENUM_SHORT_TYPE.DESC
         }
 
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
     const { data: dataList } = response
     MerchantList.value = []
     for (const iterator of dataList) {
