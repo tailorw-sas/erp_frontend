@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -73,6 +74,7 @@ public class ReconcileAutomaticInvoiceValidator {
     public List<ErrorField> validateInvoice(ManageInvoiceDto manageInvoiceDto) {
         List<ErrorField> errorFieldList = new ArrayList<>();
         List<ManageBookingDto> bookingDtos = manageInvoiceDto.getBookings();
+        String couponFormat = manageInvoiceDto.getAgency().getBookingCouponFormat();
         for (ManageBookingDto booking : bookingDtos) {
             Optional<List<Row>> matchBookingInRow = searchBookingInTheFile(booking);
             List<Row> allRow = matchBookingInRow.get();
@@ -87,9 +89,11 @@ public class ReconcileAutomaticInvoiceValidator {
                     String nightType = formatter.formatCellValue(currentRow.getCell(13));
                     String price = formatter.formatCellValue(currentRow.getCell(39));
                     String contract = formatter.formatCellValue(currentRow.getCell(0));
+                    String reservationNumber = currentRow.getCell(22).getStringCellValue();
                     if (validateCouponNumber(couponNumber, booking, errorFieldList
                     ) && validatePrice(price, booking, errorFieldList)
-                            && validateNightType(nightType, booking, errorFieldList)) {
+                            && validateNightType(nightType, booking, errorFieldList)
+                            && validateReservationNumber(reservationNumber, couponFormat, errorFieldList)) {
                         booking.setContract(contract);
                         errorFieldList.clear();
                         break;
@@ -144,5 +148,11 @@ public class ReconcileAutomaticInvoiceValidator {
         return true;
     }
 
-
+    private boolean validateReservationNumber(String reservationNumber, String couponFormat, List<ErrorField> errors){
+        if (!AgencyCouponFormatUtils.validateCode(reservationNumber, couponFormat)){
+            errors.add(new ErrorField("reservationNumber", "The reservation number is not valid."));
+            return false;
+        }
+        return true;
+    }
 }
