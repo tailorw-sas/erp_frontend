@@ -386,7 +386,7 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -586,9 +586,6 @@ onMounted(() => {
                       }"
                       @load="($event) => getHotelList($event)"
                     >
-                      <template #option="props">
-                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                      </template>
                     </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -680,9 +677,6 @@ onMounted(() => {
                           }"
                           @load="($event) => getStatusList($event)"
                         >
-                          <template #option="props">
-                            <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                          </template>
                         </DebouncedMultiSelectComponent>
                       </div>
                     </div>

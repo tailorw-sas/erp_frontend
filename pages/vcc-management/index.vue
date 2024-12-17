@@ -527,7 +527,7 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -573,7 +573,7 @@ async function getMerchantList(query: string = '') {
     const { data: dataList } = response
     merchantList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      merchantList.value = [...merchantList.value, { id: iterator.id, name: iterator.description, code: iterator.code }]
+      merchantList.value = [...merchantList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.description}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -665,7 +665,7 @@ async function getCCTypeList(query: string = '') {
     const { data: dataList } = response
     ccTypeList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -966,9 +966,6 @@ onMounted(() => {
                       }"
                       @load="($event) => getMerchantList($event)"
                     >
-                      <template #option="props">
-                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                      </template>
                     </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -991,9 +988,6 @@ onMounted(() => {
                       }"
                       @load="($event) => getHotelList($event)"
                     >
-                      <template #option="props">
-                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                      </template>
                     </DebouncedMultiSelectComponent>
                   </div>
                 </div>
@@ -1020,9 +1014,6 @@ onMounted(() => {
                       }"
                       @load="($event) => getCCTypeList($event)"
                     >
-                      <template #option="props">
-                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                      </template>
                     </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -1045,9 +1036,6 @@ onMounted(() => {
                       }"
                       @load="($event) => getStatusList($event)"
                     >
-                      <template #option="props">
-                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                      </template>
                     </DebouncedMultiSelectComponent>
                   </div>
                 </div>
