@@ -28,7 +28,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-hotel-enrolle',
 })
 
@@ -139,7 +139,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Hotel Enrolle',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-hotel-enrolle',
   loading: false,
   showDelete: false,
@@ -208,7 +208,7 @@ async function getList() {
       const obj = {
         managerMerchant: { id: iterator.managerMerchant.id, name: `${iterator.managerMerchant.code} - ${iterator.managerMerchant.description}` },
         managerHotel: { id: iterator.managerHotel.id, name: `${iterator.managerHotel.code} - ${iterator.managerHotel.name}` },
-        managerCurrency: { id: iterator.managerCurrency.id, name: iterator.managerCurrency.description },
+        managerCurrency: { id: iterator.managerCurrency?.id, name: iterator.managerCurrency?.description },
         id: iterator.id,
         enrrolle: iterator.enrrolle,
         key: iterator.key,
@@ -533,6 +533,7 @@ function requireConfirmationToSave(item: any) {
     })
   }
 }
+
 function requireConfirmationToDelete(event: any) {
   if (!useRuntimeConfig().public.showDeleteConfirm) {
     deleteItem(idItem.value)
