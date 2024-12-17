@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.kynsof.share.utils.ScaleAmount;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -81,8 +82,8 @@ public class ManageRoomRate {
 
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
-        this.rateAdult = dto.getRateAdult();
-        this.rateChild = dto.getRateChild();
+        this.rateAdult = dto.getRateAdult() != null ? ScaleAmount.scaleAmount(dto.getRateAdult()) : null;
+        this.rateChild = dto.getRateChild() != null ? ScaleAmount.scaleAmount(dto.getRateChild()) : null;
 
         this.remark = dto.getRemark();
         this.hotelAmount = dto.getHotelAmount();
@@ -100,7 +101,9 @@ public class ManageRoomRate {
 
     public ManageRoomRateDto toAggregate() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
-                rateAdult, rateChild, hotelAmount, remark, booking != null ? booking.toAggregate() : null,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null, 
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelAmount, remark, booking != null ? booking.toAggregate() : null,
                 adjustments != null ? adjustments.stream().map(b -> {
                             return b.toAggregateSample();
                         }).collect(Collectors.toList()) : null, nights, deleteInvoice);
@@ -108,7 +111,9 @@ public class ManageRoomRate {
 
     public ManageRoomRateDto toAggregateSample() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, invoiceAmount, roomNumber, adults, children,
-                rateAdult, rateChild, hotelAmount, remark, null,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null, 
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null, 
+                hotelAmount, remark, null,
                 adjustments != null ? adjustments.stream().map(b -> {
                             return b.toAggregateSample();
                         }).collect(Collectors.toList()) : null, nights, deleteInvoice);
