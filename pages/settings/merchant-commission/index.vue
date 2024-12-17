@@ -29,7 +29,7 @@ const filterToSearch = ref<IData>({
   to: null,
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-commission',
 })
 const decimalRegex = /^\d+(\.\d+)?$/
@@ -42,7 +42,7 @@ const commissionSchema = z.object({
 })
 const fields: Array<FieldDefinitionType> = [
   {
-    field: 'managerMerchant',
+    field: 'manageMerchant',
     header: 'Merchant',
     dataType: 'select',
     class: 'field col-12 required',
@@ -128,7 +128,7 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  managerMerchant: null,
+  manageMerchant: null,
   manageCreditCartType: null,
   commission: null,
   calculationType: null,
@@ -139,7 +139,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  managerMerchant: null,
+  manageMerchant: null,
   manageCreditCartType: null,
   commission: null,
   calculationType: null,
@@ -168,7 +168,7 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'manageMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'manageCreditCartType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', keyValue: 'name' }, sortable: true },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'calculationType', header: 'Calculation Type', type: 'text' },
@@ -182,7 +182,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Commission',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-commission',
   loading: false,
   actionsAsMenu: false,
@@ -241,7 +241,7 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
-      iterator.managerMerchant = { id: iterator.managerMerchant?.id, name: `${iterator.managerMerchant?.code} ${iterator.managerMerchant?.description ? `- ${iterator.managerMerchant?.description}` : ''}` }
+      iterator.manageMerchant = { id: iterator.manageMerchant?.id, name: `${iterator.manageMerchant?.code} ${iterator.manageMerchant?.description ? `- ${iterator.manageMerchant?.description}` : ''}` }
       iterator.manageCreditCartType = { id: iterator.manageCreditCartType?.id, name: `${iterator.manageCreditCartType?.name}` }
       creditCardTypeList.value.find(i => i.id === iterator.manageCreditCartType?.id)
 
@@ -312,13 +312,13 @@ async function getItemById(id: string) {
 
       if (response) {
         const objMerchant = {
-          id: response.managerMerchant.id,
-          name: `${response.managerMerchant.code} ${response.managerMerchant.description ? `- ${response.managerMerchant.description}` : ''}`,
-          status: response.managerMerchant.status
+          id: response.manageMerchant.id,
+          name: `${response.manageMerchant.code} ${response.manageMerchant.description ? `- ${response.manageMerchant.description}` : ''}`,
+          status: response.manageMerchant.status
         }
         merchantList.value = [objMerchant]
         item.value.id = response.id
-        item.value.managerMerchant = merchantList.value.find(i => i.id === response.managerMerchant.id)
+        item.value.manageMerchant = merchantList.value.find(i => i.id === response.manageMerchant.id)
         item.value.commission = response.commission
         item.value.calculationType = ENUM_CALCULATION_TYPE.find(i => i.id === response.calculationType)
         item.value.description = response.description
@@ -358,10 +358,12 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.fromDate = payload.fromDate ? dayjs(payload.fromDate).format('YYYY-MM-DD') : ''
     payload.toDate = payload.toDate ? dayjs(payload.toDate).format('YYYY-MM-DD') : ''
-    payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+    payload.managerMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
     payload.manageCreditCartType = typeof payload.manageCreditCartType === 'object' ? payload.manageCreditCartType.id : payload.manageCreditCartType
     payload.calculationType = payload.calculationType?.id
     payload.status = statusToString(payload.status)
+    delete payload.status
+    delete payload.manageMerchant
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
   }
@@ -373,10 +375,12 @@ async function updateItem(item: { [key: string]: any }) {
 
   payload.fromDate = payload.fromDate ? dayjs(payload.fromDate).format('YYYY-MM-DD') : ''
   payload.toDate = payload.toDate ? dayjs(payload.toDate).format('YYYY-MM-DD') : ''
-  payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+  payload.managerMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
   payload.manageCreditCartType = typeof payload.manageCreditCartType === 'object' ? payload.manageCreditCartType.id : payload.manageCreditCartType
   payload.calculationType = payload.calculationType?.id
   payload.status = statusToString(payload.status)
+  delete payload.status
+  delete payload.manageMerchant
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
   toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
 }
@@ -673,16 +677,16 @@ onMounted(async () => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-            <template #field-managerMerchant="{ item: data, onUpdate }">
+            <template #field-manageMerchant="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
-                :model="data.managerMerchant"
+                :model="data.manageMerchant"
                 :suggestions="merchantList"
                 @change="($event) => {
-                  onUpdate('managerMerchant', $event)
+                  onUpdate('manageMerchant', $event)
                 }"
                 @load="($event) => getMerchantList($event)"
               />
