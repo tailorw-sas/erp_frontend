@@ -1,20 +1,14 @@
-package com.kynsoft.finamer.creditcard.domain.dto;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchantConfig.create;
+
 
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class ManagerMerchantConfigDto {
-    private UUID id;
-    private ManageMerchantDto manageMerchantDto;
+public class CreateManageMerchantConfigRequest {
+    private UUID manageMerchant;
     private String url;
     private String altUrl;
     private String successUrl;
@@ -26,5 +20,4 @@ public class ManagerMerchantConfigDto {
     private String institutionCode;
     private String merchantNumber;
     private String merchantTerminal;
-
 }

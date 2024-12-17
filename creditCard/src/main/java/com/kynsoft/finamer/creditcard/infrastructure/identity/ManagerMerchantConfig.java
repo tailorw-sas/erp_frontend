@@ -82,7 +82,7 @@ public class ManagerMerchantConfig implements Serializable {
         this.declinedUrl = dto.getDeclinedUrl();
         this.merchantType = dto.getMerchantType();
         this.name = dto.getName();
-        this.method= Method.valueOf(dto.getMethod());
+        this.method= dto.getMethod();
         this.institutionCode = dto.getInstitutionCode();
         this.merchantNumber = dto.getMerchantNumber();
         this.merchantTerminal = dto.getMerchantTerminal();
@@ -117,7 +117,7 @@ public class ManagerMerchantConfig implements Serializable {
                 declinedUrl,
                 merchantType,
                 name,
-                method.name(),
+                method,
                 institutionCode,
                 merchantNumber,
                 merchantTerminal

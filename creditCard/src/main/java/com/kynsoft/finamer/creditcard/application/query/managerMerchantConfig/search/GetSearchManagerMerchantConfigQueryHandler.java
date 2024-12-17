@@ -15,7 +15,7 @@ public class GetSearchManagerMerchantConfigQueryHandler implements IQueryHandler
     }
 
     @Override
-    public PaginatedResponse handle(com.kynsoft.finamer.creditcard.application.query.managerMerchantConfig.search.GetSearchManagerMerchantConfigQuery query) {
+    public PaginatedResponse handle(GetSearchManagerMerchantConfigQuery query) {
 
         return this.service.search(query.getPageable(), query.getFilter());
     }
