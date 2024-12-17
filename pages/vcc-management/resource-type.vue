@@ -58,6 +58,13 @@ const fields: Array<FieldDefinitionType> = [
     headerClass: 'mb-1'
   },
   {
+    field: 'defaults',
+    header: 'Default',
+    dataType: 'check',
+    disabled: false,
+    class: 'field col-12 required mb-2',
+  },
+  {
     field: 'status',
     header: 'Active',
     dataType: 'check',
@@ -71,8 +78,6 @@ const item = ref<GenericObject>({
   code: '',
   description: '',
   defaults: false,
-  invoice: false,
-  vcc: false,
   status: true
 })
 
@@ -81,8 +86,6 @@ const itemTemp = ref<GenericObject>({
   code: '',
   description: '',
   defaults: false,
-  invoice: false,
-  vcc: false,
   status: true
 })
 
@@ -100,6 +103,7 @@ const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
+  { field: 'defaults', header: 'Default', type: 'bool', badge: { color: 'green' } },
   { field: 'status', header: 'Active', type: 'bool', width: '120px' },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -223,6 +227,7 @@ async function getItemById(id: string) {
         item.value.id = response.id
         item.value.name = response.name
         item.value.description = response.description ?? ''
+        item.value.defaults = response.defaults
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
       }
