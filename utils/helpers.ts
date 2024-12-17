@@ -26,6 +26,16 @@ export function isValidUrl(urlString: string) {
   }
 }
 
+export function openOrDownloadFile(url: string) {
+  if (isValidUrl(url)) {
+    // window.open(url, '_blank')
+    navigateTo(`/view-file/?url=${url}`, { open: { target: '_blank' } })
+  }
+  else {
+    console.error('Invalid URL')
+  }
+}
+
 export function formatSize(bytes: number) {
   const $primevue = usePrimeVue()
   const k = 1024
