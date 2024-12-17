@@ -18,6 +18,6 @@ public interface ManageBankAccountReadDataJPARepository extends JpaRepository<Ma
 
     Page<ManageBankAccount> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageBankAccount b WHERE b.accountNumber = :accountNumber AND b.id <> :id")
-    Long countByAccountNumberAndNotId(@Param("accountNumber") String accountNumber, @Param("id") UUID id);
+    @Query("SELECT COUNT(b) FROM ManageBankAccount b WHERE b.accountNumber = :accountNumber AND b.manageBank.id = :bankId AND b.id <> :id")
+    Long countByAccountNumberAndNotId(@Param("accountNumber") String accountNumber, @Param("id") UUID id, @Param("bankId") UUID bankId);
 }

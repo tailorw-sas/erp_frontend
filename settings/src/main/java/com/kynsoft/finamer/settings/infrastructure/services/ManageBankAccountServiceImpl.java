@@ -85,8 +85,8 @@ public class ManageBankAccountServiceImpl implements IManageBankAccountService {
     }
 
     @Override
-    public Long countByAccountNumberAndNotId(String accountNumber, UUID id) {
-        return repositoryQuery.countByAccountNumberAndNotId(accountNumber, id);
+    public Long countByAccountNumberAndNotId(String accountNumber, UUID id, UUID bankId) {
+        return repositoryQuery.countByAccountNumberAndNotId(accountNumber, id, bankId);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

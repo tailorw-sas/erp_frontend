@@ -16,7 +16,6 @@ public interface ManageRatePlanReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageRatePlan> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT COUNT(b) FROM ManageRatePlan b WHERE b.code = :code AND b.id <> :id")
-    Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
-
+    @Query("SELECT COUNT(b) FROM ManageRatePlan b WHERE b.code = :code AND b.hotel.id = :hotelId AND b.id <> :id")
+    Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id, @Param("hotelId") UUID hotelId);
 }
