@@ -52,6 +52,8 @@ public class ManageResourceType {
         this.code = dto.getCode();
         this.vcc = dto.isVcc();
         this.status = dto.getStatus();
+        this.description = dto.getDescription();
+        this.defaults = dto.isDefaults();
     }
 
     public ResourceTypeDto toAggregate() {

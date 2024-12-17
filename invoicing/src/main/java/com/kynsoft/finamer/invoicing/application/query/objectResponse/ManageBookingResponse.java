@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
+import java.text.DecimalFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,6 +51,7 @@ public class ManageBookingResponse implements IResponse {
     private ManageBookingResponse parent;
 
     public ManageBookingResponse(ManageBookingDto dto) {
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
         this.hotelCreationDate = dto.getHotelCreationDate();
@@ -60,17 +62,17 @@ public class ManageBookingResponse implements IResponse {
         this.fullName = dto.getFullName();
         this.lastName = dto.getLastName();
         this.firstName = dto.getFirstName();
-        this.invoiceAmount = dto.getInvoiceAmount();
-        this.dueAmount = dto.getDueAmount();
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? Double.valueOf(decimalFormat.format(dto.getInvoiceAmount())) : null;
+        this.dueAmount = dto.getDueAmount() != null ? Double.valueOf(decimalFormat.format(dto.getDueAmount())) : null;
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
-        this.rateAdult = dto.getRateAdult();
-        this.rateChild = dto.getRateChild();
+        this.rateAdult = dto.getRateAdult() != null ? Double.valueOf(decimalFormat.format(dto.getRateAdult())) : null;
+        this.rateChild = dto.getRateChild() != null ? Double.valueOf(decimalFormat.format(dto.getRateChild())) : null;
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.folioNumber = dto.getFolioNumber();
-        this.hotelAmount = dto.getHotelAmount();
+        this.hotelAmount = dto.getHotelAmount() != null ? Double.valueOf(decimalFormat.format(dto.getHotelAmount())) : null;
         this.description = dto.getDescription();
         this.contract = dto.getContract();
         this.invoice = dto.getInvoice();
