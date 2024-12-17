@@ -1081,14 +1081,14 @@ function requireConfirmationToDelete(event: any) {
   }
 }
 
-function openOrDownloadFile(url: string) {
-  if (isValidUrl(url)) {
-    window.open(url, '_blank')
-  }
-  else {
-    console.error('Invalid URL')
-  }
-}
+// function openOrDownloadFile(url: string) {
+//   if (isValidUrl(url)) {
+//     window.open(url, '_blank')
+//   }
+//   else {
+//     console.error('Invalid URL')
+//   }
+// }
 
 async function loadDefaultsValues() {
   const filterForEmployee: FilterCriteria[] = [
@@ -1494,7 +1494,13 @@ onMounted(async () => {
                     />
                   </IfCan>
                   <IfCan :perms="['PAYMENT-MANAGEMENT:VIEW-FILE-ATTACHMENT']">
-                    <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-eye" @click="openOrDownloadFile(pathFileLocal)" />
+                    <Button
+                      v-tooltip.top="'View File'"
+                      :disabled="!idItem"
+                      class="w-3rem ml-1 sticky"
+                      icon="pi pi-eye"
+                      @click="openOrDownloadFile(pathFileLocal)"
+                    />
                   </IfCan>
                   <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY-ATTACHMENT']">
                     <Button
