@@ -6,13 +6,13 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-public class CreateManageMerchantHotelEnrolleMessage implements ICommandMessage {
+public class CreateManagerMerchantHotelEnrolleMessage implements ICommandMessage {
 
     private final UUID id;
 
     private final String command = "CREATE_MANAGER_MERCHANT_CURRENCY";
 
-    public CreateManageMerchantHotelEnrolleMessage(UUID id) {
+    public CreateManagerMerchantHotelEnrolleMessage(UUID id) {
         this.id = id;
     }
 
