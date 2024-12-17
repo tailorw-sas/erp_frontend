@@ -20,7 +20,7 @@ public interface IManageBankAccountService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Long countByAccountNumberAndNotId(String accountNumber, UUID id);
+    Long countByAccountNumberAndNotId(String accountNumber, UUID id, UUID bankId);
 
     List<ManageBankAccountDto> findAllToReplicate();
 }

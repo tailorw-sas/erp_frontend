@@ -8,8 +8,9 @@ import lombok.Setter;
 @Setter
 public class UpdateManageResourceTypeRequest {
 
-    private String description;
     private String name;
     private Status status;
     private boolean vcc;
+    private boolean defaults;
+    private String description;
 }

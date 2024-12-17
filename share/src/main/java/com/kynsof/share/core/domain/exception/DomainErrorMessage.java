@@ -392,7 +392,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_PAYMENT_STATUS_HISTORY_NOT_FOUND(1169, Series.DOMAIN_ERROR, "Hotel Payment Status History not found."),
     NIGHT_TYPE_REQUIRED(1170, Series.DOMAIN_ERROR,"The Night Type field is required for this client."),
     HOTEL_BOOKING_NUMBER_NOT_VALID(1171, Series.DOMAIN_ERROR, "The Reservation No. is not accepted."),
-    BOOKING_COUPON_FORMAT_NOT_VALID(1172, Series.DOMAIN_ERROR, "The Booking Coupon Format is not valid.");
+    BOOKING_COUPON_FORMAT_NOT_VALID(1172, Series.DOMAIN_ERROR, "The Booking Coupon Format is not valid."),
+    BOOKING_COUPON_FORMAT_NOT_VALID_(1173, Series.DOMAIN_ERROR, "The Booking Coupon Format is not valid.");
 
     private static final DomainErrorMessage[] VALUES;
 

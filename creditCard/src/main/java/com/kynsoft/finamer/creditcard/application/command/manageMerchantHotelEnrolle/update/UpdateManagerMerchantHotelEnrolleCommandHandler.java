@@ -49,9 +49,9 @@ public class UpdateManagerMerchantHotelEnrolleCommandHandler implements ICommand
         ManageMerchantHotelEnrolleDto test = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
-        this.updateManagerCurrency(test::setManagerCurrency, command.getManagerCurrency(), test.getManagerCurrency().getId(), update::setUpdate);
-        this.updateManagerMerchant(test::setManagerMerchant, command.getManagerMerchant(), test.getManagerMerchant().getId(), update::setUpdate);
-        this.updateManageHotel(test::setManagerHotel, command.getManagerHotel(), test.getManagerHotel().getId(), update::setUpdate);
+        this.updateManagerCurrency(test::setManagerCurrency, command.getManagerCurrency(), test.getManagerCurrency() != null ? test.getManagerCurrency().getId() : null, update::setUpdate);
+        this.updateManagerMerchant(test::setManagerMerchant, command.getManagerMerchant(), test.getManagerMerchant() != null ? test.getManagerMerchant().getId() : null, update::setUpdate);
+        this.updateManageHotel(test::setManagerHotel, command.getManagerHotel(), test.getManagerHotel() != null ? test.getManagerHotel().getId() : null, update::setUpdate);
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setEnrrolle, command.getEnrolle(), test.getEnrrolle(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setKey, command.getKey(), test.getKey(), update::setUpdate);

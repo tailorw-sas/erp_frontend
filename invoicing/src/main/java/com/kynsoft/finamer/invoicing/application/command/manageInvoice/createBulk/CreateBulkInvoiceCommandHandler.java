@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -375,12 +376,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 invoiceNumber,
                 command.getInvoiceCommand().getInvoiceDate(), dueDate,
                 true,
-                command.getInvoiceCommand().getInvoiceAmount(),
+                ScaleAmount.scaleAmount(command.getInvoiceCommand().getInvoiceAmount()),
                 command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
                 command.getInvoiceCommand().getInvoiceType(), status,
                 false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null, false,
                 null, 0.0,0);
-        invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
+        invoiceDto.setOriginalAmount(ScaleAmount.scaleAmount(invoiceDto.getInvoiceAmount()));
 
         if (status.compareTo(EInvoiceStatus.RECONCILED) == 0) {
             invoiceDto = this.service.changeInvoiceStatus(invoiceDto, invoiceStatus);

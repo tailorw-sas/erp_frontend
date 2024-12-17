@@ -19,11 +19,15 @@ public class GetSearchResourceTypeResponse implements IResponse {
     private String code;
     private String name;
     private Status status;
+    private boolean defaults;
+    private String description;
 
     public GetSearchResourceTypeResponse(ResourceTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
-    }    
+        this.defaults = dto.isDefaults();
+        this.description = dto.getDescription();
+    }
 }

@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import lombok.Data;
+
 import java.util.UUID;
 
 @Data
@@ -50,7 +51,7 @@ public class UpdateManageMerchantConfigCommand implements ICommand {
                 request.getDeclinedUrl(),
                 request.getMerchantType(), 
                 request.getName(), 
-                request.getMethod(),
+                request.getMethod(), 
                 request.getInstitutionCode(),
                 request.getMerchantNumber(),
                 request.getMerchantTerminal()

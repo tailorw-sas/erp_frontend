@@ -21,6 +21,8 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
         resourceTypeDto.setName(command.getName());
         resourceTypeDto.setVcc(command.isVcc());
         resourceTypeDto.setStatus(command.getStatus());
+        resourceTypeDto.setDefaults(command.isDefaults());
+        resourceTypeDto.setDescription(command.getDescription());
 
         this.service.update(resourceTypeDto);
     }

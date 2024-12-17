@@ -28,9 +28,13 @@ public class ManageResourceType {
     private String code;
 
     private String name;
+    private String description;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean vcc;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean defaults;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -48,11 +52,13 @@ public class ManageResourceType {
         this.code = dto.getCode();
         this.vcc = dto.isVcc();
         this.status = dto.getStatus();
+        this.description = dto.getDescription();
+        this.defaults = dto.isDefaults();
     }
 
     public ResourceTypeDto toAggregate() {
         return new ResourceTypeDto(
-                id, code, name, vcc, status
+                id, code, name, vcc, status, defaults, description
         );
     }
 }

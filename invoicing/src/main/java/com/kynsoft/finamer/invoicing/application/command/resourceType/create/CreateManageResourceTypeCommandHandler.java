@@ -1,8 +1,10 @@
 package com.kynsoft.finamer.invoicing.application.command.resourceType.create;
 
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.rules.resourceType.ResourceTypeCodeMustBeUniqueRule;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +19,8 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
 
     @Override
     public void handle(CreateManageResourceTypeCommand command) {
+        RulesChecker.checkRule(new ResourceTypeCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
-      
         service.create(new ResourceTypeDto(
                 command.getId(),
                 command.getCode(),
