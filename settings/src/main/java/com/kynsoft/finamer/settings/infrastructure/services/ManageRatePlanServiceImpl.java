@@ -101,8 +101,8 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
     }
 
     @Override
-    public Long countByCodeAndNotId(String code, UUID id) {
-        return repositoryQuery.countByCodeAndNotId(code, id);
+    public Long countByCodeAndNotId(String code, UUID id, UUID hotelId) {
+        return repositoryQuery.countByCodeAndNotId(code, id, hotelId);
     }
 
     @Override
