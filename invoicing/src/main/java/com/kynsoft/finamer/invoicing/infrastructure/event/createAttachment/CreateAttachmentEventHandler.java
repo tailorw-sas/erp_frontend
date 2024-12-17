@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.event.createAttachment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ApiResponse;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
@@ -96,6 +97,8 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
                                 resourceTypeResponse.getId());
                 mediator.send(createAttachmentCommand);
 
+        } catch (BusinessNotFoundException e) {
+            throw e;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

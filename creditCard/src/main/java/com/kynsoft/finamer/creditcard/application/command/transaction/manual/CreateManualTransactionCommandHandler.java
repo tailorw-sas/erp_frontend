@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.creditcard.application.command.transaction.manual;
 
-import com.kynsof.share.core.application.mailjet.MailService;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
@@ -119,7 +118,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 command.getHotelContactEmail(),
                 command.getGuestName(),
                 command.getEmail(),
-                merchantHotelEnrolleDto.getEnrolle(),
+                merchantHotelEnrolleDto.getEnrrolle(),
                 null,
                 null,
                 0.0,
@@ -152,7 +151,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                 null,
                 command.getEmployee(),
-                transactionStatusDto
+                transactionStatusDto,
+                0L
         ));
     }
 

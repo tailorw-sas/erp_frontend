@@ -2,10 +2,12 @@ package com.kynsoft.finamer.creditcard.application.command.manageMerchantCurrenc
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageMerchantCurrencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerCurrencyDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantCurrencyDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsoft.finamer.creditcard.domain.rules.managerMerchantCurrency.ManagerMerchantCurrencyMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerCurrencyService;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerMerchantCurrencyService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
@@ -33,6 +35,8 @@ public class CreateManageMerchantCurrencyCommandHandler implements ICommandHandl
 
         ManagerCurrencyDto managerCurrencyDto = this.serviceCurrencyService.findById(command.getManagerCurrency());
         ManageMerchantDto managerMerchantDto = this.serviceMerchantService.findById(command.getManagerMerchant());
+
+        RulesChecker.checkRule(new ManagerMerchantCurrencyMustBeUniqueRule(this.serviceMerchantCurrency, command.getManagerMerchant(), command.getManagerCurrency()));
 
         serviceMerchantCurrency.create(new ManagerMerchantCurrencyDto(command.getId(), managerMerchantDto, managerCurrencyDto, command.getValue(), command.getDescription(), command.getStatus()));
     }

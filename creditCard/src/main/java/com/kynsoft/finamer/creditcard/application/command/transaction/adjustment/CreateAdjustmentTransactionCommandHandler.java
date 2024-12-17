@@ -75,7 +75,8 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
                 null,
                 command.getEmployee(),
-                transactionStatusDto
+                transactionStatusDto,
+                0L
         ));
     }
 }

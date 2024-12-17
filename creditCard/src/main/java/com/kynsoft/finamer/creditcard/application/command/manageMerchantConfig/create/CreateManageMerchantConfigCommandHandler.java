@@ -1,8 +1,10 @@
 package com.kynsoft.finamer.creditcard.application.command.manageMerchantConfig.create;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
+import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import org.springframework.stereotype.Component;
@@ -11,19 +13,23 @@ import org.springframework.stereotype.Component;
 public class CreateManageMerchantConfigCommandHandler implements ICommandHandler<CreateManageMerchantConfigCommand> {
 
     private final IManageMerchantConfigService service;
-    private final IManageMerchantService iManageMerchantService;
+    private final IManageMerchantService merchantService;
 
-    public CreateManageMerchantConfigCommandHandler(IManageMerchantConfigService service, IManageMerchantService iManageMerchantService) {
+    public CreateManageMerchantConfigCommandHandler(IManageMerchantConfigService service, IManageMerchantService merchantService) {
         this.service = service;
-        this.iManageMerchantService = iManageMerchantService;
+        this.merchantService = merchantService;
     }
 
     @Override
     public void handle(CreateManageMerchantConfigCommand command) {
-        ManageMerchantDto manageMerchantDto = iManageMerchantService.findById(command.getManageMerchant());
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageMerchant(), "id", "Manager Merchant ID cannot be null."));
+        //    RulesChecker.checkRule(new ManagerMerchantConfigMustBeUniqueRule(this.service, command.getManageMerchant()) );
+
+        ManageMerchantDto managerMerchantDto = this.merchantService.findById(command.getManageMerchant());
+
         service.create(new ManagerMerchantConfigDto(
                 command.getId(),
-                manageMerchantDto,
+                managerMerchantDto,
                 command.getUrl(),
                 command.getAltUrl(),
                 command.getSuccessUrl(),
@@ -32,10 +38,9 @@ public class CreateManageMerchantConfigCommandHandler implements ICommandHandler
                 command.getMerchantType(),
                 command.getName(),
                 command.getMethod(),
-                command.getInstitutionCode(),
+                command.getMerchantType(),
                 command.getMerchantNumber(),
                 command.getMerchantTerminal()
         ));
     }
 }
-

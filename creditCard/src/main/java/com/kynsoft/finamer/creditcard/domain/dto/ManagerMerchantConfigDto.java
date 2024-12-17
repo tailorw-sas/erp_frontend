@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,7 @@ public class ManagerMerchantConfigDto {
     private String declinedUrl;
     private String merchantType;
     private String name;
-    private String method;
+    private Method method;
     private String institutionCode;
     private String merchantNumber;
     private String merchantTerminal;

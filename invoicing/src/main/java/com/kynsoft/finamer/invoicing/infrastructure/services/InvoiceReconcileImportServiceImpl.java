@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileImport.importReconcile.InvoiceReconcileImportRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.InvoiceReconcileImportProcessStatusRequest;
@@ -146,6 +147,9 @@ public class InvoiceReconcileImportServiceImpl implements InvoiceReconcileImport
                     inputStream.readAllBytes()
             );
             applicationEventPublisher.publishEvent(createAttachmentEvent);
+        } catch (BusinessNotFoundException e){
+            e.printStackTrace();
+            processError(e.getBrokenRule().getErrorField().getMessage(), request.getImportProcessId(), attachment.getName());
         } catch (Exception e) {
             e.printStackTrace();
             processError("Can't create attachment for "+attachment.getName(), request.getImportProcessId(),attachment.getName());

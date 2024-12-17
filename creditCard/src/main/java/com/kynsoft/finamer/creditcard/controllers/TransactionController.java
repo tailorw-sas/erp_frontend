@@ -2,7 +2,6 @@ package com.kynsoft.finamer.creditcard.controllers;
 
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
-import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.manageStatusTransaction.update.UpdateManageStatusTransactionCommandMessage;
@@ -33,7 +32,7 @@ import com.kynsoft.finamer.creditcard.application.command.sendMail.SendMailReque
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionCommand;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionMessage;
 import com.kynsoft.finamer.creditcard.application.command.transaction.update.UpdateTransactionRequest;
-import com.kynsoft.finamer.creditcard.application.query.managerMerchant.getById.FindManagerMerchantByIdQuery;
+import com.kynsoft.finamer.creditcard.application.query.manageMerchant.getById.FindManageMerchantByIdQuery;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantResponse;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.getById.FindTransactionByIdQuery;
@@ -122,7 +121,7 @@ public class TransactionController {
 
     @PostMapping("/redirectTypePost")
     public ResponseEntity<?> getPaymentPostForm(@RequestBody PaymentRequestDto requestDto) {
-        FindManagerMerchantByIdQuery query = new FindManagerMerchantByIdQuery(requestDto.getMerchantId());
+        FindManageMerchantByIdQuery query = new FindManageMerchantByIdQuery(requestDto.getMerchantId());
         ManageMerchantResponse response = mediator.send(query);
         CreateRedirectCommand redirectCommand = CreateRedirectCommand.builder()
                 .manageMerchantResponse(response)

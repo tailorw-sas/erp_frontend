@@ -21,9 +21,30 @@ public interface ManageMerchantCommissionReadDataJPARepository extends JpaReposi
 
     Page<ManageMerchantCommission> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.deleted = false")
+    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType")
     List<ManageMerchantCommission> findAllByManagerMerchantAndManageCreditCartType(@Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
 
-    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.fromDate <= :date AND (m.toDate IS NULL OR m.toDate >= :date) AND m.deleted = false")
+    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.fromDate <= :date AND (m.toDate IS NULL OR m.toDate >= :date)")
     Optional<ManageMerchantCommission> findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(@Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType, @Param("date") LocalDate date);
+
+    @Query("SELECT m FROM ManageMerchantCommission m WHERE m.managerMerchant.id = :managerMerchant AND m.manageCreditCartType.id = :manageCreditCartType AND m.id <> :id")
+    List<ManageMerchantCommission> findAllByManagerMerchantAndManageCreditCartTypeById(@Param("id") UUID id, @Param("managerMerchant") UUID managerMerchant, @Param("manageCreditCartType") UUID manageCreditCartType);
+
+    @Query("SELECT COUNT(m) FROM ManageMerchantCommission m "
+            + "WHERE m.managerMerchant.id = :managerMerchant "
+            + "AND m.manageCreditCartType.id = :manageCreditCartType "
+            + "AND m.commission = :commission "
+            + "AND m.calculationType = :calculationType "
+            + "AND m.fromDate <= :toDate "
+            + "AND m.toDate >= :fromDate "
+            + "AND m.id <> :id")
+    Long countOverlappingRecords(
+            @Param("id")UUID id,
+            @Param("managerMerchant") UUID managerMerchant,
+            @Param("manageCreditCartType") UUID manageCreditCartType,
+            @Param("commission") Double commission,
+            @Param("calculationType") String calculationType,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate
+    );
 }

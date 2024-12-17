@@ -3,7 +3,6 @@ package com.kynsoft.finamer.creditcard.application.command.manageMerchantCurrenc
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +10,6 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class CreateManageMerchantCurrencyCommand implements ICommand {
 
     private UUID id;
@@ -20,6 +18,25 @@ public class CreateManageMerchantCurrencyCommand implements ICommand {
     private String value;
     private String description;
     private Status status;
+
+    public CreateManageMerchantCurrencyCommand(UUID managerMerchant, UUID managerCurrency, String value, String description, Status status) {
+        this.id = UUID.randomUUID();
+        this.managerMerchant = managerMerchant;
+        this.managerCurrency = managerCurrency;
+        this.value = value;
+        this.description = description;
+        this.status = status;
+    }
+
+    public static CreateManageMerchantCurrencyCommand fromRequest(CreateManageMerchantCurrencyRequest request) {
+        return new CreateManageMerchantCurrencyCommand(
+                request.getManagerMerchant(),
+                request.getManagerCurrency(),
+                request.getValue(),
+                request.getDescription(),
+                request.getStatus()
+        );
+    }
 
     @Override
     public ICommandMessage getMessage() {
