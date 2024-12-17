@@ -91,10 +91,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
 
-//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-//                this.closeOperationService,
-//                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
-//                hotelDto.getId()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                this.closeOperationService,
+                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
+                hotelDto.getId()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
         RulesChecker.checkRule(new InvoiceValidateClienteRule(agencyDto.getClient()));
@@ -335,12 +335,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             }
             attachmentDtos.add(attachmentDto);
         }
-//        if (cont == 0) {
-//            throw new BusinessException(
-//                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
-//                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
-//            );
-//        }
+        if (cont == 0) {
+            throw new BusinessException(
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+            );
+        }
         for (ManageBookingDto booking : bookings) {
             this.calculateBookingHotelAmount(booking);
 
