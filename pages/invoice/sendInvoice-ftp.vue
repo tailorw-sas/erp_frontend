@@ -135,17 +135,32 @@ const pagination = ref<IPagination>({
 async function getList() {
   try {
     // payload.value = { ...payload.value, query: idItem.value }
-    const staticPayload = [{
-      key: 'invoiceStatus',
-      operator: 'IN',
-      value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
-      logicalOperation: 'AND'
-    }, {
-      key: 'agency.sentB2BPartner.b2bPartnerType.code',
-      operator: 'EQUALS',
-      value: type.toString(),
-      logicalOperation: 'AND'
-    }]
+    const staticPayload = [
+      {
+        key: 'invoiceStatus',
+        operator: 'IN',
+        value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'agency.sentB2BPartner.b2bPartnerType.code',
+        operator: 'EQUALS',
+        value: type.toString(),
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'invoiceAmount',
+        operator: 'GREATER_THAN',
+        value: '0',
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'dueAmount',
+        operator: 'GREATER_THAN',
+        value: '0',
+        logicalOperation: 'AND'
+      }
+    ]
     payload.value.filter = [...payload.value.filter, ...staticPayload]
 
     listItems.value = []

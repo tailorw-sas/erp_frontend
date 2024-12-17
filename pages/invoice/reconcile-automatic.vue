@@ -309,7 +309,8 @@ function ApplyImport2() {
 
 async function ApplyImport() {
   loadingSaveAll.value = true
-  const successOperation = true
+  let successOperation = true
+  let count = 0
   uploadComplete.value = true
   errorList.value = []
   try {
@@ -337,6 +338,7 @@ async function ApplyImport() {
     else {
       invoiceIdsTemp = [...selectedElements.value]
     }
+    count = invoiceIdsTemp.length
     formData.append('file', file)
     formData.append('invoiceIds', JSON.stringify(invoiceIdsTemp.toString()))
     formData.append('employee', userData?.value?.user?.name || '')
@@ -344,11 +346,47 @@ async function ApplyImport() {
     formData.append('importProcessId', uuid)
     await GenericService.importReconcileAuto(confApi.moduleApi, confApi.uriApi, formData)
 
+    // if (response) {
+    //   console.log(response)
+
+    //   const { errorsResponse, totalInvoicesRec } = response
+    //   if (errorsResponse && errorsResponse.length === 0) {
+    //     if (totalInvoicesRec === 0) {
+    //       getErrorList(errorsResponse)
+    //     }
+    //     else {
+    //       navigateTo('/invoice')
+    //       toast.add({
+    //         severity: 'info',
+    //         summary: 'Confirmed',
+    //         detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
+    //         life: 0
+    //       })
+    //     }
+    //   }
+    //   else if (errorsResponse && errorsResponse.length > 0) {
+    //     if (totalInvoicesRec > 0) {
+    //       toast.add({
+    //         severity: 'info',
+    //         summary: 'Confirmed',
+    //         detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
+    //         life: 0
+    //       })
+    //     }
+    //     getErrorList(errorsResponse)
+    //   }
+    // }
+
     if (successOperation) {
       await validateStatusImport()
       await getErrorList()
-      if (reviewError.value) {
+      if (errorList.value.length > 0) {
         await getList()
+      }
+      else {
+        navigateTo('/invoice')
+        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 })
       }
     }
   }

@@ -463,19 +463,13 @@ async function saveItem() {
     return // Salir de la función si hay un error
   }
 
-  // Comprobar si la respuesta contiene errorsResponse y totalInvoicesRec
   const { errorsResponse, totalInvoicesRec } = response
-
-  // Validaciones según tus requisitos
   if (errorsResponse && errorsResponse.length === 0) {
-    // Si no hay errores y totalInvoicesRec es 0
     if (totalInvoicesRec === 0) {
-      // No mostrar mensaje ni redirección, solo llamar a getErrors
       getErrors(errorsResponse)
     }
     else {
-      // Si totalInvoicesRec es mayor que 0
-      navigateTo('/invoice') // Navegar a la página de invoice
+      navigateTo('/invoice')
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
@@ -485,7 +479,6 @@ async function saveItem() {
     }
   }
   else if (errorsResponse && errorsResponse.length > 0) {
-    // Si hay errores y totalInvoicesRec es mayor que 0
     if (totalInvoicesRec > 0) {
       toast.add({
         severity: 'info',
@@ -493,9 +486,7 @@ async function saveItem() {
         detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
         life: 0
       })
-      // No redirigir, solo mostrar errores
     }
-    // Llamar a getErrors para mostrar los errores
     getErrors(errorsResponse)
   }
 
