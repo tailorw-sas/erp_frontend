@@ -150,6 +150,16 @@ async function getList() {
       operator: 'EQUALS',
       value: type.toString(),
       logicalOperation: 'AND'
+    }, {
+      key: 'invoiceAmount',
+      operator: 'GREATER_THAN',
+      value: '0',
+      logicalOperation: 'AND'
+    }, {
+      key: 'dueAmount',
+      operator: 'GREATER_THAN',
+      value: '0',
+      logicalOperation: 'AND'
     }]
     payload.value.filter = [...payload.value.filter, ...staticPayload]
 

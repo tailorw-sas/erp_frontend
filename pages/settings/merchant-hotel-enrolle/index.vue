@@ -28,7 +28,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-hotel-enrolle',
 })
 
@@ -128,7 +128,7 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'managerHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
   { field: 'enrrolle', header: 'Enrolle', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
@@ -139,7 +139,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Hotel Enrolle',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-hotel-enrolle',
   loading: false,
   showDelete: false,
@@ -208,7 +208,7 @@ async function getList() {
       const obj = {
         managerMerchant: { id: iterator.managerMerchant.id, name: `${iterator.managerMerchant.code} - ${iterator.managerMerchant.description}` },
         managerHotel: { id: iterator.managerHotel.id, name: `${iterator.managerHotel.code} - ${iterator.managerHotel.name}` },
-        managerCurrency: { id: iterator.managerCurrency.id, name: iterator.managerCurrency.description },
+        managerCurrency: { id: iterator.managerCurrency?.id, name: iterator.managerCurrency?.description },
         id: iterator.id,
         enrrolle: iterator.enrrolle,
         key: iterator.key,
@@ -426,7 +426,7 @@ async function getMerchantList(query: string) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
     const { data: dataList } = response
     MerchantList.value = []
 
@@ -533,6 +533,7 @@ function requireConfirmationToSave(item: any) {
     })
   }
 }
+
 function requireConfirmationToDelete(event: any) {
   if (!useRuntimeConfig().public.showDeleteConfirm) {
     deleteItem(idItem.value)

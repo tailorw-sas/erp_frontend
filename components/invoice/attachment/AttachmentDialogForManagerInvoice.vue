@@ -742,6 +742,16 @@ function downloadFile() {
   // }
 }
 
+// function openOrDownloadFile(url: string) {
+//   if (isValidUrl(url)) {
+//     // window.open(url, '_blank')
+//     navigateTo(`/view-file/?url=${url}`, { open: { target: '_blank' } })
+//   }
+//   else {
+//     console.error('Invalid URL')
+//   }
+// }
+
 function openFileInNewWindow() {
   if (item.value && item.value.file) {
     if (typeof item.value.file === 'string' && item.value.file.length > 0) {
@@ -1120,7 +1130,10 @@ onMounted(async () => {
                   <IfCan :perms="['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE']">
                     <Button
                       v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
-                      @click="openFileInNewWindow"
+                      @click="() => {
+                        openOrDownloadFile(props?.item?.item?.file)
+                        // openFileInNewWindow()
+                      }"
                     />
                   </IfCan>
 

@@ -241,25 +241,6 @@ async function importFile() {
       return
     }
 
-    // Filtrar archivos inválidos (nombres que no comienzan con números)
-    // const invalidFiles = selectedFiles.filter((fileInput) => {
-    //   return !/^\d/.test(fileInput.name) // Verifica que el nombre comience con un número
-    // })
-
-    // if (invalidFiles.length > 0) {
-    //   const errorMessages = invalidFiles.map(file => `Error en archivo: ${file.name} - El nombre debe comenzar con un número.`)
-
-    //   // Agregar errores a la lista para mostrar en la tabla
-    //   listItems.value.push(...invalidFiles)
-
-    //   // Log para verificar que se están añadiendo errores
-    //   console.log('Errores añadidos a la lista:', invalidFiles)
-
-    //   // Mostrar mensaje de error
-
-    //   // return; // Detener el flujo si hay archivos inválidos
-    // }
-
     const uuid = uuidv4()
     idItem.value = uuid
     const formData = new FormData()

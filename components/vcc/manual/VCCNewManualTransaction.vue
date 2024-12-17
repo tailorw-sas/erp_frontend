@@ -330,7 +330,7 @@ async function getMerchantList(query: string, isDefault: boolean = false) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
     const { data: dataList } = response
     MerchantList.value = []
 
@@ -558,7 +558,7 @@ async function getCurrencyByMerchantList(query: string, isDefault: boolean = fal
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-merchant-currency', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant-currency', payload)
     const { data: dataList } = response
     CurrencyList.value = []
 
