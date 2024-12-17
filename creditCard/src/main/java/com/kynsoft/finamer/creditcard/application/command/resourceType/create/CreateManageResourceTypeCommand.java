@@ -19,10 +19,18 @@ public class CreateManageResourceTypeCommand implements ICommand {
     private String name;
     private boolean vcc;
     private Status status;
+    private boolean defaults;
+    private String description;
 
     public static CreateManageResourceTypeCommand fromRequest(CreateManageResourceTypeRequest request, UUID id) {
         return new CreateManageResourceTypeCommand(
-               id, request.getCode(), request.getName(), request.isVcc(), request.getStatus()
+                id, 
+                request.getCode(), 
+                request.getName(), 
+                request.isVcc(), 
+                request.getStatus(), 
+                request.isDefaults(),
+                request.getDescription()
         );
     }
 
