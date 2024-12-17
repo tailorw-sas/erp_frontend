@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManagerMerchantCurrencyServiceImpl implements IManagerMerchantCurrencyService {
@@ -91,6 +92,11 @@ public class ManagerMerchantCurrencyServiceImpl implements IManagerMerchantCurre
     @Override
     public Long countByManagerMerchantANDManagerCurrencyIdNotId(UUID id, UUID managerMerchant, UUID managerCurrency) {
         return this.repositoryQuery.countByManagerMerchantAndManagerCurrencyNotId(id, managerMerchant, managerCurrency);
+    }
+
+    @Override
+    public List<ManagerMerchantCurrencyDto> findAllToReplicate() {
+        return this.repositoryQuery.findAll().stream().map(ManagerMerchantCurrency::toAggregate).collect(Collectors.toList());
     }
 
 }

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.event.createAttachment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ApiResponse;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
@@ -13,8 +14,8 @@ import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.sear
 import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.search.GetSearchManageAttachmentTypeResponse;
 import com.kynsoft.finamer.invoicing.application.query.managePaymentTransactionType.search.GetSearchManagePaymentTransactionTypeQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
-import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeQuery;
-import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeResponse;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeQuery;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.invoicing.domain.services.InvoiceReconcileImportService;
@@ -96,6 +97,8 @@ public class CreateAttachmentEventHandler implements ApplicationListener<CreateA
                                 resourceTypeResponse.getId());
                 mediator.send(createAttachmentCommand);
 
+        } catch (BusinessNotFoundException e) {
+            throw e;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

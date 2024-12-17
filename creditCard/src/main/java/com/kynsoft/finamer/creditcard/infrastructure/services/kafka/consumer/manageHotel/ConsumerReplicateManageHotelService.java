@@ -42,7 +42,7 @@ public class ConsumerReplicateManageHotelService {
                 System.err.println("No se pudo crear el close operation --->>> " + e.getMessage());
             }
         } catch (Exception ex) {
-            Logger.getLogger(com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageHotel.ConsumerReplicateManageHotelService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConsumerReplicateManageHotelService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

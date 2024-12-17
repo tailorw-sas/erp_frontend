@@ -111,9 +111,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     && !command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
 
                 RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
-                        command.getBookingCommands().get(i).getHotelBookingNumber()
-                                .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
-                        .split("\\s+").length - 1],
+                        //command.getBookingCommands().get(i).getHotelBookingNumber()
+                        //        .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
+                        //.split("\\s+").length - 1],
+                        removeBlankSpaces(command.getBookingCommands().get(i).getHotelBookingNumber()),
                         command.getInvoiceCommand().getHotel(), command.getBookingCommands().get(i).getHotelBookingNumber()));
             }
 
@@ -304,6 +305,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         }
 
         int cont = 0;
+        UUID attachmentDefault = null;
         for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
             RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
                     command.getAttachmentCommands().get(i).getFile()
@@ -327,6 +329,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     false
             );
 
+            if (cont == 1) {
+                attachmentDefault = attachmentDto.getId();
+            }
             attachmentDtos.add(attachmentDto);
         }
         if (cont == 0) {
@@ -354,13 +359,13 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
                 || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
-            //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.SENT
+
             invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         }
 
         if (status.equals(EInvoiceStatus.PROCECSED) && !attachmentDtos.isEmpty()) {
             status = EInvoiceStatus.RECONCILED;
-            //TODO setear el objeto ManageInvoiceStatus segun la parametrización a partir de el codigo EInvoiceStatus.RECONCILED
+
             invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         }
         LocalDate dueDate = command.getInvoiceCommand().getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
@@ -376,6 +381,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                 false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null, false,
                 null, 0.0,0);
         invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
+
+        if (status.compareTo(EInvoiceStatus.RECONCILED) == 0) {
+            invoiceDto = this.service.changeInvoiceStatus(invoiceDto, invoiceStatus);
+        }
         ManageInvoiceDto created = service.create(invoiceDto);
 
         command.setInvoiceId(created.getInvoiceId());
@@ -392,7 +401,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 //        updateInvoiceDto.setOriginalAmount(updateInvoiceDto.getInvoiceAmount());
 //        this.service.update(updateInvoiceDto);
         try {
-            this.producerReplicateManageInvoiceService.create(created, null);
+            this.producerReplicateManageInvoiceService.create(created, attachmentDefault);
         } catch (Exception e) {
         }
 
@@ -441,6 +450,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             dto.setHotelAmount(HotelAmount);
 
         }
+    }
+
+    private String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
     }
 
     private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {

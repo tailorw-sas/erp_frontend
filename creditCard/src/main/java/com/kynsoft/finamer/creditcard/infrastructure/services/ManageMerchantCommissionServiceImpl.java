@@ -59,10 +59,11 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
 
     @Override
     public void delete(ManageMerchantCommissionDto dto) {
-        ManageMerchantCommission delete = new ManageMerchantCommission(dto);
-        delete.setDeleted(true);
-        delete.setDeletedAt(LocalDateTime.now());
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -135,6 +136,53 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
             );
         }
         return commission;
+    }
+
+    @Override
+    public boolean checkDateOverlapForSameCombination(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, LocalDate fromDate, LocalDate toDate) {
+        List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
+        for (ManageMerchantCommissionDto existing : existingCommissions) {
+            if (existing.getCommission().equals(commission) && existing.getCalculationType().equals(calculationType)) {
+                if (isOverlapping(existing.getFromDate(), existing.getToDate(), fromDate, toDate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean checkDateOverlapForDifferentCombination(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+        List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
+        for (ManageMerchantCommissionDto existing : existingCommissions) {
+            if (isOverlapping(existing.getFromDate(), existing.getToDate(), fromDate, toDate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+//    @Override
+//    public int countOverlappingRecords(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+//        return 0;
+//    }
+
+    private boolean isOverlapping(LocalDate existingFromDate, LocalDate existingToDate, LocalDate newFromDate, LocalDate newToDate) {
+        return !newFromDate.isAfter(existingToDate) && !newToDate.isBefore(existingFromDate);
+    }
+
+
+    public boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate, Double commission, String calculationType) {
+        Long count = repositoryQuery.countOverlappingRecords(id, managerMerchant, manageCreditCartType, commission, calculationType, fromDate, toDate);
+        return count > 0;
+    }
+
+    @Override
+    public List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardTypeById(UUID managerMerchant, UUID manageCreditCartType, UUID id) {
+        return this.repositoryQuery.findAllByManagerMerchantAndManageCreditCartTypeById(id, managerMerchant, manageCreditCartType)
+                .stream()
+                .map(ManageMerchantCommission::toAggregate)
+                .collect(Collectors.toList());
     }
 
 }

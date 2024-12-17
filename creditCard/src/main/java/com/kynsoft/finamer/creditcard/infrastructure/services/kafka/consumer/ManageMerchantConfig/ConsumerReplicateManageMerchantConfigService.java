@@ -23,7 +23,7 @@ public class ConsumerReplicateManageMerchantConfigService {
             CreateManageMerchantConfigCommand command = new CreateManageMerchantConfigCommand(entity.getId(),entity.getManageMerchant(), entity.getUrl(), entity.getAltUrl(), entity.getSuccessUrl(), entity.getErrorUrl(), entity.getDeclinedUrl(), entity.getMerchantType(), entity.getName(), entity.getMethod(), entity.getInstitutionCode(), entity.getMerchantNumber(), entity.getMerchantTerminal());
             mediator.send(command);
         } catch (Exception ex) {
-            Logger.getLogger(com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.manageMerchant.ConsumerReplicateManageMerchantService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConsumerReplicateManageMerchantConfigService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

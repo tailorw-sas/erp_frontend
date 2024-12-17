@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -42,4 +43,6 @@ public interface IManageInvoiceService {
     boolean existManageInvoiceByInvoiceId(long invoiceId);
 
     void deleteInvoice(ManageInvoiceDto dto);
+
+    ManageInvoiceDto changeInvoiceStatus(ManageInvoiceDto dto, ManageInvoiceStatusDto status);
 }

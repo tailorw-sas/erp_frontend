@@ -90,15 +90,18 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.SERVICE_NOT_FOUND,
                     new ErrorField("id", DomainErrorMessage.SERVICE_NOT_FOUND.getReasonPhrase())));
         }
+
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
+        if (invoices.get(0).getAgency().getSentB2BPartner() == null){
+            updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+        }
+        else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
             sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
         }
-
-        if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
+        else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
             bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
         }
-        if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
+        else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
             sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
         }
 
@@ -173,15 +176,11 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(), generatedInvoice.getIp(),
                         generatedInvoice.getUserName(), generatedInvoice.getPassword(), 21, path);
                 updateStatusAgency( generatedInvoice.getInvoices(), manageInvoiceStatus, employee);
-
 //                savePDF(pdf);
             }
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {

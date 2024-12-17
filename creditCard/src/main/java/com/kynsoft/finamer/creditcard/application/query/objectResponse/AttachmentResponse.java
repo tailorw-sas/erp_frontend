@@ -42,10 +42,7 @@ public class AttachmentResponse implements IResponse {
         this.employeeId = dto.getEmployeeId();
         this.createdAt = dto.getCreatedAt();
         this.paymentResourceType = dto.getPaymentResourceType() != null
-                ? GetSearchResourceTypeResponse.builder()
-                    .id(dto.getPaymentResourceType().getId())
-                    .code(dto.getPaymentResourceType().getCode())
-                    .name(dto.getPaymentResourceType().getName()).build()
+                ? new GetSearchResourceTypeResponse(dto.getPaymentResourceType())
                 : null;
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPaymentBasicResponse(dto.getHotelPayment()) : null;
     }

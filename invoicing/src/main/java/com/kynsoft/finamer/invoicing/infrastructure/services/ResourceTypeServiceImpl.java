@@ -7,11 +7,10 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.invoicing.application.query.resourceType.GetSearchResourceTypeResponse;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageResourceTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ResourceTypeReadDataJPARepository;
@@ -24,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ResourceTypeServiceImpl implements IManageResourceTypeService {

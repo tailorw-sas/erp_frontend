@@ -126,9 +126,7 @@ public class ImportInnsistServiceImpl {
                 //Aqui tengo que tener una logica que pregunte si el hotelBooking number ya existe para no insertar. Agregar todos esos ID a la lista de errores.
                 //Crear un metodo que sea comun para lo anterior y que espere una lista.
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                if (this.bookingService.existsByExactLastChars(value.get(0).getHotelBookingNumber()
-                        .split("\\s+")[value.get(0).getHotelBookingNumber()
-                        .split("\\s+").length - 1], hotel.getId())) {
+                if (this.bookingService.existsByExactLastChars(this.removeBlankSpaces(value.get(0).getHotelBookingNumber()), hotel.getId())) {
                     addErrorHotelBookingNumber(errors, value);
                 }
                 if (this.bookingService.existsByHotelInvoiceNumber(value.get(0).getHotelInvoiceNumber().toString(), hotel.getId())) {

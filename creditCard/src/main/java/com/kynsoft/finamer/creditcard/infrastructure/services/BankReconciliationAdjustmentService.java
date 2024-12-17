@@ -156,7 +156,8 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                 "The transaction status change to "+transactionDto.getStatus().getCode() + "-" +transactionDto.getStatus().getName()+".",
                 null,
                 null,
-                transactionDto.getStatus()
+                transactionDto.getStatus(),
+                0L
         ));
     }
 }

@@ -49,7 +49,16 @@ public class CreateManageResourceTypeCommandHandler implements ICommandHandler<C
                 command.isInvoice(),
                 command.isVcc()
         ));
-        this.producer.create(new ReplicatePaymentResourceTypeKafka(command.getId(), command.getCode(), command.getName(), command.isInvoice(), command.isVcc(), command.getStatus().name()));
+        this.producer.create(new ReplicatePaymentResourceTypeKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getDescription(),
+                command.isInvoice(), 
+                command.getDefaults(),
+                command.isVcc(), 
+                command.getStatus().name()
+        ));
     }
 
 }

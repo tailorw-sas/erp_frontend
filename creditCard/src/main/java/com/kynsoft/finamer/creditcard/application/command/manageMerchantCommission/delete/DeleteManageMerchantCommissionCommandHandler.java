@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.application.command.manageMerchantCommission.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.vcc.DeleteManageMerchantCommissionKafka;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantCommissionService;
 import org.springframework.stereotype.Component;

@@ -92,7 +92,8 @@ public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHi
                 "The transaction status change to "+dto.getStatus().getCode() + "-" +dto.getStatus().getName()+".",
                 null,
                 employee,
-                dto.getStatus()
+                dto.getStatus(),
+                0L
         ));
     }
 
