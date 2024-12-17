@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -124,8 +125,8 @@ public class Booking {
         this.children = dto.getChildren();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
-        this.rateAdult = dto.getRateAdult();
-        this.rateChild = dto.getRateChild();
+        this.rateAdult = dto.getRateAdult() != null ? ScaleAmount.scaleAmount(dto.getRateAdult()) : null;
+        this.rateChild = dto.getRateChild() != null ? ScaleAmount.scaleAmount(dto.getRateChild()) : null;
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.folioNumber = dto.getFolioNumber();
         this.hotelAmount = dto.getHotelAmount();
@@ -155,7 +156,9 @@ public class Booking {
                 checkOut,
                 hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
                 children,
-                rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelInvoiceNumber, folioNumber, hotelAmount, description,
                 invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
@@ -170,7 +173,9 @@ public class Booking {
                 checkOut,
                 hotelBookingNumber, fullName, firstName, lastName, invoiceAmount, dueAmount, roomNumber, couponNumber, adults,
                 children,
-                rateAdult, rateChild, hotelInvoiceNumber, folioNumber, hotelAmount, description,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelInvoiceNumber, folioNumber, hotelAmount, description,
                 null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
