@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.utils.ServiceLocator;
+import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileAuto.InvoiceReconcileAutomaticRequest;
 import com.kynsoft.finamer.invoicing.application.query.invoiceReconcile.processstatus.automatic.InvoiceReconcileAutomaticImportProcessStatusRequest;
@@ -22,6 +23,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeServic
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
+import com.kynsoft.finamer.invoicing.domain.services.IReportPdfService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto.ReconcileAutomaticValidatorFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportErrorEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.reconcile.automatic.InvoiceReconcileAutomaticImportProcessStatusRedisEntity;
@@ -31,6 +33,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.mana
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.autoRec.ProducerManageInvoiceAutoRecService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
+import java.io.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +65,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final IManageResourceTypeService resourceTypeService;
     private final IManageBookingService bookingService;
     private final ProducerManageInvoiceAutoRecService producerManageInvoiceAutoRecService;
+    private final IReportPdfService iReportPdfService;
 
     @Value("${resource.type.code}")
     private String paymentInvoiceTypeCode;
@@ -72,16 +76,17 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private final ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService;
 
     public InvoiceReconcileAutomaticServiceImpl(ApplicationEventPublisher applicationEventPublisher,
-                                                ReconcileAutomaticValidatorFactory reconcileAutomaticValidatorFactory,
-                                                InvoiceReportProviderFactory invoiceReportProviderFactory,
-                                                InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil,
-                                                IManageAttachmentTypeService typeService,
-                                                IManageInvoiceService manageInvoiceService,
-                                                InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
-                                                InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
-                                                ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService,
-                                                IManageBookingService bookingService, ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService,
-                                                ProducerManageInvoiceAutoRecService producerManageInvoiceAutoRecService
+            ReconcileAutomaticValidatorFactory reconcileAutomaticValidatorFactory,
+            InvoiceReportProviderFactory invoiceReportProviderFactory,
+            InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil,
+            IManageAttachmentTypeService typeService,
+            IManageInvoiceService manageInvoiceService,
+            InvoiceReconcileAutomaticImportErrorRedisRepository errorRedisRepository,
+            InvoiceReconcileAutomaticImportProcessStatusRedisRepository statusRedisRepository,
+            ServiceLocator<IMediator> serviceLocator, IManageResourceTypeService resourceTypeService,
+            IManageBookingService bookingService, ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService,
+            ProducerManageInvoiceAutoRecService producerManageInvoiceAutoRecService,
+            IReportPdfService iReportPdfService
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
         this.reconcileAutomaticValidatorFactory = reconcileAutomaticValidatorFactory;
@@ -97,6 +102,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         this.bookingService = bookingService;
         this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
         this.producerManageInvoiceAutoRecService = producerManageInvoiceAutoRecService;
+        this.iReportPdfService = iReportPdfService;
     }
 
     @Override
@@ -121,7 +127,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
             );
             this.releaseResource();
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             this.createImportProcessStatusEvent(
@@ -140,11 +146,11 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
     private List<ManageInvoiceDto> readExcel(InvoiceReconcileAutomaticRequest request) throws Exception {
         List<ManageInvoiceDto> validInvoice = new ArrayList<>();
         reconcileAutomaticValidatorFactory.prepareValidator(request.getFileContent());
-        Arrays.stream(request.getInvoiceIds()).forEach(id->{
-            log.info("id --->"+id);
-            log.info("id - length ----->{}",id.length());
+        Arrays.stream(request.getInvoiceIds()).forEach(id -> {
+            log.info("id --->" + id);
+            log.info("id - length ----->{}", id.length());
         });
-        List<ManageInvoiceDto> selectedInvoice = manageInvoiceService.findByIds(Arrays.stream(request.getInvoiceIds()).map(id->UUID.fromString(id.trim())).toList());
+        List<ManageInvoiceDto> selectedInvoice = manageInvoiceService.findByIds(Arrays.stream(request.getInvoiceIds()).map(id -> UUID.fromString(id.trim())).toList());
 
         for (ManageInvoiceDto manageInvoiceDto : selectedInvoice) {
             if (reconcileAutomaticValidatorFactory.validate(manageInvoiceDto, request.getImportProcessId())) {
@@ -155,16 +161,27 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         return validInvoice;
     }
 
-    private void createReconcileAutomaticSupport(String invoiceId, InvoiceReconcileAutomaticRequest request) throws Exception{
+    private void createReconcileAutomaticSupport(String invoiceId, InvoiceReconcileAutomaticRequest request) throws Exception {
         Optional<byte[]> fileContent = createInvoiceReconcileAutomaticSupportAttachmentContent(invoiceId);
-        if (fileContent.isPresent()){
+        if (fileContent.isPresent()) {
             createAttachmentForInvoice(invoiceId, request.getEmployeeId(), request.getEmployeeName(), fileContent.get());
         }
     }
 
     private Optional<byte[]> createInvoiceReconcileAutomaticSupportAttachmentContent(String invoiceId) {
-        IInvoiceReport service = invoiceReportProviderFactory.getInvoiceReportService(EInvoiceReportType.RECONCILE_AUTO);
-        return service.generateReport(invoiceId);
+        Optional<byte[]> fileContent = Optional.empty();
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] fileContentResponse = this.iReportPdfService.concatenateManualPDFs(new InvoiceReconcileManualPdfRequest(List.of(UUID.fromString(invoiceId)), outputStream.toByteArray()));
+            fileContent = Optional.of(fileContentResponse);
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            System.err.println("Error: " + e.getCause().getLocalizedMessage());
+            System.err.println("Error: " + e.getCause().getMessage());
+        }
+        return fileContent;
+        //IInvoiceReport service = invoiceReportProviderFactory.getInvoiceReportService(EInvoiceReportType.RECONCILE_AUTO);
+        //return service.generateReport(invoiceId);
     }
 
     private void createAttachmentForInvoice(String invoiceId, String employeeId, String employeeName, byte[] fileContent) throws Exception {
@@ -185,7 +202,7 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
         applicationEventPublisher.publishEvent(createImportStatusEvent);
     }
 
-    private void releaseResource(){
+    private void releaseResource() {
         try {
             reconcileAutomaticValidatorFactory.releaseResources();
         } catch (IOException e) {
@@ -208,18 +225,18 @@ public class InvoiceReconcileAutomaticServiceImpl implements IInvoiceReconcileAu
 
     @Override
     public InvoiceReconcileAutomaticImportProcessStatusResponse getImportProcessStatus(InvoiceReconcileAutomaticImportProcessStatusRequest importProcessStatusRequest) {
-        Optional<InvoiceReconcileAutomaticImportProcessStatusRedisEntity> statusDtp =
-                statusRedisRepository.findByImportProcessId(importProcessStatusRequest.getImportProcessId());
+        Optional<InvoiceReconcileAutomaticImportProcessStatusRedisEntity> statusDtp
+                = statusRedisRepository.findByImportProcessId(importProcessStatusRequest.getImportProcessId());
         if (statusDtp.isPresent()) {
             if (statusDtp.get().isHasError()) {
                 throw new ExcelException(statusDtp.get().getExceptionMessage());
             }
-            return new InvoiceReconcileAutomaticImportProcessStatusResponse(statusDtp.get().getStatus().name(),statusDtp.get().getTotal());
+            return new InvoiceReconcileAutomaticImportProcessStatusResponse(statusDtp.get().getStatus().name(), statusDtp.get().getTotal());
         }
         return null;
     }
 
-    private void setInvoiceAutoRec(UUID invoiceId){
+    private void setInvoiceAutoRec(UUID invoiceId) {
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(invoiceId);
         invoiceDto.setAutoRec(true);
         this.manageInvoiceService.update(invoiceDto);
