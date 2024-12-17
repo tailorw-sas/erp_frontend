@@ -4,6 +4,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
+import java.text.DecimalFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,12 +37,13 @@ public class ManageInvoiceSearchResponse {
     private ImportType importType;
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = projection.getId();
         this.invoiceId = projection.getInvoiceId();
         this.isManual = projection.getIsManual();
         this.invoiceNo = projection.getInvoiceNo();
-        this.invoiceAmount = projection.getInvoiceAmount();
-        this.dueAmount = projection.getDueAmount();
+        this.invoiceAmount = projection.getInvoiceAmount() != null ? Double.valueOf(decimalFormat.format(projection.getInvoiceAmount())) : null;
+        this.dueAmount = projection.getDueAmount() != null ? Double.valueOf(decimalFormat.format(projection.getDueAmount())) : null;
         this.invoiceDate = projection.getInvoiceDate();
         this.hotel = new ManageInvoiceHotelResponse(projection.getHotel());
         this.agency = new ManageInvoiceAgencyResponse(projection.getAgency());
@@ -55,7 +57,7 @@ public class ManageInvoiceSearchResponse {
         this.sendStatusError = projection.getSendStatusError();
         this.parent = projection.getParent() != null ? projection.getParent().getId().toString() : null;
         this.autoRec = projection.getAutoRec();
-        this.originalAmount = projection.getOriginalAmount();
+        this.originalAmount = projection.getOriginalAmount() != null ? Double.valueOf(decimalFormat.format(projection.getOriginalAmount())) : null;
         this.importType = projection.getImportType();
     }
 
