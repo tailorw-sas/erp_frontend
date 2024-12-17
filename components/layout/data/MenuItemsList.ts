@@ -776,6 +776,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
+              label: 'Invoice Resource Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/invoice/resource-type'),
+              items: []
+            },
+            {
               label: 'Invoice Attachment Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/attachment-type'),
@@ -969,6 +975,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
+              label: 'VCC Resource Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/vcc-management/resource-type'),
+              items: []
+            },
+            {
               label: 'VCC Attachment Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/vcc-management/attachment-type'),
@@ -976,7 +988,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
             }
           ]
         }
-
       ],
       [
         {

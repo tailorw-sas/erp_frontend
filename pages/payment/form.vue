@@ -98,6 +98,18 @@ const objItemSelectedForRightClickUndoApplication = ref({} as GenericObject)
 const objItemSelectedForRightClickReverseTransaction = ref({} as GenericObject)
 const allMenuListItems = ref([
   {
+    id: 'paymentDetailSelected',
+    label: 'Selected Payment Detail:',
+    icon: 'pi pi-folder',
+    command: () => {},
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    disabled: true,
+    visible: true,
+  },
+  {
     id: 'applayDeposit',
     label: 'Apply Deposit',
     icon: 'pi pi-dollar',
@@ -589,6 +601,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Remark',
     dataType: 'text',
     class: 'field col-12 md:col-3',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 
   // {
@@ -623,6 +636,7 @@ const fieldPaymentDetails = ref<FieldDefinitionType[]>([
     header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ])
 
@@ -775,6 +789,7 @@ const fieldPaymentDetailsForEdit = ref<FieldDefinitionType[]>([
     header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ])
 
@@ -999,7 +1014,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           const minValueToApplyFormatted = formatNumber(minValueToApply) // Creada solo para mostrar para que el separador de miles no cause problemas
           const decimalSchema = z.object(
             {
-              remark: z.string(),
+              remark: z.string().trim().max(255, 'Maximum 255 characters'),
               amount: z
                 .number()
                 .refine(value => !Number.isNaN(value) && (value >= 0.01) && (Number.parseFloat((amountTemp - value).toFixed(2)) >= 0.01), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
@@ -1039,7 +1054,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
           const oldAmountFormatted = formatNumber(oldAmount) // Solo para mostrar
           const decimalSchema = z.object(
             {
-              remark: z.string(),
+              remark: z.string().trim().max(255, 'Maximum 255 characters'),
               amount: z
                 .number()
                 .refine(value => !Number.isNaN(value) && (value >= 0.01) && (value <= Number.parseFloat(minValueToApply)), { message: 'Deposit Amount must be greather than zero and less or equal than the selected transaction amount' })
@@ -1063,7 +1078,7 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
       itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
       const decimalSchema = z.object(
         {
-          remark: z.string(),
+          remark: z.string().trim().max(255, 'Maximum 255 characters'),
           amount: z
             .number()
             .refine(value => !Number.isNaN(value) && value >= 0.01 && (value <= item.value.paymentBalance), { message: 'The amount must be greater than zero and less or equal than Payment Balance' })
@@ -1264,11 +1279,31 @@ function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition
   else {
     updateFieldProperty(fields, 'remark', 'disabled', false)
   }
+  // Si esta en estado confirmed o el payment balance es 0 se deshabilita
   if (!objItem.paymentStatus.confirmed) {
+    updateFieldProperty(fields, 'client', 'disabled', true)
+  }
+  else if (objItem.paymentBalance <= 0) {
     updateFieldProperty(fields, 'client', 'disabled', true)
   }
   else {
     updateFieldProperty(fields, 'client', 'disabled', false)
+  }
+
+  // Deshabilitar el campo agency si el payment balance es 0
+  if (objItem.paymentBalance <= 0) {
+    updateFieldProperty(fields, 'agency', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(fields, 'agency', 'disabled', false)
+  }
+
+  // Deshabilitar el campo bankAccount si el payment balance es 0
+  if (objItem.paymentBalance <= 0) {
+    updateFieldProperty(fields, 'bankAccount', 'disabled', true)
+  }
+  else {
+    updateFieldProperty(fields, 'bankAccount', 'disabled', false)
   }
 }
 
@@ -2919,6 +2954,11 @@ function onRowContextMenu(event: any) {
   const amount = Number.parseFloat(event.data.amount) || 0
   const childrenTotalValue = Number.parseFloat(event.data.childrenTotalValue) || 0
 
+  const selectedPaymentItem = allMenuListItems.value.find(item => item.id === 'paymentDetailSelected')
+  if (selectedPaymentItem) {
+    selectedPaymentItem.label = `Selected Payment Detail: ${event.data.paymentDetailId}`
+  }
+
   minValueToApplyDeposit = Math.abs(Math.abs(amount) - Math.abs(childrenTotalValue))
   minValueToApplyDeposit = Number.parseFloat(minValueToApplyDeposit.toFixed(2))
   const applayDepositValue = Number.parseFloat(event.data.applayDepositValue) || minValueToApplyDeposit
@@ -3108,7 +3148,10 @@ function disableAgency(data: any) {
   if (data.client === null) {
     result = true
   }
-  else if (data.paymentStatus.name === 'CON - Confirmed') {
+  else if (data.paymentBalance <= 0) { // Esta validacion es nueva, solo estaba comprobando por el paymentStatus.confirmed
+    result = true
+  }
+  else if (data.paymentStatus.confirmed === true) {
     result = false
   }
   else {
@@ -3123,7 +3166,10 @@ function disableBankAccount(data: any) {
   if (data.hotel === null) {
     result = true
   }
-  else if (data.paymentStatus.name === 'CON - Confirmed') {
+  else if (data.paymentBalance <= 0) { // Esta validacion es nueva, solo estaba comprobando por el paymentStatus.confirmed
+    result = true
+  }
+  else if (data.paymentStatus.confirmed === true) {
     result = false
   }
   else {
@@ -3376,26 +3422,26 @@ onMounted(async () => {
               onUpdate('paymentSource', $event)
 
               // Este codigo se va a implementar en algun momento
-              // if ($event && $event.expense) {
-              //   const decimalSchema = z.object(
-              //     {
-              //       bankAccount: z
-              //         .object({}).nullable(),
-              //     },
-              //   )
-              //   updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
-              //   updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
+              if ($event && $event.expense) {
+                const decimalSchema = z.object(
+                  {
+                    bankAccount: z
+                      .object({}).nullable(),
+                  },
+                )
+                updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+                updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
 
-              // }
-              // else {
-              //   const decimalSchema = z.object(
-              //     {
-              //       bankAccount: validateEntityStatus('bank account'),
-              //     },
-              //   )
-              //   updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
-              //   updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
-              // }
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    bankAccount: validateEntityStatus('bank account'),
+                  },
+                )
+                updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+                updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
+              }
 
             }"
             @load="async($event) => {

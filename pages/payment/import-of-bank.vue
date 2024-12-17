@@ -136,6 +136,7 @@ async function clearForm() {
 }
 
 async function onChangeFile(event: any) {
+  listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
     inputFile.value = event.target.files[0]
     invoiceFile.value = inputFile.value.name

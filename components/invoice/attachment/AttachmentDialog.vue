@@ -100,8 +100,8 @@ const resourceTypeList = ref<any[]>([])
 const resourceTypeSelected = ref<any>(null)
 
 const confResourceTypeApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
 })
 
 const idItem = ref('')
@@ -971,7 +971,7 @@ onMounted(async () => {
           <span class="font-bold white-space-nowrap">{{ header }}</span>
         </div>
         <div class="flex align-items-center">
-          <strong class="mr-1">Invoice:</strong>
+          <strong class="mr-1">Invoice Id:</strong>
           <strong>{{ selectedInvoiceObj.invoiceId }}</strong>
         </div>
       </div>

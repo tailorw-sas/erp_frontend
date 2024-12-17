@@ -296,7 +296,7 @@ const invoiceAllContextMenuItems = ref([
       showItem: false,
     },
     {
-      label: 'Payments',
+      label: 'Payments Details Applied',
       icon: 'pi pi-money-bill',
       width: '24px',
       height: '24px',
@@ -948,8 +948,8 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator?.dueAmount || 0, 
-          invoiceAmount: iterator?.invoiceAmount || 0,
+          dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
+          invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
@@ -1981,7 +1981,7 @@ function onRowRightClick(event: any) {
 
   // Payments
   if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
-    findMenuItemByLabelSetShow('Payments', invoiceContextMenuItems.value, true)
+    findMenuItemByLabelSetShow('Payments Details Applied', invoiceContextMenuItems.value, true)
   }
 
   // Resend

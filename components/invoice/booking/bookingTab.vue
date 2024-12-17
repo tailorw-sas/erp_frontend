@@ -655,6 +655,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 
@@ -1212,10 +1213,10 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: { ...iterator?.invoice?.agency, name: `${iterator?.invoice?.agency?.code}-${iterator?.invoice?.agency?.name}` },
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         fullName: `${iterator.firstName ? iterator.firstName : ""} ${iterator.lastName ? iterator.lastName : ''}`,
-        originalAmount: iterator?.invoiceAmount,
-        invoiceAmount: iterator?.invoiceAmount,
-        dueAmount: iterator?.dueAmount,
-        hotelAmount: iterator?.hotelAmount,
+        originalAmount: iterator?.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
+        invoiceAmount: iterator?.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
+        dueAmount: iterator?.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : 0,
+        hotelAmount: iterator?.hotelAmount ? Number.parseFloat(iterator?.hotelAmount).toFixed(2) : 0,
       }]
       if (typeof +iterator.invoiceAmount === 'number') {
         totalInvoiceAmount.value += Number(iterator.invoiceAmount)
@@ -1720,7 +1721,7 @@ const columnsPaymentDetailsApplied = ref<IColumn[]>([
 ])
 
 const optionsPaymentDetailsApplied = ref({
-  tableName: 'Payment Details',
+  tableName: 'Payment Details Applied',
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice/search-payment',
   expandableRows: false,
@@ -2017,7 +2018,7 @@ onMounted(() => {
         <div class="flex justify-content-between w-full">
           <div class="flex align-items-center">
             <h5 class="m-0">
-              Payment Details
+              Payment Details Applied
             </h5>
           </div>
           <div class="flex align-items-center">

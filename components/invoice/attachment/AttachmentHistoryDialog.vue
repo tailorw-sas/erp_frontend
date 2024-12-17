@@ -351,7 +351,7 @@ onMounted(() => {
           {{ props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? 'Income Status History' : header }}
         </h5>
         <h5 class="m-0 mr-2">
-          Invoice: {{ props.selectedInvoiceObj?.invoiceId }}
+          Invoice Id: {{ props.selectedInvoiceObj?.invoiceId }}
         </h5>
       </div>
     </template>

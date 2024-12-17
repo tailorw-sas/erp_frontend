@@ -2,6 +2,7 @@
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { v4 } from 'uuid'
+import { watch } from 'vue'
 import AttachmentHistoryTotal from './AttachmentHistoryTotal.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container } from '~/components/form/EditFormV2WithContainer'
@@ -9,7 +10,6 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
-import {watch} from "vue";
 
 const props = defineProps({
 
@@ -80,8 +80,8 @@ const confattachmentTypeListApi = reactive({
 })
 
 const confResourceTypeApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
 })
 
 const formReload = ref(0)
@@ -178,7 +178,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'textarea',
     class: 'field col-12 ',
     headerClass: 'mb-1',
-
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 
@@ -800,7 +800,7 @@ onMounted(async () => {
       <div class="inline-flex align-items-center justify-content-center gap-2">
         <span class="font-bold white-space-nowrap">{{ header }}</span>
         <!-- <strong class="mx-2">-</strong>
-        <strong class="mr-1">Invoice:</strong>
+        <strong class="mr-1">Invoice Id:</strong>
         <strong>{{ selectedInvoiceObj.invoiceId }}</strong> -->
       </div>
     </template>

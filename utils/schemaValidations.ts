@@ -51,6 +51,30 @@ export function validateEntityStatus(fieldName: string) {
     })
 }
 
+export function validateEntityStatusOnOffREquired(fieldName: string, required: boolean = true) {
+  if (!required) {
+    return z.object({
+      id: z.string(),
+      name: z.string(),
+      status: z.enum(['ACTIVE', 'INACTIVE'], { message: `The ${fieldName} must be either ACTIVE or INACTIVE` })
+    }).nullable()
+      .refine(value => !value || isActive(value), {
+        message: `This ${fieldName} is not active`,
+      })
+  }
+  else {
+    return z.object({
+      id: z.string(),
+      name: z.string(),
+      status: z.enum(['ACTIVE', 'INACTIVE'], { message: `The ${fieldName} must be either ACTIVE or INACTIVE` })
+    }).nullable()
+      .refine(value => value && value.id && value.name, { message: `The ${fieldName} field is required` })
+      .refine(value => isActive(value), {
+        message: `This ${fieldName} is not active`
+      })
+  }
+}
+
 export function validateEntityForAgency(fieldName: string) {
   return z.object({
     id: z.string(),

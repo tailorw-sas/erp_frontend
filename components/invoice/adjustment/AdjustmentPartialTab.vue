@@ -13,7 +13,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import {formatNumber} from "~/pages/payment/utils/helperFilters";
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
 const props = defineProps({
   isDialogOpen: {
@@ -166,7 +166,7 @@ const Fields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
+        validation: z.string().trim().max(255, 'Maximum 255 characters')
       },
 
     ],
@@ -212,7 +212,7 @@ const IncomeAttachmentFields: Array<Container> = [
         dataType: 'text',
         class: 'field col-12',
         headerClass: 'mb-1',
-
+        validation: z.string().trim().max(255, 'Maximum 255 characters')
       },
 
     ],

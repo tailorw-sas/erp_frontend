@@ -284,7 +284,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d+\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] \d+ \d+$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
 
   // Coupon No.
@@ -332,6 +332,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3',
     headerClass: 'mb-1',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 
@@ -1889,7 +1890,7 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-        <template #field-hotelBookingNumber="{ onUpdate, item: data, fields, field }">
+        <!--  <template #field-hotelBookingNumber="{ onUpdate, item: data, fields, field }">
           <InputText
             v-if="!loadingSaveAll"
             v-model="data.hotelBookingNumber"
@@ -1905,7 +1906,7 @@ onMounted(async () => {
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
+        </template>-->
         <template #field-dueAmount="{ onUpdate, item: data, fields, field }">
           <InputNumber
             v-if="!loadingSaveAll"

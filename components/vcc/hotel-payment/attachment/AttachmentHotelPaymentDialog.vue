@@ -48,7 +48,7 @@ const confattachmentTypeListApi = reactive({
   uriApi: 'manage-attachment-type',
 })
 const confResourceTypeListApi = reactive({
-  moduleApi: 'payment',
+  moduleApi: 'creditcard',
   uriApi: 'resource-type',
 })
 
@@ -138,6 +138,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'textarea',
     class: 'field col-12 ',
     headerClass: 'mb-1',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   }
 ]
 
@@ -319,12 +320,13 @@ async function loadDefaultResourceType() {
   if (!item.value.resourceType || !item.value.resourceType.status) {
     // Listar solo si el resource type esta en null, ya que no cambia. O si viene en null el status
     const filter: FilterCriteria[] = [
-      {
+      // Por ahora se comenta el default porque en el nuevo nomenclador no esta, que se tome el primero por defecto
+      /* {
         key: 'vcc',
         logicalOperation: 'AND',
         operator: 'EQUALS',
         value: true,
-      },
+      }, */
       {
         key: 'status',
         logicalOperation: 'AND',
@@ -478,6 +480,7 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     }
     catch (error: any) {
       successOperation = false
@@ -488,6 +491,7 @@ async function saveItem(item: { [key: string]: any }) {
   else {
     try {
       await createItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     }
     catch (error: any) {
       successOperation = false

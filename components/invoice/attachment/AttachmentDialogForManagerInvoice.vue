@@ -100,8 +100,8 @@ const resourceTypeList = ref<any[]>([])
 const resourceTypeSelected = ref<any>(null)
 
 const confResourceTypeApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
 })
 
 const idItem = ref('')
@@ -186,6 +186,7 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'textarea',
     class: 'field col-12 ',
     headerClass: 'mb-1',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ]
 
@@ -898,7 +899,7 @@ onMounted(async () => {
           <span class="font-bold white-space-nowrap">{{ header }}</span>
         </div>
         <div class="flex align-items-center mr-2">
-          <strong class="mr-1">Invoice:</strong>
+          <strong class="mr-1">Invoice Id:</strong>
           <strong>{{ selectedInvoiceObj.invoiceId }}</strong>
         </div>
       </div>
