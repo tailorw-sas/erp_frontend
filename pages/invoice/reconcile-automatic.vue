@@ -4,6 +4,7 @@ import { useToast } from 'primevue/usetoast'
 import { v4 as uuidv4 } from 'uuid'
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
+import { reject } from 'lodash'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
@@ -376,19 +377,6 @@ async function ApplyImport() {
     //     getErrorList(errorsResponse)
     //   }
     // }
-
-    if (successOperation) {
-      await validateStatusImport()
-      await getErrorList()
-      if (errorList.value.length > 0) {
-        await getList()
-      }
-      else {
-        navigateTo('/invoice')
-        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 })
-      }
-    }
   }
   catch (error: any) {
     successOperation = false
@@ -399,29 +387,62 @@ async function ApplyImport() {
     loadingSaveAll.value = false
     options.value.loading = false
   }
+  if (successOperation) {
+    try {
+      await validateStatusImport()
+
+      await getErrorList()
+      if (errorList.value.length > 0) {
+        await getList()
+      }
+      else {
+        navigateTo('/invoice')
+        const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 10000 })
+      }
+    }
+    catch (error) {
+
+    }
+  }
 }
 
 async function validateStatusImport() {
   options.value.loading = true
-  return new Promise<void>((resolve) => {
+
+  return new Promise<void>((resolve, reject) => {
     let status = 'RUNNING'
+
     const intervalID = setInterval(async () => {
       try {
-        const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, idItem.value, 'import-status-auto')
+        const response = await GenericService.getById(
+          options.value.moduleApi,
+          options.value.uriApi,
+          idItem.value,
+          'import-status-auto'
+        )
         status = response.status
       }
       catch (error: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: error.data.data.error.errorMessage,
+          life: 10000,
+        })
+
+        // Detiene el intervalo y rechaza la promesa
         clearInterval(intervalID)
-        uploadComplete.value = false
         options.value.loading = false
-        resolve() // Resuelve la promesa cuando el estado es FINISHED
+        uploadComplete.value = false
+        reject(error) // Rechaza la promesa con el error
+        return // Asegura que no continúe la ejecución
       }
 
       if (status === 'FINISHED') {
-        clearInterval(intervalID)
-        options.value.loading = false
-        resolve() // Resuelve la promesa cuando el estado es FINISHED
+        clearInterval(intervalID) // Detiene el intervalo
+        options.value.loading = false // Detiene la carga
+        resolve() // Resuelve la promesa
       }
     }, 10000)
   })
