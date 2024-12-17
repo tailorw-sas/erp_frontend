@@ -24,4 +24,6 @@ public interface IManageMerchantHotelEnrolleService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     PaginatedResponse findHotelsByManageMerchant(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    Long countByManageMerchantAndManageHotelNotId(UUID id, UUID managerMerchant, UUID managerHotel);
 }

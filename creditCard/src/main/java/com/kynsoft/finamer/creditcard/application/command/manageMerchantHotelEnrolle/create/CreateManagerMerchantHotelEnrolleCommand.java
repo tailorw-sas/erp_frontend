@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manageMerchantHotelEnrolle.update;
+package com.kynsoft.finamer.creditcard.application.command.manageMerchantHotelEnrolle.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UpdateManagerMerchantHotelEnrolleCommand implements ICommand {
+public class CreateManagerMerchantHotelEnrolleCommand implements ICommand {
 
     private UUID id;
     private UUID managerMerchant;
@@ -21,8 +21,8 @@ public class UpdateManagerMerchantHotelEnrolleCommand implements ICommand {
     private String description;
     private Status status;
 
-    public UpdateManagerMerchantHotelEnrolleCommand(UUID id, UUID managerMerchant, UUID managerCurrency, UUID managerHotel, String enrolle, String key, String description, Status status) {
-        this.id = id;
+    public CreateManagerMerchantHotelEnrolleCommand(UUID managerMerchant, UUID managerCurrency, UUID managerHotel, String enrolle, String key, String description, Status status) {
+        this.id = UUID.randomUUID();
         this.managerMerchant = managerMerchant;
         this.managerCurrency = managerCurrency;
         this.managerHotel = managerHotel;
@@ -32,12 +32,11 @@ public class UpdateManagerMerchantHotelEnrolleCommand implements ICommand {
         this.status = status;
     }
 
-    public static UpdateManagerMerchantHotelEnrolleCommand fromRequest(UpdateManagerMerchantHotelEnrolleRequest request, UUID id) {
-        return new UpdateManagerMerchantHotelEnrolleCommand(
-                id,
+    public static CreateManagerMerchantHotelEnrolleCommand fromRequest(CreateManagerMerchantHotelEnrolleRequest request) {
+        return new CreateManagerMerchantHotelEnrolleCommand(
                 request.getManagerMerchant(),
-                request.getManagerCurrency(), 
-                request.getManagerHotel(), 
+                request.getManagerCurrency(),
+                request.getManagerHotel(),
                 request.getEnrrolle(),
                 request.getKey(),
                 request.getDescription(),
@@ -47,6 +46,6 @@ public class UpdateManagerMerchantHotelEnrolleCommand implements ICommand {
 
     @Override
     public ICommandMessage getMessage() {
-        return new UpdateManagerMerchantHotelEnrolleMessage(id);
+        return new CreateManagerMerchantHotelEnrolleMessage(id);
     }
 }

@@ -59,10 +59,11 @@ public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHot
 
     @Override
     public void delete(ManageMerchantHotelEnrolleDto dto) {
-        ManageMerchantHotelEnrolle delete = new ManageMerchantHotelEnrolle(dto);
-        delete.setDeleted(true);
-        delete.setDeletedAt(LocalDateTime.now());
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -101,6 +102,11 @@ public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHot
         Page<ManageMerchantHotelEnrolle> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getHotelsPaginatedResponse(data);
+    }
+
+    @Override
+    public Long countByManageMerchantAndManageHotelNotId(UUID id, UUID managerMerchant, UUID managerHotel) {
+        return this.repositoryQuery.countByManageMerchantAndManageHotelNotId(id, managerMerchant, managerHotel);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageMerchantHotelEnrolle> data) {
