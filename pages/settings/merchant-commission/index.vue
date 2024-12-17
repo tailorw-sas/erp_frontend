@@ -151,7 +151,7 @@ const itemTemp = ref<GenericObject>({
 
 const merchantList = ref<any[]>([])
 const confMerchantApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
 })
 
@@ -168,7 +168,7 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'manageCreditCartType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', keyValue: 'name' }, sortable: true },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'calculationType', header: 'Calculation Type', type: 'text' },

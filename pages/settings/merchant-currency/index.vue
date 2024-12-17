@@ -109,7 +109,7 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'managerCurrency', header: 'Currency', type: 'select', localItems: [], objApi: { moduleApi: 'settings', uriApi: 'manage-currency' }, sortable: true },
   { field: 'value', header: 'Value', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
@@ -397,7 +397,7 @@ async function getMerchantList(query: string) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
     const { data: dataList } = response
     MerchantList.value = []
 

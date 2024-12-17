@@ -313,7 +313,7 @@ async function getMerchantList(query: string = '') {
           sortType: ENUM_SHORT_TYPE.DESC
         }
 
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
     const { data: dataList } = response
     MerchantList.value = []
     for (const iterator of dataList) {
