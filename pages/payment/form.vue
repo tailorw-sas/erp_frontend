@@ -3148,14 +3148,17 @@ function disableAgency(data: any) {
   if (data.client === null) {
     result = true
   }
-  else if (data.paymentBalance <= 0) { // Esta validacion es nueva, solo estaba comprobando por el paymentStatus.confirmed
+  else if (data.paymentBalance <= 0 && idItem.value !== '') { // Esta validacion es nueva, solo estaba comprobando por el paymentStatus.confirmed
     result = true
   }
-  else if (data.paymentStatus.confirmed === true) {
+  else if (data.paymentStatus.confirmed === true && idItem.value !== '') {
     result = false
   }
-  else {
+  else if (idItem.value !== '') {
     result = true
+  }
+  else {
+    result = false
   }
 
   return result
