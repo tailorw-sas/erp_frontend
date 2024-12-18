@@ -52,14 +52,14 @@ public class ManageInvoiceResponse implements IResponse {
     private ImportType importType;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+        //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
         this.invoiceNumber = this.deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? Double.valueOf(decimalFormat.format(dto.getInvoiceAmount())) : null;
-        this.dueAmount = dto.getDueAmount() != null ? Double.valueOf(decimalFormat.format(dto.getDueAmount())) : null;
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : null;
+        this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : null;
         this.hotel = dto.getHotel();
         this.agency = dto.getAgency();
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
@@ -76,7 +76,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.parent = dto.getParent();
         this.invoiceNo = dto.getInvoiceNo();
         this.credits = dto.getCredits();
-        this.originalAmount = dto.getOriginalAmount() != null ? Double.valueOf(decimalFormat.format(dto.getOriginalAmount())) : null;
+        this.originalAmount = dto.getOriginalAmount() != null ? dto.getOriginalAmount() : null;
         this.importType = dto.getImportType();
     }
 

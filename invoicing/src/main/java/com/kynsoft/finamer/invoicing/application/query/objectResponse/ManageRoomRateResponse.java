@@ -33,19 +33,19 @@ public class ManageRoomRateResponse implements IResponse {
     private Long nights;
 
     public ManageRoomRateResponse(ManageRoomRateDto dto) {
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+        //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = dto.getId();
         this.roomRateId = dto.getRoomRateId();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
         
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? Double.valueOf(decimalFormat.format(dto.getInvoiceAmount())) : null;
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : null;
         this.roomNumber = dto.getRoomNumber();
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
-        this.rateAdult = dto.getRateAdult() != null ? Double.valueOf(decimalFormat.format(dto.getRateAdult())) : null;
-        this.rateChild = dto.getRateChild() != null ? Double.valueOf(decimalFormat.format(dto.getRateChild())) : null;
-        this.hotelAmount = dto.getHotelAmount() != null ? Double.valueOf(decimalFormat.format(dto.getHotelAmount())) : null;
+        this.rateAdult = dto.getRateAdult() != null ? dto.getRateAdult() : null;
+        this.rateChild = dto.getRateChild() != null ? dto.getRateChild() : null;
+        this.hotelAmount = dto.getHotelAmount() != null ? dto.getHotelAmount() : null;
         this.remark = dto.getRemark();
         this.booking = dto.getBooking();
         this.nights = dto.getNights();
