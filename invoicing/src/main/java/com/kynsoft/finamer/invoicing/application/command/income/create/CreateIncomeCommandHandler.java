@@ -80,7 +80,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         } catch (Exception e) {
         }
 
-        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(new ManageInvoiceDto(
+        ManageInvoiceDto income = new ManageInvoiceDto(
                 command.getId(),
                 0L,
                 0L,
@@ -104,7 +104,9 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 null,
                 false,
                 null, 0.0,0
-        ));
+        );
+        income.setOriginalAmount(0.0);
+        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
@@ -195,11 +197,11 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     }
 
     private LocalDateTime invoiceDate(UUID hotel) {
-        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+//        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
 
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+//        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return LocalDateTime.now(ZoneId.of("UTC"));
-        }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+//        }
+//        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }
