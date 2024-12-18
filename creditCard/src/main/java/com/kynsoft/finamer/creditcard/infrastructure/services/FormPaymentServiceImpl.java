@@ -60,7 +60,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         if (transactionDto.getMethodType() == MethodType.LINK && !isValidLink(transactionDto)) {
             throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
         } else {
-            if (merchantConfigDto.getMethod().equals(Method.AZUL.toString())) {
+            if (merchantConfigDto.getMethod() == Method.AZUL) {
                 return redirectToAzul(transactionDto, merchantConfigDto);
             } else {
                 return redirectToCardNet(transactionDto, merchantConfigDto);
