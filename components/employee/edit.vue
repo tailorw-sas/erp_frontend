@@ -18,7 +18,7 @@ const props = defineProps({
   },
 })
 const emits = defineEmits<{
-  (e: 'onSuccessEdit', value: boolean): void
+  (e: 'onSuccessEdit', value: string): void
 }>()
 const toast = useToast()
 const confirm = useConfirm()
@@ -582,10 +582,10 @@ async function save(item: { [key: string]: any }) {
   payload.manageTradingCompaniesList = filterSelectedIds(selectedTradingCompanyKey.value)
   try {
     await editUser(item)
-    const response = await GenericService.update(confApi.moduleApi, confApi.uriApi, props.employeeId, payload)
+    const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, props.employeeId, payload)
     if (response) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-      emits('onSuccessEdit', true)
+      emits('onSuccessEdit', response.id)
     }
   }
   catch (error: any) {
