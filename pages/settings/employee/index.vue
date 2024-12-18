@@ -99,7 +99,7 @@ function clearFilterToSearch() {
   getList()
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -134,7 +134,7 @@ async function getList() {
     }
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
       userToClone.value = listItems.value[0]
     }
@@ -175,6 +175,12 @@ function onSortField(event: any) {
   }
 }
 
+async function onSuccessAction(employeeId: string) {
+  await getList(false)
+  if (employeeId) {
+    idItemToLoadFirstTime.value = employeeId
+  }
+}
 // Form Operations
 function setOperation(operation: E_OPERATION) {
   selectedOperation.value = operation
@@ -311,7 +317,7 @@ const disabledClearSearch = computed(() => {
         </div>
         <div class="card p-0 mb-0">
           <CreateEmployeePage v-if="selectedOperation === E_OPERATION.CREATE" @on-success-create="getList" />
-          <EditEmployeePage v-if="selectedOperation === E_OPERATION.EDIT" :key="editReload" :employee-id="idItemToLoadFirstTime" @on-success-edit="getList" />
+          <EditEmployeePage v-if="selectedOperation === E_OPERATION.EDIT" :key="editReload" :employee-id="idItemToLoadFirstTime" @on-success-edit="($event) => onSuccessAction($event)" />
           <CloneEmployeePage v-if="selectedOperation === E_OPERATION.CLONE" :key="editReload" :employee-id="idItemToLoadFirstTime" @on-success-clone="getList" />
         </div>
       </div>
