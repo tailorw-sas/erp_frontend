@@ -11,6 +11,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
@@ -231,7 +232,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph("$ " + total).addStyle(styleCell)));
+        table.addCell(new Cell().add(new Paragraph("$ " + ScaleAmount.scaleAmount(total)).addStyle(styleCell)));
         table.addCell(new Cell().add(new Paragraph(!moneyType.isEmpty() ? moneyType : "$" ).addStyle(styleCell)));
 
         document.add(table);
