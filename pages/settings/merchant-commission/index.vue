@@ -215,7 +215,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -254,7 +254,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -321,7 +321,7 @@ async function getItemById(id: string) {
         item.value.manageMerchant = merchantList.value.find(i => i.id === response.manageMerchant.id)
         item.value.commission = response.commission
         item.value.calculationType = ENUM_CALCULATION_TYPE.find(i => i.id === response.calculationType)
-        item.value.description = response.description
+        item.value.description = response.description || ''
         item.value.status = statusToBoolean(response.status)
         const newDate = new Date(response.fromDate)
         newDate.setDate(newDate.getDate() + 1)
@@ -364,8 +364,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.status = statusToString(payload.status)
     delete payload.status
     delete payload.manageMerchant
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -381,8 +380,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.status = statusToString(payload.status)
   delete payload.status
   delete payload.manageMerchant
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
-  toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -405,9 +403,11 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -416,7 +416,8 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -426,7 +427,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
