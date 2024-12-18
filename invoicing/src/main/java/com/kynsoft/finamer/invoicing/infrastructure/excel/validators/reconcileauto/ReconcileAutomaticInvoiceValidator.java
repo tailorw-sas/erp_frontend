@@ -3,8 +3,11 @@ package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcilea
 import com.kynsof.share.core.application.excel.ExcelUtils;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,15 +28,17 @@ import java.util.Optional;
 
 @Component
 public class ReconcileAutomaticInvoiceValidator {
+
     private Workbook workbook;
     private Sheet sheet;
 
     private final IManageNightTypeService nightTypeService;
+    private final IManageAgencyService agencyService;
 
-    public ReconcileAutomaticInvoiceValidator(IManageNightTypeService nightTypeService) {
+    public ReconcileAutomaticInvoiceValidator(IManageNightTypeService nightTypeService, IManageAgencyService agencyService) {
         this.nightTypeService = nightTypeService;
+        this.agencyService = agencyService;
     }
-
 
     public void loadWorkbook(byte[] file) throws IOException {
         this.workbook = WorkbookFactory.create(new ByteArrayInputStream(file));
@@ -41,7 +46,7 @@ public class ReconcileAutomaticInvoiceValidator {
     }
 
     public void closeWorkbook() throws IOException {
-        if (Objects.nonNull(workbook)){
+        if (Objects.nonNull(workbook)) {
             workbook.close();
         }
     }
@@ -62,9 +67,9 @@ public class ReconcileAutomaticInvoiceValidator {
 
     protected boolean isDateSeparator(Row currentRow) {
         for (int cellNum = 1; cellNum < currentRow.getLastCellNum(); cellNum++) {
-            if (currentRow.getCell(cellNum) != null ||
-                    currentRow.getCell(cellNum).getCellType() != CellType.BLANK ||
-                    StringUtils.isNotBlank(currentRow.getCell(cellNum).toString())) {
+            if (currentRow.getCell(cellNum) != null
+                    || currentRow.getCell(cellNum).getCellType() != CellType.BLANK
+                    || StringUtils.isNotBlank(currentRow.getCell(cellNum).toString())) {
                 return false;
             }
         }
@@ -90,10 +95,12 @@ public class ReconcileAutomaticInvoiceValidator {
                     String price = formatter.formatCellValue(currentRow.getCell(39));
                     String contract = formatter.formatCellValue(currentRow.getCell(0));
                     String reservationNumber = currentRow.getCell(22).getStringCellValue();
-                    if (validateCouponNumber(couponNumber, booking, errorFieldList
-                    ) && validatePrice(price, booking, errorFieldList)
-                            && validateNightType(nightType, booking, errorFieldList)
-                            && validateReservationNumber(reservationNumber, couponFormat, errorFieldList)) {
+                    if (validateCouponNumber(couponNumber, booking, errorFieldList)
+                        && validatePrice(price, booking, errorFieldList)
+                        && validateNightType(nightType, booking, errorFieldList)
+                        && validateReservationNumber(reservationNumber, couponFormat, errorFieldList)
+                        && validateAgency(manageInvoiceDto, errorFieldList))
+                    {
                         booking.setContract(contract);
                         errorFieldList.clear();
                         break;
@@ -121,7 +128,6 @@ public class ReconcileAutomaticInvoiceValidator {
         return Optional.of(allMatch);
     }
 
-
     private boolean validateCouponNumber(String couponNumber, ManageBookingDto manageBookingDto, List<ErrorField> errors) {
         if (!couponNumber.equals(manageBookingDto.getCouponNumber())) {
             errors.add(new ErrorField("CouponNumber", "The coupon number not match with the file"));
@@ -138,6 +144,15 @@ public class ReconcileAutomaticInvoiceValidator {
         return true;
     }
 
+    private boolean validateAgency(ManageInvoiceDto manageInvoiceDto, List<ErrorField> errors) {
+        ManageAgencyDto agencyDto = this.agencyService.findById(manageInvoiceDto.getAgency().getId());
+        if (agencyDto.getStatus().equals(Status.INACTIVE.name())) {
+            errors.add(new ErrorField("Agency", "The agency inactive."));
+            return false;
+        }
+        return true;
+    }
+
     private boolean validatePrice(String price, ManageBookingDto manageBookingDto, List<ErrorField> errors) {
         String[] priceSplit = price.split("Price:");
         Double priceAmount = Double.parseDouble(priceSplit[1]);
@@ -148,8 +163,8 @@ public class ReconcileAutomaticInvoiceValidator {
         return true;
     }
 
-    private boolean validateReservationNumber(String reservationNumber, String couponFormat, List<ErrorField> errors){
-        if (!AgencyCouponFormatUtils.validateCode(reservationNumber, couponFormat)){
+    private boolean validateReservationNumber(String reservationNumber, String couponFormat, List<ErrorField> errors) {
+        if (!AgencyCouponFormatUtils.validateCode(reservationNumber, couponFormat)) {
             errors.add(new ErrorField("reservationNumber", "The reservation number is not valid."));
             return false;
         }
