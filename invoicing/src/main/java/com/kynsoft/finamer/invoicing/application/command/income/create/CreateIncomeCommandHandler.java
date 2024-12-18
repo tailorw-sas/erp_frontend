@@ -80,7 +80,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         } catch (Exception e) {
         }
 
-        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(new ManageInvoiceDto(
+        ManageInvoiceDto income = new ManageInvoiceDto(
                 command.getId(),
                 0L,
                 0L,
@@ -104,7 +104,9 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 null,
                 false,
                 null, 0.0,0
-        ));
+        );
+        income.setOriginalAmount(0.0);
+        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
