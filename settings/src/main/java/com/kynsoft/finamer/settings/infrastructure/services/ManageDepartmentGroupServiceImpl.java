@@ -85,4 +85,17 @@ public class ManageDepartmentGroupServiceImpl implements IManageDepartmentGroupS
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
+
+    @Override
+    public List<ManageDepartmentGroupDto> findAllToReplicate() {
+        List<ManageDepartmentGroup> objects = this.repositoryQuery.findAll();
+        List<ManageDepartmentGroupDto> objectDtos = new ArrayList<>();
+
+        for (ManageDepartmentGroup object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

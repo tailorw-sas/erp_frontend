@@ -105,4 +105,16 @@ public class ManagerAccountTypeServiceImpl implements IManagerAccountTypeService
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManagerAccountTypeDto> findAllToReplicate() {
+        List<ManagerAccountType> objects = this.repositoryQuery.findAll();
+        List<ManagerAccountTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManagerAccountType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }
