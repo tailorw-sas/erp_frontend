@@ -225,7 +225,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
     //Conformar el correo para confirmar que la transaccion fue Recivida
     @Override
-    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto){
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String responseCodeMessage){
         if(transactionDto.getEmail() != null){
             TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
@@ -245,6 +245,7 @@ public class TransactionServiceImpl implements ITransactionService {
                     new MailJetVar("number_id", transactionDto.getId()),
                     new MailJetVar("transaction_type", "Sale"),
                     new MailJetVar("status", transactionDto.getStatus().getName()),
+                    new MailJetVar("response_code", responseCodeMessage),
                     new MailJetVar("payment_date", transactionDateStr),
                     new MailJetVar("authorization_number", "N/A"),
                     new MailJetVar("card_type", transactionDto.getCreditCardType().getName()),
