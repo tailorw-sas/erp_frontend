@@ -115,7 +115,7 @@ const payload = ref<IQueryRequest>({
 
   ],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -499,6 +499,7 @@ async function send() {
   loadingSaveAll.value = true
   options.value.loading = true
   let completed = false
+  const count = clickedItem.value.length
 
   try {
     if (!clickedItem.value) {
@@ -521,7 +522,7 @@ async function send() {
   finally {
     options.value.loading = false
     if (completed) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 10000 })
       if (clickedItem.value.length === listItems.value.length) {
         clickedItem.value = []
         navigateTo('/invoice')

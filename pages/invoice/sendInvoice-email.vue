@@ -569,6 +569,7 @@ async function send() {
   loadingSaveAll.value = true
   options.value.loading = true
   let completed = false
+  const count = clickedItem.value.length
   try {
     if (!clickedItem.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
@@ -588,7 +589,7 @@ async function send() {
   finally {
     options.value.loading = false
     if (completed) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 10000 })
       if (clickedItem.value.length === listItems.value.length) {
         clickedItem.value = []
         navigateTo('/invoice')
