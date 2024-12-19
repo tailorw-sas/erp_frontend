@@ -36,6 +36,7 @@ const formReloadAgency = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
 const dialogPaymentDetailFormReloadEdit = ref(0)
 const amountOfDetailItem = ref(0) // Temp
+const isCancelledPayment = ref(false)
 
 const loadingSaveAll = ref(false)
 const loadingSaveAllForEdit = ref(false)
@@ -1395,13 +1396,18 @@ async function getItemById(id: string) {
               originalName: response.paymentStatus.name,
               status: response.paymentStatus.status,
               applied: response.paymentStatus.applied,
-              confirmed: response.paymentStatus.confirmed
+              confirmed: response.paymentStatus.confirmed,
+              cancelled: response.paymentStatus.cancelled
             }
           : null
         paymentStatusList.value = [paymentStatusTemp]
         item.value.paymentStatus = paymentStatusTemp
         if (paymentStatusTemp) {
           paymentStatusOfGetById.value = paymentStatusTemp
+        }
+
+        if (response.paymentStatus && response.paymentStatus.cancelled === true) {
+          isCancelledPayment.value = response.paymentStatus.cancelled
         }
 
         const paymentSourceTemp = response.paymentSource
@@ -3661,7 +3667,12 @@ onMounted(async () => {
       @update:clicked-item="rowSelected($event)"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @on-row-right-click="onRowContextMenu($event)"
+      @on-row-right-click="($event) => {
+        if (isCancelledPayment) {
+          return
+        }
+        onRowContextMenu($event)
+      }"
       @on-row-double-click="openDialogPaymentDetailsEdit($event)"
     >
       <template #datatable-footer>
@@ -3709,7 +3720,7 @@ onMounted(async () => {
     </DynamicTable>
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
-        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="isCancelledPayment" :loading="loadingSaveAll" @click="forceSave = true" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SUMMARY']">
         <Button v-tooltip.top="'Deposit Summary'" :disabled="!enableDepositSummaryAction" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
@@ -3723,7 +3734,7 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DEPOSIT-TRANSFER']">
-        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || item.paymentBalance <= 0" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
+        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || item.paymentBalance <= 0 || isCancelledPayment" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SPLIT-ANTI']">
         <Button v-tooltip.top="'Split ANTI'" class="w-3rem ml-1" :disabled="!enableSplitAction" @click="openDialogPaymentDetailsByAction(idItemDetail, 'split-deposit')">
@@ -3747,7 +3758,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:IMPORT-EXCEL']">
-        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-file-import" @click="openDialogImportExcel(idItem)" />
+        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || isCancelledPayment" icon="pi pi-file-import" @click="openDialogImportExcel(idItem)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY']">
         <Button v-tooltip.top="'Show History'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openDialogStatusHistory">
@@ -3760,7 +3771,14 @@ onMounted(async () => {
       </IfCan>
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
-        <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
+        <Button
+          v-tooltip.top="'Add New Detail'"
+          class="w-3rem ml-1"
+          icon="pi pi-plus"
+          :disabled="idItem === null || idItem === undefined || idItem === '' || isCancelledPayment"
+          severity="primary"
+          @click="openDialogPaymentDetails($event)"
+        />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
         <Button v-tooltip.top="'Annular'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-ban" @click="requireConfirmationToDelete($event)" />
