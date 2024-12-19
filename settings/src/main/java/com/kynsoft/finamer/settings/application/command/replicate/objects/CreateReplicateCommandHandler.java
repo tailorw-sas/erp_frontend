@@ -363,7 +363,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                         ));
                     }
                 }
-                case MANEGE_CLIENT -> {
+                case MANAGE_CLIENT -> {
                     for (ManageClientDto clientDto : this.managerClientService.findAllToReplicate()) {
                         this.replicateManageClientService.create(new ReplicateManageClientKafka(clientDto.getId(), clientDto.getCode(), clientDto.getName(), clientDto.getStatus().name(), clientDto.getIsNightType()));
                     }
