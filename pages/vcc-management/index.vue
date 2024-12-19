@@ -302,9 +302,9 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
-        iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
-      }
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
+      //   iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
+      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
       }
