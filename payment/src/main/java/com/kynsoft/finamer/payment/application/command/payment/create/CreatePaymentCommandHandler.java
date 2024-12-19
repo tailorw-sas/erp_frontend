@@ -49,21 +49,21 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     private final ManageEmployeeHttpService employeeHttpService;
 
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
-                                       IManagePaymentStatusService statusService,
-                                       IManageClientService clientService,
-                                       IManageAgencyService agencyService,
-                                       IManageBankAccountService bankAccountService,
-                                       IManagePaymentAttachmentStatusService attachmentStatusService,
-                                       IPaymentService paymentService,
-                                       IManageHotelService hotelService,
-                                       IPaymentCloseOperationService closeOperationService,
-                                       IManageAttachmentTypeService manageAttachmentTypeService,
-                                       IManageResourceTypeService manageResourceTypeService,
-                                       IAttachmentStatusHistoryService attachmentStatusHistoryService,
-                                       IManageEmployeeService manageEmployeeService,
-                                       IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-                                       IMasterPaymentAttachmentService masterPaymentAttachmentService,
-                                       ManageEmployeeHttpService employeeHttpService) {
+            IManagePaymentStatusService statusService,
+            IManageClientService clientService,
+            IManageAgencyService agencyService,
+            IManageBankAccountService bankAccountService,
+            IManagePaymentAttachmentStatusService attachmentStatusService,
+            IPaymentService paymentService,
+            IManageHotelService hotelService,
+            IPaymentCloseOperationService closeOperationService,
+            IManageAttachmentTypeService manageAttachmentTypeService,
+            IManageResourceTypeService manageResourceTypeService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+            IManageEmployeeService manageEmployeeService,
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IMasterPaymentAttachmentService masterPaymentAttachmentService,
+            ManageEmployeeHttpService employeeHttpService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -93,7 +93,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAgency(), "agency", "Agency ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getHotel(), "hotel", "Hotel ID cannot be null."));
         if (!command.isIgnoreBankAccount() || !paymentSourceDto.getExpense())//Se agrega esto con el objetivo de ignorar este check cuando se importa
+        {
             RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "bankAccount", "Bank Account ID cannot be null."));
+        }
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAttachmentStatus(), "attachmentStatus", "Attachment Status ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "employee", "Employee ID cannot be null."));
@@ -117,9 +119,10 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(command.getPaymentStatus());
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
-        ManageBankAccountDto bankAccountDto=null;
-        if (!command.isIgnoreBankAccount()) {
-         bankAccountDto= this.bankAccountService.findById(command.getBankAccount());
+
+        ManageBankAccountDto bankAccountDto = null;
+        if (!command.isIgnoreBankAccount() || !paymentSourceDto.getExpense()) {
+            bankAccountDto = this.bankAccountService.findById(command.getBankAccount());
         }
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
 
