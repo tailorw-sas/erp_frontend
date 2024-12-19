@@ -1,7 +1,5 @@
 package com.kynsoft.finamer.settings.application.query.manageNightType.search;
 
-import com.kynsoft.finamer.settings.application.query.manageMerchantHotelEnrolle.search.*;
-import com.kynsoft.finamer.settings.application.query.manageMerchantCommission.search.*;
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import lombok.AllArgsConstructor;
