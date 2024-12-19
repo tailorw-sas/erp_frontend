@@ -95,7 +95,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
 
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         //Enviar correo (voucher) de confirmacion a las personas implicadas
-        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
+        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto, command.getRequest().getResponseCodeMessage());
         this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getRequest().getEmployee());
     }
 }
