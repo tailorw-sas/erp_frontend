@@ -4776,7 +4776,7 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Save'" :loading="loadingExportToExcel" class="w-3rem ml-1 sticky" icon="pi pi-save" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" />
+              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" /> -->
             </template>
           </EditFormV2>
         </div>
