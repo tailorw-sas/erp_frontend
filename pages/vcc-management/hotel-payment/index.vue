@@ -355,7 +355,7 @@ async function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         newPayload.filter = [...newPayload.filter, {
-          key: 'reconcileStatus.id',
+          key: 'status.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
