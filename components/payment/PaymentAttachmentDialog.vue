@@ -101,6 +101,7 @@ const { data: userData } = useAuth()
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
 const loadingDelete = ref(false)
+const isCancelledPayment = ref(false)
 
 const idItem = ref('')
 
@@ -1224,6 +1225,10 @@ watch(payloadOnChangePage, (newValue) => {
 // }, { deep: true })
 
 onMounted(async () => {
+  if (externalProps.selectedPayment && externalProps.selectedPayment.paymentStatus) {
+    isCancelledPayment.value = externalProps.selectedPayment.paymentStatus.cancelled
+  }
+
   if (externalProps.isCreateOrEditPayment !== 'create') {
     await getList()
     if (idItem.value) {
@@ -1494,7 +1499,7 @@ onMounted(async () => {
                     <Button
                       v-tooltip.top="'Save'"
                       :loading="loadingSaveAll"
-                      :disabled="idItem !== '' && idItem !== null" class="w-3rem sticky" icon="pi pi-save"
+                      :disabled="idItem !== '' && idItem !== null || isCancelledPayment" class="w-3rem sticky" icon="pi pi-save"
                       @click="props.item.submitForm($event)"
                     />
                   </IfCan>
@@ -1515,10 +1520,10 @@ onMounted(async () => {
                     />
                   </IfCan>
                   <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-ATTACHMENT']">
-                    <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearFormAndReload" />
+                    <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" :disabled="isCancelledPayment" icon="pi pi-plus" @click="clearFormAndReload" />
                   </IfCan>
                   <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-ATTACHMENT']">
-                    <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                    <Button v-tooltip.top="'Delete'" :disabled="!idItem || isCancelledPayment" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
                   </IfCan>
                   <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>

@@ -119,7 +119,7 @@ const columns: IColumn[] = [
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Payment Attachment Type',
+  tableName: 'Manage Payment Attachment Type',
   moduleApi: 'payment',
   uriApi: 'attachment-type',
   loading: false,
@@ -424,9 +424,9 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       {{ options.tableName }}
-    </h3>
+    </h5>
     <IfCan :perms="['ACCOUNT-TYPE:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />

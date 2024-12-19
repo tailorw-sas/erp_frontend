@@ -235,7 +235,11 @@ async function getItemById(id: string) {
         item.value.code = response.code
         // listHotelItems.value = [response.hotel]
         if (response.hotel) {
-          item.value.hotel = { id: response.hotel.id, name: `${response.hotel.code} - ${response.hotel.name}`, status: statusToBoolean(response.hotel.status) }
+          item.value.hotel = {
+            id: response.hotel.id,
+            name: `${response.hotel.code} - ${response.hotel.name}`,
+            status: response.hotel.status
+          }
         }
       }
       fields[0].disabled = true
@@ -411,7 +415,11 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     listHotelItems.value = []
     for (const iterator of dataList) {
-      listHotelItems.value = [...listHotelItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      listHotelItems.value = [...listHotelItems.value, {
+        id: iterator.id,
+        name: `${iterator.code} - ${iterator.name}`,
+        status: iterator.status
+      }]
     }
   }
   catch (error) {
