@@ -37,9 +37,6 @@ public class ManageCreditCardType implements Serializable {
     private String description;
     private Integer firstDigit;
 
-    @ManyToMany(mappedBy = "creditCardTypes", fetch = FetchType.EAGER)
-    private Set<ManageMerchantBankAccount> merchantBankAccounts = new HashSet<>();
-
     @Enumerated(EnumType.STRING)
     private Status status;
 
