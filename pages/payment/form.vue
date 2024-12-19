@@ -934,6 +934,7 @@ function openDialogPaymentDetails(event: any) {
 }
 
 function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined = undefined, createOrEdit: 'create' | 'edit' = 'create') {
+  payloadToApplyPayment.value.invoiceNo = ''
   if (createOrEdit === 'edit') {
     const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
     const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetailTemp === 'object' ? idDetailTemp.id : idDetailTemp))
@@ -1234,7 +1235,6 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       // successOperation = false
@@ -1859,6 +1859,7 @@ async function updateItem(item: { [key: string]: any }) {
   // delete payload.bankAccount
   const id = route?.query?.id.toString()
   await GenericService.update(confApi.moduleApi, confApi.uriApi, id || '', payload)
+  toast.add({ severity: 'info', summary: 'Updated', detail: `The payment Id ${item.paymentId} was updated successfully`, life: 10000 })
   hasBeenEdited.value += 1
 }
 
@@ -3260,14 +3261,14 @@ onMounted(async () => {
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       {{ formTitle }}
     </div>
-    <div class="card p-4">
+    <div class="card px-2 pb-2 pt-4 m-0">
       <EditFormV2
         :key="formReload"
         ref="refForm"
         :fields="fields"
         :item="item"
         :show-actions="false"
-        container-class="grid pt-3"
+        container-class="grid"
         :loading-save="loadingSaveAll"
         :loading-delete="loadingDelete"
         :force-save="forceSave"
@@ -3783,8 +3784,15 @@ onMounted(async () => {
         @update:amount="amountOfDetailItem = $event"
       >
         <template #infoOfInvoiceToApply>
-          <div v-if="payloadToApplyPayment.invoiceNo">
-            <strong>Invoice to apply:</strong> {{ payloadToApplyPayment.invoiceNo }}
+          <div v-if="payloadToApplyPayment.invoiceNo" class="flex flex-column">
+            <div>
+              <strong>
+                Invoice to apply:
+              </strong> {{ payloadToApplyPayment.invoiceNo }}
+            </div>
+            <div>
+              <strong class="mt-2">Booking balance:</strong> {{ payloadToApplyPayment.amount }}
+            </div>
           </div>
         </template>
       </DialogPaymentDetailForm>

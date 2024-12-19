@@ -480,7 +480,7 @@ getOptionsList()
         v-model:filters="filters1" v-model:expandedRows="expandedRows" v-model:selection="clickedItem" :filter-display="modeFilterDisplay"
         :meta-key-selection="metaKey" selection-mode="single" sort-mode="single"
         :value="data" data-key="id" show-gridlines striped-rows removable-sort lazy
-        scrollable scroll-height="60vh" @row-dblclick="onDoubleClickItem" @row-expand="onRowExpand" @row-collapse="onRowCollapse"
+        scrollable scroll-height="75vh" @row-dblclick="onDoubleClickItem" @row-expand="onRowExpand" @row-collapse="onRowCollapse"
         @sort="onSortField" @update:selection="onSelectItem" @update:filters="onChangeFilters" @row-contextmenu="onRowRightClick"
       >
         <template #empty>
@@ -776,7 +776,7 @@ getOptionsList()
     <div class="flex justify-content-center align-items-center mt-3 card p-0">
       <Paginator
         v-if="props.pagination" :rows="Number(props.pagination.limit) || 50"
-        :total-records="props.pagination.totalElements" :rows-per-page-options="[10, 20, 30, 50]"
+        :total-records="props.pagination.totalElements" :rows-per-page-options="[10, 20, 30, 50, 100, 200, 500]"
         @page="onChangePageOrLimit($event)"
       />
       <Divider layout="vertical" />

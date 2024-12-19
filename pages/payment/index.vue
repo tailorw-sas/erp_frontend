@@ -1076,7 +1076,7 @@ async function resetListItems() {
   getList()
 }
 
-function searchAndFilter() {
+async function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.criteria && filterToSearch.value.value) {
     let keyValue = ''
@@ -1094,7 +1094,7 @@ function searchAndFilter() {
         || keyTemp === 'reference'
       )
         ? 'LIKE'
-        : 'EQUALS',
+        : 'LIKE',
       value: filterToSearch.value.value,
       logicalOperation: 'AND',
       type: 'filterSearch',
@@ -1160,7 +1160,7 @@ function searchAndFilter() {
     }
 
     // Date
-    if (filterToSearch.value.from) {
+    if (filterToSearch.value.from && filterAllDateRange.value === false) {
       payload.value.filter = [...payload.value.filter, {
         key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
@@ -1169,7 +1169,8 @@ function searchAndFilter() {
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.to) {
+
+    if (filterToSearch.value.to && filterAllDateRange.value === false) {
       payload.value.filter = [...payload.value.filter, {
         key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
@@ -1202,7 +1203,7 @@ function searchAndFilter() {
     // }
   }
   options.value.selectAllItemByDefault = false
-  getList()
+  await getList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -1214,7 +1215,7 @@ async function parseDataTableFilter(payloadFilter: any) {
 
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  getList()
+  await getList()
 }
 
 function onSortField(event: any) {

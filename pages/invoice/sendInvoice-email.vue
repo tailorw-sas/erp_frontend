@@ -151,6 +151,11 @@ async function getList() {
       value: type.toString(),
       logicalOperation: 'AND'
     }, {
+      key: 'agency.status',
+      operator: 'EQUALS',
+      value: 'ACTIVE',
+      logicalOperation: 'AND'
+    }, {
       key: 'invoiceAmount',
       operator: 'GREATER_THAN',
       value: '0',
@@ -734,10 +739,7 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2">
                         <label class="filter-label font-bold ml-1" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>

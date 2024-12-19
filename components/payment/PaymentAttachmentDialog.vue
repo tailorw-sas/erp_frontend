@@ -507,15 +507,15 @@ async function loadHistoryList() {
   openDialogHistory.value = true
 }
 
-function clearFilterToSearch() {
+async function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.search = ''
-  getList()
+  await getList()
 }
 
 // paymentId
 
-function searchAndFilter() {
+async function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
@@ -538,12 +538,12 @@ function searchAndFilter() {
       type: 'filterSearch',
     },]
   }
-  getList()
+  await getList()
 }
 async function ParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
   payload.value.filter = [...parseFilter || []]
-  getList()
+  await getList()
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -866,7 +866,7 @@ async function saveItem(item: { [key: string]: any }) {
       else {
         await updateItem(item)
         loadingSaveAll.value = false
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${externalProps.selectedPayment.paymentId} was updated successfully`, life: 10000 })
       }
     }
     catch (error: any) {
@@ -881,21 +881,26 @@ async function saveItem(item: { [key: string]: any }) {
           await createItemLocal(item)
           loadingSaveAll.value = false
         }
-        catch (error) {
+        catch (error: any) {
+          if (error?.data?.statusMessage !== '') {
+            toast.add({ severity: 'error', summary: 'Error', detail: error.data.statusMessage, life: 3000 })
+          }
+          else {
+            toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
+          }
           successOperation = false
-          toast.add({ severity: 'error', summary: 'Error', detail: 'Only a payment support by payment is allowed', life: 3000 })
         }
       }
       else {
         await createItem(item)
         loadingSaveAll.value = false
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${externalProps.selectedPayment.paymentId} was updated successfully`, life: 10000 })
       }
     }
     catch (error: any) {
       successOperation = false
       loadingSaveAll.value = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
     }
   }
   if (successOperation && !haveError.value) {

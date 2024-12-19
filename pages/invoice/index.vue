@@ -807,7 +807,7 @@ const payloadPrintOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -923,7 +923,7 @@ async function getList() {
       ...payload.value,
     }
     localStorage.setItem('payloadOfInvoiceList', JSON.stringify(payloadOfInvoiceList))
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)    
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -1075,7 +1075,7 @@ async function resetListItems() {
 
 const isFirstTimeInOnMounted = ref(false)
 
-function searchAndFilter() {
+async function searchAndFilter() {
   payload.value = {
     filter: [],
     query: '',
@@ -1215,7 +1215,7 @@ function searchAndFilter() {
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'EQUALS',
+      operator: 'LIKE',
       value: filterToSearch.value.search,
       logicalOperation: 'AND'
     }]
@@ -1241,7 +1241,7 @@ function searchAndFilter() {
   //     return hotelError.value = true
   //   }
   // }
-  getList()
+  await getList()
 }
 
 async function clearFilterToSearch() {  
@@ -2061,11 +2061,11 @@ function handleClose() {
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
-watch(payloadOnChangePage, (newValue) => {
+watch(payloadOnChangePage, async  (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
-  getList()
+  await getList()
 })
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
