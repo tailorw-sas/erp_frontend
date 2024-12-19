@@ -24,6 +24,6 @@ public interface ManageResourceTypeReadDataJPARepository extends JpaRepository<M
 
     Optional<ManageResourceType> findResourceTypeByCode(String code);
 
-    @Query("SELECT b FROM ManageResourceType b WHERE b.vcc = true AND b.status = 'ACTIVE'")
+    @Query("SELECT b FROM ManageResourceType b WHERE b.defaults = true AND b.status = 'ACTIVE'")
     Optional<ManageResourceType> findByVcc();
 }
