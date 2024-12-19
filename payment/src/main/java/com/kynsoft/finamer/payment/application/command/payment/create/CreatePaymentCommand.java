@@ -76,7 +76,7 @@ public class CreatePaymentCommand implements ICommand {
                 request.getRemark(),
                 request.getAttachments(),
                 request.getEmployee(),
-                false,
+                true,
                 mediator
         );
     }
