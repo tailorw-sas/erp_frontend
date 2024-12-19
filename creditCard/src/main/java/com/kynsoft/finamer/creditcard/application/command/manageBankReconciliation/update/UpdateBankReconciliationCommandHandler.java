@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
@@ -32,13 +33,16 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
 
     private final ICreditCardCloseOperationService closeOperationService;
 
-    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IManageReconcileTransactionStatusService transactionStatusService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService, ICreditCardCloseOperationService closeOperationService) {
+    private final IParameterizationService parameterizationService;
+
+    public UpdateBankReconciliationCommandHandler(IManageBankReconciliationService bankReconciliationService, ITransactionService transactionService, IBankReconciliationAdjustmentService bankReconciliationAdjustmentService, IManageReconcileTransactionStatusService transactionStatusService, IBankReconciliationStatusHistoryService bankReconciliationStatusHistoryService, ICreditCardCloseOperationService closeOperationService, IParameterizationService parameterizationService) {
         this.bankReconciliationService = bankReconciliationService;
         this.transactionService = transactionService;
         this.bankReconciliationAdjustmentService = bankReconciliationAdjustmentService;
         this.transactionStatusService = transactionStatusService;
         this.bankReconciliationStatusHistoryService = bankReconciliationStatusHistoryService;
         this.closeOperationService = closeOperationService;
+        this.parameterizationService = parameterizationService;
     }
 
     @Override
@@ -107,7 +111,12 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
 
     private void updateStatus(ManageBankReconciliationDto dto, ManageReconcileTransactionStatusDto transactionStatusDto, String employee){
         if (transactionStatusDto.isCompleted()){
-            if (dto.getAmount().equals(dto.getDetailsAmount())){
+            ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
+            //si no encuentra la parametrization que agarre 2 decimales por defecto
+            int decimals = parameterizationDto != null ? parameterizationDto.getDecimals() : 2;
+            double amount = BankerRounding.round(dto.getAmount(), decimals);
+            double details = BankerRounding.round(dto.getDetailsAmount(), decimals);
+            if (amount == details) {
                 Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employee);
                 dto.setReconcileStatus(transactionStatusDto);
                 dto.setTransactions(updatedTransactions);
