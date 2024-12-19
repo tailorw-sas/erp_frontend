@@ -1108,7 +1108,8 @@ async function searchAndFilter() {
             key: 'dueAmount',
             operator: 'EQUALS',
             value: 0,
-            logicalOperation: 'AND'
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           });
         }
         break;
@@ -1123,7 +1124,8 @@ async function searchAndFilter() {
             key: 'dueAmount',
             operator: 'NOT_EQUALS',
             value: 0,
-            logicalOperation: 'AND'
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           });
         }
         break;
@@ -1157,7 +1159,8 @@ async function searchAndFilter() {
         key: 'agency.client.id',
         operator: 'IN',
         value: itemIds,
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find(item => item.id === 'All')) {
@@ -1167,7 +1170,8 @@ async function searchAndFilter() {
         key: 'agency.id',
         operator: 'IN',
         value: itemIds,
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.status?.length > 0) {
@@ -1178,7 +1182,8 @@ async function searchAndFilter() {
           key: 'manageInvoiceStatus.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -1190,7 +1195,8 @@ async function searchAndFilter() {
           key: 'manageInvoiceType.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -1199,7 +1205,8 @@ async function searchAndFilter() {
         key: 'invoiceDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.to && !disableDates.value) {
@@ -1207,7 +1214,8 @@ async function searchAndFilter() {
         key: 'invoiceDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
   }
@@ -1217,7 +1225,8 @@ async function searchAndFilter() {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'LIKE',
       value: filterToSearch.value.search,
-      logicalOperation: 'AND'
+      logicalOperation: 'AND',
+      type: 'filterSearch'
     }]
   }
 
@@ -1230,7 +1239,8 @@ async function searchAndFilter() {
         key: 'hotel.id',
         operator: 'IN',
         value: itemIds,
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
   }
@@ -1265,7 +1275,7 @@ async function clearFilterToSearch() {
     includeInvoicePaid: true
   }
   await getStatusListTemp()
-  getList()
+  await getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
   await openEditDialog(data?.id, data?.type)
@@ -1752,8 +1762,6 @@ async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: {
 // }
 
 async function parseDataTableFilter(payloadFilter: any) {
-  console.log(payloadFilter);
-
   // if(payloadFilter?.agencyCd){
   //   payloadFilter['agency.code'] = payloadFilter.agencyCd
   //   delete payloadFilter.agencyCd
@@ -1778,12 +1786,12 @@ async function parseDataTableFilter(payloadFilter: any) {
 
     }
   }
-
-  payload.value.filter = [...parseFilter || []]
-  getList()
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+  await getList()
 }
 
-function onSortField(event: any) {
+async function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
@@ -1802,7 +1810,7 @@ function onSortField(event: any) {
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    getList()
+    await getList()
   }
 }
 
