@@ -78,6 +78,7 @@ const columns: IColumn[] = [
 
   { field: 'invoiceDate', header: 'Generation Date', type: 'date', width: '150px' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '150px' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'text', width: '150px' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: false, showFilter: false },
   { field: 'sendStatusError', header: 'Sent Status', frozen: true, type: 'slot-text', sortable: false, showFilter: false, width: '250px' },
 ]
@@ -146,6 +147,12 @@ async function getList() {
         key: 'agency.sentB2BPartner.b2bPartnerType.code',
         operator: 'EQUALS',
         value: type.toString(),
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'agency.status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
         logicalOperation: 'AND'
       },
       {
@@ -642,10 +649,7 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2">
                         <label class="filter-label font-bold ml-1" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>
