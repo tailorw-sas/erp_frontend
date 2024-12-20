@@ -74,6 +74,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 0,
     validation: z.number({
       invalid_type_error: 'The amount field must be a number',
       required_error: 'The amount field is required',
@@ -87,6 +88,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12',
+    tabIndex: 0,
     // validation: z.string().trim().refine(value => value === '' || /^([IG]) \d+ \d+$/i.test(value), {
     //   message: 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44'
     // })
@@ -96,6 +98,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reference Number',
     dataType: 'text',
     class: 'field col-12 required',
+    tabIndex: 0,
     validation: z.string().trim().min(1, 'The reference number field is required')
     // validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
     //   message: 'Only numeric characters allowed'
@@ -471,6 +474,7 @@ watch(() => props.openDialog, (newValue) => {
             item-value="id"
             :model="data.transactionCategory"
             :suggestions="CategoryList"
+            :tabindex="0"
             @change="($event) => {
               onUpdate('transactionCategory', $event)
             }"
@@ -486,6 +490,7 @@ watch(() => props.openDialog, (newValue) => {
             item-value="id"
             :model="data.transactionSubCategory"
             :suggestions="SubCategoryList"
+            :tabindex="0"
             @change="($event) => {
               onUpdate('transactionSubCategory', $event)
             }"
@@ -501,6 +506,7 @@ watch(() => props.openDialog, (newValue) => {
             item-value="id"
             :model="data.agency"
             :suggestions="AgencyList"
+            :tabindex="0"
             @change="($event) => {
               onUpdate('agency', $event)
             }"
@@ -519,5 +525,8 @@ watch(() => props.openDialog, (newValue) => {
   </Dialog>
 </template>
 
-<style scoped>
+<style>
+/*[tabindex] {
+  outline: 2px solid red !important;
+}*/
 </style>

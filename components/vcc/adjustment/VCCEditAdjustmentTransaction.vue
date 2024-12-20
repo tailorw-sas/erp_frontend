@@ -74,6 +74,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 md:col-6 required',
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 0,
     validation: z.number({
       invalid_type_error: 'The amount field must be a number',
       required_error: 'The amount field is required',
@@ -87,6 +88,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6',
+    tabIndex: 0,
     // validation: z.string().trim().min(1, 'The reservation number field is required'),
   },
   {
@@ -94,6 +96,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reference Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
+    tabIndex: 0,
     validation: z.string().trim().min(1, 'The reference number field is required')
   },
 ]
