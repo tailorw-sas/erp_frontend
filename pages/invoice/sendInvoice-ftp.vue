@@ -156,17 +156,24 @@ async function getList() {
         logicalOperation: 'AND'
       },
       {
+        key: 'cloneParent',
+        operator: 'EQUALS',
+        value: false,
+        logicalOperation: 'OR'
+      },
+      {
         key: 'invoiceAmount',
         operator: 'GREATER_THAN',
         value: '0',
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
       },
-      {
-        key: 'dueAmount',
-        operator: 'GREATER_THAN',
-        value: '0',
-        logicalOperation: 'AND'
-      }
+
+      // {
+      //   key: 'dueAmount',
+      //   operator: 'GREATER_THAN',
+      //   value: '0',
+      //   logicalOperation: 'AND'
+      // }
     ]
     payload.value.filter = [...payload.value.filter, ...staticPayload]
 
