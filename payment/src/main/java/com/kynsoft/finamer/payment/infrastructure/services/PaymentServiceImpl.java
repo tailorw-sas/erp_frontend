@@ -52,7 +52,7 @@ public class PaymentServiceImpl implements IPaymentService {
             save.add(newPayment);
             paymentId = paymentId + 1;
         }
-        return this.repositoryQuery.saveAllAndFlush(save).stream().map(Payment::toAggregate).toList();
+        return this.repositoryCommand.saveAllAndFlush(save).stream().map(Payment::toAggregate).toList();
     }
 
     @Override
