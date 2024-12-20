@@ -20,8 +20,7 @@ public class AttachmentStatusHistoryResponse implements IResponse {
     private String description;
     private Long attachmentId;
     private TransactionBasicResponse transaction;
-    private String employee;
-    private UUID employeeId;
+    private ManageEmployeeResponse employee;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private HotelPaymentBasicResponse hotelPayment;
@@ -31,8 +30,7 @@ public class AttachmentStatusHistoryResponse implements IResponse {
         this.description = dto.getDescription();
         this.attachmentId = dto.getAttachmentId();
         this.transaction = dto.getTransaction() != null ? new TransactionBasicResponse(dto.getTransaction()) : null;
-        this.employee = dto.getEmployee();
-        this.employeeId = dto.getEmployeeId();
+        this.employee = dto.getEmployee() != null ? new ManageEmployeeResponse(dto.getEmployee()) : null;
         this.createdAt = dto.getCreatedAt();
         this.updatedAt = dto.getUpdatedAt();
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPaymentBasicResponse(dto.getHotelPayment()) : null;
