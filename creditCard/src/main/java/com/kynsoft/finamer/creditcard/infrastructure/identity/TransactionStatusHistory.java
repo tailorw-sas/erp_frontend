@@ -31,7 +31,9 @@ public class TransactionStatusHistory implements Serializable {
 
     private String description;
 
-    private String employee;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "employee_id")
+    private ManageEmployee employee;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "transaction_status_id")
@@ -51,7 +53,7 @@ public class TransactionStatusHistory implements Serializable {
         this.id = dto.getId();
         this.transaction = dto.getTransaction() != null ? new Transaction(dto.getTransaction()) : null;
         this.description = dto.getDescription();
-        this.employee = dto.getEmployee();
+        this.employee = dto.getEmployee() != null ? new ManageEmployee(dto.getEmployee()) : null;
         this.transactionStatus = dto.getTransactionStatus() != null ? new ManageTransactionStatus(dto.getTransactionStatus()) : null;
     }
 
@@ -61,7 +63,7 @@ public class TransactionStatusHistory implements Serializable {
                 transaction != null ? transaction.toAggregate() : null,
                 description,
                 createdAt,
-                employee,
+                employee != null ? employee.toAggregate() : null,
                 transactionStatus != null ? transactionStatus.toAggregate() : null,
                 historyId
         );

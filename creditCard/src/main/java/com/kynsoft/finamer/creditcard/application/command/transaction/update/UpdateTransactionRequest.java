@@ -25,4 +25,5 @@ public class UpdateTransactionRequest {
     private String guestName;
     private String email;
     private String employee;
+    private UUID employeeId;
 }

@@ -145,15 +145,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 transactionService.sendTransactionPaymentLinkEmail(newTransaction, paymentLink);
             }
         }
-        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                UUID.randomUUID(),
-                transactionDto,
-                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                null,
-                command.getEmployee(),
-                transactionStatusDto,
-                0L
-        ));
+        this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());
     }
 
 }

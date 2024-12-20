@@ -8,8 +8,10 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.TransactionStatusHistory.TransactionStatusHistoryResponse;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.TransactionStatusHistory;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionsStatusHistoryWriteDataJPARepository;
@@ -28,15 +30,16 @@ import java.util.stream.Collectors;
 @Service
 public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHistoryService {
 
-    @Autowired
     private final TransactionsStatusHistoryWriteDataJPARepository repositoryCommand;
 
-    @Autowired
     private final TransactionStatusHistoryReadDataJPARepository repositoryQuery;
 
-    public TransactionStatusHistoryServiceImpl(TransactionsStatusHistoryWriteDataJPARepository repositoryCommand, TransactionStatusHistoryReadDataJPARepository repositoryQuery) {
+    private final IManageEmployeeService employeeService;
+
+    public TransactionStatusHistoryServiceImpl(TransactionsStatusHistoryWriteDataJPARepository repositoryCommand, TransactionStatusHistoryReadDataJPARepository repositoryQuery, IManageEmployeeService employeeService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -85,13 +88,17 @@ public class TransactionStatusHistoryServiceImpl implements ITransactionStatusHi
     }
 
     @Override
-    public TransactionStatusHistoryDto create(TransactionDto dto, String employee) {
+    public TransactionStatusHistoryDto create(TransactionDto dto, UUID employeeId) {
+        ManageEmployeeDto employeeDto = null;
+        if (employeeId != null) {
+            employeeDto = this.employeeService.findById(employeeId);
+        }
         return this.create(new TransactionStatusHistoryDto(
                 UUID.randomUUID(),
                 dto,
                 "The transaction status change to "+dto.getStatus().getCode() + "-" +dto.getStatus().getName()+".",
                 null,
-                employee,
+                employeeDto,
                 dto.getStatus(),
                 0L
         ));
