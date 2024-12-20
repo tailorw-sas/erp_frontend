@@ -29,7 +29,8 @@ public class HotelPaymentStatusHistory implements Serializable {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    private String employee;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private ManageEmployee employee;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private HotelPayment hotelPayment;
@@ -41,14 +42,15 @@ public class HotelPaymentStatusHistory implements Serializable {
         this.id = dto.getId();
         this.description = dto.getDescription();
         this.createdAt = dto.getCreatedAt();
-        this.employee = dto.getEmployee();
+        this.employee = dto.getEmployee() != null ? new ManageEmployee(dto.getEmployee()) : null;
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
         this.status = dto.getStatus() != null ? new ManagePaymentTransactionStatus(dto.getStatus()) : null;
     }
 
     public HotelPaymentStatusHistoryDto toAggregate(){
         return new HotelPaymentStatusHistoryDto(
-                id, description, createdAt, employee,
+                id, description, createdAt,
+                employee != null ? employee.toAggregate() : null,
                 hotelPayment != null ? hotelPayment.toAggregateSimple() : null,
                 status != null ? status.toAggregateSimple() : null
         );

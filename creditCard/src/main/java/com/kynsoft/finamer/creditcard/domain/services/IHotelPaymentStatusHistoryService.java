@@ -13,7 +13,7 @@ public interface IHotelPaymentStatusHistoryService {
 
     HotelPaymentStatusHistoryDto create(HotelPaymentStatusHistoryDto dto);
 
-    HotelPaymentStatusHistoryDto create(HotelPaymentDto hotelPaymentDto, String employee);
+    HotelPaymentStatusHistoryDto create(HotelPaymentDto hotelPaymentDto, UUID employeeId);
 
     HotelPaymentStatusHistoryDto findById(UUID id);
 

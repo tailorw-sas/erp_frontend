@@ -17,7 +17,7 @@ public class HotelPaymentStatusHistoryDto {
     private UUID id;
     private String description;
     private LocalDateTime createdAt;
-    private String employee;
+    private ManageEmployeeDto employee;
     private HotelPaymentDto hotelPayment;
     private ManagePaymentTransactionStatusDto status;
 }
