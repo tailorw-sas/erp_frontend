@@ -73,7 +73,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.setBorder(Border.NO_BORDER);
 
         // Add header row
-        Paragraph hotelHead = new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getName() : "").addStyle(styleHeader);
+        Paragraph hotelHead = new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName() : "").addStyle(styleHeader);
         hotelHead.setBold();
         table.addHeaderCell(new Cell().add(hotelHead));
         table.addHeaderCell(new Cell());
