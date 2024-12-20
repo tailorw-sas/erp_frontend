@@ -115,7 +115,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionDto.setPaymentDate(LocalDateTime.now());
             if (!transactionStatusDto.equals(transactionDto.getStatus())){
                 transactionDto.setStatus(transactionStatusDto);
-                this.transactionStatusHistoryService.create(transactionDto, command.getEmployee());
+                this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());
             }
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
