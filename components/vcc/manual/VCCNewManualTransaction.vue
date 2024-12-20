@@ -115,6 +115,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
+    tabIndex: 0,
     validation: z.string().trim().min(1, 'The reservation number field is required'),
     // .regex(/^([IG]) \d+ \d+$/i, 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
   },
@@ -123,6 +124,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reference Number',
     dataType: 'text',
     class: 'field col-12 md:col-6 required',
+    tabIndex: 0,
     validation: z.string().trim().min(1, 'The reference number field is required')
   },
   {
@@ -130,6 +132,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Hotel Email Contact',
     dataType: 'text',
     class: 'field col-12 md:col-6',
+    tabIndex: 0,
     validation: z.string().trim().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -137,12 +140,14 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Guest Name',
     dataType: 'text',
     class: 'field col-12 md:col-6',
+    tabIndex: 0,
   },
   {
     field: 'email',
     header: 'Email',
     dataType: 'text',
     class: 'field col-12 md:col-6',
+    tabIndex: 0,
     validation: z.string().trim().email('Invalid email').or(z.string().length(0))
   },
   {

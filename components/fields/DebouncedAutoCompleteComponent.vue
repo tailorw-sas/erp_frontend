@@ -27,6 +27,10 @@ const props = defineProps({
     type: String,
     default: 'autocomplete'
   },
+  tabindex: {
+    type: Number,
+    default: 0
+  },
   debounceTimeMs: {
     type: Number,
     default: 300
@@ -95,6 +99,7 @@ function wait(ms: number) {
     :item-value="props.itemValue"
     :placeholder="props.placeholder"
     :disabled="props.disabled"
+    :tabindex="props.tabindex"
     force-selection
     dropdown
     :multiple="props.multiple"
