@@ -27,7 +27,7 @@ const Columns: IColumn[] = [
   { field: 'historyId', header: 'Id', type: 'text', width: '70px', sortable: false, showFilter: false },
   { field: 'transactionId', header: 'Transaction Id', type: 'text', width: '70px', sortable: false, showFilter: false },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px', sortable: false, showFilter: false },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'employeeName', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px', sortable: false, showFilter: false },
 ]
@@ -82,7 +82,8 @@ function getSortField(field: any) {
   switch (field) {
     case 'statusName':
       return 'transactionStatus.name'
-
+    case 'employeeName':
+      return 'employee.firstName'
     case 'transactionId':
       return 'transaction.id'
 
@@ -112,7 +113,8 @@ async function getList() {
           loadingEdit: false,
           loadingDelete: false,
           transactionId: iterator?.transaction?.id,
-          statusName: iterator?.transactionStatus?.name
+          statusName: iterator?.transactionStatus?.name,
+          employeeName: iterator?.employee ? `${iterator.employee.firstName} ${iterator.employee.lastName}` : ''
         }
       ]
     }

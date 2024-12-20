@@ -26,7 +26,7 @@ const props = defineProps({
 const Columns: IColumn[] = [
   { field: 'hotelPaymentId', header: 'Id', type: 'text', width: '70px' },
   { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px' },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
+  { field: 'employeeName', header: 'Employee', type: 'text', width: '100px' },
   { field: 'description', header: 'Remark', type: 'text', width: '200px' },
   { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px' },
 ]
@@ -80,7 +80,8 @@ function getSortField(field: any) {
   switch (field) {
     case 'statusName':
       return 'status.name'
-
+    case 'employeeName':
+      return 'employee.firstName'
     case 'hotelPaymentId':
       return 'hotelPayment.hotelPaymentId'
 
@@ -104,7 +105,17 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, hotelPaymentId: iterator?.hotelPayment?.hotelPaymentId, statusName: iterator?.status?.name }]
+      ListItems.value = [
+        ...ListItems.value,
+        {
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          hotelPaymentId: iterator?.hotelPayment?.hotelPaymentId,
+          statusName: iterator?.status?.name,
+          employeeName: iterator?.employee ? `${iterator.employee.firstName} ${iterator.employee.lastName}` : ''
+        }
+      ]
     }
   }
   catch (error) {
