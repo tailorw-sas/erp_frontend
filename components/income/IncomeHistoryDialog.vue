@@ -31,8 +31,8 @@ const invoice = ref(props.selectedInvoiceObj)
 
 const Columns: IColumn[] = [
   { field: 'invoiceHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'createdAt', header: 'Date', type: 'date', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoice.invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   { field: 'invoiceStatus', header: 'Status', type: 'slot-text', width: '100px', sortable: false, showFilter: false },
@@ -159,7 +159,7 @@ onMounted(() => {
           {{ props.header }}
         </h5>
         <h5 class="m-0 mr-2">
-          Income Id: {{ props.selectedInvoiceObj?.incomeId }}
+          Invoice Id: {{ props.selectedInvoiceObj?.incomeId }}
         </h5>
       </div>
     </template>
