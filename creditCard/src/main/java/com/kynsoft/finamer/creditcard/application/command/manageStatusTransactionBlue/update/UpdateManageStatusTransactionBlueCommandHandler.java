@@ -84,7 +84,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         }
         if (!transactionStatusDto.equals(transactionDto.getStatus())){
             transactionDto.setStatus(transactionStatusDto);
-            this.transactionStatusHistoryService.create(transactionDto, command.getRequest().getEmployee());
+            this.transactionStatusHistoryService.create(transactionDto, command.getRequest().getEmployeeId());
         }
         this.transactionService.update(transactionDto);
 

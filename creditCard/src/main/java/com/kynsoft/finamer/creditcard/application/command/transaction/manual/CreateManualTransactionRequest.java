@@ -25,4 +25,5 @@ public class CreateManualTransactionRequest {
     private String email;
     private UUID merchantCurrency;
     private String employee;
+    private UUID employeeId;
 }

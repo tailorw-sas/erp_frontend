@@ -148,22 +148,14 @@ public class TransactionServiceImpl implements ITransactionService {
 
     @Override
     @Transactional
-    public Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee) {
+    public Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, UUID employeeId) {
         Set<TransactionDto> transactionsDto = new HashSet<>();
         for (Long transactionId : transactionIds) {
             TransactionDto transactionDto = this.findById(transactionId);
             ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(status);
             transactionDto.setStatus(transactionStatusDto);
             this.update(transactionDto);
-            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                    UUID.randomUUID(),
-                    transactionDto,
-                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                    null,
-                    employee,
-                    transactionStatusDto,
-                    0L
-            ));
+            this.transactionStatusHistoryService.create(transactionDto, employeeId);
             transactionsDto.add(transactionDto);
         }
         return transactionsDto;

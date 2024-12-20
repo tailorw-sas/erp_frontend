@@ -69,14 +69,6 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 true
         ));
         command.setId(transactionDto.getId());
-        this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                UUID.randomUUID(),
-                transactionDto,
-                "The transaction status is "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                null,
-                command.getEmployee(),
-                transactionStatusDto,
-                0L
-        ));
+        this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());
     }
 }

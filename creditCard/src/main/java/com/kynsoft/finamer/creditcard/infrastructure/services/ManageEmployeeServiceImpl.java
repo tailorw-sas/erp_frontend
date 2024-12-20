@@ -56,11 +56,9 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
     @Override
     public ManageEmployeeDto findById(UUID id) {
-        Optional<ManageEmployee> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregate();
-        }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND.getReasonPhrase())));
+        return this.repositoryQuery.findById(id).map(ManageEmployee::toAggregate).orElseThrow(()->
+                new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND.getReasonPhrase())))
+        );
     }
 
     @Override

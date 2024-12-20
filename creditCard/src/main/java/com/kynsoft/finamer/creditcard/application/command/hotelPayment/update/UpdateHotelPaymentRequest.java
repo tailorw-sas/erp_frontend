@@ -13,4 +13,5 @@ public class UpdateHotelPaymentRequest {
     private String remark;
     private UUID status;
     private String employee;
+    private UUID employeeId;
 }

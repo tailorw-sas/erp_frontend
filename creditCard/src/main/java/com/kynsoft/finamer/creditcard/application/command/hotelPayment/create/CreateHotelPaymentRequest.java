@@ -23,4 +23,5 @@ public class CreateHotelPaymentRequest {
     private Set<Long> transactions;
     private List<CreateHotelPaymentAdjustmentRequest> adjustmentTransactions;
     private String employee;
+    private UUID employeeId;
 }

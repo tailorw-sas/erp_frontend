@@ -32,7 +32,9 @@ public class BankReconciliationStatusHistory {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    private String employee;
+    @ManyToOne
+    @JoinColumn(name = "employee_id")
+    private ManageEmployee employee;
 
     @ManyToOne
     @JoinColumn(name = "reconcile_transaction_status_id")
@@ -44,7 +46,7 @@ public class BankReconciliationStatusHistory {
         this.id = dto.getId();
         this.bankReconciliation = dto.getBankReconciliation() != null ? new ManageBankReconciliation(dto.getBankReconciliation()) : null;
         this.description = dto.getDescription();
-        this.employee = dto.getEmployee();
+        this.employee = dto.getEmployee() != null ? new ManageEmployee(dto.getEmployee()) : null;
         this.reconcileTransactionStatus = dto.getReconcileTransactionStatus() != null ? new ManageReconcileTransactionStatus(dto.getReconcileTransactionStatus()) : null;
     }
 
@@ -54,7 +56,7 @@ public class BankReconciliationStatusHistory {
                 bankReconciliation != null ? bankReconciliation.toAggregate() : null,
                 description,
                 createdAt,
-                employee,
+                employee != null ? employee.toAggregate() : null,
                 reconcileTransactionStatus != null ? reconcileTransactionStatus.toAggregate() : null
         );
     }

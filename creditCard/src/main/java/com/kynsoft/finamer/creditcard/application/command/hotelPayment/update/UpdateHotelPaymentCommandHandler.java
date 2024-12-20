@@ -14,6 +14,7 @@ import com.kynsoft.finamer.creditcard.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -55,7 +56,7 @@ public class UpdateHotelPaymentCommandHandler implements ICommandHandler<UpdateH
 
         if (command.getStatus() != null && !command.getStatus().equals(hotelPaymentDto.getStatus().getId()) && hotelPaymentDto.getStatus().isInProgress()) {
             ManagePaymentTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getStatus());
-            updateStatus(hotelPaymentDto, transactionStatusDto, command.getEmployee(), update);
+            updateStatus(hotelPaymentDto, transactionStatusDto, command.getEmployeeId(), update);
         }
 
         if (update.getUpdate() > 0){
@@ -64,20 +65,20 @@ public class UpdateHotelPaymentCommandHandler implements ICommandHandler<UpdateH
         command.setHotelPaymentId(hotelPaymentDto.getHotelPaymentId());
     }
 
-    private void updateStatus(HotelPaymentDto hotelPaymentDto, ManagePaymentTransactionStatusDto transactionStatusDto, String employee, ConsumerUpdate update) {
+    private void updateStatus(HotelPaymentDto hotelPaymentDto, ManagePaymentTransactionStatusDto transactionStatusDto, UUID employeeId, ConsumerUpdate update) {
         if (transactionStatusDto.isCompleted()) {
-            Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(hotelPaymentDto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.PAID, employee);
+            Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(hotelPaymentDto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.PAID, employeeId);
             hotelPaymentDto.setStatus(transactionStatusDto);
             hotelPaymentDto.setTransactions(updatedTransactions);
             hotelPaymentDto.setTransactionDate(this.creditCardCloseOperationService.hotelCloseOperationDateTime(hotelPaymentDto.getManageHotel().getId()));
             update.setUpdate(1);
-            this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employee);
+            this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employeeId);
 
         } else if (transactionStatusDto.isCancelled()) {
             if (hotelPaymentDto.getTransactions() == null || hotelPaymentDto.getTransactions().isEmpty()){
                 hotelPaymentDto.setStatus(transactionStatusDto);
                 update.setUpdate(1);
-                this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employee);
+                this.hotelPaymentStatusHistoryService.create(hotelPaymentDto, employeeId);
             } else {
                 throw new BusinessException(
                         DomainErrorMessage.HOTEL_PAYMENT_CANCELLED_STATUS,

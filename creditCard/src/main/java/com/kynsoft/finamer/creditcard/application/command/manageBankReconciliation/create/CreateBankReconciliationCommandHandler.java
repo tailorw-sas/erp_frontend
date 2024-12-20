@@ -95,14 +95,7 @@ public class CreateBankReconciliationCommandHandler implements ICommandHandler<C
 
         ManageBankReconciliationDto created = this.bankReconciliationService.create(bankReconciliationDto);
         command.setReconciliationId(created.getReconciliationId());
-        this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
-                UUID.randomUUID(),
-                created,
-                "The reconcile status is "+reconcileTransactionStatusDto.getCode()+"-"+reconcileTransactionStatusDto.getName()+".",
-                null,
-                command.getEmployee(),
-                reconcileTransactionStatusDto
-        ));
+        this.bankReconciliationStatusHistoryService.create(created, command.getEmployeeId());
     }
 
 }

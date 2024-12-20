@@ -40,5 +40,5 @@ public interface ITransactionService {
 
     TransactionTotalResume searchTotal(List<FilterCriteria> filterCriteria);
 
-    Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee);
+    Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, UUID employeeId);
 }

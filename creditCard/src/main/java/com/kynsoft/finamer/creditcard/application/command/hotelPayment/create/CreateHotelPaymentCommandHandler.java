@@ -58,7 +58,7 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
         }
 
         if (command.getAdjustmentTransactions() != null) {
-            this.hotelPaymentAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList, command.getEmployee());
+            this.hotelPaymentAdjustmentService.createAdjustments(command.getAdjustmentTransactions(), transactionList, command.getEmployeeId());
         }
 
         double netAmounts = transactionList.stream().map(transactionDto ->
@@ -93,7 +93,7 @@ public class CreateHotelPaymentCommandHandler implements ICommandHandler<CreateH
                 transactionList,
                 null
         ));
-        this.hotelPaymentStatusHistoryService.create(created, command.getEmployee());
+        this.hotelPaymentStatusHistoryService.create(created, command.getEmployeeId());
         command.setHotelPaymentId(created.getHotelPaymentId());
     }
 
