@@ -43,6 +43,19 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
+    public List<PaymentDto> createBulk(List<PaymentDto> dtoList) {
+        List<Payment> save = new ArrayList<>();
+        Long paymentId = this.findMaxId();
+        for (PaymentDto paymentDto : dtoList) {
+            Payment newPayment = new Payment(paymentDto);
+            newPayment.setPaymentId(paymentId);
+            save.add(newPayment);
+            paymentId = paymentId + 1;
+        }
+        return this.repositoryQuery.saveAllAndFlush(save).stream().map(Payment::toAggregate).toList();
+    }
+
+    @Override
     public void update(PaymentDto dto) {
         Payment update = new Payment(dto);
 
@@ -119,12 +132,6 @@ public class PaymentServiceImpl implements IPaymentService {
         Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedExcelExporter(data);
-    }
-
-    @Override
-    public List<PaymentDto> createBulk(List<PaymentDto> dtoList) {
-        return repositoryCommand.saveAllAndFlush(dtoList.stream().map(Payment::new).toList())
-                .stream().map(Payment::toAggregate).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
