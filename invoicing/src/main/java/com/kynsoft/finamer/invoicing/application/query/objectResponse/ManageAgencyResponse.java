@@ -24,6 +24,7 @@ public class ManageAgencyResponse implements IResponse {
     private Integer creditDay;
     private Boolean autoReconcile;
     private String status;
+    private String bookingCouponFormat;
 
     public ManageAgencyResponse(ManageAgencyDto dto) {
         this.id = dto.getId();
@@ -34,6 +35,7 @@ public class ManageAgencyResponse implements IResponse {
         this.creditDay = dto.getCreditDay();
         this.autoReconcile = dto.getAutoReconcile();
         this.status = dto.getStatus();
+        this.bookingCouponFormat = dto.getBookingCouponFormat();
     }
 
 }
