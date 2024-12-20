@@ -1474,7 +1474,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="attachmentHistoryDialogOpen">
-      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Income Status History" />
+      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Invoice Status History" />
     </div>
     <div v-if="exportAttachmentsDialogOpen">
       <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen" :invoice="item" />
