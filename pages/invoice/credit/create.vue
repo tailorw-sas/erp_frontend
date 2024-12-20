@@ -421,6 +421,7 @@ async function createItem(item: { [key: string]: any }) {
     const bookings: any[] = []
     let roomRates = []
     const attachments = []
+    const listBookingForFlateRate: string[] = []
 
     bookingList.value?.forEach((booking) => {
       if (nightTypeRequired.value && !booking.nightType?.id) {
@@ -428,8 +429,12 @@ async function createItem(item: { [key: string]: any }) {
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error('The Hotel amount field must be greater than 0 for this hotel')
+        listBookingForFlateRate.push(booking.hotelBookingNumber)
       }
+
+      // if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
+      //   throw new Error('The Hotel amount field must be greater than 0 for this hotel')
+      // }
 
       if (booking?.invoiceAmount !== 0) {
         bookings.push({
@@ -469,6 +474,10 @@ async function createItem(item: { [key: string]: any }) {
       if (requiresFlatRate.value && +roomRateList.value[i].hotelAmount <= 0) {
         throw new Error('The Hotel amount field must be greater than 0 for this hotel')
       }
+    }
+
+    if (listBookingForFlateRate.length > 0) {
+      throw new Error(`The Hotel amount field must be greater than 0 for this booking: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < adjustmentList?.value.length; i++) {
@@ -689,13 +698,13 @@ function addBooking(booking: any) {
   roomRateList.value = [...roomRateList.value, {
     checkIn: dayjs(booking?.checkIn).toISOString(),
     checkOut: dayjs(booking?.checkOut).toISOString(),
-    invoiceAmount: String(booking?.invoiceAmount),
+    invoiceAmount: booking?.invoiceAmount ? String(booking?.invoiceAmount) : '0',
     roomNumber: booking?.roomNumber,
     adults: booking?.adults,
     children: booking?.children,
     rateAdult: booking?.rateAdult,
     rateChild: booking?.rateChild,
-    hotelAmount: String(booking?.hotelAmount),
+    hotelAmount: booking?.hotelAmount ? String(booking?.hotelAmount) : '0',
     remark: booking?.description,
     booking: booking?.id,
     nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),

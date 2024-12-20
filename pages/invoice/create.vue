@@ -572,6 +572,8 @@ async function createItem(item: { [key: string]: any }) {
     const attachments = []
     let countBookingWithoutNightType = 0
     const listOfBookingsWithoutNightType: string[] = []
+    const listBookingForFlateRate: string[] = []
+
     bookingList.value?.forEach((booking) => {
       // Es aqui donde hay que hacer la validacion de recorrer la lista de booking y verificar si alguno necesita un nightType
       if (nightTypeRequired.value && !booking.nightType?.id) {
@@ -581,8 +583,12 @@ async function createItem(item: { [key: string]: any }) {
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error(`The Hotel amount field of Hotel Booking No. ${booking.hotelBookingNumber} must be greater than 0 for this hotel`)
+        listBookingForFlateRate.push(booking.hotelBookingNumber)
       }
+
+      // if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
+      //   throw new Error(`The Hotel amount field of Hotel Booking No. ${booking.hotelBookingNumber} must be greater than 0 for this hotel`)
+      // }
 
       if (booking?.invoiceAmount !== 0) {
         bookings.push({
@@ -622,6 +628,10 @@ async function createItem(item: { [key: string]: any }) {
 
     if (countBookingWithoutNightType > 0) {
       throw new Error(`The Night Type field is required for this booking: ${listOfBookingsWithoutNightType.toString()}`)
+    }
+
+    if (listBookingForFlateRate.length > 0) {
+      throw new Error(`The Hotel amount field must be greater than 0 for this booking: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < roomRateList.value.length; i++) {
