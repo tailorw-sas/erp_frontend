@@ -183,6 +183,7 @@ public class Invoice {
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
+        manageInvoiceDto.setCloneParent(cloneParent);
         return manageInvoiceDto;
     }
 
@@ -203,6 +204,7 @@ public class Invoice {
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
+        manageInvoiceDto.setCloneParent(cloneParent);
         return manageInvoiceDto;
     }
 
@@ -220,6 +222,7 @@ public class Invoice {
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
+        manageInvoiceDto.setCloneParent(cloneParent);
         return manageInvoiceDto;
     }
 
