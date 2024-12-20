@@ -34,6 +34,7 @@ public class ManageInvoiceSearchResponse {
     private Boolean autoRec;
     private Double originalAmount;
     private ImportType importType;
+    private boolean cloneParent;
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
@@ -58,6 +59,7 @@ public class ManageInvoiceSearchResponse {
         this.autoRec = projection.getAutoRec();
         this.originalAmount = projection.getOriginalAmount() != null ? projection.getOriginalAmount() : null;
         this.importType = projection.getImportType();
+        this.cloneParent = projection.isCloneParent();
     }
 
     private String deleteHotelInfo(String input) {

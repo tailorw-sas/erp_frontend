@@ -53,6 +53,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         updateFields(dto, command, update);
         updateRelationships(dto, command, update);
+        updateBookingCouponFormat(dto, command, update);
 //        updateB2bPartener(dto, command, update);
 
         if (update.getUpdate() > 0) {
@@ -87,6 +88,20 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 //            }
 //        }
 //    }
+    private void updateBookingCouponFormat(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
+        if (command.getBookingCouponFormat() == null || command.getBookingCouponFormat().isEmpty()) {
+            dto.setBookingCouponFormat(null);
+            update.setUpdate(1);
+        } else {
+            if (dto.getBookingCouponFormat() == null) {
+                dto.setBookingCouponFormat(command.getBookingCouponFormat());
+                update.setUpdate(1);
+            } else if(!command.getBookingCouponFormat().equals(dto.getBookingCouponFormat())) {
+                dto.setBookingCouponFormat(command.getBookingCouponFormat());
+                update.setUpdate(1);
+            }
+        }
+    }
 
     private void updateFields(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
@@ -105,7 +120,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         UpdateIfNotNull.updateInteger(dto::setCreditDay, command.getCreditDay(), dto.getCreditDay(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRfc, command.getRfc(), dto.getRfc(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setValidateCheckout, command.getValidateCheckout(), dto.getValidateCheckout(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
+//        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
