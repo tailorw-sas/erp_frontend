@@ -181,7 +181,16 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, status: iterator?.type?.status || 'ACTIVE' }]
+      ListItems.value = [
+        ...ListItems.value,
+        {
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          invoiceId: iterator?.invoice?.invoiceId,
+          status: iterator?.type?.status || 'ACTIVE'
+        }
+      ]
     }
   }
   catch (error) {
