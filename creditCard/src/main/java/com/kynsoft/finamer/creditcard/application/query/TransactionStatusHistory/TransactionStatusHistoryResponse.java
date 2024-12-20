@@ -30,4 +30,5 @@ public class TransactionStatusHistoryResponse implements IResponse {
         this.transactionStatus = dto.getTransactionStatus() != null ? new TransactionStatusToStatusHistoryResponse(dto.getTransactionStatus()) : null;
         this.historyId = dto.getHistoryId();
     }
+    
 }
