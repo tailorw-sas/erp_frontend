@@ -318,7 +318,6 @@ onMounted(() => {
     v-model:visible="dialogVisible"
     modal
     :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header"
-    class="p-4"
     content-class="border-round-bottom border-top-1 surface-border h-fit"
     :block-scroll="true"
     style="width: 50%;" :pt="{

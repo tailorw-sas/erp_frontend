@@ -28,6 +28,7 @@ const $primevue = usePrimeVue()
 defineExpose({
   $primevue
 })
+const { data: userData } = useAuth()
 const formReload = ref(0)
 const forceSave = ref(false)
 let submitEvent = new Event('')
@@ -239,6 +240,8 @@ async function save(item: { [key: string]: any }) {
     payload.parentId = item.transactionId
     payload.hasCommission = item.refundCommission
     payload.amount = item.selectedAmount.type === 'TOTAL' ? item.selectedAmount.total : item.selectedAmount.partial
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     onClose(false)

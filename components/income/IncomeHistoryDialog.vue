@@ -30,11 +30,12 @@ const props = defineProps({
 const invoice = ref(props.selectedInvoiceObj)
 
 const Columns: IColumn[] = [
-  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '100px' },
-  // { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'date', width: '90px' },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
-  { field: 'invoice.status', header: 'Status', type: 'text', width: '200px' },
+  { field: 'invoiceHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoice.invoiceId', header: 'Income Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '90px', sortable: false, showFilter: false },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
+  { field: 'invoiceStatus', header: 'Status', type: 'slot-text', width: '100px', sortable: false, showFilter: false },
 ]
 
 const dialogVisible = ref(props.openDialog)
@@ -46,6 +47,7 @@ const options = ref({
   showDelete: false,
   showFilters: false,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -96,7 +98,7 @@ async function getList() {
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'invoice')) {
         iterator['invoice.invoiceId'] = iterator.invoice.invoiceId
-        iterator['invoice.status'] = iterator.invoice.status
+        iterator.invoiceStatus = iterator.invoice.status
       }
       ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
     }
@@ -112,6 +114,14 @@ async function ParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
   Payload.value.filter = [...parseFilter || []]
   getList()
+}
+
+function getStatusBadgeBackgroundColorByItem(item: string) {
+  if (!item) { return }
+  if (item === 'PROCESSED') { return '#FF8D00' }
+  if (item === 'SENT') { return '#006400' }
+  if (item === 'RECONCILED') { return '#005FB7' }
+  if (item === 'CANCELED') { return '#888888' }
 }
 
 watch(() => props.selectedInvoiceObj, () => {
@@ -133,41 +143,47 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal class="mx-3 sm:mx-0"
-    content-class="border-round-bottom border-top-1 surface-border" :block-scroll="true"
-    :style="{ width: '60%' }"
-    :pt="{
-      root: {
-        class: 'custom-dialog',
-      },
+    v-model:visible="dialogVisible" modal
+    content-class="border-round-bottom border-top-1 surface-border h-fit"
+    :block-scroll="true"
+    style="width: 50%;" :pt="{
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
-      },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
       },
     }"
     @hide="closeDialog"
   >
     <template #header>
-      <div class="flex justify-content-between">
+      <div class="flex justify-content-between w-full">
         <h5 class="m-0">
           {{ props.header }}
+        </h5>
+        <h5 class="m-0 mr-2">
+          Income Id: {{ props.selectedInvoiceObj?.incomeId }}
         </h5>
       </div>
     </template>
     <template #default>
-      <div class="p-fluid pt-3">
-        <DynamicTable
-          class="card p-0"
-          :data="ListItems"
-          :columns="Columns"
-          :options="options"
-          :pagination="Pagination"
-          @on-change-pagination="PayloadOnChangePage = $event"
-          @on-change-filter="ParseDataTableFilter"
-          @on-sort-field="OnSortField"
-        />
+      <div class="p-fluid mt-4">
+        <div class="flex flex-column" style="width: 100%;overflow: auto;">
+          <DynamicTable
+            class="card p-0"
+            :data="ListItems"
+            :columns="Columns"
+            :options="options"
+            :pagination="Pagination"
+            @on-change-pagination="PayloadOnChangePage = $event"
+            @on-change-filter="ParseDataTableFilter"
+            @on-sort-field="OnSortField"
+          >
+            <template #column-invoiceStatus="{ data }">
+              <Badge
+                :value="data.invoiceStatus"
+                :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.invoiceStatus)}`"
+              />
+            </template>
+          </DynamicTable>
+        </div>
       </div>
     </template>
   </Dialog>
