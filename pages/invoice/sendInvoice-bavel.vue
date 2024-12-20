@@ -105,11 +105,9 @@ sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
       : ''
 
 const payload = ref<IQueryRequest>({
-  filter: [
-
-  ],
+  filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -129,6 +127,9 @@ const pagination = ref<IPagination>({
 
 async function getList() {
   try {
+    if (options.value.loading) { return }
+
+    options.value.loading = true
     // payload.value = { ...payload.value, query: idItem.value }
     const staticPayload = [
       {
@@ -174,6 +175,7 @@ async function getList() {
     clickedItem.value = []
     const newListItems = []
     const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
+
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
     pagination.value.limit = size
@@ -215,6 +217,10 @@ async function getList() {
   }
   catch (error) {
     console.error('Error loading file:', error)
+    options.value.loading = false
+  }
+  finally {
+    options.value.loading = false
   }
 }
 
@@ -365,15 +371,8 @@ function onSortField(event: any) {
   }
 }
 
-function searchAndFilter() {
-  payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
+async function searchAndFilter() {
+  payload.value.filter = []
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     // newPayload.filter = [{
     payload.value.filter = [...payload.value.filter, {
@@ -539,17 +538,17 @@ const disabledSearch = computed(() => {
   return false
 })
 
-watch(payloadOnChangePage, (newValue) => {
+watch(payloadOnChangePage, async (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
-  getList()
+  await searchAndFilter()
 })
 
 onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
-  await getList()
+  await searchAndFilter()
 })
 </script>
 
