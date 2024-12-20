@@ -477,7 +477,7 @@ async function createItem(item: { [key: string]: any }) {
     }
 
     if (listBookingForFlateRate.length > 0) {
-      throw new Error(`The Hotel amount field must be greater than 0 for this booking: ${listBookingForFlateRate.toString()}`)
+      throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < adjustmentList?.value.length; i++) {
