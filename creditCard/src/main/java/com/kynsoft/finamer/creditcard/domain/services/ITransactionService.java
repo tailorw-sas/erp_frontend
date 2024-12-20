@@ -34,7 +34,7 @@ public interface ITransactionService {
 
     Double findSumOfAmountByParentId(Long parentId);
 
-    void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto);
+    void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String responseCodeMessage);
 
     void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink);
 

@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,5 +20,5 @@ public class UpdateManageStatusTransactionBlueCommandRequest {
     private ETransactionResultStatus status;
     private LocalDateTime paymentDate;
     private String employee;
-    private UUID employeeId;
+    private String responseCodeMessage;
 }

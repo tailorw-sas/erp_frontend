@@ -129,8 +129,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             transactionPaymentLogsDto.setIsProcessed(true);
             transactionPaymentLogsService.update(transactionPaymentLogsDto);
 
+            String responseCodeMessage = transactionResponse.getMerchantStatus().getCode() + ", " + transactionResponse.getMerchantStatus().getDescription();
             //Enviar correo (voucher) de confirmacion a las personas implicadas
-            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
+            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto, responseCodeMessage);
             this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getEmployee());
             command.setResult(transactionResponse);
         } else {

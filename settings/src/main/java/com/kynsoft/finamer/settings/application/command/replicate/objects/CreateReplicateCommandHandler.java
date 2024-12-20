@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.kafka.entity.*;
 import com.kynsof.share.core.domain.kafka.entity.vcc.*;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.services.*;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAccountType.ProducerReplicateAccountTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgencyContact.ProducerReplicateManageAgencyContactService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgencyType.ProducerReplicateManageAgencyTypeService;
@@ -125,7 +126,10 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManageRoomCategoryService roomCategoryService;
     private final ProducerReplicateManageRoomCategoryService producerReplicateManageRoomCategoryService;
 
-    public CreateReplicateCommandHandler(IManageRoomCategoryService roomCategoryService,
+    private final IManagerAccountTypeService accountTypeService;
+    private final ProducerReplicateAccountTypeService producerReplicateAccountTypeService;
+
+    public CreateReplicateCommandHandler(IManagerAccountTypeService accountTypeService, ProducerReplicateAccountTypeService producerReplicateAccountTypeService, IManageRoomCategoryService roomCategoryService,
                                          ProducerReplicateManageRoomCategoryService producerReplicateManageRoomCategoryService,
                                          IManageRatePlanService ratePlanService,
                                          ProducerReplicateManageRatePlanService producerReplicateManageRatePlanService,
@@ -180,6 +184,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageTimeZoneService producerReplicateManageTimeZoneService,
                                          IManageNightTypeService manageNightTypeService,
                                          ProducerReplicateManageNightTypeService producerReplicateManageNightTypeService) {
+        this.accountTypeService = accountTypeService;
+        this.producerReplicateAccountTypeService = producerReplicateAccountTypeService;
         this.roomCategoryService = roomCategoryService;
         this.producerReplicateManageRoomCategoryService = producerReplicateManageRoomCategoryService;
         this.ratePlanService = ratePlanService;
@@ -251,6 +257,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 case MANAGE_RATE_PLAN -> {
                     for (ManageRatePlanDto ratePlanDto : this.ratePlanService.findAllToReplicate()) {
                         this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(ratePlanDto.getId(), ratePlanDto.getCode(), ratePlanDto.getName(), ratePlanDto.getStatus().name()));
+                    }
+                }
+                case MANAGE_ACCOUNT_TYPE -> {
+                    for (ManagerAccountTypeDto accountTypeDto : this.accountTypeService.findAllToReplicate()) {
+                        this.producerReplicateAccountTypeService.replicate(new ManageAccountTypeKafka(accountTypeDto.getId(), accountTypeDto.getCode(), accountTypeDto.getName(), accountTypeDto.getDescription(), accountTypeDto.getStatus().name(), accountTypeDto.isModuleVcc(), accountTypeDto.isModulePayment()));
                     }
                 }
                 case MANAGE_ROOM_CATEGORY -> {
