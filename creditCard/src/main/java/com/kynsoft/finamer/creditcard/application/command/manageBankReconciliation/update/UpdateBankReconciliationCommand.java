@@ -25,6 +25,7 @@ public class UpdateBankReconciliationCommand implements ICommand {
     private UUID reconcileStatus;
     private Double amount;
     private String employee;
+    private UUID employeeId;
 
     public UpdateBankReconciliationCommand(
             UUID id,
@@ -34,7 +35,8 @@ public class UpdateBankReconciliationCommand implements ICommand {
             List<UpdateBankReconciliationAdjustmentRequest> adjustmentTransactions,
             UUID reconcileStatus,
             Double amount,
-            String employee) {
+            String employee,
+            UUID employeeId) {
         this.id = id;
         this.paidDate = paidDate;
         this.remark = remark;
@@ -43,6 +45,7 @@ public class UpdateBankReconciliationCommand implements ICommand {
         this.reconcileStatus = reconcileStatus;
         this.amount = amount;
         this.employee = employee;
+        this.employeeId = employeeId;
     }
 
     public static UpdateBankReconciliationCommand fromRequest(UUID id, UpdateBankReconciliationRequest request){
@@ -54,7 +57,8 @@ public class UpdateBankReconciliationCommand implements ICommand {
                 request.getAdjustmentTransactions(),
                 request.getReconcileStatus(),
                 request.getAmount(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getEmployeeId()
         );
     }
 

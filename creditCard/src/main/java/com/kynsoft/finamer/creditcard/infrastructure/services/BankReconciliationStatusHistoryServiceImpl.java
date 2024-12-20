@@ -9,11 +9,13 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.bankReconciliationStatusHistory.BankReconciliationStatusHistoryResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.BankReconciliationStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageBankReconciliationDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IBankReconciliationStatusHistoryService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.BankReconciliationStatusHistory;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.BankReconciliationStatusHistoryWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.BankReconciliationStatusHistoryReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,15 +28,16 @@ import java.util.UUID;
 @Service
 public class BankReconciliationStatusHistoryServiceImpl implements IBankReconciliationStatusHistoryService {
 
-    @Autowired
     private final BankReconciliationStatusHistoryWriteDataJPARepository repositoryCommand;
 
-    @Autowired
     private final BankReconciliationStatusHistoryReadDataJPARepository repositoryQuery;
 
-    public BankReconciliationStatusHistoryServiceImpl(BankReconciliationStatusHistoryWriteDataJPARepository repositoryCommand, BankReconciliationStatusHistoryReadDataJPARepository repositoryQuery) {
+    private final IManageEmployeeService employeeService;
+
+    public BankReconciliationStatusHistoryServiceImpl(BankReconciliationStatusHistoryWriteDataJPARepository repositoryCommand, BankReconciliationStatusHistoryReadDataJPARepository repositoryQuery, IManageEmployeeService employeeService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -72,6 +75,24 @@ public class BankReconciliationStatusHistoryServiceImpl implements IBankReconcil
         Page<BankReconciliationStatusHistory> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public BankReconciliationStatusHistoryDto create(ManageBankReconciliationDto dto, UUID employeeId) {
+        ManageEmployeeDto employeeDto = null;
+        if (employeeId != null) {
+            employeeDto = this.employeeService.findById(employeeId);
+        }
+        BankReconciliationStatusHistoryDto history = new BankReconciliationStatusHistoryDto(
+                UUID.randomUUID(),
+                dto,
+                "The reconcile status is "+ dto.getReconcileStatus().getCode()+"-"+ dto.getReconcileStatus().getName()+".",
+                null,
+                employeeDto,
+                dto.getReconcileStatus()
+        );
+        BankReconciliationStatusHistory data = new BankReconciliationStatusHistory(history);
+        return this.repositoryCommand.save(data).toAggregate();
     }
 
     private PaginatedResponse getPaginatedResponse(Page<BankReconciliationStatusHistory> data) {

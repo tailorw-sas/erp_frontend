@@ -70,7 +70,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
 
         if (command.getReconcileStatus() != null && !command.getReconcileStatus().equals(dto.getReconcileStatus().getId())){
             ManageReconcileTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getReconcileStatus());
-            updateStatus(dto, transactionStatusDto, command.getEmployee());
+            updateStatus(dto, transactionStatusDto, command.getEmployeeId());
         }
 
         if(update.getUpdate() > 0) {
@@ -109,7 +109,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         this.bankReconciliationService.update(reconciliation);
     }
 
-    private void updateStatus(ManageBankReconciliationDto dto, ManageReconcileTransactionStatusDto transactionStatusDto, String employee){
+    private void updateStatus(ManageBankReconciliationDto dto, ManageReconcileTransactionStatusDto transactionStatusDto, UUID employeeId){
         if (transactionStatusDto.isCompleted()){
             ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
             //si no encuentra la parametrization que agarre 2 decimales por defecto
@@ -117,18 +117,11 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
             double amount = BankerRounding.round(dto.getAmount(), decimals);
             double details = BankerRounding.round(dto.getDetailsAmount(), decimals);
             if (amount == details) {
-                Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employee);
+                Set<TransactionDto> updatedTransactions = this.transactionService.changeAllTransactionStatus(dto.getTransactions().stream().map(TransactionDto::getId).collect(Collectors.toSet()), ETransactionStatus.RECONCILED, employeeId);
                 dto.setReconcileStatus(transactionStatusDto);
                 dto.setTransactions(updatedTransactions);
                 this.bankReconciliationService.update(dto);
-                this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
-                        UUID.randomUUID(),
-                        dto,
-                        "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
-                        null,
-                        employee,
-                        transactionStatusDto
-                ));
+                this.bankReconciliationStatusHistoryService.create(dto, employeeId);
             } else {
                 throw new BusinessException(
                         DomainErrorMessage.MANAGE_BANK_RECONCILIATION_COMPLETED_STATUS,
@@ -139,14 +132,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
             if (dto.getTransactions().isEmpty() && !dto.getReconcileStatus().isCompleted()) {
                 dto.setReconcileStatus(transactionStatusDto);
                 this.bankReconciliationService.update(dto);
-                this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
-                        UUID.randomUUID(),
-                        dto,
-                        "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
-                        null,
-                        employee,
-                        transactionStatusDto
-                ));
+                this.bankReconciliationStatusHistoryService.create(dto, employeeId);
             } else {
                 throw new BusinessException(
                         DomainErrorMessage.MANAGE_BANK_RECONCILIATION_CANCELLED_STATUS,
@@ -156,14 +142,7 @@ public class UpdateBankReconciliationCommandHandler implements ICommandHandler<U
         } else if (transactionStatusDto.isCreated()){
             dto.setReconcileStatus(transactionStatusDto);
             this.bankReconciliationService.update(dto);
-            this.bankReconciliationStatusHistoryService.create(new BankReconciliationStatusHistoryDto(
-                    UUID.randomUUID(),
-                    dto,
-                    "The reconcile status change to "+transactionStatusDto.getCode()+"-"+transactionStatusDto.getName()+".",
-                    null,
-                    employee,
-                    transactionStatusDto
-            ));
+            this.bankReconciliationStatusHistoryService.create(dto, employeeId);
         }
     }
 
