@@ -627,11 +627,11 @@ async function createItem(item: { [key: string]: any }) {
     })
 
     if (countBookingWithoutNightType > 0) {
-      throw new Error(`The Night Type field is required for this booking: ${listOfBookingsWithoutNightType.toString()}`)
+      throw new Error(`The Night Type field is required for this Hotel Booking No: ${listOfBookingsWithoutNightType.toString()}`)
     }
-
+    // The Hotel amount field must be greater than 0 for this Hotel Booking No: I 789 567
     if (listBookingForFlateRate.length > 0) {
-      throw new Error(`The Hotel amount field must be greater than 0 for this booking: ${listBookingForFlateRate.toString()}`)
+      throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < roomRateList.value.length; i++) {
