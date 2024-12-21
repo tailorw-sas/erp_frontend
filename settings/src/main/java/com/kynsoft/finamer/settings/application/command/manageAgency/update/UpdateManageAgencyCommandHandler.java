@@ -90,7 +90,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 //    }
     private void updateBookingCouponFormat(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
         if (command.getBookingCouponFormat() == null || command.getBookingCouponFormat().isEmpty()) {
-            dto.setBookingCouponFormat(null);
+            dto.setBookingCouponFormat("");
             update.setUpdate(1);
         } else {
             if (dto.getBookingCouponFormat() == null) {
