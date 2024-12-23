@@ -28,9 +28,10 @@ public class VoucherServiceImpl implements IVoucherService {
     }
 
     @Override
-    public void createAndUploadAndAttachTransactionVoucher(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String employee) {
+    public byte[] createAndUploadAndAttachTransactionVoucher(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String employee) {
+        byte[] attachment = null;
         try {
-            byte[] attachment = this.pdfVoucherService.generatePdf(transactionDto, merchantConfigDto);
+            attachment = this.pdfVoucherService.generatePdf(transactionDto, merchantConfigDto);
             int attachNumber = transactionDto.getAttachments() != null ? transactionDto.getAttachments().size()+1 : 1;
             String filename = "transaction_"+transactionDto.getId()+"_attach_"+attachNumber+".pdf";
             String file = "";
@@ -40,6 +41,7 @@ public class VoucherServiceImpl implements IVoucherService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return attachment;
     }
 
     private void createAttachment(TransactionDto transactionDto, String file, String filename, String employee){

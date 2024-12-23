@@ -131,8 +131,8 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 
             String responseCodeMessage = transactionResponse.getMerchantStatus().getCode() + ", " + transactionResponse.getMerchantStatus().getDescription();
             //Enviar correo (voucher) de confirmacion a las personas implicadas
-            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto, responseCodeMessage);
-            this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getEmployee());
+            byte[] attachment = this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getEmployee());
+            transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto, responseCodeMessage, attachment);
             command.setResult(transactionResponse);
         } else {
             throw new BusinessException(DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR, DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR.getReasonPhrase());

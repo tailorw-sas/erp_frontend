@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
-import com.kynsof.share.core.application.mailjet.MailJetRecipient;
-import com.kynsof.share.core.application.mailjet.MailJetVar;
-import com.kynsof.share.core.application.mailjet.MailService;
-import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
+import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
@@ -217,7 +214,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
     //Conformar el correo para confirmar que la transaccion fue Recivida
     @Override
-    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String responseCodeMessage){
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String responseCodeMessage, byte[] attachment) {
         if(transactionDto.getEmail() != null){
             TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
@@ -259,6 +256,18 @@ public class TransactionServiceImpl implements ITransactionService {
                 recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
             }
             request.setRecipientEmail(recipients);
+
+            if (attachment != null) {
+                //creando el attachment para adjuntarlo al correo
+                List<MailJetAttachment> list = new ArrayList<>();
+                MailJetAttachment attach = new MailJetAttachment(
+                        "application/pdf",
+                        "Voucher_" + transactionDto.getId() + ".pdf",
+                        Base64.getEncoder().encodeToString(attachment)
+                );
+                list.add(attach);
+                request.setMailJetAttachments(list);
+            }
 
             mailService.sendMail(request);
         }

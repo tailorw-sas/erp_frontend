@@ -5,5 +5,5 @@ import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
 
 public interface IVoucherService {
 
-    void createAndUploadAndAttachTransactionVoucher(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String employee);
+    byte[] createAndUploadAndAttachTransactionVoucher(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String employee);
 }
