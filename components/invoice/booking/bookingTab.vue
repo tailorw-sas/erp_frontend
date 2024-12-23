@@ -1673,15 +1673,6 @@ function onRowRightClick(event: any) {
     ]
   } 
 
-  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
-    menuModel.value = [
-      {
-        label: 'Payment Details Applied',
-        command: () => openModalPaymentDetail(selectedBooking.value),
-        disabled: computedShowMenuItemEditBooking
-      },
-    ]
-  }
   let bookingAmount = 0
   let bookingBalance = 0
   if (typeof event.data?.invoiceAmount === 'string') {
@@ -1693,6 +1684,16 @@ function onRowRightClick(event: any) {
     bookingBalance = Number(event.data?.dueAmount.replace(/,/g, ''))
   } else {
     bookingBalance = event.data?.dueAmount
+  }
+
+  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT && bookingAmount !== bookingBalance) {  
+    menuModel.value = [
+      {
+        label: 'Payment Details Applied',
+        command: () => openModalPaymentDetail(selectedBooking.value),
+        disabled: computedShowMenuItemEditBooking
+      },
+    ]
   }
 
   if (!props.isCreationDialog && props.invoiceObj?.invoiceStatus?.processStatus === false && bookingAmount !== bookingBalance) {
