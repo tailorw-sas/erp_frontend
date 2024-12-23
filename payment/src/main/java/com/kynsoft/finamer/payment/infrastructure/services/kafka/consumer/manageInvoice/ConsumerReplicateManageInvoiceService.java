@@ -75,11 +75,12 @@ public class ConsumerReplicateManageInvoiceService {
         if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
             ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
             if (!hotelDto.getAutoApplyCredit()) {
-                this.automaticProcessApplyPayment(objKafka, invoiceDto);
+                this.automaticProcessApplyPayment(objKafka, invoiceDto);//Aplica al padre
             } else {
-                List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
-                this.addAttachment(objKafka, attachmentKafkas);
-                this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
+                 this.automaticProcessApplyPayment(objKafka, invoiceDto);
+//                List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
+//                this.addAttachment(objKafka, attachmentKafkas);
+//                this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
             }
         }
         if (invoiceDto.getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
