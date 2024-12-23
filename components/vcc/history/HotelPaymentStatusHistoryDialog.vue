@@ -25,7 +25,7 @@ const props = defineProps({
 
 const Columns: IColumn[] = [
   { field: 'hotelPaymentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px' },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '100px' },
   { field: 'employeeName', header: 'Employee', type: 'text', width: '100px' },
   { field: 'description', header: 'Remark', type: 'text', width: '200px' },
   { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px' },
