@@ -530,12 +530,12 @@ const fieldsV2: Array<FieldDefinitionType> = [
     || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT 
     ? { 
       validation: z
-      .number({invalid_type_error: 'The Invoice Amount field is required'}).min(1, 'The Invoice Amount field is required')
-      .refine((value: any) => value !== null && !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
+      .number({invalid_type_error: 'The Booking Amount field is required'}).min(1, 'The Booking Amount field is required')
+      .refine((value: any) => value !== null && !isNaN(value) && +value < 0, { message: 'The Booking Amount field must be negative' }) 
     } : { 
       validation: 
-      z.number({invalid_type_error: 'The Invoice Amount field is required'}).min(1, 'The Invoice Amount field is required')
-      .refine((value: any) => value !== null && !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) 
+      z.number({invalid_type_error: 'The Booking Amount field is required'}).min(1, 'The Booking Amount field is required')
+      .refine((value: any) => value !== null && !isNaN(value) && +value > 0, { message: 'The Booking Amount field must be greater than 0' }) 
     })
   },
 
@@ -565,7 +565,26 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{1,}\s*$/, 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44')
+    validation: z.string()
+    .superRefine((value, ctx) => {
+      // Validar si está vacío
+      if (!value.trim()) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'The Hotel Booking No. field is required',
+        });
+        return; // Detiene más validaciones
+      }
+
+      // Validar el formato
+      const regex = /^[IG]\s+\d+\s+\d+\s*$/;
+      if (!regex.test(value)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44',
+        });
+      }
+    }),
   },
 
   {
