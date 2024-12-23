@@ -215,7 +215,6 @@ const Fields = ref<Array<Container>>([
         dataType: 'number',
         class: 'field col-12 required',
         headerClass: 'mb-1',
-
         validation: z.string().min(0, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must not be negative' })
 
       },

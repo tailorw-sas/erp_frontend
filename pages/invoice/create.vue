@@ -183,7 +183,7 @@ const Fields = ref<FieldDefinitionType[]>([
       id: z.string(),
       name: z.string(),
     })
-      .required()
+      .required().nullable()
       .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
   },
   {
@@ -1065,18 +1065,13 @@ function calcBookingInvoiceAmount(roomRate: any) {
   // Filtra las tarifas de habitación asociadas a esta reserva
   const roomRates = roomRateList.value.filter((r: any) => r.booking === bookingList.value[bookingIndex]?.id)
 
-  console.log(`Room rates associated with booking ${bookingList.value[bookingIndex].id}:`, roomRates)
-
   // Suma los invoiceAmounts de las tarifas de habitación
   roomRates.forEach((r) => {
-    console.log(`Adding room rate invoice amount: ${r.invoiceAmount}`)
     bookingList.value[bookingIndex].invoiceAmount += Number(r.invoiceAmount)
   })
 
   // Redondea el monto total a 2 decimales
   bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2))
-
-  console.log(`Total invoice amount for booking ${bookingList.value[bookingIndex].id}: ${bookingList.value[bookingIndex].invoiceAmount}`)
 
   // Llama a la función para recalcular el total de la factura
   calcInvoiceAmount()
