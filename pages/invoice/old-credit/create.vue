@@ -539,9 +539,12 @@ async function createItem(item: { [key: string]: any }) {
     if (invoiceAmount.value === 0) {
       throw new Error('The Invoice amount field cannot be 0')
     }
-
-    await getInvoiceAgency(item.agency?.id)
-    await getInvoiceHotel(item.hotel?.id)
+    if (item.agency?.id) {
+      await getInvoiceAgency(item.agency?.id)
+    }
+    if (item.hotel?.id) {
+      await getInvoiceHotel(item.hotel?.id)
+    }
 
     const adjustments = []
     const bookings: any[] = []
@@ -598,7 +601,6 @@ async function createItem(item: { [key: string]: any }) {
     }
 
     roomRates = []
-    roomRates = roomRateList.value
     for (const element of roomRateList.value) {
       roomRates.push({
         ...element,
@@ -824,7 +826,7 @@ function addBooking(booking: any) {
   calcInvoiceAmount()
 }
 
-async function getInvoiceAgency(id) {
+async function getInvoiceAgency(id: string) {
   try {
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
 
@@ -833,11 +835,11 @@ async function getInvoiceAgency(id) {
     }
   }
   catch (err) {
-
+    console.log(err)
   }
 }
 
-async function getInvoiceHotel(id) {
+async function getInvoiceHotel(id: string) {
   try {
     const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
 
@@ -846,7 +848,7 @@ async function getInvoiceHotel(id) {
     }
   }
   catch (err) {
-
+    console.log(err)
   }
 }
 
