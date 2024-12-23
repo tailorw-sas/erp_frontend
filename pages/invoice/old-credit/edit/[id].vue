@@ -668,10 +668,13 @@ async function getItemById(id: string) {
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
         item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
 
-        item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
-        const newDate = new Date(response.invoiceDate)
-        newDate.setDate(newDate.getDate() + 1)
-        item.value.invoiceDate = newDate || null
+        // item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
+        // const newDate = new Date(response.invoiceDate)
+        // newDate.setDate(newDate.getDate() + 1)
+        // item.value.invoiceDate = newDate || null
+
+        const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : ''
+        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null 
 
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
