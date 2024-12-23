@@ -26,7 +26,7 @@ const props = defineProps({
 const Columns: IColumn[] = [
   { field: 'historyId', header: 'Id', type: 'text', width: '70px', sortable: false, showFilter: false },
   { field: 'transactionId', header: 'Transaction Id', type: 'text', width: '70px', sortable: false, showFilter: false },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '100px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '100px', sortable: false, showFilter: false },
   { field: 'employeeName', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   { field: 'statusName', header: 'Status', type: 'custom-badge', statusClassMap: props.sClassMap, width: '100px', sortable: false, showFilter: false },
