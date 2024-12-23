@@ -136,6 +136,7 @@ public class TransactionController {
         UpdateManageStatusTransactionCommand updateManageStatusTransactionCommandRequest = UpdateManageStatusTransactionCommand.builder()
                 .session(request.getSession())
                 .employee(request.getEmployee())
+                .employeeId(request.getEmployeeId())
                 .build();
 
         UpdateManageStatusTransactionCommandMessage response = mediator.send(updateManageStatusTransactionCommandRequest);
