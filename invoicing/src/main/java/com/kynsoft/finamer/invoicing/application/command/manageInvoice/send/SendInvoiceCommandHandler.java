@@ -114,16 +114,16 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         if (invoices.get(0).getAgency().getSentB2BPartner() == null){
-            updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
         else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
-            sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
         else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
-            bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
         else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
-            sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
 
         command.setResult(true);

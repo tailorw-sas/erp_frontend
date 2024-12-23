@@ -9,9 +9,11 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.InvoiceStatusHistoryResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceStatusHistoryDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceStatusHistoryService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.InvoiceStatusHistory;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.InvoiceStatusHistoryWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.InvoiceStatusHistoryReadDataJPARepository;
@@ -35,6 +37,12 @@ public class InvoiceStatusHistoryServiceImpl implements IInvoiceStatusHistorySer
 
     @Autowired
     private InvoiceStatusHistoryReadDataJPARepository repositoryQuery;
+
+    private final IManageEmployeeService employeeService;
+
+    public InvoiceStatusHistoryServiceImpl(IManageEmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
 
     @Override
     public UUID create(InvoiceStatusHistoryDto dto) {
@@ -81,12 +89,21 @@ public class InvoiceStatusHistoryServiceImpl implements IInvoiceStatusHistorySer
 
     @Override
     public UUID create(ManageInvoiceDto invoiceDto, String employee) {
+        ManageEmployeeDto employeeC = null;
+        String employeeFullName = "";
+        try {
+            employeeC = this.employeeService.findById(UUID.fromString(employee));
+            employeeFullName = employeeC.getFirstName() + " " + employeeC.getLastName();
+        } catch (Exception e) {
+            employeeFullName = employee;
+        }
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto(
                 UUID.randomUUID(),
                 invoiceDto,
                 "The invoice data was inserted.",
                 null,
-                employee,
+                //employee,
+                employeeFullName,
                 invoiceDto.getStatus(),
                 0L
         );

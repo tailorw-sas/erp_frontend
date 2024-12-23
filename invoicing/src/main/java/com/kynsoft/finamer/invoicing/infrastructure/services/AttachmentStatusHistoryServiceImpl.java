@@ -10,8 +10,10 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.AttachmentStatusHistoryResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IAttachmentStatusHistoryService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.AttachmentStatusHistory;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.AttachmentStatusHistoryWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.AttachmentStatusHistoryReadDataJPARepository;
@@ -34,6 +36,12 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
 
     @Autowired
     private AttachmentStatusHistoryReadDataJPARepository repositoryQuery;
+
+    private final IManageEmployeeService employeeService;
+
+    public AttachmentStatusHistoryServiceImpl(IManageEmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
 
     @Override
     public UUID create(AttachmentStatusHistoryDto dto) {
@@ -78,12 +86,21 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
 
     @Override
     public UUID create(ManageAttachmentDto attachmentDto, ManageInvoiceDto invoiceDto) {
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(attachmentDto.getEmployeeId());
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = attachmentDto.getEmployee();
+        }
         AttachmentStatusHistoryDto dto = new AttachmentStatusHistoryDto(
                 UUID.randomUUID(),
                 "An attachment to the invoice was inserted. The file name: " + attachmentDto.getFilename(),
                 attachmentDto.getAttachmentId(),
                 invoiceDto,
-                attachmentDto.getEmployee(),
+                employeeFullName,
+                //attachmentDto.getEmployee(),
                 attachmentDto.getEmployeeId(),
                 null,
                 null

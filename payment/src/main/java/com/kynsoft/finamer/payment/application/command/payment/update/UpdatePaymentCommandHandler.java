@@ -29,16 +29,16 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IManageEmployeeService manageEmployeeService;
 
-    public UpdatePaymentCommandHandler(IManagePaymentSourceService sourceService, 
-                                       IManagePaymentStatusService statusService, 
-                                       IManageClientService clientService, 
-                                       IManageAgencyService agencyService, 
-                                       IManageHotelService hotelService, 
-                                       IManageBankAccountService bankAccountService, 
-                                       IManagePaymentAttachmentStatusService attachmentStatusService, 
-                                       IPaymentService paymentService,
-                                       IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-                                       IManageEmployeeService manageEmployeeService) {
+    public UpdatePaymentCommandHandler(IManagePaymentSourceService sourceService,
+            IManagePaymentStatusService statusService,
+            IManageClientService clientService,
+            IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageBankAccountService bankAccountService,
+            IManagePaymentAttachmentStatusService attachmentStatusService,
+            IPaymentService paymentService,
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IManageEmployeeService manageEmployeeService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -60,7 +60,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getClient(), "Client", "Client ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAgency(), "Agency", "Agency ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getHotel(), "Hotel", "Hotel ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "Bank Account", "Bank Account ID cannot be null."));
+        //RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "Bank Account", "Bank Account ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getAttachmentStatus(), "Attachment Status", "Attachment Status ID cannot be null."));
 
         PaymentDto paymentDto = this.paymentService.findById(command.getId());
@@ -80,7 +80,24 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
 
         //if (update.getUpdate() > 0) {
-        paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+        if (!paymentDto.getPaymentSource().getExpense())//Se agrega esto con el objetivo de ignorar este check cuando se importa
+        {
+            RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBankAccount(), "bankAccount", "Bank Account ID cannot be null."));
+            if (paymentDto.getBankAccount() == null) {
+                paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+            } else if(!command.getBankAccount().equals(paymentDto.getBankAccount().getId())) {
+                paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+            }
+        } else {
+            if (command.getBankAccount() == null) {
+                paymentDto.setBankAccount(null);
+            } else if(paymentDto.getBankAccount() == null) {
+                paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+            } else if(!command.getBankAccount().equals(paymentDto.getBankAccount().getId())) {
+                paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+            }
+        }
+
         this.paymentService.update(paymentDto);
         //}
 
