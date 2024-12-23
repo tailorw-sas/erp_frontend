@@ -1824,9 +1824,9 @@ onMounted(() => {
       { field: 'children', header: 'Children', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'couponNumber', header: 'Coupon No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
       { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'invoiceAmount', header: 'Booking Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-      { field: 'dueAmount', header: 'Booking Balance', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'invoiceAmount', header: 'Booking Amount', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
+      { field: 'dueAmount', header: 'Booking Balance', type: 'number', sortable: !props.isDetailView && !props.isCreationDialog },
 
     ]
   }
