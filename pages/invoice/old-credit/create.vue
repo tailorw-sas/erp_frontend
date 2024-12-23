@@ -670,6 +670,15 @@ async function saveItem(item: { [key: string]: any }) {
         toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
       }
     }
+    else if (error?.data?.data?.error?.status === 1171) {
+      const message = error?.data?.data?.error?.errors.find((error: any) => error?.field === 'hotelBookingNumber')?.message
+      if (message) {
+        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 10000 })
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
+      }
+    }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
     }
