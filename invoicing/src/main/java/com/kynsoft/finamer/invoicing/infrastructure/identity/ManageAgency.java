@@ -89,28 +89,28 @@ public class ManageAgency {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.client = dto.getClient() != null ? new ManageClient(dto.getClient()) : null;
-        this.generationType=dto.getGenerationType();
-        this.status=dto.getStatus();
-        this.cif= dto.getCif();
-        this.address= dto.getAddress();
-        this.sentB2BPartner= dto.getSentB2BPartner() != null ? new ManageB2BPartner(dto.getSentB2BPartner()) : null;
-        this.cityState= dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
-        this.country= dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
+        this.generationType = dto.getGenerationType();
+        this.status = dto.getStatus();
+        this.cif = dto.getCif();
+        this.address = dto.getAddress();
+        this.sentB2BPartner = dto.getSentB2BPartner() != null ? new ManageB2BPartner(dto.getSentB2BPartner()) : null;
+        this.cityState = dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
+        this.country = dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
         this.mailingAddress = dto.getMailingAddress();
         this.zipCode = dto.getZipCode();
         this.city = dto.getCity();
         this.creditDay = dto.getCreditDay();
         this.autoReconcile = dto.getAutoReconcile();
         this.validateCheckout = dto.getValidateCheckout();
-        this.bookingCouponFormat= dto.getBookingCouponFormat();
+        this.bookingCouponFormat = dto.getBookingCouponFormat() != null ? dto.getBookingCouponFormat() : "";
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null,generationType,status,cif,address,
-                Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
-                Objects.nonNull(cityState)?cityState.toAggregate():null,
-                Objects.nonNull(country)?country.toAggregate():null,
+                id, code, name, client != null ? client.toAggregate() : null, generationType, status, cif, address,
+                Objects.nonNull(sentB2BPartner) ? sentB2BPartner.toAggregate() : null,
+                Objects.nonNull(cityState) ? cityState.toAggregate() : null,
+                Objects.nonNull(country) ? country.toAggregate() : null,
                 mailingAddress,
                 zipCode,
                 city,
@@ -123,10 +123,10 @@ public class ManageAgency {
 
     public ManageAgencyDto toAggregateSample() {
         return new ManageAgencyDto(
-                id, code, name, client != null ? client.toAggregate() : null,generationType,status,cif,address,
-                Objects.nonNull(sentB2BPartner)?sentB2BPartner.toAggregate():null,
-                Objects.nonNull(cityState)?cityState.toAggregate():null,
-                Objects.nonNull(country)?country.toAggregate():null,
+                id, code, name, client != null ? client.toAggregate() : null, generationType, status, cif, address,
+                Objects.nonNull(sentB2BPartner) ? sentB2BPartner.toAggregate() : null,
+                Objects.nonNull(cityState) ? cityState.toAggregate() : null,
+                Objects.nonNull(country) ? country.toAggregate() : null,
                 mailingAddress,
                 zipCode,
                 city,

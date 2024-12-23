@@ -148,7 +148,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
             }
             this.invoiceService.update(invoiceDto);
             this.attachmentStatusHistoryService.create(attachmentDto, invoiceDto);
-            this.invoiceStatusHistoryService.create(invoiceDto, command.getEmployeeName());
+            this.invoiceStatusHistoryService.create(invoiceDto, command.getEmployeeId().toString());
         }
         command.setErrorResponse(errorResponse);
         command.setTotalInvoicesRec(command.getInvoices().size() - errorResponse.size());

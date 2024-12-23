@@ -38,6 +38,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IManageAttachmentService attachmentService;
 
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IManageEmployeeService employeeService;
 
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
                                         IManageHotelService hotelService,
@@ -49,7 +50,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                                         IInvoiceStatusHistoryService invoiceStatusHistoryService, 
                                         IInvoiceCloseOperationService closeOperationService, 
                                         IManageAttachmentService attachmentService, 
-                                        IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+                                        IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                        IManageEmployeeService employeeService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -61,6 +63,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         this.closeOperationService = closeOperationService;
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -80,6 +83,14 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         } catch (Exception e) {
         }
 
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
         ManageInvoiceDto income = new ManageInvoiceDto(
                 command.getId(),
                 0L,
@@ -110,11 +121,12 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
-        this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
+        this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
+        //this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
         if (command.getAttachments() != null) {
             List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
-            this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList);
+            this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
         }
 
     }
@@ -141,13 +153,14 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     }
 
-    private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments) {
+    private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments, String employeeFullName) {
         for (ManageAttachmentDto attachment : attachments) {
             AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
             attachmentStatusHistoryDto.setId(UUID.randomUUID());
             attachmentStatusHistoryDto
                     .setDescription("An attachment to the invoice was inserted. The file name: " + attachment.getFile());
-            attachmentStatusHistoryDto.setEmployee(attachment.getEmployee());
+            attachmentStatusHistoryDto.setEmployee(employeeFullName);
+            //attachmentStatusHistoryDto.setEmployee(attachment.getEmployee());
             invoice.setAttachments(null);
             attachmentStatusHistoryDto.setInvoice(invoice);
             attachmentStatusHistoryDto.setEmployeeId(attachment.getEmployeeId());

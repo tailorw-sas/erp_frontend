@@ -51,6 +51,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
+    private final IManageEmployeeService employeeService;
 
     public CreateBulkInvoiceCommandHandler(IManageRatePlanService ratePlanService,
             IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
@@ -63,7 +64,10 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
             IInvoiceCloseOperationService closeOperationService,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, 
+            IInvoiceStatusHistoryService invoiceStatusHistoryService, 
+            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+            IManageEmployeeService employeeService) {
 
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -82,6 +86,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -90,11 +95,19 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
 
         RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
 
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-                this.closeOperationService,
-                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
-                hotelDto.getId()));
+//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+//                this.closeOperationService,
+//                command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
+//                hotelDto.getId()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
         RulesChecker.checkRule(new InvoiceValidateClienteRule(agencyDto.getClient()));
@@ -335,12 +348,12 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             }
             attachmentDtos.add(attachmentDto);
         }
-        if (cont == 0) {
-            throw new BusinessException(
-                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
-                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
-            );
-        }
+//        if (cont == 0) {
+//            throw new BusinessException(
+//                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+//                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+//            );
+//        }
         for (ManageBookingDto booking : bookings) {
             this.calculateBookingHotelAmount(booking);
 
@@ -413,7 +426,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         created,
                         "The invoice data was inserted.",
                         null,
-                        command.getEmployee(),
+                        //command.getEmployee(),
+                        employeeFullName,
                         status,
                         0L
                 )
@@ -427,7 +441,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
                             created,
-                            command.getEmployee(),
+                            //command.getEmployee(),
+                            employeeFullName,
                             attachment.getEmployeeId(),
                             null,
                             null

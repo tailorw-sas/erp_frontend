@@ -41,9 +41,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
+    private final IManageEmployeeService employeeService;
 
     public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageEmployeeService employeeService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -57,6 +58,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -69,6 +71,15 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
 //                hotelDto.getId()));
 
         //preparando lo necesario
+        
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployeeName();
+        }
         List<ManageBookingDto> parentBookings = parentInvoice.getBookings();
         List<ManageBookingDto> newBookings = new LinkedList<>();
         List<ManageAttachmentDto> attachments = new LinkedList<>();
@@ -244,7 +255,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         created,
                         "The invoice data was inserted.",
                         null,
-                        command.getEmployeeName(),
+                        employeeFullName,
+                        //command.getEmployeeName(),
                         invoiceStatus,
                         0L
                 )
@@ -256,7 +268,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
                             created,
-                            command.getEmployeeName(),
+                            //command.getEmployeeName(),
+                            employeeFullName,
                             UUID.fromString(command.getEmployee()),
                             null,
                             null
