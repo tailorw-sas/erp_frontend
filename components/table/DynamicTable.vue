@@ -789,16 +789,6 @@ defineExpose({ clearSelectedItems })
                 :min-fraction-digits="2"
                 :max-fraction-digits="4"
               />
-              <!-- @change="filterCallback()" -->
-              <Button
-                v-if="false"
-                type="button"
-                icon="pi pi-filter"
-                text
-                aria-haspopup="true"
-                :aria-controls="`overlayPanel_${index}`"
-                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
-              />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">

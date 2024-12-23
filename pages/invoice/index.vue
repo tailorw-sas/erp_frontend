@@ -924,7 +924,7 @@ async function getList() {
     }
     localStorage.setItem('payloadOfInvoiceList', JSON.stringify(payloadOfInvoiceList))
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)    
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { data: dataList, page, size, totalElements, totalPages } = response    
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -948,8 +948,8 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
-          invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
+          // dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
+          // invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
@@ -1076,14 +1076,7 @@ async function resetListItems() {
 const isFirstTimeInOnMounted = ref(false)
 
 async function searchAndFilter() {
-  payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
 
   if (!filterToSearch.value.search) {
     // if (isFirstTimeInOnMounted.value === false) {}
@@ -1782,6 +1775,14 @@ async function parseDataTableFilter(payloadFilter: any) {
 
       if (parseFilter[i]?.key === 'invoiceNumber') {
         parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+
+      if (parseFilter[i]?.key === 'invoiceAmount') {
+        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+      }
+
+      if (parseFilter[i]?.key === 'dueAmount') {
+        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
       }
 
     }
