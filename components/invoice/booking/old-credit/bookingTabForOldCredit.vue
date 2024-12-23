@@ -530,8 +530,8 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'number',
     class: 'field col-12 md:col-3 required',
     headerClass: 'mb-1',
-    validation: z.number().max(0, 'The Invoice Amount field is required')
-    .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
+    validation: z.number({invalid_type_error: 'The Invoice Amount field is required'}).max(0, 'The Invoice Amount field is required')
+    .refine((value: any) => value !== null && !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
   },
 
   // Hotel Amount

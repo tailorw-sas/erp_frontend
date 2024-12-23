@@ -74,6 +74,9 @@ export function validateEntityStatusOnOffREquired(fieldName: string, required: b
       })
   }
 }
+// .refine(value => value && value.id && value.name, { message: `The ${fieldName} field is required` })
+// .refine(value => value?.status === 'ACTIVE', { message: `This ${fieldName} is not active` })
+// .refine(value => value?.client?.status === 'ACTIVE', { message: `The client associated with this ${fieldName} is not active` })
 
 export function validateEntityForAgency(fieldName: string) {
   return z.object({
@@ -86,9 +89,33 @@ export function validateEntityForAgency(fieldName: string) {
       status: z.enum(['ACTIVE', 'INACTIVE'], { message: `The client must be either ACTIVE or INACTIVE` })
     })
   }).nullable()
-    .refine(value => value && value.id && value.name, { message: `The ${fieldName} field is required` })
-    .refine(value => value?.status === 'ACTIVE', { message: `This ${fieldName} is not active` })
-    .refine(value => value?.client?.status === 'ACTIVE', { message: `The client associated with this ${fieldName} is not active` })
+    .superRefine((value, ctx) => {
+      if (!value || !value.id || !value.name) {
+        ctx.addIssue({
+          code: 'custom', // Agregamos el código obligatorio
+          path: [],
+          message: `The ${fieldName} field is required`,
+        })
+        return // Stop further validations
+      }
+
+      if (value.status !== 'ACTIVE') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['status'],
+          message: `This ${fieldName} is not active`,
+        })
+        return // Stop further validations
+      }
+
+      if (value.client?.status !== 'ACTIVE') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['client', 'status'],
+          message: `The client associated with this ${fieldName} is not active`,
+        })
+      }
+    })
 }
 
 export function validateEntityStatusForNotRequiredField(fieldName: string) {

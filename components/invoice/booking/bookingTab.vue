@@ -530,8 +530,13 @@ const fieldsV2: Array<FieldDefinitionType> = [
     || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT 
     ? { 
       validation: z
-      .number().min(1, 'The Invoice Amount field is required')
-      .refine((value: any) => !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) } : { validation: z.number().min(1, 'The Invoice Amount field is required').refine((value: any) => !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) })
+      .number({invalid_type_error: 'The Invoice Amount field is required'}).min(1, 'The Invoice Amount field is required')
+      .refine((value: any) => value !== null && !isNaN(value) && +value < 0, { message: 'The Invoice Amount field must be negative' }) 
+    } : { 
+      validation: 
+      z.number({invalid_type_error: 'The Invoice Amount field is required'}).min(1, 'The Invoice Amount field is required')
+      .refine((value: any) => value !== null && !isNaN(value) && +value > 0, { message: 'The Invoice Amount field must be greater than 0' }) 
+    })
   },
 
   // Hotel Amount
