@@ -1,9 +1,11 @@
 package com.kynsoft.finamer.invoicing.application.command.manageBooking.update;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
@@ -52,7 +54,15 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
         UpdateIfNotNull.updateLocalDateTime(dto::setHotelCreationDate, command.getHotelCreationDate(), dto.getHotelCreationDate(), update::setUpdate);
 
         UpdateIfNotNull.updateLocalDateTime(dto::setBookingDate, command.getBookingDate(), dto.getBookingDate(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setHotelBookingNumber, command.getHotelBookingNumber(), dto.getHotelBookingNumber(), update::setUpdate);
+        if (!dto.getHotelBookingNumber().equals(command.getHotelBookingNumber())) {
+            RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(
+                    bookingService,
+                    removeBlankSpaces(command.getHotelBookingNumber()), 
+                    dto.getInvoice().getHotel().getId(), 
+                    command.getHotelBookingNumber()
+            ));
+            UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setHotelBookingNumber, command.getHotelBookingNumber(), dto.getHotelBookingNumber(), update::setUpdate);
+        }
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setFullName, command.getFullName(), dto.getFullName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setFirstName, command.getFirstName(), dto.getFirstName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setLastName, command.getLastName(), dto.getLastName(), update::setUpdate);
@@ -84,4 +94,9 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
             update.accept(1);
         }
     }
+
+    private String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
+    }
+
 }
