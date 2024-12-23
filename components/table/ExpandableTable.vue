@@ -10,7 +10,7 @@ import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterf
 import type { IData } from './interfaces/IModelData'
 import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
-import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
+import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
 
 const props = defineProps({
@@ -86,6 +86,7 @@ type FilterDisplayMode = 'row' | 'menu' | undefined
 const modeFilterDisplay: Ref<FilterDisplayMode> = ref('menu')
 const menuFilter: { [key: string]: Ref<any> } = {}
 const menuFilterForRowDisplay: Ref = ref()
+const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
 
 // Iteramos sobre el array de campos y añadimos las propiedades a menuFilter
 props.columns.forEach((field) => {
@@ -273,7 +274,9 @@ async function getOptionsList() {
     for (const iterator of props.columns) {
       switch (iterator.type) {
         case 'text':
-
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -607,6 +610,33 @@ getOptionsList()
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                    <span :class="item.icon" />
+                    <span class="ml-2">{{ item.label }}</span>
+                  </a>
+                </template>
+              </Menu>
+            </div>
+
+            <div v-if="column.type === 'number'" class="flex flex-column">
+              <Dropdown
+                v-if="true"
+                v-model="filterModel.matchMode"
+                :options="menuItemsNumeric"
+                option-label="label"
+                placeholder="Select a operator"
+                class="w-full mb-2"
+              />
+              <InputNumber
+                v-model="filterModel.value"
+                class="p-column-filter w-full"
+                placeholder="Write a number"
+                :min-fraction-digits="2"
+                :max-fraction-digits="4"
+              />
+
+              <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">
                   <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
