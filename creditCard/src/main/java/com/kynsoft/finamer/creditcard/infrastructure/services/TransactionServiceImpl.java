@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
-import com.kynsof.share.core.application.mailjet.MailJetRecipient;
-import com.kynsof.share.core.application.mailjet.MailJetVar;
-import com.kynsof.share.core.application.mailjet.MailService;
-import com.kynsof.share.core.application.mailjet.SendMailJetEMailRequest;
+import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.EMailjetType;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
@@ -148,22 +145,14 @@ public class TransactionServiceImpl implements ITransactionService {
 
     @Override
     @Transactional
-    public Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee) {
+    public Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, UUID employeeId) {
         Set<TransactionDto> transactionsDto = new HashSet<>();
         for (Long transactionId : transactionIds) {
             TransactionDto transactionDto = this.findById(transactionId);
             ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(status);
             transactionDto.setStatus(transactionStatusDto);
             this.update(transactionDto);
-            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                    UUID.randomUUID(),
-                    transactionDto,
-                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                    null,
-                    employee,
-                    transactionStatusDto,
-                    0L
-            ));
+            this.transactionStatusHistoryService.create(transactionDto, employeeId);
             transactionsDto.add(transactionDto);
         }
         return transactionsDto;
@@ -225,7 +214,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
     //Conformar el correo para confirmar que la transaccion fue Recivida
     @Override
-    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto){
+    public void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String responseCodeMessage, byte[] attachment) {
         if(transactionDto.getEmail() != null){
             TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_CONFIRMATION_VOUCHER);
             SendMailJetEMailRequest request = new SendMailJetEMailRequest();
@@ -245,6 +234,7 @@ public class TransactionServiceImpl implements ITransactionService {
                     new MailJetVar("number_id", transactionDto.getId()),
                     new MailJetVar("transaction_type", "Sale"),
                     new MailJetVar("status", transactionDto.getStatus().getName()),
+                    new MailJetVar("response_code", responseCodeMessage),
                     new MailJetVar("payment_date", transactionDateStr),
                     new MailJetVar("authorization_number", "N/A"),
                     new MailJetVar("card_type", transactionDto.getCreditCardType().getName()),
@@ -266,6 +256,18 @@ public class TransactionServiceImpl implements ITransactionService {
                 recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
             }
             request.setRecipientEmail(recipients);
+
+            if (attachment != null) {
+                //creando el attachment para adjuntarlo al correo
+                List<MailJetAttachment> list = new ArrayList<>();
+                MailJetAttachment attach = new MailJetAttachment(
+                        "application/pdf",
+                        "Voucher_" + transactionDto.getId() + ".pdf",
+                        Base64.getEncoder().encodeToString(attachment)
+                );
+                list.add(attach);
+                request.setMailJetAttachments(list);
+            }
 
             mailService.sendMail(request);
         }

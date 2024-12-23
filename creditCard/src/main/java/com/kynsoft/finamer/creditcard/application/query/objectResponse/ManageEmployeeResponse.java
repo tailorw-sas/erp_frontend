@@ -15,16 +15,16 @@ import java.util.UUID;
 @Setter
 public class ManageEmployeeResponse implements IResponse {
 
-    private UUID id;
+//    private UUID id;
     private String firstName;
     private String lastName;
-    private String email;
+//    private String email;
 
     public ManageEmployeeResponse(ManageEmployeeDto dto) {
-        this.id = dto.getId();
+//        this.id = dto.getId();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
-        this.email = dto.getEmail();
+//        this.email = dto.getEmail();
     }
 
 }

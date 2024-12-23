@@ -34,9 +34,8 @@ public class AttachmentStatusHistory implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     private HotelPayment hotelPayment;
 
-    private String employee;
-
-    private UUID employeeId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private ManageEmployee employee;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -49,8 +48,7 @@ public class AttachmentStatusHistory implements Serializable {
         this.description = dto.getDescription();
         this.attachmentId = dto.getAttachmentId();
         this.transaction = dto.getTransaction() != null ? new Transaction(dto.getTransaction()) : null;
-        this.employee = dto.getEmployee();
-        this.employeeId = dto.getEmployeeId();
+        this.employee = dto.getEmployee() != null ? new ManageEmployee(dto.getEmployee()) : null;
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
     }
 
@@ -58,7 +56,8 @@ public class AttachmentStatusHistory implements Serializable {
         return  new AttachmentStatusHistoryDto(
                 id,description, attachmentId,
                 transaction != null ? transaction.toAggregate() : null,
-                employee, employeeId, createdAt, updatedAt,
+                employee != null ? employee.toAggregate() : null,
+                createdAt, updatedAt,
                 hotelPayment != null ? hotelPayment.toAggregate() : null
         );
     }

@@ -18,6 +18,6 @@ public class BankReconciliationStatusHistoryDto {
     private ManageBankReconciliationDto bankReconciliation;
     private String description;
     private LocalDateTime createdAt;
-    private String employee;
+    private ManageEmployeeDto employee;
     private ManageReconcileTransactionStatusDto reconcileTransactionStatus;
 }

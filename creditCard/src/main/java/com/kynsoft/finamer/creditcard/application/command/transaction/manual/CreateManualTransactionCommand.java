@@ -29,11 +29,12 @@ public class CreateManualTransactionCommand implements ICommand {
     private String email;
     private UUID merchantCurrency;
     private String employee;
+    private UUID employeeId;
 
     public CreateManualTransactionCommand(
             UUID merchant, MethodType methodType, UUID hotel, UUID agency, UUID language,
             Double amount, LocalDateTime checkIn, String reservationNumber, String referenceNumber,
-            String hotelContactEmail, String guestName, String email, UUID merchantCurrency, String employee) {
+            String hotelContactEmail, String guestName, String email, UUID merchantCurrency, String employee, UUID employeeId) {
         this.transactionUuid = UUID.randomUUID();
         this.merchant = merchant;
         this.methodType = methodType;
@@ -49,6 +50,7 @@ public class CreateManualTransactionCommand implements ICommand {
         this.email = email;
         this.merchantCurrency = merchantCurrency;
         this.employee = employee;
+        this.employeeId = employeeId;
     }
 
     public static CreateManualTransactionCommand fromRequest(CreateManualTransactionRequest request) {
@@ -58,7 +60,7 @@ public class CreateManualTransactionCommand implements ICommand {
                 request.getCheckIn(), request.getReservationNumber(),
                 request.getReferenceNumber(), request.getHotelContactEmail(),
                 request.getGuestName(), request.getEmail(), request.getMerchantCurrency(),
-                request.getEmployee()
+                request.getEmployee(), request.getEmployeeId()
         );
     }
 

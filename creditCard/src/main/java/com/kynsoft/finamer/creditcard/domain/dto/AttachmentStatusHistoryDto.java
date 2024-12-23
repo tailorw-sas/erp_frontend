@@ -18,8 +18,7 @@ public class AttachmentStatusHistoryDto {
     private String description;
     private Long attachmentId;
     private TransactionDto transaction;
-    private String employee;
-    private UUID employeeId;
+    private ManageEmployeeDto employee;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private HotelPaymentDto hotelPayment;

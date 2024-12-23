@@ -65,15 +65,7 @@ public class UpdateTransactionCommandHandler implements ICommandHandler<UpdateTr
         if (command.getTransactionStatus() != null && !command.getTransactionStatus().equals(dto.getStatus().getId())) {
             ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findById(command.getTransactionStatus());
             dto.setStatus(transactionStatusDto);
-            this.transactionStatusHistoryService.create(new TransactionStatusHistoryDto(
-                    UUID.randomUUID(),
-                    dto,
-                    "The transaction status change to "+transactionStatusDto.getCode() + "-" +transactionStatusDto.getName()+".",
-                    null,
-                    command.getEmployee(),
-                    transactionStatusDto,
-                    0L
-            ));
+            this.transactionStatusHistoryService.create(dto, command.getEmployeeId());
             update.setUpdate(1);
         }
 

@@ -19,4 +19,5 @@ public class UpdateBankReconciliationRequest {
     private UUID reconcileStatus;
     private Double amount;
     private String employee;
+    private UUID employeeId;
 }

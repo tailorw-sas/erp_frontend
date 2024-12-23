@@ -16,4 +16,5 @@ public class CreateAdjustmentTransactionRequest {
     private String reservationNumber;
     private String referenceNumber;
     private String employee;
+    private UUID employeeId;
 }

@@ -18,7 +18,7 @@ public class TransactionStatusHistoryDto {
     private TransactionDto transaction;
     private String description;
     private LocalDateTime createdAt;
-    private String employee;
+    private ManageEmployeeDto employee;
     private ManageTransactionStatusDto transactionStatus;
     private Long historyId;
 }

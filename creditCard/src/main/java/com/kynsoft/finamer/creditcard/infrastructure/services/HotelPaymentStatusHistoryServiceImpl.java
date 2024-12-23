@@ -10,7 +10,9 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.HotelPaymentStatusHistoryResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentDto;
 import com.kynsoft.finamer.creditcard.domain.dto.HotelPaymentStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IHotelPaymentStatusHistoryService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.HotelPaymentStatusHistory;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.HotelPaymentStatusHistoryWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.HotelPaymentStatusHistoryReadDataJPARepository;
@@ -29,9 +31,12 @@ public class HotelPaymentStatusHistoryServiceImpl implements IHotelPaymentStatus
 
     private final HotelPaymentStatusHistoryReadDataJPARepository repositoryQuery;
 
-    public HotelPaymentStatusHistoryServiceImpl(HotelPaymentStatusHistoryWriteDataJPARepository repositoryCommand, HotelPaymentStatusHistoryReadDataJPARepository repositoryQuery) {
+    private final IManageEmployeeService employeeService;
+
+    public HotelPaymentStatusHistoryServiceImpl(HotelPaymentStatusHistoryWriteDataJPARepository repositoryCommand, HotelPaymentStatusHistoryReadDataJPARepository repositoryQuery, IManageEmployeeService employeeService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -41,12 +46,16 @@ public class HotelPaymentStatusHistoryServiceImpl implements IHotelPaymentStatus
     }
 
     @Override
-    public HotelPaymentStatusHistoryDto create(HotelPaymentDto hotelPaymentDto, String employee) {
+    public HotelPaymentStatusHistoryDto create(HotelPaymentDto hotelPaymentDto, UUID employeeId) {
+        ManageEmployeeDto employeeDto = null;
+        if (employeeId != null) {
+            employeeDto = this.employeeService.findById(employeeId);
+        }
         HotelPaymentStatusHistoryDto dto = new HotelPaymentStatusHistoryDto(
                 UUID.randomUUID(),
                 "The hotel payment status is "+hotelPaymentDto.getStatus().getCode()+"-"+hotelPaymentDto.getStatus().getName()+".",
                 null,
-                employee,
+                employeeDto,
                 hotelPaymentDto,
                 hotelPaymentDto.getStatus()
         );

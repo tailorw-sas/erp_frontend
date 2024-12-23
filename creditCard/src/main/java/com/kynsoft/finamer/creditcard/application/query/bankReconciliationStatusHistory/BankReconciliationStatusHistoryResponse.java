@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.application.query.bankReconciliationStatusHistory;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageEmployeeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.BankReconciliationStatusHistoryDto;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ public class BankReconciliationStatusHistoryResponse implements IResponse {
     private ReconcileStatusToStatusHistoryResponse reconcileStatus;
     private String description;
     private LocalDateTime createdAt;
-    private String employee;
+    private ManageEmployeeResponse employee;
     private BankReconciliationToStatusHistoryResponse bankReconciliation;
 
     public BankReconciliationStatusHistoryResponse(BankReconciliationStatusHistoryDto dto){
@@ -24,7 +25,7 @@ public class BankReconciliationStatusHistoryResponse implements IResponse {
         this.reconcileStatus = dto.getReconcileTransactionStatus() != null ? new ReconcileStatusToStatusHistoryResponse(dto.getReconcileTransactionStatus()) : null;
         this.description = dto.getDescription();
         this.createdAt = dto.getCreatedAt();
-        this.employee = dto.getEmployee();
+        this.employee = dto.getEmployee() != null ? new ManageEmployeeResponse(dto.getEmployee()) : null;
         this.bankReconciliation = dto.getBankReconciliation() != null ? new BankReconciliationToStatusHistoryResponse(dto.getBankReconciliation()) : null;
     }
 }

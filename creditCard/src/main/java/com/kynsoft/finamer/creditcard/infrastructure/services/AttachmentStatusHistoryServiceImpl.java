@@ -10,7 +10,9 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.AttachmentStatusHistoryResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.AttachmentDto;
 import com.kynsoft.finamer.creditcard.domain.dto.AttachmentStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.creditcard.domain.services.IAttachmentStatusHistoryService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.AttachmentStatusHistory;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.AttachmentStatusHistoryWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.AttachmentStatusHistoryReadDataJPARepository;
@@ -28,11 +30,17 @@ import java.util.UUID;
 @Service
 public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHistoryService {
 
-    @Autowired
-    private AttachmentStatusHistoryWriteDataJPARepository repositoryCommand;
+    private final AttachmentStatusHistoryWriteDataJPARepository repositoryCommand;
 
-    @Autowired
-    private AttachmentStatusHistoryReadDataJPARepository repositoryQuery;
+    private final AttachmentStatusHistoryReadDataJPARepository repositoryQuery;
+
+    private final IManageEmployeeService employeeService;
+
+    public AttachmentStatusHistoryServiceImpl(AttachmentStatusHistoryWriteDataJPARepository repositoryCommand, AttachmentStatusHistoryReadDataJPARepository repositoryQuery, IManageEmployeeService employeeService) {
+        this.repositoryCommand = repositoryCommand;
+        this.repositoryQuery = repositoryQuery;
+        this.employeeService = employeeService;
+    }
 
     @Override
     public UUID create(AttachmentStatusHistoryDto dto) {
@@ -77,13 +85,13 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
 
     @Override
     public UUID create(AttachmentDto attachmentDto, String action) {
+        ManageEmployeeDto employeeDto = this.employeeService.findById(attachmentDto.getEmployeeId());
         AttachmentStatusHistoryDto dto = new AttachmentStatusHistoryDto(
                 UUID.randomUUID(),
                 "An attachment was " + action +". The file name: " + attachmentDto.getFilename(),
                 attachmentDto.getAttachmentId(),
                 attachmentDto.getTransaction(),
-                attachmentDto.getEmployee(),
-                attachmentDto.getEmployeeId(),
+                employeeDto,
                 null,
                 null,
                 attachmentDto.getHotelPayment()

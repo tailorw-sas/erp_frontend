@@ -27,8 +27,9 @@ public class CreateBankReconciliationCommand implements ICommand {
     private List<Long> adjustmentTransactionIds = new ArrayList<>();
     private Long reconciliationId;
     private String employee;
+    private UUID employeeId;
 
-    public CreateBankReconciliationCommand(UUID merchantBankAccount, UUID hotel, Double amount, Double detailsAmount, LocalDateTime paidDate, String remark, Set<Long> transactions, List<CreateBankReconciliationAdjustmentRequest> adjustmentTransactions, String  employee) {
+    public CreateBankReconciliationCommand(UUID merchantBankAccount, UUID hotel, Double amount, Double detailsAmount, LocalDateTime paidDate, String remark, Set<Long> transactions, List<CreateBankReconciliationAdjustmentRequest> adjustmentTransactions, String  employee, UUID employeeId) {
         this.id = UUID.randomUUID();
         this.merchantBankAccount = merchantBankAccount;
         this.hotel = hotel;
@@ -39,6 +40,7 @@ public class CreateBankReconciliationCommand implements ICommand {
         this.transactions = transactions;
         this.adjustmentTransactions = adjustmentTransactions;
         this.employee = employee;
+        this.employeeId = employeeId;
     }
 
     public static CreateBankReconciliationCommand fromRequest(CreateBankReconciliationRequest request){
@@ -51,7 +53,8 @@ public class CreateBankReconciliationCommand implements ICommand {
                 request.getRemark(),
                 request.getTransactions(),
                 request.getAdjustmentTransactions(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getEmployeeId()
         );
     }
 

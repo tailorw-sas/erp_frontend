@@ -21,4 +21,5 @@ public class CreateBankReconciliationRequest {
     private Set<Long> transactions;
     private List<CreateBankReconciliationAdjustmentRequest> adjustmentTransactions;
     private String employee;
+    private UUID employeeId;
 }
