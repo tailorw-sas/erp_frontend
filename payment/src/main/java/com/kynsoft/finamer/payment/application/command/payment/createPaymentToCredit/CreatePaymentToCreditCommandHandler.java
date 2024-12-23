@@ -119,10 +119,10 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,
+                0.0,
                 paymentAmount,
-                0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                paymentAmount,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -193,10 +193,10 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 0.0,
                 0.0,
                 0.0,
-                paymentAmount,
+                paymentAmount,//Debe estar deshabilitado inicialmente y en 0. Sumatoria que tengan marcado check Cash en el Manage Payment Transaction Type
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                paymentAmount,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
