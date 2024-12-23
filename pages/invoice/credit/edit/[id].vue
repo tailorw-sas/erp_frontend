@@ -679,10 +679,7 @@ async function getItemById(id: string) {
         // item.value.invoiceDate = newDate || null
 
         const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : ''
-
-        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null
-        console.log(item.value.invoiceDate);
-        
+        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null        
 
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
