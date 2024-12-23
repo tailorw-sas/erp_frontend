@@ -2,11 +2,13 @@ package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.upd
 
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.invoicing.domain.dto.PaymentDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.invoicing.domain.services.IPaymentService;
@@ -26,12 +28,18 @@ public class ConsumerUpdateBookingService {
     private final IPaymentService paymentService;
     private final IPaymentDetailService detailService;
 
-    public ConsumerUpdateBookingService(IManageBookingService bookingService, IManageInvoiceService invoiceService,
-                                        IPaymentService paymentService, IPaymentDetailService detailService) {
+    private final IManageHotelService manageHotelService;
+
+    public ConsumerUpdateBookingService(IManageBookingService bookingService, 
+                                        IManageInvoiceService invoiceService,
+                                        IPaymentService paymentService, 
+                                        IPaymentDetailService detailService,
+                                        IManageHotelService manageHotelService) {
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
         this.paymentService = paymentService;
         this.detailService = detailService;
+        this.manageHotelService = manageHotelService;
     }
 
     @KafkaListener(topics = "finamer-update-booking-balance", groupId = "invoicing-entity-replica")
@@ -51,7 +59,8 @@ public class ConsumerUpdateBookingService {
             this.paymentService.create(payment);
             this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, bookingDto));
 
-            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
+            ManageHotelDto hotelDto = this.manageHotelService.findById(invoiceDto.getHotel().getId());
+            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit()) {
                 ManageBookingDto bookingParent = this.bookingService.findById(bookingDto.getParent().getId());
                 double amountBalance = objKafka.getAmountBalance() * -1;
                 if (bookingParent.getDueAmount() >= amountBalance) {
