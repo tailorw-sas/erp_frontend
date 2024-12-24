@@ -4,8 +4,6 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfCommand;
-import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceRequest;
@@ -46,12 +44,9 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvo
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
 @RestController
@@ -228,26 +223,6 @@ public class InvoiceController {
         ReconcileManualMessage response = this.mediator.send(command);
 
         return ResponseEntity.ok(response);
-        //Intentar devolver el pdf
-//        try {
-//            // Generar el buffer de manera dinámica
-//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//
-//            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(request.getInvoices(), outputStream.toByteArray());
-//            InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
-//
-//            // Retornar el PDF
-//            return ResponseEntity.ok()
-//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
-//                    .contentType(MediaType.APPLICATION_PDF)
-//                    .body(pdfCommand.getRequest().getPdfData());
-//
-//        } catch (Exception e) {
-//            // Manejar errores
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(null);
-//        }
-
     }
 /*
     //Probar el metodo para generar PDFs a partir de un listado de invoicings UUIDs
