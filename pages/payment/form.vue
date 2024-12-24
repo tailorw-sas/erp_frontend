@@ -1314,6 +1314,8 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      console.log(response)
+
       if (response) {
         item.value.id = id
         item.value.paymentId = response.paymentId
@@ -1419,6 +1421,26 @@ async function getItemById(id: string) {
           : null
         paymentSourceList.value = [paymentSourceTemp]
         item.value.paymentSource = paymentSourceTemp
+
+        if (response?.paymentSource && response?.paymentSource?.expense) {
+          const decimalSchema = z.object(
+            {
+              bankAccount: z
+                .object({}).nullable(),
+            },
+          )
+          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
+        }
+        else {
+          const decimalSchema = z.object(
+            {
+              bankAccount: validateEntityStatus('bank account'),
+            },
+          )
+          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
+        }
       }
       // debugger
       // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
