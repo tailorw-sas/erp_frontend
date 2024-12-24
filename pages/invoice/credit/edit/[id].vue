@@ -26,7 +26,7 @@ const active = ref(0)
 
 const route = useRoute()
 const invoiceType = ref<string>(route.query.type as string)
-
+const isCredit = ref(false)
 //@ts-ignore
 const selectedInvoice = <string>ref(route.params.id.toString())
 const selectedBooking = ref<string>('')
@@ -662,6 +662,7 @@ async function getItemById(id: string) {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id) 
            
       if (response) {
+        isCredit.value = response?.invoiceType === 'CREDIT'
         propsParentId.value.id = response?.parent?.invoiceId
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -1009,7 +1010,7 @@ onMounted(async () => {
       <div>
         {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
       </div>
-      <div>
+      <div v-if="isCredit">
          {{propsParentId?.label}} {{ propsParentId?.id }}
       </div>
     </div>
