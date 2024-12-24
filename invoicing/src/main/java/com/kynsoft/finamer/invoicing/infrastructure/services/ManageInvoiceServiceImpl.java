@@ -176,7 +176,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 "Status",
                 "Manual",
                 "Invoice Amount",
-                "Amount Balance",
+                "Invoice Balance",
                 "Auto Rec",
                 null
         ));
