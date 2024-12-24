@@ -1141,12 +1141,12 @@ async function onCellEditRoomRate(event: any) {
 
   if (data[field] === newValue) { return }
 
-  if (field === 'hotelAmount') {
-    if (+newValue <= 0 && requiresFlatRateCheck.value) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
-      return
-    }
-  }
+  // if (field === 'hotelAmount') {
+  //   if (+newValue <= 0 && requiresFlatRateCheck.value) {
+  //     toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
+  //     return
+  //   }
+  // }
 
   if (field === 'adults') {
     if (+newValue <= 0 && newData.children === 0) {
@@ -1906,7 +1906,7 @@ onMounted(async () => {
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
-        </template>-->
+        </template> -->
         <template #field-dueAmount="{ onUpdate, item: data, fields, field }">
           <InputNumber
             v-if="!loadingSaveAll"
@@ -2119,8 +2119,7 @@ onMounted(async () => {
                         <ColumnGroup type="footer" class="flex align-items-center">
                           <Row>
                             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-                            <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
-
+                            <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2)).toString()" footer-style="font-weight: 700" />
                             <Column :colspan="6" />
                           </Row>
                         </ColumnGroup>
