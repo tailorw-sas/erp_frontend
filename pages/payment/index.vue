@@ -4264,7 +4264,14 @@ onMounted(async () => {
               <template #expansion="{ data: item }">
                 <div class="p-0 m-0">
                   <DataTable :value="item.bookings" striped-rows>
-                    <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                    <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
+                      <template v-if="column.field === 'dueAmount'" #body="slotProps">
+                        {{ formatNumber(slotProps.data.dueAmount) }}
+                      </template>
+                      <template v-else-if="column.field === 'invoiceAmount'" #body="slotProps">
+                        {{ formatNumber(slotProps.data.invoiceAmount) }}
+                      </template>
+                    </Column>
                     <template #empty>
                       <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                         <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
