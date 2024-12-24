@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -65,10 +66,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     public void handle(CreateNewCreditCommand command) {
         ManageInvoiceDto parentInvoice = this.invoiceService.findById(command.getInvoice());
         ManageHotelDto hotelDto = this.hotelService.findById(parentInvoice.getHotel().getId());
-//        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
-//                this.closeOperationService,
-//                command.getInvoiceDate().toLocalDate(),
-//                hotelDto.getId()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
+                this.closeOperationService,
+                command.getInvoiceDate().toLocalDate(),
+                hotelDto.getId()));
 
         //preparando lo necesario
         
@@ -217,8 +218,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0L,
                 0L,
                 invoiceNumber,
-                //command.getInvoiceDate(),
-                this.invoiceDate(parentInvoice.getHotel().getId()),
+                command.getInvoiceDate(),
+                //this.invoiceDate(parentInvoice.getHotel().getId()),
                 dueDate,
                 true,
                 invoiceAmount,
