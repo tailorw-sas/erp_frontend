@@ -657,7 +657,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
-    payload.employee = userData?.value?.user?.name
+    payload.employee = userData?.value?.user?.userId
     payload.employeeId = userData?.value?.user?.userId
 
     let totalIncomeAmount = 0
