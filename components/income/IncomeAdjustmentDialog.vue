@@ -207,6 +207,8 @@ watch(() => props.item, async (newValue) => {
             v-if="!loadingSaveAll"
             v-model="data.amount"
             show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             @update:model-value="($event: any) => {
               onUpdate('amount', $event)
             }"
