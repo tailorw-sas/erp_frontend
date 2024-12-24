@@ -760,7 +760,7 @@ const nightTypeRequired = ref(false)
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
-  payload.employee = userData?.value?.user?.name
+  payload.employee = userData?.value?.user?.userId
   payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
   payload.isManual = item.isManual
   payload.hotel = item.hotel.id
