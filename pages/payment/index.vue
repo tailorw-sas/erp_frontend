@@ -1982,6 +1982,13 @@ async function getListPaymentDetailTypeDeposit() {
 
         iterator.amount = formatNumber(iterator.amount)
       }
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
+      //   iterator.applyDepositValue = (!Number.isNaN(iterator.applyDepositValue) && iterator.applyDepositValue !== null && iterator.applyDepositValue !== '')
+      //     ? Number.parseFloat(iterator.applyDepositValue).toString()
+      //     : '0'
+
+      //   iterator.applyDepositValue = formatNumber(iterator.applyDepositValue)
+      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
@@ -4227,7 +4234,11 @@ onMounted(async () => {
                 @update:selection="onRowSelectAll"
               >
                 <Column selection-mode="multiple" header-style="width: 3rem" />
-                <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
+                  <template v-if="column.field === 'applyDepositValue'" #body="slotProps">
+                    {{ formatNumber(slotProps.data.applyDepositValue) }}
+                  </template>
+                </Column>
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                     <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
