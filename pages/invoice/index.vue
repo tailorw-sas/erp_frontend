@@ -1760,7 +1760,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   //   delete payloadFilter.agencyCd
   // }
 
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)  
 
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
@@ -1769,8 +1769,8 @@ async function parseDataTableFilter(payloadFilter: any) {
         parseFilter[i].key = 'agency.code'
       }
 
-      if (parseFilter[i]?.key === 'status') {
-        parseFilter[i].key = 'invoiceStatus'
+      if (parseFilter[i]?.key === 'invoiceStatus.id') {
+        parseFilter[i].key = 'manageInvoiceStatus.id'
       }
 
       if (parseFilter[i]?.key === 'invoiceNumber') {
@@ -1784,7 +1784,6 @@ async function parseDataTableFilter(payloadFilter: any) {
       if (parseFilter[i]?.key === 'dueAmount') {
         parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
       }
-
     }
   }
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
