@@ -138,13 +138,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                         new InvoiceStatusHistoryDto(
                                 UUID.randomUUID(),
                                 manageInvoiceDto,
-                                "The invoice data was inserted.",
+                                "The invoice data was update.",
                                 null,
                                 employee,
                                 EInvoiceStatus.SENT,
                                 0L
                         )
                 );
+                manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 this.service.update(manageInvoiceDto);
             }
             else if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
