@@ -65,4 +65,9 @@ public class PaymentDetailDto {
         this.applayPayment = applayPayment;
     }
 
+    @Override
+    public String toString() {
+        return "PaymentDetailDto{" + "id=" + id + ", status=" + status + ", amount=" + amount + ", remark=" + remark + ", bookingId=" + bookingId + ", invoiceId=" + invoiceId + ", transactionDate=" + transactionDate + ", firstName=" + firstName + ", lastName=" + lastName + ", reservation=" + reservation + ", couponNo=" + couponNo + ", adults=" + adults + ", childrens=" + childrens + ", createdAt=" + createdAt + ", paymentDetailId=" + paymentDetailId + ", parentId=" + parentId + ", applyDepositValue=" + applyDepositValue + ", applayPayment=" + applayPayment + '}';
+    }
+
 }
