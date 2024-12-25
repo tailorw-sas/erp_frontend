@@ -98,6 +98,10 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             ManagePaymentAttachmentStatusDto attachmentStatusDto,
             CreatePaymentToCreditCommand command) {
 
+        if (!command.isAutoApplyCredit()) {
+            paymentStatusDto = this.statusService.findByConfirmed();
+        }
+
         Double paymentAmount = command.getInvoiceDto().getInvoiceAmount() * -1;
         PaymentDto paymentDto = new PaymentDto(
                 UUID.randomUUID(),
