@@ -140,7 +140,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         if (command.getInvoiceDto().getBookings() != null && command.isAutoApplyCredit()) {
             List<PaymentDetailDto> updateChildrens = new ArrayList<>();
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
-                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking, parentDetailDto, command));
+                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking.getParent(), parentDetailDto, command));
             }
             parentDetailDto.setChildren(updateChildrens);
         } else {
@@ -238,10 +238,11 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate(), true));
-        if (command.isAutoApplyCredit()) {
-            command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId(), null));
-        }
+        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance(), false, command.getInvoiceDto().getInvoiceDate(), true));
+        //CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate(), true));
+        //if (command.isAutoApplyCredit()) {
+            command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId(), null));//Este marcado o no el check AutoApplyCredit el cash que se crea siempre va aplicado al CREDIT.
+        //}
     }
 
     private PaymentDetailDto createPaymentDetailsToCreditDeposit(PaymentDto payment, CreatePaymentToCreditCommand command) {
