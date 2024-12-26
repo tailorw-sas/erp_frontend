@@ -13,6 +13,7 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInv
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -159,6 +160,11 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
             return invoiceDate;
         }
+
+        if (closeOperationDto.getEndDate().isAfter(LocalDate.now())){
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }
