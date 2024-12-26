@@ -144,7 +144,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         if (command.getInvoiceDto().getBookings() != null && command.isAutoApplyCredit()) {
             List<PaymentDetailDto> updateChildrens = new ArrayList<>();
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
-                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking.getParent(), parentDetailDto, command));
+                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking.getParent(), parentDetailDto, command, booking.getInvoiceAmount()));
             }
             parentDetailDto.setChildren(updateChildrens);
         } else {
@@ -254,8 +254,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         return message.getNewDetailDto();
     }
 
-    private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking.getAmountBalance(), parentDetailDto, false, command.getInvoiceDto().getInvoiceDate(), true));
+    private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command, double amount) {
+        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, /*booking.getAmountBalance()*/amount, parentDetailDto, false, command.getInvoiceDto().getInvoiceDate(), true));
         command.getMediator().send(new ApplyPaymentToCreditDetailCommand(message.getNewDetailDto().getId(), booking.getId()));
         return message.getNewDetailDto();
     }
