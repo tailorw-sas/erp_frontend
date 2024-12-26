@@ -167,4 +167,5 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
+
 }
