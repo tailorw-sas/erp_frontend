@@ -472,6 +472,7 @@ const fields: Array<FieldDefinitionType> = [
     minFractionDigits: 2,
     maxFractionDigits: 4,
     class: 'field col-12 md:col-1 required',
+    tabIndex: 9,
     validation: decimalSchema.shape.paymentAmmount
   },
   {
@@ -481,6 +482,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 11,
     class: 'field col-12 md:col-1',
   },
   {
@@ -490,6 +492,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 13,
     class: 'field col-12 md:col-1',
   },
   {
@@ -499,6 +502,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 16,
     class: 'field col-12 md:col-3',
   },
   {
@@ -547,6 +551,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 10,
     class: 'field col-12 md:col-1',
   },
   {
@@ -556,6 +561,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 12,
     class: 'field col-12 md:col-1',
   },
   {
@@ -565,6 +571,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 14,
     class: 'field col-12 md:col-1',
   },
   {
@@ -572,6 +579,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Attachment Status',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
+    tabIndex: 17,
     validation: validateEntityStatus('attachment status'),
   },
   {
@@ -595,6 +603,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Bank Account',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
+    tabIndex: 15,
     validation: validateEntityStatus('bank account'),
   },
   {
@@ -602,6 +611,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Remark',
     dataType: 'text',
     class: 'field col-12 md:col-3',
+    tabIndex: 18,
     validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 
@@ -3305,34 +3315,12 @@ onMounted(async () => {
         @submit="handleSave($event)"
         @delete="requireConfirmationToDelete($event)"
       >
-        <template #field-paymentAmount="{ item: data, onUpdate, fields: listFields, field }">
-          <InputNumber
-            v-if="!loadingSaveAll"
-            v-model="data.paymentAmount"
-            show-clear
-            mode="decimal"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
-            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
-            :readonly="idItem !== ''"
-            :min-fraction-digits="2"
-            :max-fraction-digits="4"
-            @update:model-value="($event) => {
-              onUpdate('paymentAmount', $event)
-              if (idItem === '' && paymentDetailsList.length === 0) {
-                onUpdate('notIdentified', $event)
-                onUpdate('paymentBalance', $event)
-              }
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-
         <template #field-paymentStatus="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             item-value="id"
             :model="data.paymentStatus"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled"
@@ -3391,12 +3379,34 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
+        <template #field-paymentAmount="{ item: data, onUpdate, fields: listFields, field }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.paymentAmount"
+            show-clear
+            mode="decimal"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
+            :readonly="idItem !== ''"
+            :min-fraction-digits="2"
+            :max-fraction-digits="4"
+            @update:model-value="($event) => {
+              onUpdate('paymentAmount', $event)
+              if (idItem === '' && paymentDetailsList.length === 0) {
+                onUpdate('notIdentified', $event)
+                onUpdate('paymentBalance', $event)
+              }
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+
         <template #field-client="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             item-value="id"
             :model="data.client"
             :suggestions="[...clientList]"
@@ -3445,7 +3455,7 @@ onMounted(async () => {
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             item-value="id"
             :model="data.paymentSource"
             :suggestions="[...paymentSourceList]"
@@ -3497,7 +3507,7 @@ onMounted(async () => {
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.transactionDate"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             date-format="yy-mm-dd"
             :max-date="new Date()"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
@@ -3513,7 +3523,7 @@ onMounted(async () => {
             v-if="!loadingSaveAll"
             id="autocomplete"
             :key="formReloadAgency"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             field="name"
             item-value="id"
             :model="data.agency"
@@ -3553,7 +3563,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             :model="data.hotel"
             :suggestions="[...hotelList]"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
@@ -3606,7 +3616,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             :model="data.bankAccount"
             :disabled="disableBankAccount(data)"
             :suggestions="[...bankAccountList]"
@@ -3644,7 +3654,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             :disabled="true"
             :model="data.attachmentStatus"
             :suggestions="[...attachmentStatusList]"
