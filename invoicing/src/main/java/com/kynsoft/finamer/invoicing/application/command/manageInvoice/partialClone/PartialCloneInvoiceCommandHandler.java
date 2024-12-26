@@ -248,6 +248,10 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         //calcular el amount del invoice
         this.service.calculateInvoiceAmount(created);
 
+        //establecer el original amount
+        created.setOriginalAmount(created.getInvoiceAmount());
+        this.service.update(created);
+
         try {
             this.producerReplicateManageInvoiceService.create(created, null);
         } catch (Exception e) {
