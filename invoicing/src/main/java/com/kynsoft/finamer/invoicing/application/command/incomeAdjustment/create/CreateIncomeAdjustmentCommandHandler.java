@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.creat
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
@@ -13,6 +14,8 @@ import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -74,9 +77,9 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
             RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(adjustment.getDate()));
-            RulesChecker.checkRule(
-                    new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
-                            adjustment.getDate(), incomeDto.getHotel().getId()));
+//            RulesChecker.checkRule(
+//                    new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
+//                            adjustment.getDate(), incomeDto.getHotel().getId()));
 
             ManagePaymentTransactionTypeDto paymentTransactionTypeDto = adjustment
                     .getTransactionType() != null
@@ -87,7 +90,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     UUID.randomUUID(),
                     0L,
                     adjustment.getAmount(),
-                    adjustment.getDate().atStartOfDay(),
+                    invoiceDate(incomeDto.getHotel().getId(), adjustment.getDate().atStartOfDay()),
                     adjustment.getRemark(),
                     null,
                     paymentTransactionTypeDto,
@@ -148,5 +151,14 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         this.service.update(incomeDto);
         // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
         // this.service.calculateInvoiceAmount(updatedIncome);
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }
