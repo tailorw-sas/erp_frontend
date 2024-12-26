@@ -96,7 +96,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                 0L,
                 0L,
                 this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME)),
-                this.invoiceDate(hotelDto.getId()),
+                this.invoiceDate(hotelDto.getId(), command.getInvoiceDate()),
                 command.getDueDate(),
                 command.getManual(),
                 0.0,
@@ -209,11 +209,11 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         return dtos;
     }
 
-    private LocalDateTime invoiceDate(UUID hotel) {
+    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
         InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
 
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
-            return LocalDateTime.now(ZoneId.of("UTC"));
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
         }
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
