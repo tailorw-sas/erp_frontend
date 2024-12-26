@@ -151,6 +151,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             else if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());
+                manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 this.service.update(manageInvoiceDto);
             }
 
