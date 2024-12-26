@@ -714,7 +714,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await validateIncomeCloseOperation(item)
+      // await validateIncomeCloseOperation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
