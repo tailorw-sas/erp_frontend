@@ -905,6 +905,7 @@ defineExpose({ clearSelectedItems })
                 style="width: 100%"
                 :view="column.props?.calendarMode || 'month'"
                 date-format="yy-mm-dd"
+                :max-date="column.props?.maxDate"
                 @update:model-value="onCellEditComplete($event, dataList)"
               />
             </slot>

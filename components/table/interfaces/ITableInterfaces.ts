@@ -47,6 +47,7 @@ export interface ISortOptions {
 export interface IProps {
   isRange?: boolean
   calendarMode?: CALENDAR_MODE
+  maxDate?: Date
 }
 
 export interface IPagination {

@@ -39,7 +39,7 @@ const confHotelApi = reactive({
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
-  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '220px', widthTruncate: '50px', props: { isRange: true, calendarMode: CALENDAR_MODE.MONTH } },
+  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '220px', widthTruncate: '50px', props: { isRange: true, calendarMode: CALENDAR_MODE.MONTH, maxDate: new Date() } },
   // { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
