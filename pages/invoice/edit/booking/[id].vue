@@ -1158,7 +1158,7 @@ async function onCellEditRoomRate(event: any) {
     }, 0)
 
     if (field === 'hotelAmount') {
-      if (+totalHotelAmount <= 0 && requiresFlatRateCheck.value) {
+      if (+totalHotelAmount <= 0 && +newValue <= 0 && requiresFlatRateCheck.value) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
         return
       }
