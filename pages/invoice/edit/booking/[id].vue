@@ -1136,29 +1136,37 @@ function clearFormAdjustment() {
 }
 
 async function onCellEditRoomRate(event: any) {
-  const isExistRoomRateWith = false
   const { data, newValue, field, newData } = event
   const dataTemp = typeof data[field] !== 'string' ? data[field] : data[field].replace(/,/g, '')
 
   if (data[field] === newValue) { return }
 
-  const totalHotelAmount = roomRateList.value.reduce((total, roomRate) => {
-    if (roomRate.id !== data.id) {
-      return total + (roomRate.hotelAmount ? +roomRate.hotelAmount : 0)
+  if (roomRateList.value.length === 1) {
+    if (field === 'hotelAmount') {
+      if (+newValue <= 0 && requiresFlatRateCheck.value) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
+        return
+      }
     }
-    return total
-  }, 0)
+  }
+  else {
+    const totalHotelAmount = roomRateList.value.reduce((total, roomRate) => {
+      if (roomRate.id !== data.id) {
+        return total + (roomRate.hotelAmount ? +roomRate.hotelAmount : 0)
+      }
+      return total
+    }, 0)
 
-  if (field === 'hotelAmount') {
-    if (+totalHotelAmount <= 0 && requiresFlatRateCheck.value) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
-      return
+    if (field === 'hotelAmount') {
+      if (+totalHotelAmount <= 0 && requiresFlatRateCheck.value) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
+        return
+      }
     }
   }
 
   if (field === 'adults') {
     if (+newValue <= 0 && newData.children === 0) {
-      // Mensaje de error: Almenos uno de los dos debe ser mayo que 0
       toast.add({ severity: 'error', summary: 'Error', detail: 'At least one of the fields Adults or Children must be greater than 0.', life: 3000 })
       return
     }
