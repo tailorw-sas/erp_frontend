@@ -36,7 +36,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     @Override
     public PaymentDetailDto create(PaymentDetailDto dto) {
         PaymentDetail data = new PaymentDetail(dto);
-        return this.repositoryCommand.save(data).toAggregateSimpleNotPayment();
+        return this.repositoryCommand.save(data).toAggregate();
     }
 
     @Override
