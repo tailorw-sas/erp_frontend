@@ -81,6 +81,9 @@ public class ManageHotel implements Serializable {
     @JoinColumn(name = "currency_id")
     private ManageCurrency manageCurrency;
 
+    @Column(columnDefinition = "boolean default false")
+    private Boolean applyByTradingCompany;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -99,6 +102,7 @@ public class ManageHotel implements Serializable {
         this.manageCountry = dto.getManageCountry() != null ? new ManageCountry(dto.getManageCountry()) : null;
         this.city = dto.getCity();
         this.manageCurrency = dto.getManageCurrency() != null ? new ManageCurrency(dto.getManageCurrency()) : null;
+        this.applyByTradingCompany = dto.getApplyByTradingCompany();
     }
 
     public ManageHotelDto toAggregate() {
@@ -110,7 +114,8 @@ public class ManageHotel implements Serializable {
                 manageCountry != null ? manageCountry.toAggregate() : null,
                 manageCityState != null ? manageCityState.toAggregateSimple() : null,
                 city,
-                manageCurrency != null ? manageCurrency.toAggregate() : null
+                manageCurrency != null ? manageCurrency.toAggregate() : null,
+                applyByTradingCompany
         );
     }
 }
