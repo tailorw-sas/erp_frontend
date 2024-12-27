@@ -347,7 +347,7 @@ async function getHotelList(query = '', currentTradingCompany: any, currentHotel
           logicalOperation: 'AND'
         },
         {
-          key: 'manageTradingCompanies.company',
+          key: 'manageTradingCompanies.id',
           operator: 'EQUALS',
           value: currentTradingCompany,
           logicalOperation: 'AND'
@@ -1672,7 +1672,7 @@ onMounted(async () => {
       <template #field-hotel="{ item: data, onUpdate }">
         <DebouncedAutoCompleteComponent
           v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-          :disabled="false" :model="data.hotel" :suggestions="hotelList" @change="($event) => {
+          :disabled="data.hotel && data.hotel.applyByTradingCompany === false" :model="data.hotel" :suggestions="hotelList" @change="($event) => {
             const currentHotel = data.hotel
 
             if (currentHotel && $event) {
@@ -1695,7 +1695,7 @@ onMounted(async () => {
             // Si la validación pasa, actualizar el hotel
             onUpdate('hotel', $event);
           }"
-          @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.company, data.hotel.id)"
+          @load="($event) => getHotelList($event, data.hotel.manageTradingCompanies.id, data.hotel.id)"
         >
           <template #option="props">
             <span>{{ props.item.fullName }}</span>

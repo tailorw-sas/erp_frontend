@@ -20,7 +20,8 @@ import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
 const confirm = useConfirm()
-const { data: userData } = useAuth()
+// const { data: userData } = useAuth()
+const { userData } = useAuthStore()
 const idItemToLoadFirstTime = ref('')
 const idItem = ref('')
 const idItemDetail = ref('')
@@ -789,7 +790,7 @@ async function createAdjustment(items: any[]) {
       const transformed = {
         status: 'ACTIVE',
         income: idItem.value,
-        employee: userData?.value?.user?.name,
+        employee: userData?.data?.userId,
         adjustments: items.map(item => ({
           transactionType: item.transactionType ? item.transactionType.id : null,
           amount: Number.parseFloat(item.amount),
@@ -860,7 +861,8 @@ function saveLocal(itemP: { [key: string]: any }) {
   const adjustmentDate = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
   const itemAmount = Number(itemP.amount) + Number(item.value.incomeAmount)
   localAdjustment.date = adjustmentDate
-  localAdjustment.employee = userData?.value?.user?.name
+  localAdjustment.employee = userData?.data ? `${userData?.data?.name} ${userData?.data?.lastName}` : ''
+  localAdjustment.employeeId = userData?.data?.userId
   localAdjustment.id = AdjustmentList.value.length
   localAdjustment.amountTemp = formatNumber(itemAmount)
   if (AdjustmentList.value.length > 0) {
