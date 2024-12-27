@@ -380,8 +380,13 @@ async function reconcileManual() {
     const invoicesFromState = selectedElements.value
 
     // Llenar el array de facturas
-    if (invoicesFromState && Array.isArray(invoicesFromState)) {
-      payload.invoices = invoicesFromState // Asignar directamente
+    if (invoicesFromState && Array.isArray(invoicesFromState) && invoicesFromState.length > 0) {
+      if (typeof invoicesFromState[0] === 'object') {
+        payload.invoices = invoicesFromState.map((invoice: any) => invoice.id)
+      }
+      else {
+        payload.invoices = invoicesFromState // Asignar directamente
+      }
     }
 
     // Enviar el payload a la API
