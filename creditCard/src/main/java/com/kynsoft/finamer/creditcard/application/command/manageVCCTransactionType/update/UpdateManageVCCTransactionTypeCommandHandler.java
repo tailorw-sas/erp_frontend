@@ -10,6 +10,7 @@ import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsManualMustBeUniqueRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeIsRefundMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.rules.manageVCCTransactionType.ManageVCCTransactionTypeSubcategoryMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerUpdateManageVCCTransactionTypeService;
@@ -43,6 +44,9 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
         if (command.isManual()){
             RulesChecker.checkRule(new ManageVCCTransactionTypeIsManualMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isRefund()){
+            RulesChecker.checkRule(new ManageVCCTransactionTypeIsRefundMustBeUniqueRule(this.service, command.getId()));
+        }
         ManageVCCTransactionTypeDto dto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -60,6 +64,7 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
         UpdateIfNotNull.updateBoolean(dto::setSubcategory, command.getSubcategory(), dto.getSubcategory(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setOnlyApplyNet, command.getOnlyApplyNet(), dto.getOnlyApplyNet(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setManual, command.isManual(), dto.isManual(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setRefund, command.isRefund(), dto.isRefund(), update::setUpdate);
 
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 

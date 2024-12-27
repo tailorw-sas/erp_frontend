@@ -151,4 +151,14 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     public Long countByManualAndNotId(UUID id) {
         return this.repositoryQuery.countByManualAndNotId(id);
     }
+
+    @Override
+    public Long countByRefundAndNotId(UUID id) {
+        return this.repositoryQuery.countByRefundAndNotId(id);
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByRefund() {
+        return this.repositoryQuery.findByRefund().map(ManageVCCTransactionType::toAggregate).orElse(null);
+    }
 }

@@ -28,4 +28,5 @@ public class ManageVCCTransactionTypeDto {
     private Integer minNumberOfCharacter;
     private String defaultRemark;
     private boolean manual;
+    private boolean refund;
 }

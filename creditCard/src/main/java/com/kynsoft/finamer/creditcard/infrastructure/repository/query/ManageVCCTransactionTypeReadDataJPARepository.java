@@ -40,4 +40,10 @@ public interface ManageVCCTransactionTypeReadDataJPARepository extends JpaReposi
 
     @Query("SELECT COUNT(b) FROM ManageVCCTransactionType b WHERE b.manual = true AND b.id <> :id")
     Long countByManualAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageVCCTransactionType b WHERE b.refund = true AND b.id <> :id")
+    Long countByRefundAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT t FROM ManageVCCTransactionType t WHERE t.refund = true AND t.status = 'ACTIVE'")
+    Optional<ManageVCCTransactionType> findByRefund();
 }
