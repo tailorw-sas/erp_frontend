@@ -356,6 +356,7 @@ async function getHotelList(query: string = '') {
 }
 
 async function reconcileManual() {
+  let response: any
   try {
     loadingSaveAll.value = true
 
@@ -386,7 +387,7 @@ async function reconcileManual() {
     }
 
     // Enviar el payload a la API
-    return await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
+    response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
   }
   catch (error: any) {
     console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage)
@@ -400,6 +401,7 @@ async function reconcileManual() {
   finally {
     loadingSaveAll.value = false
   }
+  return response
 }
 
 /*
@@ -450,6 +452,8 @@ async function saveItem() {
   let response: any
   try {
     response = await reconcileManual()
+    loadingSaveAll.value = false // Detener el loading en caso de error
+    options.value.loading = false
   }
   catch (error) {
     toast.add({
@@ -521,7 +525,7 @@ async function getErrors(errorsResponse: any) {
 
     // Llenar listItems con los nuevos errores
     listItems.value = newListItems
-
+    console.log(listItems.value)
     return listItems
   }
   catch (error) {
