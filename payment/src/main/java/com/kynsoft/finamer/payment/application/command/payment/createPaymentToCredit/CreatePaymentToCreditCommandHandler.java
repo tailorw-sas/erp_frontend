@@ -123,8 +123,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,
-                0.0,
                 paymentAmount,
+                0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
                 paymentAmount,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
