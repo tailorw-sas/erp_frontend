@@ -40,8 +40,9 @@ public class ApplyPaymentToCreditDetailCommandHandler implements ICommandHandler
         ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
-        //bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
-        bookingDto.setAmountBalance(0.0);
+        double amount = paymentDetailDto.getAmount();
+        bookingDto.setAmountBalance(bookingDto.getAmountBalance() - amount);
+        //bookingDto.setAmountBalance(0.0);
         paymentDetailDto.setManageBooking(bookingDto);
         paymentDetailDto.setApplayPayment(Boolean.TRUE);
         this.manageBookingService.update(bookingDto);
@@ -54,7 +55,7 @@ public class ApplyPaymentToCreditDetailCommandHandler implements ICommandHandler
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), 0.0, paymentKafka));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), amount, paymentKafka, true));
             command.setPaymentResponse(paymentDto);
         } catch (Exception e) {
         }

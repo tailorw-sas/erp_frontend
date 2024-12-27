@@ -15,4 +15,5 @@ public class UpdateBookingBalanceKafka {
     private UUID id;
     private Double amountBalance;//dueAmount
     private ReplicatePaymentKafka paymentKafka;
+    private boolean deposit;
 }
