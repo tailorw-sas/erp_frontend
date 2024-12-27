@@ -60,7 +60,7 @@ public class ConsumerUpdateBookingService {
             this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, bookingDto));
 
             ManageHotelDto hotelDto = this.manageHotelService.findById(invoiceDto.getHotel().getId());
-            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit()) {
+            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit() && objKafka.isDeposit()) {
                 ManageBookingDto bookingParent = this.bookingService.findById(bookingDto.getParent().getId());
                 double amountBalance = objKafka.getAmountBalance() * -1;
                 if (bookingParent.getDueAmount() >= amountBalance) {
