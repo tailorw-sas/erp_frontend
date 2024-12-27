@@ -364,7 +364,11 @@ async function resetListItems() {
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
+  payload.value = localStorage.getItem('payloadOfInvoiceList')
+    ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    : payload.value
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
       /*   if (parseFilter[i]?.key === 'status') {
@@ -381,7 +385,7 @@ async function parseDataTableFilter(payloadFilter: any) {
     }
   }
 
-  payload.value.filter = [...parseFilter || []]
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   await getPrintList()
 }
 // payload.value.filter = [...parseFilter || []]
@@ -407,9 +411,9 @@ async function onSortField(event: any) {
       event.sortField = 'invoiceNumberPrefix'
     }
 
-    payload.value = localStorage.getItem('payloadOfInvoiceList')
-      ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
-      : payload.value
+    // payload.value = localStorage.getItem('payloadOfInvoiceList')
+    //   ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    //   : payload.value
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     await getPrintList()
