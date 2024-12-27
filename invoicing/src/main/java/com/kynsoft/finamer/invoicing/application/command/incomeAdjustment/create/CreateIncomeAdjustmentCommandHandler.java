@@ -3,16 +3,19 @@ package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.creat
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,17 +29,19 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
     private final IManageBookingService bookingService;
 
     private final IManageInvoiceService service;
+    private final IManageEmployeeService employeeService;
 
     public CreateIncomeAdjustmentCommandHandler(IManagePaymentTransactionTypeService transactionTypeService,
-            IInvoiceCloseOperationService closeOperationService,
-            IManageBookingService bookingService,
-            IManageAdjustmentService manageAdjustmentService,
-            IManageInvoiceService service) {
+                                                IInvoiceCloseOperationService closeOperationService,
+                                                IManageBookingService bookingService,
+                                                IManageAdjustmentService manageAdjustmentService,
+                                                IManageInvoiceService service, IManageEmployeeService employeeService) {
         this.transactionTypeService = transactionTypeService;
         this.closeOperationService = closeOperationService;
         this.bookingService = bookingService;
         this.manageAdjustmentService = manageAdjustmentService;
         this.service = service;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -70,13 +75,21 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         );
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
         for (NewIncomeAdjustmentRequest adjustment : command.getAdjustments()) {
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
             RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(adjustment.getDate()));
-            RulesChecker.checkRule(
-                    new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
-                            adjustment.getDate(), incomeDto.getHotel().getId()));
+//            RulesChecker.checkRule(
+//                    new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
+//                            adjustment.getDate(), incomeDto.getHotel().getId()));
 
             ManagePaymentTransactionTypeDto paymentTransactionTypeDto = adjustment
                     .getTransactionType() != null
@@ -87,12 +100,12 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     UUID.randomUUID(),
                     0L,
                     adjustment.getAmount(),
-                    adjustment.getDate().atStartOfDay(),
+                    invoiceDate(incomeDto.getHotel().getId(), adjustment.getDate().atStartOfDay()),
                     adjustment.getRemark(),
                     null,
                     paymentTransactionTypeDto,
                     null,
-                    command.getEmployee(),
+                    employeeFullName,
                     false
             ));
             invoiceAmount += adjustment.getAmount();
@@ -149,4 +162,19 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
         // this.service.calculateInvoiceAmount(updatedIncome);
     }
+
+    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
+        }
+
+        if (closeOperationDto.getEndDate().isAfter(LocalDate.now())){
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    }
+
 }

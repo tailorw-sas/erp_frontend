@@ -39,6 +39,11 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
     public void handle(UndoApplyPaymentDetailCommand command) {
         ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
+        /*
+        Esta variable es para identificar si lo que se esta reversando es un tipo deposito.
+        Dado que sie es un apply deposit y pertenece a un credit, debe de reversar el valor en el padre del credit.
+        */
+        boolean deposit = paymentDetailDto.getTransactionType().getApplyDeposit();
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() + paymentDetailDto.getAmount());
         paymentDetailDto.setApplayPayment(Boolean.FALSE);
@@ -52,7 +57,7 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka));
+            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, deposit));
         } catch (Exception e) {
         }
         //this.paymentService.update(paymentDto);

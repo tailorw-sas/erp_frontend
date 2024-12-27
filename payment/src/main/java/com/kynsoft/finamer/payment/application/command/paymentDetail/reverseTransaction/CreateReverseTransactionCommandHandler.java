@@ -89,7 +89,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
             reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             reverseFrom.setParentId(paymentDetailDto.getParentId());
             this.addChildren(reverseFrom, paymentDetailDto.getParentId());
-            this.calculateReverseApplyDeposit(reverseFrom.getPayment(), reverseFrom);
+            this.calculateReverseApplyDeposit(reverseFrom.getPayment(), paymentDetailDto);
             this.paymentDetailService.update(reverseFrom);
 
             this.changeStatus(paymentDetailDto, command.getEmployee());
@@ -137,10 +137,11 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
     }
 
     private void calculateReverseApplyDeposit(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
-        paymentDto.setDepositBalance(paymentDto.getDepositBalance() - newDetailDto.getAmount());
-        paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
-        paymentDto.setIdentified(paymentDto.getIdentified() + newDetailDto.getAmount());
-        paymentDto.setNotIdentified(paymentDto.getPaymentAmount() - paymentDto.getIdentified());
+        paymentDto.setDepositBalance(paymentDto.getDepositBalance() + newDetailDto.getAmount());
+        //paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
+        paymentDto.setApplied(paymentDto.getApplied() - newDetailDto.getAmount()); // TODO: Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
+//        paymentDto.setIdentified(paymentDto.getIdentified() - newDetailDto.getAmount());
+//        paymentDto.setNotIdentified(paymentDto.getPaymentAmount() + paymentDto.getIdentified());
 
         this.paymentService.update(paymentDto);
     }

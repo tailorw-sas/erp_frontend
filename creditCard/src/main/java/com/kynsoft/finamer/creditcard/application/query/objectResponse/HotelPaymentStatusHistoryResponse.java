@@ -19,7 +19,7 @@ public class HotelPaymentStatusHistoryResponse implements IResponse {
     private UUID id;
     private String description;
     private LocalDateTime createdAt;
-    private String employee;
+    private ManageEmployeeResponse employee;
     private HotelPaymentBasicResponse hotelPayment;
     private ManagePaymentTransactionStatusResponse status;
 
@@ -27,7 +27,7 @@ public class HotelPaymentStatusHistoryResponse implements IResponse {
         this.id = dto.getId();
         this.description = dto.getDescription();
         this.createdAt = dto.getCreatedAt();
-        this.employee = dto.getEmployee();
+        this.employee = dto.getEmployee() != null ? new ManageEmployeeResponse(dto.getEmployee()) : null;
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPaymentBasicResponse(dto.getHotelPayment()) : null;
         this.status = dto.getStatus() != null ? new ManagePaymentTransactionStatusResponse(dto.getStatus()) : null;
     }

@@ -34,11 +34,11 @@ public interface ITransactionService {
 
     Double findSumOfAmountByParentId(Long parentId);
 
-    void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto);
+    void sendTransactionConfirmationVoucherEmail(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, String responseCodeMessage, byte[] attachment);
 
     void sendTransactionPaymentLinkEmail(TransactionDto transactionDto, String paymentLink);
 
     TransactionTotalResume searchTotal(List<FilterCriteria> filterCriteria);
 
-    Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, String employee);
+    Set<TransactionDto> changeAllTransactionStatus(Set<Long> transactionIds, ETransactionStatus status, UUID employeeId);
 }

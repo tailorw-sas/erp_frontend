@@ -11,7 +11,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
@@ -44,6 +43,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final IManageInvoiceTransactionTypeService transactionTypeService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final IManageEmployeeService employeeService;
 
     public PartialCloneInvoiceCommandHandler(
             IManageInvoiceService service,
@@ -54,7 +54,9 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IManageInvoiceTransactionTypeService transactionTypeService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService, IInvoiceCloseOperationService closeOperationService) {
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            IInvoiceCloseOperationService closeOperationService,
+            IManageEmployeeService employeeService) {
 
         this.service = service;
 
@@ -69,13 +71,21 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.transactionTypeService = transactionTypeService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.closeOperationService = closeOperationService;
+        this.employeeService = employeeService;
     }
 
     @Override
     @Transactional
     public void handle(PartialCloneInvoiceCommand command) {
         ManageInvoiceDto invoiceToClone = this.service.findById(command.getInvoice());
-
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
         List<ManageBookingDto> bookingDtos = new ArrayList<>();
 
         List<ManageRoomRateDto> roomRateDtos = new ArrayList<>();
@@ -238,6 +248,10 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         //calcular el amount del invoice
         this.service.calculateInvoiceAmount(created);
 
+        //establecer el original amount
+        created.setOriginalAmount(created.getInvoiceAmount());
+        this.service.update(created);
+
         try {
             this.producerReplicateManageInvoiceService.create(created, null);
         } catch (Exception e) {
@@ -250,7 +264,8 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                         created,
                         "The invoice data was inserted.",
                         null,
-                        command.getEmployee(),
+                        //command.getEmployee(),
+                        employeeFullName,
                         status,
                         0L
                 )
@@ -264,7 +279,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
                             created,
-                            attachment.getEmployee(),
+                            employeeFullName,
                             attachment.getEmployeeId(),
                             null,
                             null

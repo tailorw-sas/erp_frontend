@@ -84,7 +84,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         }
         if (!transactionStatusDto.equals(transactionDto.getStatus())){
             transactionDto.setStatus(transactionStatusDto);
-            this.transactionStatusHistoryService.create(transactionDto, command.getRequest().getEmployee());
+            this.transactionStatusHistoryService.create(transactionDto, command.getRequest().getEmployeeId());
         }
         this.transactionService.update(transactionDto);
 
@@ -95,7 +95,7 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
 
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         //Enviar correo (voucher) de confirmacion a las personas implicadas
-        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto);
-        this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getRequest().getEmployee());
+        byte[] attachment = this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getRequest().getEmployee());
+        transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto, command.getRequest().getResponseCodeMessage(), attachment);
     }
 }

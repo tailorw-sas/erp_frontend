@@ -2,6 +2,8 @@ package com.kynsoft.finamer.creditcard.application.command.manageStatusTransacti
 
 import lombok.*;
 
+import java.util.UUID;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -10,4 +12,5 @@ public class UpdateManageStatusTransactionCommandRequest {
 
     private String session;
     private String employee;
+    private UUID employeeId;
 }

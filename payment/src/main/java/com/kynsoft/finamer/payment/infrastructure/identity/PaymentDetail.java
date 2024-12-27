@@ -143,7 +143,7 @@ public class PaymentDetail implements Serializable {
         return new PaymentDetailDto(
                 id,
                 status,
-                payment.toAggregate(),
+                payment != null ? payment.toAggregate() : null,
                 transactionType.toAggregate(),
                 amount,
                 remark,
@@ -176,7 +176,7 @@ public class PaymentDetail implements Serializable {
         return new PaymentDetailDto(
                 id,
                 status,
-                payment.toAggregate(),
+                payment != null ? payment.toAggregate() : null,
                 transactionType.toAggregate(),
                 amount,
                 remark,

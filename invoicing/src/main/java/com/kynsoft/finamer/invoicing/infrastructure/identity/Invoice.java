@@ -157,7 +157,7 @@ public class Invoice {
         this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null
                 ? new ManageInvoiceStatus(dto.getManageInvoiceStatus())
                 : null;
-        this.dueAmount = dto.getDueAmount() != null ? ScaleAmount.scaleAmount(dto.getOriginalAmount()) : 0.0;
+        this.dueAmount = dto.getDueAmount() != null ? ScaleAmount.scaleAmount(dto.getDueAmount()) : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
         this.invoiceNumberPrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
@@ -183,6 +183,7 @@ public class Invoice {
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
+        manageInvoiceDto.setCloneParent(cloneParent);
         return manageInvoiceDto;
     }
 
@@ -203,6 +204,7 @@ public class Invoice {
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
+        manageInvoiceDto.setCloneParent(cloneParent);
         return manageInvoiceDto;
     }
 
@@ -220,6 +222,7 @@ public class Invoice {
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
+        manageInvoiceDto.setCloneParent(cloneParent);
         return manageInvoiceDto;
     }
 

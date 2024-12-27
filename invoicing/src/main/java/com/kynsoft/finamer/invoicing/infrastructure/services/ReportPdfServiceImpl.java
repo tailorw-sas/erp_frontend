@@ -11,6 +11,8 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.text.Font;
+import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
@@ -57,9 +59,11 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         double total = 0;
         String moneyType = "$";
+        Font font = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
 
         //Add pdf title
-        Paragraph title = new Paragraph("Invoicing Data");
+        Paragraph title = new Paragraph("Invoice Data");
+        title.setBold();
         title.setTextAlignment(TextAlignment.CENTER);
         document.add(title);
 
@@ -69,11 +73,20 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.setBorder(Border.NO_BORDER);
 
         // Add header row
-        table.addHeaderCell(new Cell().add(new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getName() : "").addStyle(styleHeader)));
+        Paragraph hotelHead = new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName() : "").addStyle(styleHeader);
+        hotelHead.setBold();
+        table.addHeaderCell(new Cell().add(hotelHead));
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
-        table.addHeaderCell(new Cell().add(new Paragraph("Create Date").addStyle(styleHeader)));
-        table.addHeaderCell(new Cell().add(new Paragraph("Booking Date").addStyle(styleHeader)));
+
+        Paragraph cDateHead = new Paragraph("Create Date").addStyle(styleHeader);
+        cDateHead.setBold();
+        table.addHeaderCell(new Cell().add(cDateHead));
+
+        Paragraph bookingDate = new Paragraph("Booking Date").addStyle(styleHeader);
+        bookingDate.setBold();
+        table.addHeaderCell(new Cell().add(bookingDate));
+
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
 
@@ -97,10 +110,22 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         }
 
         // Add header row file 2
-        table.addCell(new Cell().add(new Paragraph("Voucher").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Hotel Reservation").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Contract").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Night Type").addStyle(styleHeader)));
+        Paragraph voucher = new Paragraph("Voucher").addStyle(styleHeader);
+        voucher.setBold();
+        table.addCell(new Cell().add(voucher));
+
+        Paragraph hotelReservation = new Paragraph("Hotel Reservation").addStyle(styleHeader);
+        hotelReservation.setBold();
+        table.addCell(new Cell().add(hotelReservation));
+
+        Paragraph contract = new Paragraph("Contract").addStyle(styleHeader);
+        contract.setBold();
+        table.addCell(new Cell().add(contract));
+
+        Paragraph nigtType = new Paragraph("Night Type").addStyle(styleHeader);
+        nigtType.setBold();
+        table.addCell(new Cell().add(nigtType));
+
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
@@ -126,9 +151,18 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         }
 
         // Add data row file 4
-        table.addCell(new Cell().add(new Paragraph("Room Type").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Rate Plan").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Room Number").addStyle(styleHeader)));
+        Paragraph roomType = new Paragraph("Room Type").addStyle(styleHeader);
+        roomType.setBold();
+        table.addCell(new Cell().add(roomType));
+
+        Paragraph ratePlan = new Paragraph("Rate Plan").addStyle(styleHeader);
+        ratePlan.setBold();
+        table.addCell(new Cell().add(ratePlan));
+
+        Paragraph roomNumber = new Paragraph("Room Number").addStyle(styleHeader);
+        roomNumber.setBold();
+        table.addCell(new Cell().add(roomNumber));
+
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
@@ -163,9 +197,16 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         }
 
         // Add data row file 6
-        table.addCell(new Cell().add(new Paragraph("Full Name").addStyle(styleHeader)));
+        Paragraph fullName = new Paragraph("Full Name").addStyle(styleHeader);
+        fullName.setBold();
+        table.addCell(new Cell().add(fullName));
+
         table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph("Remark").addStyle(styleHeader)));
+
+        Paragraph remark = new Paragraph("Remark").addStyle(styleHeader);
+        remark.setBold();
+        table.addCell(new Cell().add(remark));
+
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
@@ -192,13 +233,33 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         }
 
         // Add data row file 8
-        table.addCell(new Cell().add(new Paragraph("Check In").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Check Out").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Nights").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Adults").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Children").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Rate").addStyle(styleHeader)));
-        table.addCell(new Cell().add(new Paragraph("Currency").addStyle(styleHeader)));
+        Paragraph checkin = new Paragraph("Check In").addStyle(styleHeader);
+        checkin.setBold();
+        table.addCell(new Cell().add(checkin));
+
+        Paragraph checkout = new Paragraph("Check Out").addStyle(styleHeader);
+        checkout.setBold();
+        table.addCell(new Cell().add(checkout));
+
+        Paragraph nigths = new Paragraph("Nights").addStyle(styleHeader);
+        nigths.setBold();
+        table.addCell(new Cell().add(nigths));
+
+        Paragraph adults = new Paragraph("Adults").addStyle(styleHeader);
+        adults.setBold();
+        table.addCell(new Cell().add(adults));
+
+        Paragraph children = new Paragraph("Children").addStyle(styleHeader);
+        children.setBold();
+        table.addCell(new Cell().add(children));
+
+        Paragraph rate = new Paragraph("Rate").addStyle(styleHeader);
+        rate.setBold();
+        table.addCell(new Cell().add(rate));
+
+        Paragraph currency = new Paragraph("Currency").addStyle(styleHeader);
+        currency.setBold();
+        table.addCell(new Cell().add(currency));
 
         // Add data row file 9
         for (ManageBookingDto booking : bookings) {
@@ -222,7 +283,9 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph("TOTAL").addStyle(styleHeader)));
+        Paragraph totalP = new Paragraph("TOTAL").addStyle(styleHeader);
+        totalP.setBold();
+        table.addCell(new Cell().add(totalP));
         table.addCell(new Cell());
 
         // Add data row file 11
@@ -231,7 +294,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell());
-        table.addCell(new Cell().add(new Paragraph("$ " + total).addStyle(styleCell)));
+        table.addCell(new Cell().add(new Paragraph("$ " + ScaleAmount.scaleAmount(total)).addStyle(styleCell)));
         table.addCell(new Cell().add(new Paragraph(!moneyType.isEmpty() ? moneyType : "$" ).addStyle(styleCell)));
 
         document.add(table);

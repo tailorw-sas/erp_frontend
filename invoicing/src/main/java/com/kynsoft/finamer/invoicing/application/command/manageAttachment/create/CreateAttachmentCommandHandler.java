@@ -26,6 +26,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
 
     private final IManageInvoiceStatusService invoiceStatusService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IManageEmployeeService employeeService;
 
     public CreateAttachmentCommandHandler(IManageAttachmentService attachmentService,
                                             IManageAttachmentTypeService attachmentTypeService, 
@@ -33,7 +34,8 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                                             IManageResourceTypeService resourceTypeService,
                                             IAttachmentStatusHistoryService attachmentStatusHistoryService, 
                                             IManageInvoiceStatusService invoiceStatusService,
-                                            IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+                                            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                            IManageEmployeeService employeeService) {
         this.attachmentService = attachmentService;
         this.attachmentTypeService = attachmentTypeService;
         this.manageInvoiceService = manageInvoiceService;
@@ -41,6 +43,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.invoiceStatusService = invoiceStatusService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -55,6 +58,15 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         ResourceTypeDto resourceTypeDto = command.getPaymentResourceType() != null
                 ? this.resourceTypeService.findById(command.getPaymentResourceType())
                 : null;
+
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(command.getEmployeeId());
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
 
         if (invoiceDto.getInvoiceType().compareTo(EInvoiceType.INCOME) == 0 && attachmentType.getDefaults() != null
                 && attachmentType.getDefaults()) {
@@ -101,10 +113,10 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
                     resourceTypeDto,
                     false
             ));
-            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, command.getEmployee(), command.getEmployeeId());
+            this.updateAttachmentStatusHistory(invoiceDto, command.getFilename(), attachmentId, employeeFullName, command.getEmployeeId());
             if (reconciled){
                 this.manageInvoiceService.update(invoiceDto);
-                this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee(), command.getFilename());
+                this.updateInvoiceStatusHistory(invoiceDto, employeeFullName, command.getFilename());
             }
         } else {
             throw new BusinessException(
@@ -115,13 +127,13 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, String fileName, Long attachmentId,
-            String employee, UUID employeeId) {
+            String employeeFullName, UUID employeeId) {
 
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());
         attachmentStatusHistoryDto
                 .setDescription("An attachment to the invoice was inserted. The file name: " + fileName);
-        attachmentStatusHistoryDto.setEmployee(employee);
+        attachmentStatusHistoryDto.setEmployee(employeeFullName);
         attachmentStatusHistoryDto.setInvoice(invoice);
         attachmentStatusHistoryDto.setEmployeeId(employeeId);
         attachmentStatusHistoryDto.setAttachmentId(attachmentId);
@@ -129,13 +141,13 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
  
-    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee, String fileName) {
+    private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employeeFullName, String fileName) {
 
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
         dto.setInvoice(invoiceDto);
         dto.setDescription("An attachment to the invoice was inserted. The file name: " + fileName);
-        dto.setEmployee(employee);
+        dto.setEmployee(employeeFullName);
         dto.setInvoiceStatus(invoiceDto.getStatus());
 
         this.invoiceStatusHistoryService.create(dto);

@@ -27,8 +27,9 @@ public class CreateHotelPaymentCommand implements ICommand {
     private List<CreateHotelPaymentAdjustmentRequest> adjustmentTransactions;
     private Long hotelPaymentId;
     private String employee;
+    private UUID employeeId;
 
-    public CreateHotelPaymentCommand(LocalDateTime transactionDate, UUID manageHotel, UUID manageBankAccount, double amount, double commission, double netAmount, UUID status, String remark, Set<Long> transactions, List<CreateHotelPaymentAdjustmentRequest> adjustmentTransactions, String employee) {
+    public CreateHotelPaymentCommand(LocalDateTime transactionDate, UUID manageHotel, UUID manageBankAccount, double amount, double commission, double netAmount, UUID status, String remark, Set<Long> transactions, List<CreateHotelPaymentAdjustmentRequest> adjustmentTransactions, String employee, UUID employeeId) {
         this.id = UUID.randomUUID();
         this.transactionDate = transactionDate;
         this.manageHotel = manageHotel;
@@ -41,13 +42,15 @@ public class CreateHotelPaymentCommand implements ICommand {
         this.transactions = transactions;
         this.adjustmentTransactions = adjustmentTransactions;
         this.employee = employee;
+        this.employeeId = employeeId;
     }
 
     public static CreateHotelPaymentCommand fromRequest(CreateHotelPaymentRequest request) {
         return new CreateHotelPaymentCommand(
                 request.getTransactionDate(), request.getManageHotel(), request.getManageBankAccount(),
                 request.getAmount(), request.getCommission(), request.getNetAmount(), request.getStatus(),
-                request.getRemark(), request.getTransactions(), request.getAdjustmentTransactions(), request.getEmployee()
+                request.getRemark(), request.getTransactions(), request.getAdjustmentTransactions(),
+                request.getEmployee(), request.getEmployeeId()
         );
     }
 

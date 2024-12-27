@@ -53,7 +53,8 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 countryDto,
                 cityStateDto,
                 command.getCity(),
-                currencyDto
+                currencyDto,
+                command.getApplyByTradingCompany()
         ));
     }
 }

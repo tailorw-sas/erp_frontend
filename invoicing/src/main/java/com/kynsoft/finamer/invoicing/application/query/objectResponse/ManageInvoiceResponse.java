@@ -1,14 +1,12 @@
 package com.kynsoft.finamer.invoicing.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
-import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
-import java.text.DecimalFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,16 +48,17 @@ public class ManageInvoiceResponse implements IResponse {
     private Double credits;
     private Double originalAmount;
     private ImportType importType;
+    private boolean cloneParent;
 
     public ManageInvoiceResponse(ManageInvoiceDto dto) {
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+        //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = dto.getId();
         this.invoiceId = dto.getInvoiceId();
         this.invoiceNumber = this.deleteHotelInfo(dto.getInvoiceNumber());
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? Double.valueOf(decimalFormat.format(dto.getInvoiceAmount())) : null;
-        this.dueAmount = dto.getDueAmount() != null ? Double.valueOf(decimalFormat.format(dto.getDueAmount())) : null;
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : null;
+        this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : null;
         this.hotel = dto.getHotel();
         this.agency = dto.getAgency();
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
@@ -76,8 +75,9 @@ public class ManageInvoiceResponse implements IResponse {
         this.parent = dto.getParent();
         this.invoiceNo = dto.getInvoiceNo();
         this.credits = dto.getCredits();
-        this.originalAmount = dto.getOriginalAmount() != null ? Double.valueOf(decimalFormat.format(dto.getOriginalAmount())) : null;
+        this.originalAmount = dto.getOriginalAmount() != null ? dto.getOriginalAmount() : null;
         this.importType = dto.getImportType();
+        this.cloneParent = dto.isCloneParent();
     }
 
     private String deleteHotelInfo(String input) {

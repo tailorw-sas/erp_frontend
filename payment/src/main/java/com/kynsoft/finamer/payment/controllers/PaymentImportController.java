@@ -42,8 +42,16 @@ public class PaymentImportController {
                                                  @RequestPart(value = "employeeId",required = false) String employeeId,
                                                  @RequestPart(value = "attachments",required = false) Flux<FilePart> attachments
     ) {
-        if (Objects.nonNull(attachments)) {
+        try {
+            if (Objects.nonNull(attachments)) {
             storageService.store(attachments, importProcessId);
+        }
+        } catch (Exception e) {
+            System.err.println("##############################################");
+            System.err.println("##############################################");
+            System.err.println("No fue definida la ruta para almacenar los attachment: " + e.getMessage());
+            System.err.println("##############################################");
+            System.err.println("##############################################");
         }
 
         return DataBufferUtils.join(filePart.content())

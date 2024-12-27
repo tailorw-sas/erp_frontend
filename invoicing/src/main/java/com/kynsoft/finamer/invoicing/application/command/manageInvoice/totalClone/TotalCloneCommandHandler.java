@@ -49,20 +49,23 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManageInvoiceTransactionTypeService invoiceTransactionTypeService;
     private final IInvoiceCloseOperationService closeOperationService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IManageEmployeeService employeeService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
-                                    IManageAgencyService agencyService,
-                                    IManageHotelService hotelService,
-                                    IManageAttachmentTypeService attachmentTypeService,
-                                    IManageBookingService bookingService,
-                                    IManageInvoiceStatusService invoiceStatusService,
-                                    ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-                                    IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-                                    IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
-                                    IInvoiceStatusHistoryService invoiceStatusHistoryService,
-                                    IAttachmentStatusHistoryService attachmentStatusHistoryService,
-                                    IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
-                                    IInvoiceCloseOperationService closeOperationService, IManagePaymentTransactionTypeService paymentTransactionTypeService) {
+            IManageAgencyService agencyService,
+            IManageHotelService hotelService,
+            IManageAttachmentTypeService attachmentTypeService,
+            IManageBookingService bookingService,
+            IManageInvoiceStatusService invoiceStatusService,
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
+            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
+            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+            IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+            IInvoiceCloseOperationService closeOperationService,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            IManageEmployeeService employeeService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -79,6 +82,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.invoiceTransactionTypeService = invoiceTransactionTypeService;
         this.closeOperationService = closeOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -91,6 +95,14 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(command.getEmployeeId());
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployeeName();
+        }
         //vienen todos los attachments juntos, lo del padre y los nuevos
         for (TotalCloneAttachmentRequest attachmentRequest : command.getAttachments()) {
             RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
@@ -203,14 +215,14 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             );
             bookings.add(newBooking);
             if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
-                hotelBookingNumber.append(bookingRequest.getHotelBookingNumber()+", ");
+                hotelBookingNumber.append(bookingRequest.getHotelBookingNumber() + ", ");
             }
         }
 
-        if (!hotelBookingNumber.isEmpty()){
+        if (!hotelBookingNumber.isEmpty()) {
             throw new BusinessException(
                     DomainErrorMessage.NIGHT_TYPE_REQUIRED,
-                    "Bookings with Hotel Booking Number: " + hotelBookingNumber +"require the Night Type field."
+                    "Bookings with Hotel Booking Number: " + hotelBookingNumber + "require the Night Type field."
             );
         }
 
@@ -264,14 +276,14 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 null,
                 true,
                 invoiceToClone,
-                invoiceToClone.getCredits(),0
+                invoiceToClone.getCredits(), 0
         );
         //actualizando el invoice con la info de los bookings
         command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(clonedInvoice));
         clonedInvoice.setDueAmount(clonedInvoice.getInvoiceAmount());
         clonedInvoice.setOriginalAmount(clonedInvoice.getInvoiceAmount());
 
-        this.setInvoiceToCloneAmounts(invoiceToClone, command.getEmployeeName());
+        this.setInvoiceToCloneAmounts(invoiceToClone, employeeFullName);
         ManageInvoiceDto created = this.invoiceService.create(clonedInvoice);
         command.setClonedInvoiceId(created.getInvoiceId());
         command.setClonedInvoiceNo(this.deleteHotelInfo(created.getInvoiceNumber()));
@@ -288,7 +300,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         created,
                         "The invoice data was inserted.",
                         null,
-                        command.getEmployeeName(),
+                        //command.getEmployeeName(),
+                        employeeFullName,
                         status,
                         0L
                 )
@@ -302,7 +315,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
                             created,
-                            command.getEmployeeName(),
+                            employeeFullName,
+                            //command.getEmployeeName(),
                             attachment.getEmployeeId(),
                             null,
                             null

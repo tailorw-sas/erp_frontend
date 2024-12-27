@@ -98,6 +98,10 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             ManagePaymentAttachmentStatusDto attachmentStatusDto,
             CreatePaymentToCreditCommand command) {
 
+        if (!command.isAutoApplyCredit()) {
+            paymentStatusDto = this.statusService.findByConfirmed();
+        }
+
         Double paymentAmount = command.getInvoiceDto().getInvoiceAmount() * -1;
         PaymentDto paymentDto = new PaymentDto(
                 UUID.randomUUID(),
@@ -119,10 +123,14 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,
+                /*
+                *identified es cero y el notIdentified toma el valor del paymentAmount y su valor varia en paymentAmount - identified.
+                *identified es la suma de todos los cash, que para este payment siempre va a ser cero.
+                */
+                0.0,
                 paymentAmount,
-                0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                paymentAmount,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -140,7 +148,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         if (command.getInvoiceDto().getBookings() != null && command.isAutoApplyCredit()) {
             List<PaymentDetailDto> updateChildrens = new ArrayList<>();
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
-                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking, parentDetailDto, command));
+                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking.getParent(), parentDetailDto, command, booking.getInvoiceAmount()));
             }
             parentDetailDto.setChildren(updateChildrens);
         } else {
@@ -193,10 +201,14 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 0.0,
                 0.0,
                 0.0,
+                /**
+                 *Para este caso, el identified toma el valor del paymentAmount, dado que se crean cash por el valor total del payment Amount y
+                 * entonces el notIdentified se hace cero.
+                 **/
                 paymentAmount,
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                0.0,
+                paymentAmount,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,
@@ -238,10 +250,11 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     private void createPaymentDetailsToCreditCash(PaymentDto paymentCash, ManageBookingDto booking, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate(), true));
-        if (command.isAutoApplyCredit()) {
-            command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId(), null));
-        }
+        CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance(), false, command.getInvoiceDto().getInvoiceDate(), true));
+        //CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentCash, booking.getId(), booking.getAmountBalance() * -1, false, command.getInvoiceDto().getInvoiceDate(), true));
+        //if (command.isAutoApplyCredit()) {
+            command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), booking.getId(), null));//Este marcado o no el check AutoApplyCredit el cash que se crea siempre va aplicado al CREDIT.
+        //}
     }
 
     private PaymentDetailDto createPaymentDetailsToCreditDeposit(PaymentDto payment, CreatePaymentToCreditCommand command) {
@@ -249,8 +262,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         return message.getNewDetailDto();
     }
 
-    private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command) {
-        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, booking.getAmountBalance() * -1, parentDetailDto, false, command.getInvoiceDto().getInvoiceDate(), true));
+    private PaymentDetailDto createPaymentDetailsToCreditApplyDeposit(PaymentDto payment, ManageBookingDto booking, PaymentDetailDto parentDetailDto, CreatePaymentToCreditCommand command, double amount) {
+        CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(payment, /*booking.getAmountBalance()*/amount * -1, parentDetailDto, false, command.getInvoiceDto().getInvoiceDate(), true));
         command.getMediator().send(new ApplyPaymentToCreditDetailCommand(message.getNewDetailDto().getId(), booking.getId()));
         return message.getNewDetailDto();
     }

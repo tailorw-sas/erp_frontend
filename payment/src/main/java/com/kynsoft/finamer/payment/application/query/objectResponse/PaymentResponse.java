@@ -50,6 +50,7 @@ public class PaymentResponse implements IResponse {
     private EAttachment eAttachment;
     private boolean paymentSupport;
     private boolean createByCredit;
+    private boolean existDetails;
     private ImportType importType;
 //    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
@@ -80,6 +81,11 @@ public class PaymentResponse implements IResponse {
         this.paymentSupport = dto.isPaymentSupport();
         this.createByCredit = dto.isCreateByCredit();
         this.importType = dto.getImportType();
+        if (dto.getPaymentDetails() == null) {
+            this.existDetails = false;
+        } else {
+            this.existDetails = !dto.getPaymentDetails().isEmpty();
+        }
 //        if (dto.getAttachments() != null) {
 //            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
 //                attachments.add(new MasterPaymentAttachmentResponse(attachment));

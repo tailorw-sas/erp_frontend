@@ -26,6 +26,7 @@ public class UpdateTransactionCommand implements ICommand {
     private String guestName;
     private String email;
     private String employee;
+    private UUID employeeId;
 
     public static UpdateTransactionCommand fromRequest(UpdateTransactionRequest request, Long id){
         return new UpdateTransactionCommand(
@@ -33,7 +34,7 @@ public class UpdateTransactionCommand implements ICommand {
                 request.getCheckIn(), request.getReservationNumber(),
                 request.getReferenceNumber(), request.getHotelContactEmail(),
                 request.getTransactionStatus(), request.getAmount(), request.getGuestName(),
-                request.getEmail(), request.getEmployee()
+                request.getEmail(), request.getEmployee(), request.getEmployeeId()
         );
     }
 

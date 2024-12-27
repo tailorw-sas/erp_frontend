@@ -48,8 +48,8 @@ public class PaymentDetailResponse implements IResponse {
     public PaymentDetailResponse(PaymentDetailDto dto) {
         this.id = dto.getId();
         this.status = dto.getStatus();
-        this.paymentId = dto.getPayment().getId();
-        this.paymentNo = dto.getPayment().getPaymentId();
+        this.paymentId = dto.getPayment() != null ? dto.getPayment().getId() : null;
+        this.paymentNo = dto.getPayment() != null ? dto.getPayment().getPaymentId() : null;
         this.transactionType = dto.getTransactionType() != null ? new ManagePaymentTransactionTypeResponse(dto.getTransactionType()) : null;
         this.amount = dto.getAmount();
         this.remark = dto.getRemark();

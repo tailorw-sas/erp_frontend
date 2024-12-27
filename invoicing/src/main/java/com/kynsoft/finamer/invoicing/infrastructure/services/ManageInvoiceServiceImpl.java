@@ -40,7 +40,6 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -176,8 +175,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 "Gen. Date",
                 "Status",
                 "Manual",
-                "Amount",
-                "Due Amount",
+                "Invoice Amount",
+                "Invoice Balance",
                 "Auto Rec",
                 null
         ));

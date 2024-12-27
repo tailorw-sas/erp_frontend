@@ -34,9 +34,9 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     private ManagePaymentDetailReadDataJPARepository repositoryQuery;
 
     @Override
-    public Long create(PaymentDetailDto dto) {
+    public PaymentDetailDto create(PaymentDetailDto dto) {
         PaymentDetail data = new PaymentDetail(dto);
-        return this.repositoryCommand.save(data).getPaymentDetailId();
+        return this.repositoryCommand.save(data).toAggregate();
     }
 
     @Override

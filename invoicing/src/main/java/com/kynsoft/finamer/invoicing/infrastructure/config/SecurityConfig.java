@@ -23,10 +23,10 @@ public class SecurityConfig {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String jwkSetUri;
-	   
+
     @Autowired
     private JwtAuthenticationConverter jwtAuthenticationConverter;
-    
+
     private final CorsProperties corsProperties;
 
     @Bean
@@ -36,12 +36,12 @@ public class SecurityConfig {
                 "/api/**",
         };
         return httpSecurity
-        		.cors(Customizer.withDefaults())
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> exchanges
-        				.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/health").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs.yaml", "/v3/api-docs/**", "/swagger-resources/**", "webjars/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/*", "/v3/api-docs.yaml", "/v3/api-docs/", "/swagger-resources/", "webjars/*").permitAll()
                         .pathMatchers(AUTH_WHITELIST).permitAll()
                         .anyExchange().authenticated()
                 )
@@ -72,4 +72,3 @@ public class SecurityConfig {
 //    }
 
 }
-

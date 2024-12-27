@@ -2,26 +2,16 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
-import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.domain.service.IStorageService;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
-import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
-import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsof.share.utils.ServiceLocator;
 import com.kynsoft.finamer.payment.application.command.masterPaymentAttachment.create.CreateMasterPaymentAttachmentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentMessage;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommand;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createFormImport.CreatePaymentDetailFromFileCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
-import com.kynsoft.finamer.payment.application.query.attachmentType.search.GetSearchAttachmentTypeQuery;
-import com.kynsoft.finamer.payment.application.query.manageResourceType.search.GetSearchManageResourceTypeQuery;
-import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTypeResponse;
-import com.kynsoft.finamer.payment.application.query.objectResponse.ResourceTypeResponse;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentExpenseBookingImportCache;
@@ -33,7 +23,6 @@ import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBookin
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,8 +35,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -121,6 +108,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.availableClient = new HashSet<>();
     }
 
+    @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
         this.totalProcessRow=0;
         availableClient.clear();
@@ -132,7 +120,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         for (PaymentExpenseBookingRow row : excelBean) {
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
-            row.setHotelId(request.getHotelId().toString());
+            row.setHotelId(request.getHotelId() != null ? request.getHotelId().toString() : "");
             if (expenseBookingValidatorFactory.validate(row)) {
                 row.setClientName(getClientName(row.getBookingId()));
                 availableClient.add(row.getClientName());
@@ -253,7 +241,13 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                }
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.err.println("//////////////////////////////////////////////");
+            System.err.println("//////////////////////////////////////////////");
+            System.err.println("Error: " + e.getMessage());
+            System.err.println("//////////////////////////////////////////////");
+            System.err.println("//////////////////////////////////////////////");
+            System.err.println("//////////////////////////////////////////////");
+            //throw new RuntimeException(e);
         }
     }
 

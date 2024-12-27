@@ -34,6 +34,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
 
     private final ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService;
     private final IInvoiceCloseOperationService closeOperationService;
+    private final IManageEmployeeService employeeService;
 
     public UpdateInvoiceCommandHandler(IManageInvoiceService service,
             IManageAgencyService agencyService,
@@ -42,7 +43,8 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
             ProducerReplicateManageInvoiceService producerUpdateManageInvoiceService,
             IManageInvoiceStatusService invoiceStatusService,
-            IInvoiceCloseOperationService closeOperationService) {
+            IInvoiceCloseOperationService closeOperationService,
+            IManageEmployeeService employeeService) {
         this.service = service;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -51,6 +53,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
         this.invoiceStatusService = invoiceStatusService;
         this.closeOperationService = closeOperationService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -69,6 +72,15 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
             RulesChecker.checkRule(new ManageInvoiceValidateChangeAgencyRule(dto.getStatus()));
             this.updateAgency(dto::setAgency, command.getAgency(), dto.getAgency().getId(), update::setUpdate);
         }
+
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
         if (command.getInvoiceStatus() != null) {
 
             ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findById(command.getInvoiceStatus());
@@ -77,7 +89,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
                 RulesChecker.checkRule(new ManageInvoiceValidateChangeStatusRule(dto.getStatus()));
                 dto.setStatus(EInvoiceStatus.CANCELED);
                 dto.setManageInvoiceStatus(this.invoiceStatusService.findByCanceledStatus());
-                this.updateInvoiceStatusHistory(dto, command.getEmployee());
+                this.updateInvoiceStatusHistory(dto, employeeFullName);
             }
         }
 

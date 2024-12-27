@@ -85,6 +85,27 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     public void handle(SendInvoiceCommand command) {
         ManageEmployeeDto manageEmployeeDto = manageEmployeeService.findById(UUID.fromString(command.getEmployee()));
         List<ManageInvoiceDto> invoices = this.service.findByIds(command.getInvoice());
+        LocalDate today = LocalDate.now();
+        invoices = invoices.stream()
+                .filter(invoice -> {
+                    ManageAgencyDto agency = invoice.getAgency();
+
+                    if (agency != null && Boolean.TRUE.equals(agency.getValidateCheckout())) {
+                        List<ManageBookingDto> bookings = invoice.getBookings();
+
+                        if (bookings != null && !bookings.isEmpty()) {
+                            boolean hasInvalidCheckout = bookings.stream()
+                                    .anyMatch(booking ->
+                                            booking.getCheckOut() != null && booking.getCheckOut().toLocalDate().isAfter(today)
+                                    );
+
+                            return !hasInvalidCheckout;
+                        }
+                    }
+
+                    return true;
+                })
+                .collect(Collectors.toList());
 
         if (invoices.isEmpty()) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.SERVICE_NOT_FOUND,
@@ -93,16 +114,16 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         if (invoices.get(0).getAgency().getSentB2BPartner() == null){
-            updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
         else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
-            sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
         else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
-            bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
         else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
-            sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getLastName());
+            sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
         }
 
         command.setResult(true);
@@ -117,18 +138,20 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                         new InvoiceStatusHistoryDto(
                                 UUID.randomUUID(),
                                 manageInvoiceDto,
-                                "The invoice data was inserted.",
+                                "The invoice data was update.",
                                 null,
                                 employee,
                                 EInvoiceStatus.SENT,
                                 0L
                         )
                 );
+                manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 this.service.update(manageInvoiceDto);
             }
             else if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());
+                manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 this.service.update(manageInvoiceDto);
             }
 
@@ -142,7 +165,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 String nameFile = invoice.getInvoiceNumber() + ".xml";
                 InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
                 ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
-                        agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21, "bvl");
+                        agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21, invoice.getAgency().getSentB2BPartner().getUrl());
 
             } catch (Exception e) {
                 invoice.setSendStatusError(e.getMessage());

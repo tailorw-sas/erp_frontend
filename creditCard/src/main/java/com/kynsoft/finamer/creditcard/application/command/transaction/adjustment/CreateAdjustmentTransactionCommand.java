@@ -20,11 +20,12 @@ public class CreateAdjustmentTransactionCommand implements ICommand {
     private String reservationNumber;
     private String referenceNumber;
     private String employee;
+    private UUID employeeId;
 
     public CreateAdjustmentTransactionCommand(UUID agency, UUID transactionCategory,
                                               UUID transactionSubCategory, Double amount,
                                               String reservationNumber, String referenceNumber,
-                                              String employee) {
+                                              String employee, UUID employeeId) {
         this.transactionUuid = UUID.randomUUID();
         this.agency = agency;
         this.transactionCategory = transactionCategory;
@@ -33,6 +34,7 @@ public class CreateAdjustmentTransactionCommand implements ICommand {
         this.reservationNumber = reservationNumber;
         this.referenceNumber = referenceNumber;
         this.employee = employee;
+        this.employeeId = employeeId;
     }
 
     public static CreateAdjustmentTransactionCommand fromRequest(CreateAdjustmentTransactionRequest request){
@@ -40,7 +42,7 @@ public class CreateAdjustmentTransactionCommand implements ICommand {
                 request.getAgency(), request.getTransactionCategory(),
                 request.getTransactionSubCategory(), request.getAmount(),
                 request.getReservationNumber(), request.getReferenceNumber(),
-                request.getEmployee()
+                request.getEmployee(), request.getEmployeeId()
         );
     }
 
