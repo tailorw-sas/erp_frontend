@@ -259,7 +259,6 @@ async function getAttach() {
 
     if (dataList.length > 0) {
       const attachId = dataList[0].id // Tomar solo el primer ID
-      console.log(attachId, 'resource id')
       return attachId // Devolver solo el ID
     }
     else {
@@ -296,7 +295,6 @@ async function getResource() {
     // Verificar si hay resultados
     if (dataList.length > 0) {
       const resourceId = dataList[0].id // Tomar solo el primer ID
-      console.log(resourceId, 'resource id')
       return resourceId // Devolver solo el ID
     }
     else {
@@ -510,6 +508,7 @@ async function getErrors(errorsResponse: any) {
     listItems.value = [] // Limpiar la lista antes de agregar nuevos elementos
 
     const newListItems = errorsResponse.map((error: { invoiceId: any, message: any, agency: any, hotel: any, invoiceDate: any, status: any, invoiceNo: any, invoiceAmount: any }) => ({
+      id: error.invoiceId,
       invoiceId: error.invoiceId, // Asignar invoiceId
       hotel: error.hotel,
       agency: error.agency,
@@ -525,7 +524,6 @@ async function getErrors(errorsResponse: any) {
 
     // Llenar listItems con los nuevos errores
     listItems.value = newListItems
-    console.log(listItems.value)
     return listItems
   }
   catch (error) {
