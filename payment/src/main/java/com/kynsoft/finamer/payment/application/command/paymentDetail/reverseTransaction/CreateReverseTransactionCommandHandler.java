@@ -94,7 +94,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
 
             this.changeStatus(paymentDetailDto, command.getEmployee());
         } else if (paymentDetailDto.getTransactionType().getCash()) {
-            this.calculateReverseCash(reverseFrom.getPayment(), paymentDetailDto.getAmount());
+            this.calculateReverseCash(reverseFrom.getPayment(), reverseFrom.getAmount());
             reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             this.paymentDetailService.update(reverseFrom);
             //paymentDetailDto.setTransactionDate(null);
