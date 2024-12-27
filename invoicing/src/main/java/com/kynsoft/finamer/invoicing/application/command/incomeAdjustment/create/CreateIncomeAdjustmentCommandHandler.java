@@ -9,7 +9,6 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
@@ -30,17 +29,19 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
     private final IManageBookingService bookingService;
 
     private final IManageInvoiceService service;
+    private final IManageEmployeeService employeeService;
 
     public CreateIncomeAdjustmentCommandHandler(IManagePaymentTransactionTypeService transactionTypeService,
-            IInvoiceCloseOperationService closeOperationService,
-            IManageBookingService bookingService,
-            IManageAdjustmentService manageAdjustmentService,
-            IManageInvoiceService service) {
+                                                IInvoiceCloseOperationService closeOperationService,
+                                                IManageBookingService bookingService,
+                                                IManageAdjustmentService manageAdjustmentService,
+                                                IManageInvoiceService service, IManageEmployeeService employeeService) {
         this.transactionTypeService = transactionTypeService;
         this.closeOperationService = closeOperationService;
         this.bookingService = bookingService;
         this.manageAdjustmentService = manageAdjustmentService;
         this.service = service;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -74,6 +75,14 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         );
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
+        ManageEmployeeDto employee = null;
+        String employeeFullName = "";
+        try {
+            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+        } catch (Exception e) {
+            employeeFullName = command.getEmployee();
+        }
         for (NewIncomeAdjustmentRequest adjustment : command.getAdjustments()) {
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
@@ -96,7 +105,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     null,
                     paymentTransactionTypeDto,
                     null,
-                    command.getEmployee(),
+                    employeeFullName,
                     false
             ));
             invoiceAmount += adjustment.getAmount();
