@@ -1291,8 +1291,8 @@ async function getRoomRateList() {
     for (const iterator of dataList) {
       countRR++
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
-      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
-      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+      const rateAdult = iterator.invoiceAmount && iterator.adults > 0 && iterator.nights > 0 ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      const rateChildren = iterator.invoiceAmount && iterator.children > 0 && iterator.nights > 0 ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
 
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
@@ -1300,7 +1300,7 @@ async function getRoomRateList() {
         checkOut: iterator?.checkOut ? new Date(`${dayjs(iterator?.checkOut).format('YYYY-MM-DD')}T00:00:00`) : null,
         invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
         hotelAmount: formatNumber(iterator?.hotelAmount) || 0,
-        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        nights: iterator.checkOut && iterator.checkIn ? dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false) : 0,
         loadingEdit: false,
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
