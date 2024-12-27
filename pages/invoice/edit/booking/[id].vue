@@ -1141,16 +1141,32 @@ async function onCellEditRoomRate(event: any) {
 
   if (data[field] === newValue) { return }
 
-  if (field === 'hotelAmount') {
-    if (+newValue <= 0 && requiresFlatRateCheck.value) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
-      return
+  if (roomRateList.value.length === 1) {
+    if (field === 'hotelAmount') {
+      if (+newValue <= 0 && requiresFlatRateCheck.value) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
+        return
+      }
+    }
+  }
+  else {
+    const totalHotelAmount = roomRateList.value.reduce((total, roomRate) => {
+      if (roomRate.id !== data.id) {
+        return total + (roomRate.hotelAmount ? +roomRate.hotelAmount : 0)
+      }
+      return total
+    }, 0)
+
+    if (field === 'hotelAmount') {
+      if (+totalHotelAmount <= 0 && +newValue <= 0 && requiresFlatRateCheck.value) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Hotel Amount must be greater than 0', life: 3000 })
+        return
+      }
     }
   }
 
   if (field === 'adults') {
     if (+newValue <= 0 && newData.children === 0) {
-      // Mensaje de error: Almenos uno de los dos debe ser mayo que 0
       toast.add({ severity: 'error', summary: 'Error', detail: 'At least one of the fields Adults or Children must be greater than 0.', life: 3000 })
       return
     }
@@ -1275,8 +1291,8 @@ async function getRoomRateList() {
     for (const iterator of dataList) {
       countRR++
       // Rate Adult= RateAmount/(Ctdad noches*Ctdad Adults) y Rate Children= RateAmount/(Ctdad noches*Ctdad Children)
-      const rateAdult = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
-      const rateChildren = iterator.invoiceAmount ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
+      const rateAdult = iterator.invoiceAmount && iterator.adults > 0 && iterator.nights > 0 ? iterator.invoiceAmount / (iterator.nights * iterator.adults) : 0
+      const rateChildren = iterator.invoiceAmount && iterator.children > 0 && iterator.nights > 0 ? iterator.invoiceAmount / (iterator.nights * iterator.children) : 0
 
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
@@ -1284,7 +1300,7 @@ async function getRoomRateList() {
         checkOut: iterator?.checkOut ? new Date(`${dayjs(iterator?.checkOut).format('YYYY-MM-DD')}T00:00:00`) : null,
         invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
         hotelAmount: formatNumber(iterator?.hotelAmount) || 0,
-        nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
+        nights: iterator.checkOut && iterator.checkIn ? dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false) : 0,
         loadingEdit: false,
         loadingDelete: false,
         fullName: `${iterator.booking.firstName ? iterator.booking.firstName : ''} ${iterator.booking.lastName ? iterator.booking.lastName : ''}`,
@@ -1906,7 +1922,7 @@ onMounted(async () => {
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
-        </template>-->
+        </template> -->
         <template #field-dueAmount="{ onUpdate, item: data, fields, field }">
           <InputNumber
             v-if="!loadingSaveAll"
@@ -2119,8 +2135,7 @@ onMounted(async () => {
                         <ColumnGroup type="footer" class="flex align-items-center">
                           <Row>
                             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-                            <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2))" footer-style="font-weight: 700" />
-
+                            <Column :footer="Number.parseFloat(totalAmountAdjustment.toFixed(2)).toString()" footer-style="font-weight: 700" />
                             <Column :colspan="6" />
                           </Row>
                         </ColumnGroup>

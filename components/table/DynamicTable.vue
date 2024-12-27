@@ -611,7 +611,7 @@ defineExpose({ clearSelectedItems })
         removable-sort
         :lazy="props.isCustomSorting"
         scrollable
-        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '60vh'"
+        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '75vh'"
         :filters="filters1"
         edit-mode="cell"
         @sort="onSortField"
@@ -789,16 +789,6 @@ defineExpose({ clearSelectedItems })
                 :min-fraction-digits="2"
                 :max-fraction-digits="4"
               />
-              <!-- @change="filterCallback()" -->
-              <Button
-                v-if="false"
-                type="button"
-                icon="pi pi-filter"
-                text
-                aria-haspopup="true"
-                :aria-controls="`overlayPanel_${index}`"
-                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
-              />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">
@@ -915,6 +905,7 @@ defineExpose({ clearSelectedItems })
                 style="width: 100%"
                 :view="column.props?.calendarMode || 'month'"
                 date-format="yy-mm-dd"
+                :max-date="column.props?.maxDate"
                 @update:model-value="onCellEditComplete($event, dataList)"
               />
             </slot>
@@ -1011,7 +1002,7 @@ defineExpose({ clearSelectedItems })
         <Paginator
           :rows="Number(props.pagination.limit) || 50"
           :total-records="props.pagination.totalElements"
-          :rows-per-page-options="[10, 20, 30, 50]"
+          :rows-per-page-options="[10, 20, 30, 50, 100, 200, 500]"
           @page="onChangePageOrLimit($event)"
         />
         <Badge class="px-2 py-3 flex align-items-center" severity="secondary">

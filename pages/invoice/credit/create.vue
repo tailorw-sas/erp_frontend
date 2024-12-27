@@ -421,6 +421,7 @@ async function createItem(item: { [key: string]: any }) {
     const bookings: any[] = []
     let roomRates = []
     const attachments = []
+    const listBookingForFlateRate: string[] = []
 
     bookingList.value?.forEach((booking) => {
       if (nightTypeRequired.value && !booking.nightType?.id) {
@@ -428,8 +429,12 @@ async function createItem(item: { [key: string]: any }) {
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error('The Hotel amount field must be greater than 0 for this hotel')
+        listBookingForFlateRate.push(booking.hotelBookingNumber)
       }
+
+      // if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
+      //   throw new Error('The Hotel amount field must be greater than 0 for this hotel')
+      // }
 
       if (booking?.invoiceAmount !== 0) {
         bookings.push({
@@ -469,6 +474,10 @@ async function createItem(item: { [key: string]: any }) {
       if (requiresFlatRate.value && +roomRateList.value[i].hotelAmount <= 0) {
         throw new Error('The Hotel amount field must be greater than 0 for this hotel')
       }
+    }
+
+    if (listBookingForFlateRate.length > 0) {
+      throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < adjustmentList?.value.length; i++) {
@@ -689,13 +698,13 @@ function addBooking(booking: any) {
   roomRateList.value = [...roomRateList.value, {
     checkIn: dayjs(booking?.checkIn).toISOString(),
     checkOut: dayjs(booking?.checkOut).toISOString(),
-    invoiceAmount: String(booking?.invoiceAmount),
+    invoiceAmount: booking?.invoiceAmount ? String(booking?.invoiceAmount) : '0',
     roomNumber: booking?.roomNumber,
     adults: booking?.adults,
     children: booking?.children,
     rateAdult: booking?.rateAdult,
     rateChild: booking?.rateChild,
-    hotelAmount: String(booking?.hotelAmount),
+    hotelAmount: booking?.hotelAmount ? String(booking?.hotelAmount) : '0',
     remark: booking?.description,
     booking: booking?.id,
     nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),
@@ -748,9 +757,10 @@ async function getItemById(id: any) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
-
+        const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : ''
+        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null
+        // item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
         item.value.invoiceAmount = toNegative(response.invoiceAmount).toString()
         item.value.hotel = response.hotel

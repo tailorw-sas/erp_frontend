@@ -355,7 +355,7 @@ async function searchAndFilter() {
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
         newPayload.filter = [...newPayload.filter, {
-          key: 'reconcileStatus.id',
+          key: 'status.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
@@ -519,6 +519,7 @@ async function updateStatus(hotelPaymentId: string, statusId: string) {
   const payload: { [key: string]: any } = {}
   payload.status = statusId
   payload.employee = userData?.value?.user?.name
+  payload.employeeId = userData?.value?.user?.userId
   const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, hotelPaymentId, payload)
   if (response && response.id) {
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })

@@ -183,7 +183,7 @@ const Fields = ref<FieldDefinitionType[]>([
       id: z.string(),
       name: z.string(),
     })
-      .required()
+      .required().nullable()
       .refine((value: any) => value && value.id && value.name, { message: `The Hotel field is required` })
   },
   {
@@ -572,6 +572,8 @@ async function createItem(item: { [key: string]: any }) {
     const attachments = []
     let countBookingWithoutNightType = 0
     const listOfBookingsWithoutNightType: string[] = []
+    const listBookingForFlateRate: string[] = []
+
     bookingList.value?.forEach((booking) => {
       // Es aqui donde hay que hacer la validacion de recorrer la lista de booking y verificar si alguno necesita un nightType
       if (nightTypeRequired.value && !booking.nightType?.id) {
@@ -581,8 +583,12 @@ async function createItem(item: { [key: string]: any }) {
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error(`The Hotel amount field of Hotel Booking No. ${booking.hotelBookingNumber} must be greater than 0 for this hotel`)
+        listBookingForFlateRate.push(booking.hotelBookingNumber)
       }
+
+      // if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
+      //   throw new Error(`The Hotel amount field of Hotel Booking No. ${booking.hotelBookingNumber} must be greater than 0 for this hotel`)
+      // }
 
       if (booking?.invoiceAmount !== 0) {
         bookings.push({
@@ -621,7 +627,11 @@ async function createItem(item: { [key: string]: any }) {
     })
 
     if (countBookingWithoutNightType > 0) {
-      throw new Error(`The Night Type field is required for this booking: ${listOfBookingsWithoutNightType.toString()}`)
+      throw new Error(`The Night Type field is required for this Hotel Booking No: ${listOfBookingsWithoutNightType.toString()}`)
+    }
+    // The Hotel amount field must be greater than 0 for this Hotel Booking No: I 789 567
+    if (listBookingForFlateRate.length > 0) {
+      throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < roomRateList.value.length; i++) {
@@ -656,8 +666,14 @@ async function createItem(item: { [key: string]: any }) {
         })
       }
     }
-
-    const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
+    const response = await GenericService.createBulk('invoicing', 'manage-invoice', {
+      bookings,
+      invoice: payload,
+      roomRates,
+      adjustments,
+      attachments,
+      employee: userData?.value?.user?.userId
+    })
     return response
   }
 }
@@ -751,6 +767,15 @@ async function saveItem(item: { [key: string]: any }) {
     successOperation = false
 
     if (error?.data?.data?.error?.status === 1029) {
+      const message = error?.data?.data?.error?.errors.find((error: any) => error?.field === 'hotelBookingNumber')?.message
+      if (message) {
+        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 10000 })
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
+      }
+    }
+    else if (error?.data?.data?.error?.status === 1171) {
       const message = error?.data?.data?.error?.errors.find((error: any) => error?.field === 'hotelBookingNumber')?.message
       if (message) {
         toast.add({ severity: 'error', summary: 'Error', detail: message, life: 10000 })
@@ -943,7 +968,9 @@ async function getItemById(id: any) {
         const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
         item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
-        item.value.invoiceDate = new Date(response.invoiceDate)
+        // item.value.invoiceDate = new Date(response.invoiceDate)
+        const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : ''
+        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null
         item.value.isManual = response.isManual
         item.value.invoiceAmount = toNegative(response.invoiceAmount)
         item.value.hotel = response.hotel
@@ -1055,18 +1082,13 @@ function calcBookingInvoiceAmount(roomRate: any) {
   // Filtra las tarifas de habitación asociadas a esta reserva
   const roomRates = roomRateList.value.filter((r: any) => r.booking === bookingList.value[bookingIndex]?.id)
 
-  console.log(`Room rates associated with booking ${bookingList.value[bookingIndex].id}:`, roomRates)
-
   // Suma los invoiceAmounts de las tarifas de habitación
   roomRates.forEach((r) => {
-    console.log(`Adding room rate invoice amount: ${r.invoiceAmount}`)
     bookingList.value[bookingIndex].invoiceAmount += Number(r.invoiceAmount)
   })
 
   // Redondea el monto total a 2 decimales
   bookingList.value[bookingIndex].invoiceAmount = Number.parseFloat(bookingList.value[bookingIndex].invoiceAmount.toFixed(2))
-
-  console.log(`Total invoice amount for booking ${bookingList.value[bookingIndex].id}: ${bookingList.value[bookingIndex].invoiceAmount}`)
 
   // Llama a la función para recalcular el total de la factura
   calcInvoiceAmount()
@@ -1286,6 +1308,10 @@ watch(invoiceAmount, () => {
   }
 })
 
+function onCloseDialog() {
+  bookingDialogOpen.value = false
+}
+
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getInvoiceTypeList()
@@ -1309,7 +1335,6 @@ onMounted(async () => {
       : "" }}
   </div>
   <div class="pt-3">
-    <!-- <pre>{{ reactiveItem }}</pre> -->
     <EditFormV2
       :key="formReload"
       :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields"
@@ -1435,7 +1460,7 @@ onMounted(async () => {
             :get-invoice-hotel="getInvoiceHotel"
             :invoice-obj-amount="invoiceAmount"
             :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }"
+            :close-dialog="onCloseDialog"
             :open-dialog="handleDialogOpen"
             :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog"

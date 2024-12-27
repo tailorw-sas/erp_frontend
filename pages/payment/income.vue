@@ -20,7 +20,8 @@ import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
 const confirm = useConfirm()
-const { data: userData } = useAuth()
+// const { data: userData } = useAuth()
+const { userData } = useAuthStore()
 const idItemToLoadFirstTime = ref('')
 const idItem = ref('')
 const idItemDetail = ref('')
@@ -411,7 +412,10 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 required',
-    validation: z.number()
+    validation: z.number({
+      invalid_type_error: 'The amount field is required',
+      required_error: 'The amount field is required',
+    })
       // .positive({ message: 'The amount must be a positive number' })
       .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
       .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
@@ -657,7 +661,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
-    payload.employee = userData?.value?.user?.name
+    payload.employee = userData?.value?.user?.userId
     payload.employeeId = userData?.value?.user?.userId
 
     let totalIncomeAmount = 0
@@ -711,7 +715,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await validateIncomeCloseOperation(item)
+      // await validateIncomeCloseOperation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
@@ -786,7 +790,7 @@ async function createAdjustment(items: any[]) {
       const transformed = {
         status: 'ACTIVE',
         income: idItem.value,
-        employee: userData?.value?.user?.name,
+        employee: userData?.data?.userId,
         adjustments: items.map(item => ({
           transactionType: item.transactionType ? item.transactionType.id : null,
           amount: Number.parseFloat(item.amount),
@@ -857,7 +861,8 @@ function saveLocal(itemP: { [key: string]: any }) {
   const adjustmentDate = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
   const itemAmount = Number(itemP.amount) + Number(item.value.incomeAmount)
   localAdjustment.date = adjustmentDate
-  localAdjustment.employee = userData?.value?.user?.name
+  localAdjustment.employee = userData?.data ? `${userData?.data?.name} ${userData?.data?.lastName}` : ''
+  localAdjustment.employeeId = userData?.data?.userId
   localAdjustment.id = AdjustmentList.value.length
   localAdjustment.amountTemp = formatNumber(itemAmount)
   if (AdjustmentList.value.length > 0) {
@@ -1474,7 +1479,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="attachmentHistoryDialogOpen">
-      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Income Status History" />
+      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Invoice Status History" />
     </div>
     <div v-if="exportAttachmentsDialogOpen">
       <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen" :invoice="item" />

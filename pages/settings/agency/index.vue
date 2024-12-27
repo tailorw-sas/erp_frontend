@@ -426,7 +426,7 @@ const options = ref({
   uriApi: 'manage-agency',
   loading: false,
   actionsAsMenu: false,
-  selectFirstItemByDefault: true,
+  selectFirstItemByDefault: false,
   messageToDelete: 'Are you sure you want to delete the agency: {{name}}?'
 })
 const payloadOnChangePage = ref<PageState>()
@@ -459,15 +459,13 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
-    if (options.value.selectFirstItemByDefault) {
-      idItemToLoadFirstTime.value = ''
-    }
+    idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listItems.value = []
     const newListItems = []
@@ -497,7 +495,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0 && options.value.selectFirstItemByDefault) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -664,11 +662,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
     payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
     payload.status = statusToString(payload.status)
-    const response = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-
-    if (response && options.value.selectFirstItemByDefault === false) {
-      idItemToLoadFirstTime.value = response.id
-    }
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -684,11 +678,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
   payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
   payload.status = statusToString(payload.status)
-  const response = await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
-
-  if (response && options.value.selectFirstItemByDefault === false) {
-    idItemToLoadFirstTime.value = response.id
-  }
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -711,9 +701,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -723,7 +714,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -734,7 +725,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 

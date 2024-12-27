@@ -93,7 +93,7 @@ const emits = defineEmits([
 
 ])
 
-const { data } = useAuth()
+const { userData } = useAuthStore()
 const adjustmentDialogOpen = ref(false)
 const toast = useToast()
 const loadingSaveAll = ref(false)
@@ -501,7 +501,8 @@ async function saveAdjustment(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
   item.roomRate = props?.selectedRoomRate
-  item.employee = data?.value?.user?.name
+  item.employee = userData?.data ? `${userData?.data?.name} ${userData?.data?.lastName}` : ''
+  item.employeeId = userData?.data?.userId
 
   if (idItem.value || item?.id) {
     try {

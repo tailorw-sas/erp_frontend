@@ -468,6 +468,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.manageHotel = Object.prototype.hasOwnProperty.call(payload.manageHotel, 'id') ? payload.manageHotel.id : payload.manageHotel
     payload.manageBankAccount = Object.prototype.hasOwnProperty.call(payload.manageBankAccount, 'id') ? payload.manageBankAccount.id : payload.manageBankAccount
     payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
 
     if (LocalBindTransactionList.value.length > 0) {
       payload.transactions = LocalBindTransactionList.value.filter((t: any) => !t.adjustment).map((i: any) => i.id)

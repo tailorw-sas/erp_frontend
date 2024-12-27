@@ -119,7 +119,7 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'detailsAmount', header: 'Details Amount', type: 'number' },
   { field: 'paidDate', header: 'Date', type: 'date' },
-  { field: 'remark', header: 'Remark', type: 'text', width: '200px' },
+  { field: 'remark', header: 'Remark', type: 'text', width: '200px', maxWidth: '200px' },
   { field: 'reconcileStatus', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-reconcile-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
@@ -585,8 +585,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getHotelList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Bank Account:</label>
@@ -676,8 +675,7 @@ onMounted(() => {
                             }
                           }"
                           @load="($event) => getStatusList($event)"
-                        >
-                        </DebouncedMultiSelectComponent>
+                        />
                       </div>
                     </div>
                   </div>

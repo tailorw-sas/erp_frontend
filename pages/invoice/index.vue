@@ -807,7 +807,7 @@ const payloadPrintOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -923,8 +923,8 @@ async function getList() {
       ...payload.value,
     }
     localStorage.setItem('payloadOfInvoiceList', JSON.stringify(payloadOfInvoiceList))
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)    
+    const { data: dataList, page, size, totalElements, totalPages } = response    
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -948,8 +948,8 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
-          invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
+          // dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
+          // invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
         })
@@ -1075,15 +1075,8 @@ async function resetListItems() {
 
 const isFirstTimeInOnMounted = ref(false)
 
-function searchAndFilter() {
-  payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
+async function searchAndFilter() {
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
 
   if (!filterToSearch.value.search) {
     // if (isFirstTimeInOnMounted.value === false) {}
@@ -1108,7 +1101,8 @@ function searchAndFilter() {
             key: 'dueAmount',
             operator: 'EQUALS',
             value: 0,
-            logicalOperation: 'AND'
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           });
         }
         break;
@@ -1123,7 +1117,8 @@ function searchAndFilter() {
             key: 'dueAmount',
             operator: 'NOT_EQUALS',
             value: 0,
-            logicalOperation: 'AND'
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           });
         }
         break;
@@ -1157,7 +1152,8 @@ function searchAndFilter() {
         key: 'agency.client.id',
         operator: 'IN',
         value: itemIds,
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find(item => item.id === 'All')) {
@@ -1167,7 +1163,8 @@ function searchAndFilter() {
         key: 'agency.id',
         operator: 'IN',
         value: itemIds,
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.status?.length > 0) {
@@ -1178,7 +1175,8 @@ function searchAndFilter() {
           key: 'manageInvoiceStatus.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -1190,7 +1188,8 @@ function searchAndFilter() {
           key: 'manageInvoiceType.id',
           operator: 'IN',
           value: itemIds,
-          logicalOperation: 'AND'
+          logicalOperation: 'AND',
+          type: 'filterSearch'
         }]
       }
     }
@@ -1199,7 +1198,8 @@ function searchAndFilter() {
         key: 'invoiceDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
     if (filterToSearch.value.to && !disableDates.value) {
@@ -1207,7 +1207,8 @@ function searchAndFilter() {
         key: 'invoiceDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
   }
@@ -1215,9 +1216,10 @@ function searchAndFilter() {
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'EQUALS',
+      operator: 'LIKE',
       value: filterToSearch.value.search,
-      logicalOperation: 'AND'
+      logicalOperation: 'AND',
+      type: 'filterSearch'
     }]
   }
 
@@ -1230,7 +1232,8 @@ function searchAndFilter() {
         key: 'hotel.id',
         operator: 'IN',
         value: itemIds,
-        logicalOperation: 'AND'
+        logicalOperation: 'AND',
+        type: 'filterSearch'
       }]
     }
   }
@@ -1241,7 +1244,7 @@ function searchAndFilter() {
   //     return hotelError.value = true
   //   }
   // }
-  getList()
+  await getList()
 }
 
 async function clearFilterToSearch() {  
@@ -1265,7 +1268,7 @@ async function clearFilterToSearch() {
     includeInvoicePaid: true
   }
   await getStatusListTemp()
-  getList()
+  await getList()
 }
 async function getItemById(data: { id: string, type: string, status: any }) {
   await openEditDialog(data?.id, data?.type)
@@ -1752,14 +1755,12 @@ async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: {
 // }
 
 async function parseDataTableFilter(payloadFilter: any) {
-  console.log(payloadFilter);
-
   // if(payloadFilter?.agencyCd){
   //   payloadFilter['agency.code'] = payloadFilter.agencyCd
   //   delete payloadFilter.agencyCd
   // }
 
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)  
 
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
@@ -1768,22 +1769,29 @@ async function parseDataTableFilter(payloadFilter: any) {
         parseFilter[i].key = 'agency.code'
       }
 
-      if (parseFilter[i]?.key === 'status') {
-        parseFilter[i].key = 'invoiceStatus'
+      if (parseFilter[i]?.key === 'invoiceStatus.id') {
+        parseFilter[i].key = 'manageInvoiceStatus.id'
       }
 
       if (parseFilter[i]?.key === 'invoiceNumber') {
         parseFilter[i].key = 'invoiceNumberPrefix'
       }
 
+      if (parseFilter[i]?.key === 'invoiceAmount') {
+        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+      }
+
+      if (parseFilter[i]?.key === 'dueAmount') {
+        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+      }
     }
   }
-
-  payload.value.filter = [...parseFilter || []]
-  getList()
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+  await getList()
 }
 
-function onSortField(event: any) {
+async function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
@@ -1802,7 +1810,7 @@ function onSortField(event: any) {
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    getList()
+    await getList()
   }
 }
 
@@ -2061,11 +2069,11 @@ function handleClose() {
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
-watch(payloadOnChangePage, (newValue) => {
+watch(payloadOnChangePage, async  (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
-  getList()
+  await getList()
 })
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {

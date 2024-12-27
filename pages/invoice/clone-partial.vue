@@ -738,7 +738,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
     loadingSaveAll.value = true
 
     const payload: { [key: string]: any } = { ...item }
-    payload.employee = userData?.value?.user?.name
+    payload.employee = userData?.value?.user?.userId
     payload.invoice = globalSelectedInvoicing
 
     const adjustments: any = [...adjustmentList.value]

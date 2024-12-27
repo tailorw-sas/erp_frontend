@@ -26,7 +26,7 @@ const active = ref(0)
 
 const route = useRoute()
 const invoiceType = ref<string>(route.query.type as string)
-
+const isCredit = ref(false)
 //@ts-ignore
 const selectedInvoice = <string>ref(route.params.id.toString())
 const selectedBooking = ref<string>('')
@@ -662,6 +662,7 @@ async function getItemById(id: string) {
       const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id) 
            
       if (response) {
+        isCredit.value = response?.invoiceType === 'CREDIT'
         propsParentId.value.id = response?.parent?.invoiceId
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
@@ -674,10 +675,12 @@ async function getItemById(id: string) {
 
         // item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
 
-        const newDate = new Date(response.invoiceDate)
-        newDate.setDate(newDate.getDate() + 1)
-        item.value.invoiceDate = newDate || null
+        // const newDate = new Date(response.invoiceDate)
+        // newDate.setDate(newDate.getDate() + 1)
+        // item.value.invoiceDate = newDate || null
 
+        const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : ''
+        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null        
 
         item.value.isManual = response.isManual
         item.value.invoiceAmount = response.invoiceAmount
@@ -756,7 +759,7 @@ const nightTypeRequired = ref(false)
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = {}
-  payload.employee = userData?.value?.user?.name
+  payload.employee = userData?.value?.user?.userId
   payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
   payload.isManual = item.isManual
   payload.hotel = item.hotel.id
@@ -1007,7 +1010,7 @@ onMounted(async () => {
       <div>
         {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
       </div>
-      <div>
+      <div v-if="isCredit">
          {{propsParentId?.label}} {{ propsParentId?.id }}
       </div>
     </div>

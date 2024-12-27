@@ -1076,7 +1076,7 @@ async function resetListItems() {
   getList()
 }
 
-function searchAndFilter() {
+async function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.criteria && filterToSearch.value.value) {
     let keyValue = ''
@@ -1094,7 +1094,7 @@ function searchAndFilter() {
         || keyTemp === 'reference'
       )
         ? 'LIKE'
-        : 'EQUALS',
+        : 'LIKE',
       value: filterToSearch.value.value,
       logicalOperation: 'AND',
       type: 'filterSearch',
@@ -1160,7 +1160,7 @@ function searchAndFilter() {
     }
 
     // Date
-    if (filterToSearch.value.from) {
+    if (filterToSearch.value.from && filterAllDateRange.value === false) {
       payload.value.filter = [...payload.value.filter, {
         key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
@@ -1169,7 +1169,8 @@ function searchAndFilter() {
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.to) {
+
+    if (filterToSearch.value.to && filterAllDateRange.value === false) {
       payload.value.filter = [...payload.value.filter, {
         key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
@@ -1202,7 +1203,7 @@ function searchAndFilter() {
     // }
   }
   options.value.selectAllItemByDefault = false
-  getList()
+  await getList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -1214,7 +1215,7 @@ async function parseDataTableFilter(payloadFilter: any) {
 
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  getList()
+  await getList()
 }
 
 function onSortField(event: any) {
@@ -1981,6 +1982,13 @@ async function getListPaymentDetailTypeDeposit() {
 
         iterator.amount = formatNumber(iterator.amount)
       }
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
+      //   iterator.applyDepositValue = (!Number.isNaN(iterator.applyDepositValue) && iterator.applyDepositValue !== null && iterator.applyDepositValue !== '')
+      //     ? Number.parseFloat(iterator.applyDepositValue).toString()
+      //     : '0'
+
+      //   iterator.applyDepositValue = formatNumber(iterator.applyDepositValue)
+      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
@@ -4226,7 +4234,11 @@ onMounted(async () => {
                 @update:selection="onRowSelectAll"
               >
                 <Column selection-mode="multiple" header-style="width: 3rem" />
-                <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
+                  <template v-if="column.field === 'applyDepositValue'" #body="slotProps">
+                    {{ formatNumber(slotProps.data.applyDepositValue) }}
+                  </template>
+                </Column>
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                     <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -4263,7 +4275,14 @@ onMounted(async () => {
               <template #expansion="{ data: item }">
                 <div class="p-0 m-0">
                   <DataTable :value="item.bookings" striped-rows>
-                    <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                    <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
+                      <template v-if="column.field === 'dueAmount'" #body="slotProps">
+                        {{ formatNumber(slotProps.data.dueAmount) }}
+                      </template>
+                      <template v-else-if="column.field === 'invoiceAmount'" #body="slotProps">
+                        {{ formatNumber(slotProps.data.invoiceAmount) }}
+                      </template>
+                    </Column>
                     <template #empty>
                       <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                         <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -4775,7 +4794,7 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Save'" :loading="loadingExportToExcel" class="w-3rem ml-1 sticky" icon="pi pi-save" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" />
+              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogExportToExcel" /> -->
             </template>
           </EditFormV2>
         </div>

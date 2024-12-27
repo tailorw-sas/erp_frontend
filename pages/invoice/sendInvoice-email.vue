@@ -140,27 +140,44 @@ const pagination = ref<IPagination>({
 async function getList() {
   try {
     // payload.value = { ...payload.value, query: idItem.value }
-    const staticPayload = [{
-      key: 'invoiceStatus',
-      operator: 'IN',
-      value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
-      logicalOperation: 'AND'
-    }, {
-      key: 'agency.sentB2BPartner.b2bPartnerType.code',
-      operator: 'EQUALS',
-      value: type.toString(),
-      logicalOperation: 'AND'
-    }, {
-      key: 'invoiceAmount',
-      operator: 'GREATER_THAN',
-      value: '0',
-      logicalOperation: 'AND'
-    }, {
-      key: 'dueAmount',
-      operator: 'GREATER_THAN',
-      value: '0',
-      logicalOperation: 'AND'
-    }]
+    const staticPayload = [
+      {
+        key: 'invoiceStatus',
+        operator: 'IN',
+        value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'agency.sentB2BPartner.b2bPartnerType.code',
+        operator: 'EQUALS',
+        value: type.toString(),
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'agency.status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'cloneParent',
+        operator: 'EQUALS',
+        value: false,
+        logicalOperation: 'OR'
+      },
+      {
+        key: 'invoiceAmount',
+        operator: 'GREATER_THAN',
+        value: '0',
+        logicalOperation: 'OR'
+      },
+      // {
+      //   key: 'dueAmount',
+      //   operator: 'GREATER_THAN',
+      //   value: '0',
+      //   logicalOperation: 'AND'
+      // }
+    ]
     payload.value.filter = [...payload.value.filter, ...staticPayload]
 
     listItems.value = []
@@ -564,6 +581,7 @@ async function send() {
   loadingSaveAll.value = true
   options.value.loading = true
   let completed = false
+  const count = clickedItem.value.length
   try {
     if (!clickedItem.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
@@ -583,7 +601,7 @@ async function send() {
   finally {
     options.value.loading = false
     if (completed) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 10000 })
       if (clickedItem.value.length === listItems.value.length) {
         clickedItem.value = []
         navigateTo('/invoice')
@@ -734,10 +752,7 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2">
                         <label class="filter-label font-bold ml-1" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>

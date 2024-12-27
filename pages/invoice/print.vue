@@ -113,6 +113,15 @@ const payload = ref<IQueryRequest>({
   sortType: ENUM_SHORT_TYPE.DESC
 })
 
+const payloadLocalStorage = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'invoiceId',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
@@ -148,9 +157,9 @@ async function getPrintList() {
     //     logicalOperation: 'AND'
     //   })
     // }
-    payload.value = localStorage.getItem('payloadOfInvoiceList')
-      ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
-      : payload.value
+    // payload.value = localStorage.getItem('payloadOfInvoiceList')
+    //   ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    //   : payload.value
 
     totalInvoiceAmount.value = 0
     totalDueAmount.value = 0
@@ -347,12 +356,19 @@ async function clearForm() {
 }
 
 async function resetListItems() {
+  payload.value = localStorage.getItem('payloadOfInvoiceList')
+    ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    : payload.value
   payload.value.page = 0
   getPrintList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
+  payload.value = localStorage.getItem('payloadOfInvoiceList')
+    ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    : payload.value
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
       /*   if (parseFilter[i]?.key === 'status') {
@@ -369,14 +385,14 @@ async function parseDataTableFilter(payloadFilter: any) {
     }
   }
 
-  payload.value.filter = [...parseFilter || []]
-  getPrintList()
+  payload.value.filter = [...payload.value.filter, ...parseFilter || []]
+  await getPrintList()
 }
 // payload.value.filter = [...parseFilter || []]
 // getPrintList()
 // }
 
-function onSortField(event: any) {
+async function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
@@ -394,9 +410,13 @@ function onSortField(event: any) {
     if (event.sortField === 'invoiceNumber') {
       event.sortField = 'invoiceNumberPrefix'
     }
+
+    // payload.value = localStorage.getItem('payloadOfInvoiceList')
+    //   ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    //   : payload.value
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    getPrintList()
+    await getPrintList()
   }
 }
 function getStatusName(code: string) {
@@ -517,16 +537,21 @@ const disabledSearch = computed(() => {
   return false
 })
 
-watch(payloadOnChangePage, (newValue) => {
+watch(payloadOnChangePage, async (newValue) => {
+  payload.value = localStorage.getItem('payloadOfInvoiceList')
+    ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    : payload.value
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getPrintList()
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
+  await getPrintList()
 })
 
 onMounted(async () => {
+  payload.value = localStorage.getItem('payloadOfInvoiceList')
+    ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
+    : payload.value
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
-  getPrintList()
+  await getPrintList()
 })
 </script>
 

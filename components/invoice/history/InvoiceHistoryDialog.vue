@@ -100,7 +100,7 @@ const Columns: IColumn[] = [
 const incomeColumns: IColumn[] = [
   { field: 'invoiceHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '90px', sortable: false, showFilter: false },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
   { field: 'invoiceStatus', header: 'Status', type: 'slot-text', width: '100px', sortable: false, showFilter: false },
@@ -318,7 +318,6 @@ onMounted(() => {
     v-model:visible="dialogVisible"
     modal
     :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header"
-    class="p-4"
     content-class="border-round-bottom border-top-1 surface-border h-fit"
     :block-scroll="true"
     style="width: 50%;" :pt="{

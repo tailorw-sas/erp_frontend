@@ -539,9 +539,12 @@ async function createItem(item: { [key: string]: any }) {
     if (invoiceAmount.value === 0) {
       throw new Error('The Invoice amount field cannot be 0')
     }
-
-    await getInvoiceAgency(item.agency?.id)
-    await getInvoiceHotel(item.hotel?.id)
+    if (item.agency?.id) {
+      await getInvoiceAgency(item.agency?.id)
+    }
+    if (item.hotel?.id) {
+      await getInvoiceHotel(item.hotel?.id)
+    }
 
     const adjustments = []
     const bookings: any[] = []
@@ -550,6 +553,7 @@ async function createItem(item: { [key: string]: any }) {
 
     let countBookingWithoutNightType = 0
     const listOfBookingsWithoutNightType: string[] = []
+    const listBookingForFlateRate: string[] = []
 
     bookingList.value?.forEach((booking) => {
       if (nightTypeRequired.value && !booking.nightType?.id) {
@@ -559,7 +563,7 @@ async function createItem(item: { [key: string]: any }) {
       }
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error('The Hotel amount field must be greater than 0 for this hotel')
+        listBookingForFlateRate.push(booking.hotelBookingNumber)
       }
 
       if (booking?.invoiceAmount !== 0) {
@@ -576,7 +580,11 @@ async function createItem(item: { [key: string]: any }) {
     })
 
     if (countBookingWithoutNightType > 0) {
-      throw new Error(`The Night Type field is required for this booking: ${listOfBookingsWithoutNightType.toString()}`)
+      throw new Error(`The Night Type field is required for this Hotel Booking No: ${listOfBookingsWithoutNightType.toString()}`)
+    }
+
+    if (listBookingForFlateRate.length > 0) {
+      throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
     }
 
     for (let i = 0; i < roomRateList.value.length; i++) {
@@ -593,7 +601,12 @@ async function createItem(item: { [key: string]: any }) {
     }
 
     roomRates = []
-    roomRates = roomRateList.value
+    for (const element of roomRateList.value) {
+      roomRates.push({
+        ...element,
+        hotelAmount: element.hotelAmount ? element.hotelAmount : 0
+      })
+    }
 
     for (let i = 0; i < attachmentList.value.length; i++) {
       if (attachmentList.value[i]?.file?.files.length > 0) {
@@ -606,7 +619,7 @@ async function createItem(item: { [key: string]: any }) {
       }
     }
 
-    const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
+    const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.userId })
     return response
   }
 }
@@ -645,12 +658,21 @@ async function saveItem(item: { [key: string]: any }) {
   try {
     let response: any = null
     response = await createItem(item)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 30000 })
     navigateTo({ path: `/invoice/edit/${response?.id}` })
   }
   catch (error: any) {
     successOperation = false
     if (error?.data?.data?.error?.status === 1029) {
+      const message = error?.data?.data?.error?.errors.find((error: any) => error?.field === 'hotelBookingNumber')?.message
+      if (message) {
+        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 10000 })
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
+      }
+    }
+    else if (error?.data?.data?.error?.status === 1171) {
       const message = error?.data?.data?.error?.errors.find((error: any) => error?.field === 'hotelBookingNumber')?.message
       if (message) {
         toast.add({ severity: 'error', summary: 'Error', detail: message, life: 10000 })
@@ -770,8 +792,6 @@ function sortRoomRate(event: any) {
 }
 
 function addBooking(booking: any) {
-  console.log('Sin entro aqui......add booking')
-
   bookingList.value = [...bookingList.value, {
     ...booking,
     checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
@@ -784,13 +804,13 @@ function addBooking(booking: any) {
   roomRateList.value = [...roomRateList.value, {
     checkIn: dayjs(booking?.checkIn).toISOString(),
     checkOut: dayjs(booking?.checkOut).toISOString(),
-    invoiceAmount: String(booking?.invoiceAmount),
+    invoiceAmount: booking?.invoiceAmount ? String(booking?.invoiceAmount) : '0',
     roomNumber: booking?.roomNumber,
     adults: booking?.adults,
     children: booking?.children,
     rateAdult: booking?.rateAdult,
     rateChild: booking?.rateChild,
-    hotelAmount: String(booking?.hotelAmount),
+    hotelAmount: booking?.hotelAmount ? String(booking?.hotelAmount) : '0',
     remark: booking?.description,
     booking: booking?.id,
     nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),
@@ -806,7 +826,7 @@ function addBooking(booking: any) {
   calcInvoiceAmount()
 }
 
-async function getInvoiceAgency(id) {
+async function getInvoiceAgency(id: string) {
   try {
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
 
@@ -815,11 +835,11 @@ async function getInvoiceAgency(id) {
     }
   }
   catch (err) {
-
+    console.log(err)
   }
 }
 
-async function getInvoiceHotel(id) {
+async function getInvoiceHotel(id: string) {
   try {
     const hotel = await GenericService.getById(confhotelListApi.moduleApi, confhotelListApi.uriApi, id)
 
@@ -828,7 +848,7 @@ async function getInvoiceHotel(id) {
     }
   }
   catch (err) {
-
+    console.log(err)
   }
 }
 

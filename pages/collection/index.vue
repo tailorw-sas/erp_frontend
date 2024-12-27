@@ -395,6 +395,7 @@ const options = ref({
   uriApi: 'payment',
   loading: false,
   // selectionMode: 'single' as 'multiple' | 'single',
+  scrollHeight: '70vh',
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
@@ -409,6 +410,7 @@ const optionsInv = ref({
   actionsAsMenu: false,
   showEdit: false,
   showAcctions: false,
+  scrollHeight: '70vh',
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })

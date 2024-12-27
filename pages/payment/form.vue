@@ -36,6 +36,7 @@ const formReloadAgency = ref(0)
 const dialogPaymentDetailFormReload = ref(0)
 const dialogPaymentDetailFormReloadEdit = ref(0)
 const amountOfDetailItem = ref(0) // Temp
+const isCancelledPayment = ref(false)
 
 const loadingSaveAll = ref(false)
 const loadingSaveAllForEdit = ref(false)
@@ -373,7 +374,7 @@ const columns: IColumn[] = [
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
   { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
-  { field: 'amount', header: 'Detail. Amount', tooltip: 'Detail Amount', width: 'auto', type: 'text' },
+  { field: 'amount', header: 'Detail. Amount', tooltip: 'Detail Amount', width: 'auto', type: 'number' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
   { field: 'reverseFromParentId', header: 'Reverse From', width: 'auto', type: 'text' },
@@ -471,6 +472,7 @@ const fields: Array<FieldDefinitionType> = [
     minFractionDigits: 2,
     maxFractionDigits: 4,
     class: 'field col-12 md:col-1 required',
+    tabIndex: 9,
     validation: decimalSchema.shape.paymentAmmount
   },
   {
@@ -480,6 +482,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 11,
     class: 'field col-12 md:col-1',
   },
   {
@@ -489,6 +492,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 13,
     class: 'field col-12 md:col-1',
   },
   {
@@ -498,6 +502,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 16,
     class: 'field col-12 md:col-3',
   },
   {
@@ -546,6 +551,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 10,
     class: 'field col-12 md:col-1',
   },
   {
@@ -555,6 +561,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 12,
     class: 'field col-12 md:col-1',
   },
   {
@@ -564,6 +571,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     minFractionDigits: 2,
     maxFractionDigits: 4,
+    tabIndex: 14,
     class: 'field col-12 md:col-1',
   },
   {
@@ -571,6 +579,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Attachment Status',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
+    tabIndex: 17,
     validation: validateEntityStatus('attachment status'),
   },
   {
@@ -594,6 +603,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Bank Account',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
+    tabIndex: 15,
     validation: validateEntityStatus('bank account'),
   },
   {
@@ -601,6 +611,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Remark',
     dataType: 'text',
     class: 'field col-12 md:col-3',
+    tabIndex: 18,
     validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 
@@ -934,6 +945,7 @@ function openDialogPaymentDetails(event: any) {
 }
 
 function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-detail' | 'deposit-transfer' | 'split-deposit' | 'apply-deposit' | 'apply-payment' | undefined = undefined, createOrEdit: 'create' | 'edit' = 'create') {
+  payloadToApplyPayment.value.invoiceNo = ''
   if (createOrEdit === 'edit') {
     const idDetailTemp = JSON.parse(JSON.stringify(idDetail))
     const objToEditTemp = paymentDetailsList.value.find(x => x.id === (typeof idDetailTemp === 'object' ? idDetailTemp.id : idDetailTemp))
@@ -1234,7 +1246,6 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       // successOperation = false
@@ -1313,6 +1324,8 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+      console.log(response)
+
       if (response) {
         item.value.id = id
         item.value.paymentId = response.paymentId
@@ -1395,13 +1408,18 @@ async function getItemById(id: string) {
               originalName: response.paymentStatus.name,
               status: response.paymentStatus.status,
               applied: response.paymentStatus.applied,
-              confirmed: response.paymentStatus.confirmed
+              confirmed: response.paymentStatus.confirmed,
+              cancelled: response.paymentStatus.cancelled
             }
           : null
         paymentStatusList.value = [paymentStatusTemp]
         item.value.paymentStatus = paymentStatusTemp
         if (paymentStatusTemp) {
           paymentStatusOfGetById.value = paymentStatusTemp
+        }
+
+        if (response.paymentStatus && response.paymentStatus.cancelled === true) {
+          isCancelledPayment.value = response.paymentStatus.cancelled
         }
 
         const paymentSourceTemp = response.paymentSource
@@ -1413,6 +1431,26 @@ async function getItemById(id: string) {
           : null
         paymentSourceList.value = [paymentSourceTemp]
         item.value.paymentSource = paymentSourceTemp
+
+        if (response?.paymentSource && response?.paymentSource?.expense) {
+          const decimalSchema = z.object(
+            {
+              bankAccount: z
+                .object({}).nullable(),
+            },
+          )
+          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
+        }
+        else {
+          const decimalSchema = z.object(
+            {
+              bankAccount: validateEntityStatus('bank account'),
+            },
+          )
+          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
+        }
       }
       // debugger
       // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
@@ -1859,6 +1897,7 @@ async function updateItem(item: { [key: string]: any }) {
   // delete payload.bankAccount
   const id = route?.query?.id.toString()
   await GenericService.update(confApi.moduleApi, confApi.uriApi, id || '', payload)
+  toast.add({ severity: 'info', summary: 'Updated', detail: `The payment Id ${item.paymentId} was updated successfully`, life: 10000 })
   hasBeenEdited.value += 1
 }
 
@@ -3148,14 +3187,17 @@ function disableAgency(data: any) {
   if (data.client === null) {
     result = true
   }
-  else if (data.paymentBalance <= 0) { // Esta validacion es nueva, solo estaba comprobando por el paymentStatus.confirmed
+  else if (data.paymentBalance <= 0 && idItem.value !== '') { // Esta validacion es nueva, solo estaba comprobando por el paymentStatus.confirmed
     result = true
   }
-  else if (data.paymentStatus.confirmed === true) {
+  else if (data.paymentStatus.confirmed === true && idItem.value !== '') {
     result = false
   }
-  else {
+  else if (idItem.value !== '') {
     result = true
+  }
+  else {
+    result = false
   }
 
   return result
@@ -3257,14 +3299,14 @@ onMounted(async () => {
     <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       {{ formTitle }}
     </div>
-    <div class="card p-4">
+    <div class="card px-2 pb-2 pt-4 m-0">
       <EditFormV2
         :key="formReload"
         ref="refForm"
         :fields="fields"
         :item="item"
         :show-actions="false"
-        container-class="grid pt-3"
+        container-class="grid"
         :loading-save="loadingSaveAll"
         :loading-delete="loadingDelete"
         :force-save="forceSave"
@@ -3273,34 +3315,12 @@ onMounted(async () => {
         @submit="handleSave($event)"
         @delete="requireConfirmationToDelete($event)"
       >
-        <template #field-paymentAmount="{ item: data, onUpdate, fields: listFields, field }">
-          <InputNumber
-            v-if="!loadingSaveAll"
-            v-model="data.paymentAmount"
-            show-clear
-            mode="decimal"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
-            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
-            :readonly="idItem !== ''"
-            :min-fraction-digits="2"
-            :max-fraction-digits="4"
-            @update:model-value="($event) => {
-              onUpdate('paymentAmount', $event)
-              if (idItem === '' && paymentDetailsList.length === 0) {
-                onUpdate('notIdentified', $event)
-                onUpdate('paymentBalance', $event)
-              }
-            }"
-          />
-          <Skeleton v-else height="2rem" class="mb-2" />
-        </template>
-
         <template #field-paymentStatus="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             item-value="id"
             :model="data.paymentStatus"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled"
@@ -3359,12 +3379,34 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
+        <template #field-paymentAmount="{ item: data, onUpdate, fields: listFields, field }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.paymentAmount"
+            show-clear
+            mode="decimal"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
+            :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
+            :readonly="idItem !== ''"
+            :min-fraction-digits="2"
+            :max-fraction-digits="4"
+            @update:model-value="($event) => {
+              onUpdate('paymentAmount', $event)
+              if (idItem === '' && paymentDetailsList.length === 0) {
+                onUpdate('notIdentified', $event)
+                onUpdate('paymentBalance', $event)
+              }
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
+
         <template #field-client="{ item: data, onUpdate, fields: listFields, field }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             item-value="id"
             :model="data.client"
             :suggestions="[...clientList]"
@@ -3413,7 +3455,7 @@ onMounted(async () => {
             v-if="!loadingSaveAll"
             id="autocomplete"
             field="name"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             item-value="id"
             :model="data.paymentSource"
             :suggestions="[...paymentSourceList]"
@@ -3465,7 +3507,7 @@ onMounted(async () => {
           <Calendar
             v-if="!loadingSaveAll"
             v-model="data.transactionDate"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             date-format="yy-mm-dd"
             :max-date="new Date()"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
@@ -3481,7 +3523,7 @@ onMounted(async () => {
             v-if="!loadingSaveAll"
             id="autocomplete"
             :key="formReloadAgency"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             field="name"
             item-value="id"
             :model="data.agency"
@@ -3521,7 +3563,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             :model="data.hotel"
             :suggestions="[...hotelList]"
             :disabled="listFields.find((f: FieldDefinitionType) => f.field === field)?.disabled || false"
@@ -3574,7 +3616,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             :model="data.bankAccount"
             :disabled="disableBankAccount(data)"
             :suggestions="[...bankAccountList]"
@@ -3612,7 +3654,7 @@ onMounted(async () => {
             id="autocomplete"
             field="name"
             item-value="id"
-            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : undefined"
+            :tabindex="listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== undefined && listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex !== null ? listFields.find((f: FieldDefinitionType) => f.field === field)?.tabIndex : 0"
             :disabled="true"
             :model="data.attachmentStatus"
             :suggestions="[...attachmentStatusList]"
@@ -3657,7 +3699,12 @@ onMounted(async () => {
       @update:clicked-item="rowSelected($event)"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @on-row-right-click="onRowContextMenu($event)"
+      @on-row-right-click="($event) => {
+        if (isCancelledPayment) {
+          return
+        }
+        onRowContextMenu($event)
+      }"
       @on-row-double-click="openDialogPaymentDetailsEdit($event)"
     >
       <template #datatable-footer>
@@ -3705,7 +3752,7 @@ onMounted(async () => {
     </DynamicTable>
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
-        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
+        <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="isCancelledPayment" :loading="loadingSaveAll" @click="forceSave = true" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SUMMARY']">
         <Button v-tooltip.top="'Deposit Summary'" :disabled="!enableDepositSummaryAction" class="w-3rem ml-1" @click="dialogPaymentDetailSummary">
@@ -3719,7 +3766,7 @@ onMounted(async () => {
         </Button>
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DEPOSIT-TRANSFER']">
-        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || item.paymentBalance <= 0" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
+        <Button v-tooltip.top="'Deposit Transfer'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || item.paymentBalance <= 0 || isCancelledPayment" icon="pi pi-lock" @click="openDialogPaymentDetailsByAction(idItemDetail, 'deposit-transfer')" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SPLIT-ANTI']">
         <Button v-tooltip.top="'Split ANTI'" class="w-3rem ml-1" :disabled="!enableSplitAction" @click="openDialogPaymentDetailsByAction(idItemDetail, 'split-deposit')">
@@ -3743,7 +3790,7 @@ onMounted(async () => {
         <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:IMPORT-EXCEL']">
-        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" icon="pi pi-file-import" @click="openDialogImportExcel(idItem)" />
+        <Button v-tooltip.top="'Import from Excel'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === '' || isCancelledPayment" icon="pi pi-file-import" @click="openDialogImportExcel(idItem)" />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY']">
         <Button v-tooltip.top="'Show History'" class="w-3rem ml-1" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openDialogStatusHistory">
@@ -3756,7 +3803,14 @@ onMounted(async () => {
       </IfCan>
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
-        <Button v-tooltip.top="'Add New Detail'" class="w-3rem ml-1" icon="pi pi-plus" :disabled="idItem === null || idItem === undefined || idItem === ''" severity="primary" @click="openDialogPaymentDetails($event)" />
+        <Button
+          v-tooltip.top="'Add New Detail'"
+          class="w-3rem ml-1"
+          icon="pi pi-plus"
+          :disabled="idItem === null || idItem === undefined || idItem === '' || isCancelledPayment"
+          severity="primary"
+          @click="openDialogPaymentDetails($event)"
+        />
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
         <Button v-tooltip.top="'Annular'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-ban" @click="requireConfirmationToDelete($event)" />
@@ -3780,8 +3834,15 @@ onMounted(async () => {
         @update:amount="amountOfDetailItem = $event"
       >
         <template #infoOfInvoiceToApply>
-          <div v-if="payloadToApplyPayment.invoiceNo">
-            <strong>Invoice to apply:</strong> {{ payloadToApplyPayment.invoiceNo }}
+          <div v-if="payloadToApplyPayment.invoiceNo" class="flex flex-column">
+            <div>
+              <strong>
+                Invoice to apply:
+              </strong> {{ payloadToApplyPayment.invoiceNo }}
+            </div>
+            <div>
+              <strong class="mt-2">Booking balance:</strong> {{ payloadToApplyPayment.amount }}
+            </div>
           </div>
         </template>
       </DialogPaymentDetailForm>

@@ -259,7 +259,6 @@ async function getAttach() {
 
     if (dataList.length > 0) {
       const attachId = dataList[0].id // Tomar solo el primer ID
-      console.log(attachId, 'resource id')
       return attachId // Devolver solo el ID
     }
     else {
@@ -296,7 +295,6 @@ async function getResource() {
     // Verificar si hay resultados
     if (dataList.length > 0) {
       const resourceId = dataList[0].id // Tomar solo el primer ID
-      console.log(resourceId, 'resource id')
       return resourceId // Devolver solo el ID
     }
     else {
@@ -356,6 +354,7 @@ async function getHotelList(query: string = '') {
 }
 
 async function reconcileManual() {
+  let response: any
   try {
     loadingSaveAll.value = true
 
@@ -381,12 +380,17 @@ async function reconcileManual() {
     const invoicesFromState = selectedElements.value
 
     // Llenar el array de facturas
-    if (invoicesFromState && Array.isArray(invoicesFromState)) {
-      payload.invoices = invoicesFromState // Asignar directamente
+    if (invoicesFromState && Array.isArray(invoicesFromState) && invoicesFromState.length > 0) {
+      if (typeof invoicesFromState[0] === 'object') {
+        payload.invoices = invoicesFromState.map((invoice: any) => invoice.id)
+      }
+      else {
+        payload.invoices = invoicesFromState // Asignar directamente
+      }
     }
 
     // Enviar el payload a la API
-    return await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
+    response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
   }
   catch (error: any) {
     console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage)
@@ -400,6 +404,7 @@ async function reconcileManual() {
   finally {
     loadingSaveAll.value = false
   }
+  return response
 }
 
 /*
@@ -450,6 +455,8 @@ async function saveItem() {
   let response: any
   try {
     response = await reconcileManual()
+    loadingSaveAll.value = false // Detener el loading en caso de error
+    options.value.loading = false
   }
   catch (error) {
     toast.add({
@@ -506,6 +513,7 @@ async function getErrors(errorsResponse: any) {
     listItems.value = [] // Limpiar la lista antes de agregar nuevos elementos
 
     const newListItems = errorsResponse.map((error: { invoiceId: any, message: any, agency: any, hotel: any, invoiceDate: any, status: any, invoiceNo: any, invoiceAmount: any }) => ({
+      id: error.invoiceId,
       invoiceId: error.invoiceId, // Asignar invoiceId
       hotel: error.hotel,
       agency: error.agency,
@@ -521,7 +529,6 @@ async function getErrors(errorsResponse: any) {
 
     // Llenar listItems con los nuevos errores
     listItems.value = newListItems
-
     return listItems
   }
   catch (error) {

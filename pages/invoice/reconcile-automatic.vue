@@ -950,10 +950,7 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2">
                         <label class="filter-label font-bold" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>

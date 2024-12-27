@@ -105,11 +105,9 @@ sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
       : ''
 
 const payload = ref<IQueryRequest>({
-  filter: [
-
-  ],
+  filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -129,34 +127,55 @@ const pagination = ref<IPagination>({
 
 async function getList() {
   try {
+    if (options.value.loading) { return }
+
+    options.value.loading = true
     // payload.value = { ...payload.value, query: idItem.value }
-    const staticPayload = [{
-      key: 'invoiceStatus',
-      operator: 'IN',
-      value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
-      logicalOperation: 'AND'
-    }, {
-      key: 'agency.sentB2BPartner.b2bPartnerType.code',
-      operator: 'EQUALS',
-      value: type.toString(),
-      logicalOperation: 'AND'
-    }, {
-      key: 'invoiceAmount',
-      operator: 'GREATER_THAN',
-      value: '0',
-      logicalOperation: 'AND'
-    }, {
-      key: 'dueAmount',
-      operator: 'GREATER_THAN',
-      value: '0',
-      logicalOperation: 'AND'
-    }]
+    const staticPayload = [
+      {
+        key: 'invoiceStatus',
+        operator: 'IN',
+        value: filterAllDateRange.value ? ['SENT'] : ['RECONCILED'],
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'agency.sentB2BPartner.b2bPartnerType.code',
+        operator: 'EQUALS',
+        value: type.toString(),
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'agency.status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      },
+      {
+        key: 'cloneParent',
+        operator: 'EQUALS',
+        value: false,
+        logicalOperation: 'OR'
+      },
+      {
+        key: 'invoiceAmount',
+        operator: 'GREATER_THAN',
+        value: '0',
+        logicalOperation: 'OR'
+      },
+    // {
+    //   key: 'dueAmount',
+    //   operator: 'GREATER_THAN',
+    //   value: '0',
+    //   logicalOperation: 'AND'
+    // }
+    ]
     payload.value.filter = [...payload.value.filter, ...staticPayload]
 
     listItems.value = []
     clickedItem.value = []
     const newListItems = []
     const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
+
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
     pagination.value.limit = size
@@ -198,6 +217,10 @@ async function getList() {
   }
   catch (error) {
     console.error('Error loading file:', error)
+    options.value.loading = false
+  }
+  finally {
+    options.value.loading = false
   }
 }
 
@@ -348,15 +371,8 @@ function onSortField(event: any) {
   }
 }
 
-function searchAndFilter() {
-  payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
+async function searchAndFilter() {
+  payload.value.filter = []
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     // newPayload.filter = [{
     payload.value.filter = [...payload.value.filter, {
@@ -482,6 +498,7 @@ async function send() {
   loadingSaveAll.value = true
   options.value.loading = true
   let completed = false
+  const count = clickedItem.value.length
   try {
     if (!clickedItem.value) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Please select at least one item', life: 10000 })
@@ -501,7 +518,7 @@ async function send() {
   finally {
     options.value.loading = false
     if (completed) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoices sent successfully', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 10000 })
       if (clickedItem.value.length === listItems.value.length) {
         clickedItem.value = []
         navigateTo('/invoice')
@@ -521,17 +538,17 @@ const disabledSearch = computed(() => {
   return false
 })
 
-watch(payloadOnChangePage, (newValue) => {
+watch(payloadOnChangePage, async (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
 
-  getList()
+  await searchAndFilter()
 })
 
 onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
-  await getList()
+  await searchAndFilter()
 })
 </script>
 
@@ -629,10 +646,7 @@ onMounted(async () => {
                       <div class="flex align-items-center gap-2">
                         <label class="filter-label font-bold ml-1" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>

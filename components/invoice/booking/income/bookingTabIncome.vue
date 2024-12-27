@@ -311,8 +311,26 @@ const Fields = ref<Array<Container>>([
         dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The Hotel Booking No. field is required').regex(/^[IG] +\d+ +\d{1,}\s*$/, 'The Hotel Booking No. field has an invalid format')
+        validation: z.string()
+        .superRefine((value, ctx) => {
+          // Validar si está vacío
+          if (!value.trim()) {
+            ctx.addIssue({
+              code: 'custom',
+              message: 'The Hotel Booking No. field is required',
+            });
+            return; // Detiene más validaciones
+          }
 
+          // Validar el formato
+          const regex = /^[IG]\s+\d+\s+\d+\s*$/;
+          if (!regex.test(value)) {
+            ctx.addIssue({
+              code: 'custom',
+              message: 'The Hotel Booking No. field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44',
+            });
+          }
+        }),
       },
       {
         field: 'checkOut',
@@ -1603,7 +1621,20 @@ const computedShowMenuItemAddRoomRate = computed(() => {
   })
 
 function onRowRightClick(event: any) {
-  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {  
+  let bookingAmount = 0
+  let bookingBalance = 0
+  if (typeof event.data?.invoiceAmount === 'string') {
+    bookingAmount = Number(event.data?.invoiceAmount.replace(/,/g, ''))
+  } else {
+    bookingAmount = event.data?.invoiceAmount
+  }
+  if (typeof event.data?.dueAmount === 'string') {
+    bookingBalance = Number(event.data?.dueAmount.replace(/,/g, ''))
+  } else {
+    bookingBalance = event.data?.dueAmount
+  }
+
+  if ((route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) && bookingAmount !== bookingBalance) {  
     menuModel.value = [
       {
         label: 'Payment Details Applied',
@@ -1613,7 +1644,7 @@ function onRowRightClick(event: any) {
     ]
   }
 
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED && bookingAmount !== bookingBalance) {
     menuModel.value = [
       {
         label: 'Payment Details Applied',
@@ -1624,7 +1655,9 @@ function onRowRightClick(event: any) {
   }
 
   selectedBooking.value = event.data
-  bookingContextMenu.value.show(event.originalEvent)
+  if (menuModel.value.length > 0) {
+    bookingContextMenu.value.show(event.originalEvent)
+  }
 }
 
 function onCellEditComplete(val: any) {
@@ -1792,27 +1825,27 @@ onMounted(() => {
 
   
   menuModel.value = [
-    {
-      label: 'Add Room Rate',
-      command: () => props.openRoomRateDialog(selectedBooking.value),
-      disabled: computedShowMenuItemAddRoomRate
-    },
+    // {
+    //   label: 'Add Room Rate',
+    //   command: () => props.openRoomRateDialog(selectedBooking.value),
+    //   disabled: computedShowMenuItemAddRoomRate
+    // },
     // {
     //   label: 'Edit booking',
     //   command: () => openEditBooking(selectedBooking.value),
     //   disabled: computedShowMenuItemEditBooking
     // },
     // Esto es solo para pruebas
-    {
-      label: 'Edit booking',
-      command: () => newOpenEditBooking(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
-    },
-    {
-      label: 'Payment Details Applied',
-      command: () => openModalPaymentDetail(selectedBooking.value),
-      disabled: computedShowMenuItemEditBooking
-    },
+    // {
+    //   label: 'Edit booking',
+    //   command: () => newOpenEditBooking(selectedBooking.value),
+    //   disabled: computedShowMenuItemEditBooking
+    // },
+    // {
+    //   label: 'Payment Details Applied',
+    //   command: () => openModalPaymentDetail(selectedBooking.value),
+    //   disabled: computedShowMenuItemEditBooking
+    // },
   ]
 
   if (route.query.type === InvoiceType.CREDIT || props.invoiceObj?.invoiceType?.id === InvoiceType.CREDIT) {

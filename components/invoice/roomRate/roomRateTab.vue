@@ -728,8 +728,8 @@ async function deleteRoomRate(id: string) {
 async function saveRoomRate(item: { [key: string]: any }) {
   if (!props.isCreationDialog) {
     await props.getInvoiceHotel(props.invoiceObj?.hotel?.id)
-
-    if (props.requiresFlatRate && item.hotelAmount <= 0) {
+    const hotelAmount = props?.bookingObj?.hotelAmount ? Number(props?.bookingObj?.hotelAmount) : 0
+    if (props.requiresFlatRate && item.hotelAmount <= 0 && hotelAmount === 0) {
       return toast.add({ severity: 'error', summary: 'Error', detail: 'The Hotel amount field must be greater than 0 for this hotel', life: 10000 })
     }
   }
