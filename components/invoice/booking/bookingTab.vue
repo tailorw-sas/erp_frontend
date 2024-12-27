@@ -2001,6 +2001,8 @@ onMounted(() => {
       :require-confirmation-to-delete="requireConfirmationToDeleteBooking"
       :header="isCreationDialog || !idItem ? 'New Booking' : 'Edit Booking'" 
       :close-dialog="() => {
+        console.log('Se ha ceerrado el modal');
+        
         ClearForm()
         closeDialog()
       }" 

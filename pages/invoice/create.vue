@@ -1308,6 +1308,10 @@ watch(invoiceAmount, () => {
   }
 })
 
+function onCloseDialog() {
+  bookingDialogOpen.value = false
+}
+
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getInvoiceTypeList()
@@ -1331,7 +1335,6 @@ onMounted(async () => {
       : "" }}
   </div>
   <div class="pt-3">
-    <!-- <pre>{{ reactiveItem }}</pre> -->
     <EditFormV2
       :key="formReload"
       :fields="route.query.type === InvoiceType.CREDIT ? CreditFields : Fields"
@@ -1457,7 +1460,7 @@ onMounted(async () => {
             :get-invoice-hotel="getInvoiceHotel"
             :invoice-obj-amount="invoiceAmount"
             :is-dialog-open="bookingDialogOpen"
-            :close-dialog="() => { bookingDialogOpen = false }"
+            :close-dialog="onCloseDialog"
             :open-dialog="handleDialogOpen"
             :selected-booking="selectedBooking"
             :open-adjustment-dialog="openAdjustmentDialog"
