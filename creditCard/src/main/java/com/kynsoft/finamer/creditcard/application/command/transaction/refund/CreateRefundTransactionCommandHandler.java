@@ -72,11 +72,11 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
         double parentAmountAndCommandAmount =  service.findSumOfAmountByParentId(parentTransaction.getId()) + command.getAmount();
         ManageVCCTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByRefund();
-        if (transactionTypeDto != null && transactionTypeDto.getNegative()){
-            amount = -command.getAmount();
-            commission = -commission;
-            netAmount = -netAmount;
-        }
+//        if (transactionTypeDto != null && transactionTypeDto.getNegative()){
+//            amount = -command.getAmount();
+//            commission = -commission;
+//            netAmount = -netAmount;
+//        }
         TransactionDto transactionDto = this.service.create(new TransactionDto(
                 UUID.randomUUID(),
                 parentTransaction.getMerchant(),
