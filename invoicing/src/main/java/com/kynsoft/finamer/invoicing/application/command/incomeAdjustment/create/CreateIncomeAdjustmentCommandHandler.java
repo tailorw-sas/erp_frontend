@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -30,18 +31,21 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
     private final IManageInvoiceService service;
     private final IManageEmployeeService employeeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public CreateIncomeAdjustmentCommandHandler(IManagePaymentTransactionTypeService transactionTypeService,
                                                 IInvoiceCloseOperationService closeOperationService,
                                                 IManageBookingService bookingService,
                                                 IManageAdjustmentService manageAdjustmentService,
-                                                IManageInvoiceService service, IManageEmployeeService employeeService) {
+                                                IManageInvoiceService service, IManageEmployeeService employeeService,
+                                                ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.transactionTypeService = transactionTypeService;
         this.closeOperationService = closeOperationService;
         this.bookingService = bookingService;
         this.manageAdjustmentService = manageAdjustmentService;
         this.service = service;
         this.employeeService = employeeService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
@@ -159,6 +163,10 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
         // this.manageAdjustmentService.create(adjustmentDtos);
         this.service.update(incomeDto);
+//        try {
+//            this.producerReplicateManageInvoiceService.create(incomeDto, null);
+//        } catch (Exception e) {
+//        }
         // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
         // this.service.calculateInvoiceAmount(updatedIncome);
     }

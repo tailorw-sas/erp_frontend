@@ -35,6 +35,7 @@ public class CreateIncomeTransactionKafka {
     private String remark;
 
     private UUID relatedPaymentDetail;
+    private ReplicatePaymentKafka paymentKafka;
 
 }
 
