@@ -46,6 +46,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private final IManageInvoiceStatusService manageInvoiceStatusService;
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
+    private final IManageEmployeeService employeeService;
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
                                           IManageHotelService manageHotelService,
@@ -57,7 +58,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
                                           IManageInvoiceStatusService manageInvoiceStatusService,
                                           IManageInvoiceTypeService iManageInvoiceTypeService,
-                                          IInvoiceStatusHistoryService invoiceStatusHistoryService) {
+                                          IInvoiceStatusHistoryService invoiceStatusHistoryService, IManageEmployeeService employeeService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
@@ -70,6 +71,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         this.manageInvoiceStatusService = manageInvoiceStatusService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
+        this.employeeService = employeeService;
     }
 
     @Override
@@ -270,7 +272,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         manageInvoice,
                         "The invoice data was inserted.",
                         LocalDateTime.now(),
-                        employee,
+                        this.employeeService.getEmployeeFullName(employee),
                         EInvoiceStatus.PROCECSED,
                         0L
                 )

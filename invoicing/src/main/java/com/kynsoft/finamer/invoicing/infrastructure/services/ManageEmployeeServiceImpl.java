@@ -73,6 +73,19 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         return getPaginatedResponse(data);
     }
 
+    @Override
+    public String getEmployeeFullName(String employee) {
+        String employeeFullName = "";
+        try {
+            ManageEmployeeDto employeeDto = findById(UUID.fromString(employee));
+            employeeFullName = employeeDto.getFirstName() + " " + employeeDto.getLastName();
+        } catch (Exception e) {
+            e.printStackTrace();
+            employeeFullName = employee;
+        }
+        return employeeFullName;
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 
