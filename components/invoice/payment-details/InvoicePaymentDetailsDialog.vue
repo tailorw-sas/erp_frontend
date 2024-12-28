@@ -59,7 +59,7 @@ const payloadOnChangePagePayments = ref<PageState>()
 const columnsPayments = ref<IColumn[]>([
   { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  // { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '140px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '140px', sortable: true, showFilter: true },
@@ -112,16 +112,19 @@ async function getPaymentDetailList() {
     optionsOfTablePayments.value.loading = true
     listPaymentDetails.value = []
     const newListItems = []
-    payloadPayments.value.filter = []
-    const filter: FilterCriteria[] = [
-      {
+
+    const filterPaymentDetail = payloadPayments.value.filter.find(item => item.key === 'manageBooking.invoice.id')
+    if (filterPaymentDetail) {
+      filterPaymentDetail.value = props.selectedInvoice.id
+    }
+    else {
+      payloadPayments.value.filter.push({
         key: 'manageBooking.invoice.id',
-        logicalOperation: 'AND',
         operator: 'EQUALS',
         value: props.selectedInvoice.id,
-      },
-    ]
-    payloadPayments.value.filter = [...payloadPayments.value.filter, ...filter]
+        logicalOperation: 'AND'
+      })
+    }
 
     const response = await GenericService.search(optionsOfTablePayments.value.moduleApi, optionsOfTablePayments.value.uriApi, payloadPayments.value)
 
@@ -211,6 +214,17 @@ async function onRowDoubleClickInDataTable(item: any) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsPayments.value)
+
+  const objFilterPaymentId = parseFilter?.find((item: IFilter) => item?.key === 'paymentNo')
+  if (objFilterPaymentId) {
+    objFilterPaymentId.key = 'payment.paymentId'
+  }
+
+  const objFilterFullName = parseFilter?.find((item: IFilter) => item?.key === 'fullName')
+  if (objFilterFullName) {
+    objFilterFullName.key = 'manageBooking.fullName'
+  }
+
   payloadPayments.value.filter = [...payloadPayments.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadPayments.value.filter = [...payloadPayments.value.filter, ...parseFilter || []]
   await getPaymentDetailList()
@@ -218,6 +232,12 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'paymentNo') {
+      event.sortField = 'payment.paymentId'
+    }
+    if (event.sortField === 'fullName') {
+      event.sortField = 'manageBooking.fullName'
+    }
     payloadPayments.value.sortBy = event.sortField
     payloadPayments.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
