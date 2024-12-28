@@ -107,13 +107,13 @@ public class ConsumerCreateIncomeTransactionService {
                 objKafka.getReSend(),
                 objKafka.getReSendDate(),
                 objKafka.getInvoiceStatus(),
-                objKafka.getEmployee(), null);
+                objKafka.getEmployeeId().toString(), null);
     }
 
     private CreateIncomeAdjustmentCommand createIncomeAdjustmentCommand(CreateIncomeTransactionKafka objKafka) {
         return new CreateIncomeAdjustmentCommand(Status.valueOf(objKafka.getStatusAdjustment()),
                 objKafka.getId(),
-                objKafka.getEmployeeAdjustment(),
+                objKafka.getEmployeeId().toString(),
                 List.of(createAdjustmentRequest(objKafka)));
     }
 

@@ -79,14 +79,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         );
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
-        try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
-        } catch (Exception e) {
-            employeeFullName = command.getEmployee();
-        }
+
         for (NewIncomeAdjustmentRequest adjustment : command.getAdjustments()) {
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
@@ -109,7 +102,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     null,
                     paymentTransactionTypeDto,
                     null,
-                    employeeFullName,
+                    this.employeeService.getEmployeeFullName(command.getEmployee()),
                     false
             ));
             invoiceAmount += adjustment.getAmount();
