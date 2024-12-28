@@ -191,7 +191,7 @@ async function importFile() {
     formData.append('file', file)
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_INVOICE_IMPORT_TYPE.NO_VIRTUAL)
-    formData.append('employee', userData?.value?.user?.name || '')
+    formData.append('employee', userData?.value?.user?.userId || '')
     await GenericService.importFile(confApi.moduleApi, confApi.uriApi, formData)
   }
   catch (error: any) {
