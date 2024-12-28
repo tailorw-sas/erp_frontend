@@ -661,8 +661,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
-    payload.employee = userData?.value?.user?.userId
-    payload.employeeId = userData?.value?.user?.userId
+    payload.employee = userData?.data?.userId
 
     let totalIncomeAmount = 0
     if (Array.isArray(payload.incomeAmount)) {
@@ -819,7 +818,7 @@ async function createInvoiceAdjustment(item: { [key: string]: any }) {
       loadingSaveAdjustment.value = true
       const payload: { [key: string]: any } = { ...item }
       payload.amount = Number.parseFloat(payload.amount)
-      payload.employee = userData?.value?.user?.name
+      payload.employee = userData?.data?.userId
       payload.paymentTransactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
       payload.description = item.remark
       payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
