@@ -156,10 +156,10 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
         // this.manageAdjustmentService.create(adjustmentDtos);
         this.service.update(incomeDto);
-//        try {
-//            this.producerReplicateManageInvoiceService.create(incomeDto, null);
-//        } catch (Exception e) {
-//        }
+        try {
+            this.producerReplicateManageInvoiceService.create(incomeDto, null);
+        } catch (Exception e) {
+        }
         // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
         // this.service.calculateInvoiceAmount(updatedIncome);
     }
