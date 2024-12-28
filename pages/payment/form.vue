@@ -373,7 +373,7 @@ const columns: IColumn[] = [
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
-  { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
+  { field: 'childrens', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
   { field: 'amount', header: 'Detail. Amount', tooltip: 'Detail Amount', width: 'auto', type: 'number' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
