@@ -47,7 +47,6 @@ public class PaymentBankRow extends Row implements Serializable {
         paymentDto.setDepositBalance(0.0);
         paymentDto.setOtherDeductions(0.0);
         paymentDto.setApplied(0.0);
-        paymentDto.setNotApplied(this.amount);
         paymentDto.setRemark(this.remarks);
         try {
             paymentDto.setTransactionDate(DateUtil.parseDateToLocalDate(this.transactionDate, "dd/MM/yyyy"));
