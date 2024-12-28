@@ -104,13 +104,10 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
         Double paymentAmount = command.getInvoiceDto().getInvoiceAmount() * -1;
         double applied = 0.0;
-        double notApplied = 0.0 ;
         if (hotelDto.getAutoApplyCredit()) {// no aplica los apply deposit
             applied = 0.0;
-            notApplied = paymentAmount;
         } else {// aplica los apply deposit
             applied = paymentAmount;
-            notApplied = 0.0;
         }
         PaymentDto paymentDto = new PaymentDto(
                 UUID.randomUUID(),
@@ -138,7 +135,7 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 */
                 0.0,
                 paymentAmount,
-                notApplied,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
+                0.0, //Siempre es cero para este caso
                 applied,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
