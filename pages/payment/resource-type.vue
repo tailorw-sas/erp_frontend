@@ -434,7 +434,7 @@ onMounted(() => {
     <h5 class="mb-0">
       {{ options.tableName }}
     </h5>
-    <IfCan :perms="['ACCOUNT-TYPE:CREATE']">
+    <IfCan :perms="['PAYMENT-MANAGEMENT-RESOURCE-TYPE:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
