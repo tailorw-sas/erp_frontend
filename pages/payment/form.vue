@@ -44,6 +44,7 @@ const loadingDelete = ref(false)
 const loadingPrintDetail = ref(false)
 
 const disabledBtnDelete = ref(true)
+const isExistPaymentDetail = ref(false)
 
 const forceSave = ref(false)
 const submitEvent = new Event('')
@@ -1324,8 +1325,6 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      console.log(response)
-
       if (response) {
         item.value.id = id
         item.value.paymentId = response.paymentId
@@ -1344,6 +1343,7 @@ async function getItemById(id: string) {
         item.value.identified = formatToTwoDecimalPlaces(response.identified)
         item.value.notIdentified = formatToTwoDecimalPlaces(response.notIdentified)
         item.value.remark = response.remark
+        isExistPaymentDetail.value = response.existDetails
 
         const clientTemp = response.client
           ? {
@@ -3248,7 +3248,7 @@ watch(() => paymentDetailsList.value, (newValue) => {
   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
 
   // paymentDetailsList.value.length === 0 && item.value.paymentStatus.cancelled === false  Esto es lo que va
-  if (paymentDetailsList.value.length === 0 && (item.value.paymentStatus.code !== 'CAN' || item.value.paymentStatus.name !== 'CAN - Cancelled')) {
+  if (isExistPaymentDetail.value === false && (item.value.paymentStatus.code !== 'CAN' || item.value.paymentStatus.name !== 'CAN - Cancelled')) {
     updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
   }
   else {
