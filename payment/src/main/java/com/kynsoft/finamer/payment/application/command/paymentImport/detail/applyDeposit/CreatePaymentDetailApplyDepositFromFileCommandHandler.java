@@ -3,6 +3,8 @@ package com.kynsoft.finamer.payment.application.command.paymentImport.detail.app
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -78,9 +80,10 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         //UpdateIfNotNull.updateDouble(paymentUpdate::setPaymentBalance, paymentUpdate.getPaymentBalance() + (- paymentDetailDto.getAmount()), updatePayment::setUpdate);
 
         UpdateIfNotNull.updateDouble(paymentUpdate::setDepositBalance, paymentUpdate.getDepositBalance() - command.getAmount(), updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentUpdate::setNotApplied, paymentUpdate.getNotApplied() + command.getAmount(), updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentUpdate::setIdentified, paymentUpdate.getIdentified() + command.getAmount(), updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentUpdate::setNotIdentified, paymentUpdate.getPaymentAmount() - paymentUpdate.getIdentified(), updatePayment::setUpdate);
+        UpdateIfNotNull.updateDouble(paymentUpdate::setApplied, paymentUpdate.getApplied() + command.getAmount(), updatePayment::setUpdate);
+        //UpdateIfNotNull.updateDouble(paymentUpdate::setNotApplied, paymentUpdate.getNotApplied() + command.getAmount(), updatePayment::setUpdate);
+//        UpdateIfNotNull.updateDouble(paymentUpdate::setIdentified, paymentUpdate.getIdentified() + command.getAmount(), updatePayment::setUpdate);
+//        UpdateIfNotNull.updateDouble(paymentUpdate::setNotIdentified, paymentUpdate.getPaymentAmount() - paymentUpdate.getIdentified(), updatePayment::setUpdate);
 
         //TODO: Se debe de validar esta variable para que cumpla con el Close Operation
         OffsetDateTime transactionDate = OffsetDateTime.now(ZoneId.of("UTC"));
@@ -139,6 +142,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         createIncomeTransactionSuccessKafka.setRelatedPaymentDetail(paymentDetailDto.getId());
         createIncomeTransactionSuccessKafka.setStatusAdjustment(Status.ACTIVE.name());
         createIncomeTransactionSuccessKafka.setEmployeeId(employeeId);
+        createIncomeTransactionSuccessKafka.setPaymentKafka(new ReplicatePaymentKafka(paymentDto.getId(), paymentDto.getPaymentId(), new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getParentId())));
         producerCreateIncomeService.create(createIncomeTransactionSuccessKafka);
     }
 
