@@ -28,4 +28,5 @@ public class ManageHotelDto {
     private ManageCityStateDto manageCityState;
     private String city;
     private ManageCurrencyDto manageCurrency;
+    private Boolean applyByTradingCompany;
 }

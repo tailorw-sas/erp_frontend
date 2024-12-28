@@ -15,7 +15,6 @@ import com.kynsoft.finamer.settings.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageEmployee;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageEmployeeWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -145,7 +144,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
             List<String> permissions = new ArrayList<>();
             data.getManagePermissionList().forEach(permission -> permissions.add(permission.getCode()));
             return new UserMeResponse(data.getId(),data.getLoginName(),
-                   data.getEmail(), data.getLastName(),
+                   data.getEmail(), data.getFirstName(),
                    data.getLastName(), null, permissions);
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND, new ErrorField("id", "Manage Employee not found.")));

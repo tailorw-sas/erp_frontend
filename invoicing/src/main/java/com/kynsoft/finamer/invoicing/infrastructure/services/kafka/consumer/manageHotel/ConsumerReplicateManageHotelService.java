@@ -41,7 +41,8 @@ public class ConsumerReplicateManageHotelService {
                     objKafka.getBabelCode(),
                     objKafka.getAddress(),
                     objKafka.getCity(),
-                    objKafka.getManageCurrency()
+                    objKafka.getManageCurrency(),
+                    objKafka.getApplyByTradingCompany()
             );
             mediator.send(command);
 
