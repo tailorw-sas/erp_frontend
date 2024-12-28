@@ -43,7 +43,7 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
                 false
         );
 
-        newDetailDto.setApplyDepositValue(newDetailDto.getAmount());
+        newDetailDto.setApplyDepositValue(newDetailDto.getAmount() * -1);
         newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         newDetailDto.setCreateByCredit(command.isCreateByCredit());
 
