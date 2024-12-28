@@ -51,6 +51,7 @@ public class PaymentSearchResponse implements IResponse {
     private boolean applyPayment;
     private boolean paymentSupport;
     private boolean createByCredit;
+    private boolean existDetails;
 
     public PaymentSearchResponse(PaymentDto dto) {
         this.id = dto.getId();
@@ -79,6 +80,7 @@ public class PaymentSearchResponse implements IResponse {
         this.applyPayment = dto.isApplyPayment();
         this.paymentSupport = dto.isPaymentSupport();
         this.createByCredit = dto.isCreateByCredit();
+        this.existDetails = !dto.getPaymentDetails().isEmpty();
 
         this.hasAttachment = !dto.getAttachments().isEmpty();
         if (dto.getInvoice() != null) {

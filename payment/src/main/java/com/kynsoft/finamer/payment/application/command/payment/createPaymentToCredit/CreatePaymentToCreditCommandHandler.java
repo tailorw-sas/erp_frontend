@@ -123,8 +123,12 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 paymentAmount,
                 0.0,
                 0.0,
-                paymentAmount,
+                /*
+                *identified es cero y el notIdentified toma el valor del paymentAmount y su valor varia en paymentAmount - identified.
+                *identified es la suma de todos los cash, que para este payment siempre va a ser cero.
+                */
                 0.0,
+                paymentAmount,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
                 paymentAmount,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
@@ -197,7 +201,11 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 0.0,
                 0.0,
                 0.0,
-                paymentAmount,//Debe estar deshabilitado inicialmente y en 0. Sumatoria que tengan marcado check Cash en el Manage Payment Transaction Type
+                /**
+                 *Para este caso, el identified toma el valor del paymentAmount, dado que se crean cash por el valor total del payment Amount y
+                 * entonces el notIdentified se hace cero.
+                 **/
+                paymentAmount,
                 0.0,
                 0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
                 paymentAmount,

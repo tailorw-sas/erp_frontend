@@ -39,7 +39,7 @@ public class ConsumerCreateIncomeTransactionSuccess {
         this.serviceLocator = serviceLocator;
     }
 
-    @KafkaListener(topics = "finamer-create-income-transaction-success", groupId = "income-entity-replica")
+    @KafkaListener(topics = "finamer-create-income-transaction-success", groupId = "payment-entity-replica")
     public void listen(CreateIncomeTransactionSuccessKafka objKafka) {
             this.stablishRelationPaymentDetailsIncome(objKafka);
     }
