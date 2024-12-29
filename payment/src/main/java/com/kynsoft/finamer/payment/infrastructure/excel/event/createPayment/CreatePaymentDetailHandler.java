@@ -17,8 +17,16 @@ public class CreatePaymentDetailHandler implements ApplicationListener<CreatePay
 
     @Override
     public void onApplicationEvent(CreatePaymentDetailEvent event) {
-        CreatePaymentDetailCommand createPaymentDetailCommand = new CreatePaymentDetailCommand(Status.ACTIVE,event.getPayment(),
-                event.getTransactionType(),event.getAmount(),event.getRemark(),event.getEmployee(), null, false, mediator);
+        CreatePaymentDetailCommand createPaymentDetailCommand = new CreatePaymentDetailCommand(
+            Status.ACTIVE,event.getPayment(),
+            event.getTransactionType(),
+            event.getAmount(),
+            event.getRemark(),
+            event.getEmployee(),
+            event.getBooking(),
+            event.getApplyPayment(),
+            mediator
+            );
         mediator.send(createPaymentDetailCommand);
     }
 }

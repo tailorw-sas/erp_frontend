@@ -39,7 +39,7 @@ public class PaymentImportCache implements Serializable {
     private String coupon;
     private String invoiceNo;
     private String anti;
-
+    private String bookId;
 
     public PaymentImportCache(PaymentExpenseRow paymentExpenseRow) {
         this.importProcessId= paymentExpenseRow.getImportProcessId();
@@ -82,6 +82,7 @@ public class PaymentImportCache implements Serializable {
         this.coupon=paymentRow.getCoupon();
         this.invoiceNo= String.valueOf(paymentRow.getInvoiceNo());
         this.transactionId=paymentRow.getTransactionType();
+        this.bookId = paymentRow.getBookId();
     }
 
 }

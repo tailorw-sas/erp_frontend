@@ -4,6 +4,7 @@ import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
+import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
@@ -23,6 +24,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     private PaymentDetailsNoApplyDepositValidator paymentDetailsNoApplyDepositValidator;
 
     private PaymentDetailExistPaymentValidator paymentDetailExistPaymentValidator;
+    private PaymentDetailsBookingFieldValidator paymentDetailsBookingFieldValidator;
 
     private PaymentDetailBelongToSamePayment paymentDetailBelongToSamePayment;
 
@@ -36,18 +38,21 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     private final PaymentImportCacheRepository paymentImportCacheRepository;
 
     private final IManagePaymentTransactionTypeService managePaymentTransactionTypeService;
+    private final IManageBookingService bookingService;
 
 
     public PaymentDetailValidatorFactory(ApplicationEventPublisher paymentEventPublisher, IPaymentService paymentService,
                                          IPaymentDetailService paymentDetailService,
                                          PaymentImportCacheRepository paymentImportCacheRepository,
-                                         IManagePaymentTransactionTypeService managePaymentTransactionTypeService
+                                         IManagePaymentTransactionTypeService managePaymentTransactionTypeService,
+                                         IManageBookingService bookingService
     ) {
         super(paymentEventPublisher);
         this.paymentService = paymentService;
         this.paymentDetailService = paymentDetailService;
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.managePaymentTransactionTypeService = managePaymentTransactionTypeService;
+        this.bookingService = bookingService;
     }
 
     @Override
@@ -58,12 +63,14 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentDetailBelongToSamePayment = new PaymentDetailBelongToSamePayment(applicationEventPublisher,paymentService);
         paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
         paymentTransactionIdValidator = new PaymentTransactionIdValidator(paymentDetailService, applicationEventPublisher);
+        paymentDetailsBookingFieldValidator = new PaymentDetailsBookingFieldValidator(applicationEventPublisher, bookingService);
 
     }
 
     @Override
     public boolean validate(PaymentDetailRow toValidate) {
         paymentDetailExistPaymentValidator.validate(toValidate,errorFieldList);
+        paymentDetailsBookingFieldValidator.validate(toValidate, errorFieldList);
         this.validatePaymentAmount(toValidate);
         paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList);
         this.validateAsAntiToIncome(toValidate);
