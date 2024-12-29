@@ -39,7 +39,7 @@ public class ProducerReplicateManageInvoiceService {
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(entity.getId());
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
             if (invoiceDto.getBookings() != null) {
-                for (ManageBookingDto booking : entity.getBookings()) {
+                for (ManageBookingDto booking : invoiceDto.getBookings()) {
                     bookingKafkas.add(new ManageBookingKafka(
                             booking.getId(),
                             booking.getBookingId(),
