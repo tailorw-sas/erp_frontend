@@ -1,7 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.event.applyDeposit;
 
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.applyDeposit.CreatePaymentDetailApplyDepositFromFileCommand;
 import org.springframework.context.ApplicationListener;
@@ -23,7 +22,19 @@ public class ApplyDepositEventHandler implements ApplicationListener<ApplyDeposi
             mediator.send(createPaymentDetailApplyDepositCommand);
         }else{
             CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand = (CreatePaymentDetailApplyDepositCommand) event.getSource();
-            mediator.send(createPaymentDetailApplyDepositCommand);
+            CreatePaymentDetailApplyDepositCommand newEvent = new CreatePaymentDetailApplyDepositCommand(
+                createPaymentDetailApplyDepositCommand.getStatus(),
+                createPaymentDetailApplyDepositCommand.getPaymentDetail(),
+                createPaymentDetailApplyDepositCommand.getTransactionType(),
+                createPaymentDetailApplyDepositCommand.getAmount(),
+                createPaymentDetailApplyDepositCommand.getRemark(),
+                createPaymentDetailApplyDepositCommand.getEmployee(),
+                createPaymentDetailApplyDepositCommand.getTransactionTypeForAdjustment(),
+                createPaymentDetailApplyDepositCommand.getBooking(),
+                createPaymentDetailApplyDepositCommand.getApplyPayment(),
+                mediator
+            );
+            mediator.send(newEvent);
         }
 
     }
