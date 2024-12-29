@@ -145,10 +145,7 @@ public class ReconcileAutomaticInvoiceValidator {
     private boolean validateNightType(String nightType, ManageBookingDto manageBookingDto, List<ErrorField> errors) {
         if (!nightTypeService.existNightTypeByCode(nightType)) {
             try {
-                CreateManageNightTypeCommand command = createManageNightTypeCommand(nightType);
-                IMediator mediator = serviceLocator.getBean(IMediator.class);
-                mediator.send(command);
-                this.producerReplicateManageNightTypeService.create(replicateManageNightTypeKafka(command));
+                createNightType(nightType, manageBookingDto);
             } catch (Exception e){
                 errors.add(new ErrorField("Night Type", "The night type could not be created."));
                 return false;
@@ -200,5 +197,13 @@ public class ReconcileAutomaticInvoiceValidator {
                 command.getName(),
                 command.getStatus()
         );
+    }
+
+    private void createNightType(String nightType, ManageBookingDto manageBookingDto){
+        CreateManageNightTypeCommand command = createManageNightTypeCommand(nightType);
+        IMediator mediator = serviceLocator.getBean(IMediator.class);
+        mediator.send(command);
+        this.producerReplicateManageNightTypeService.create(replicateManageNightTypeKafka(command));
+        manageBookingDto.setNightType(this.nightTypeService.findByCode(nightType));
     }
 }
