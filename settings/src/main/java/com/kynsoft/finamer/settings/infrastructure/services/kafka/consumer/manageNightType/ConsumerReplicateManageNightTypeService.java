@@ -27,7 +27,7 @@ public class ConsumerReplicateManageNightTypeService {
                     objKafka.getCode(),
                     objKafka.getName(),
                     Status.valueOf(objKafka.getStatus()),
-                    "From invoice.");
+                    "Night type created by the automatic reconciliation process.");
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageNightTypeService.class.getName()).log(Level.SEVERE, null, ex);

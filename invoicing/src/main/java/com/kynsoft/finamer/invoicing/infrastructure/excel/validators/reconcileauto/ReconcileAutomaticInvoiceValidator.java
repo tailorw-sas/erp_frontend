@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto;
 
 import com.kynsof.share.core.application.excel.ExcelUtils;
+import com.kynsof.share.core.domain.exception.BusinessRuleValidationException;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageNightTypeKafka;
 import com.kynsof.share.core.domain.response.ErrorField;
@@ -146,8 +147,18 @@ public class ReconcileAutomaticInvoiceValidator {
         if (!nightTypeService.existNightTypeByCode(nightType)) {
             try {
                 createNightType(nightType, manageBookingDto);
+            } catch (BusinessRuleValidationException e) {
+                errors.add(new ErrorField("Night Type", "The night type could not be created. "+e.getMessage()));
+                return false;
             } catch (Exception e){
                 errors.add(new ErrorField("Night Type", "The night type could not be created."));
+                return false;
+            }
+        } else {
+            try{
+                manageBookingDto.setNightType(nightTypeService.findByCode(nightType));
+            } catch (Exception e) {
+                errors.add(new ErrorField("Night Type", "The night type could not be assigned."));
                 return false;
             }
         }
@@ -203,7 +214,7 @@ public class ReconcileAutomaticInvoiceValidator {
         CreateManageNightTypeCommand command = createManageNightTypeCommand(nightType);
         IMediator mediator = serviceLocator.getBean(IMediator.class);
         mediator.send(command);
-        this.producerReplicateManageNightTypeService.create(replicateManageNightTypeKafka(command));
         manageBookingDto.setNightType(this.nightTypeService.findByCode(nightType));
+        this.producerReplicateManageNightTypeService.create(replicateManageNightTypeKafka(command));
     }
 }
