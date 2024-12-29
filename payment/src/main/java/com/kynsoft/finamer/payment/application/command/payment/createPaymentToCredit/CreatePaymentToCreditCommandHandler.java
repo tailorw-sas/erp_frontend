@@ -17,6 +17,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.createPayme
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeDeposit.CreatePaymentDetailTypeDepositMessage;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -108,6 +109,9 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             applied = 0.0;
         } else {// aplica los apply deposit
             applied = paymentAmount;
+        }
+        if (command.getInvoiceDto().getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name())) {
+            applied = 0.0;
         }
         PaymentDto paymentDto = new PaymentDto(
                 UUID.randomUUID(),
