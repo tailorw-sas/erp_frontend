@@ -58,12 +58,20 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         if (update.getUpdate() > 0) {
             service.update(dto);
-            this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(dto.getId(),
-                    dto.getCode(), dto.getName(), dto.getClient().getId(), dto.getBookingCouponFormat(),
-                    dto.getStatus().name(), dto.getGenerationType().name(), dto.getAgencyType().getId(), dto.getCif(), dto.getAddress(),
-                    dto.getSentB2BPartner().getId(),
-                    dto.getCityState().getId(),
-                    dto.getCountry().getId(),
+            this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(
+                    dto.getId(),
+                    dto.getCode(),
+                    dto.getName(),
+                    dto.getClient() != null ? dto.getClient().getId() : null,
+                    dto.getBookingCouponFormat(),
+                    dto.getStatus().name(),
+                    dto.getGenerationType().name(),
+                    dto.getAgencyType() != null ? dto.getAgencyType().getId() : null,
+                    dto.getCif(),
+                    dto.getAddress(),
+                    dto.getSentB2BPartner() != null ? dto.getSentB2BPartner().getId() : null,
+                    dto.getCityState() != null ? dto.getCityState().getId() : null,
+                    dto.getCountry() != null ? dto.getCountry().getId() : null,
                     dto.getMailingAddress(),
                     dto.getZipCode(),
                     dto.getCity(),
