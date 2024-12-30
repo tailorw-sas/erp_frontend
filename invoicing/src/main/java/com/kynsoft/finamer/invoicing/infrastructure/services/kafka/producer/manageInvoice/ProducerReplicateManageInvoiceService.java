@@ -36,10 +36,10 @@ public class ProducerReplicateManageInvoiceService {
     @Async
     public void create(ManageInvoiceDto entity, UUID attachmentDefault) {
         try {
-            ManageInvoiceDto invoiceDto = this.invoiceService.findById(entity.getId());
+//            ManageInvoiceDto invoiceDto = this.invoiceService.findById(entity.getId());
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
-            if (invoiceDto.getBookings() != null) {
-                for (ManageBookingDto booking : invoiceDto.getBookings()) {
+            if (entity.getBookings() != null) {
+                for (ManageBookingDto booking : entity.getBookings()) {
                     bookingKafkas.add(new ManageBookingKafka(
                             booking.getId(),
                             booking.getBookingId(),

@@ -382,11 +382,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public void update(ManageInvoiceDto dto) {
+    public ManageInvoiceDto update(ManageInvoiceDto dto) {
         Invoice entity = new Invoice(dto);
         entity.setUpdatedAt(LocalDateTime.now());
 
-        repositoryCommand.save(entity);
+        return repositoryCommand.save(entity).toAggregate();
     }
 
     @Override
