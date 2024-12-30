@@ -425,7 +425,7 @@ onMounted(() => {
 <template>
   <div class="flex justify-content-between align-items-center mb-1">
     <h5 class="mb-0">
-      Manage Attachment Type
+      Manage Invoice Attachment Type
     </h5>
     <IfCan :perms="['ATTACHMENT-TYPE:CREATE']">
       <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
