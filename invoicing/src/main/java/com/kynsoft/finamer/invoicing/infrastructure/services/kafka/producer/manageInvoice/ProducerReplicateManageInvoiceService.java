@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,9 @@ public class ProducerReplicateManageInvoiceService {
     @Async
     public void create(ManageInvoiceDto entity, UUID attachmentDefault) {
         try {
-//            ManageInvoiceDto invoiceDto = this.invoiceService.findById(entity.getId());
+            if (entity.getInvoiceType().compareTo(EInvoiceType.INCOME) == 0){
+                entity = this.invoiceService.findById(entity.getId());
+            }
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
             if (entity.getBookings() != null) {
                 for (ManageBookingDto booking : entity.getBookings()) {
