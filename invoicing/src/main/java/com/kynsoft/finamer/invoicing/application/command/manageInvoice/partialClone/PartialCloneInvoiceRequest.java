@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,5 +20,5 @@ public class PartialCloneInvoiceRequest {
     private List<PartialCloneInvoiceAdjustmentRelation> roomRateAdjustments;
     private List<CreateAttachmentRequest> attachments;
     private String employee;
-
+    private LocalDateTime invoiceDate;
 }
