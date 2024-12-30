@@ -127,11 +127,11 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     }
 
     private void updateRelationships(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
-        updateEntity(dto::setAgencyType, command.getAgencyType(), dto.getAgencyType().getId(), agencyTypeService::findById, update::setUpdate);
-        updateEntity(dto::setCityState, command.getCityState(), dto.getCityState().getId(), cityStateService::findById, update::setUpdate);
+        updateEntity(dto::setAgencyType, command.getAgencyType(), dto.getAgencyType() != null ? dto.getAgencyType().getId() : null, agencyTypeService::findById, update::setUpdate);
+        updateEntity(dto::setCityState, command.getCityState(), dto.getCityState() != null ? dto.getCityState().getId() : null, cityStateService::findById, update::setUpdate);
         updateEntity(dto::setClient, command.getClient(), dto.getClient() != null ? dto.getClient().getId() : null, managerClientService::findById, update::setUpdate);
-        updateEntity(dto::setCountry, command.getCountry(), dto.getCountry().getId(), countryService::findById, update::setUpdate);
-        updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner().getId(), managerB2BPartnerService::findById, update::setUpdate);
+        updateEntity(dto::setCountry, command.getCountry(), dto.getCountry() != null ? dto.getCountry().getId() : null, countryService::findById, update::setUpdate);
+        updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner() != null ? dto.getSentB2BPartner().getId() : null, managerB2BPartnerService::findById, update::setUpdate);
         updateEnum(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         updateEnum(dto::setGenerationType, command.getGenerationType(), dto.getGenerationType(), update::setUpdate);
         updateEnum(dto::setSentFileFormat, command.getSentFileFormat(), dto.getSentFileFormat(), update::setUpdate);
