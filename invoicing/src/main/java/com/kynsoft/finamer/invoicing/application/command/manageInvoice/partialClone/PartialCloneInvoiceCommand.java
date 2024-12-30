@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import java.util.UUID;
@@ -28,19 +29,21 @@ public class PartialCloneInvoiceCommand implements ICommand {
         private List<UUID> attachments;
         private String employee;
         private UUID cloned;
+        private LocalDateTime invoiceDate;
 
         public PartialCloneInvoiceCommand(UUID invoice, List<PartialCloneInvoiceAdjustmentRelation> roomRateAdjustments,
-                        List<CreateAttachmentCommand> attachmentCommands, String employee) {
+                        List<CreateAttachmentCommand> attachmentCommands, String employee, LocalDateTime invoiceDate) {
                 this.invoice = invoice;
                 this.roomRateAdjustments = roomRateAdjustments;
                 this.attachmentCommands = attachmentCommands;
                 this.employee = employee;
+                this.invoiceDate = invoiceDate;
         }
 
         public static PartialCloneInvoiceCommand fromRequest(PartialCloneInvoiceRequest request) {
                 return new PartialCloneInvoiceCommand(request.getInvoice(), request.getRoomRateAdjustments(),
                                 request.getAttachments().stream().map(e -> CreateAttachmentCommand.fromRequest(e))
-                                                .collect(Collectors.toList()), request.getEmployee());
+                                                .collect(Collectors.toList()), request.getEmployee(), request.getInvoiceDate());
         }
 
         @Override
