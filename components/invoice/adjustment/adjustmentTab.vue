@@ -247,7 +247,8 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'amount', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  // { field: 'amount', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'amountTemp', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'roomRateId', header: 'Room Rate Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'paymentTransactionType', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -363,6 +364,7 @@ async function getAdjustmentList() {
         loadingDelete: false,
         roomRateId: iterator?.roomRate?.roomRateId,
         date: iterator?.date,
+        amountTemp: iterator?.amount ? formatNumber(iterator?.amount) : 0,
 
       }]
 
