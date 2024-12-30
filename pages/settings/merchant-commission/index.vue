@@ -362,7 +362,6 @@ async function createItem(item: { [key: string]: any }) {
     payload.manageCreditCartType = typeof payload.manageCreditCartType === 'object' ? payload.manageCreditCartType.id : payload.manageCreditCartType
     payload.calculationType = payload.calculationType?.id
     payload.status = statusToString(payload.status)
-    delete payload.status
     delete payload.manageMerchant
     return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
@@ -378,7 +377,6 @@ async function updateItem(item: { [key: string]: any }) {
   payload.manageCreditCartType = typeof payload.manageCreditCartType === 'object' ? payload.manageCreditCartType.id : payload.manageCreditCartType
   payload.calculationType = payload.calculationType?.id
   payload.status = statusToString(payload.status)
-  delete payload.status
   delete payload.manageMerchant
   return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
