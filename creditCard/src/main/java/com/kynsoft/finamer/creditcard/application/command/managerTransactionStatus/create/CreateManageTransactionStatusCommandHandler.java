@@ -47,7 +47,7 @@ public class CreateManageTransactionStatusCommandHandler implements ICommandHand
             RulesChecker.checkRule(new ManageTransactionPaidStatusMustBeUniqueRule(this.service, command.getId()));
         }
 
-        List<ManageTransactionStatusDto> navigate = this.service.findByIds(command.getNavigate().stream().toList());
+        List<ManageTransactionStatusDto> navigate = command.getNavigate() != null ? this.service.findByIds(command.getNavigate().stream().toList()) : null;
 
         service.create(new ManageTransactionStatusDto(
                 command.getId(),
