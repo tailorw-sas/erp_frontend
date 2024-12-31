@@ -220,7 +220,7 @@ async function getItemById(id: string) {
           item.value.manageHotel = {
             id: response.manageHotel.id,
             name: `${response.manageHotel.code} - ${response.manageHotel.name}`,
-            status: statusToBoolean(response.manageHotel.status)
+            status: response.manageHotel.status
           }
         }
       }
@@ -374,7 +374,14 @@ async function getHotelList(query: string) {
     HotelList.value = []
 
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      HotelList.value = [
+        ...HotelList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {

@@ -88,6 +88,12 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
   },
   {
+    field: 'refund',
+    header: 'Refund',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
     field: 'remarkRequired',
     header: 'Remark Required',
     dataType: 'check',
@@ -136,6 +142,7 @@ const item = ref<GenericObject>({
   subcategory: false,
   onlyApplyNet: false,
   manual: false,
+  refund: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
   description: '',
@@ -152,6 +159,7 @@ const itemTemp = ref<GenericObject>({
   subcategory: false,
   onlyApplyNet: false,
   manual: false,
+  refund: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
   description: '',
@@ -303,6 +311,7 @@ async function getItemById(id: string) {
         item.value.subcategory = response.subcategory
         item.value.onlyApplyNet = response.onlyApplyNet
         item.value.manual = response.manual
+        item.value.refund = response.refund
         // item.value.policyCredit = response.policyCredit
         item.value.remarkRequired = response.remarkRequired
         item.value.minNumberOfCharacter = response.minNumberOfCharacter
@@ -439,8 +448,6 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  console.log(payload)
-
   getList()
 }
 
