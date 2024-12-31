@@ -146,8 +146,6 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                             paymentStatusService.findByCode(PAYMENT_STATUS_CONF_CODE));
                     paymentStatusOptional.ifPresent(paymentDto::setPaymentStatus);
                     paymentDto.setId(UUID.randomUUID());
-                    paymentDto.setApplied(0.0);
-                    paymentDto.setNotApplied(0.0);
                     paymentDto.setAttachmentStatus(attachmentStatusService.findByCode(PAYMENT_ATTACHMENT_STATUS));
                     return paymentDto;
                 }).toList();

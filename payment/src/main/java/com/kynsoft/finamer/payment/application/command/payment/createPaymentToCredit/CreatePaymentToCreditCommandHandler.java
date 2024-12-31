@@ -17,6 +17,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.createPayme
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeDeposit.CreatePaymentDetailTypeDepositMessage;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -103,6 +104,15 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         }
 
         Double paymentAmount = command.getInvoiceDto().getInvoiceAmount() * -1;
+        double applied = 0.0;
+        if (hotelDto.getAutoApplyCredit()) {// no aplica los apply deposit
+            applied = 0.0;
+        } else {// aplica los apply deposit
+            applied = paymentAmount;
+        }
+        if (command.getInvoiceDto().getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name())) {
+            applied = 0.0;
+        }
         PaymentDto paymentDto = new PaymentDto(
                 UUID.randomUUID(),
                 Long.MIN_VALUE,
@@ -129,8 +139,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
                 */
                 0.0,
                 paymentAmount,
-                0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
-                paymentAmount,
+                0.0, //Siempre es cero para este caso
+                applied,
                 "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
                 command.getInvoiceDto(),
                 null,

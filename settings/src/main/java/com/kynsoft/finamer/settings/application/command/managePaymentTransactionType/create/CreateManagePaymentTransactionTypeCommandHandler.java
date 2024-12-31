@@ -33,16 +33,16 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
 //        if (command.getDefaults()) {
 //            RulesChecker.checkRule(new ManagePaymentTransactionTypeDefaultMustBeUniqueRule(service, command.getId()));
 //        }
-        if (command.getIncomeDefault()) {
+        if (command.getIncomeDefault() != null && command.getIncomeDefault()) {
             RulesChecker.checkRule(new ManagePaymentTransactionTypeIncomeDefaultMustBeUniqueRule(this.service, command.getId()));
         }
-        if (command.getApplyDeposit()) {
+        if (command.getApplyDeposit() != null && command.getApplyDeposit()) {
             RulesChecker.checkRule(new ManagePaymentTransactionTypeApplyDepositMustBeUniqueRule(this.service, command.getId()));
         }
-        if (command.getDeposit()) {
+        if (command.getDeposit() != null && command.getDeposit()) {
             RulesChecker.checkRule(new ManagePaymentTransactionTypeDepositMustBeUniqueRule(this.service, command.getId()));
         }
-        if (command.getPaymentInvoice()) {
+        if (command.getPaymentInvoice() != null && command.getPaymentInvoice()) {
             RulesChecker.checkRule(new ManagePaymentTransactionTypePaymentInvoiceMustBeUniqueRule(this.service, command.getId()));
         }
 

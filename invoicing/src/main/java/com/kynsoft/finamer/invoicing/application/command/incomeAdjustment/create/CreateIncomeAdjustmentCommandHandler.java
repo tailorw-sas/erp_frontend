@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -30,18 +31,21 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
     private final IManageInvoiceService service;
     private final IManageEmployeeService employeeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public CreateIncomeAdjustmentCommandHandler(IManagePaymentTransactionTypeService transactionTypeService,
                                                 IInvoiceCloseOperationService closeOperationService,
                                                 IManageBookingService bookingService,
                                                 IManageAdjustmentService manageAdjustmentService,
-                                                IManageInvoiceService service, IManageEmployeeService employeeService) {
+                                                IManageInvoiceService service, IManageEmployeeService employeeService,
+                                                ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.transactionTypeService = transactionTypeService;
         this.closeOperationService = closeOperationService;
         this.bookingService = bookingService;
         this.manageAdjustmentService = manageAdjustmentService;
         this.service = service;
         this.employeeService = employeeService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
@@ -75,14 +79,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         );
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
-        try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
-        } catch (Exception e) {
-            employeeFullName = command.getEmployee();
-        }
+
         for (NewIncomeAdjustmentRequest adjustment : command.getAdjustments()) {
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
@@ -105,7 +102,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     null,
                     paymentTransactionTypeDto,
                     null,
-                    employeeFullName,
+                    this.employeeService.getEmployeeFullName(command.getEmployee()),
                     false
             ));
             invoiceAmount += adjustment.getAmount();
@@ -158,7 +155,11 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         this.bookingService.create(bookingDto);
 
         // this.manageAdjustmentService.create(adjustmentDtos);
-        this.service.update(incomeDto);
+        ManageInvoiceDto updated = this.service.update(incomeDto);
+        try {
+            this.producerReplicateManageInvoiceService.create(updated, null);
+        } catch (Exception e) {
+        }
         // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
         // this.service.calculateInvoiceAmount(updatedIncome);
     }

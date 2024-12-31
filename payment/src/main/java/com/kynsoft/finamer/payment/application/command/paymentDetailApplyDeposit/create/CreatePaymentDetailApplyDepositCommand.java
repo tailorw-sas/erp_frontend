@@ -43,7 +43,7 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
         this.mediator = mediator;
     }
 
-    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee,UUID transactionTypeForAdjustment) {
+    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee,UUID transactionTypeForAdjustment, UUID booking, Boolean applyPayment) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentDetail = paymentDetail;
@@ -53,6 +53,8 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
         this.employee = employee;
         this.transactionTypeForAdjustment =transactionTypeForAdjustment;
         this.mediator = null;
+        this.booking = booking;
+        this.applyPayment = applyPayment;
     }
 
     public static CreatePaymentDetailApplyDepositCommand fromRequest(CreatePaymentDetailApplyDepositRequest request, final IMediator mediator) {

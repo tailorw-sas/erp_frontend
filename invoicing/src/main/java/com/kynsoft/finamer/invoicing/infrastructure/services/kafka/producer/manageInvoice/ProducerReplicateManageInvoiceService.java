@@ -6,10 +6,13 @@ import com.kynsof.share.core.domain.kafka.entity.ManageInvoiceKafka;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -22,16 +25,21 @@ public class ProducerReplicateManageInvoiceService {
 
     private final KafkaTemplate<String, Object> producer;
     private final IManageBookingService manageBookingService;
+    private final IManageInvoiceService invoiceService;
 
     public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer,
-                                                IManageBookingService manageBookingService) {
+                                                 IManageBookingService manageBookingService, IManageInvoiceService invoiceService) {
         this.producer = producer;
         this.manageBookingService = manageBookingService;
+        this.invoiceService = invoiceService;
     }
 
     @Async
     public void create(ManageInvoiceDto entity, UUID attachmentDefault) {
         try {
+            if (entity.getInvoiceType().compareTo(EInvoiceType.INCOME) == 0){
+                entity = this.invoiceService.findById(entity.getId());
+            }
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
             if (entity.getBookings() != null) {
                 for (ManageBookingDto booking : entity.getBookings()) {

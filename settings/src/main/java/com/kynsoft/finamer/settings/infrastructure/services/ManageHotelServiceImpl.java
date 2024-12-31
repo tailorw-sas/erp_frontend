@@ -40,14 +40,14 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
-    @CacheEvict(cacheNames = {"manageHotel", "manageHotelAll", "manageHotelToReplicate"}, allEntries = true)
+//    @CacheEvict(cacheNames = {"manageHotel", "manageHotelAll", "manageHotelToReplicate"}, allEntries = true)
     public UUID create(ManageHotelDto dto) {
         ManageHotel entity = new ManageHotel(dto);
         return repositoryCommand.save(entity).getId();
     }
 
     @Override
-    @CacheEvict(cacheNames = {"manageHotel", "manageHotelAll", "manageHotelToReplicate"}, allEntries = true)
+//    @CacheEvict(cacheNames = {"manageHotel", "manageHotelAll", "manageHotelToReplicate"}, allEntries = true)
     public void update(ManageHotelDto dto) {
         ManageHotel entity = new ManageHotel(dto);
         entity.setUpdatedAt(LocalDateTime.now());
@@ -55,7 +55,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
-    @CacheEvict(cacheNames = "manageHotel", key = "#dto.id")
+//    @CacheEvict(cacheNames = "manageHotel", key = "#dto.id")
     public void delete(ManageHotelDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());
@@ -65,7 +65,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageHotel", key = "#id", unless = "#result == null")
+//    @Cacheable(cacheNames = "manageHotel", key = "#id", unless = "#result == null")
     public ManageHotelDto findById(UUID id) {
         Optional<ManageHotel> optionalEntity = repositoryQuery.findById(id);
         return optionalEntity.map(ManageHotel::toAggregate)
@@ -73,13 +73,13 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageHotelAll", unless = "#result == null or #result.isEmpty()")
+//    @Cacheable(cacheNames = "manageHotelAll", unless = "#result == null or #result.isEmpty()")
     public List<ManageHotelDto> findAll() {
         return repositoryQuery.findAll().stream().map(ManageHotel::toAggregate).collect(Collectors.toList());
     }
 
     @Override
-    @Cacheable(cacheNames = "manageHotelAll", unless = "#result == null")
+//    @Cacheable(cacheNames = "manageHotelAll", unless = "#result == null")
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ManageHotel> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
@@ -93,13 +93,13 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageHotelByIds", key = "#ids")
+//    @Cacheable(cacheNames = "manageHotelByIds", key = "#ids")
     public List<ManageHotelDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageHotel::toAggregate).toList();
     }
 
     @Override
-    @Cacheable(cacheNames = "manageHotelToReplicate", unless = "#result == null or #result.isEmpty()")
+//    @Cacheable(cacheNames = "manageHotelToReplicate", unless = "#result == null or #result.isEmpty()")
     public List<ManageHotelDto> findAllToReplicate() {
         List<ManageHotel> objects = this.repositoryQuery.findAll();
         List<ManageHotelDto> objectDtos = new ArrayList<>();

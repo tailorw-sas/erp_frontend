@@ -27,6 +27,7 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
     private Integer minNumberOfCharacter;
     private String defaultRemark;
     private boolean manual;
+    private boolean refund;
 
     public CreateManageVCCTransactionTypeCommand(String code, Status status, String name, String description, Boolean isActive,
                                                  Boolean negative,
@@ -37,7 +38,7 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
                                                  Boolean remarkRequired,
                                                  Integer minNumberOfCharacter,
                                                  String defaultRemark,
-                                                 boolean manual) {
+                                                 boolean manual, boolean refund) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
@@ -53,6 +54,7 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
         this.minNumberOfCharacter = minNumberOfCharacter;
         this.defaultRemark = defaultRemark;
         this.manual = manual;
+        this.refund = refund;
     }
 
     public static CreateManageVCCTransactionTypeCommand fromRequest(
@@ -71,8 +73,8 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
                 request.getRemarkRequired(),
                 request.getMinNumberOfCharacter(),
                 request.getDefaultRemark(),
-                request.isManual()
-
+                request.isManual(),
+                request.isRefund()
         );
     }
 

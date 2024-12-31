@@ -19,7 +19,7 @@ public interface IManageInvoiceService {
 
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream);
 
-    void update(ManageInvoiceDto dto);
+    ManageInvoiceDto update(ManageInvoiceDto dto);
 
     void delete(ManageInvoiceDto dto);
 

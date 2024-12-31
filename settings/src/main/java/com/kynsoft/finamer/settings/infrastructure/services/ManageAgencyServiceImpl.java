@@ -45,7 +45,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
+//    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
     public UUID create(ManageAgencyDto dto) {
         ManageAgency entity = new ManageAgency(dto);
         return repositoryCommand.save(entity).getId();
@@ -53,7 +53,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
+//    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
     public void update(ManageAgencyDto dto) {
         ManageAgency entity = new ManageAgency(dto);
         entity.setUpdatedAt(LocalDateTime.now());
@@ -62,7 +62,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
+//    @CacheEvict(cacheNames = {"manageAgency", "manageAgencyAll", "manageAgencyToReplicate"}, allEntries = true)
     public void delete(UUID id) {
         try {
             ManageAgency entity = this.repositoryQuery.findById(id)
@@ -82,13 +82,13 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null or #result.isEmpty()")
+//    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null or #result.isEmpty()")
     public List<ManageAgencyDto> findAll() {
         return repositoryQuery.findAll().stream().map(ManageAgency::toAggregate).collect(Collectors.toList());
     }
 
     @Override
-    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null")
+//    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null")
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
@@ -133,7 +133,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageAgencyToReplicate", unless = "#result == null or #result.isEmpty()")
+//    @Cacheable(cacheNames = "manageAgencyToReplicate", unless = "#result == null or #result.isEmpty()")
     public List<ManageAgencyDto> findAllToReplicate() {
         List<ManageAgency> objects = this.repositoryQuery.findAll();
         List<ManageAgencyDto> objectDtos = new ArrayList<>();

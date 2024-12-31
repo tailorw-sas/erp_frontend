@@ -18,4 +18,6 @@ public interface IManageEmployeeService {
     ManageEmployeeDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    String getEmployeeFullName(String employee);
 }

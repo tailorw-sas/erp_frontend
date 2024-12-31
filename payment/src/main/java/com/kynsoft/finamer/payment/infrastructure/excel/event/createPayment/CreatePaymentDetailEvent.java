@@ -17,6 +17,9 @@ public class CreatePaymentDetailEvent extends ApplicationEvent {
     private UUID transactionType;
     private Double amount;
     private String remark;
+    private UUID booking;
+    private Boolean applyPayment;
+
     public CreatePaymentDetailEvent(Object source) {
         super(source);
     }

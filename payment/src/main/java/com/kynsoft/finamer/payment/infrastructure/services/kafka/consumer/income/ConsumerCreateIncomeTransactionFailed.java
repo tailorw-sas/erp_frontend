@@ -16,7 +16,7 @@ public class ConsumerCreateIncomeTransactionFailed {
         this.paymentDetailService = paymentDetailService;
     }
 
-    @KafkaListener(topics = "finamer-income-transaction-failed", groupId = "income-entity-replica")
+    @KafkaListener(topics = "finamer-income-transaction-failed", groupId = "payment-entity-replica")
     public void listen(CreateIncomeTransactionFailedKafka objKafka) {
         this.rollBackApplyDeposit(objKafka);
     }

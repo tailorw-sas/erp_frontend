@@ -392,7 +392,12 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_PAYMENT_STATUS_HISTORY_NOT_FOUND(1169, Series.DOMAIN_ERROR, "Hotel Payment Status History not found."),
     NIGHT_TYPE_REQUIRED(1170, Series.DOMAIN_ERROR,"The Night Type field is required for this client."),
     HOTEL_BOOKING_NUMBER_NOT_VALID(1171, Series.DOMAIN_ERROR, "The Reservation No. is not accepted."),
-    BOOKING_COUPON_FORMAT_NOT_VALID(1172, Series.DOMAIN_ERROR, "The Booking Coupon Format is not valid.");
+    BOOKING_COUPON_FORMAT_NOT_VALID(1172, Series.DOMAIN_ERROR, "The Booking Coupon Format is not valid."),
+    MANAGE_VCC_TRANSACTION_TYPE_CHECK_REFUND(1173, Series.DOMAIN_ERROR,"Another item already exists with refund."),
+    MANAGE_VCC_TRANSACTION_TYPE_REFUND_NOT_FOUND(1174, Series.DOMAIN_ERROR,"There is no transaction category of type refund by default."),
+    MANAGE_VCC_TRANSACTION_TYPE_CHECK_MANUAL(1175, Series.DOMAIN_ERROR,"Another item already exists with manual."),
+    MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND(1176, Series.DOMAIN_ERROR,"There is no transaction category of type manual by default."),
+    MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND(1177, Series.DOMAIN_ERROR,"There is no transaction category by default."),;
 
     private static final DomainErrorMessage[] VALUES;
 

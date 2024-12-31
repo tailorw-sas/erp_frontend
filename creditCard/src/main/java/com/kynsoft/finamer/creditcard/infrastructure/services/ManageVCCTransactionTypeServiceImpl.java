@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -9,7 +10,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageVCCTransactionTypeResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
-import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import com.kynsoft.finamer.creditcard.domain.services.IManageVCCTransactionTypeService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageVCCTransactionType;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageVCCTransactionTypeWriteDataJPARepository;
@@ -74,17 +74,32 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
 
     @Override
     public ManageVCCTransactionTypeDto findByIsDefaultAndNotIsSubcategory() {
-        return this.repositoryQuery.findByIsDefaultAndNotIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElse(null);
+        return this.repositoryQuery.findByIsDefaultAndNotIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND.getReasonPhrase()
+                )
+        );
     }
 
     @Override
     public ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory() {
-        return this.repositoryQuery.findByIsDefaultAndIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElse(null);
+        return this.repositoryQuery.findByIsDefaultAndIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND.getReasonPhrase()
+                )
+        );
     }
 
     @Override
     public ManageVCCTransactionTypeDto findByManual() {
-        return this.repositoryQuery.findByManual().map(ManageVCCTransactionType::toAggregate).orElse(null);
+        return this.repositoryQuery.findByManual().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND.getReasonPhrase()
+                )
+        );
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {
@@ -150,5 +165,20 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     @Override
     public Long countByManualAndNotId(UUID id) {
         return this.repositoryQuery.countByManualAndNotId(id);
+    }
+
+    @Override
+    public Long countByRefundAndNotId(UUID id) {
+        return this.repositoryQuery.countByRefundAndNotId(id);
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByRefund() {
+        return this.repositoryQuery.findByRefund().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_REFUND_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_REFUND_NOT_FOUND.getReasonPhrase()
+                )
+        );
     }
 }

@@ -15,6 +15,8 @@ import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -215,7 +217,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                 0L,
                 invoiceNumber,
                 //invoiceToClone.getInvoiceDate(), 
-                this.invoiceDate(invoiceToClone.getHotel().getId()),
+                this.invoiceDate(invoiceToClone.getHotel().getId(), command.getInvoiceDate()),
                 invoiceToClone.getDueDate(),
                 true,
                 invoiceToClone.getInvoiceAmount(),
@@ -299,6 +301,20 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return LocalDateTime.now(ZoneId.of("UTC"));
         }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    }
+
+    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
+        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
+        }
+
+        if (closeOperationDto.getEndDate().isAfter(LocalDate.now())){
+            return LocalDateTime.now(ZoneId.of("UTC"));
+        }
+
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 

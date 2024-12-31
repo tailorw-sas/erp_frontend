@@ -1,14 +1,20 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.reconcileauto;
 
 import com.kynsof.share.core.application.excel.ExcelUtils;
+import com.kynsof.share.core.domain.exception.BusinessRuleValidationException;
 import com.kynsof.share.core.domain.exception.ExcelException;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageNightTypeKafka;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsof.share.utils.ServiceLocator;
+import com.kynsoft.finamer.invoicing.application.command.manageNightType.create.CreateManageNightTypeCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageNightType.ProducerReplicateManageNightTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.CellType;
@@ -21,10 +27,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 public class ReconcileAutomaticInvoiceValidator {
@@ -34,10 +37,14 @@ public class ReconcileAutomaticInvoiceValidator {
 
     private final IManageNightTypeService nightTypeService;
     private final IManageAgencyService agencyService;
+    private final ServiceLocator<IMediator> serviceLocator;
+    private final ProducerReplicateManageNightTypeService producerReplicateManageNightTypeService;
 
-    public ReconcileAutomaticInvoiceValidator(IManageNightTypeService nightTypeService, IManageAgencyService agencyService) {
+    public ReconcileAutomaticInvoiceValidator(IManageNightTypeService nightTypeService, IManageAgencyService agencyService, ServiceLocator<IMediator> serviceLocator, ProducerReplicateManageNightTypeService producerReplicateManageNightTypeService) {
         this.nightTypeService = nightTypeService;
         this.agencyService = agencyService;
+        this.serviceLocator = serviceLocator;
+        this.producerReplicateManageNightTypeService = producerReplicateManageNightTypeService;
     }
 
     public void loadWorkbook(byte[] file) throws IOException {
@@ -97,9 +104,9 @@ public class ReconcileAutomaticInvoiceValidator {
                     String reservationNumber = currentRow.getCell(22).getStringCellValue();
                     if (validateCouponNumber(couponNumber, booking, errorFieldList)
                         && validatePrice(price, booking, errorFieldList)
-                        && validateNightType(nightType, booking, errorFieldList)
                         && validateReservationNumber(reservationNumber, couponFormat, errorFieldList)
-                        && validateAgency(manageInvoiceDto, errorFieldList))
+                        && validateAgency(manageInvoiceDto, errorFieldList)
+                        && validateNightType(nightType, booking, errorFieldList))
                     {
                         booking.setContract(contract);
                         errorFieldList.clear();
@@ -138,8 +145,22 @@ public class ReconcileAutomaticInvoiceValidator {
 
     private boolean validateNightType(String nightType, ManageBookingDto manageBookingDto, List<ErrorField> errors) {
         if (!nightTypeService.existNightTypeByCode(nightType)) {
-            errors.add(new ErrorField("Night Type", "The night type not exist"));
-            return false;
+            try {
+                createNightType(nightType, manageBookingDto);
+            } catch (BusinessRuleValidationException e) {
+                errors.add(new ErrorField("Night Type", "The night type could not be created. "+e.getMessage()));
+                return false;
+            } catch (Exception e){
+                errors.add(new ErrorField("Night Type", "The night type could not be created."));
+                return false;
+            }
+        } else {
+            try{
+                manageBookingDto.setNightType(nightTypeService.findByCode(nightType));
+            } catch (Exception e) {
+                errors.add(new ErrorField("Night Type", "The night type could not be assigned."));
+                return false;
+            }
         }
         return true;
     }
@@ -169,5 +190,31 @@ public class ReconcileAutomaticInvoiceValidator {
             return false;
         }
         return true;
+    }
+
+    private CreateManageNightTypeCommand createManageNightTypeCommand(String code){
+        return new CreateManageNightTypeCommand(
+                UUID.randomUUID(),
+                code,
+                code,
+                Status.ACTIVE.name()
+        );
+    }
+
+    private ReplicateManageNightTypeKafka replicateManageNightTypeKafka(CreateManageNightTypeCommand command){
+        return new ReplicateManageNightTypeKafka(
+                command.getId(),
+                command.getCode(),
+                command.getName(),
+                command.getStatus()
+        );
+    }
+
+    private void createNightType(String nightType, ManageBookingDto manageBookingDto){
+        CreateManageNightTypeCommand command = createManageNightTypeCommand(nightType);
+        IMediator mediator = serviceLocator.getBean(IMediator.class);
+        mediator.send(command);
+        manageBookingDto.setNightType(this.nightTypeService.findByCode(nightType));
+        this.producerReplicateManageNightTypeService.create(replicateManageNightTypeKafka(command));
     }
 }

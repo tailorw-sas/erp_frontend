@@ -26,6 +26,7 @@ public class UpdateManageVCCTransactionTypeCommand implements ICommand {
     private Integer minNumberOfCharacter;
     private String defaultRemark;
     private boolean manual;
+    private boolean refund;
 
     public UpdateManageVCCTransactionTypeCommand(UUID id,  Status status, String name, String description, Boolean isActive,  Boolean negative,
                                                  Boolean isDefault,
@@ -35,7 +36,7 @@ public class UpdateManageVCCTransactionTypeCommand implements ICommand {
                                                  Boolean remarkRequired,
                                                  Integer minNumberOfCharacter,
                                                  String defaultRemark,
-                                                 boolean manual) {
+                                                 boolean manual, boolean refund) {
         this.id = id;
         this.status = status;
         this.name = name;
@@ -50,6 +51,7 @@ public class UpdateManageVCCTransactionTypeCommand implements ICommand {
         this.minNumberOfCharacter = minNumberOfCharacter;
         this.defaultRemark = defaultRemark;
         this.manual = manual;
+        this.refund = refund;
     }
 
     public static UpdateManageVCCTransactionTypeCommand fromRequest(UpdateManageVCCTransactionTypeRequest request, UUID id){
@@ -67,7 +69,8 @@ public class UpdateManageVCCTransactionTypeCommand implements ICommand {
                 request.getRemarkRequired(),
                 request.getMinNumberOfCharacter(),
                 request.getDefaultRemark(),
-                request.isManual()
+                request.isManual(),
+                request.isRefund()
         );
     }
 

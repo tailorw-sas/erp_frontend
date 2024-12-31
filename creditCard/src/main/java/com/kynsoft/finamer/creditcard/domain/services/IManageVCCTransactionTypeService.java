@@ -41,4 +41,8 @@ public interface IManageVCCTransactionTypeService {
     Long countByIsDefaultsAndSubCategoryAndNotId(UUID id);
 
     Long countByManualAndNotId(UUID id);
+
+    Long countByRefundAndNotId(UUID id);
+
+    ManageVCCTransactionTypeDto findByRefund();
 }

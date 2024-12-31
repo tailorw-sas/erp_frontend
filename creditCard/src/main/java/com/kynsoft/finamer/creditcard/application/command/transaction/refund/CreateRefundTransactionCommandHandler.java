@@ -7,10 +7,7 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsoft.finamer.creditcard.domain.dto.ManageTransactionStatusDto;
-import com.kynsoft.finamer.creditcard.domain.dto.ParameterizationDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionStatusHistoryDto;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.rules.refundTransaction.RefundTransactionCompareParentAmountRule;
 import com.kynsoft.finamer.creditcard.domain.services.*;
@@ -32,12 +29,15 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
     private final ITransactionStatusHistoryService transactionStatusHistoryService;
 
-    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService, ITransactionStatusHistoryService transactionStatusHistoryService) {
+    private final IManageVCCTransactionTypeService transactionTypeService;
+
+    public CreateRefundTransactionCommandHandler(ITransactionService service, IParameterizationService parameterizationService, IManageTransactionStatusService transactionStatusService, IManageMerchantCommissionService manageMerchantCommissionService, ITransactionStatusHistoryService transactionStatusHistoryService, IManageVCCTransactionTypeService transactionTypeService) {
         this.service = service;
         this.parameterizationService = parameterizationService;
         this.transactionStatusService = transactionStatusService;
         this.manageMerchantCommissionService = manageMerchantCommissionService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
+        this.transactionTypeService = transactionTypeService;
     }
 
     @Override
@@ -48,6 +48,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_CANNOT_BE_REFUNDED, new ErrorField("refund", DomainErrorMessage.VCC_TRANSACTION_CANNOT_BE_REFUNDED.getReasonPhrase())));
         }
 
+        double amount = command.getAmount();
         double commission = 0.0;
         double netAmount = command.getAmount();
         if(command.getHasCommission()
@@ -70,6 +71,12 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
 
         ManageTransactionStatusDto transactionStatusDto = transactionStatusService.findByETransactionStatus(ETransactionStatus.REFUND);
         double parentAmountAndCommandAmount =  service.findSumOfAmountByParentId(parentTransaction.getId()) + command.getAmount();
+        ManageVCCTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByRefund();
+        if (transactionTypeDto != null && transactionTypeDto.getNegative()){
+            amount = -amount;
+            commission = -commission;
+            netAmount = -netAmount;
+        }
         TransactionDto transactionDto = this.service.create(new TransactionDto(
                 UUID.randomUUID(),
                 parentTransaction.getMerchant(),
@@ -77,7 +84,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
                 parentTransaction.getHotel(),
                 parentTransaction.getAgency(),
                 parentTransaction.getLanguage(),
-                command.getAmount(),
+                amount,
                 parentTransaction.getCheckIn(),
                 parentTransaction.getReservationNumber(),
                 parentTransaction.getReferenceNumber(),
@@ -90,7 +97,7 @@ public class CreateRefundTransactionCommandHandler implements ICommandHandler<Cr
                 commission,
                 transactionStatusDto,
                 parentTransaction,
-                parentTransaction.getTransactionCategory(),
+                transactionTypeDto,
                 parentTransaction.getTransactionSubCategory(),
                 netAmount,
                 false,

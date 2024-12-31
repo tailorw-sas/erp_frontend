@@ -36,6 +36,9 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
         if (command.isManual()){
             RulesChecker.checkRule(new ManageVCCTransactionTypeIsManualMustBeUniqueRule(this.service, command.getId()));
         }
+        if (command.isRefund()){
+            RulesChecker.checkRule(new ManageVCCTransactionTypeIsRefundMustBeUniqueRule(this.service, command.getId()));
+        }
         service.create(new ManageVCCTransactionTypeDto(
                 command.getId(),
                 command.getCode(),
@@ -51,7 +54,8 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
                 command.getRemarkRequired(),
                 command.getMinNumberOfCharacter(),
                 command.getDefaultRemark(),
-                command.isManual()
+                command.isManual(),
+                command.isRefund()
         ));
 
         this.transactionTypeService.create(new ReplicateManageVCCTransactionTypeKafka(

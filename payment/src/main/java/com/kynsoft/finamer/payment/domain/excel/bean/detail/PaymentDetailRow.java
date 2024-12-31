@@ -35,6 +35,8 @@ public class PaymentDetailRow extends Row implements Serializable {
     private Double anti;
     @Cell(position = 6,headerName = "Remark")
     private String remarks;
+    @Cell(position = 7,cellType = CustomCellType.DATAFORMAT,headerName = "Book Id")
+    private String bookId;
 
     private UUID externalPaymentId;
 
