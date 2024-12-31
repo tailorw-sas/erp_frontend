@@ -831,7 +831,7 @@ async function getListInvoice() {
       payloadInv.value.filter.push({
         key: 'dueAmount',
         operator: 'GREATER_THAN',
-        value: 0,
+        value: '0',
         logicalOperation: 'AND',
         type: 'filterSearch'
       })
@@ -1121,8 +1121,8 @@ async function parseDataTableFilterInvoice(payloadFilter: any) {
         parseFilter[i].key = 'agency.code'
       }
 
-      if (parseFilter[i]?.key === 'status') {
-        parseFilter[i].key = 'invoiceStatus'
+      if (parseFilter[i]?.key === 'invoiceStatus.id') {
+        parseFilter[i].key = 'manageInvoiceStatus.id'
       }
 
       if (parseFilter[i]?.key === 'invoiceNumber') {
@@ -1131,7 +1131,7 @@ async function parseDataTableFilterInvoice(payloadFilter: any) {
     }
   }
 
-  payloadFilter.value.filter = [...parseFilter || []]
+  payloadInv.value.filter = [...parseFilter || []]
   getListInvoice()
 }
 
@@ -1299,6 +1299,8 @@ function onSortField(event: any) {
   }
 }
 function onSortFieldInvoice(event: any) {
+  console.log('event', event)
+
   if (event) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
