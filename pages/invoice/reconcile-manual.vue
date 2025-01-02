@@ -957,7 +957,7 @@ onMounted(async () => {
                         <div class="w-full">
                           <IconField icon-position="left">
                             <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
+                            <!-- <InputIcon class="pi pi-search" /> -->
                           </IconField>
                         </div>
                       </div>
