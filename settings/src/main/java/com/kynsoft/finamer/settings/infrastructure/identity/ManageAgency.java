@@ -70,7 +70,7 @@ public class ManageAgency {
     private ManageAgencyType agencyType;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "manage_client_id")
+    @JoinColumn(name = "manage_client_id",nullable = false)
     private ManageClient client;
 
     @ManyToOne(fetch = FetchType.EAGER)
