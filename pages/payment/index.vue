@@ -2872,8 +2872,8 @@ async function saveApplyPayment() {
       payment: objItemSelectedForRightClickApplyPayment.value.id || '',
       invoices: [...idInvoicesSelectedToApplyPayment.value], // este ya es un array de ids
       deposits: [...paymentDetailsTypeDepositSelected.value.map(item => item.id)], // Convertir a ids[]
-      applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,,
-      applyPaymentBalance: checkApplyPayment.value
+      applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,
+      applyPaymentBalance: checkApplyPayment.value,
       employee: userData?.value?.user?.userId || ''
     }
 
