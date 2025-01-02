@@ -37,4 +37,6 @@ public interface IManageBookingService {
     void deleteInvoice(ManageBookingDto dto);
 
     boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId);
+
+    ManageBookingDto findBookingId(Long bookingId);
 }
