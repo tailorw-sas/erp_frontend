@@ -4,6 +4,7 @@ import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsof.share.core.domain.BaseEntity;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,6 +34,10 @@ public class JasperReportTemplate extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Enumerated(EnumType.STRING)
+    private ModuleSystems moduleSystems;
+
     private Double parentIndex;
     private Double menuPosition;
     private String lanPath;
@@ -112,7 +117,8 @@ public class JasperReportTemplate extends BaseEntity {
                 rootIndex,
                 language,
                 conectionDto,
-                query
+                query,
+                moduleSystems
         );
     }
 
