@@ -28,6 +28,7 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.search.GetS
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBookingResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
+import java.util.List;
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
@@ -96,8 +97,11 @@ public class BookingController {
 
         FindBookingByGenIdQuery query = new FindBookingByGenIdQuery(id);
         ManageBookingResponse response = mediator.send(query);
+        
+        PaginatedResponse data = new PaginatedResponse();
+        data.setData(List.of(response));
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(data);
     }
 
     @DeleteMapping(path = "/{id}")
