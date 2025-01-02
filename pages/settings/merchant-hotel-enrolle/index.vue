@@ -243,10 +243,10 @@ function searchAndFilter() {
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     let key
     if (filterToSearch.value.criterial.id === 'managerMerchant') {
-      key = 'managerMerchant.description'
+      key = 'manageMerchant.description'
     }
     else if (filterToSearch.value.criterial.id === 'managerHotel') {
-      key = 'managerHotel.name'
+      key = 'manageHotel.name'
     }
     else {
       key = filterToSearch.value.criterial.id
@@ -562,6 +562,19 @@ function requireConfirmationToDelete(event: any) {
 // FILTER -------------------------------------------------------------------------------------------------------
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'managerMerchant.id') {
+        parseFilter[i].key = 'manageMerchant.id'
+      }
+
+      if (parseFilter[i]?.key === 'managerHotel.id') {
+        parseFilter[i].key = 'manageHotel.id'
+      }
+    }
+  }
+
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
@@ -569,6 +582,12 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'managerMerchant') {
+      event.sortField = 'manageMerchant.description'
+    }
+    if (event.sortField === 'managerHotel') {
+      event.sortField = 'manageHotel.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)

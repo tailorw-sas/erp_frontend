@@ -1299,8 +1299,6 @@ function onSortField(event: any) {
   }
 }
 function onSortFieldInvoice(event: any) {
-  console.log('event', event)
-
   if (event) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
