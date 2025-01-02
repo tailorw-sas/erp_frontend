@@ -343,6 +343,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         for (ManageInvoiceDto manageInvoiceDto : invoices) {
             if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
                 manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
+
                 manageInvoiceDto.setManageInvoiceStatus(manageInvoiceStatus);
                 this.invoiceStatusHistoryService.create(
                         new InvoiceStatusHistoryDto(
@@ -357,6 +358,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 );
             }if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
+                manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 manageInvoiceDto.setReSendDate(LocalDate.now());
             }
             service.update(manageInvoiceDto);
