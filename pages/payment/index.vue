@@ -3419,7 +3419,7 @@ async function loadDefaultsConfig() {
     query: '',
     keys: ['name', 'code'],
   }, filterForEmployee)
-  await getList()
+  await searchAndFilter()
 }
 
 // -------------------------------------------------------------------------------------------------------
