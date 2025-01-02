@@ -1985,7 +1985,6 @@ onMounted(() => {
         :pagination="pagination"
         @on-confirm-create="clearForm"
         @open-edit-dialog="getItemById($event)"
-        @update:clicked-item="getItemById($event)"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
