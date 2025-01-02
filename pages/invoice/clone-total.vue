@@ -351,6 +351,12 @@ async function getHotelList(query = '', currentTradingCompany: any, currentHotel
           operator: 'EQUALS',
           value: currentTradingCompany,
           logicalOperation: 'AND'
+        },
+        {
+          key: 'isVirtual',
+          operator: 'EQUALS',
+          value: false,
+          logicalOperation: 'AND'
         }
       ],
       query: '',
@@ -1020,11 +1026,9 @@ async function getItem(id: any) {
       if (response) {
         item.value.id = response.id
         item.value.invoiceId = response.invoiceId
-        console.log('aqui se muestra el invoiceId', item.value.invoiceId)
         // const invoiceNumber = `${response?.clonedInvoiceNo?.split('-')[0]}-${response?.clonedInvoiceNo?.split('-')[2]}`
 
         item.value.invoiceNumber = response.invoiceNumber
-        console.log('aqui se muestra el invoiceNumber', item.value.invoiceNumber)
 
         item.value.invoiceDate = new Date(response.invoiceDate)
         item.value.isManual = response.isManual
@@ -1677,13 +1681,10 @@ onMounted(async () => {
 
             if (currentHotel && $event) {
               const currentManageTradingCompany = currentHotel.manageTradingCompanies.company;
-              console.log(currentManageTradingCompany, 'actual')
               const newManageTradingCompany = $event.manageTradingCompanies.company;
-              console.log(newManageTradingCompany, 'nuevo')
               // Verificar si los nombres coinciden
               if (currentManageTradingCompany !== newManageTradingCompany) {
                 hotelError = true; // Mostrar error
-                console.log(hotelError, 'q hay aqui')
 
                 return; // Salir sin actualizar
               }
