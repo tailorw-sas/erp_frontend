@@ -2872,8 +2872,9 @@ async function saveApplyPayment() {
       payment: objItemSelectedForRightClickApplyPayment.value.id || '',
       invoices: [...idInvoicesSelectedToApplyPayment.value], // este ya es un array de ids
       deposits: [...paymentDetailsTypeDepositSelected.value.map(item => item.id)], // Convertir a ids[]
-      applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,
+      applyDeposit: paymentDetailsTypeDepositSelected.value.length > 0,,
       applyPaymentBalance: checkApplyPayment.value
+      employee: userData?.value?.user?.userId || ''
     }
 
     const response = await GenericService.create('payment', 'payment/apply-payment', payload)
@@ -2915,7 +2916,8 @@ async function saveApplyPaymentOtherDeduction() {
         payment: objItemSelectedForRightClickApplyPaymentOtherDeduction.value.id || '',
         booking: [...listTemp], // este ya es un array de ids
         transactionType: transactionType.value?.id || '',
-        remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark
+        remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark,
+        employee: userData?.value?.user?.userId || ''
       }
 
       await GenericService.create('payment', 'payment-detail/apply-other-deductions', payload)
