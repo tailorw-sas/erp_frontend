@@ -2238,8 +2238,8 @@ const legend = ref(
             <div class="flex gap-4 flex-column lg:flex-row">
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="" class="font-bold">Client</label>
-                  <label for="" class="font-bold">Agency</label>
+                  <label for="" class="font-bold">Client:</label>
+                  <label for="" class="font-bold">Agency:</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">
@@ -2331,8 +2331,8 @@ const legend = ref(
 
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="" class="font-bold">Hotel</label>
-                  <label for="" class="font-bold">Status</label>
+                  <label for="" class="font-bold">Hotel:</label>
+                  <label for="" class="font-bold">Status:</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">
@@ -2418,8 +2418,8 @@ const legend = ref(
               </div>
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
-                  <label for="" class="font-bold">From</label>
-                  <label for="" class="font-bold">To</label>
+                  <label for="" class="font-bold">From:</label>
+                  <label for="" class="font-bold">To:</label>
                 </div>
 
                 <div class="flex flex-column gap-2 ">

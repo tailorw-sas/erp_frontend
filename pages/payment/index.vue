@@ -3554,7 +3554,7 @@ onMounted(async () => {
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-2 font-bold"> Client</label>
+                    <label for="" class="mr-2 font-bold"> Client:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
@@ -3630,7 +3630,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="mr-2 font-bold"> Agency</label>
+                    <label for="" class="mr-2 font-bold"> Agency:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
@@ -3728,7 +3728,7 @@ onMounted(async () => {
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-2 font-bold"> Hotels</label>
+                    <label for="" class="mr-2 font-bold"> Hotels:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         id="autocomplete"
@@ -3798,7 +3798,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="mr-2 font-bold">Status</label>
+                    <label for="" class="mr-2 font-bold">Status:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         id="autocomplete"
@@ -3887,7 +3887,7 @@ onMounted(async () => {
               <div class="grid align-items-center justify-content-center p-0 m-0">
                 <div class="col-12 md:col-10 p-0 m-0 w-auto">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-2 font-bold"> From</label>
+                    <label for="" class="mr-2 font-bold"> From:</label>
                     <div class="w-9rem">
                       <!-- :min-date="new Date(startOfMonth)"
                         :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)" -->
@@ -3902,7 +3902,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To</label>
+                    <label for="" class="mr-2 font-bold" style="padding-right: 17px;"> To:</label>
                     <div class="w-9rem">
                       <!-- :max-date="new Date(endOfMonth)" -->
                       <Calendar
@@ -3940,7 +3940,7 @@ onMounted(async () => {
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-2 font-bold"> Criteria</label>
+                    <label for="" class="mr-2 font-bold"> Criteria:</label>
                     <div class="w-12rem">
                       <Dropdown
                         v-model="filterToSearch.criteria"
@@ -3955,7 +3955,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="w-4rem font-bold">Value</label>
+                    <label for="" class="w-4rem font-bold">Value:</label>
                     <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-12rem" style="max-width: 12rem;" />
                   </div>
                 </div>
