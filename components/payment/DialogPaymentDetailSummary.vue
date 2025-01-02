@@ -330,8 +330,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center">
               <Row>
                 <Column footer="Totals:" :colspan="3" footer-style="text-align:right; font-weight: bold;" />
-                <Column :footer="(-Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)).toString()" footer-style="font-weight: bold;" />
-                <Column :footer="(-Math.abs(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)).toString()" footer-style="font-weight: bold;" />
+                <Column :footer="formatNumber((-Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)).toString())" footer-style="font-weight: bold;" />
+                <Column :footer="formatNumber((-Math.abs(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)).toString())" footer-style="font-weight: bold;" />
                 <Column :colspan="0" />
               </Row>
             </ColumnGroup>
