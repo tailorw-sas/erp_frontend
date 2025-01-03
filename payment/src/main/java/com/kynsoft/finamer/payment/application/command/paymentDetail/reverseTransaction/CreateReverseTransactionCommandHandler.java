@@ -141,7 +141,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         //paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
         paymentDto.setApplied(paymentDto.getApplied() - newDetailDto.getAmount()); // TODO: Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
         paymentDto.setIdentified(paymentDto.getIdentified() - newDetailDto.getAmount());
-        paymentDto.setNotIdentified(paymentDto.getPaymentAmount() + paymentDto.getIdentified());
+        paymentDto.setNotIdentified(paymentDto.getNotIdentified() + newDetailDto.getAmount());
 
         this.paymentService.update(paymentDto);
     }
