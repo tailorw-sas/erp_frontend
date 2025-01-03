@@ -1,5 +1,6 @@
 package com.kynsoft.report.domain.dto;
 
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +40,7 @@ public class JasperReportTemplateDto {
     private DBConectionDto dbConectionDto;
 
     private String query;
+    private ModuleSystems moduleSystems; // Campo para el módulo del sistema
 
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
