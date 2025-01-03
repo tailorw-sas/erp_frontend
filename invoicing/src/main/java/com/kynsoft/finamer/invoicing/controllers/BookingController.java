@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
@@ -96,12 +97,9 @@ public class BookingController {
     public ResponseEntity<?> getByGenId(@PathVariable Long id) {
 
         FindBookingByGenIdQuery query = new FindBookingByGenIdQuery(id);
-        ManageBookingResponse response = mediator.send(query);
-        
-        PaginatedResponse data = new PaginatedResponse();
-        data.setData(List.of(response));
+        BookingHttp response = mediator.send(query);
 
-        return ResponseEntity.ok(data);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping(path = "/{id}")
