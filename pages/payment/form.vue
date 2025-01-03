@@ -3225,6 +3225,12 @@ function disableBankAccount(data: any) {
   return result
 }
 
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getListPaymentDetail()
+})
+
 watch(() => hasBeenEdited.value, async (newValue) => {
   if (newValue) {
     if (route?.query?.id) {
