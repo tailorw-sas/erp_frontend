@@ -5,8 +5,10 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.payment.application.query.http.invoice.booking.FindBookingByGenIdQuery;
+import com.kynsoft.finamer.payment.application.query.http.invoice.booking.genId.FindBookingByGenIdQuery;
+import com.kynsoft.finamer.payment.application.query.http.invoice.booking.uuid.FindBookingByUUIDQuery;
 import com.kynsoft.finamer.payment.application.query.manageBooking.search.GetSearchManageBookingQuery;
+import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +42,15 @@ public class ManageBookingController {
     public ResponseEntity<?> getByGenId(@PathVariable Long id) {
 
         FindBookingByGenIdQuery query = new FindBookingByGenIdQuery(id, mediator);
+        BookingHttp response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/uuid/{id}")
+    public ResponseEntity<?> getByUUID(@PathVariable UUID id) {
+
+        FindBookingByUUIDQuery query = new FindBookingByUUIDQuery(id, mediator);
         BookingHttp response = mediator.send(query);
 
         return ResponseEntity.ok(response);

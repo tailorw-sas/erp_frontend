@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.application.query.http.invoice.booking;
+package com.kynsoft.finamer.payment.application.query.http.invoice.booking.genId;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.infrastructure.bus.IMediator;

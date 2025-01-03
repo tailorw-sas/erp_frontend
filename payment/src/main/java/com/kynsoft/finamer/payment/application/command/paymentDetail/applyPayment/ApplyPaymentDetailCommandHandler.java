@@ -2,9 +2,14 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayme
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
@@ -21,6 +26,8 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.infrastructure.services.http.BookingHttpUUIDService;
+import com.kynsoft.finamer.payment.infrastructure.services.http.helper.BookingImportAutomaticeHelperServiceImpl;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import java.time.LocalTime;
 import org.springframework.stereotype.Component;
@@ -44,6 +51,9 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
 
     private final IPaymentCloseOperationService paymentCloseOperationService;
 
+    private final BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl;
+    private final BookingHttpUUIDService bookingHttpUUIDService;
+
     public ApplyPaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
                                             IManageBookingService manageBookingService,
                                             IPaymentService paymentService,
@@ -51,7 +61,9 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
                                             IManagePaymentStatusService statusService,
                                             IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
                                             IManageEmployeeService manageEmployeeService,
-                                            IPaymentCloseOperationService paymentCloseOperationService) {
+                                            IPaymentCloseOperationService paymentCloseOperationService,
+                                            BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl,
+                                            BookingHttpUUIDService bookingHttpUUIDService) {
         this.paymentDetailService = paymentDetailService;
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
@@ -60,13 +72,18 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.manageEmployeeService = manageEmployeeService;
         this.paymentCloseOperationService = paymentCloseOperationService;
+        this.bookingImportAutomaticeHelperServiceImpl = bookingImportAutomaticeHelperServiceImpl;
+        this.bookingHttpUUIDService = bookingHttpUUIDService;
     }
 
     @Override
     public void handle(ApplyPaymentDetailCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBooking(), "id", "Booking ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentDetail(), "id", "Payment Detail ID cannot be null."));
-        ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
+
+        //ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
+        ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
+
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
@@ -123,6 +140,20 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
 
         this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+    }
+
+    private ManageBookingDto getBookingDto(UUID bookingId) {
+        try {
+            return this.manageBookingService.findById(bookingId);
+        } catch (Exception e) {
+            try {
+                BookingHttp bookingHttp = this.bookingHttpUUIDService.sendGetBookingHttpRequest(bookingId);
+                this.bookingImportAutomaticeHelperServiceImpl.createInvoice(bookingHttp);
+                return this.manageBookingService.findById(bookingId);
+            } catch (Exception ex) {
+                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
+            }
+        }
     }
 
 }

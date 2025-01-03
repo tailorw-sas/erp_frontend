@@ -1,22 +1,22 @@
-package com.kynsoft.finamer.payment.application.query.http.invoice.booking;
+package com.kynsoft.finamer.payment.application.query.http.invoice.booking.uuid;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsoft.finamer.payment.application.command.invoice.create.CreateInvoiceCommand;
-import com.kynsoft.finamer.payment.infrastructure.services.http.BookingHttpService;
+import com.kynsoft.finamer.payment.infrastructure.services.http.BookingHttpUUIDService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FindBookingByGenIdQueryHandler implements IQueryHandler<FindBookingByGenIdQuery, BookingHttp> {
+public class FindBookingByUUIDQueryHandler implements IQueryHandler<FindBookingByUUIDQuery, BookingHttp> {
 
-    private final BookingHttpService service;
+    private final BookingHttpUUIDService service;
 
-    public FindBookingByGenIdQueryHandler(BookingHttpService service) {
+    public FindBookingByUUIDQueryHandler(BookingHttpUUIDService service) {
         this.service = service;
     }
 
     @Override
-    public BookingHttp handle(FindBookingByGenIdQuery query) {
+    public BookingHttp handle(FindBookingByUUIDQuery query) {
         BookingHttp response = service.sendGetBookingHttpRequest(query.getId());
 
         query.getMediator().send(new CreateInvoiceCommand(response));
