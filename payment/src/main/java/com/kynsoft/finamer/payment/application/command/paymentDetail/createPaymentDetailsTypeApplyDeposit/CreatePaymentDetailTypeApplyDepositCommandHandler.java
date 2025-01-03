@@ -100,8 +100,8 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
         save.setDepositBalance(save.getDepositBalance() - newDetailDto.getAmount());
         //paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
         save.setApplied(save.getApplied() + newDetailDto.getAmount()); // TODO: Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
-        //save.setIdentified(save.getIdentified() + newDetailDto.getAmount());
-        //save.setNotIdentified(save.getPaymentAmount() - paymentDto.getIdentified());
+        save.setIdentified(save.getIdentified() + newDetailDto.getAmount());
+        save.setNotIdentified(save.getPaymentAmount() - paymentDto.getIdentified());
 
         this.paymentService.update(save);
     }
