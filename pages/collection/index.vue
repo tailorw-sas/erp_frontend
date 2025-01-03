@@ -501,7 +501,7 @@ function clearForm() {
 }
 
 async function getListContactByAgency(agencyIds: string[] = []) {
-  if (options.value.loading) {
+  if (optionsAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
@@ -1112,6 +1112,21 @@ async function parseDataTableFilter(payloadFilter: any) {
   getList()
 }
 
+async function parseDataTableFilterForContactAgency(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsAgency)
+  payloadAgency.value.filter = [...payloadAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payloadAgency.value.filter = [...payloadAgency.value.filter, ...parseFilter || []]
+
+  const agencyIds: string[] = []
+  if (filterToSearch.value.agency?.length > 0) {
+    filterToSearch.value.agency.forEach((item: any) => {
+      agencyIds.push(item.id)
+    })
+  }
+
+  getListContactByAgency(agencyIds)
+}
+
 async function parseDataTableFilterInvoice(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsInvoice)
 
@@ -1298,9 +1313,20 @@ function onSortField(event: any) {
     parseDataTableFilter(event.filter)
   }
 }
+function onSortFieldContactAgency(event: any) {
+  if (event) {
+    if (event.sortField === 'manageAgency') {
+      event.sortField = 'manageAgency.name'
+    }
+    if (event.sortField === 'manageRegion') {
+      event.sortField = 'manageRegion.name'
+    }
+    payloadAgency.value.sortBy = event.sortField
+    payloadAgency.value.sortType = event.sortOrder
+    parseDataTableFilterForContactAgency(event.filter)
+  }
+}
 function onSortFieldInvoice(event: any) {
-  console.log('event', event)
-
   if (event) {
     if (event.sortField === 'hotel') {
       event.sortField = 'hotel.name'
@@ -1737,6 +1763,11 @@ onMounted(() => {
                             query: '',
                             keys: ['name', 'code'],
                           }, filter)
+                          const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0);
+                          filterToSearch.creditDays = totalCreditDays
+                          if (filterToSearch.agency?.length > 0) {
+                            getListContactByAgency(filterToSearch.agency.map((item: any) => item.id))
+                          }
                         }"
                       >
                         <template #option="props">
@@ -2080,12 +2111,16 @@ onMounted(() => {
         <div class="w-full" style="height: 13rem; min-height: 12.1rem;">
           <DynamicTable
             component-table-id="componentTableIdInCollection"
-            :data="listItemsAgency" :columns="columnsAgency" :options="optionsAgency"
-            :pagination="paginationAgency" @on-confirm-create="clearForm"
-            @open-edit-dialog="getItemById($event)" @update:clicked-item="getItemById($event)"
-            @on-change-pagination="payloadOnChangePage = $event"
-            @on-change-filter="parseDataTableFilter" @on-list-item="resetListItems"
-            @on-sort-field="onSortField"
+            :data="listItemsAgency"
+            :columns="columnsAgency"
+            :options="optionsAgency"
+            :pagination="paginationAgency"
+            @on-confirm-create="clearForm"
+            @open-edit-dialog="getItemById($event)"
+            @on-change-pagination="payloadOnChangePageAgency = $event"
+            @on-change-filter="parseDataTableFilterForContactAgency"
+            @on-list-item="resetListItems"
+            @on-sort-field="onSortFieldContactAgency"
           >
             <template #emptyTable="{ data }">
               <div class="flex flex-column flex-wrap align-items-center justify-content-center py-3">

@@ -195,6 +195,16 @@ async function onConfirmSignOut() {
 
             <li role="menuitem" class="m-0 mb-3">
               <a
+                v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+                href="https://kibanadev.tailorw.net/" target="_blank" class="flex align-items-center hover:text-primary-500 transition-duration-200"
+              >
+                <i class="pi pi-fw pi-external-link mr-2" />
+                <span>Kibana</span>
+              </a>
+            </li>
+
+            <li role="menuitem" class="m-0 mb-3">
+              <a
                 v-if="currentBussiness !== null"
                 v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
                 :href="`/business/profile/${currentBussiness.businessId}`"

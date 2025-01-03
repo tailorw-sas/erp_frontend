@@ -45,8 +45,10 @@ const columns: IColumn[] = [
   { field: 'createdAt', header: 'Create Date', width: '200px', type: 'date' },
   // { field: 'paymentId', header: 'Payment Id', width: '200px', type: 'text' },
 
-  { field: 'amount', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
-  { field: 'depositBalance', header: 'Deposit Balance', width: '200px', type: 'text' },
+  // { field: 'amount', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
+  { field: 'amountTemp', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
+  // { field: 'depositBalance', header: 'Deposit Balance', width: '200px', type: 'text' },
+  { field: 'depositBalanceTemp', header: 'Deposit Balance', width: '200px', type: 'text' },
   { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 const options = ref({
@@ -137,6 +139,10 @@ async function getListPaymentDetailSummary() {
         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
           ? Number.parseFloat(iterator.amount).toString()
           : '0'
+
+        if (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '') {
+          iterator.amountTemp = formatNumber(iterator.amount)
+        }
       }
 
       for (const child of iterator.children) {
@@ -151,6 +157,8 @@ async function getListPaymentDetailSummary() {
         count.depositBalance += Number.parseFloat(iterator.applyDepositValue)
         if (iterator.applyDepositValue !== null && iterator.applyDepositValue !== '' && iterator.applyDepositValue !== undefined && iterator.applyDepositValue !== '0' && iterator.applyDepositValue !== '0.00' && iterator.applyDepositValue !== 0) {
           iterator.depositBalance = Number.parseFloat(iterator.applyDepositValue) * -1
+          const valueTemp = Number.parseFloat(iterator.applyDepositValue) * -1
+          iterator.depositBalanceTemp = formatNumber(valueTemp)
         }
         else {
           iterator.depositBalance = 0
@@ -330,8 +338,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center">
               <Row>
                 <Column footer="Totals:" :colspan="3" footer-style="text-align:right; font-weight: bold;" />
-                <Column :footer="(-Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)).toString()" footer-style="font-weight: bold;" />
-                <Column :footer="(-Math.abs(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)).toString()" footer-style="font-weight: bold;" />
+                <Column :footer="formatNumber((-Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)).toString())" footer-style="font-weight: bold;" />
+                <Column :footer="formatNumber((-Math.abs(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)).toString())" footer-style="font-weight: bold;" />
                 <Column :colspan="0" />
               </Row>
             </ColumnGroup>

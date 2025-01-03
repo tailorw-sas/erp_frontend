@@ -407,7 +407,7 @@ async function requireConfirmationToSelectItem(items: any[]) {
   const confirmItemSelection = (item: any) => {
     return new Promise((resolve) => {
       confirm.require({
-        header: 'High risk item',
+        header: 'High Risk Item',
         message: `Are you sure you want to assign ${item.parentName} - ${item.label} high-risk permission?`,
         rejectLabel: 'Cancel',
         acceptLabel: 'Accept',

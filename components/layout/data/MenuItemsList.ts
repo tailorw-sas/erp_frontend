@@ -57,7 +57,7 @@ export const model = ref([
         icon: 'pi pi-fw pi-envelope',
         items: [
           {
-            label: 'Configuration',
+            label: 'Mailjet Configuration',
             icon: 'pi pi-fw pi-folder',
             to: '/mailjet-config'
           },
@@ -567,7 +567,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
             //   items: []
             // },
             {
-              label: 'Configuration',
+              label: 'Mailjet Configuration',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/mailjet-config'),
               items: []

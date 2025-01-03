@@ -2338,7 +2338,8 @@ async function applyUndoApplication(event: any) {
   try {
     if (objItemSelectedForRightClickUndoApplication.value?.id) {
       const payload = {
-        paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || ''
+        paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || '',
+        employee: userData?.value?.user?.userId || ''
       }
       await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
       if (route?.query?.id) {
@@ -2373,7 +2374,8 @@ async function applyReverseTransaction(event: any) {
   try {
     if (objItemSelectedForRightClickReverseTransaction.value?.id) {
       const payload = {
-        paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || ''
+        paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || '',
+        employee: userData?.value?.user?.userId || ''
       }
       await GenericService.create(confApiPaymentDetailReverseTransaction.moduleApi, confApiPaymentDetailReverseTransaction.uriApi, payload)
       if (route?.query?.id) {
@@ -3147,6 +3149,7 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
     payloadToApplyPayment.value.amount = event?.bookingBalance
     payloadToApplyPayment.value.booking = event?.id
     payloadToApplyPayment.value.applyPayment = true
+    payloadToApplyPayment.value.employe = userData?.value?.user?.userId || ''
     openDialogApplyPayment.value = false
     toast.add({ severity: 'success', summary: 'Successful', detail: 'The selected payment will be applied once the corresponding detail is created.', life: 10000 })
   }
@@ -3154,7 +3157,8 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
     try {
       const payloadToApplyPayment: GenericObject = {
         paymentDetail: idPaymentDetail.value || '',
-        booking: event.id
+        booking: event.id,
+        employe: userData?.value?.user?.userId || ''
       }
 
       const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
@@ -3220,6 +3224,12 @@ function disableBankAccount(data: any) {
 
   return result
 }
+
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getListPaymentDetail()
+})
 
 watch(() => hasBeenEdited.value, async (newValue) => {
   if (newValue) {

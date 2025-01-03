@@ -357,9 +357,10 @@ async function getAdjustmentList() {
       }
 
       iterator.paymentTransactionType = transaction */
-      iterator.paymentTransactionType = iterator.paymentTransactionType || iterator.transaction
+      // iterator.paymentTransactionType = iterator.paymentTransactionType || iterator.transaction
       ListItems.value = [...ListItems.value, {
         ...iterator,
+        paymentTransactionType: iterator.transaction ? { ...iterator.transaction, name: `${iterator.transaction?.code || ''}-${iterator.transaction?.name || ''}` } : null,
         loadingEdit: false,
         loadingDelete: false,
         roomRateId: iterator?.roomRate?.roomRateId,
@@ -744,8 +745,7 @@ onMounted(() => {
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
             <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
-            <Column :footer="Number.parseFloat(totalAmount.toFixed(2))" footer-style="font-weight: 700" />
-
+            <Column :footer="formatNumber(Number.parseFloat(totalAmount.toFixed(2)))" footer-style="font-weight: 700" />
             <Column :colspan="6" />
           </Row>
         </ColumnGroup>

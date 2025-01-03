@@ -20,8 +20,8 @@ export const ENUM_OPERATOR_STRING = [
   { id: 'LIKE', label: 'CONTAINS' },
   { id: 'EQUALS', label: 'EQUALS' },
   { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
-  { id: 'IS_NULL', label: 'IS NULL' },
-  { id: 'IS_NOT_NULL', label: 'IS NOT NULL' },
+  // { id: 'IS_NULL', label: 'IS NULL' },
+  // { id: 'IS_NOT_NULL', label: 'IS NOT NULL' },
 ]
 
 export const ENUM_OPERATOR_BOOLEAN = [

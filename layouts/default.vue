@@ -128,7 +128,7 @@ catch (error) {
           <div class="inline-flex justify-content-center align-items-center h-4rem w-4rem mt-2 mb-3">
             <i class="pi pi-exclamation-triangle text-6xl" style="color: #F54108;" />
           </div>
-          <p class="mb-0 font-semibold">
+          <p class="p-2 text-center mb-0 font-semibold">
             {{ message.message }}
           </p>
           <div class="flex align-items-center gap-2 mt-4">
