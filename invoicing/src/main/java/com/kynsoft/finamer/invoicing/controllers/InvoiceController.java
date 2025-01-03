@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.http.entity.InvoiceHttp;
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
@@ -34,6 +35,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.Up
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.originalAmount.UpdateInvoiceOriginalAmountCommand;
+import com.kynsoft.finamer.invoicing.application.query.invoice.http.getById.FindInvoiceHttpByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
@@ -56,6 +58,15 @@ public class InvoiceController {
     private final IMediator mediator;
     public InvoiceController(IMediator mediator) {
         this.mediator = mediator;
+    }
+
+    @GetMapping(path = "/uuid-id/{id}")
+    public ResponseEntity<?> getByUuidId(@PathVariable UUID id) {
+
+        FindInvoiceHttpByIdQuery query = new FindInvoiceHttpByIdQuery(id);
+        InvoiceHttp response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping()

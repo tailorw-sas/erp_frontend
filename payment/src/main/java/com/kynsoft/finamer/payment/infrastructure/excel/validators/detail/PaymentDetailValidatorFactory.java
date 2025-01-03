@@ -12,6 +12,8 @@ import com.kynsoft.finamer.payment.infrastructure.excel.event.error.detail.Payme
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentImportAmountValidator;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentTransactionIdValidator;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
+import com.kynsoft.finamer.payment.infrastructure.services.http.BookingHttpGenIdService;
+import com.kynsoft.finamer.payment.infrastructure.services.http.helper.BookingImportAutomaticeHelperServiceImpl;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -40,12 +42,16 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     private final IManagePaymentTransactionTypeService managePaymentTransactionTypeService;
     private final IManageBookingService bookingService;
 
+    private final BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl;
+    private final BookingHttpGenIdService bookingHttpGenIdService;
 
     public PaymentDetailValidatorFactory(ApplicationEventPublisher paymentEventPublisher, IPaymentService paymentService,
                                          IPaymentDetailService paymentDetailService,
                                          PaymentImportCacheRepository paymentImportCacheRepository,
                                          IManagePaymentTransactionTypeService managePaymentTransactionTypeService,
-                                         IManageBookingService bookingService
+                                         IManageBookingService bookingService,
+                                         BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl,
+                                         BookingHttpGenIdService bookingHttpGenIdService
     ) {
         super(paymentEventPublisher);
         this.paymentService = paymentService;
@@ -53,6 +59,8 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.managePaymentTransactionTypeService = managePaymentTransactionTypeService;
         this.bookingService = bookingService;
+        this.bookingImportAutomaticeHelperServiceImpl = bookingImportAutomaticeHelperServiceImpl;
+        this.bookingHttpGenIdService = bookingHttpGenIdService;
     }
 
     @Override
@@ -63,7 +71,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentDetailBelongToSamePayment = new PaymentDetailBelongToSamePayment(applicationEventPublisher,paymentService);
         paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
         paymentTransactionIdValidator = new PaymentTransactionIdValidator(paymentDetailService, applicationEventPublisher);
-        paymentDetailsBookingFieldValidator = new PaymentDetailsBookingFieldValidator(applicationEventPublisher, bookingService);
+        paymentDetailsBookingFieldValidator = new PaymentDetailsBookingFieldValidator(applicationEventPublisher, bookingService, bookingImportAutomaticeHelperServiceImpl, bookingHttpGenIdService);
 
     }
 

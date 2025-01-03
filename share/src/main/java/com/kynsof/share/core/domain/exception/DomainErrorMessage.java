@@ -271,7 +271,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     CHECK_IF_NEW_PAYMENT_DETAIL_IS_APPLY_DEPOSIT(1052, Series.DOMAIN_ERROR, "Transaction of type Apply Deposit is not applicable to Payment."),
     CHECK_DATES(1053, Series.DOMAIN_ERROR, "The initial date must be less than the final date."),
     VCC_CHECKIN_DATE_IS_BEFORE_CURRENT_DATE(1054, Series.DOMAIN_ERROR, "The check in date must be before or equal to the current date."),
-    VCC_CLOSE_OPERATION_OUT_OF_RANGE(1055, Series.DOMAIN_ERROR, "Transaction date out of schedule range"),
+    VCC_CLOSE_OPERATION_OUT_OF_RANGE(1055, Series.DOMAIN_ERROR, "Transaction date is out of close operation."),
     VCC_CLOSE_OPERATION_NOT_FOUND(1056, Series.DOMAIN_ERROR, "Close Operation not found."),
     INCOME_ADJUSTMENT_NOT_FOUND(1057, Series.DOMAIN_ERROR, "Adjustment not found."),
     INCOME_ADJUSTMENT_AMOUNT_NOT_ZERO(1058, Series.DOMAIN_ERROR,"The amount must be different from zero."),
@@ -397,7 +397,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_VCC_TRANSACTION_TYPE_REFUND_NOT_FOUND(1174, Series.DOMAIN_ERROR,"There is no transaction category of type refund by default."),
     MANAGE_VCC_TRANSACTION_TYPE_CHECK_MANUAL(1175, Series.DOMAIN_ERROR,"Another item already exists with manual."),
     MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND(1176, Series.DOMAIN_ERROR,"There is no transaction category of type manual by default."),
-    MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND(1177, Series.DOMAIN_ERROR,"There is no transaction category by default."),;
+    MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND(1177, Series.DOMAIN_ERROR,"There is no transaction category by default."),
+    BOOKING_NOT_FOUND_(1178, Series.DOMAIN_ERROR, "The booking not found."),
+    INVOICE_NOT_FOUND_(1179, Series.DOMAIN_ERROR, "The invoice not found.");
 
     private static final DomainErrorMessage[] VALUES;
 

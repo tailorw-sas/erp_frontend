@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.report.applications.query.dbconection.getById.DBConectionResponse;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,6 +42,7 @@ public class JasperReportTemplateResponse implements IResponse {
     private String language;
     private DBConectionResponse dbConection;
     private String query;
+    private ModuleSystems moduleSystems; // Campo para el módulo del sistema
 
     public JasperReportTemplateResponse(JasperReportTemplateDto jasperReportTemplateDto) {
         this.id = jasperReportTemplateDto.getId();
@@ -65,6 +67,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.status = jasperReportTemplateDto.getStatus();
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.query = jasperReportTemplateDto.getQuery();
+        this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
     }
 
 }

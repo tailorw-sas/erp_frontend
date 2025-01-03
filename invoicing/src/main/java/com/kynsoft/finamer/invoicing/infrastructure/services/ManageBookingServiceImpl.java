@@ -149,8 +149,8 @@ public class ManageBookingServiceImpl implements IManageBookingService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
-                new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
+                new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
 
     }
 
@@ -217,6 +217,18 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId) {
         return this.repositoryQuery.existsByHotelInvoiceNumber(hotelInvoiceNumber, hotelId);
+    }
+
+    @Override
+    public ManageBookingDto findBookingId(Long bookingId) {
+        Optional<Booking> optionalEntity = repositoryQuery.findByBookingId(bookingId);
+
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
+                new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
     }
 
 }

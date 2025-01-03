@@ -32,6 +32,8 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
 
     Optional<Booking> findManageBookingByHotelBookingNumber(String hotelBookingNumber);
 
+    Optional<Booking> findByBookingId(Long bookingId);
+
     @Query(value = "SELECT * " +
             "FROM booking mb " +
             "JOIN invoice ON mb.manage_invoice = invoice.id " +
