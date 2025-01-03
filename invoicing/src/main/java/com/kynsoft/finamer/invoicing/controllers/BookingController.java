@@ -19,8 +19,9 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.update.Up
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.update.UpdateBookingRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateMessage;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.getByGenId.FindBookingByGenIdQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.http.getByGenId.FindBookinghttpByGenIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.getById.FindBookingByIdQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.http.getById.FindBookingHttpByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingFromFileErrorQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusQuery;
@@ -96,7 +97,16 @@ public class BookingController {
     @GetMapping(path = "/gen-id/{id}")
     public ResponseEntity<?> getByGenId(@PathVariable Long id) {
 
-        FindBookingByGenIdQuery query = new FindBookingByGenIdQuery(id);
+        FindBookinghttpByGenIdQuery query = new FindBookinghttpByGenIdQuery(id);
+        BookingHttp response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/uuid-id/{id}")
+    public ResponseEntity<?> getByUuidId(@PathVariable UUID id) {
+
+        FindBookingHttpByIdQuery query = new FindBookingHttpByIdQuery(id);
         BookingHttp response = mediator.send(query);
 
         return ResponseEntity.ok(response);
