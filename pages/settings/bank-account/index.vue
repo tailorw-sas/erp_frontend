@@ -547,9 +547,17 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
-    payload.value.sortBy = event.sortField === 'manageBank'
-      ? 'manageBank.name'
-      : event.sortField === 'manageHotel' ? 'manageHotel.name' : event.sortField
+    if (event.sortField === 'manageAccountType') {
+      event.sortField = 'manageAccountType.name'
+    }
+    if (event.sortField === 'manageBank') {
+      event.sortField = 'manageBank.name'
+    }
+    if (event.sortField === 'manageHotel') {
+      event.sortField = 'manageHotel.name'
+    }
+
+    payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
