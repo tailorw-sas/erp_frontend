@@ -33,7 +33,7 @@ public class UpdateManageReportParamTypeCommandHandler implements ICommandHandle
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setLabel, command.getLabel(), dto.getLabel(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setSource, command.getSource(), dto.getSource(), update::setUpdate);
+        updateSource(dto::setSource, command.getSource(), dto.getSource(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setHotel, command.getHotel(), dto.getHotel(), update::setUpdate);
@@ -49,6 +49,15 @@ public class UpdateManageReportParamTypeCommandHandler implements ICommandHandle
             setter.accept(newValue);
             update.accept(1);
 
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateSource(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
+        if (!newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
             return true;
         }
         return false;
