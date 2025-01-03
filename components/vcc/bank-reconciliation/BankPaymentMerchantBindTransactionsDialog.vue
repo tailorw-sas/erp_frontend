@@ -546,7 +546,7 @@ onMounted(async () => {
         />
       </div>
       <div>
-        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="loadingSaveAll" @click="handleSave()" />
+        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="options.loading" :disabled="BindTransactionList.length === 0" @click="handleSave()" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
       </div>
     </div>
