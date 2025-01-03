@@ -1,12 +1,16 @@
 package com.kynsoft.finamer.payment.controllers;
 
+import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.payment.application.query.http.invoice.booking.FindBookingByGenIdQuery;
 import com.kynsoft.finamer.payment.application.query.manageBooking.search.GetSearchManageBookingQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,4 +35,14 @@ public class ManageBookingController {
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping(path = "/gen-id/{id}")
+    public ResponseEntity<?> getByGenId(@PathVariable Long id) {
+
+        FindBookingByGenIdQuery query = new FindBookingByGenIdQuery(id, mediator);
+        BookingHttp response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
 }
