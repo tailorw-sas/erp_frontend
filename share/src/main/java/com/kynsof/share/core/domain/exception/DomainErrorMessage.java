@@ -271,7 +271,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     CHECK_IF_NEW_PAYMENT_DETAIL_IS_APPLY_DEPOSIT(1052, Series.DOMAIN_ERROR, "Transaction of type Apply Deposit is not applicable to Payment."),
     CHECK_DATES(1053, Series.DOMAIN_ERROR, "The initial date must be less than the final date."),
     VCC_CHECKIN_DATE_IS_BEFORE_CURRENT_DATE(1054, Series.DOMAIN_ERROR, "The check in date must be before or equal to the current date."),
-    VCC_CLOSE_OPERATION_OUT_OF_RANGE(1055, Series.DOMAIN_ERROR, "Transaction date out of schedule range"),
+    VCC_CLOSE_OPERATION_OUT_OF_RANGE(1055, Series.DOMAIN_ERROR, "Transaction date is out of close operation."),
     VCC_CLOSE_OPERATION_NOT_FOUND(1056, Series.DOMAIN_ERROR, "Close Operation not found."),
     INCOME_ADJUSTMENT_NOT_FOUND(1057, Series.DOMAIN_ERROR, "Adjustment not found."),
     INCOME_ADJUSTMENT_AMOUNT_NOT_ZERO(1058, Series.DOMAIN_ERROR,"The amount must be different from zero."),
