@@ -1,34 +1,22 @@
-package com.kynsoft.finamer.invoicing.application.query.manageBooking.getByGenId;
+package com.kynsoft.finamer.invoicing.infrastructure.services.http.helper;
 
-import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.http.entity.AttachmentHttp;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.http.entity.InvoiceHttp;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
-public class FindBookingByGenIdQueryHandler implements IQueryHandler<FindBookingByGenIdQuery, BookingHttp> {
+@Service
+public class BookingImportAutomaticeHelperServiceImpl {
 
-    private final IManageBookingService service;
-
-    public FindBookingByGenIdQueryHandler(IManageBookingService service) {
-        this.service = service;
+    public BookingImportAutomaticeHelperServiceImpl() {
     }
 
-    @Override
-    public BookingHttp handle(FindBookingByGenIdQuery query) {
-        ManageBookingDto response = service.findBookingId(query.getId());
-
-        return createBookingHttp(response);
-    }
-
-    private BookingHttp createBookingHttp(ManageBookingDto response) {
+    public BookingHttp createBookingHttp(ManageBookingDto response) {
         BookingHttp bookingHttp = new BookingHttp();
         bookingHttp.setId(response.getId());
         bookingHttp.setBookingId(response.getBookingId());
