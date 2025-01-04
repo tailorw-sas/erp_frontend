@@ -13,6 +13,7 @@ import InvoiceTabView from '~/components/invoice/InvoiceTabView/InvoiceTabView.v
 
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 import type { IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 const toast = useToast()
 
@@ -193,6 +194,15 @@ const itemTemp = ref<GenericObject>({
   agency: null,
   status: ENUM_INVOICE_STATUS[5] || ENUM_INVOICE_STATUS[2],
   invoiceType: ENUM_INVOICE_TYPE.find((element => element.id === 'CREDIT')),
+})
+
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
 })
 
 const Pagination = ref<IPagination>({
@@ -790,24 +800,19 @@ async function getItemById(id: any) {
 
 async function getBookingList(clearFilter: boolean = false) {
   try {
-    const Payload: any = ({
-      filter: [{
+    payload.value.filter = []
+    payload.value.filter = [{
 
-        key: 'invoice.id',
-        operator: 'EQUALS',
-        value: route.query.selected,
-        logicalOperation: 'AND'
+      key: 'invoice.id',
+      operator: 'EQUALS',
+      value: route.query.selected,
+      logicalOperation: 'AND'
 
-      }],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.ASC
-    })
+    }]
+
     bookingList.value = []
 
-    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload)
+    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1038,6 +1043,12 @@ const existsAttachmentTypeInv = computed(() => {
   return attachmentList.value.some(attachment => attachment?.type?.code === 'INV')
 })
 
+function onChangePage($event: any) {
+  payload.value.page = $event?.page ? $event?.page : 0
+  payload.value.pageSize = $event?.rows ? $event.rows : 50
+  getBookingList()
+}
+
 watch(invoiceAmount, () => {
   invoiceAmountError.value = false
 
@@ -1218,6 +1229,7 @@ onMounted(async () => {
             :is-creation-dialog="true"
             :selected-invoice="selectedInvoice as any"
             :booking-list="bookingList"
+            :booking-pagination="Pagination"
             :add-booking="addBooking"
             :update-booking="updateBooking"
             :adjustment-list="adjustmentList"
@@ -1226,6 +1238,7 @@ onMounted(async () => {
             :active="active" :set-active="($event) => {
               active = $event
             }"
+            @on-change-page="onChangePage"
           />
 
           <div>
