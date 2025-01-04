@@ -77,7 +77,7 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(
-                DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+                DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND_, new ErrorField("id", DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND_.getReasonPhrase())));
     }
 
     @Override
