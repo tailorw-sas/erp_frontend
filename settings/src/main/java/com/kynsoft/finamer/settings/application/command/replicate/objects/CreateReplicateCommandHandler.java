@@ -39,6 +39,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageVCCTransactionType.ProducerReplicateManageVCCTransactionTypeService;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -415,7 +416,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     }
                 }
                 case MANAGE_PAYMENT_TRANSACTION_TYPE -> {
-                    for (ManagePaymentTransactionTypeDto paymentTransactionTypeDto : this.paymentTransactionTypeService.findAllToReplicate()) {
+                    List<ManagePaymentTransactionTypeDto> list = this.paymentTransactionTypeService.findAllToReplicate();
+                    for (ManagePaymentTransactionTypeDto paymentTransactionTypeDto : list) {
                         this.replicateManagePaymentTransactionTypeService.create(new ReplicateManagePaymentTransactionTypeKafka(
                                 paymentTransactionTypeDto.getId(),
                                 paymentTransactionTypeDto.getCode(),
@@ -429,7 +431,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentTransactionTypeDto.getDefaultRemark(),
                                 paymentTransactionTypeDto.getDefaults(),
                                 paymentTransactionTypeDto.getPaymentInvoice(),
-                                paymentTransactionTypeDto.getDebit()
+                                paymentTransactionTypeDto.getDebit(),
+                                paymentTransactionTypeDto.isExpenseToBooking()
                         ));
                     }
                 }
