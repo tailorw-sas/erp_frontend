@@ -74,7 +74,7 @@ public class InvoiceStatusHistoryServiceImpl implements IInvoiceStatusHistorySer
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_STATUS_HISTORY, new ErrorField("id", DomainErrorMessage.INVOICE_STATUS_HISTORY.getReasonPhrase())));
     }
 
     @Override

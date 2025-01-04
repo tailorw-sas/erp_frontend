@@ -416,7 +416,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
                 new ErrorField("id", "The invoice not found.")));
 
     }
@@ -461,7 +461,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public ManageInvoiceDto findByInvoiceId(long id) {
         return repositoryQuery.findByInvoiceId(id)
                 .map(Invoice::toAggregate)
-                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
+                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
                 new ErrorField("invoiceId", "The invoice not found."))));
     }
 

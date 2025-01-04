@@ -17,6 +17,7 @@ import com.kynsoft.finamer.payment.infrastructure.excel.mapper.PaymentBankRowMap
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.bank.PaymentBankValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportBankErrorRepository;
+import java.util.Comparator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,9 +29,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHelperService {
+
     private final PaymentImportCacheRepository paymentImportCacheRepository;
     private final PaymentImportBankErrorRepository paymentImportErrorRepository;
     private final PaymentBankValidatorFactory paymentBankValidatorFactory;
@@ -55,19 +58,19 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     private String PAYMENT_ATTACHMENT_STATUS;
 
     public PaymentImportBankHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
-                                              PaymentImportBankErrorRepository paymentImportErrorRepository,
-                                              PaymentBankValidatorFactory paymentBankValidatorFactory,
-                                              RedisTemplate<String, String> redisTemplate,
-                                              IPaymentService paymentService,
-                                              IManageAgencyService manageAgencyService,
-                                              IManageHotelService manageHotelService,
-                                              IManageBankAccountService bankAccountService,
-                                              IManagePaymentSourceService paymentSourceService,
-                                              IManagePaymentStatusService paymentStatusService,
-                                              PaymentBankRowMapper paymentBankRowMapper,
-                                              IManagePaymentAttachmentStatusService attachmentStatusService,
-                                              IPaymentStatusHistoryService paymentStatusHistoryService,
-                                              IManageEmployeeService employeeService) {
+            PaymentImportBankErrorRepository paymentImportErrorRepository,
+            PaymentBankValidatorFactory paymentBankValidatorFactory,
+            RedisTemplate<String, String> redisTemplate,
+            IPaymentService paymentService,
+            IManageAgencyService manageAgencyService,
+            IManageHotelService manageHotelService,
+            IManageBankAccountService bankAccountService,
+            IManagePaymentSourceService paymentSourceService,
+            IManagePaymentStatusService paymentStatusService,
+            PaymentBankRowMapper paymentBankRowMapper,
+            IManagePaymentAttachmentStatusService attachmentStatusService,
+            IPaymentStatusHistoryService paymentStatusHistoryService,
+            IManageEmployeeService employeeService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
@@ -84,7 +87,6 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         this.paymentStatusHistoryService = paymentStatusHistoryService;
         this.employeeService = employeeService;
     }
-
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
@@ -171,7 +173,13 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     @Override
     public PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable) {
         Page<PaymentBankRowError> page = paymentImportErrorRepository.findAllByImportProcessId(importProcessId, pageable);
-        return new PaginatedResponse(page.getContent(), page.getTotalPages(), page.getNumberOfElements(),
-                page.getTotalElements(), page.getSize(), page.getNumber());
+        return new PaginatedResponse(
+                page.getContent().stream().sorted(Comparator.comparingInt(PaymentBankRowError::getRowNumber)).collect(Collectors.toList()),
+                page.getTotalPages(),
+                page.getNumberOfElements(),
+                page.getTotalElements(),
+                page.getSize(),
+                page.getNumber()
+        );
     }
 }
