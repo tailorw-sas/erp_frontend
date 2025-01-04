@@ -399,7 +399,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND(1176, Series.DOMAIN_ERROR,"There is no transaction category of type manual by default."),
     MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND(1177, Series.DOMAIN_ERROR,"There is no transaction category by default."),
     BOOKING_NOT_FOUND_(1178, Series.DOMAIN_ERROR, "The booking not found."),
-    INVOICE_NOT_FOUND_(1179, Series.DOMAIN_ERROR, "The invoice not found.");
+    INVOICE_NOT_FOUND_(1179, Series.DOMAIN_ERROR, "The invoice not found."),
+    ROOM_RATE_NOT_FOUND_(1180, Series.DOMAIN_ERROR, "The Room Rate not found.");
 
     private static final DomainErrorMessage[] VALUES;
 
