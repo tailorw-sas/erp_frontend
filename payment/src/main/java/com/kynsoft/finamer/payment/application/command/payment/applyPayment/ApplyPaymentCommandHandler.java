@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.payment.applyPayment;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.http.entity.InvoiceHttp;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositCommand;
@@ -15,6 +16,8 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.infrastructure.services.http.InvoiceHttpUUIDService;
+import com.kynsoft.finamer.payment.infrastructure.services.http.helper.InvoiceImportAutomaticeHelperServiceImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -26,9 +29,16 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private final IPaymentService paymentService;
     private final IPaymentDetailService paymentDetailService;
 
+    private final InvoiceHttpUUIDService invoiceHttpUUIDService;
+    private final InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl;
+
     public ApplyPaymentCommandHandler(IPaymentService paymentService,
-            IManageInvoiceService manageInvoiceService,
-            IPaymentDetailService paymentDetailService) {
+                                      IManageInvoiceService manageInvoiceService,
+                                      IPaymentDetailService paymentDetailService,
+                                      InvoiceHttpUUIDService invoiceHttpUUIDService,
+                                      InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl) {
+        this.invoiceHttpUUIDService = invoiceHttpUUIDService;
+        this.invoiceImportAutomaticeHelperServiceImpl = invoiceImportAutomaticeHelperServiceImpl;
         this.paymentService = paymentService;
         this.manageInvoiceService = manageInvoiceService;
         this.paymentDetailService = paymentDetailService;
@@ -134,7 +144,17 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private List<ManageInvoiceDto> createInvoiceQueue(ApplyPaymentCommand command) {
         List<ManageInvoiceDto> queue = new ArrayList<>();
         for (UUID invoice : command.getInvoices()) {
-            queue.add(this.manageInvoiceService.findById(invoice));
+            try {
+                queue.add(this.manageInvoiceService.findById(invoice));
+            } catch (Exception e) {
+                /***
+                 * TODO: Aqui se define un flujo alternativo por HTTP si en algun momento kafka falla y las invoice no se replicaron, para
+                 * evitar que el flujo de aplicacion de pago falle.
+                 */
+                InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
+                this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
+                queue.add(this.manageInvoiceService.findById(invoice));
+            }
         }
 
         Collections.sort(queue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));

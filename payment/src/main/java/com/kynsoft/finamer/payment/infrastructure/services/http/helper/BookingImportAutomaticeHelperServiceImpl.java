@@ -37,12 +37,12 @@ public class BookingImportAutomaticeHelperServiceImpl {
         ManageHotelDto hotelDto = this.hotelService.findById(bookingHttp.getInvoice().getHotel());
         ManageAgencyDto agencyDto = this.manageAgencyService.findById(bookingHttp.getInvoice().getAgency());
         List<ManageBookingDto> bookingDtos = new ArrayList<>();
-        createBookingList(bookingHttp, bookingDtos);
         create(bookingHttp, bookingDtos, hotelDto, agencyDto);
     }
 
     private void create(BookingHttp bookingHttp, List<ManageBookingDto> bookingDtos, ManageHotelDto hotelDto, ManageAgencyDto agencyDto) {
 
+        createBookingList(bookingHttp.getInvoice().getBookings(), bookingDtos);
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
                 bookingHttp.getInvoice().getId(),
                 bookingHttp.getInvoice().getInvoiceId(),
@@ -63,25 +63,27 @@ public class BookingImportAutomaticeHelperServiceImpl {
 
     }
 
-    private void createBookingList(BookingHttp bookingHttp, List<ManageBookingDto> bookingDtos) {
-        bookingDtos.add(new ManageBookingDto(
-                bookingHttp.getId(),
-                bookingHttp.getBookingId(),
-                bookingHttp.getReservationNumber(),
-                LocalDateTime.parse(bookingHttp.getCheckIn()),
-                LocalDateTime.parse(bookingHttp.getCheckOut()),
-                bookingHttp.getFullName(),
-                bookingHttp.getFirstName(),
-                bookingHttp.getLastName(),
-                bookingHttp.getInvoiceAmount(),
-                bookingHttp.getAmountBalance(),
-                bookingHttp.getCouponNumber(),
-                bookingHttp.getAdults(),
-                bookingHttp.getChildren(),
-                null,
-                bookingHttp.getBookingParent() != null ? this.bookingService.findById(bookingHttp.getBookingParent()) : null,
-                LocalDateTime.parse(bookingHttp.getBookingDate())
-        ));
+    private void createBookingList(List<BookingHttp> bookings, List<ManageBookingDto> bookingDtos) {
+        for (BookingHttp booking : bookings) {
+            bookingDtos.add(new ManageBookingDto(
+                    booking.getId(),
+                    booking.getBookingId(),
+                    booking.getReservationNumber(),
+                    LocalDateTime.parse(booking.getCheckIn()),
+                    LocalDateTime.parse(booking.getCheckOut()),
+                    booking.getFullName(),
+                    booking.getFirstName(),
+                    booking.getLastName(),
+                    booking.getInvoiceAmount(),
+                    booking.getAmountBalance(),
+                    booking.getCouponNumber(),
+                    booking.getAdults(),
+                    booking.getChildren(),
+                    null,
+                    booking.getBookingParent() != null ? this.bookingService.findById(booking.getBookingParent()) : null,
+                    LocalDateTime.parse(booking.getBookingDate())
+            ));
+        }
     }
 
     private String deleteHotelInfo(String input) {
