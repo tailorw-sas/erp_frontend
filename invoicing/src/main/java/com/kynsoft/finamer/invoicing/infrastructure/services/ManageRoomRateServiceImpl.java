@@ -124,7 +124,7 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ROOM_RATE_NOT_FOUND_, new ErrorField("id", "The Room Rate not found.")));
 
     }
 
