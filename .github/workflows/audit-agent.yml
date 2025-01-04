@@ -6,6 +6,7 @@ on:
     branches:
       - 'dev'
       - 'qa'
+      - 'main'
     paths:
       - .github/workflows/audit-agent.yml
       - 'audit-agent/**'
