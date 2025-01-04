@@ -28,6 +28,7 @@ public class ManagePaymentTransactionTypeResponse implements IResponse {
     private Boolean defaults;
     private Boolean paymentInvoice;
     private Boolean debit;
+    private boolean expenseToBooking;
 
     public ManagePaymentTransactionTypeResponse(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -43,6 +44,7 @@ public class ManagePaymentTransactionTypeResponse implements IResponse {
         this.defaults = dto.isDefaults();
         this.paymentInvoice = dto.getPaymentInvoice();
         this.debit = dto.getDebit();
+        this.expenseToBooking = dto.isExpenseToBooking();
     }
 
 }

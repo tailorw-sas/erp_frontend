@@ -111,7 +111,7 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
-    @Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null or #result.isEmpty()")
+    //@Cacheable(cacheNames = "managePaymentTransactionTypeAll", unless = "#result == null or #result.isEmpty()")
     public List<ManagePaymentTransactionTypeDto> findAllToReplicate() {
         List<ManagePaymentTransactionType> objects = this.repositoryQuery.findAll();
         List<ManagePaymentTransactionTypeDto> objectDtos = new ArrayList<>();

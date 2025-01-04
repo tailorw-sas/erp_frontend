@@ -40,6 +40,21 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse, Seriali
     private boolean expenseToBooking;
 
     public ManagePaymentTransactionTypeDto createObject() {
-        return new ManagePaymentTransactionTypeDto(id, code, name, status, cash, deposit, applyDeposit, remarkRequired, minNumberOfCharacter, defaultRemark, defaults, paymentInvoice, debit);
+        return new ManagePaymentTransactionTypeDto(
+                id, 
+                code, 
+                name, 
+                status, 
+                cash, 
+                deposit, 
+                applyDeposit, 
+                remarkRequired, 
+                minNumberOfCharacter, 
+                defaultRemark, 
+                defaults, 
+                paymentInvoice, 
+                debit,
+                expenseToBooking
+        );
     }
 }
