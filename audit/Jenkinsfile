@@ -23,9 +23,9 @@ pipeline {
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'audit.yaml'
         DEPLOYMENT_NAME = 'audit'
-        URL_DEV = credentials("URL-K3S-dev")
-        URL_QA = credentials("URL-K3S-qa")
-		URL_PROD = credentials("URL-K3S")
+        URL_DEV = "${URL_K3S_DEV}"
+        URL_QA = "${URL_K3S_QA}"
+		URL_PROD = "${URL_K3S}"
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
@@ -124,14 +124,18 @@ pipeline {
     post {
         success {
             script {
-                def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+                if(env.BRANCH_NAME != 'main'){
+                    def notificator = new NotificadorEmail(this)
+                    notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+                }
             }
         }
         failure {
             script {
-                def notificator = new NotificadorEmail(this)
-                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
+                if(env.BRANCH_NAME != 'main'){
+                    def notificator = new NotificadorEmail(this)
+                    notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
+                }
             }
         }
     }
