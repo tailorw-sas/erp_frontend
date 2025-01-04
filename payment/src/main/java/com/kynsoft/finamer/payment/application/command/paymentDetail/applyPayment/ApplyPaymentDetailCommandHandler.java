@@ -147,6 +147,10 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
             return this.manageBookingService.findById(bookingId);
         } catch (Exception e) {
             try {
+                /***
+                 * TODO: Aqui se define un flujo alternativo por HTTP si en algun momento kafka falla y las invoice no se replicaron, para
+                 * evitar que el flujo de aplicacion de pago falle.
+                 */
                 BookingHttp bookingHttp = this.bookingHttpUUIDService.sendGetBookingHttpRequest(bookingId);
                 this.bookingImportAutomaticeHelperServiceImpl.createInvoice(bookingHttp);
                 return this.manageBookingService.findById(bookingId);

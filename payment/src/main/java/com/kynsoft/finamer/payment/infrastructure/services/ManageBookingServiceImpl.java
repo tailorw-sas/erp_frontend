@@ -49,7 +49,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_, new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         if (booking.isPresent()) {
             return booking.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
     }
 
     @Override
