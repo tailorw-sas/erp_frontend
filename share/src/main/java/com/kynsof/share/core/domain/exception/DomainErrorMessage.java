@@ -402,7 +402,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_NOT_FOUND_(1179, Series.DOMAIN_ERROR, "The invoice not found."),
     ROOM_RATE_NOT_FOUND_(1180, Series.DOMAIN_ERROR, "The Room Rate not found."),
     INVOICE_STATUS_HISTORY(1181, Series.DOMAIN_ERROR, "The invoice status history not found."),
-    INVOICE_ADJUSTMENT_NOT_FOUND(1182, Series.DOMAIN_ERROR, "The invoice adjustment not found.");
+    INVOICE_ADJUSTMENT_NOT_FOUND(1182, Series.DOMAIN_ERROR, "The invoice adjustment not found."),
+    INVOICE_ATTACHMENT_NOT_FOUND(1183, Series.DOMAIN_ERROR, "The attachment not found.");
 
     private static final DomainErrorMessage[] VALUES;
 
