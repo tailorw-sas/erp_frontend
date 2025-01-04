@@ -17,4 +17,9 @@ public class ManageTradingCompaniesDto {
     private String code;
     private Boolean isApplyInvoice;
     private Long autogen_code;
+    private String cif;
+    private String address;
+    private String company;
+    private String status;
+
 }

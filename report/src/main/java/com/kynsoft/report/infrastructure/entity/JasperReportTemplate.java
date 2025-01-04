@@ -1,8 +1,10 @@
 package com.kynsoft.report.infrastructure.entity;
 
+import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsof.share.core.domain.BaseEntity;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,8 +12,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,7 +35,8 @@ public class JasperReportTemplate extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    private String parameters;
+    @Enumerated(EnumType.STRING)
+    private ModuleSystems moduleSystems;
 
     private Double parentIndex;
     private Double menuPosition;
@@ -46,11 +51,20 @@ public class JasperReportTemplate extends BaseEntity {
     private String rootIndex;
     private String language;
 
+    private String query;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "db_conection_id", nullable = true)
+    private DBConection dbConection;
+
+    @OneToMany(mappedBy = "jasperReportTemplate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<JasperReportParameter> parametersList;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @UpdateTimestamp
     private LocalDateTime updateAt;
 
     public JasperReportTemplate(JasperReportTemplateDto jasperReportTemplateDto) {
@@ -60,7 +74,6 @@ public class JasperReportTemplate extends BaseEntity {
         this.description = jasperReportTemplateDto.getDescription();
         this.file = jasperReportTemplateDto.getFile();
         this.type = jasperReportTemplateDto.getType();
-        this.parameters = jasperReportTemplateDto.getParameters();
 
         this.parentIndex = jasperReportTemplateDto.getParentIndex();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
@@ -75,11 +88,13 @@ public class JasperReportTemplate extends BaseEntity {
         this.rootIndex = jasperReportTemplateDto.getRootIndex();
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
+        this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConection(jasperReportTemplateDto.getDbConectionDto()) : null;
+        this.query = jasperReportTemplateDto.getQuery();
     }
 
     public JasperReportTemplateDto toAggregate() {
         String templateContentUrlS = file != null ? file : null;
-
+        DBConectionDto conectionDto = dbConection != null ? dbConection.toAggregate() : null;
         return new JasperReportTemplateDto(
                 id,
                 code,
@@ -88,7 +103,6 @@ public class JasperReportTemplate extends BaseEntity {
                 templateContentUrlS,
                 type,
                 status,
-                parameters,
                 createdAt,
                 parentIndex,
                 menuPosition,
@@ -101,7 +115,10 @@ public class JasperReportTemplate extends BaseEntity {
                 visible,
                 cancel,
                 rootIndex,
-                language
+                language,
+                conectionDto,
+                query,
+                moduleSystems
         );
     }
 

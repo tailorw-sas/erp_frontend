@@ -6,7 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,13 +19,14 @@ import java.time.LocalDate;
 public class TransactionDto {
 
     private Long id;
+    private UUID transactionUuid;
     private ManageMerchantDto merchant;
     private MethodType methodType;
     private ManageHotelDto hotel;
     private ManageAgencyDto agency;
     private ManageLanguageDto language;
     private Double amount;
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
     private String reservationNumber;
     private String referenceNumber;
     private String hotelContactEmail;
@@ -34,32 +39,44 @@ public class TransactionDto {
     private Double commission;
     private ManageTransactionStatusDto status;
     private TransactionDto parent;
-    private LocalDate transactionDate;
+    private LocalDateTime transactionDate;
     private ManageVCCTransactionTypeDto transactionCategory;
     private ManageVCCTransactionTypeDto transactionSubCategory;
     private Double netAmount;
     private Boolean permitRefund;
+    private ManagerMerchantCurrencyDto merchantCurrency;
+    private boolean manual;
+    private boolean adjustment;
+    private LocalDateTime paymentDate;
+    private ManageBankReconciliationDto reconciliation;
+    private List<AttachmentDto> attachments = new ArrayList<>();
+    private HotelPaymentDto hotelPayment;
 
+    //uso -> toAggregateParent
     public TransactionDto(
-            Long id, LocalDate checkIn, String reservationNumber,
-            String referenceNumber, LocalDate transactionDate) {
+            Long id, UUID transactionUuid, LocalDateTime checkIn, String reservationNumber,
+            String referenceNumber, LocalDateTime transactionDate) {
 
         this.id = id;
+        this.transactionUuid = transactionUuid;
         this.checkIn = checkIn;
         this.reservationNumber = reservationNumber;
         this.referenceNumber = referenceNumber;
         this.transactionDate = transactionDate;
     }
 
+    //uso -> manual transaction, refund transaction
     public TransactionDto(
-            ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
+            UUID transactionUuid, ManageMerchantDto merchant, MethodType methodType, ManageHotelDto hotel,
             ManageAgencyDto agency, ManageLanguageDto language, Double amount,
-            LocalDate checkIn, String reservationNumber, String referenceNumber,
+            LocalDateTime checkIn, String reservationNumber, String referenceNumber,
             String hotelContactEmail, String guestName, String email, String enrolleCode,
             String cardNumber, ManageCreditCardTypeDto creditCardType, Double commission,
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
-            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund) {
+            ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund,
+            ManagerMerchantCurrencyDto merchantCurrency, boolean manual) {
+        this.transactionUuid = transactionUuid;
         this.merchant = merchant;
         this.methodType = methodType;
         this.hotel = hotel;
@@ -82,14 +99,18 @@ public class TransactionDto {
         this.transactionSubCategory = transactionSubCategory;
         this.netAmount = netAmount;
         this.permitRefund = permitRefund;
+        this.merchantCurrency = merchantCurrency;
+        this.manual = manual;
     }
 
+    //uso -> adjustment transaction
     public TransactionDto(
-            ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
+            UUID transactionUuid, ManageAgencyDto agency, ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
-            Double commission, LocalDate checkIn, Double netAmount,
-            LocalDate transactionDate, Boolean permitRefund){
+            Double commission, LocalDateTime checkIn, Double netAmount,
+            LocalDateTime transactionDate, Boolean permitRefund, boolean adjustment) {
+        this.transactionUuid = transactionUuid;
         this.agency = agency;
         this.transactionCategory = transactionCategory;
         this.transactionSubCategory = transactionSubCategory;
@@ -102,5 +123,19 @@ public class TransactionDto {
         this.netAmount = netAmount;
         this.transactionDate = transactionDate;
         this.permitRefund = permitRefund;
+        this.adjustment = adjustment;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionDto that = (TransactionDto) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

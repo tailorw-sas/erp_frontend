@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.query.objectResponse;
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class ManageAdjustmentResponse implements IResponse {
     private LocalDateTime date;
     private String description;
     private ManageInvoiceTransactionTypeDto transaction;
+    private ManagePaymentTransactionTypeDto paymentTransactionType;
     private ManageRoomRateDto roomRate;
     private String employee;
 
@@ -36,5 +38,6 @@ public class ManageAdjustmentResponse implements IResponse {
         this.roomRate = dto.getRoomRate();
         this.adjustmentId = dto.getAdjustmentId();
         this.employee = dto.getEmployee();
+        this.paymentTransactionType = dto.getPaymentTransactionType();
     }
 }

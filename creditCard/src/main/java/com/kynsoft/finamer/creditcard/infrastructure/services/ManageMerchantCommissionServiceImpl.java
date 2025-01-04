@@ -7,8 +7,10 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.creditcard.application.query.objectResponse.ManageMerchantCommissionResponse;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantCommissionService;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.ManageMerchantCommission;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.ManageMerchantCommissionWriteDataJPARepository;
@@ -57,10 +59,11 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
 
     @Override
     public void delete(ManageMerchantCommissionDto dto) {
-        ManageMerchantCommission delete = new ManageMerchantCommission(dto);
-        delete.setDeleted(true);
-        delete.setDeletedAt(LocalDateTime.now());
-        this.repositoryCommand.save(delete);
+        try{
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
     }
 
     @Override
@@ -107,4 +110,79 @@ public class ManageMerchantCommissionServiceImpl implements IManageMerchantCommi
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_MANAGE_MERCHANT_COMMISSION_NOT_FOUND.getReasonPhrase())));
     }
+
+    @Override
+    public Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId, LocalDate date, int decimals) {
+        ManageMerchantCommissionDto merchantCommissionDto = this.repositoryQuery.findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(
+                merchantId, creditCardTypeId, date
+        ).map(ManageMerchantCommission::toAggregate).orElse(null);
+        double commission = 0;
+        if (merchantCommissionDto != null) {
+            if (merchantCommissionDto.getCalculationType() == CalculationType.PER) {
+                commission = (merchantCommissionDto.getCommission() / 100.0) * amount;
+                // Aplicar redondeo de banquero con dos decimales por ahora, despues la cantidad de decimales se toma de la config
+                commission = BankerRounding.round(commission, decimals);
+            } else {
+                commission = merchantCommissionDto.getCommission();
+            }
+        } else {
+            throw new BusinessNotFoundException(
+                    new GlobalBusinessException(
+                            DomainErrorMessage.COMMISSION_NOT_FOUND,
+                            new ErrorField(
+                                    "commission",
+                                    DomainErrorMessage.COMMISSION_NOT_FOUND.getReasonPhrase())
+                    )
+            );
+        }
+        return commission;
+    }
+
+    @Override
+    public boolean checkDateOverlapForSameCombination(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, LocalDate fromDate, LocalDate toDate) {
+        List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
+        for (ManageMerchantCommissionDto existing : existingCommissions) {
+            if (existing.getCommission().equals(commission) && existing.getCalculationType().equals(calculationType)) {
+                if (isOverlapping(existing.getFromDate(), existing.getToDate(), fromDate, toDate)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean checkDateOverlapForDifferentCombination(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+        List<ManageMerchantCommissionDto> existingCommissions = findAllByMerchantAndCreditCardType(managerMerchant, manageCreditCartType);
+        for (ManageMerchantCommissionDto existing : existingCommissions) {
+            if (isOverlapping(existing.getFromDate(), existing.getToDate(), fromDate, toDate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+//    @Override
+//    public int countOverlappingRecords(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate) {
+//        return 0;
+//    }
+
+    private boolean isOverlapping(LocalDate existingFromDate, LocalDate existingToDate, LocalDate newFromDate, LocalDate newToDate) {
+        return !newFromDate.isAfter(existingToDate) && !newToDate.isBefore(existingFromDate);
+    }
+
+
+    public boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate, Double commission, String calculationType) {
+        Long count = repositoryQuery.countOverlappingRecords(id, managerMerchant, manageCreditCartType, commission, calculationType, fromDate, toDate);
+        return count > 0;
+    }
+
+    @Override
+    public List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardTypeById(UUID managerMerchant, UUID manageCreditCartType, UUID id) {
+        return this.repositoryQuery.findAllByManagerMerchantAndManageCreditCartTypeById(id, managerMerchant, manageCreditCartType)
+                .stream()
+                .map(ManageMerchantCommission::toAggregate)
+                .collect(Collectors.toList());
+    }
+
 }

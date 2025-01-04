@@ -15,12 +15,14 @@ public class UpdateManageBankAccountCommand implements ICommand {
     private String accountNumber;
     private String status;
     private String nameOfBank;
+    private UUID manageHotel;
 
-    public UpdateManageBankAccountCommand(UUID id, String accountNumber, String status, String nameOfBank) {
+    public UpdateManageBankAccountCommand(UUID id, String accountNumber, String status, String nameOfBank,UUID manageHotel) {
         this.id = id;
         this.accountNumber = accountNumber;
         this.status = status;
         this.nameOfBank = nameOfBank;
+        this.manageHotel=manageHotel;
     }
 
     @Override

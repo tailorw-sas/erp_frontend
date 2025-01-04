@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentImportDetailCommandHandler implements ICommandHandler<PaymentImportDetailCommand> {
 
-   private final IPaymentImportDetailService paymentImportDetail;
+    private final IPaymentImportDetailService paymentImportDetail;
 
     public PaymentImportDetailCommandHandler(IPaymentImportDetailService paymentImportDetail) {
         this.paymentImportDetail = paymentImportDetail;
@@ -16,6 +16,7 @@ public class PaymentImportDetailCommandHandler implements ICommandHandler<Paymen
 
     @Override
     public void handle(PaymentImportDetailCommand command) {
-       paymentImportDetail.importPaymentFromFile(command.getPaymentImportDetailRequest());
+        paymentImportDetail.importPaymentFromFile(command.getPaymentImportDetailRequest());
+
     }
 }

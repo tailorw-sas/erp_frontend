@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
@@ -56,9 +57,9 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
 
     @Override
     public void delete(ManageAdjustmentDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
@@ -86,21 +87,35 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
     public ManageAdjustmentDto findById(UUID id) {
         Optional<ManageAdjustment> optionalEntity = repositoryQuery.findById(id);
 
-        if(optionalEntity.isPresent()){
+        if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_ADJUSTMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.INVOICE_ADJUSTMENT_NOT_FOUND.getReasonPhrase())));
 
     }
-
-
-
-
 
     @Override
     public List<ManageAdjustmentDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageAdjustment::toAggregate).toList();
+    }
+
+    @Override
+    public void deleteByIds(List<UUID> ids) {
+        try {
+            this.repositoryCommand.deleteAllById(ids);
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
+    }
+
+    @Override
+    public void deleteInvoice(ManageAdjustmentDto dto) {
+        ManageAdjustment entity = new ManageAdjustment(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
@@ -115,6 +130,13 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
                 }
             }
         }
+    }
+
+    @Override
+    public void create(List<ManageAdjustmentDto> dtos) {
+        this.repositoryCommand.saveAll(dtos.stream()
+                .map(ManageAdjustment::new)
+                .collect(Collectors.toList()));
     }
 
 }

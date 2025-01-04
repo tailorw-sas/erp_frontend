@@ -2,16 +2,18 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsof.share.utils.ScaleAmount;
-import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class PaymentResponse implements IResponse {
 
     private UUID id;
+    private OffsetDateTime createdAt;
     private Long paymentId;
     private ManagePaymentSourceResponse paymentSource;
     private String reference;
@@ -39,12 +42,21 @@ public class PaymentResponse implements IResponse {
     private double otherDeductions;
     private double identified;
     private double notIdentified;
+    private Double notApplied;
+    private Double applied;
     private String remark;
     private Boolean hasAttachment;
-    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
+    private boolean hasDetailTypeDeposit = false;
+    private EAttachment eAttachment;
+    private boolean paymentSupport;
+    private boolean createByCredit;
+    private boolean existDetails;
+    private ImportType importType;
+//    private List<MasterPaymentAttachmentResponse> attachments = new ArrayList<>();
 
     public PaymentResponse(PaymentDto dto) {
         this.id = dto.getId();
+        this.createdAt = dto.getCreatedAt();
         this.paymentId = dto.getPaymentId();
         this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceResponse(dto.getPaymentSource()) : null;
         this.reference = dto.getReference();
@@ -62,13 +74,38 @@ public class PaymentResponse implements IResponse {
         this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
         this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
         this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
+        this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
+        this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
-        if (dto.getAttachments() != null) {
-            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
-                attachments.add(new MasterPaymentAttachmentResponse(attachment));
+        this.eAttachment = dto.getEAttachment();
+        this.paymentSupport = dto.isPaymentSupport();
+        this.createByCredit = dto.isCreateByCredit();
+        this.importType = dto.getImportType();
+        if (dto.getPaymentDetails() == null) {
+            this.existDetails = false;
+        } else {
+            this.existDetails = !dto.getPaymentDetails().isEmpty();
+        }
+//        if (dto.getAttachments() != null) {
+//            for (MasterPaymentAttachmentDto attachment : dto.getAttachments()) {
+//                attachments.add(new MasterPaymentAttachmentResponse(attachment));
+//            }
+//        }
+
+        this.hasAttachment = dto.getAttachments() != null;
+        if (dto.getInvoice() != null) {
+            if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+                this.hasAttachment = dto.getInvoice().getHasAttachment();
             }
         }
-        this.hasAttachment = !this.attachments.isEmpty();
+        if (dto.getPaymentDetails() != null) {
+            for (PaymentDetailDto paymentDetail : dto.getPaymentDetails()) {
+                if (paymentDetail.getTransactionType().getDeposit()) {
+                    this.hasDetailTypeDeposit = true;
+                    break;
+                }
+            }
+        }
     }
 
 }

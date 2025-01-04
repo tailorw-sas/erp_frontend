@@ -23,4 +23,7 @@ public class ManagePaymentTransactionTypeDto {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
+    private boolean defaults;
+    private Boolean paymentInvoice;
+    private Boolean debit;
 }

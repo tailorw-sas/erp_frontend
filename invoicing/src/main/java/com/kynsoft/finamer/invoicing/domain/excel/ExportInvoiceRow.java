@@ -14,35 +14,44 @@ public class ExportInvoiceRow {
     @SheetIndex
     private int sheetIndex;
 
-    @Cell(position = 0,cellType = CustomCellType.STRING)
-    private String invoiceId;
+    @Cell(position = 0, cellType = CustomCellType.STRING)
+    private String invoiceId;//Id
 
+    @Cell(position = 1, cellType = CustomCellType.STRING)
+    private String hasAttachment;//Has Attachment
 
-    @Cell(position = 1,cellType = CustomCellType.STRING)
-    private String invoiceNumber;
+    @Cell(position = 2, cellType = CustomCellType.STRING)
+    private String invoiceType;//Type
 
-    @Cell(position = 2,cellType = CustomCellType.STRING)
-    private String invoiceDate;
+    @Cell(position = 3, cellType = CustomCellType.STRING)
+    private String hotel;//Hotel
 
-    @Cell(position = 3,cellType = CustomCellType.STRING)
-    private String isManual;
+    @Cell(position = 4, cellType = CustomCellType.STRING)
+    private String agencyCd;//Agency
 
-    @Cell(position = 4,cellType = CustomCellType.STRING)
-    private String invoiceAmount;
+    @Cell(position = 5, cellType = CustomCellType.STRING)
+    private String agency;//Agency
 
+    @Cell(position = 6, cellType = CustomCellType.STRING)
+    private String invoiceNumber;//Inv. No
 
-    @Cell(position = 5,cellType = CustomCellType.STRING)
-    private String hotel;
+    @Cell(position = 7, cellType = CustomCellType.STRING)
+    private String invoiceDate;//Gen. Date
 
-    @Cell(position = 6,cellType = CustomCellType.STRING)
-    private String agency;
+    @Cell(position = 8, cellType = CustomCellType.STRING)
+    private String status;//Status
 
-    @Cell(position = 7,cellType = CustomCellType.STRING)
-    private String invoiceType;
+    @Cell(position = 9, cellType = CustomCellType.STRING)
+    private String isManual;//Manual
 
-    @Cell(position = 8,cellType = CustomCellType.STRING)
-    private String status;
+    @Cell(position = 10, cellType = CustomCellType.STRING)
+    private String invoiceAmount;//Amount
 
+    @Cell(position = 11, cellType = CustomCellType.STRING)
+    private String dueAmount;//Due Amount
+
+    @Cell(position = 12, cellType = CustomCellType.STRING)
+    private String autoRec;//Auto Rec
 
     private CellStyle cellStyle;
 }

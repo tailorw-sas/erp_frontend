@@ -13,4 +13,7 @@ public class CreateManageInvoiceTypeRequest {
     private Status status;
     private String name;
     private Boolean enabledToPolicy;
+    private boolean income;
+    private boolean credit;
+    private boolean invoice;
 }

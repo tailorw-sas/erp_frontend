@@ -6,13 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManagerLanguageDto {
+public class ManagerLanguageDto implements Serializable {
 
     private UUID id;
     private String code;
@@ -20,5 +21,5 @@ public class ManagerLanguageDto {
     private Status status;
     private String name;
     private Boolean isEnabled;
-
+    private Boolean defaults;
 }

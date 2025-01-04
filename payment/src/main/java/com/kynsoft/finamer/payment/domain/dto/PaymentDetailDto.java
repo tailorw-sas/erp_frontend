@@ -1,14 +1,13 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -24,22 +23,29 @@ public class PaymentDetailDto {
     private Double amount;
     private String remark;
     private List<PaymentDetailDto> children;
+    private ManageBookingDto manageBooking;
 
     private Double bookingId;
     private String invoiceId;
-    private LocalDate transactionDate;
+    private OffsetDateTime transactionDate;
     private String firstName;
     private String lastName;
     private String reservation;
     private String couponNo;
     private Integer adults;
     private Integer childrens;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
     private Long paymentDetailId;
     private Long parentId;
     private Double applyDepositValue;
+    private Boolean applayPayment;
+    private Long reverseFrom;
+    private Long reverseFromParentId;//Esta variable es para poder controlar el undo luego de realizar un reverse.
+    private boolean reverseTransaction;
+    private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
+    private boolean canceledTransaction;
 
-    public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, LocalDate transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens) {
+    public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens, Boolean applayPayment) {
         this.id = id;
         this.status = status;
         this.payment = payment;
@@ -56,6 +62,12 @@ public class PaymentDetailDto {
         this.couponNo = couponNo;
         this.adults = adults;
         this.childrens = childrens;
+        this.applayPayment = applayPayment;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentDetailDto{" + "id=" + id + ", status=" + status + ", amount=" + amount + ", remark=" + remark + ", bookingId=" + bookingId + ", invoiceId=" + invoiceId + ", transactionDate=" + transactionDate + ", firstName=" + firstName + ", lastName=" + lastName + ", reservation=" + reservation + ", couponNo=" + couponNo + ", adults=" + adults + ", childrens=" + childrens + ", createdAt=" + createdAt + ", paymentDetailId=" + paymentDetailId + ", parentId=" + parentId + ", applyDepositValue=" + applyDepositValue + ", applayPayment=" + applayPayment + '}';
     }
 
 }

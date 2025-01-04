@@ -39,6 +39,7 @@ public class ManageBookingResponse implements IResponse {
     private String folioNumber;
     private Double hotelAmount;
     private String description;
+    private String contract;
     private ManageInvoiceDto invoice;
     private ManageRatePlanDto ratePlan;
     private ManageNightTypeDto nightType;
@@ -46,7 +47,10 @@ public class ManageBookingResponse implements IResponse {
     private ManageRoomCategoryDto roomCategory;
     private Long nights;
 
+    private ManageBookingResponse parent;
+
     public ManageBookingResponse(ManageBookingDto dto) {
+        //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = dto.getId();
         this.bookingId = dto.getBookingId();
         this.hotelCreationDate = dto.getHotelCreationDate();
@@ -57,18 +61,19 @@ public class ManageBookingResponse implements IResponse {
         this.fullName = dto.getFullName();
         this.lastName = dto.getLastName();
         this.firstName = dto.getFirstName();
-        this.invoiceAmount = dto.getInvoiceAmount();
-        this.dueAmount = dto.getDueAmount();
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : null;
+        this.dueAmount = dto.getDueAmount() != null ? dto.getDueAmount() : null;
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
-        this.rateAdult = dto.getRateAdult();
-        this.rateChild = dto.getRateChild();
+        this.rateAdult = dto.getRateAdult() != null ? dto.getRateAdult() : null;
+        this.rateChild = dto.getRateChild() != null ? dto.getRateChild() : null;
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.folioNumber = dto.getFolioNumber();
-        this.hotelAmount = dto.getHotelAmount();
+        this.hotelAmount = dto.getHotelAmount() != null ? dto.getHotelAmount() : null;
         this.description = dto.getDescription();
+        this.contract = dto.getContract();
         this.invoice = dto.getInvoice();
         this.ratePlan = dto.getRatePlan();
         this.nightType = dto.getNightType();
@@ -76,5 +81,6 @@ public class ManageBookingResponse implements IResponse {
         this.roomCategory = dto.getRoomCategory();
         this.reservationNumber = dto.getReservationNumber();
         this.nights = dto.getNights();
+        this.parent = dto.getParent() != null ? new ManageBookingResponse(dto.getParent()) : null;
     }
 }

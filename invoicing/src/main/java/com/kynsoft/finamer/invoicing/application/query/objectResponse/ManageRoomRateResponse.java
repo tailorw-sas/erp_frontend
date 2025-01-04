@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
+import java.text.DecimalFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,17 +33,19 @@ public class ManageRoomRateResponse implements IResponse {
     private Long nights;
 
     public ManageRoomRateResponse(ManageRoomRateDto dto) {
+        //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         this.id = dto.getId();
         this.roomRateId = dto.getRoomRateId();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
-        this.invoiceAmount = dto.getInvoiceAmount();
+        
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : null;
         this.roomNumber = dto.getRoomNumber();
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
-        this.rateAdult = dto.getRateAdult();
-        this.rateChild = dto.getRateChild();
-        this.hotelAmount = dto.getHotelAmount();
+        this.rateAdult = dto.getRateAdult() != null ? dto.getRateAdult() : null;
+        this.rateChild = dto.getRateChild() != null ? dto.getRateChild() : null;
+        this.hotelAmount = dto.getHotelAmount() != null ? dto.getHotelAmount() : null;
         this.remark = dto.getRemark();
         this.booking = dto.getBooking();
         this.nights = dto.getNights();

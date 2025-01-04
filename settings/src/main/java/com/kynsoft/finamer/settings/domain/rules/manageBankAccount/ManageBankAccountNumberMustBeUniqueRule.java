@@ -14,8 +14,9 @@ public class ManageBankAccountNumberMustBeUniqueRule extends BusinessRule {
     private final String accountNumber;
 
     private final UUID id;
+    private final UUID bankId;
 
-    public ManageBankAccountNumberMustBeUniqueRule(IManageBankAccountService service, String accountNumber, UUID id) {
+    public ManageBankAccountNumberMustBeUniqueRule(IManageBankAccountService service, String accountNumber, UUID id, UUID bankId) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
                 new ErrorField("accountNumber", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
@@ -23,10 +24,11 @@ public class ManageBankAccountNumberMustBeUniqueRule extends BusinessRule {
         this.service = service;
         this.accountNumber = accountNumber;
         this.id = id;
+        this.bankId = bankId;
     }
 
     @Override
     public boolean isBroken() {
-        return this.service.countByAccountNumberAndNotId(accountNumber, id) > 0;
+        return this.service.countByAccountNumberAndNotId(accountNumber, id, bankId) > 0;
     }
 }

@@ -20,5 +20,7 @@ public interface IManageRatePlanService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Long countByCodeAndNotId(String code, UUID id);
+    Long countByCodeAndNotId(String code, UUID id, UUID hotelId);
+
+    List<ManageRatePlanDto> findAllToReplicate();
 }

@@ -17,15 +17,17 @@ public class CreateManageAttachmentTypeCommand implements ICommand {
     private String description;
     private Status status;
     private String name;
-    private Boolean defaults;
+    private boolean defaults;
+    private boolean attachInvDefault;
 
-    public CreateManageAttachmentTypeCommand(String code, String description, Status status, String name, Boolean defaults) {
+    public CreateManageAttachmentTypeCommand(String code, String description, Status status, String name, boolean defaults, boolean attachInvDefault) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.status = status;
         this.name = name;
         this.defaults = defaults;
+        this.attachInvDefault = attachInvDefault;
     }
 
     public static CreateManageAttachmentTypeCommand fromRequest(CreateManageAttachmentTypeRequest request){
@@ -34,7 +36,8 @@ public class CreateManageAttachmentTypeCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getDefaults()
+                request.isDefaults(),
+                request.isAttachInvDefault()
         );
     }
 

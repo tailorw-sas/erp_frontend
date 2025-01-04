@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.application.query.attachmentStatusHistory.getById;
 
-import com.kynsoft.finamer.payment.application.query.masterPaymentAttachment.getById.*;
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import lombok.Getter;
 

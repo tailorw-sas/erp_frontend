@@ -15,5 +15,8 @@ public class UpdateManageTradingCompanyKafka {
 
     private UUID id;
     private boolean isApplyInvoice;
+    private String cif;
+    private String address;
+    private String company;
 
 }

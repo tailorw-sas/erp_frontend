@@ -18,10 +18,12 @@ import com.kynsoft.finamer.settings.application.command.manageEmployee.update.Up
 import com.kynsoft.finamer.settings.application.command.manageEmployee.update.UpdateManageEmployeeMessage;
 import com.kynsoft.finamer.settings.application.command.manageEmployee.update.UpdateManageEmployeeRequest;
 import com.kynsoft.finamer.settings.application.query.manageEmployee.getById.FindManageEmployeeByIdQuery;
+import com.kynsoft.finamer.settings.application.query.manageEmployee.getById.http.replicate.FindManageEmployeeByIdHttpReplicateQuery;
 import com.kynsoft.finamer.settings.application.query.manageEmployee.getByIdGrouped.FindManageEmployeeByIdGroupedQuery;
 import com.kynsoft.finamer.settings.application.query.manageEmployee.search.GetManageEmployeeQuery;
 import com.kynsoft.finamer.settings.application.query.objectResponse.manageEmployee.ManageEmployeeGroupedResponse;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageEmployeeResponse;
+import com.kynsoft.finamer.settings.application.query.objectResponse.replicate.ManageEmployeeHttpReplicateResponse;
 
 import java.util.UUID;
 
@@ -57,6 +59,15 @@ public class ManageEmployeeController {
 
         FindManageEmployeeByIdQuery query = new FindManageEmployeeByIdQuery(id);
         ManageEmployeeResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/http-replicate/{id}")
+    public ResponseEntity<?> getByIdHttpReplicate(@PathVariable UUID id) {
+
+        FindManageEmployeeByIdHttpReplicateQuery query = new FindManageEmployeeByIdHttpReplicateQuery(id);
+        ManageEmployeeHttpReplicateResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

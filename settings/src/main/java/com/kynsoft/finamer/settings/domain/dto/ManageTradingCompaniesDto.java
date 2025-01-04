@@ -6,13 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageTradingCompaniesDto {
+public class ManageTradingCompaniesDto implements Serializable {
 
     private UUID id;
     private String code;
@@ -24,7 +25,7 @@ public class ManageTradingCompaniesDto {
     private ManagerCountryDto country;
     private ManageCityStateDto cityState;
     private String city;
-    private Long zipCode;
+    private String zipCode;
     private String innsistCode;
     private Boolean isApplyInvoice;
 }

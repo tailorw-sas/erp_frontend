@@ -19,7 +19,11 @@ public class ExcelBeanIterator<T> implements Iterator<T> {
     @Override
     public boolean hasNext() {
         this.bean = beanReader.readSingleLine();
-        return Objects.nonNull(bean);
+        boolean finished = Objects.nonNull(bean);
+        if (!finished){
+            beanReader.close();
+        }
+        return finished;
     }
 
     @Override

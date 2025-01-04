@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.application.query.attachmentStatusHistory.search;
 
-import com.kynsoft.finamer.payment.application.query.manageResourceType.search.*;
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import lombok.AllArgsConstructor;

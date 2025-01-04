@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.domain.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.UUID;
 
 @Getter
@@ -14,5 +15,10 @@ public class ManagePaymentAttachmentStatusDto {
     private String code;
     private String name;
     private String status;
-
+    private Boolean defaults;
+    private boolean nonNone;
+    private boolean patWithAttachment;
+    private boolean pwaWithOutAttachment;
+    private boolean supported;
+    private boolean otherSupport;
 }

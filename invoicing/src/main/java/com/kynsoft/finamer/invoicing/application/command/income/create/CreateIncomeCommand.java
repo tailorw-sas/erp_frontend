@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -15,7 +17,7 @@ import java.util.UUID;
 public class CreateIncomeCommand implements ICommand {
 
     private UUID id;
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
     private Boolean manual;
     private UUID agency;
     private UUID hotel;
@@ -32,10 +34,13 @@ public class CreateIncomeCommand implements ICommand {
     private IncomeDto income;
     private String employee;
 
-    public CreateIncomeCommand(Status status, LocalDate invoiceDate, Boolean manual,
+    private List<CreateIncomeAttachmentRequest> attachments;
+    private String invoiceNo;
+
+    public CreateIncomeCommand(Status status, LocalDateTime invoiceDate, Boolean manual,
                                UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
                                Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
-                               UUID invoiceStatus, String employee) {
+                               UUID invoiceStatus, String employee, List<CreateIncomeAttachmentRequest> attachments) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.invoiceDate = invoiceDate;
@@ -50,6 +55,27 @@ public class CreateIncomeCommand implements ICommand {
         this.reSend = reSend;
         this.reSendDate = reSendDate;
         this.employee = employee;
+        this.attachments = attachments;
+    }
+    public CreateIncomeCommand(UUID id,Status status, LocalDateTime invoiceDate, Boolean manual,
+                               UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
+                               Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
+                               UUID invoiceStatus, String employee, List<CreateIncomeAttachmentRequest> attachments) {
+        this.id = id;
+        this.status = status;
+        this.invoiceDate = invoiceDate;
+        this.manual = manual;
+        this.agency = agency;
+        this.hotel = hotel;
+        this.invoiceType = invoiceType;
+        this.invoiceStatus = invoiceStatus;
+        this.incomeAmount = incomeAmount;
+        this.invoiceNumber = invoiceNumber;
+        this.dueDate = dueDate;
+        this.reSend = reSend;
+        this.reSendDate = reSendDate;
+        this.employee = employee;
+        this.attachments = attachments;
     }
 
     public static CreateIncomeCommand fromRequest(CreateIncomeRequest request) {
@@ -66,12 +92,13 @@ public class CreateIncomeCommand implements ICommand {
                 request.getReSend(),
                 request.getReSendDate(),
                 request.getInvoiceStatus(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getAttachments()
         );
     }
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateIncomeMessage(id, invoiceId);
+        return new CreateIncomeMessage(id, invoiceId, invoiceNo);
     }
 }

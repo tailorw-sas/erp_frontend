@@ -2,8 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.bank;
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.excel.PaymentImportError;
-import com.kynsoft.finamer.payment.domain.excel.bean.PaymentBankRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentBankRow;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
@@ -16,16 +15,15 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<PaymentBank
 
     @Override
     public boolean validate(PaymentBankRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.isNull(obj.getPaymentAmount())){
+        if (Objects.isNull(obj.getAmount())){
             errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount can't be empty"));
             return false;
         }
-        boolean valid = obj.getPaymentAmount() > 0;
-        if (valid){
-            return true;
-        }else{
-            errorFieldList.add(new ErrorField("Payment Amount","Payment amount must not be 0"));
+        boolean valid = obj.getAmount() > 0;
+        if (!valid) {
+            errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount must be greater than 0"));
             return false;
         }
+        return true;
     }
 }

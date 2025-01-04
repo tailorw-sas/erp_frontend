@@ -23,4 +23,14 @@ public interface IManageMerchantCommissionService {
     List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardType(UUID managerMerchant, UUID manageCreditCartType);
 
     ManageMerchantCommissionDto findByManagerMerchantAndManageCreditCartTypeAndDateWithinRangeOrNoEndDate(UUID managerMerchant, UUID manageCreditCartType, LocalDate date);
+
+    Double calculateCommission(double amount, UUID merchantId, UUID creditCardTypeId, LocalDate date, int decimals);
+
+    boolean checkDateOverlapForSameCombination(UUID managerMerchant, UUID manageCreditCartType, Double commission, String calculationType, LocalDate fromDate, LocalDate toDate);
+
+    boolean checkDateOverlapForDifferentCombination(UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate);
+
+    boolean hasOverlappingRecords(UUID id, UUID managerMerchant, UUID manageCreditCartType, LocalDate fromDate, LocalDate toDate, Double commission, String calculationType);
+
+    List<ManageMerchantCommissionDto> findAllByMerchantAndCreditCardTypeById(UUID managerMerchant, UUID manageCreditCartType, UUID id);
 }

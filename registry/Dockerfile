@@ -38,11 +38,14 @@ COPY . /build
 ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 
+ARG POM_NAME
+ENV POM_NAME ${POM_NAME}
+
 # Build
-RUN mvn dependency:go-offline -f pom.xml -s rc-settings.xml
+RUN mvn dependency:go-offline -f ${POM_NAME} -s rc-settings.xml
 # RUN mvn -B clean package -Pnative  --no-transfer-progress
 # RUN mvn package -Pnative -f pom.xml
-RUN mvn --no-transfer-progress clean package -DskipTests
+RUN mvn --no-transfer-progress clean package -DskipTests -f ${POM_NAME}
 
 # The deployment Image
 # FROM docker.io/oraclelinux:9-slim

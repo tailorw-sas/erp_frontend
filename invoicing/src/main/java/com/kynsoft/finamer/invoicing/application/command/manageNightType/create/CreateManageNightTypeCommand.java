@@ -14,11 +14,13 @@ public class CreateManageNightTypeCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
+    private String status;
 
-    public CreateManageNightTypeCommand(UUID id, String code, String name) {
+    public CreateManageNightTypeCommand(UUID id, String code, String name, String status) {
         this.id = id;
         this.code = code;
         this.name = name;
+        this.status = status;
     }
 
     @Override

@@ -8,20 +8,8 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToSplitRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositTransactionTypeRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountSplitGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailDepositTypeIsApplyRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckSplitAmountRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
-import java.util.UUID;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
+import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -87,9 +75,12 @@ public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHa
                 null,
                 null,
                 null,
-                null
+                null,
+                false
         );
-        Long paymentDetailId = paymentDetailService.create(split);
+        split.setApplyDepositValue(command.getAmount());
+        paymentDetailDto.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - command.getAmount());
+        paymentDetailService.create(split);
         paymentDetailService.update(paymentDetailDto);
 
 //        createPaymentAttachmentStatusHistory(employeeDto, paymentDetailDto.getPayment(), paymentDetailId, "Creating Split ANTI with ID: ");

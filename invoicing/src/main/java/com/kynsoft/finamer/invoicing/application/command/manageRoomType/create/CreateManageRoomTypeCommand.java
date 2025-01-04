@@ -14,7 +14,7 @@ public class CreateManageRoomTypeCommand implements ICommand {
     private final UUID id;
     private final String code;
     private final String name;
-
+    private final String status;
 
     @Override
     public ICommandMessage getMessage() {

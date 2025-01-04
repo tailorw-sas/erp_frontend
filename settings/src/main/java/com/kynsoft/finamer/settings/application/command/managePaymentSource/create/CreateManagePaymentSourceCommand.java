@@ -18,14 +18,16 @@ public class CreateManagePaymentSourceCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean isBank;
+    private Boolean expense;
 
-    public CreateManagePaymentSourceCommand(String code, String description, Status status, String name, Boolean isBank) {
+    public CreateManagePaymentSourceCommand(String code, String description, Status status, String name, Boolean isBank, Boolean expense) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.status = status;
         this.name = name;
         this.isBank = isBank;
+        this.expense = expense;
     }
 
     public static CreateManagePaymentSourceCommand fromRequest(CreateManagePaymentSourceRequest request){
@@ -34,7 +36,8 @@ public class CreateManagePaymentSourceCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getIsBank()
+                request.getIsBank(),
+                request.getExpense()
         );
     }
 

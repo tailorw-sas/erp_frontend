@@ -21,6 +21,7 @@ public class IncomeAdjustmentResponse implements IResponse {
     private Status status;
     private IncomeResponse income;
     private ManageInvoiceTransactionTypeResponse transactionType;
+    private ManagePaymentTransactionTypeResponse paymentTransactionType;
     private Double amount;
     private LocalDate date;
     private String remark;
@@ -30,6 +31,7 @@ public class IncomeAdjustmentResponse implements IResponse {
         this.status = dto.getStatus();
         this.income = dto.getIncome() != null ? new IncomeResponse(dto.getIncome()) : null;
         this.transactionType = dto.getTransactionType() != null ? new ManageInvoiceTransactionTypeResponse(dto.getTransactionType()) : null;
+        this.paymentTransactionType = new ManagePaymentTransactionTypeResponse(dto.getPaymentTransactionType());
         this.amount = dto.getAmount();
         this.date = dto.getDate();
         this.remark = dto.getRemark();

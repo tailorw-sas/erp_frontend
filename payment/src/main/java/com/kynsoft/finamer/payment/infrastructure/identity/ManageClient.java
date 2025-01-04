@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.UUID;
 
 
 @NoArgsConstructor
@@ -17,6 +19,8 @@ import java.util.*;
 @Setter
 @Entity
 @Table(name = "manage_client")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_client",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageClient implements Serializable {
 
     @Id

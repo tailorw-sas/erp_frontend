@@ -20,4 +20,8 @@ public class ManagerPaymentStatusDto {
     private Boolean collected;
     private String description;
     private Boolean defaults;
+    private Boolean applied;
+    private boolean confirmed;
+    private boolean cancelled;
+    private boolean transit;
 }

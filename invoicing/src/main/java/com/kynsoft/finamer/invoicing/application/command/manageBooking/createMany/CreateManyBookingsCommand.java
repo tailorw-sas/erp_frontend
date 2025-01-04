@@ -32,7 +32,7 @@ public class CreateManyBookingsCommand implements ICommand {
                         e.getRoomType() != null && !e.getRoomType().isEmpty() ? UUID.fromString(e.getRoomType()) : null,
                         e.getRoomCategory() != null && !e.getRoomCategory().isEmpty()
                                 ? UUID.fromString(e.getRoomCategory())
-                                : null))
+                                : null, e.getContract()))
                 .collect(Collectors.toList()));
     }
 

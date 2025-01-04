@@ -1,8 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.command.manageClient.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageClientDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManagerClientService;
 import org.springframework.stereotype.Component;
@@ -18,19 +16,11 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
     @Override
     public void handle(UpdateManageClientCommand command) {
-
         ManageClientDto test = this.service.findById(command.getId());
-
-        ConsumerUpdate update = new ConsumerUpdate();
-
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(),
-                update::setUpdate);
-        UpdateIfNotNull.updateBoolean(test::setIsNightType, command.getIsNightType(), test.getIsNightType(), update::setUpdate);
-
-        if (update.getUpdate() > 0) {
-            this.service.update(test);
-        }
-
+        test.setName(command.getName());
+        test.setIsNightType(command.getIsNightType());
+        test.setStatus(command.getStatus());
+        this.service.update(test);
     }
 
 }

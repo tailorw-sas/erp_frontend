@@ -15,61 +15,49 @@ public class UpdateBookingCommand implements ICommand {
     private UUID id;
     private LocalDateTime hotelCreationDate;
     private LocalDateTime bookingDate;
-    private LocalDateTime checkIn;
-    private LocalDateTime checkOut;
+    //private LocalDateTime checkIn;
+    //private LocalDateTime checkOut;
 
     private String hotelBookingNumber;
     private String fullName;
     private String firstName;
     private String lastName;
-    private Double invoiceAmount;
+    //private Double invoiceAmount;
     private String roomNumber;
     private String couponNumber;
-    private Integer adults;
-    private Integer children;
-    private Double rateAdult;
-    private Double rateChild;
+    //private Integer adults;
+    //private Integer children;
+    //private Double rateAdult;
+    //private Double rateChild;
     private String hotelInvoiceNumber;
     private String folioNumber;
-    private Double hotelAmount;
+    //private Double hotelAmount;
     private String description;
+    private String contract;
 
-    private UUID invoice;
+    //private UUID invoice;
     private UUID ratePlan;
     private UUID nightType;
     private UUID roomType;
     private UUID roomCategory;
 
     public UpdateBookingCommand(UUID id, LocalDateTime hotelCreationDate, LocalDateTime bookingDate,
-            LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String fullName,
-
-            String firstName,
-            String lastName,
-            Double invoiceAmount, String roomNumber, String couponNumber, Integer adults,
-            Integer children, Double rateAdult, Double rateChild, String hotelInvoiceNumber, String folioNumber,
-            Double hotelAmount, String description, UUID invoice, UUID ratePlan, UUID nightType, UUID roomType,
-            UUID roomCategory) {
+            String hotelBookingNumber, String fullName, String firstName, String lastName, String roomNumber,
+            String couponNumber, String hotelInvoiceNumber, String folioNumber, String description, String contract,
+            UUID ratePlan, UUID nightType, UUID roomType, UUID roomCategory) {
         this.id = id;
         this.hotelCreationDate = hotelCreationDate;
         this.bookingDate = bookingDate;
-        this.checkIn = checkIn;
-        this.checkOut = checkOut;
         this.firstName = firstName;
         this.lastName = lastName;
         this.hotelBookingNumber = hotelBookingNumber;
         this.fullName = fullName;
-        this.invoiceAmount = invoiceAmount;
         this.roomNumber = roomNumber;
         this.couponNumber = couponNumber;
-        this.adults = adults;
-        this.children = children;
-        this.rateAdult = rateAdult;
-        this.rateChild = rateChild;
         this.hotelInvoiceNumber = hotelInvoiceNumber;
         this.folioNumber = folioNumber;
-        this.hotelAmount = hotelAmount;
         this.description = description;
-        this.invoice = invoice;
+        this.contract = contract;
         this.ratePlan = ratePlan;
         this.nightType = nightType;
         this.roomType = roomType;
@@ -81,24 +69,16 @@ public class UpdateBookingCommand implements ICommand {
                 id,
                 request.getHotelCreationDate(),
                 request.getBookingDate(),
-                request.getCheckIn(),
-                request.getCheckOut(),
                 request.getHotelBookingNumber(),
                 request.getFullName(),
                 request.getFirstName(),
                 request.getLastName(),
-                request.getInvoiceAmount(),
                 request.getRoomNumber(),
                 request.getCouponNumber(),
-                request.getAdults(),
-                request.getChildren(),
-                request.getRateAdult(),
-                request.getRateChild(),
                 request.getHotelInvoiceNumber(),
                 request.getFolioNumber(),
-                request.getHotelAmount(),
                 request.getDescription(),
-                request.getInvoice(),
+                request.getContract(),
                 request.getRatePlan(),
                 request.getNightType(),
                 request.getRoomType(),

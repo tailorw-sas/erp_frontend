@@ -20,4 +20,7 @@ public interface ManageInvoiceTransactionTypeReadDataJPARepository extends JpaRe
 
     @Query("SELECT COUNT(b) FROM ManageInvoiceTransactionType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceTransactionType b WHERE b.defaults = true AND b.id <> :id")
+    Long countByDefaultsAndNotId(@Param("id") UUID id);
 }

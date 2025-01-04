@@ -30,7 +30,10 @@ public class ConsumerUpdateManageTransactionTypeService {
                     objKafka.getApplyDeposit(),
                     objKafka.getRemarkRequired(),
                     objKafka.getMinNumberOfCharacter(),
-                    objKafka.getDefaultRemark()
+                    objKafka.getDefaultRemark(),
+                    objKafka.getDefaults(),
+                    objKafka.getPaymentInvoice(),
+                    objKafka.getDebit()
             );
             mediator.send(command);
         } catch (Exception ex) {

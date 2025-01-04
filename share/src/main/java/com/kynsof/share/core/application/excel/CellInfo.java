@@ -9,4 +9,5 @@ import org.apache.poi.ss.usermodel.CellType;
 public class CellInfo {
     private int position;
     private CustomCellType cellType;
+    private String headerName;
 }

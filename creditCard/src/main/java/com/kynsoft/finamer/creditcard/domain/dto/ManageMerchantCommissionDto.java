@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.CalculationType;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,12 +17,12 @@ import java.util.UUID;
 public class ManageMerchantCommissionDto {
 
     private UUID id;
-    private ManageMerchantDto managerMerchant;
+    private ManageMerchantDto manageMerchant;
     private ManageCreditCardTypeDto manageCreditCartType;
     private Double commission;
     private CalculationType calculationType;
+    private String description;
     private LocalDate fromDate;
     private LocalDate toDate;
-    private String status;
-
+    private Status status;
 }

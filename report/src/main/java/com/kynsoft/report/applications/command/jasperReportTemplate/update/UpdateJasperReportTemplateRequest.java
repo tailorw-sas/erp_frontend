@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -31,4 +33,6 @@ public class UpdateJasperReportTemplateRequest {
     private String rootIndex;
     private String language;
     private Status status;
+    private UUID dbConection;
+    private String query;
 }

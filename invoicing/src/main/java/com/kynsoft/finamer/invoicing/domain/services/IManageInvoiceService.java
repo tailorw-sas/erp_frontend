@@ -3,6 +3,8 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.io.ByteArrayOutputStream;
@@ -17,13 +19,30 @@ public interface IManageInvoiceService {
 
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream);
 
-    void update(ManageInvoiceDto dto);
+    ManageInvoiceDto update(ManageInvoiceDto dto);
 
     void delete(ManageInvoiceDto dto);
 
     ManageInvoiceDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse sendList(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria>filterCriteria);
 
     List<ManageInvoiceDto> findByIds(List<UUID> ids);
+
+    List<ManageInvoiceDto> findAllToReplicate();
+
+    Double findSumOfAmountByParentId(UUID parentId);
+
+    ManageInvoiceDto findByInvoiceId(long id);
+
+    boolean existManageInvoiceByInvoiceId(long invoiceId);
+
+    void deleteInvoice(ManageInvoiceDto dto);
+
+    ManageInvoiceDto changeInvoiceStatus(ManageInvoiceDto dto, ManageInvoiceStatusDto status);
 }

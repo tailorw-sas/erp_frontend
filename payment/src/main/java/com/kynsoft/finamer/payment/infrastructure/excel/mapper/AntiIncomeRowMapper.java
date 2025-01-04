@@ -2,7 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.mapper;
 
 import com.kynsof.share.core.application.excel.mapper.IMapper;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
-import com.kynsoft.finamer.payment.domain.excel.bean.AntiToIncomeRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,9 +14,10 @@ public class AntiIncomeRowMapper implements IMapper<PaymentImportCache, AntiToIn
         AntiToIncomeRow antiToIncomeRow = new AntiToIncomeRow();
         antiToIncomeRow.setAmount(Double.parseDouble(obj.getPaymentAmount()));
         antiToIncomeRow.setRemarks(obj.getRemarks());
-        antiToIncomeRow.setTransactionId(obj.getTransactionId());
+        antiToIncomeRow.setTransactionId(Double.parseDouble(obj.getTransactionId()));
         antiToIncomeRow.setImportType(obj.getImportType());
         antiToIncomeRow.setImportProcessId(obj.getImportProcessId());
+        antiToIncomeRow.setRowNumber(obj.getRowNumber());
         return antiToIncomeRow;
     }
 

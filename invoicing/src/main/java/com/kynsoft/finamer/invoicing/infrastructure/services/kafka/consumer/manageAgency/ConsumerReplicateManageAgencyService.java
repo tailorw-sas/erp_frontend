@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageAgency;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageAgency.create.CreateManageAgencyCommand;
@@ -31,7 +28,10 @@ public class ConsumerReplicateManageAgencyService {
 //
 //            ReplicateManageAgencyKafka objKafka = objectMapper.treeToValue(rootNode, ReplicateManageAgencyKafka.class);
             CreateManageAgencyCommand command = new CreateManageAgencyCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getClient(), EGenerationType.valueOf(objKafka.getGenerationType()), objKafka.getStatus());
+                    objKafka.getName(), objKafka.getClient(), EGenerationType.valueOf(objKafka.getGenerationType()),
+                    objKafka.getStatus(),objKafka.getCif(),objKafka.getAddress(),objKafka.getSentB2BPartner(),objKafka.getCityState(),objKafka.getCountry(), 
+                    objKafka.getMailingAddress(), objKafka.getZipCode(), objKafka.getCity(), objKafka.getCreditDay(), objKafka.getAutoReconcile(), objKafka.getValidateCheckout(),
+                    objKafka.getBookingCouponFormat());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);

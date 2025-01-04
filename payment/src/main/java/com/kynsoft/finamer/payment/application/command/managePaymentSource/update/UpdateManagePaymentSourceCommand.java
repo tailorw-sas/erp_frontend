@@ -14,11 +14,15 @@ public class UpdateManagePaymentSourceCommand implements ICommand {
     private UUID id;
     private String name;
     private String status;
+    private Boolean expense;
+    private Boolean isBank;
 
-    public UpdateManagePaymentSourceCommand(UUID id, String name, String status) {
+    public UpdateManagePaymentSourceCommand(UUID id, String name, String status, Boolean expense, Boolean isBank) {
         this.id = id;
         this.name = name;
         this.status = status;
+        this.expense = expense;
+        this.isBank = isBank;
     }
 
     @Override

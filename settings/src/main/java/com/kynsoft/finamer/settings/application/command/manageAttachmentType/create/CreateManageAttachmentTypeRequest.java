@@ -12,5 +12,6 @@ public class CreateManageAttachmentTypeRequest {
     private String description;
     private Status status;
     private String name;
-    private Boolean defaults;
+    private boolean defaults;
+    private boolean attachInvDefault;
 }

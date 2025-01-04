@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import jakarta.persistence.*;
@@ -10,8 +12,10 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,11 +23,16 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "vcc_transaction")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "vcc_transaction",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Transaction implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "transaction_uuid", unique = true)
+    private UUID transactionUuid;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_merchant_id")
@@ -44,9 +53,13 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "manage_language_id")
     private ManageLanguage language;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_merchant_currency_id")
+    private ManagerMerchantCurrency merchantCurrency;
+
     private Double amount;
 
-    private LocalDate checkIn;
+    private LocalDateTime checkIn;
 
     private String reservationNumber;
 
@@ -95,6 +108,32 @@ public class Transaction implements Serializable {
     @Column(name = "permit_refund")
     private Boolean permitRefund = true;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean manual;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean adjustment;
+
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bank_reconciliation")
+    private ManageBankReconciliation reconciliation;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "transaction", cascade = CascadeType.ALL)
+    private List<Attachment> attachments;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean hasAttachments;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_payment")
+    private HotelPayment hotelPayment;
+
+    @CreationTimestamp
+    private LocalDateTime transactionDate;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -121,17 +160,33 @@ public class Transaction implements Serializable {
         if(dto.getPermitRefund() != null){
             this.permitRefund = dto.getPermitRefund();
         }
+        this.merchantCurrency = dto.getMerchantCurrency() != null ? new ManagerMerchantCurrency(dto.getMerchantCurrency()) : null;
+        transactionUuid= dto.getTransactionUuid();
+        this.manual = dto.isManual();
+        this.paymentDate = dto.getPaymentDate();
+        this.reconciliation = dto.getReconciliation() != null ? new ManageBankReconciliation(dto.getReconciliation()) : null;
+        this.adjustment = dto.isAdjustment();
+        this.attachments = dto.getAttachments() != null
+                ? dto.getAttachments().stream().map(attachmentDto -> {
+                        Attachment attachment = new Attachment(attachmentDto);
+                        attachment.setTransaction(this);
+                        return attachment;
+                    }).collect(Collectors.toList())
+                : null;
+        this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
+        this.transactionDate = dto.getTransactionDate();
     }
 
-    private TransactionDto toAggregateParent() {
+    public TransactionDto toAggregateParent() {
         return new TransactionDto(
-                id, checkIn, reservationNumber, referenceNumber,
-                createdAt.toLocalDate());
+                id,transactionUuid, checkIn, reservationNumber, referenceNumber,
+                transactionDate);
     }
 
     public TransactionDto toAggregate(){
         return new TransactionDto(
                 id,
+                transactionUuid,
                 merchant != null ? merchant.toAggregate() : null,
                 methodType,
                 hotel != null ? hotel.toAggregate() : null,
@@ -144,10 +199,22 @@ public class Transaction implements Serializable {
                 commission,
                 status != null ? status.toAggregate() : null,
                 parent != null ? parent.toAggregateParent() : null,
-                createdAt.toLocalDate(),
+                transactionDate,
                 transactionCategory != null ? transactionCategory.toAggregate() : null,
                 transactionSubCategory != null ? transactionSubCategory.toAggregate() : null,
-                netAmount, permitRefund
+                netAmount, permitRefund, merchantCurrency != null ? merchantCurrency.toAggregate() : null,
+                manual,
+                adjustment,
+                paymentDate,
+                reconciliation != null ? reconciliation.toAggregateSimple() : null,
+                attachments != null ? attachments.stream().map(Attachment::toAggregate).collect(Collectors.toList()) : null,
+                hotelPayment != null ? hotelPayment.toAggregateSimple() : null
         );
+    }
+
+    @PostLoad
+    public void initDefaultValue() {
+        hasAttachments = (attachments != null && !attachments.isEmpty());
+        transactionDate = transactionDate != null ? transactionDate : createdAt;
     }
 }

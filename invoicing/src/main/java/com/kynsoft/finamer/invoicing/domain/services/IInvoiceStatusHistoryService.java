@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceStatusHistoryDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -13,15 +14,12 @@ public interface IInvoiceStatusHistoryService {
 
     void update(InvoiceStatusHistoryDto dto);
 
-
-
     void delete(InvoiceStatusHistoryDto dto);
 
     InvoiceStatusHistoryDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-
-
+    UUID create(ManageInvoiceDto invoiceDto, String employee);
 }
 

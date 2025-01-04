@@ -3,11 +3,10 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IManageBookingService {
@@ -23,9 +22,21 @@ public interface IManageBookingService {
 
     ManageBookingDto findById(UUID id);
 
-    boolean existsByExactLastTwoChars(String lastTwoChars, UUID hotelId);
+    boolean existsByExactLastChars(String lastChars, UUID hotelId);
+
+    Optional<ManageBookingDto> findManageBookingByBookingNumber(String reservationNumber);
+
+    void calculateHotelAmount(ManageBookingDto dto);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageBookingDto> findByIds(List<UUID> ids);
+
+    List<ManageBookingDto> findAllToReplicate();
+
+    void deleteInvoice(ManageBookingDto dto);
+
+    boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId);
+
+    ManageBookingDto findBookingId(Long bookingId);
 }

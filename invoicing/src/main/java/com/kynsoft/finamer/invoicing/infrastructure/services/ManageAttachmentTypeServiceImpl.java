@@ -8,10 +8,13 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 
+import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.search.GetSearchManageAttachmentTypeResponse;
+import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAttachmentType;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageAttachmentTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageAttachmentTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,9 +77,47 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(
-                DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+                DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND_, new ErrorField("id", DomainErrorMessage.MANAGE_ATTACHMENT_TYPE_NOT_FOUND_.getReasonPhrase())));
     }
 
+    @Override
+    public Optional<ManageAttachmentTypeDto> findByCode(String code) {
+        Optional<ManageAttachmentType> attachmentType =repositoryQuery.findManageAttachmentTypeByCode(code);
+        if (attachmentType.isPresent()){
+            return attachmentType.map(ManageAttachmentType::toAggregate);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<ManageAttachmentTypeDto> findDefault() {
+        Optional<ManageAttachmentType> defaultType=repositoryQuery.findManageAttachmentTypeByDefaults(true);
+       if(defaultType.isPresent()){
+           return defaultType.map(ManageAttachmentType::toAggregate);
+       }
+       return Optional.empty();
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filter) {
+        filterCriteria(filter);
+        GenericSpecificationsBuilder<ManageAttachmentType> specifications = new GenericSpecificationsBuilder<>(filter);
+        Page<ManageAttachmentType> data = repositoryQuery.findAll(specifications, pageable);
+        return getPaginatedResponse(data);
+    }
+
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageAttachmentType> data) {
+        List<GetSearchManageAttachmentTypeResponse> responses = data.stream()
+                .map(resourceType -> GetSearchManageAttachmentTypeResponse.builder()
+                        .name(resourceType.getName())
+                        .code(resourceType.getCode())
+                        .id(resourceType.getId())
+                        .status(resourceType.getStatus().name())
+                        .build()
+                ).toList();
+        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
+    }
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

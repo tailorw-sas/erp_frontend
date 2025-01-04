@@ -15,7 +15,7 @@ public class UpdateManageRatePlanCommand implements ICommand {
 
     private UUID id;
     private String name;
-
+    private String status;
 
     @Override
     public ICommandMessage getMessage() {

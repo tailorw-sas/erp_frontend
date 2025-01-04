@@ -17,6 +17,8 @@ public class CreateManageModuleCommand implements ICommand {
     private String code;
     private String name;
     private String status;
+    private String image;
+    private String description;
 
     @Override
     public ICommandMessage getMessage() {

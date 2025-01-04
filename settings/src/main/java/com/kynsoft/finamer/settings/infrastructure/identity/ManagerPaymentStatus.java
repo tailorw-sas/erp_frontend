@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagerPaymentStatusDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -18,6 +20,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "manage_payment_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_payment_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagerPaymentStatus {
     @Id
     @Column(name = "id")
@@ -36,6 +40,18 @@ public class ManagerPaymentStatus {
 
     private Boolean defaults;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean applied;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean confirmed;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cancelled;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean transit;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,10 +67,25 @@ public class ManagerPaymentStatus {
         this.collected = dto.getCollected();
         this.description = dto.getDescription();
         this.defaults = dto.getDefaults();
+        this.applied = dto.getApplied();
+        this.confirmed = dto.isConfirmed();
+        this.cancelled = dto.isCancelled();
+        this.transit = dto.isTransit();
     }
     
     public ManagerPaymentStatusDto toAggregate() {
-        return new ManagerPaymentStatusDto(id, code, name, status, collected, description, 
-                defaults != null ? defaults : null);
+        return new ManagerPaymentStatusDto(
+                id, 
+                code, 
+                name, 
+                status, 
+                collected, 
+                description, 
+                defaults != null ? defaults : null,
+                applied,
+                confirmed,
+                cancelled,
+                transit
+        );
     }
 }

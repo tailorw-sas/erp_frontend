@@ -43,7 +43,7 @@ public class CreateManageBankAccountCommandHandler implements ICommandHandler<Cr
 
     @Override
     public void handle(CreateManageBankAccountCommand command) {
-        RulesChecker.checkRule(new ManageBankAccountNumberMustBeUniqueRule(this.service, command.getAccountNumber(), command.getId()));
+        RulesChecker.checkRule(new ManageBankAccountNumberMustBeUniqueRule(this.service, command.getAccountNumber(), command.getId(), command.getManageBank()));
         RulesChecker.checkRule(new ManageBankAccountNumberRule(command.getAccountNumber()));
 
         ManagerBankDto manageBankDto = bankService.findById(command.getManageBank());
@@ -54,6 +54,9 @@ public class CreateManageBankAccountCommandHandler implements ICommandHandler<Cr
                 command.getId(), command.getStatus(), command.getAccountNumber(),
                 manageBankDto, manageHotelDto, manageAccountTypeDto, command.getDescription()
         ));
-        this.producerReplicateManageBankAccount.create(new ReplicateManageBankAccountKafka(command.getId(), command.getAccountNumber(), command.getStatus().name(), manageBankDto.getName()));
+        this.producerReplicateManageBankAccount.create(new ReplicateManageBankAccountKafka(
+                command.getId(), command.getAccountNumber(), command.getStatus().name(),
+                manageBankDto.getName(),manageHotelDto.getId(), manageBankDto.getId(),
+                manageAccountTypeDto.getId(), command.getDescription()));
     }
 }

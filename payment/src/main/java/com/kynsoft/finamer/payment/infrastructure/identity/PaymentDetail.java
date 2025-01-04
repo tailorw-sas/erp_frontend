@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -8,19 +10,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,6 +27,8 @@ import org.hibernate.generator.EventType;
 @Setter
 @Entity
 @Table(name = "payment_detail")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment_detail",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class PaymentDetail implements Serializable {
 
     @Id
@@ -51,13 +52,33 @@ public class PaymentDetail implements Serializable {
     @JoinColumn(name = "transaction_type_id")
     private ManagePaymentTransactionType transactionType;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_booking_id")
+    private Booking manageBooking;
+
+    private Long reverseFrom;
+
+    private Long reverseFromParentId;//Esta variable es para poder controlar el undo luego de realizar un reverse.
+
     private Double amount;
     private Double applyDepositValue;
     private String remark;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean applayPayment;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean reverseTransaction;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean canceledTransaction;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
+
     private Double bookingId;
     private String invoiceId;
-    private LocalDate transactionDate;
+    private OffsetDateTime transactionDate;
     private String firstName;
     private String lastName;
     private String reservation;
@@ -66,14 +87,24 @@ public class PaymentDetail implements Serializable {
     private Integer childrens;
 
     @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "payment_detail_payment_detail",
+            joinColumns = @JoinColumn(name = "paymentdetail_id"),
+            inverseJoinColumns = @JoinColumn(name = "children_id")
+    )
     private List<PaymentDetail> children = new ArrayList<>();
 
-    @CreationTimestamp
+    //@CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
+
+    @PrePersist
+    protected void prePersist() {
+        this.createdAt = OffsetDateTime.now(ZoneId.of("UTC"));
+    }
 
     public PaymentDetail(PaymentDetailDto dto) {
         this.id = dto.getId();
@@ -98,6 +129,13 @@ public class PaymentDetail implements Serializable {
         this.childrens = dto.getChildrens() != null ? dto.getChildrens() : null;
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
+        this.manageBooking = dto.getManageBooking() != null ? new Booking(dto.getManageBooking()) : null;
+        this.applayPayment = dto.getApplayPayment();
+        this.reverseFrom = dto.getReverseFrom();
+        this.reverseFromParentId = dto.getReverseFromParentId();
+        this.reverseTransaction = dto.isReverseTransaction();
+        this.createByCredit = dto.isCreateByCredit();
+        this.canceledTransaction = dto.isCanceledTransaction();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -105,11 +143,12 @@ public class PaymentDetail implements Serializable {
         return new PaymentDetailDto(
                 id,
                 status,
-                payment.toAggregate(),
+                payment != null ? payment.toAggregate() : null,
                 transactionType.toAggregate(),
                 amount,
                 remark,
                 children != null ? children.stream().map(PaymentDetail::toAggregateSimple).toList() : null,
+                manageBooking != null ? manageBooking.toAggregate() : null,
                 bookingId,
                 invoiceId,
                 transactionDate,
@@ -122,7 +161,13 @@ public class PaymentDetail implements Serializable {
                 createdAt,
                 paymentDetailId,
                 parentId,
-                applyDepositValue
+                applyDepositValue,
+                applayPayment,
+                reverseFrom != null ? reverseFrom : null,
+                reverseFromParentId != null ? reverseFromParentId : null,
+                reverseTransaction,
+                createByCredit,
+                canceledTransaction
         );
     }
 
@@ -131,11 +176,12 @@ public class PaymentDetail implements Serializable {
         return new PaymentDetailDto(
                 id,
                 status,
-                payment.toAggregate(),
+                payment != null ? payment.toAggregate() : null,
                 transactionType.toAggregate(),
                 amount,
                 remark,
                 null,
+                manageBooking != null ? manageBooking.toAggregate() : null,
                 bookingId != null ? bookingId : null,
                 invoiceId != null ? invoiceId : null,
                 transactionDate != null ? transactionDate : null,
@@ -148,7 +194,46 @@ public class PaymentDetail implements Serializable {
                 createdAt,
                 paymentDetailId,
                 parentId,
-                applyDepositValue
+                applyDepositValue,
+                applayPayment,
+                null,
+                reverseFromParentId != null ? reverseFromParentId : null,
+                reverseTransaction,
+                createByCredit,
+                canceledTransaction
+        );
+    }
+
+    public PaymentDetailDto toAggregateSimpleNotPayment() {
+
+        return new PaymentDetailDto(
+                id,
+                status,
+                null,
+                transactionType.toAggregate(),
+                amount,
+                remark,
+                null,
+                manageBooking != null ? manageBooking.toAggregate() : null,
+                bookingId != null ? bookingId : null,
+                invoiceId != null ? invoiceId : null,
+                transactionDate != null ? transactionDate : null,
+                firstName != null ? firstName : null,
+                lastName != null ? lastName : null,
+                reservation != null ? reservation : null,
+                couponNo != null ? couponNo : null,
+                adults != null ? adults : null,
+                childrens != null ? childrens : null,
+                createdAt,
+                paymentDetailId,
+                parentId,
+                applyDepositValue,
+                applayPayment,
+                reverseFrom != null ? reverseFrom : null,
+                reverseFromParentId != null ? reverseFromParentId : null,
+                reverseTransaction,
+                createByCredit,
+                canceledTransaction
         );
     }
 }

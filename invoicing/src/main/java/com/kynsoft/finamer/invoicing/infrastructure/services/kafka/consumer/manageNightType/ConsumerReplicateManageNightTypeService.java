@@ -1,7 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageNightType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageNightTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageNightType.create.CreateManageNightTypeCommand;
@@ -25,7 +23,7 @@ public class ConsumerReplicateManageNightTypeService {
         try {
 
             CreateManageNightTypeCommand command = new CreateManageNightTypeCommand(objKafka.getId(),
-                    objKafka.getCode(), objKafka.getName());
+                    objKafka.getCode(), objKafka.getName(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageNightTypeService.class.getName()).log(Level.SEVERE, null, ex);

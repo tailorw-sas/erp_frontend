@@ -18,9 +18,8 @@ public class CreateManageRoomTypeCommandHandler implements ICommandHandler<Creat
     @Override
     public void handle(CreateManageRoomTypeCommand command) {
 
-
         service.create(new ManageRoomTypeDto(
-                command.getId(), command.getCode(),  command.getName()
+                command.getId(), command.getCode(),  command.getName(), command.getStatus()
         ));
     }
 }

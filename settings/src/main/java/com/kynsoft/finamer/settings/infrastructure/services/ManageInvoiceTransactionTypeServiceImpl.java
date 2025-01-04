@@ -125,4 +125,9 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
         return objectDtos;
     }
 
+    @Override
+    public Long countByDefaultsAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultsAndNotId(id);
+    }
+
 }

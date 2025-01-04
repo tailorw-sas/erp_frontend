@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,14 +14,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageClientDto {
+public class ManageClientDto implements Serializable {
 
     private UUID id;
     private String code;
     private String name;
     private String description;
     private Status status;
-    private List<ManageAgencyDto> agencies;
+   private List<ManageAgencyDto> agencies;
     private Boolean isNightType;
 
     public ManageClientDto(UUID id, String code, String name, String description, Status status, Boolean isNightType) {

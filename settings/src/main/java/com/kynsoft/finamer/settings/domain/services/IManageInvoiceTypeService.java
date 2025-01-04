@@ -23,4 +23,10 @@ public interface IManageInvoiceTypeService {
     Long countByCodeAndNotId(String code, UUID id);
 
     List<ManageInvoiceTypeDto> findAllToReplicate();
+
+    Long countByCreditAndNotId(UUID id);
+
+    Long countByInvoiceAndNotId(UUID id);
+
+    Long countByIncomeAndNotId(UUID id);
 }

@@ -20,5 +20,5 @@ public class UpdateManageVCCTransactionTypeRequest {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
-
+    private boolean manual;
 }

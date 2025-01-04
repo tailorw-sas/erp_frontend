@@ -1,10 +1,10 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
+import com.kynsof.share.core.domain.http.entity.InvoiceHttp;
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.manageInvoice.calculateInvoiceAmount.CalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.create.CreateInvoiceRequest;
@@ -13,12 +13,35 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBul
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBulk.CreateBulkInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.delete.DeleteInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.delete.DeleteInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit.CreateNewCreditCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit.CreateNewCreditMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.newCredit.CreateNewCreditRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.partialClone.PartialCloneInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.reconcileManual.ReconcileManualRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.send.SendInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.totalClone.TotalCloneRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImportInvoice.UndoImportInvoiceRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.UpdateInvoiceRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.originalAmount.UpdateInvoiceOriginalAmountCommand;
+import com.kynsoft.finamer.invoicing.application.query.invoice.http.getById.FindInvoiceHttpByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.ExportInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.export.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.GetSearchInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.sendList.SendListInvoiceQuery;
+import com.kynsoft.finamer.invoicing.application.query.manageInvoice.toPayment.search.GetSearchInvoiceToPaymentQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ExportInvoiceResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import org.springframework.data.domain.Pageable;
@@ -27,17 +50,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/manage-invoice")
 public class InvoiceController {
 
     private final IMediator mediator;
-
     public InvoiceController(IMediator mediator) {
-
         this.mediator = mediator;
+    }
+
+    @GetMapping(path = "/uuid-id/{id}")
+    public ResponseEntity<?> getByUuidId(@PathVariable UUID id) {
+
+        FindInvoiceHttpByIdQuery query = new FindInvoiceHttpByIdQuery(id);
+        InvoiceHttp response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping()
@@ -48,25 +77,52 @@ public class InvoiceController {
         FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
         ManageInvoiceResponse resp = mediator.send(query);
 
-        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null, null, null,null, null, null, null));
+        this.mediator.send(
+                new UpdateInvoiceCommand(response.getId(), null, resp.getAgency().getId(), null, null));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("bulk")
     public ResponseEntity<CreateBulkInvoiceMessage> createBulk(@RequestBody CreateBulkInvoiceRequest request) {
-
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
-
         CreateBulkInvoiceMessage message = this.mediator.send(command);
 
-        this.mediator.send(
-                new CalculateInvoiceAmountCommand(message.getId(), command.getBookingCommands().stream().map(b -> {
-                    return b.getId();
-                }).collect(Collectors.toList()), command.getRoomRateCommands().stream().map(rr -> {
-                    return rr.getId();
-                }).collect(Collectors.toList())));
+        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(message.getId());
+        ManageInvoiceResponse resp = mediator.send(query);
 
-        
+        this.mediator.send(new UpdateInvoiceOriginalAmountCommand(resp.getId(), resp.getInvoiceAmount()));
+        return ResponseEntity.ok(message);
+
+    }
+
+    @PostMapping("total-clone-invoice")
+    public ResponseEntity<?> totalClone(@RequestBody TotalCloneRequest request) {
+
+        TotalCloneCommand command = TotalCloneCommand.fromRequest(request, mediator);
+
+        TotalCloneMessage message = this.mediator.send(command);
+
+        return ResponseEntity.ok(message);
+
+    }
+
+    @PostMapping("partial-clone")
+    public ResponseEntity<PartialCloneInvoiceMessage> createBulk(@RequestBody PartialCloneInvoiceRequest request) {
+
+        PartialCloneInvoiceCommand command = PartialCloneInvoiceCommand.fromRequest(request);
+
+        PartialCloneInvoiceMessage message = this.mediator.send(command);
+
+        return ResponseEntity.ok(message);
+
+    }
+
+    @PostMapping("/undo")
+    public ResponseEntity<UndoImportInvoiceMessage> createBulk(@RequestBody UndoImportInvoiceRequest request) {
+
+        UndoImportInvoiceCommand command = UndoImportInvoiceCommand.fromRequest(request, mediator);
+
+        UndoImportInvoiceMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
 
@@ -99,6 +155,24 @@ public class InvoiceController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping("/send-list")
+    public ResponseEntity<?> send(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        SendListInvoiceQuery query = new SendListInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/search-payment/search")
+    public ResponseEntity<?> searchToPayment(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchInvoiceToPaymentQuery query = new GetSearchInvoiceToPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
     @PostMapping("/export")
     public ResponseEntity<?> export(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -115,6 +189,19 @@ public class InvoiceController {
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
+    @PostMapping("/export-base64")
+    public ResponseEntity<?> exportBase64(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        ExportInvoiceQuery query = new ExportInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        ExportInvoiceResponse data = mediator.send(query);
+
+        final byte[] bytes = data.getStream().toByteArray();
+        PaymentExcelExporterResponse response = new PaymentExcelExporterResponse(bytes, "file");
+
+        return ResponseEntity.ok(response);
+    }
+
     @PatchMapping(path = "/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateInvoiceRequest request) {
 
@@ -122,4 +209,62 @@ public class InvoiceController {
         UpdateInvoiceMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/new-credit")
+    public ResponseEntity<?> newCredit(@RequestBody CreateNewCreditRequest request) {
+        CreateNewCreditCommand command = CreateNewCreditCommand.fromRequest(request);
+        CreateNewCreditMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<?> send(@RequestBody SendInvoiceRequest request) {
+        SendInvoiceCommand command = SendInvoiceCommand.fromRequest(request);
+        SendInvoiceMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reconcile-manual")
+    public ResponseEntity<?> generateInvoicePdf(@RequestBody ReconcileManualRequest request) {
+
+        //Realizar el reconcile manual
+        ReconcileManualCommand command = ReconcileManualCommand.fromRequest(request);
+        ReconcileManualMessage response = this.mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+/*
+    //Probar el metodo para generar PDFs a partir de un listado de invoicings UUIDs
+    @PostMapping("/reconcile-pdf-manual-test")
+    public ResponseEntity<byte[]> generatePdf(@RequestBody List<UUID> ids) {
+
+        try {
+            // Generar el buffer de manera dinámica
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(ids, outputStream.toByteArray());
+            *//*byte[] pdf = pdfService.concatenateManualPDFs(pdfRequest);*//*
+             InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
+
+            // Enviar el comando y obtener el mensaje
+            InvoiceReconcileManualPdfMessage message = mediator.send(pdfCommand);
+
+            // Validar los datos del PDF
+
+            // Responder con el PDF
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfCommand.getRequest().getPdfData());
+
+        } catch (Exception e) {
+            // Manejar errores
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+
+    }*/
+
 }

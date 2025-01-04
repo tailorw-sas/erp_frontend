@@ -16,13 +16,17 @@ public class UpdateManageResourceTypeCommand implements ICommand {
     private String name;
     private Status status;
     private Boolean defaults;
+    private boolean invoice;
+    private boolean vcc;
 
-    public UpdateManageResourceTypeCommand(UUID id, String name, String description, Status status, Boolean defaults) {
+    public UpdateManageResourceTypeCommand(UUID id, String name, String description, Status status, Boolean defaults, boolean invoice, boolean vcc) {
         this.id = id;
         this.description = description;
         this.name = name;
         this.status = status;
         this.defaults = defaults;
+        this.invoice = invoice;
+        this.vcc = vcc;
     }
 
     public static UpdateManageResourceTypeCommand fromRequest(UpdateManageResourceTypeRequest request, UUID id) {
@@ -31,7 +35,9 @@ public class UpdateManageResourceTypeCommand implements ICommand {
                 request.getName(),
                 request.getDescription(),
                 request.getStatus(),
-                request.getDefaults()
+                request.getDefaults(),
+                request.isInvoice(),
+                request.isVcc()
         );
     }
 

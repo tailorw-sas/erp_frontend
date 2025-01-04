@@ -10,20 +10,20 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentStatusHistoryResponse;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.identity.AttachmentStatusHistory;
+import com.kynsoft.finamer.payment.infrastructure.repository.command.AttachmentStatusHistoryWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.AttachmentStatusHistoryReadDataJPARepository;
-import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
-import com.kynsoft.finamer.payment.infrastructure.repository.command.AttachmentStatusHistoryWriteDataJPARepository;
 
 @Service
 public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHistoryService {

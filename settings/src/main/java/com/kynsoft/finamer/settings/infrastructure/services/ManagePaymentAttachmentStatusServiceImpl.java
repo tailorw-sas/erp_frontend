@@ -115,4 +115,19 @@ public class ManagePaymentAttachmentStatusServiceImpl implements IManagePaymentA
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
+    @Override
+    public Long countByNonNoneAndNotId(UUID id) {
+        return this.repositoryQuery.countByNonNoneAndNotId(id);
+    }
+
+    @Override
+    public Long countByPatWithAttachmentAndNotId(UUID id) {
+        return this.repositoryQuery.countByPatWithAttachmentAndNotId(id);
+    }
+
+    @Override
+    public Long countByPwaWithOutAttachmentAndNotId(UUID id) {
+        return this.repositoryQuery.countByPwaWithOutAttachmentAndNotId(id);
+    }
+
 }

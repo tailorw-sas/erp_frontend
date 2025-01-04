@@ -1,5 +1,6 @@
 package com.kynsoft.report.domain.dto;
 
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +22,6 @@ public class JasperReportTemplateDto {
     private  String file;
     private  JasperReportTemplateType type;
     private Status status;
-    private  String parameters;
     private LocalDateTime createdAt;
 
     private Double parentIndex;
@@ -37,20 +37,25 @@ public class JasperReportTemplateDto {
     private String rootIndex;
     private String language;
 
+    private DBConectionDto dbConectionDto;
+
+    private String query;
+    private ModuleSystems moduleSystems; // Campo para el módulo del sistema
+
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
-                                   JasperReportTemplateType type, String parameters, 
+                                   JasperReportTemplateType type,
                                    Double parentIndex, Double menuPosition, 
                                    String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                    Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                   String rootIndex, String language, Status status) {
+                                   String rootIndex, String language, Status status, DBConectionDto dbConection,
+                                   String query) {
         this.id = id;
         this.code = templateCode;
         this.name = templateName;
         this.description = templateDescription;
         this.file = templateContentUrl;
         this.type = type;
-        this.parameters = parameters;
         this.parentIndex = parentIndex;
         this.menuPosition = menuPosition;
         this.lanPath = lanPath;
@@ -64,6 +69,8 @@ public class JasperReportTemplateDto {
         this.rootIndex = rootIndex;
         this.language = language;
         this.status = status;
+        this.dbConectionDto = dbConection;
+        this.query = query;
     }
 
 }

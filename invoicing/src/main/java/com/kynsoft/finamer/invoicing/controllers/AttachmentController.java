@@ -49,10 +49,10 @@ public class AttachmentController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable UUID id) {
+    @DeleteMapping(path = "/{id}/employee/{employeeId}")
+    public ResponseEntity<?> deleteById(@PathVariable UUID id, @PathVariable UUID employeeId) {
 
-        DeleteAttachmentCommand command = new DeleteAttachmentCommand(id);
+        DeleteAttachmentCommand command = new DeleteAttachmentCommand(id, employeeId);
         DeleteAttachmentMessage response = mediator.send(command);
 
         return ResponseEntity.ok(response);

@@ -19,12 +19,18 @@ public class ManageHotelResponse implements IResponse {
     private String code;
     private String name;
     private String status;
+    private Boolean applyByTradingCompany;
+    private UUID manageTradingCompany;
+    private Boolean autoApplyCredit;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.applyByTradingCompany = dto.getApplyByTradingCompany();
+        this.manageTradingCompany = dto.getManageTradingCompany();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
 }

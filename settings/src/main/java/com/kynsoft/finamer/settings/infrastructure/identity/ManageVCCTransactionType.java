@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_vcc_transaction_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_vcc_transaction_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageVCCTransactionType implements Serializable {
 
     @Id
@@ -41,6 +45,9 @@ public class ManageVCCTransactionType implements Serializable {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean manual;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -67,6 +74,7 @@ public class ManageVCCTransactionType implements Serializable {
         this.subcategory = dto.getSubcategory();
         this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
         this.defaultRemark = dto.getDefaultRemark();
+        this.manual = dto.isManual();
     }
 
     public ManageVCCTransactionTypeDto toAggregate(){
@@ -77,7 +85,7 @@ public class ManageVCCTransactionType implements Serializable {
                 policyCredit,
                 remarkRequired,
                 minNumberOfCharacter,
-                defaultRemark);
+                defaultRemark, manual);
     }
 
 }

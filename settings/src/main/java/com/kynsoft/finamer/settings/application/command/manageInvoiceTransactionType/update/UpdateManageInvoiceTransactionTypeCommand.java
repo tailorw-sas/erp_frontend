@@ -25,6 +25,9 @@ public class UpdateManageInvoiceTransactionTypeCommand implements ICommand {
     private Integer minNumberOfCharacters;
     private String defaultRemark;
 
+    private boolean defaults;
+    private boolean cloneAdjustmentDefault;
+
     public static UpdateManageInvoiceTransactionTypeCommand fromRequest(UpdateManageInvoiceTransactionTypeRequest request, UUID id){
         return new UpdateManageInvoiceTransactionTypeCommand(
                 id,
@@ -36,7 +39,9 @@ public class UpdateManageInvoiceTransactionTypeCommand implements ICommand {
                 request.getIsPolicyCredit(),
                 request.getIsRemarkRequired(),
                 request.getMinNumberOfCharacters(),
-                request.getDefaultRemark()
+                request.getDefaultRemark(),
+                request.isDefaults(),
+                request.isCloneAdjustmentDefault()
         );
     }
 

@@ -5,7 +5,9 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
+import java.util.function.Consumer;
 
 import org.springframework.stereotype.Component;
 
@@ -25,13 +27,30 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(resourceTypeDto::setName, command.getName(),
-                resourceTypeDto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(resourceTypeDto::setName, command.getName(), resourceTypeDto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(resourceTypeDto::setDescription, command.getDescription(), resourceTypeDto.getDescription(), update::setUpdate);
+        this.updateStatus(resourceTypeDto::setStatus, command.getStatus(), resourceTypeDto.getStatus(), update::setUpdate);
+        this.updateBooleam(resourceTypeDto::setDefaults, command.getDefaults(), resourceTypeDto.getDefaults(), update::setUpdate);
+        this.updateBooleam(resourceTypeDto::setInvoice, command.isInvoice(), resourceTypeDto.isInvoice(), update::setUpdate);
 
-        if (update.getUpdate() > 0) {
-            this.service.update(resourceTypeDto);
+        resourceTypeDto.setInvoice(command.isInvoice());
+
+        this.service.update(resourceTypeDto);
+
+    }
+
+    private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
         }
+    }
 
+    private void updateBooleam(Consumer<Boolean> setter, Boolean newValue, Boolean oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+        }
     }
 
 }

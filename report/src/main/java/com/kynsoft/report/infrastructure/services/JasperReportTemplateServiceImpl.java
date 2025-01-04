@@ -1,7 +1,9 @@
 package com.kynsoft.report.infrastructure.services;
 
 import com.kynsoft.report.applications.query.jasperreporttemplate.getbyid.JasperReportTemplateResponse;
+import com.kynsoft.report.applications.query.menu.ReportMenuResponse;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsoft.report.infrastructure.entity.JasperReportTemplate;
 import com.kynsoft.report.infrastructure.repository.command.JasperReportTemplateWriteDataJPARepository;
@@ -13,29 +15,29 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JasperReportTemplateServiceImpl implements IJasperReportTemplateService {
 
-    @Autowired
-    private JasperReportTemplateWriteDataJPARepository commandRepository;
+    private final JasperReportTemplateWriteDataJPARepository commandRepository;
+    private final JasperReportTemplateReadDataJPARepository queryRepository;
 
-    @Autowired
-    private JasperReportTemplateReadDataJPARepository queryRepository;
+    public JasperReportTemplateServiceImpl(JasperReportTemplateWriteDataJPARepository commandRepository,
+                                           JasperReportTemplateReadDataJPARepository queryRepository) {
+        this.commandRepository = commandRepository;
+        this.queryRepository = queryRepository;
+    }
 
     @Override
-    public void create(JasperReportTemplateDto object) {
-        this.commandRepository.save(new JasperReportTemplate(object));
+    public UUID create(JasperReportTemplateDto object) {
+        return this.commandRepository.save(new JasperReportTemplate(object)).getId();
     }
 
     @Override
@@ -95,4 +97,23 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
         return this.queryRepository.countByCodeAndNotId(templateCode, id);
     }
 
+    @Override
+    public Map<ModuleSystems, List<ReportMenuResponse>> getGroupedAndOrderedReports() {
+        // Obtener todos los reportes
+        List<JasperReportTemplate> templates = queryRepository.findAll();
+
+        // Agrupar por módulo y ordenar por `menuPosition`
+        return templates.stream()
+                .map(JasperReportTemplate::toAggregate) // Convertir a DTO
+                .map(ReportMenuResponse::new) // Crear Response
+                .collect(Collectors.groupingBy(
+                        ReportMenuResponse::getModuleSystems, // Agrupar por módulo
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> list.stream()
+                                        .sorted((a, b) -> Double.compare(a.getMenuPosition(), b.getMenuPosition())) // Ordenar
+                                        .collect(Collectors.toList())
+                        )
+                ));
+    }
 }

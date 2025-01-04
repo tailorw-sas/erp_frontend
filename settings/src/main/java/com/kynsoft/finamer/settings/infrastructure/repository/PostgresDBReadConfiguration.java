@@ -22,7 +22,7 @@ import javax.sql.DataSource;
 public class PostgresDBReadConfiguration {
 
     @Bean(name = "readDataSourceProperties")
-    @ConfigurationProperties("spring.read-datasource")
+    @ConfigurationProperties(value = "spring.read-datasource")
     public DataSourceProperties dataSourceProperties() {
         return new DataSourceProperties();
     }

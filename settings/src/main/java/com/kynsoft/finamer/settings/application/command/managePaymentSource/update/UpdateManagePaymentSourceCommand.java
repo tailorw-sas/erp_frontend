@@ -17,13 +17,15 @@ public class UpdateManagePaymentSourceCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean isBank;
+    private Boolean expense;
 
-    public UpdateManagePaymentSourceCommand(UUID id, String description, Status status, String name, Boolean isBank) {
+    public UpdateManagePaymentSourceCommand(UUID id, String description, Status status, String name, Boolean isBank, Boolean expense) {
         this.id = id;
         this.description = description;
         this.status = status;
         this.name = name;
         this.isBank = isBank;
+        this.expense = expense;
     }
 
     public static UpdateManagePaymentSourceCommand fromRequest(UpdateManagePaymentSourceRequest request, UUID id){
@@ -32,7 +34,8 @@ public class UpdateManagePaymentSourceCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getIsBank()
+                request.getIsBank(),
+                request.getExpense()
         );
     }
 

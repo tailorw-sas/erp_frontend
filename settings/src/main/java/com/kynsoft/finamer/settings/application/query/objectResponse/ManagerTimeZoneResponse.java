@@ -8,13 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManagerTimeZoneResponse implements IResponse {
+public class ManagerTimeZoneResponse implements IResponse, Serializable {
 
     private UUID id;
     private String code;

@@ -6,10 +6,10 @@ import com.kynsoft.finamer.payment.application.command.manageHotel.update.Update
 import com.kynsoft.finamer.payment.application.command.paymentcloseoperation.create.CreatePaymentCloseOperationCommand;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
-import java.time.LocalDate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +28,14 @@ public class ConsumerUpdateManageHotelService {
     @KafkaListener(topics = "finamer-update-manage-hotel", groupId = "payment-entity-replica")
     public void listen(UpdateManageHotelKafka objKafka) {
         try {
-            UpdateManageHotelCommand command = new UpdateManageHotelCommand(objKafka.getId(), objKafka.getName(), objKafka.getStatus());
+            UpdateManageHotelCommand command = new UpdateManageHotelCommand(
+                    objKafka.getId(), 
+                    objKafka.getName(), 
+                    objKafka.getStatus(), 
+                    objKafka.getApplyByTradingCompany(),
+                    objKafka.getManageTradingCompany(),
+                    objKafka.getAutoApplyCredit()
+            );
             mediator.send(command);
 
             if (paymentCloseOperationService.findByHotelId(objKafka.getId()) == 0) {

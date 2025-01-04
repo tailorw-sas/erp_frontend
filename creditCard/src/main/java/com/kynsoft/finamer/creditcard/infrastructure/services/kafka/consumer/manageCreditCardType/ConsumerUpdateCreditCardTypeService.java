@@ -3,6 +3,7 @@ package com.kynsoft.finamer.creditcard.infrastructure.services.kafka.consumer.ma
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCreditCardTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.creditcard.application.command.manageCreditCardType.update.UpdateManageCreditCardTypeCommand;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,13 @@ public class ConsumerUpdateCreditCardTypeService {
     @KafkaListener(topics = "finamer-update-manage-credit-card-type", groupId = "vcc-entity-replica")
     public void listen(UpdateManageCreditCardTypeKafka objKafka) {
         try {
-            UpdateManageCreditCardTypeCommand command = new UpdateManageCreditCardTypeCommand(objKafka.getId(), objKafka.getName());
+            UpdateManageCreditCardTypeCommand command = new UpdateManageCreditCardTypeCommand(
+                    objKafka.getId(), 
+                    objKafka.getName(),
+                    objKafka.getDescription(),
+                    objKafka.getFirstDigit(),
+                    Status.valueOf(objKafka.getStatus())
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateCreditCardTypeService.class.getName()).log(Level.SEVERE, null, ex);

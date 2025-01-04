@@ -20,8 +20,8 @@ public class CreateManageRoomCategoryCommandHandler implements ICommandHandler<C
         service.create(new ManageRoomCategoryDto(
                 command.getId(),
                 command.getCode(),
-
-                command.getName()
+                command.getName(),
+                command.getStatus()
         ));
     }
 }

@@ -18,4 +18,6 @@ public interface IManagerClientService {
     ManageClientDto findById(UUID id);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

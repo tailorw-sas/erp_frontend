@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.application.command.manageTradingCompanies.create;
 
-import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
@@ -25,6 +24,11 @@ public class CreateManageTradingCompaniesCommandHandler
                 command.getId(),
                 command.getCode(),
                 command.getIsApplyInvoice(),
-                null));
+                null,
+                command.getCif(),
+                command.getAddress(),
+                command.getCompany(),
+                command.getStatus()
+        ));
     }
 }

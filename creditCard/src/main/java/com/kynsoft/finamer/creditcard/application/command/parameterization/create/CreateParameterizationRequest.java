@@ -5,8 +5,5 @@ import lombok.Getter;
 @Getter
 public class CreateParameterizationRequest {
 
-    private String transactionStatusCode;
-    private String transactionCategory;
-    private String transactionSubCategory;
-    private String refundTransactionStatusCode;
+    private int decimals;
 }

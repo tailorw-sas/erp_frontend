@@ -3,6 +3,7 @@ package com.kynsof.share.core.domain.exception;
 import com.kynsof.share.core.domain.response.ApiError;
 import com.kynsof.share.core.domain.response.ApiResponse;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.infrastructure.exceptions.StorageException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.WebRequest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+        ApiError apiError = new ApiError(ex.getMessage(), null); // Assuming constructor ApiError(message, errors)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(apiError));
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ApiResponse<?>> handleEntityNotFoundException(StorageException ex) {
         ApiError apiError = new ApiError(ex.getMessage(), null); // Assuming constructor ApiError(message, errors)
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(apiError));
     }
@@ -53,11 +61,11 @@ public class GlobalExceptionHandler {
                 List.of(ex.getErrorField()));
         return ResponseEntity.internalServerError().body(ApiResponse.fail(apiError));
     }
-    @ExceptionHandler(EmptySheetException.class)
+    @ExceptionHandler(ExcelException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ApiResponse<?>> handleReadExcelException(EmptySheetException ex) {
-        ApiError apiError = new ApiError(ex.getDomainErrorMessage().getReasonPhrase(),
-                List.of(ex.getErrorField()));
+    public ResponseEntity<ApiResponse<?>> handleReadExcelException(ExcelException ex) {
+        ApiError apiError = new ApiError(ex.getMessage(),
+                Collections.EMPTY_LIST);
         return ResponseEntity.internalServerError().body(ApiResponse.fail(apiError));
     }
 

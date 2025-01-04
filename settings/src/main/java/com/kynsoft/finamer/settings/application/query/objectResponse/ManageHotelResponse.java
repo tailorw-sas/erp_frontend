@@ -8,13 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageHotelResponse implements IResponse {
+public class ManageHotelResponse implements IResponse, Serializable {
 
     private UUID id;
     private String code;
@@ -34,6 +35,7 @@ public class ManageHotelResponse implements IResponse {
     private Boolean isVirtual;
     private Boolean requiresFlatRate;
     private Boolean isApplyByVCC;
+    private Boolean autoApplyCredit;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();
@@ -54,5 +56,6 @@ public class ManageHotelResponse implements IResponse {
         this.isVirtual = dto.getIsVirtual();
         this.requiresFlatRate = dto.getRequiresFlatRate();
         this.isApplyByVCC = dto.getIsApplyByVCC();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 }

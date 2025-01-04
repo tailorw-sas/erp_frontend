@@ -26,7 +26,9 @@ public class ConsumerReplicateUpdateManageRoomCateogry {
 
             UpdateManageRoomCategoryCommand command = new UpdateManageRoomCategoryCommand(
                     objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(),
+                    objKafka.getStatus()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateUpdateManageRoomCateogry.class.getName()).log(Level.SEVERE, null, ex);

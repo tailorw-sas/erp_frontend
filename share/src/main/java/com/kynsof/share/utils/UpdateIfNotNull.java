@@ -118,6 +118,16 @@ public class UpdateIfNotNull {
         return false;
     }
 
+    public static boolean updateLong(Consumer<Long> setter, Long newValue, Long oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+
+            return true;
+        }
+        return false;
+    }
+
     public static boolean updateBoolean(Consumer<Boolean> setter, Boolean newValue, Boolean oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);

@@ -13,11 +13,13 @@ public class GenerateTemplateCommand implements ICommand {
     private  byte[] result;
     private final Map<String, Object> parameters;
     private final String JasperReportCode;
+    private final String reportFormatType;
 
-    public GenerateTemplateCommand(Map<String, Object> parameters, String jasperReportCode) {
+    public GenerateTemplateCommand(Map<String, Object> parameters, String jasperReportCode, String reportFormatType) {
 
         this.parameters = parameters;
         JasperReportCode = jasperReportCode;
+        this.reportFormatType = reportFormatType;
     }
 
 //    public static GenerateTemplateCommand fromRequest(GenerateTemplateRequest request) {

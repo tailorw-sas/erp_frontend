@@ -15,4 +15,5 @@ public class UpdateManageRoomTypeKafka {
 
     private UUID id;
     private String name;
+    private String status;
 }

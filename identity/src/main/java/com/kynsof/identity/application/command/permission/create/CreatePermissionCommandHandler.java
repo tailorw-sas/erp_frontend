@@ -7,9 +7,12 @@ import com.kynsof.identity.domain.interfaces.service.IModuleService;
 import com.kynsof.identity.domain.interfaces.service.IPermissionService;
 import com.kynsof.identity.domain.rules.permission.PermissionCodeMustBeNullRule;
 import com.kynsof.identity.domain.rules.permission.PermissionCodeMustBeUniqueRule;
+import com.kynsof.identity.infrastructure.services.kafka.producer.permission.ProducerReplicateManagePermissionService;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePermissionKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,10 +20,13 @@ public class CreatePermissionCommandHandler implements ICommandHandler<CreatePer
 
     private final IPermissionService service;
     private final IModuleService serviceModule;
+    private final ProducerReplicateManagePermissionService replicateManagePermissionService;
 
-    public CreatePermissionCommandHandler(IPermissionService service, IModuleService serviceModule) {
+    public CreatePermissionCommandHandler(IPermissionService service, IModuleService serviceModule,
+                                          ProducerReplicateManagePermissionService replicateManagePermissionService) {
         this.service = service;
         this.serviceModule = serviceModule;
+        this.replicateManagePermissionService = replicateManagePermissionService;
     }
 
     @Override
@@ -38,5 +44,19 @@ public class CreatePermissionCommandHandler implements ICommandHandler<CreatePer
         permissionDto.setStatus(PermissionStatusEnm.ACTIVE);
 
         service.create(permissionDto);
+
+        this.replicateManagePermissionService.create(new ReplicatePermissionKafka(
+                permissionDto.getId(), 
+                permissionDto.getCode(), 
+                permissionDto.getDescription(), 
+                permissionDto.getModule().getId(), 
+                permissionDto.getStatus().name(), 
+                permissionDto.getAction(), 
+                false, 
+                LocalDateTime.now(), 
+                permissionDto.getIsHighRisk(), 
+                permissionDto.getIsIT(), 
+                permissionDto.getName()
+        ));
     }
 }

@@ -1,11 +1,13 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceType;
@@ -54,7 +56,7 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
         ManageInvoiceType delete = new ManageInvoiceType(dto);
 
         delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
+//        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
         delete.setDeletedAt(LocalDateTime.now());
 
         repositoryCommand.save(delete);
@@ -76,6 +78,50 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByEInvoiceType(EInvoiceType invoiceType) {
+        return switch (invoiceType) {
+            case CREDIT, OLD_CREDIT -> this.repositoryQuery.findByCredit()
+                    .map(ManageInvoiceType::toAggregate)
+                    .orElseThrow(() -> new BusinessException(
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND,
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND.getReasonPhrase()
+                    ));
+            case INVOICE -> this.repositoryQuery.findByInvoice()
+                    .map(ManageInvoiceType::toAggregate)
+                    .orElseThrow(() -> new BusinessException(
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND,
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND.getReasonPhrase()
+                    ));
+            case INCOME -> this.repositoryQuery.findByIncome()
+                    .map(ManageInvoiceType::toAggregate)
+                    .orElseThrow(() -> new BusinessException(
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND,
+                            DomainErrorMessage.INVOICE_TYPE_NOT_FOUND.getReasonPhrase()
+                    ));
+        };
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByCode(String code) {
+        return this.repositoryQuery.findByCode(code).map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByIncome() {
+        return this.repositoryQuery.findByIncome().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByCredit() {
+        return this.repositoryQuery.findByCredit().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByInvoice() {
+        return this.repositoryQuery.findByInvoice().map(ManageInvoiceType::toAggregate).orElse(null);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

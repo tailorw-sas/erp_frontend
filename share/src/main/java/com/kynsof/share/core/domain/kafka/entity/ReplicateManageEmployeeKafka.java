@@ -15,6 +15,6 @@ public class ReplicateManageEmployeeKafka implements Serializable {
     private UUID id;
     private String firstName;
     private String lastName;
-
     private String email;
+    private String phoneExtension;
 }

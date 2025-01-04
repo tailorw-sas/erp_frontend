@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 
 import org.springframework.stereotype.Component;
@@ -25,10 +26,11 @@ public class CreateManageAttachmentTypeCommandHandler implements ICommandHandler
         service.create(new ManageAttachmentTypeDto(
                 command.getId(),
                 command.getCode(),
-
                 command.getName(),
-                command.getStatus(),
-                command.getDefaults()));
+                Status.valueOf(command.getStatus()),
+                command.getDefaults(),
+                command.isAttachInvDefault()
+        ));
 
     }
 }

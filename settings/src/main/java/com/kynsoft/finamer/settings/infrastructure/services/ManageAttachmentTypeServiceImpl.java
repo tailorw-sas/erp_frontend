@@ -128,4 +128,9 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
     public Long countByDefaultAndNotId(UUID id) {
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
+
+    @Override
+    public Long countByAttachInvDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByAttachInvDefaultAndNotId(id);
+    }
 }

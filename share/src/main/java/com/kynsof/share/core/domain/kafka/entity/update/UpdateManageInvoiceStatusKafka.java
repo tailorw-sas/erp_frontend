@@ -16,4 +16,6 @@ public class UpdateManageInvoiceStatusKafka implements Serializable {
     private UUID id;
     @JsonProperty("name")
     private String name;
+    @JsonProperty("showClone")
+    private Boolean showClone;
 }

@@ -1,20 +1,34 @@
+@Library(['PullRequestInfo', 'emailNotification']) _
+import com.tailorwsas.notificaciones.NotificadorEmail
+
 pipeline {
     
     agent any
 
+    parameters {
+        booleanParam(name: 'FORCE_BUILD', defaultValue: false, description: 'Forzar la ejecución del pipeline sin verificar cambios')
+    }
+    
     environment {
+        SISTEMA = 'ERP'
+		GITHUB_REPO = 'erp_backend'
+		GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-cloud-bridges:version'
         SRC = 'cloudBridges'
+        SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'cloudbridges.yaml'
         DEPLOYMENT_NAME = 'cloudbridges'
-        URL_K3S = 'URL-K3S-'
-        URL_DEV = 'https://172.20.41.150:5443'
-        URL_QA = 'https://172.20.1.150:5443'
+        URL_DEV = credentials("URL-K3S-dev")
+        URL_QA = credentials("URL-K3S-qa")
+        EMAIL_FROM = "${env.CORREO_ORIGEN}"
+        ESTADO_OK = 'OK'
+        ESTADO_ERROR = 'ERROR'
+        DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
     }
     
     triggers {
@@ -22,10 +36,31 @@ pipeline {
     }
     
     stages {
-        stage ('Init') {
+
+        stage ('Check for a specific project.....') {
             steps {
-                echo 'Initializing......'
+                echo 'Identifying project...'
                 script {
+                    if (!params.FORCE_BUILD){
+                        def folderPaths = [env.SRC, env.SRC_SHARE]
+                        def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
+                        def changesInFolder = changes.findAll { item -> folderPaths.any { palabra -> item.toLowerCase().contains(palabra.toLowerCase()) } }
+                        if (changesInFolder) {
+                            echo "Changes detected in folders: ${SRC} y/o ${SRC_SHARE}"
+                        } else {
+                            echo "* * * * * * * * No changes detected in folders: ${SRC} y/o ${SRC_SHARE} * * * * * * * *"
+                            currentBuild.result = 'NOT_BUILT'
+                            error('No changes detected in folders: $SRC y $SRC_SHARE' )
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage ('Initialize variables') {
+            steps {
+                echo '* * * * STAGE: Initializing variables * * * *'
+                script {   
                     def branch = env.ORIGIN_BRANCH_NAME.replace('origin/', '')
                     env.BRANCH_NAME = branch
 
@@ -35,24 +70,34 @@ pipeline {
                     def k3sCredentials = env.K3S_CREDENTIALS.replace('env', env.BRANCH_NAME)
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
-                    def k3s = "${URL_K3S}${BRANCH_NAME}"
-                    env K3S_URL_TOKEN = k3s
+                    if (!params.FORCE_BUILD){
+			            def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
+			            env.PR_TITLE = prInfo.title
+			            env.PR_AUTHOR = prInfo.author
+			            env.EMAIL_AUTHOR = prInfo.authorEmail
+		            }else{
+			            env.PR_TITLE = 'MANUAL EXECUTION'
+			            env.PR_AUTHOR = 'Jenkins Admin'
+			            env.EMAIL_AUTHOR = env.DEFAULT_EMAIL
+		            }
+					
+                    if(env.BRANCH_NAME == 'dev'){
+                        env.SERVER_K3S_URL = env.URL_DEV
+                        env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
+                    }
+                    if(env.BRANCH_NAME == 'qa'){
+                        env.SERVER_K3S_URL = env.URL_QA
+                        env.EMAIL_LIST = env.EMAIL_LIST_QA
+                    }
                 }
-
-                withCredentials([string(credentialsId: "${K3S_URL_TOKEN}", variable: 'SERVER_K3S_URL')]){
-                    echo "${SERVER_K3S_URL}"
-                }
-
-                //def k3sUrl = credentials("${URL_K3S}${BRANCH_NAME}")
-                    //echo "NOMBRE CREDENCIAL ${k3s} URL: ${k3sUrl}"
-                  //  env.SERVER_K3S_URL = k3sUrl
             }
         }
 
         stage ('Create docker image'){
             steps {
+                echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
-                    sh 'docker build -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
+                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
                         sh 'docker push $DOCKER_IMAGE'
                     }
@@ -62,10 +107,26 @@ pipeline {
 
         stage ('Publish to Kubernetes') {
             steps {
+                echo '* * * * STAGE: Publishing to kubernetes * * * *'
                 withKubeConfig(credentialsId: "${SERVER_K3S_CREDENTIALS}", namespace: "${NAMESPACE}", restrictKubeConfigAccess: false, serverUrl: "${SERVER_K3S_URL}") {
-                    sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
+                    //sh 'kubectl apply -f kubernetes-config/deployments/$YAML'
                     sh 'kubectl rollout restart deploy $DEPLOYMENT_NAME'
                 }
+            }
+        }
+    }
+
+     post {
+        success {
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+            }
+        }
+        failure {
+            script {
+                def notificator = new NotificadorEmail(this)
+                notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
             }
         }
     }

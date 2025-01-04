@@ -14,15 +14,15 @@ import com.kynsoft.finamer.payment.domain.services.IManagePaymentSourceService;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentSource;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentSourceWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentSourceReadDataJPARepository;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ManagePaymentSourceServiceImpl implements IManagePaymentSourceService {
@@ -104,6 +104,17 @@ public class ManagePaymentSourceServiceImpl implements IManagePaymentSourceServi
 
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public ManagePaymentSourceDto findByExpense() {
+        Optional<ManagePaymentSource> optionalEntity = repositoryQuery.findByExpense();
+        if(optionalEntity.isPresent()){
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_SOURCE_NOT_FOUND.getReasonPhrase())));
+        
     }
 
 }

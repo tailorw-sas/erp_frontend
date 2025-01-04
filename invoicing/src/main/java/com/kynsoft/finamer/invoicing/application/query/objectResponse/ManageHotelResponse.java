@@ -19,12 +19,16 @@ public class ManageHotelResponse implements IResponse {
     private String code;
     private String name;
     private String status;
+    private boolean virtual;
+    private Boolean autoApplyCredit;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.virtual = dto.isVirtual();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
 }

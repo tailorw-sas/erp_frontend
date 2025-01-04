@@ -12,7 +12,7 @@
                 </repository>
                 <repository>
                     <id>github</id>
-                    <url>https://maven.pkg.github.com/tailorwr/finamer-backend</url>
+                    <url>https://maven.pkg.github.com/tailorw-sas/erp_backend</url>
                     <snapshots>
                         <enabled>true</enabled>
                     </snapshots>

@@ -2,7 +2,6 @@ package com.kynsoft.finamer.payment.application.command.test.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.payment.application.command.test.create.CreateTestMessage;
 import lombok.Getter;
 import lombok.Setter;
 

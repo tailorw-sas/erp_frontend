@@ -21,7 +21,9 @@ public class CreateManagePaymentSourceCommandHandler implements ICommandHandler<
                 command.getId(),
                 command.getCode(),
                 command.getName(),
-                command.getStatus()
+                command.getStatus(),
+                command.getExpense(),
+                command.getIsBank()
         ));
     }
 }

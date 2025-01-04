@@ -98,7 +98,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
         if (update.getUpdate() > 0) {
             this.service.update(test);
             this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(test.getId(),
-                    test.getFirstName(), test.getLastName(), test.getEmail()));
+                    test.getFirstName(), test.getLastName(), test.getEmail(), test.getPhoneExtension()));
         }
 
     }

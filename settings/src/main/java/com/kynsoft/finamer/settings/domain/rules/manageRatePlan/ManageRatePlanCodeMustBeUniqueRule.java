@@ -14,20 +14,22 @@ public class ManageRatePlanCodeMustBeUniqueRule extends BusinessRule {
     private final String code;
 
     private final UUID id;
+    private final UUID hotelId;
 
-    public ManageRatePlanCodeMustBeUniqueRule(IManageRatePlanService service, String code, UUID id) {
+    public ManageRatePlanCodeMustBeUniqueRule(IManageRatePlanService service, String code, UUID id, UUID hotelId) {
         super(
                 DomainErrorMessage.ITEM_ALREADY_EXITS,
-                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.toString())
+                new ErrorField("code", DomainErrorMessage.ITEM_ALREADY_EXITS.getReasonPhrase())
         );
         this.service = service;
         this.code = code;
         this.id = id;
+        this.hotelId = hotelId;
     }
 
     @Override
     public boolean isBroken() {
-        return this.service.countByCodeAndNotId(code, id) > 0;
+        return this.service.countByCodeAndNotId(code, id, hotelId) > 0;
     }
 
 }

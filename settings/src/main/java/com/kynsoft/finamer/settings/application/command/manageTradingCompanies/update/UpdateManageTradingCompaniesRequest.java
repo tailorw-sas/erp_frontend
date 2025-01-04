@@ -17,7 +17,7 @@ public class UpdateManageTradingCompaniesRequest {
     private UUID country;
     private UUID cityState;
     private String city;
-    private Long zipCode;
+    private String zipCode;
     private String innsistCode;
     private Boolean isApplyInvoice;
 }

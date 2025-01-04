@@ -41,6 +41,6 @@ public class CreateManageRoomTypeCommandHandler implements ICommandHandler<Creat
                 command.getId(), command.getCode(), command.getDescription(),
                 command.getStatus(), command.getName(), hotelDto
         ));
-        this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
     }
 }

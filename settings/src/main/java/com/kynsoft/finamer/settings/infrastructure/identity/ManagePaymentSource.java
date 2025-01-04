@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "manage_payment_source")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_payment_source",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagePaymentSource implements Serializable {
 
     @Id
@@ -44,6 +48,9 @@ public class ManagePaymentSource implements Serializable {
 
     private Boolean isBank;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean expense;
+
     public ManagePaymentSource(ManagePaymentSourceDto dto){
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -51,9 +58,10 @@ public class ManagePaymentSource implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.isBank = dto.getIsBank();
+        this.expense = dto.getExpense();
     }
 
     public ManagePaymentSourceDto toAggregate(){
-        return new ManagePaymentSourceDto(id, code, description, status, name, isBank);
+        return new ManagePaymentSourceDto(id, code, description, status, name, isBank, expense);
     }
 }

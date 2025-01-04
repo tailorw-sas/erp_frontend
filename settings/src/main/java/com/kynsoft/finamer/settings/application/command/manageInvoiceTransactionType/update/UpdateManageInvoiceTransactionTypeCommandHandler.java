@@ -2,14 +2,15 @@ package com.kynsoft.finamer.settings.application.command.manageInvoiceTransactio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageInvoiceTransactionTypeKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.rules.manageInvoiceTransactionType.ManageInvoiceTransactionTypeDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.IManageInvoiceTransactionTypeService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerUpdateManageInvoiceTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageInvoiceTransactionType.ProducerReplicateManageInvoiceTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -19,18 +20,20 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
 
     private final IManageInvoiceTransactionTypeService service;
 
-    private final ProducerUpdateManageInvoiceTransactionTypeService producerUpdateManageInvoiceTransactionTypeService;
+    private final ProducerReplicateManageInvoiceTransactionTypeService producerReplicateManageInvoiceTransactionTypeService;
 
     public UpdateManageInvoiceTransactionTypeCommandHandler(IManageInvoiceTransactionTypeService service,
-                                                            ProducerUpdateManageInvoiceTransactionTypeService producerUpdateManageInvoiceTransactionTypeService) {
+                                                            ProducerReplicateManageInvoiceTransactionTypeService producerReplicateManageInvoiceTransactionTypeService) {
         this.service = service;
-        this.producerUpdateManageInvoiceTransactionTypeService = producerUpdateManageInvoiceTransactionTypeService;
+        this.producerReplicateManageInvoiceTransactionTypeService = producerReplicateManageInvoiceTransactionTypeService;
     }
 
     @Override
     public void handle(UpdateManageInvoiceTransactionTypeCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Invoice Transaction Type ID cannot be null."));
-
+        if(command.isDefaults()) {
+            RulesChecker.checkRule(new ManageInvoiceTransactionTypeDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
         ManageInvoiceTransactionTypeDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
@@ -44,10 +47,18 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setIsRemarkRequired, command.getIsRemarkRequired(), dto.getIsRemarkRequired(), update::setUpdate);
         UpdateIfNotNull.updateInteger(dto::setMinNumberOfCharacters, command.getMinNumberOfCharacters(), dto.getMinNumberOfCharacters(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setDefaults, command.isDefaults(), dto.isDefaults(), update::setUpdate);
+        UpdateIfNotNull.updateBoolean(dto::setCloneAdjustmentDefault, command.isCloneAdjustmentDefault(), dto.isCloneAdjustmentDefault(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManageInvoiceTransactionTypeService.update(new UpdateManageInvoiceTransactionTypeKafka(dto.getId(), dto.getName()));
+            this.producerReplicateManageInvoiceTransactionTypeService.create(new ReplicateManageInvoiceTransactionTypeKafka(
+                    dto.getId(), 
+                    dto.getCode(), 
+                    dto.getName(), 
+                    dto.isDefaults(),
+                    dto.isCloneAdjustmentDefault()
+            ));
         }
     }
 

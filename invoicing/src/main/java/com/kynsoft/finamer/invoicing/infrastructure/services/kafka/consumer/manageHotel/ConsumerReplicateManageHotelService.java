@@ -27,8 +27,23 @@ public class ConsumerReplicateManageHotelService {
     public void listen(ReplicateManageHotelKafka objKafka) {
         try {
 
-            CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getManageTradingCompany(), objKafka.getIsVirtual(), objKafka.getStatus());
+            CreateManageHotelCommand command = new CreateManageHotelCommand(
+                    objKafka.getId(), 
+                    objKafka.getCode(),
+                    objKafka.getName(), 
+                    objKafka.getManageTradingCompany(), 
+                    objKafka.getIsVirtual(), 
+                    objKafka.getStatus(),
+                    objKafka.isRequiresFlatRate(),
+                    objKafka.getAutoApplyCredit(),
+                    objKafka.getManageCityState(),
+                    objKafka.getManageCountry(),
+                    objKafka.getBabelCode(),
+                    objKafka.getAddress(),
+                    objKafka.getCity(),
+                    objKafka.getManageCurrency(),
+                    objKafka.getApplyByTradingCompany()
+            );
             mediator.send(command);
 
             try{

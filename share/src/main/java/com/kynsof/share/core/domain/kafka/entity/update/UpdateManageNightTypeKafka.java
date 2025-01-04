@@ -14,4 +14,5 @@ public class UpdateManageNightTypeKafka implements Serializable {
 
     private UUID id;
     private String name;
+    private String status;
 }

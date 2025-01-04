@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -14,7 +15,7 @@ import java.util.UUID;
 public class CreateInvoiceCommand implements ICommand {
 
     private UUID id;
-    private LocalDate invoiceDate;
+    private LocalDateTime invoiceDate;
     private LocalDate dueDate;
     private Boolean isManual;
     private Double invoiceAmount;
@@ -23,7 +24,7 @@ public class CreateInvoiceCommand implements ICommand {
     private EInvoiceType invoiceType;
     private Long invoiceId;
 
-    public CreateInvoiceCommand(LocalDate invoiceDate, LocalDate dueDate, Boolean isManual,
+    public CreateInvoiceCommand(LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
             Double invoiceAmount, UUID hotel,
             UUID agency, EInvoiceType invoiceType, UUID id) {
         this.id = id;

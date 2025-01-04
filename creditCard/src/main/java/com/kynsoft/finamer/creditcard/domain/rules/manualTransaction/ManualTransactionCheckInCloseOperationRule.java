@@ -7,17 +7,18 @@ import com.kynsoft.finamer.creditcard.domain.dto.CreditCardCloseOperationDto;
 import com.kynsoft.finamer.creditcard.domain.services.ICreditCardCloseOperationService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class ManualTransactionCheckInCloseOperationRule extends BusinessRule {
 
     private final ICreditCardCloseOperationService closeOperationService;
 
-    private final LocalDate checkIn;
+    private final LocalDateTime checkIn;
 
     private final UUID hotel;
 
-    public ManualTransactionCheckInCloseOperationRule(ICreditCardCloseOperationService closeOperationService, LocalDate checkIn, UUID hotel) {
+    public ManualTransactionCheckInCloseOperationRule(ICreditCardCloseOperationService closeOperationService, LocalDateTime checkIn, UUID hotel) {
         super(
                 DomainErrorMessage.VCC_CLOSE_OPERATION_OUT_OF_RANGE,
                 new ErrorField("checkIn", DomainErrorMessage.VCC_CLOSE_OPERATION_OUT_OF_RANGE.getReasonPhrase())
@@ -30,6 +31,6 @@ public class ManualTransactionCheckInCloseOperationRule extends BusinessRule {
     @Override
     public boolean isBroken() {
         CreditCardCloseOperationDto dto = this.closeOperationService.findActiveByHotelId(hotel);
-        return checkIn.isBefore(dto.getBeginDate()) || checkIn.isAfter(dto.getEndDate());
+        return checkIn.toLocalDate().isBefore(dto.getBeginDate()) || checkIn.toLocalDate().isAfter(dto.getEndDate());
     }
 }

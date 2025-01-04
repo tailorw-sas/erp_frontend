@@ -105,4 +105,9 @@ public class ManageCityStateServiceImpl implements IManageCityStateService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageCityStateDto> findAllToReplicate() {
+        return repositoryQuery.findAll().stream().map(ManageCityState::toAggregate).toList();
+    }
+
 }

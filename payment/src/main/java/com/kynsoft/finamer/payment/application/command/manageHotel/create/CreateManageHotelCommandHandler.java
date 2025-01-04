@@ -19,7 +19,13 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
     public void handle(CreateManageHotelCommand command) {
 
         service.create(new ManageHotelDto(
-                command.getId(), command.getCode(), command.getName(), command.getStatus()
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getStatus(), 
+                command.getApplyByTradingCompany(),
+                command.getManageTradingCompany(),
+                command.getAutoApplyCredit()
         ));
     }
 }

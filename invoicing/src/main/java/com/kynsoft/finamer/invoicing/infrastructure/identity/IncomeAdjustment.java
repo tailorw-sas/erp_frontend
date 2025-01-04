@@ -37,6 +37,10 @@ public class IncomeAdjustment implements Serializable {
     @JoinColumn(name = "transaction_type_id")
     private ManageInvoiceTransactionType transactionType;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "payment_transaction_type_id")
+    private ManagePaymentTransactionType paymentTransactionType;
+
     private Double amount;
     private LocalDate date;
     private String remark;
@@ -56,6 +60,7 @@ public class IncomeAdjustment implements Serializable {
         this.amount = dto.getAmount();
         this.remark = dto.getRemark();
         this.status = dto.getStatus();
+        this.paymentTransactionType = dto.getPaymentTransactionType() != null ? new ManagePaymentTransactionType(dto.getPaymentTransactionType()): null;
     }
 
     public IncomeAdjustmentDto toAggregate() {
@@ -65,6 +70,7 @@ public class IncomeAdjustment implements Serializable {
                 status,
                 income != null ? income.toAggregate() : null,
                 transactionType != null ? transactionType.toAggregate() : null,
+                paymentTransactionType != null ? paymentTransactionType.toAggregate() : null,
                 amount,
                 date,
                 remark

@@ -1,17 +1,19 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import org.hibernate.annotations.CreationTimestamp;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +21,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "attachment_status_history")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "attachment_status_history",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class AttachmentStatusHistory implements Serializable {
 
     @Id

@@ -26,7 +26,15 @@ public class ConsumerReplicateManageHotelService {
     @KafkaListener(topics = "finamer-replicate-manage-hotel", groupId = "payment-entity-replica")
     public void listen(ReplicateManageHotelKafka objKafka) {
         try {
-            CreateManageHotelCommand command = new CreateManageHotelCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.getStatus());
+            CreateManageHotelCommand command = new CreateManageHotelCommand(
+                    objKafka.getId(), 
+                    objKafka.getCode(), 
+                    objKafka.getName(), 
+                    objKafka.getStatus(), 
+                    objKafka.getApplyByTradingCompany(),
+                    objKafka.getManageTradingCompany(),
+                    objKafka.getAutoApplyCredit()
+            );
             mediator.send(command);
 
             try {

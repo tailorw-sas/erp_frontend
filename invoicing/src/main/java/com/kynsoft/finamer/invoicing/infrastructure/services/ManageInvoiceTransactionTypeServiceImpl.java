@@ -5,8 +5,10 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceTransactionTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceTransactionTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageInvoiceTransactionType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceTransactionTypeWriteDataJPARepository;
@@ -15,9 +17,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTransactionTypeService {
@@ -54,8 +59,8 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
         ManageInvoiceTransactionType delete = new ManageInvoiceTransactionType(dto);
 
         delete.setDeleted(Boolean.TRUE);
-        delete.setCode(delete.getCode()+ "-" + UUID.randomUUID());
         delete.setDeletedAt(LocalDateTime.now());
+        delete.setDefaults(false);
 
         repositoryCommand.save(delete);
     }
@@ -78,19 +83,27 @@ public class ManageInvoiceTransactionTypeServiceImpl implements IManageInvoiceTr
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
-        for (FilterCriteria filter : filterCriteria) {
-
-            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
-                try {
-                    Status enumValue = Status.valueOf((String) filter.getValue());
-                    filter.setValue(enumValue);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
-                }
-            }
-        }
+    @Override
+    public ManageInvoiceTransactionTypeDto findByDefaults() {
+        return this.repositoryQuery.findByDefaults().map(ManageInvoiceTransactionType::toAggregate).orElse(null);
     }
 
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+
+        GenericSpecificationsBuilder<ManageInvoiceTransactionType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageInvoiceTransactionType> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageInvoiceTransactionType> data) {
+        List<ManageInvoiceTransactionTypeResponse> userSystemsResponses = new ArrayList<>();
+        for (ManageInvoiceTransactionType p : data.getContent()) {
+            userSystemsResponses.add(new ManageInvoiceTransactionTypeResponse(p.toAggregate()));
+        }
+        return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
 
 }

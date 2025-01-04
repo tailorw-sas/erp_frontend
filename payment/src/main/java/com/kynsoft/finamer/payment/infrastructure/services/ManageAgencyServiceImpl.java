@@ -5,6 +5,9 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.payment.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAgencyService;
@@ -12,9 +15,12 @@ import com.kynsoft.finamer.payment.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageAgencyWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageAgencyReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -84,6 +90,25 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
                 .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
                         new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND.getReasonPhrase()))));
 
+    }
+
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageAgency> data = repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
+        List<ManageAgencyResponse> responseList = new ArrayList<>();
+        for (ManageAgency entity : data.getContent()) {
+            responseList.add(new ManageAgencyResponse(entity.toAggregate()));
+        }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

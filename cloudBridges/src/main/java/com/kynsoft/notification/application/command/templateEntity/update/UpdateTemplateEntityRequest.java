@@ -1,5 +1,6 @@
 package com.kynsoft.notification.application.command.templateEntity.update;
 
+import com.kynsof.share.core.domain.EMailjetType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,4 +15,6 @@ public class UpdateTemplateEntityRequest {
     private String name;
     private String description;
     private UUID MailjetConfigId;
+    private String languageCode;
+    private EMailjetType type;
 }

@@ -26,7 +26,9 @@ public class ConsumerUpdateManageRatePlanService {
 
             UpdateManageRatePlanCommand command = new UpdateManageRatePlanCommand(
                     objKafka.getId(),
-                    objKafka.getName());
+                    objKafka.getName(),
+                    objKafka.getStatus()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateManageRatePlanService.class.getName()).log(Level.SEVERE, null, ex);

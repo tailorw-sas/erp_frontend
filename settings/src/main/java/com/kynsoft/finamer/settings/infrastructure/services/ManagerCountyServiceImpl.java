@@ -110,4 +110,9 @@ public class ManagerCountyServiceImpl implements IManagerCountryService {
         return this.repositoryQuery.countByNameAndNotId(name, id);
     }
 
+    @Override
+    public List<ManagerCountryDto> findAllToReplicate() {
+        return this.repositoryQuery.findAll().stream().map(ManageCountry::toAggregate).toList();
+    }
+
 }

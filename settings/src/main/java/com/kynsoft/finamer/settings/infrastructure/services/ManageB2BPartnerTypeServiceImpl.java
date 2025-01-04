@@ -105,4 +105,9 @@ public class ManageB2BPartnerTypeServiceImpl implements IManageB2BPartnerTypeSer
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManageB2BPartnerTypeDto> findAllToReplicate() {
+        return repositoryQuery.findAll().stream().map(ManageB2BPartnerType::toAggregate).toList();
+    }
+
 }

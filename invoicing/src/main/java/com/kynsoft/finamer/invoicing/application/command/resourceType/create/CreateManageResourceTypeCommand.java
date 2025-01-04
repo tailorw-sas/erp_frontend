@@ -18,9 +18,16 @@ public class CreateManageResourceTypeCommand implements ICommand {
     private UUID id;
     private String code;
     private String name;
-   
+    private String description;
+    private Status status;
+    private Boolean defaults;
+    private boolean invoice;
 
-   
+    public static CreateManageResourceTypeCommand fromRequest(CreateManageResourceTypeRequest request, UUID id) {
+        return new CreateManageResourceTypeCommand(
+               id, request.getCode(), request.getName(), request.getDescription(), request.getStatus(), request.getDefaults(), request.isInvoice()
+        );
+    }
 
     @Override
     public ICommandMessage getMessage() {

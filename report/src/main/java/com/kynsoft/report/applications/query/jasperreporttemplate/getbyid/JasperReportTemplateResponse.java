@@ -1,8 +1,10 @@
 package com.kynsoft.report.applications.query.jasperreporttemplate.getbyid;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsoft.report.applications.query.dbconection.getById.DBConectionResponse;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +26,6 @@ public class JasperReportTemplateResponse implements IResponse {
     private String file;
     private JasperReportTemplateType type;
     private Status status;
-    private String parameters;
     private LocalDate createdAt;
 
     private Double parentIndex;
@@ -39,6 +40,9 @@ public class JasperReportTemplateResponse implements IResponse {
     private Boolean cancel;
     private String rootIndex;
     private String language;
+    private DBConectionResponse dbConection;
+    private String query;
+    private ModuleSystems moduleSystems; // Campo para el módulo del sistema
 
     public JasperReportTemplateResponse(JasperReportTemplateDto jasperReportTemplateDto) {
         this.id = jasperReportTemplateDto.getId();
@@ -47,9 +51,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.description = jasperReportTemplateDto.getDescription();
         this.file = jasperReportTemplateDto.getFile();
         this.type = jasperReportTemplateDto.getType();
-        this.parameters = jasperReportTemplateDto.getParameters();
         this.createdAt = jasperReportTemplateDto.getCreatedAt().toLocalDate();
-        
         this.parentIndex = jasperReportTemplateDto.getParentIndex();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
         this.lanPath = jasperReportTemplateDto.getLanPath();
@@ -63,6 +65,9 @@ public class JasperReportTemplateResponse implements IResponse {
         this.rootIndex = jasperReportTemplateDto.getRootIndex();
         this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
+        this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConectionDto()) : null;
+        this.query = jasperReportTemplateDto.getQuery();
+        this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
     }
 
 }

@@ -15,6 +15,7 @@ public class DeletePaymentDetailCommand implements ICommand {
 
     private UUID id;
     private UUID employee;
+    private boolean undoApplication;
 
     @Override
     public ICommandMessage getMessage() {

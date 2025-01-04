@@ -18,14 +18,20 @@ public class CreateManageInvoiceTypeCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean enabledToPolicy;
+    private boolean income;
+    private boolean credit;
+    private boolean invoice;
 
-    public CreateManageInvoiceTypeCommand(String code, String description, Status status, String name, Boolean enabledToPolicy) {
+    public CreateManageInvoiceTypeCommand(String code, String description, Status status, String name, Boolean enabledToPolicy, boolean income, boolean credit, boolean invoice) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.status = status;
         this.name = name;
         this.enabledToPolicy = enabledToPolicy;
+        this.income = income;
+        this.credit = credit;
+        this.invoice = invoice;
     }
 
     public static CreateManageInvoiceTypeCommand fromRequest(CreateManageInvoiceTypeRequest request){
@@ -34,7 +40,10 @@ public class CreateManageInvoiceTypeCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getEnabledToPolicy()
+                request.getEnabledToPolicy(),
+                request.isIncome(),
+                request.isCredit(),
+                request.isInvoice()
         );
 
     }

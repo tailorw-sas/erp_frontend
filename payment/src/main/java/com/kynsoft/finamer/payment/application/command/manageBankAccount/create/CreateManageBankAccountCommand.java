@@ -15,12 +15,15 @@ public class CreateManageBankAccountCommand implements ICommand {
     private String accountNumber;
     private String status;
     private String nameOfBank;
+    private UUID manageBank;
+    private UUID manageHotel;
 
-    public CreateManageBankAccountCommand(UUID id, String accountNumber, String status, String nameOfBank) {
+    public CreateManageBankAccountCommand(UUID id, String accountNumber, String status, String nameOfBank,UUID manageHotel) {
         this.id = id;
         this.accountNumber = accountNumber;
         this.status = status;
         this.nameOfBank = nameOfBank;
+        this.manageHotel=manageHotel;
     }
 
     @Override

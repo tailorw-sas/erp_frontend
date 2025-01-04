@@ -27,12 +27,18 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
     private Boolean deposit;
     private Boolean applyDeposit;
     private Boolean defaults;
+    private Boolean antiToIncome;
+    private Boolean incomeDefault;
+    private Boolean paymentInvoice;
+    private Boolean debit;
+    private boolean expenseToBooking;
 
     public UpdateManagePaymentTransactionTypeCommand(UUID id, Status status, 
             String name, String description,  Boolean cash, Boolean agencyRateAmount, 
             Boolean negative, Boolean policyCredit, Boolean remarkRequired, 
             Integer minNumberOfCharacter, String defaultRemark, Boolean deposit, Boolean applyDeposit,
-            Boolean defaults) {
+            Boolean defaults, Boolean antiToIncome, Boolean incomeDefault, Boolean paymentInvoice,
+            Boolean debit, boolean expenseToBooking) {
         this.id = id;
         this.status = status;
         this.name = name;
@@ -47,6 +53,11 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
         this.deposit = deposit;
         this.applyDeposit = applyDeposit;
         this.defaults = defaults;
+        this.antiToIncome = antiToIncome;
+        this.incomeDefault = incomeDefault;
+        this.paymentInvoice = paymentInvoice;
+        this.debit = debit;
+        this.expenseToBooking = expenseToBooking;
     }
 
     public static UpdateManagePaymentTransactionTypeCommand fromRequest(UpdateManagePaymentTransactionTypeRequest request, UUID id) {
@@ -61,7 +72,12 @@ public class UpdateManagePaymentTransactionTypeCommand implements ICommand {
                 request.getDefaultRemark(),
                 request.getDeposit(),
                 request.getApplyDeposit(),
-                request.getDefaults()
+                request.getDefaults(),
+                request.getAntiToIncome(),
+                request.getIncomeDefault(),
+                request.getPaymentInvoice(),
+                request.getDebit(),
+                request.isExpenseToBooking()
         );
     }
 

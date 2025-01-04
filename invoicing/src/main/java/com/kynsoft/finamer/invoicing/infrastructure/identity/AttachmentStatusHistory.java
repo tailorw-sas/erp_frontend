@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.AttachmentStatusHistoryDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "attachment_status_history")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "attachment_status_history",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class AttachmentStatusHistory implements Serializable {
 
     @Id
@@ -29,7 +33,7 @@ public class AttachmentStatusHistory implements Serializable {
     private Long attachmentId;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private ManageInvoice invoice;
+    private Invoice invoice;
 
     private String employee;
 
@@ -46,7 +50,7 @@ public class AttachmentStatusHistory implements Serializable {
         this.id = dto.getId();
         this.description = dto.getDescription();
         this.attachmentId = dto.getAttachmentId();
-        this.invoice = dto.getInvoice() != null ? new ManageInvoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
         this.employee = dto.getEmployee();
         this.employeeId = dto.getEmployeeId();
     }

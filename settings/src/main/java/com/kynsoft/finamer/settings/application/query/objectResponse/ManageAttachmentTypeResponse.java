@@ -22,6 +22,7 @@ public class ManageAttachmentTypeResponse implements IResponse {
     private Status status;
     private String name;
     private Boolean defaults;
+    private Boolean attachInvDefault;
 
     public ManageAttachmentTypeResponse(ManageAttachmentTypeDto dto){
         this.id = dto.getId();
@@ -30,5 +31,6 @@ public class ManageAttachmentTypeResponse implements IResponse {
         this.status = dto.getStatus();
         this.name = dto.getName();
         this.defaults = dto.getDefaults();
+        this.attachInvDefault = dto.getAttachInvDefault();
     }
 }

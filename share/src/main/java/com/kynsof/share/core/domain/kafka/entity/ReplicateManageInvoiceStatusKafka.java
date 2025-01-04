@@ -18,4 +18,6 @@ public class ReplicateManageInvoiceStatusKafka implements Serializable {
     private String code;
     @JsonProperty("name")
     private String name;
+    @JsonProperty("showClone")
+    private Boolean showClone;
 }

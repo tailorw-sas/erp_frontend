@@ -14,6 +14,7 @@ public class UpdateIncomeAdjustmentRequest {
     private Status status;
     private UUID income;
     private UUID transactionType;
+    private UUID paymentTransactionType;
     private Double amount;
     private LocalDate date;
     private String remark;

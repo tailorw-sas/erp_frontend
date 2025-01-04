@@ -5,8 +5,10 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageAgencyWriteDataJPARepository;
@@ -15,9 +17,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ManageAgencyServiceImpl implements IManageAgencyService {
@@ -92,18 +97,22 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         return repositoryQuery.existsManageAgenciesByCode(manageAgencyCode);
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
-        for (FilterCriteria filter : filterCriteria) {
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
 
-            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
-                try {
-                    Status enumValue = Status.valueOf((String) filter.getValue());
-                    filter.setValue(enumValue);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
-                }
-            }
+        GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageAgency> data = this.repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
+        List<ManageAgencyResponse> userSystemsResponses = new ArrayList<>();
+        for (ManageAgency p : data.getContent()) {
+            userSystemsResponses.add(new ManageAgencyResponse(p.toAggregate()));
         }
+        return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
 }

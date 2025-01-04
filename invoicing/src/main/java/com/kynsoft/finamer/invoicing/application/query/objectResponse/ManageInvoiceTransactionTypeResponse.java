@@ -18,11 +18,13 @@ public class ManageInvoiceTransactionTypeResponse implements IResponse {
     private UUID id;
     private String code;
     private String name;
+    private boolean defaults;
 
     public ManageInvoiceTransactionTypeResponse(ManageInvoiceTransactionTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.defaults = dto.isDefaults();
     }
 
 }

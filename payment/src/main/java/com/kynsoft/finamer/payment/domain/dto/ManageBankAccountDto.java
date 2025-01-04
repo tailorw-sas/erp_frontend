@@ -17,4 +17,6 @@ public class ManageBankAccountDto {
     private String accountNumber;
     private String status;
     private String nameOfBank;
+    private ManageHotelDto manageHotelDto;
+
 }

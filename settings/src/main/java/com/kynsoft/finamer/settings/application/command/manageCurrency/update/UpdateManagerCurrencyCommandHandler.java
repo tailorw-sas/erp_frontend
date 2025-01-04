@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageCurrency.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCurrencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -9,15 +10,19 @@ import com.kynsoft.finamer.settings.domain.dto.ManagerCurrencyDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManagerCurrencyService;
 import java.util.function.Consumer;
+
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageCurrency.ProducerUpdateManageCurrencyService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateManagerCurrencyCommandHandler implements ICommandHandler<UpdateManagerCurrencyCommand> {
 
     private final IManagerCurrencyService service;
+    private final ProducerUpdateManageCurrencyService producer;
 
-    public UpdateManagerCurrencyCommandHandler(IManagerCurrencyService service) {
+    public UpdateManagerCurrencyCommandHandler(IManagerCurrencyService service, ProducerUpdateManageCurrencyService producer) {
         this.service = service;
+        this.producer = producer;
     }
 
     @Override
@@ -35,6 +40,12 @@ public class UpdateManagerCurrencyCommandHandler implements ICommandHandler<Upda
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
+            this.producer.update(new ReplicateManageCurrencyKafka(
+                    test.getId(),
+                    test.getCode(),
+                    test.getName(),
+                    test.getStatus().name()
+            ));
         }
 
     }

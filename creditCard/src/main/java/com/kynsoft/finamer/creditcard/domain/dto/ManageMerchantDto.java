@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,10 @@ import java.util.UUID;
 @Getter
 @Setter
 public class ManageMerchantDto {
-
     private UUID id;
     private String code;
-
+    private String description;
+    private ManagerB2BPartnerDto b2bPartner;
+    private Boolean defaultm;
+    private Status status;
 }

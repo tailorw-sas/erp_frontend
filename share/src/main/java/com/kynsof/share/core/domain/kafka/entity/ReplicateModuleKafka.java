@@ -21,4 +21,7 @@ public class ReplicateModuleKafka implements Serializable {
     private String name;
     @JsonProperty("status")
     private String status;
+    private String image;
+    private String description;
+
 }

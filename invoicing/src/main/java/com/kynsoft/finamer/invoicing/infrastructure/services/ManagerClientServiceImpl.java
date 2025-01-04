@@ -7,9 +7,9 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageClientResponse;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageClientDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManagerClientService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageClient;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManagerClientWriteDataJPARepository;
@@ -69,19 +69,23 @@ public class ManagerClientServiceImpl implements IManagerClientService {
                 new ErrorField("id", "Manage Client not found.")));
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
-        for (FilterCriteria filter : filterCriteria) {
+    @Override
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        GenericSpecificationsBuilder<ManageClient> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageClient> data = repositoryQuery.findAll(specifications, pageable);
 
-            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
-                try {
-                    Status enumValue = Status.valueOf((String) filter.getValue());
-                    filter.setValue(enumValue);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
-                }
-            }
-        }
+        return getPaginatedResponse(data);
     }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageClient> data) {
+        List<ManageClientResponse> responseList = new ArrayList<>();
+        for (ManageClient entity : data.getContent()) {
+            responseList.add(new ManageClientResponse(entity.toAggregate()));
+        }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
 
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {

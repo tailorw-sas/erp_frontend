@@ -14,6 +14,11 @@ public class CreatePaymentDetailApplyDepositRequest {
     private UUID employee;
     private UUID paymentDetail;
     private UUID transactionType;
+    private UUID transactionTypeForAdjustment;
     private Double amount;
     private String remark;
+
+    private UUID booking;
+    private Boolean applyPayment;
+
 }

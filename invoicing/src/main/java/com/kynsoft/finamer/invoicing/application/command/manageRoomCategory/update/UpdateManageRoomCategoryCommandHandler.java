@@ -27,8 +27,9 @@ public class UpdateManageRoomCategoryCommandHandler implements ICommandHandler<U
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
-
+        service.update(dto);
     }
 
 

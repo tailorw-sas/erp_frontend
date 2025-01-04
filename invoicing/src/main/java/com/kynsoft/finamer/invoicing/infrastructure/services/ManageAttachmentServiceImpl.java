@@ -92,14 +92,37 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
-                new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_ATTACHMENT_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.INVOICE_ATTACHMENT_NOT_FOUND.getReasonPhrase())));
 
     }
 
     @Override
     public List<ManageAttachmentDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageAttachment::toAggregate).toList();
+    }
+
+    @Override
+    public List<ManageAttachmentDto> findAllByInvoiceId(UUID invoiceId) {
+        return repositoryQuery.findAllByInvoiceId(invoiceId).stream().map(ManageAttachment::toAggregate).toList();
+    }
+
+    @Override
+    public void create(List<ManageAttachmentDto> dtos) {
+        List<ManageAttachment> attachments = new ArrayList<>();
+        for(ManageAttachmentDto dto : dtos){
+            attachments.add(new ManageAttachment(dto));
+        }
+        this.repositoryCommand.saveAll(attachments);
+    }
+
+    @Override
+    public void deleteInvoice(ManageAttachmentDto dto) {
+        ManageAttachment entity = new ManageAttachment(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

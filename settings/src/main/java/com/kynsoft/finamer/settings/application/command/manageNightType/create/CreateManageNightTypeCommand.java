@@ -26,6 +26,14 @@ public class CreateManageNightTypeCommand implements ICommand {
         this.status = status;
     }
 
+    public CreateManageNightTypeCommand(UUID id, String code, String name, Status status, String description) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.status = status;
+        this.description = description;
+    }
+
     public static CreateManageNightTypeCommand fromRequest(CreateManageNightTypeRequest request) {
         return new CreateManageNightTypeCommand(
                 request.getCode(),

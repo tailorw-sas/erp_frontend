@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,28 +34,6 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
 
     @Autowired
     private ManageVCCTransactionTypeWriteDataJPARepository repositoryCommand;
-
-    @Override
-    public UUID create(ManageVCCTransactionTypeDto dto) {
-        ManageVCCTransactionType entity = new ManageVCCTransactionType(dto);
-        ManageVCCTransactionType saved = repositoryCommand.save(entity);
-
-        return saved.getId();
-    }
-
-    @Override
-    public void update(ManageVCCTransactionTypeDto dto) {
-        repositoryCommand.save(new ManageVCCTransactionType(dto));
-    }
-
-    @Override
-    public void delete(ManageVCCTransactionTypeDto dto) {
-        try {
-            this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }
-    }
 
     @Override
     public ManageVCCTransactionTypeDto findById(UUID id) {
@@ -92,6 +72,36 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Transaction Type not found.")));
     }
 
+    @Override
+    public ManageVCCTransactionTypeDto findByIsDefaultAndNotIsSubcategory() {
+        return this.repositoryQuery.findByIsDefaultAndNotIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND.getReasonPhrase()
+                )
+        );
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory() {
+        return this.repositoryQuery.findByIsDefaultAndIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND.getReasonPhrase()
+                )
+        );
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByManual() {
+        return this.repositoryQuery.findByManual().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_MANUAL_NOT_FOUND.getReasonPhrase()
+                )
+        );
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManageVCCTransactionType> data) {
         List<ManageVCCTransactionTypeResponse> responses = new ArrayList<>();
         for (ManageVCCTransactionType p : data.getContent()) {
@@ -99,5 +109,76 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public UUID create(ManageVCCTransactionTypeDto dto) {
+        ManageVCCTransactionType entity = new ManageVCCTransactionType(dto);
+        ManageVCCTransactionType saved = repositoryCommand.save(entity);
+
+        return saved.getId();
+    }
+
+    @Override
+    public void update(ManageVCCTransactionTypeDto dto) {
+        ManageVCCTransactionType entity = new ManageVCCTransactionType(dto);
+        entity.setUpdateAt(LocalDateTime.now());
+        repositoryCommand.save(entity);
+    }
+
+    @Override
+    public void delete(ManageVCCTransactionTypeDto dto) {
+        try {
+            this.repositoryCommand.deleteById(dto.getId());
+        } catch (Exception e) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+        }
+    }
+
+    @Override
+    public Long countByCodeAndNotId(String code, UUID id) {
+        return repositoryQuery.countByCodeAndNotId(code, id);
+    }
+
+    @Override
+    public List<ManageVCCTransactionTypeDto> findAllToReplicate() {
+        List<ManageVCCTransactionType> objects = this.repositoryQuery.findAll();
+        List<ManageVCCTransactionTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageVCCTransactionType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
+    @Override
+    public Long countByIsDefaultsAndNotSubcategoryAndNotId(UUID id) {
+        return this.repositoryQuery.countByIsDefaultsAndNotSubCategoryAndNotId(id);
+    }
+
+    @Override
+    public Long countByIsDefaultsAndSubCategoryAndNotId(UUID id) {
+        return this.repositoryQuery.countByIsDefaultsAndSubCategoryAndNotId(id);
+    }
+
+    @Override
+    public Long countByManualAndNotId(UUID id) {
+        return this.repositoryQuery.countByManualAndNotId(id);
+    }
+
+    @Override
+    public Long countByRefundAndNotId(UUID id) {
+        return this.repositoryQuery.countByRefundAndNotId(id);
+    }
+
+    @Override
+    public ManageVCCTransactionTypeDto findByRefund() {
+        return this.repositoryQuery.findByRefund().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
+                new BusinessException(
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_REFUND_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_REFUND_NOT_FOUND.getReasonPhrase()
+                )
+        );
     }
 }

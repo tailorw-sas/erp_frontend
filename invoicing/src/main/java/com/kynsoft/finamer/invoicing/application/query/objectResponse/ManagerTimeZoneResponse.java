@@ -1,0 +1,35 @@
+package com.kynsoft.finamer.invoicing.application.query.objectResponse;
+
+import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.ManagerTimeZoneDto;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+import java.util.UUID;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+public class ManagerTimeZoneResponse implements IResponse, Serializable {
+
+    private UUID id;
+    private String code;
+    private String name;
+    private String description;
+    private Double elapse;
+    private String status;
+
+    public ManagerTimeZoneResponse(ManagerTimeZoneDto dto) {
+        this.id = dto.getId();
+        this.code = dto.getCode();
+        this.name = dto.getName();
+        this.description = dto.getDescription();
+        this.elapse = dto.getElapse();
+        this.status = dto.getStatus();
+    }
+
+}

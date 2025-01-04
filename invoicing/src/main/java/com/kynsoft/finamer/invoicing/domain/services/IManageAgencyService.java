@@ -1,10 +1,13 @@
 package com.kynsoft.finamer.invoicing.domain.services;
 
 
+import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 
 public interface IManageAgencyService {
 
@@ -23,4 +26,6 @@ public interface IManageAgencyService {
     List<ManageAgencyDto> findByIds(List<UUID> ids);
 
     boolean existByCode(String manageAgencyCode);
+
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

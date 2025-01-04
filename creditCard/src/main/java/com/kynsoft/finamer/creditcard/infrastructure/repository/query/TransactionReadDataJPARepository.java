@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +20,10 @@ public interface TransactionReadDataJPARepository extends JpaRepository<Transact
 
     Page<Transaction> findAll(Specification specification, Pageable pageable);
 
+    List<Transaction> findAll(Specification specification);
+    Optional<Transaction> findByTransactionUuid(UUID uuid);
+
+   /* Page<TransactionSearchResponse> findAll(Specification specification, Pageable pageable);*/
     @Query("SELECT COUNT(r) FROM Transaction r WHERE r.reservationNumber = :reservationNumber AND r.hotel.id = :hotel")
     Long countByReservationNumberAndManageHotelIdAndNotId(@Param("reservationNumber") String reservationNumber, @Param("hotel") UUID hotel);
 

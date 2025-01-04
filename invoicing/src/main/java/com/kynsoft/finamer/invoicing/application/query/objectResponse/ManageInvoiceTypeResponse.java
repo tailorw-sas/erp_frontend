@@ -17,11 +17,14 @@ public class ManageInvoiceTypeResponse {
     private UUID id;
     private String code;
     private String name;
+    private boolean income;
 
     public ManageInvoiceTypeResponse(ManageInvoiceTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
         this.name = dto.getName();
+        this.income = dto.isIncome();
+
     }
 
 }

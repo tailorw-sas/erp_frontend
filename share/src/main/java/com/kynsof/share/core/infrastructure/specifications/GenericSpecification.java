@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class GenericSpecification<T> implements Specification<T> {
+
     private final SearchCriteria criteria;
 
     public GenericSpecification(SearchCriteria criteria) {
@@ -30,8 +31,6 @@ public class GenericSpecification<T> implements Specification<T> {
         } else {
             path = root.get(criteria.getKey());
         }
-
-        // Verificar si el valor es un UUID y convertirlo a UUID si es necesario.
         Object value = criteria.getValue();
 
         if (value instanceof String && isValidUUID((String) value)) {
@@ -41,7 +40,6 @@ public class GenericSpecification<T> implements Specification<T> {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        // Intentar convertir el valor a LocalDate o LocalDateTime si es necesario.
         try {
             value = LocalDate.parse(value.toString(), dateFormatter);
         } catch (DateTimeParseException ignored) {
@@ -52,7 +50,8 @@ public class GenericSpecification<T> implements Specification<T> {
         }
 
         return switch (criteria.getOperation()) {
-            case LIKE -> builder.like(builder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%");
+            case LIKE ->
+                builder.like(builder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%");
             case EQUALS -> {
                 if (value instanceof LocalDate) {
                     yield builder.equal(path.as(LocalDate.class), (LocalDate) value);
@@ -69,7 +68,13 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.greaterThan(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.greaterThan(path.as(LocalDateTime.class), (LocalDateTime) value);
-                } else {
+                } else if (value instanceof Integer) {
+                    yield builder.greaterThan(path.as(Integer.class), (Integer) value);
+                }
+                else if (value instanceof Double) {
+                    yield builder.greaterThan(path.as(Double.class), (Double) value);
+                }
+                else {
                     yield builder.greaterThan(path.as(String.class), value.toString());
                 }
             }
@@ -78,7 +83,13 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.lessThan(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.lessThan(path.as(LocalDateTime.class), (LocalDateTime) value);
-                } else {
+                } else if (value instanceof Integer) {
+                    yield builder.lessThan(path.as(Integer.class), (Integer) value);
+                }
+                else if (value instanceof Double) {
+                    yield builder.lessThan(path.as(Double.class), (Double) value);
+                }
+                else {
                     yield builder.lessThan(path.as(String.class), value.toString());
                 }
             }
@@ -87,6 +98,11 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.greaterThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
+                } else if (value instanceof Integer) {
+                    yield builder.greaterThanOrEqualTo(path.as(Integer.class), (Integer) value);
+                }
+                else if (value instanceof Double) {
+                    yield builder.greaterThanOrEqualTo(path.as(Double.class), (Double) value);
                 } else {
                     yield builder.greaterThanOrEqualTo(path.as(String.class), value.toString());
                 }
@@ -96,11 +112,18 @@ public class GenericSpecification<T> implements Specification<T> {
                     yield builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) value);
                 } else if (value instanceof LocalDateTime) {
                     yield builder.lessThanOrEqualTo(path.as(LocalDateTime.class), (LocalDateTime) value);
-                } else {
+                } else if (value instanceof Integer) {
+                    yield builder.lessThanOrEqualTo(path.as(Integer.class), (Integer) value);
+                } else if (value instanceof Double) {
+                    yield builder.lessThanOrEqualTo(path.as(Double.class), (Double) value);
+                }
+                else {
                     yield builder.lessThanOrEqualTo(path.as(String.class), value.toString());
                 }
             }
-            case NOT_EQUALS -> builder.notEqual(path, value);
+
+            case NOT_EQUALS ->
+                builder.notEqual(path, value);
             case IN -> {
                 CriteriaBuilder.In<Object> inClause = builder.in(path);
                 if (value instanceof List) {
@@ -137,15 +160,20 @@ public class GenericSpecification<T> implements Specification<T> {
                 }
                 yield builder.not(inClause);
             }
-            case IS_NULL -> builder.isNull(path);
-            case IS_NOT_NULL -> builder.isNotNull(path);
-            case IS_TRUE -> builder.isTrue(path.as(Boolean.class));
-            case IS_FALSE -> builder.isFalse(path.as(Boolean.class));
+            case IS_NULL ->
+                builder.isNull(path);
+            case IS_NOT_NULL ->
+                builder.isNotNull(path);
+            case IS_TRUE ->
+                builder.isTrue(path.as(Boolean.class));
+            case IS_FALSE ->
+                builder.isFalse(path.as(Boolean.class));
             case EXISTS -> {
                 Join<T, ?> join = root.join(criteria.getKey(), JoinType.LEFT);
                 yield builder.isNotNull(join.get("id"));
             }
-            default -> throw new IllegalArgumentException("Operación no soportada: " + criteria.getOperation());
+            default ->
+                throw new IllegalArgumentException("Operación no soportada: " + criteria.getOperation());
         };
     }
 

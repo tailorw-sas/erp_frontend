@@ -1,8 +1,11 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -31,7 +34,8 @@ public class ManageAttachmentType implements Serializable {
 
     private String name;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     private Boolean defaults;
 
@@ -42,19 +46,21 @@ public class ManageAttachmentType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean attachInvDefault;
+
     public ManageAttachmentType(ManageAttachmentTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-
         this.name = dto.getName();
         this.status =dto.getStatus();
-
         this.defaults = dto.getDefaults();
+        this.attachInvDefault=dto.isAttachInvDefault();
     }
 
     public ManageAttachmentTypeDto toAggregate() {
         return new ManageAttachmentTypeDto(
-                id, code, name, status, defaults);
+                id, code, name, status, defaults,attachInvDefault);
     }
 
 }

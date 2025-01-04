@@ -7,6 +7,9 @@ import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.CreateRoomRateRequest;
+import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.other.CreateRoomRateOtherCommand;
+import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.other.CreateRoomRateOtherMessage;
+import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.other.CreateRoomRateOtherRequest;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.delete.DeleteRoomRateCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.delete.DeleteRoomRateMessage;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.update.UpdateRoomRateCommand;
@@ -32,12 +35,18 @@ public class RoomRateController {
         this.mediator = mediator;
     }
 
-    @PostMapping()
+    @PostMapping("/create")
     public ResponseEntity<CreateRoomRateMessage> create(@RequestBody CreateRoomRateRequest request) {
         CreateRoomRateCommand createCommand = CreateRoomRateCommand.fromRequest(request);
         CreateRoomRateMessage response = mediator.send(createCommand);
 
-    
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping()
+    public ResponseEntity<CreateRoomRateOtherMessage> createOther(@RequestBody CreateRoomRateOtherRequest request) {
+        CreateRoomRateOtherCommand createCommand = CreateRoomRateOtherCommand.fromRequest(request, mediator);
+        CreateRoomRateOtherMessage response = mediator.send(createCommand);
 
         return ResponseEntity.ok(response);
     }
@@ -60,7 +69,6 @@ public class RoomRateController {
         return ResponseEntity.ok(response);
     }
 
-
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
@@ -73,11 +81,9 @@ public class RoomRateController {
     @PatchMapping(path = "/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateRoomRateRequest request) {
 
-        UpdateRoomRateCommand command = UpdateRoomRateCommand.fromRequest(request, id);
+        UpdateRoomRateCommand command = UpdateRoomRateCommand.fromRequest(request, id, mediator);
         UpdateRoomRateMessage response = mediator.send(command);
 
-      
-        
         return ResponseEntity.ok(response);
     }
 }

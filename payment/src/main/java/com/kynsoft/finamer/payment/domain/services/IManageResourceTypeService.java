@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IManageResourceTypeService {
+
     UUID create(ResourceTypeDto dto);
 
     void update(ResourceTypeDto dto);
@@ -17,11 +18,19 @@ public interface IManageResourceTypeService {
 
     ResourceTypeDto findById(UUID id);
 
+    ResourceTypeDto findByCode(String code);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByDefaultAndNotId(UUID id);
 
-  List<ResourceTypeDto> findAllToReplicate();
+    List<ResourceTypeDto> findAllToReplicate();
+
+    Long countByInvoiceAndNotId(UUID id);
+
+    ResourceTypeDto getByDefault();
+
+    Long countByVccAndNotId(UUID id);
 }

@@ -18,4 +18,7 @@ public interface ManagerLanguageReadDataJPARepository extends JpaRepository<Mana
 
     @Query("SELECT COUNT(b) FROM ManagerLanguage b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManagerLanguage b WHERE b.defaults = true AND b.id <> :id")
+    Long countByDefaultAndNotId(@Param("id") UUID id);
 }

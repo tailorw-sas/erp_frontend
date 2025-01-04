@@ -2,14 +2,14 @@ package com.kynsoft.finamer.settings.application.command.manageAgency.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageAgencyKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.settings.domain.services.*;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerUpdateManageAgencyService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageAgency.ProducerReplicateManageAgencyService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -24,28 +24,28 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     private final IManageAgencyTypeService agencyTypeService;
     private final IManagerB2BPartnerService managerB2BPartnerService;
     private final IManagerClientService managerClientService;
-    private final ProducerUpdateManageAgencyService producerUpdateManageAgencyService;
+    private final ProducerReplicateManageAgencyService producerReplicateManageAgencyService;
 
     public UpdateManageAgencyCommandHandler(IManageAgencyService service,
-                                            IManagerCountryService countryService,
-                                            IManageCityStateService cityStateService,
-                                            IManageAgencyTypeService agencyTypeService,
-                                            IManagerB2BPartnerService managerB2BPartnerService,
-                                            IManagerClientService managerClientService,
-                                            ProducerUpdateManageAgencyService producerUpdateManageAgencyService) {
+            IManagerCountryService countryService,
+            IManageCityStateService cityStateService,
+            IManageAgencyTypeService agencyTypeService,
+            IManagerB2BPartnerService managerB2BPartnerService,
+            IManagerClientService managerClientService,
+            ProducerReplicateManageAgencyService producerReplicateManageAgencyService) {
         this.service = service;
         this.countryService = countryService;
         this.cityStateService = cityStateService;
         this.agencyTypeService = agencyTypeService;
         this.managerB2BPartnerService = managerB2BPartnerService;
         this.managerClientService = managerClientService;
-        this.producerUpdateManageAgencyService = producerUpdateManageAgencyService;
+        this.producerReplicateManageAgencyService = producerReplicateManageAgencyService;
     }
 
     @Override
     public void handle(UpdateManageAgencyCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Agency Type ID cannot be null."));
-        if(command.getIsDefault()) {
+        if (command.getIsDefault()) {
             RulesChecker.checkRule(new ManageAgencyDefaultMustBeUniqueRule(this.service, command.getId()));
         }
         ManageAgencyDto dto = service.findById(command.getId());
@@ -53,11 +53,61 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
         updateFields(dto, command, update);
         updateRelationships(dto, command, update);
+        updateBookingCouponFormat(dto, command, update);
+//        updateB2bPartener(dto, command, update);
 
         if (update.getUpdate() > 0) {
             service.update(dto);
-            producerUpdateManageAgencyService.update(new UpdateManageAgencyKafka(dto.getId(), dto.getName(), dto.getClient().getId(), 
-                    dto.getBookingCouponFormat(), command.getStatus().name(), dto.getAgencyType().getId()));
+            this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(
+                    dto.getId(),
+                    dto.getCode(),
+                    dto.getName(),
+                    dto.getClient() != null ? dto.getClient().getId() : null,
+                    dto.getBookingCouponFormat(),
+                    dto.getStatus().name(),
+                    dto.getGenerationType().name(),
+                    dto.getAgencyType() != null ? dto.getAgencyType().getId() : null,
+                    dto.getCif(),
+                    dto.getAddress(),
+                    dto.getSentB2BPartner() != null ? dto.getSentB2BPartner().getId() : null,
+                    dto.getCityState() != null ? dto.getCityState().getId() : null,
+                    dto.getCountry() != null ? dto.getCountry().getId() : null,
+                    dto.getMailingAddress(),
+                    dto.getZipCode(),
+                    dto.getCity(),
+                    dto.getCreditDay(),
+                    dto.getAutoReconcile(),
+                    dto.getValidateCheckout()
+            ));
+        }
+    }
+
+//    private void updateB2bPartener(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
+//        if (command.getSentB2BPartner() == null) {
+//            dto.setSentB2BPartner(null);
+//            update.setUpdate(1);
+//        } else {
+//            if (dto.getSentB2BPartner() == null) {
+//                dto.setSentB2BPartner(this.managerB2BPartnerService.findById(command.getSentB2BPartner()));
+//                update.setUpdate(1);
+//            } else if(!command.getSentB2BPartner().equals(dto.getSentB2BPartner().getId())) {
+//                dto.setSentB2BPartner(this.managerB2BPartnerService.findById(command.getSentB2BPartner()));
+//                update.setUpdate(1);
+//            }
+//        }
+//    }
+    private void updateBookingCouponFormat(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
+        if (command.getBookingCouponFormat() == null || command.getBookingCouponFormat().isEmpty()) {
+            dto.setBookingCouponFormat("");
+            update.setUpdate(1);
+        } else {
+            if (dto.getBookingCouponFormat() == null) {
+                dto.setBookingCouponFormat(command.getBookingCouponFormat());
+                update.setUpdate(1);
+            } else if(!command.getBookingCouponFormat().equals(dto.getBookingCouponFormat())) {
+                dto.setBookingCouponFormat(command.getBookingCouponFormat());
+                update.setUpdate(1);
+            }
         }
     }
 
@@ -78,18 +128,18 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         UpdateIfNotNull.updateInteger(dto::setCreditDay, command.getCreditDay(), dto.getCreditDay(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRfc, command.getRfc(), dto.getRfc(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setValidateCheckout, command.getValidateCheckout(), dto.getValidateCheckout(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
+//        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
     }
 
     private void updateRelationships(ManageAgencyDto dto, UpdateManageAgencyCommand command, ConsumerUpdate update) {
-        updateEntity(dto::setAgencyType, command.getAgencyType(), dto.getAgencyType().getId(), agencyTypeService::findById, update::setUpdate);
-        updateEntity(dto::setCityState, command.getCityState(), dto.getCityState().getId(), cityStateService::findById, update::setUpdate);
-        updateEntity(dto::setClient, command.getClient(), dto.getClient().getId(), managerClientService::findById, update::setUpdate);
-        updateEntity(dto::setCountry, command.getCountry(), dto.getCountry().getId(), countryService::findById, update::setUpdate);
-        updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner().getId(), managerB2BPartnerService::findById, update::setUpdate);
+        updateEntity(dto::setAgencyType, command.getAgencyType(), dto.getAgencyType() != null ? dto.getAgencyType().getId() : null, agencyTypeService::findById, update::setUpdate);
+        updateEntity(dto::setCityState, command.getCityState(), dto.getCityState() != null ? dto.getCityState().getId() : null, cityStateService::findById, update::setUpdate);
+        updateEntity(dto::setClient, command.getClient(), dto.getClient() != null ? dto.getClient().getId() : null, managerClientService::findById, update::setUpdate);
+        updateEntity(dto::setCountry, command.getCountry(), dto.getCountry() != null ? dto.getCountry().getId() : null, countryService::findById, update::setUpdate);
+        updateEntity(dto::setSentB2BPartner, command.getSentB2BPartner(), dto.getSentB2BPartner() != null ? dto.getSentB2BPartner().getId() : null, managerB2BPartnerService::findById, update::setUpdate);
         updateEnum(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         updateEnum(dto::setGenerationType, command.getGenerationType(), dto.getGenerationType(), update::setUpdate);
         updateEnum(dto::setSentFileFormat, command.getSentFileFormat(), dto.getSentFileFormat(), update::setUpdate);
@@ -112,6 +162,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
 
     @FunctionalInterface
     private interface EntityFinder<T> {
+
         T findById(UUID id);
     }
 }

@@ -20,8 +20,8 @@ public class CreateManageRatePlanCommandHandler implements ICommandHandler<Creat
         service.create(new ManageRatePlanDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
-
+                command.getName(),
+                command.getStatus()
         ));
     }
 }

@@ -13,6 +13,8 @@ public interface IManageAdjustmentService {
 
     UUID create(ManageAdjustmentDto dto);
 
+    void create(List<ManageAdjustmentDto> dtos);
+
     void update(ManageAdjustmentDto dto);
 
     void delete(ManageAdjustmentDto dto);
@@ -23,4 +25,8 @@ public interface IManageAdjustmentService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageAdjustmentDto> findByIds(List<UUID> ids);
+
+    void deleteByIds(List<UUID> ids);
+
+    void deleteInvoice(ManageAdjustmentDto dto);
 }

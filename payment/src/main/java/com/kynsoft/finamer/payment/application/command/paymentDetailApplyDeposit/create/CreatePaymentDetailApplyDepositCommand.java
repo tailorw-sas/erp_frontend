@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposi
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.Getter;
@@ -18,12 +19,17 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
     private UUID employee;
     private UUID paymentDetail;
     private UUID transactionType;
+    private UUID transactionTypeForAdjustment;
     private Double amount;
     private String remark;
 
-    private PaymentDto paymentResponse;
+    private UUID booking;
+    private Boolean applyPayment;
 
-    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee) {
+    private PaymentDto paymentResponse;
+    private final IMediator mediator;
+
+    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee,UUID transactionTypeForAdjustment, UUID booking, Boolean applyPayment, final IMediator mediator) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.paymentDetail = paymentDetail;
@@ -31,16 +37,38 @@ public class CreatePaymentDetailApplyDepositCommand implements ICommand {
         this.amount = amount;
         this.remark = remark;
         this.employee = employee;
+        this.transactionTypeForAdjustment =transactionTypeForAdjustment;
+        this.booking = booking;
+        this.applyPayment = applyPayment;
+        this.mediator = mediator;
     }
 
-    public static CreatePaymentDetailApplyDepositCommand fromRequest(CreatePaymentDetailApplyDepositRequest request) {
+    public CreatePaymentDetailApplyDepositCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee,UUID transactionTypeForAdjustment, UUID booking, Boolean applyPayment) {
+        this.id = UUID.randomUUID();
+        this.status = status;
+        this.paymentDetail = paymentDetail;
+        this.transactionType = transactionType;
+        this.amount = amount;
+        this.remark = remark;
+        this.employee = employee;
+        this.transactionTypeForAdjustment =transactionTypeForAdjustment;
+        this.mediator = null;
+        this.booking = booking;
+        this.applyPayment = applyPayment;
+    }
+
+    public static CreatePaymentDetailApplyDepositCommand fromRequest(CreatePaymentDetailApplyDepositRequest request, final IMediator mediator) {
         return new CreatePaymentDetailApplyDepositCommand(
                 request.getStatus(),
                 request.getPaymentDetail(),
                 request.getTransactionType(),
                 request.getAmount(),
                 request.getRemark(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getTransactionTypeForAdjustment(),
+                request.getBooking(),
+                request.getApplyPayment(),
+                mediator
         );
     }
 

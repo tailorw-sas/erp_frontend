@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagerAccountTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Setter
 @Entity
 @Table(name = "manager_account_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manager_account_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagerAccountType implements Serializable {
 
     @Id
@@ -33,6 +37,12 @@ public class ManagerAccountType implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean moduleVcc;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean modulePayment;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -46,10 +56,12 @@ public class ManagerAccountType implements Serializable {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
+        this.moduleVcc = dto.isModuleVcc();
+        this.modulePayment = dto.isModulePayment();
     }
 
     public ManagerAccountTypeDto toAggregate() {
-        return new ManagerAccountTypeDto(id, code, name, description, status);
+        return new ManagerAccountTypeDto(id, code, name, description, status, moduleVcc, modulePayment);
     }
 
 }

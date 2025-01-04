@@ -8,8 +8,6 @@ public class SendMailjetEmailMessage implements ICommandMessage {
 
     private final boolean result;
 
-
-
     public SendMailjetEmailMessage(boolean result) {
         this.result = result;
     }

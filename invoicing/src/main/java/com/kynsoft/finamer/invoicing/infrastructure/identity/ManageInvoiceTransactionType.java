@@ -27,12 +27,10 @@ public class ManageInvoiceTransactionType implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true)
     private String code;
 
     @Column(nullable = true)
     private Boolean deleted = false;
-
 
     private String name;
 
@@ -46,18 +44,23 @@ public class ManageInvoiceTransactionType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean defaults;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean cloneAdjustmentDefault;
 
     public ManageInvoiceTransactionType(ManageInvoiceTransactionTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-
         this.name = dto.getName();
-
+        this.defaults = dto.isDefaults();
+        this.cloneAdjustmentDefault = dto.isCloneAdjustmentDefault();
     }
 
     public ManageInvoiceTransactionTypeDto toAggregate() {
         return new ManageInvoiceTransactionTypeDto(
-                id, code, name
+                id, code, name, defaults, cloneAdjustmentDefault
         );
     }
 }

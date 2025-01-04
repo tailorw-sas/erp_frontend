@@ -39,6 +39,6 @@ public class CreateManageNightTypeCommandHandler implements ICommandHandler<Crea
                 command.getDescription()
         ));
 
-        this.producerReplicateManageNightTypeService.create(new ReplicateManageNightTypeKafka(command.getId(), command.getCode(), command.getName()));
+        this.producerReplicateManageNightTypeService.create(new ReplicateManageNightTypeKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
     }
 }

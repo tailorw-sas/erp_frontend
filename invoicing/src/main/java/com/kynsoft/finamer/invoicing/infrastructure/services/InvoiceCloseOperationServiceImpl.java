@@ -65,7 +65,7 @@ public class InvoiceCloseOperationServiceImpl implements IInvoiceCloseOperationS
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.INVOICE_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override

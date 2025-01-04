@@ -1,9 +1,10 @@
 package com.kynsoft.finamer.payment.application.command.masterPaymentAttachment.create;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Getter
 @Setter

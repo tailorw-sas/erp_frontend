@@ -13,4 +13,5 @@ public class CreateManagerLanguageRequest {
     private Status status;
     private String name;
     private Boolean isEnabled;
+    private Boolean defaults;
 }

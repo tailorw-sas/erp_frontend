@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.application.query.objectResponse;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManagePaymentTransactionTypeResponse  implements IResponse {
+public class ManagePaymentTransactionTypeResponse  implements IResponse, Serializable {
     private UUID id;
     private String code;
     private Status status;
@@ -33,6 +34,11 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse {
     private Boolean deposit;
     private Boolean applyDeposit;
     private Boolean defaults;
+    private Boolean antiToIncome;
+    private Boolean incomeDefault;
+    private Boolean paymentInvoice;
+    private Boolean debit;
+    private boolean expenseToBooking;
 
     public ManagePaymentTransactionTypeResponse(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -50,6 +56,11 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse {
         this.applyDeposit = dto.getApplyDeposit();
         this.deposit = dto.getDeposit();
         this.defaults = dto.getDefaults();
+        this.antiToIncome = dto.getAntiToIncome();
+        this.incomeDefault = dto.getIncomeDefault();
+        this.paymentInvoice = dto.getPaymentInvoice();
+        this.debit = dto.getDebit();
+        this.expenseToBooking = dto.isExpenseToBooking();
     }
 
 }

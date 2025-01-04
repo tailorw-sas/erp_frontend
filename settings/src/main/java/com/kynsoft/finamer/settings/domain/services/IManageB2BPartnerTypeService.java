@@ -20,4 +20,6 @@ public interface IManageB2BPartnerTypeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     Long countByCodeAndNotId(String code, UUID id);
+
+    List<ManageB2BPartnerTypeDto> findAllToReplicate();
 }

@@ -1,7 +1,8 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Navigate;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "manage_invoice_status")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_invoice_status",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageInvoiceStatus implements Serializable {
 
     @Id
@@ -50,6 +53,9 @@ public class ManageInvoiceStatus implements Serializable {
     private Boolean enabledToPolicy;
     private Boolean processStatus;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean waitingStatus;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "manage_invoice_status_relations",
@@ -57,6 +63,8 @@ public class ManageInvoiceStatus implements Serializable {
             inverseJoinColumns = @JoinColumn(name = "child_id")
     )
     private List<ManageInvoiceStatus> navigate = new ArrayList<>();
+
+    private Boolean showClone;
 
     public ManageInvoiceStatus(ManageInvoiceStatusDto dto){
         this.id = dto.getId();
@@ -74,13 +82,15 @@ public class ManageInvoiceStatus implements Serializable {
                     .map(ManageInvoiceStatus::new)
                     .collect(Collectors.toList());
         }
+        this.showClone = dto.getShowClone();
+        this.waitingStatus = dto.isWaitingStatus();
     }
 
     public ManageInvoiceStatusDto toAggregateSimple(){
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
-                 null
+                 null, showClone, waitingStatus
         );
     }
 
@@ -88,7 +98,8 @@ public class ManageInvoiceStatus implements Serializable {
         return new ManageInvoiceStatusDto(
                 id, code, description, status, name, enabledToPrint, enabledToPropagate,
                 enabledToApply, enabledToPolicy, processStatus,
-                navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null
+                navigate != null ? navigate.stream().map(ManageInvoiceStatus::toAggregateSimple).toList() : null,
+                showClone, waitingStatus
         );
     }
 }

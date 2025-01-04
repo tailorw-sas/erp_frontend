@@ -1,9 +1,6 @@
 package com.kynsof.share.core.domain.kafka.entity.vcc;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -11,8 +8,12 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ReplicateManageMerchantKafka {
-
     private UUID id;
     private String code;
+    private String description;
+    private UUID b2bPartner;
+    private Boolean defaultm;
+    private String status;
 }

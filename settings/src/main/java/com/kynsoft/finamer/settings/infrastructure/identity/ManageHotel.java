@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_hotel")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_hotel",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageHotel implements Serializable {
 
     @Id
@@ -47,6 +51,7 @@ public class ManageHotel implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
     private ManageCountry manageCountry;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "city_state_id")
     private ManageCityState manageCityState;
@@ -77,6 +82,9 @@ public class ManageHotel implements Serializable {
 
     private Boolean isApplyByVCC;
 
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean autoApplyCredit;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -96,9 +104,10 @@ public class ManageHotel implements Serializable {
         this.isVirtual = dto.getIsVirtual();
         this.requiresFlatRate = dto.getRequiresFlatRate();
         this.isApplyByVCC = dto.getIsApplyByVCC();
+        this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
-    public ManageHotelDto toAggregate(){
+    public ManageHotelDto toAggregate() {
         return new ManageHotelDto(
                 id,
                 code,
@@ -113,7 +122,7 @@ public class ManageHotel implements Serializable {
                 manageCurrency != null ? manageCurrency.toAggregate() : null,
                 manageRegion != null ? manageRegion.toAggregate() : null,
                 manageTradingCompanies != null ? manageTradingCompanies.toAggregate() : null,
-                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC
+                applyByTradingCompany, prefixToInvoice, isVirtual, requiresFlatRate, isApplyByVCC, autoApplyCredit
         );
     }
 }

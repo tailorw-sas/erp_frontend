@@ -22,4 +22,10 @@ public interface IManageAttachmentService {
     ManageAttachmentDto findById(UUID id);
 
     List<ManageAttachmentDto> findByIds(List<UUID> ids);
+
+    List<ManageAttachmentDto> findAllByInvoiceId(UUID invoiceId);
+
+    void create(List<ManageAttachmentDto> dtos);
+
+    void deleteInvoice(ManageAttachmentDto dto);
 }

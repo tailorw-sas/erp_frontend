@@ -11,18 +11,18 @@ import com.kynsoft.finamer.payment.application.query.objectResponse.AttachmentTy
 import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
-import com.kynsoft.finamer.payment.infrastructure.identity.AttachmentType;
+import com.kynsoft.finamer.payment.infrastructure.identity.ManageAttachmentType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageAttachmentTypeWriteDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.UUID;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.AttachmentTypeReadDataJPARepository;
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
@@ -35,13 +35,13 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
 
     @Override
     public UUID create(AttachmentTypeDto dto) {
-        AttachmentType data = new AttachmentType(dto);
+        ManageAttachmentType data = new ManageAttachmentType(dto);
         return this.repositoryCommand.save(data).getId();
     }
 
     @Override
     public void update(AttachmentTypeDto dto) {
-        AttachmentType update = new AttachmentType(dto);
+        ManageAttachmentType update = new ManageAttachmentType(dto);
 
         this.repositoryCommand.save(update);
     }
@@ -57,7 +57,7 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
 
     @Override
     public AttachmentTypeDto findById(UUID id) {
-        Optional<AttachmentType> userSystem = this.repositoryQuery.findById(id);
+        Optional<ManageAttachmentType> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -65,11 +65,20 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
     }
 
     @Override
+    public AttachmentTypeDto findByCode(String code) {
+        Optional<ManageAttachmentType> userSystem = this.repositoryQuery.findByCode(code);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<AttachmentType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<AttachmentType> data = this.repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<ManageAttachmentType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<ManageAttachmentType> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -88,9 +97,9 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<AttachmentType> data) {
+    private PaginatedResponse getPaginatedResponse(Page<ManageAttachmentType> data) {
         List<AttachmentTypeResponse> responses = new ArrayList<>();
-        for (AttachmentType p : data.getContent()) {
+        for (ManageAttachmentType p : data.getContent()) {
             responses.add(new AttachmentTypeResponse(p.toAggregate()));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
@@ -105,6 +114,29 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
     @Override
     public Long countByDefaultAndNotId(UUID id) {
         return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
+
+    @Override
+    public Long countByAntiToIncomeImportAndNotId(UUID id) {
+        return this.repositoryQuery.countByAntiToIncomeImportAndNotId(id);
+    }
+
+    @Override
+    public AttachmentTypeDto getByDefault() {
+        Optional<ManageAttachmentType> attachmentType = this.repositoryQuery.getByDefault();
+        if (attachmentType.isPresent()) {
+            return attachmentType.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public AttachmentTypeDto getByAntiToIncomeImport() {
+        Optional<ManageAttachmentType> attachmentType = this.repositoryQuery.getByAntiToIncomeImport();
+        if (attachmentType.isPresent()) {
+            return attachmentType.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
 }

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -17,5 +18,8 @@ public interface ManageAttachmentReadDataJPARepository extends JpaRepository<Man
         JpaSpecificationExecutor<ManageAttachment> {
 
     Page<ManageAttachment> findAll(Specification specification, Pageable pageable);
+
+    @Query("SELECT b FROM ManageAttachment b WHERE b.invoice.id = :invoice")
+    List<ManageAttachment> findAllByInvoiceId(@Param("invoice") UUID invoiceId);
 
 }

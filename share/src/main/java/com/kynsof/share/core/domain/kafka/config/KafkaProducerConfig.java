@@ -22,16 +22,16 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-    @Bean
-    @Profile("dev")
-    public ProducerFactory<String, Object> devProducerFactory() {
-        Map<String, Object> configProps = createBaseProps();
-        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
+//    @Bean
+//    @Profile("dev")
+//    public ProducerFactory<String, Object> devProducerFactory() {
+//        Map<String, Object> configProps = createBaseProps();
+//        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
+//        return new DefaultKafkaProducerFactory<>(configProps);
+//    }
 
     @Bean
-    @Profile("!dev")
+    //@Profile("!dev")
     public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);
@@ -42,6 +42,7 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, "20971520");
         return configProps;
     }
 

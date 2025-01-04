@@ -6,4 +6,5 @@ import lombok.Data;
 public class Row {
     protected String importProcessId;
     protected String importType;
+
 }

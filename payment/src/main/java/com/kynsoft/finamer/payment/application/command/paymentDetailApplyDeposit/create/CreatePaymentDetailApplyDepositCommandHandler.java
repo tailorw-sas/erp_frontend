@@ -2,29 +2,25 @@ package com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposi
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfDepositBalanceGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckGreaterThanOrEqualToTheTransactionAmountRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
-import java.time.LocalDate;
+import com.kynsoft.finamer.payment.domain.services.*;
+import org.springframework.stereotype.Component;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import org.springframework.stereotype.Component;
+import java.util.Objects;
 
 @Component
 public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHandler<CreatePaymentDetailApplyDepositCommand> {
@@ -33,28 +29,16 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
 
-    private final IManageEmployeeService manageEmployeeService;
-
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
-
     public CreatePaymentDetailApplyDepositCommandHandler(IPaymentDetailService paymentDetailService,
-                                             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                             IPaymentService paymentService,
-                                             IManageEmployeeService manageEmployeeService,
-                                             IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            IPaymentService paymentService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
-        this.manageEmployeeService = manageEmployeeService;
-        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
     }
 
     @Override
     public void handle(CreatePaymentDetailApplyDepositCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "id", "Employee ID cannot be null."));
-
-        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
-
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
@@ -71,11 +55,14 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         //UpdateIfNotNull.updateDouble(paymentUpdate::setPaymentBalance, paymentUpdate.getPaymentBalance() + (- paymentDetailDto.getAmount()), updatePayment::setUpdate);
 
         UpdateIfNotNull.updateDouble(paymentUpdate::setDepositBalance, paymentUpdate.getDepositBalance() - command.getAmount(), updatePayment::setUpdate);
+        //UpdateIfNotNull.updateDouble(paymentUpdate::setNotApplied, paymentUpdate.getNotApplied() + command.getAmount(), updatePayment::setUpdate);
+        //Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
+        UpdateIfNotNull.updateDouble(paymentUpdate::setApplied, paymentUpdate.getApplied() + command.getAmount(), updatePayment::setUpdate);
         UpdateIfNotNull.updateDouble(paymentUpdate::setIdentified, paymentUpdate.getIdentified() + command.getAmount(), updatePayment::setUpdate);
         UpdateIfNotNull.updateDouble(paymentUpdate::setNotIdentified, paymentUpdate.getPaymentAmount() - paymentUpdate.getIdentified(), updatePayment::setUpdate);
 
         //TODO: Se debe de validar esta variable para que cumpla con el Close Operation
-        LocalDate transactionDate = LocalDate.now();
+        OffsetDateTime transactionDate = OffsetDateTime.now(ZoneId.of("UTC"));
         PaymentDetailDto children = new PaymentDetailDto(
                 command.getId(),
                 command.getStatus(),
@@ -86,17 +73,19 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
                 null,
                 null,
                 null,
-                transactionDate,
+                //transactionDate,
                 null,
                 null,
                 null,
                 null,
                 null,
-                null
+                null,
+                null,
+                false
         );
 
         children.setParentId(paymentDetailDto.getPaymentDetailId());
-        Long paymentDetailId = this.paymentDetailService.create(children);
+        this.paymentDetailService.create(children);
 
         List<PaymentDetailDto> updateChildrens = new ArrayList<>();
         updateChildrens.addAll(paymentDetailDto.getChildren());
@@ -106,22 +95,14 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         paymentDetailService.update(paymentDetailDto);
 
         this.paymentService.update(paymentUpdate);
-//        createPaymentAttachmentStatusHistory(employeeDto, paymentUpdate, paymentDetailId, "Creating New Apply Deposit with ID: ");
+
+        if (Objects.nonNull(command.getApplyPayment()) && command.getApplyPayment()) {
+            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking(), command.getEmployee()));
+            paymentUpdate.setApplyPayment(message.getPayment().isApplyPayment());
+            paymentUpdate.setPaymentStatus(message.getPayment().getPaymentStatus());
+        }
+
         command.setPaymentResponse(paymentUpdate);
 
     }
-
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-//    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, Long paymentDetail, String msg) {
-//
-//        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto.setDescription(msg + paymentDetail);
-//        attachmentStatusHistoryDto.setEmployee(employeeDto);
-//        attachmentStatusHistoryDto.setPayment(payment);
-//        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
-//
-//        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
-
 }

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageRoomRate.update;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,44 +17,32 @@ public class UpdateRoomRateCommand implements ICommand {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
     private Double invoiceAmount;
-    private String roomNumber;
     private Integer adults;
     private Integer children;
-    private Double rateAdult;
-    private Double rateChild;
     private Double hotelAmount;
-    private String remark;
-    private UUID booking;
+    private IMediator mediator;
 
-    public UpdateRoomRateCommand(UUID id, LocalDateTime checkIn, LocalDateTime checkOut, Double invoiceAmount, String roomNumber, Integer adults, Integer children, Double rateAdult, Double rateChild, Double hotelAmount, String remark, UUID booking) {
+    public UpdateRoomRateCommand(UUID id, LocalDateTime checkIn, LocalDateTime checkOut, Double invoiceAmount, Integer adults, Integer children, Double hotelAmount, IMediator mediator) {
         this.id = id;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
         this.invoiceAmount = invoiceAmount;
-        this.roomNumber = roomNumber;
         this.adults = adults;
         this.children = children;
-        this.rateAdult = rateAdult;
-        this.rateChild = rateChild;
         this.hotelAmount = hotelAmount;
-        this.remark = remark;
-        this.booking = booking;
+        this.mediator = mediator;
     }
 
-    public static UpdateRoomRateCommand fromRequest(UpdateRoomRateRequest request, UUID id) {
+    public static UpdateRoomRateCommand fromRequest(UpdateRoomRateRequest request, UUID id, IMediator mediator) {
         return new UpdateRoomRateCommand(
                 id,
                 request.getCheckIn(),
                 request.getCheckOut(),
                 request.getInvoiceAmount(),
-                request.getRoomNumber(),
                 request.getAdults(),
                 request.getChildren(),
-                request.getRateAdult(),
-                request.getRateChild(),
                 request.getHotelAmount(),
-                request.getRemark(),
-                request.getBooking()
+                mediator
         );
     }
 

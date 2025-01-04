@@ -20,7 +20,6 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private JasperReportTemplateType type;
     private Status status;
     private String file;
-    private String parameters;
 
     private Double parentIndex;
     private Double menuPosition;
@@ -34,20 +33,22 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private Boolean cancel;
     private String rootIndex;
     private String language;
+    private UUID dbConection;
+    private String query;
 
     public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
-                                             String file, String parameters, 
+                                             String file,
                                              Double parentIndex, Double menuPosition, 
                                              String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
                                              Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
-                                             String rootIndex, String language, Status status) {
+                                             String rootIndex, String language, Status status, UUID dbConection,
+                                             String query) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
         this.description = description;
         this.type = type;
         this.file = file;
-        this.parameters = parameters;
 
         this.parentIndex = parentIndex;
         this.menuPosition = menuPosition;
@@ -62,7 +63,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
         this.rootIndex = rootIndex;
         this.language = language;
         this.status = status;
-        
+        this.dbConection = dbConection;
+        this.query = query;
     }
 
     public static CreateJasperReportTemplateCommand fromRequest(CreateJasperReportTemplateRequest request) {
@@ -72,7 +74,6 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getDescription(), 
                 request.getType(), 
                 request.getFile(),
-                request.getParameters(),
 
                 request.getParentIndex(),
                 request.getMenuPosition(),
@@ -86,7 +87,9 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getCancel(),
                 request.getRootIndex(),
                 request.getLanguage(),
-                request.getStatus()
+                request.getStatus(),
+                request.getDbConection(),
+                request.getQuery()
         );
     }
 

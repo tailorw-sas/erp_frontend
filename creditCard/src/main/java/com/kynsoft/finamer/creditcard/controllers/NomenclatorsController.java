@@ -10,17 +10,15 @@ import com.kynsoft.finamer.creditcard.application.query.manageCreditCardType.sea
 import com.kynsoft.finamer.creditcard.application.query.manageHotel.search.GetSearchManageHotelQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageLanguage.search.GetSearchManageLanguageQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantCommission.search.GetSearchManageMerchantCommissionQuery;
+import com.kynsoft.finamer.creditcard.application.query.manageMerchantConfig.search.GetSearchManageMerchantConfigQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantHotelEnrolle.findHotelsByMerchant.FindHotelsByMerchantQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageMerchantHotelEnrolle.search.GetSearchManageMerchantHotelEnrolleQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageTransactionStatus.search.GetSearchManageTransactionStatusQuery;
 import com.kynsoft.finamer.creditcard.application.query.manageVCCTransactionType.search.GetManageVCCTransactionTypeQuery;
-import com.kynsoft.finamer.creditcard.application.query.managerMerchant.search.GetSearchManagerMerchantQuery;
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.HotelsByMerchantResponse;
+import com.kynsoft.finamer.creditcard.application.query.manageMerchant.search.GetSearchManageMerchantQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/nomenclators")
@@ -96,7 +94,7 @@ public class NomenclatorsController {
     public ResponseEntity<?> merchants(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchManagerMerchantQuery query = new GetSearchManagerMerchantQuery(pageable, request.getFilter(), request.getQuery());
+        GetSearchManageMerchantQuery query = new GetSearchManageMerchantQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
@@ -132,10 +130,22 @@ public class NomenclatorsController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/hotels-by-merchant/{merchantId}")
-    public ResponseEntity<?> hotelsByMerchant(@PathVariable UUID merchantId){
-        FindHotelsByMerchantQuery query = new FindHotelsByMerchantQuery(merchantId);
-        HotelsByMerchantResponse response = mediator.send(query);
+    @PostMapping("/hotels-by-merchant")
+    public ResponseEntity<?> hotelsByMerchant(@RequestBody SearchRequest request){
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        FindHotelsByMerchantQuery query = new FindHotelsByMerchantQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/merchant-config")
+    public ResponseEntity<?> merchantConfig(@RequestBody SearchRequest request){
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchManageMerchantConfigQuery query = new GetSearchManageMerchantConfigQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

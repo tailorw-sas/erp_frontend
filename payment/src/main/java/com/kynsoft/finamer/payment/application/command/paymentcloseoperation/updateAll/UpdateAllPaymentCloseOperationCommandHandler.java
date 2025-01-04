@@ -7,13 +7,12 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.closeOperation.CheckBeginDateAndEndDateRule;
 import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.function.Consumer;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateAllPaymentCloseOperationCommandHandler implements ICommandHandler<UpdateAllPaymentCloseOperationCommand> {

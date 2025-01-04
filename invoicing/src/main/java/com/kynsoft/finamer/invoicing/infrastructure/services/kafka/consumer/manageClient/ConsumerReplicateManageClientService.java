@@ -23,7 +23,7 @@ public class ConsumerReplicateManageClientService {
     public void listen(ReplicateManageClientKafka objKafka) {
         try {
             CreateManageClientCommand command = new CreateManageClientCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getIsNightType());
+                    objKafka.getName(), objKafka.getIsNightType(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageClientService.class.getName()).log(Level.SEVERE, null, ex);

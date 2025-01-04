@@ -109,4 +109,17 @@ public class ManageRoomCategoryServiceImpl implements IManageRoomCategoryService
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageRoomCategoryDto> findAllToReplicate() {
+        List<ManageRoomCategory> objects = this.repositoryQuery.findAll();
+        List<ManageRoomCategoryDto> objectDtos = new ArrayList<>();
+
+        for (ManageRoomCategory object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

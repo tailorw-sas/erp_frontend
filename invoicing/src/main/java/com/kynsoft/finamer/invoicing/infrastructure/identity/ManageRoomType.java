@@ -33,6 +33,7 @@ public class ManageRoomType implements Serializable {
     @Column(nullable = true)
     private Boolean deleted = false;
 
+    private String status;
 
     private String name;
 
@@ -46,18 +47,16 @@ public class ManageRoomType implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-
     public ManageRoomType(ManageRoomTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-
         this.name = dto.getName();
-
+        this.status = dto.getStatus();
     }
 
     public ManageRoomTypeDto toAggregate() {
         return new ManageRoomTypeDto(
-                id, code, name
+                id, code, name, status
         );
     }
 

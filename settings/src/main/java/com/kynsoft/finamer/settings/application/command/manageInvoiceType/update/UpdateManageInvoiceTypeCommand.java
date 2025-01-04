@@ -19,6 +19,9 @@ public class UpdateManageInvoiceTypeCommand implements ICommand {
     private Status status;
     private String name;
     private Boolean enabledToPolicy;
+    private boolean income;
+    private boolean credit;
+    private boolean invoice;
 
     public static UpdateManageInvoiceTypeCommand fromRequest(UpdateManageInvoiceTypeRequest request, UUID id){
         return new UpdateManageInvoiceTypeCommand(
@@ -26,7 +29,10 @@ public class UpdateManageInvoiceTypeCommand implements ICommand {
                 request.getDescription(),
                 request.getStatus(),
                 request.getName(),
-                request.getEnabledToPolicy()
+                request.getEnabledToPolicy(),
+                request.isIncome(),
+                request.isCredit(),
+                request.isInvoice()
         );
     }
 

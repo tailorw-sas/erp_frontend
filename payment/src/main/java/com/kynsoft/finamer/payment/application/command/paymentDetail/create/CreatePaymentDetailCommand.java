@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.Getter;
@@ -21,9 +22,13 @@ public class CreatePaymentDetailCommand implements ICommand {
     private Double amount;
     private String remark;
 
-    private PaymentDto paymentResponse;
+    private UUID booking;
+    private Boolean applyPayment;
 
-    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee) {
+    private PaymentDto paymentResponse;
+    private final IMediator mediator;
+
+    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee, UUID booking, Boolean applyPayment, final IMediator mediator) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.payment = payment;
@@ -31,16 +36,22 @@ public class CreatePaymentDetailCommand implements ICommand {
         this.amount = amount;
         this.remark = remark;
         this.employee = employee;
+        this.booking = booking;
+        this.applyPayment = applyPayment;
+        this.mediator = mediator;
     }
 
-    public static CreatePaymentDetailCommand fromRequest(CreatePaymentDetailRequest request) {
+    public static CreatePaymentDetailCommand fromRequest(CreatePaymentDetailRequest request, final IMediator mediator) {
         return new CreatePaymentDetailCommand(
                 request.getStatus(),
                 request.getPayment(),
                 request.getTransactionType(),
                 request.getAmount(),
                 request.getRemark(),
-                request.getEmployee()
+                request.getEmployee(),
+                request.getBooking(),
+                request.getApplyPayment(),
+                mediator
         );
     }
 

@@ -6,7 +6,6 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateManageHotelKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageHotel.ManageHotelCodeMustBeUniqueRule;
-import com.kynsoft.finamer.settings.domain.rules.manageHotel.ManageHotelCodeSizeRule;
 import com.kynsoft.finamer.settings.domain.rules.manageHotel.ManageHotelNameMustBeNullRule;
 import com.kynsoft.finamer.settings.domain.services.*;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageHotel.ProducerReplicateManageHotelService;
@@ -44,7 +43,7 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
 
     @Override
     public void handle(CreateManageHotelCommand command) {
-        RulesChecker.checkRule(new ManageHotelCodeSizeRule(command.getCode()));
+        //RulesChecker.checkRule(new ManageHotelCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageHotelNameMustBeNullRule(command.getName()));
         RulesChecker.checkRule(new ManageHotelCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
@@ -56,6 +55,8 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 "Manage Currency State cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageRegion(), "manageRegion",
                 "Manage Region cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getManageTradingCompanies(), "manageTradingCompanies",
+                "Manage Trading Company cannot be null."));
 
         ManagerCountryDto countryDto = countryService.findById(command.getManageCountry());
         ManageCityStateDto cityStateDto = cityStateService.findById(command.getManageCityState());
@@ -70,8 +71,25 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getName(), command.getBabelCode(), countryDto, cityStateDto, command.getCity(),
                 command.getAddress(), currencyDto, regionDto, tradingCompaniesDto, command.getApplyByTradingCompany(),
                 command.getPrefixToInvoice(), command.getIsVirtual(), command.getRequiresFlatRate(),
-                command.getIsApplyByVCC()));
-        this.producerReplicateManageHotelService.create(new ReplicateManageHotelKafka(command.getId(),
-                command.getCode(), command.getName(), command.getIsApplyByVCC(), command.getManageTradingCompanies(), command.getStatus().name(), command.getIsVirtual()));
+                command.getIsApplyByVCC(), command.getAutoApplyCredit()));
+
+        this.producerReplicateManageHotelService.create(new ReplicateManageHotelKafka(
+                command.getId(),
+                command.getCode(),
+                command.getName(),
+                command.getIsApplyByVCC(),
+                command.getManageTradingCompanies(),
+                command.getStatus().name(),
+                command.getRequiresFlatRate(),
+                command.getIsVirtual(),
+                command.getApplyByTradingCompany(),
+                command.getAutoApplyCredit(),
+                command.getCity(),
+                command.getBabelCode(),
+                command.getAddress(),
+                cityStateDto.getId(),
+                countryDto.getId(),
+                currencyDto.getId()
+        ));
     }
 }

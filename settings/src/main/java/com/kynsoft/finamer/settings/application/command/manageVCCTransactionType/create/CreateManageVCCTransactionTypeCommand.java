@@ -26,6 +26,7 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
     private Boolean remarkRequired;
     private Integer minNumberOfCharacter;
     private String defaultRemark;
+    private boolean manual;
 
     public CreateManageVCCTransactionTypeCommand(String code, Status status, String name, String description, Boolean isActive,
                                                  Boolean negative,
@@ -35,7 +36,8 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
                                                  Boolean policyCredit,
                                                  Boolean remarkRequired,
                                                  Integer minNumberOfCharacter,
-                                                 String defaultRemark) {
+                                                 String defaultRemark,
+                                                 boolean manual) {
         this.id = UUID.randomUUID();
         this.code = code;
         this.status = status;
@@ -50,14 +52,13 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
         this.subcategory = subcategory;
         this.minNumberOfCharacter = minNumberOfCharacter;
         this.defaultRemark = defaultRemark;
-
+        this.manual = manual;
     }
 
     public static CreateManageVCCTransactionTypeCommand fromRequest(
             CreateManageVCCTransactionTypeRequest request) {
         return new CreateManageVCCTransactionTypeCommand(
                 request.getCode(),
-
                 request.getStatus(),
                 request.getName(),
                 request.getDescription(),
@@ -69,7 +70,8 @@ public class CreateManageVCCTransactionTypeCommand implements ICommand {
                 request.getPolicyCredit(),
                 request.getRemarkRequired(),
                 request.getMinNumberOfCharacter(),
-                request.getDefaultRemark()
+                request.getDefaultRemark(),
+                request.isManual()
 
         );
     }

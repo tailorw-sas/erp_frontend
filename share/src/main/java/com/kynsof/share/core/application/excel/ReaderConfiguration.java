@@ -14,4 +14,8 @@ public class ReaderConfiguration {
 
     private String sheetNameToRead;
 
+    private boolean strictHeaderOrder;
+
+    private int startReading;
+
 }

@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -19,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_attachment_type")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_attachment_type",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAttachmentType implements Serializable {
 
     @Id
@@ -34,8 +38,10 @@ public class ManageAttachmentType implements Serializable {
     private String description;
 
     private String name;
-
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean defaults;
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean attachInvDefault;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -51,11 +57,12 @@ public class ManageAttachmentType implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.defaults = dto.getDefaults();
+        this.attachInvDefault = dto.getAttachInvDefault();
     }
 
     public ManageAttachmentTypeDto toAggregate(){
         return new ManageAttachmentTypeDto(
-                id, code, description, status, name, defaults
+                id, code, description, status, name, defaults, attachInvDefault
         );
     }
 

@@ -11,7 +11,7 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBook
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageBooking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageBookingReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +39,10 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
     }
+
     @Override
-    public void calculateInvoiceAmount(ManageBookingDto dto){
+    public void calculateInvoiceAmount(ManageBookingDto dto) {
         Double InvoiceAmount = 0.00;
-
-
-        
 
         if (dto.getRoomRates() != null) {
 
@@ -62,14 +60,32 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public void calculateHotelAmount(ManageBookingDto dto) {
+        Double HotelAmount = 0.00;
+
+        if (dto.getRoomRates() != null) {
+
+            for (int i = 0; i < dto.getRoomRates().size(); i++) {
+
+                HotelAmount += dto.getRoomRates().get(i).getHotelAmount();
+
+            }
+
+            dto.setHotelAmount(HotelAmount);
+
+            this.update(dto);
+        }
+    }
+
+    @Override
     public UUID create(ManageBookingDto dto) {
-        ManageBooking entity = new ManageBooking(dto);
+        Booking entity = new Booking(dto);
         return repositoryCommand.saveAndFlush(entity).getId();
     }
 
     @Override
     public void update(ManageBookingDto dto) {
-        ManageBooking entity = new ManageBooking(dto);
+        Booking entity = new Booking(dto);
         entity.setUpdatedAt(LocalDateTime.now());
 
         repositoryCommand.save(entity);
@@ -79,22 +95,31 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<ManageBooking> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageBooking> data = repositoryQuery.findAll(specifications, pageable);
+        GenericSpecificationsBuilder<Booking> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Booking> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
 
     @Override
-    public boolean existsByExactLastTwoChars(String lastTwoChars, UUID hotelId) {
-        boolean exists = this.repositoryQuery.existsByExactLastTwoChars(lastTwoChars, hotelId);
+    public boolean existsByExactLastChars(String lastChars, UUID hotelId) {
+        boolean exists = this.repositoryQuery.existsByExactLastChars(lastChars, hotelId);
 
         return exists;
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageBooking> data) {
+    @Override
+    public Optional<ManageBookingDto> findManageBookingByBookingNumber(String bookingNumber) {
+        Optional<Booking> manageBooking= this.repositoryQuery.findManageBookingByHotelBookingNumber(bookingNumber);
+        if (manageBooking.isPresent()){
+            return manageBooking.map(Booking::toAggregate);
+        }
+        return Optional.empty();
+    }
+
+    private PaginatedResponse getPaginatedResponse(Page<Booking> data) {
         List<ManageBookingResponse> responseList = new ArrayList<>();
-        for (ManageBooking entity : data.getContent()) {
+        for (Booking entity : data.getContent()) {
             responseList.add(new ManageBookingResponse(entity.toAggregate()));
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
@@ -116,23 +141,22 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return repositoryQuery.existsByHotelBookingNumber(bookingHotelNumber);
     }
 
-
     @Override
     public ManageBookingDto findById(UUID id) {
-        Optional<ManageBooking> optionalEntity = repositoryQuery.findById(id);
+        Optional<Booking> optionalEntity = repositoryQuery.findById(id);
 
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
-                new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
+                new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
 
     }
 
     @Override
     public List<ManageBookingDto> findByIds(List<UUID> ids) {
-        return repositoryQuery.findAllById(ids).stream().map(ManageBooking::toAggregate).toList();
+        return repositoryQuery.findAllById(ids).stream().map(Booking::toAggregate).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
@@ -146,7 +170,65 @@ public class ManageBookingServiceImpl implements IManageBookingService {
                     System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
                 }
             }
+
+            if ("dueAmount".equals(filter.getKey()) && filter.getValue() instanceof String) {
+                try {
+                    filter.setValue(Double.valueOf(filter.getValue().toString()));
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                }
+            }
         }
+    }
+
+    @Override
+    public void deleteInvoice(ManageBookingDto dto) {
+        Booking entity = new Booking(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        repositoryCommand.save(entity);
+    }
+
+    @Override
+    public List<ManageBookingDto> findAllToReplicate() {
+        List<Booking> objects = this.repositoryQuery.findAll();
+        List<ManageBookingDto> objectDtos = new ArrayList<>();
+
+        for (Booking object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
+
+    public List<ManageBookingDto> findByManageInvoicing(UUID id) {
+        List<Booking> objects = this.repositoryQuery.findByManageInvoicing(id);
+        List<ManageBookingDto> objectDtos = new ArrayList<>();
+
+        for (Booking object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
+    @Override
+    public boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId) {
+        return this.repositoryQuery.existsByHotelInvoiceNumber(hotelInvoiceNumber, hotelId);
+    }
+
+    @Override
+    public ManageBookingDto findBookingId(Long bookingId) {
+        Optional<Booking> optionalEntity = repositoryQuery.findByBookingId(bookingId);
+
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
+                new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
     }
 
 }

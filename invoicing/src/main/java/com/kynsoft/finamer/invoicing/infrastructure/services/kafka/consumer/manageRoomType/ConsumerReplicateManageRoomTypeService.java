@@ -1,8 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.manageRoomType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageRoomTypeKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.manageRoomType.create.CreateManageRoomTypeCommand;
@@ -27,7 +24,7 @@ public class ConsumerReplicateManageRoomTypeService {
         try {
 
             CreateManageRoomTypeCommand command = new CreateManageRoomTypeCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName());
+                    objKafka.getName(), objKafka.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageRoomTypeService.class.getName()).log(Level.SEVERE, null, ex);

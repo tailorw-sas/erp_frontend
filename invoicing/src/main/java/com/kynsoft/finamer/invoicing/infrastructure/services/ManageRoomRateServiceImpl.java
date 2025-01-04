@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageRoom
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageRoomRateReadDataJPARepository;
@@ -40,22 +41,19 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     }
 
     @Override
-     public void calculateInvoiceAmount(ManageRoomRateDto dto, Double adjustmentOldAmount, Double adjustmentNewAmount){
+    public void calculateInvoiceAmount(ManageRoomRateDto dto, Double adjustmentOldAmount, Double adjustmentNewAmount) {
         Double InvoiceAmount = dto.getInvoiceAmount() != null ? dto.getInvoiceAmount() : 0;
 
-
-
-        if(adjustmentOldAmount != null && adjustmentNewAmount != null){
+        if (adjustmentOldAmount != null && adjustmentNewAmount != null) {
 
             InvoiceAmount -= adjustmentOldAmount;
             InvoiceAmount += adjustmentNewAmount;
 
             dto.setInvoiceAmount(InvoiceAmount);
 
-             this.update(dto);
-             return;
+            this.update(dto);
+            return;
         }
-        
 
         if (dto.getAdjustments() != null) {
 
@@ -70,7 +68,6 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
             this.update(dto);
         }
     }
-
 
     @Override
     public UUID create(ManageRoomRateDto dto) {
@@ -106,10 +103,15 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     }
 
     @Override
+    public List<ManageRoomRate> findByBooking(Booking booking) {
+        return this.repositoryQuery.findByBooking(booking);
+    }
+
+    @Override
     public void delete(ManageRoomRateDto dto) {
-        try{
+        try {
             this.repositoryCommand.deleteById(dto.getId());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
@@ -118,17 +120,22 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     public ManageRoomRateDto findById(UUID id) {
         Optional<ManageRoomRate> optionalEntity = repositoryQuery.findById(id);
 
-        if(optionalEntity.isPresent()){
+        if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ROOM_RATE_NOT_FOUND_, new ErrorField("id", "The Room Rate not found.")));
 
     }
 
+    @Override
+    public void deleteInvoice(ManageRoomRateDto dto) {
+        ManageRoomRate entity = new ManageRoomRate(dto);
+        entity.setDeleteInvoice(true);
+        entity.setUpdatedAt(LocalDateTime.now());
 
-
-
+        repositoryCommand.save(entity);
+    }
 
     @Override
     public List<ManageRoomRateDto> findByIds(List<UUID> ids) {

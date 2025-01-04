@@ -16,12 +16,14 @@ public class CreateManageClientCommand implements ICommand {
     private String code;
     private String name;
     private Boolean isNightType;
+    private String status;
 
-    public CreateManageClientCommand(UUID id, String code, String name, Boolean isNightType) {
+    public CreateManageClientCommand(UUID id, String code, String name, Boolean isNightType, String status) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.isNightType = isNightType;
+        this.status = status;
     }
 
     @Override

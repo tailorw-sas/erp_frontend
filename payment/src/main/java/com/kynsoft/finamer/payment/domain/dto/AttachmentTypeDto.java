@@ -20,4 +20,5 @@ public class AttachmentTypeDto {
     private String description;
     private Boolean defaults;
     private Status status;
+    private boolean antiToIncomeImport;
 }

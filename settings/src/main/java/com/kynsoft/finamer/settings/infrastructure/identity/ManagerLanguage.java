@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.settings.domain.dto.ManagerLanguageDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -11,8 +13,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -21,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manager_language")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manager_language",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManagerLanguage implements Serializable {
 
     @Id
@@ -39,6 +41,8 @@ public class ManagerLanguage implements Serializable {
 
     private Boolean isEnabled;
 
+    private Boolean defaults;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -53,9 +57,10 @@ public class ManagerLanguage implements Serializable {
         this.description = dto.getDescription();
         this.name = dto.getName();
         this.isEnabled = dto.getIsEnabled();
+        this.defaults = dto.getDefaults();
     }
 
     public ManagerLanguageDto toAggregate(){
-        return new ManagerLanguageDto(id, code, description, status, name, isEnabled);
+        return new ManagerLanguageDto(id, code, description, status, name, isEnabled, defaults);
     }
 }

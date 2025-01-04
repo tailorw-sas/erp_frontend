@@ -5,10 +5,14 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
+import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsoft.report.domain.dto.status.Status;
+import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+
+import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +21,11 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
 
     private final IJasperReportTemplateService service;
 
-    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service) {
+    private final IDBConnectionService conectionService;
+
+    public UpdateJasperReportTemplateCommandHandler(IJasperReportTemplateService service, IDBConnectionService conectionService) {
         this.service = service;
+        this.conectionService = conectionService;
     }
 
     @Override
@@ -32,7 +39,6 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setDescription, command.getDescription(), updateDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setFile, command.getFile(), updateDto.getFile(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setName, command.getName(), updateDto.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setParameters, command.getParameters(), updateDto.getParameters(), update::setUpdate);
 
         UpdateIfNotNull.updateDouble(updateDto::setParentIndex, command.getParentIndex(), updateDto.getParentIndex(), update::setUpdate);
         UpdateIfNotNull.updateDouble(updateDto::setMenuPosition, command.getMenuPosition(), updateDto.getMenuPosition(), update::setUpdate);
@@ -47,6 +53,9 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setRootIndex, command.getRootIndex(), updateDto.getRootIndex(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setQuery, command.getQuery(), updateDto.getQuery(), update::setUpdate);
+
+        this.updateConection(updateDto::setDbConectionDto, command.getDbConection(), updateDto.getDbConectionDto() != null ? updateDto.getDbConectionDto().getId() : null,update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(updateDto);
@@ -63,6 +72,14 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
     private void updateType(Consumer<JasperReportTemplateType> setter, JasperReportTemplateType newValue, JasperReportTemplateType oldValue, Consumer<Integer> update) {
         if (newValue != null && !newValue.equals(oldValue)) {
             setter.accept(newValue);
+            update.accept(1);
+        }
+    }
+
+    private void updateConection(Consumer<DBConectionDto> setter, UUID newValue, UUID oldValue, Consumer<Integer> update) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            DBConectionDto conectionDto = this.conectionService.findById(newValue);
+            setter.accept(conectionDto);
             update.accept(1);
         }
     }

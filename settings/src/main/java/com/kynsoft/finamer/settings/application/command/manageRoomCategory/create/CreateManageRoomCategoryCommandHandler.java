@@ -34,6 +34,6 @@ public class CreateManageRoomCategoryCommandHandler implements ICommandHandler<C
                 command.getDescription()
         ));
 
-       this.producerReplicateManageRoomCategoryService.create(new ReplicateManageRoomCategoryKafka(command.getId(), command.getCode(), command.getName()));
+       this.producerReplicateManageRoomCategoryService.create(new ReplicateManageRoomCategoryKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
     }
 }

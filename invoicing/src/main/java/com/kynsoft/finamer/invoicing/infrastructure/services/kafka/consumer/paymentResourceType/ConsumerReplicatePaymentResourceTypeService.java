@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentResourceTypeKaf
 
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.resourceType.create.CreateManageResourceTypeCommand;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,15 @@ public class ConsumerReplicatePaymentResourceTypeService {
     public void listen(ReplicatePaymentResourceTypeKafka objKafka) {
         try {
 
-            CreateManageResourceTypeCommand command = new CreateManageResourceTypeCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName());
+            CreateManageResourceTypeCommand command = new CreateManageResourceTypeCommand(
+                    objKafka.getId(), 
+                    objKafka.getCode(),
+                    objKafka.getName(), 
+                    objKafka.getDescription(),
+                    Status.valueOf(objKafka.getStatus()),
+                    objKafka.isDefaults(),
+                    objKafka.isInvoice()
+            );
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicatePaymentResourceTypeService.class.getName()).log(Level.SEVERE, null, ex);

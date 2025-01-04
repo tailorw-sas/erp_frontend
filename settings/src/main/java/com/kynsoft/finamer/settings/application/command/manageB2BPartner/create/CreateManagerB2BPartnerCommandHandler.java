@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.command.manageB2BPartner.create
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateB2BPartnerKafka;
 import com.kynsoft.finamer.settings.domain.dto.ManageB2BPartnerTypeDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.settings.domain.rules.managerB2BPartner.ManagerB2BPartnerCodeMustBeUniqueRule;
@@ -9,6 +10,7 @@ import com.kynsoft.finamer.settings.domain.rules.managerB2BPartner.ManagerB2BPar
 import com.kynsoft.finamer.settings.domain.rules.managerB2BPartner.ManagerB2BPartnerNameMustBeNullRule;
 import com.kynsoft.finamer.settings.domain.services.IManageB2BPartnerTypeService;
 import com.kynsoft.finamer.settings.domain.services.IManagerB2BPartnerService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageB2BPartner.ProducerReplicateB2BPartnerService;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,10 +18,13 @@ public class CreateManagerB2BPartnerCommandHandler implements ICommandHandler<Cr
 
     private final IManagerB2BPartnerService service;
     private final IManageB2BPartnerTypeService b2BPartnerTypeService;
+    private final ProducerReplicateB2BPartnerService replicateB2BPartnerService;
 
-    public CreateManagerB2BPartnerCommandHandler(IManagerB2BPartnerService service, IManageB2BPartnerTypeService b2BPartnerTypeService) {
+    public CreateManagerB2BPartnerCommandHandler(IManagerB2BPartnerService service, IManageB2BPartnerTypeService b2BPartnerTypeService,
+                                                 ProducerReplicateB2BPartnerService replicateB2BPartnerService) {
         this.service = service;
         this.b2BPartnerTypeService = b2BPartnerTypeService;
+        this.replicateB2BPartnerService = replicateB2BPartnerService;
     }
 
     @Override
@@ -40,6 +45,19 @@ public class CreateManagerB2BPartnerCommandHandler implements ICommandHandler<Cr
                 command.getPassword(),
                 command.getToken(),
                 b2BPartnerTypeDto
+        ));
+        replicateB2BPartnerService.create(new ReplicateB2BPartnerKafka(
+                command.getId(), 
+                command.getCode(), 
+                command.getName(), 
+                command.getDescription(), 
+                command.getPassword(), 
+                command.getIp(), 
+                command.getToken(), 
+                command.getUrl(), 
+                command.getUserName(), 
+                command.getStatus().name(), 
+                b2BPartnerTypeDto.getId()
         ));
     }
 }

@@ -21,7 +21,7 @@ public class ConsumerReplicateManageLanguageService {
     @KafkaListener(topics = "finamer-replicate-manage-language", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageLanguageKafka entity) {
         try {
-            CreateManageLanguageCommand command = new CreateManageLanguageCommand(entity.getId(), entity.getCode(), entity.getName());
+            CreateManageLanguageCommand command = new CreateManageLanguageCommand(entity.getId(), entity.getCode(), entity.getName(), entity.getDefaults(), entity.getStatus());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageLanguageService.class.getName()).log(Level.SEVERE, null, ex);

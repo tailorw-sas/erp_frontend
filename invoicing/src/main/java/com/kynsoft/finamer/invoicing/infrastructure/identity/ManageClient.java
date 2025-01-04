@@ -32,7 +32,7 @@ public class ManageClient implements Serializable {
     private String name;
 
     private Boolean isNightType;
-
+    private String status;
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -45,11 +45,12 @@ public class ManageClient implements Serializable {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.isNightType = dto.getIsNightType();
-    }
+        this.status = dto.getStatus();
+    } 
 
     public ManageClientDto toAggregate() {
 
-        return new ManageClientDto(id, code, name, isNightType);
+        return new ManageClientDto(id, code, name, isNightType, status);
     }
 
 }

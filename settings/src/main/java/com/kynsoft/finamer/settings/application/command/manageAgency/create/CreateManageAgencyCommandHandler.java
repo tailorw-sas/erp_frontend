@@ -52,7 +52,7 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
         ManageAgencyTypeDto agencyTypeDto = this.agencyTypeService.findById(command.getAgencyType());
         ManagerCountryDto countryDto = this.countryService.findById(command.getCountry());
         ManageCityStateDto cityStateDto = this.cityStateService.findById(command.getCityState());
-        ManagerB2BPartnerDto b2BPartnerDto = this.managerB2BPartnerService.findById(command.getSentB2BPartner());
+        ManagerB2BPartnerDto b2BPartnerDto = command.getSentB2BPartner() != null ? this.managerB2BPartnerService.findById(command.getSentB2BPartner()) : null;
         ManageClientDto clientDto = this.managerClientService.findById(command.getClient());
 
         service.create(new ManageAgencyDto(
@@ -75,6 +75,16 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
 
         this.producerReplicateManageAgencyService.create(new ReplicateManageAgencyKafka(command.getId(),
                 command.getCode(), command.getName(), command.getClient(), command.getBookingCouponFormat(), 
-                command.getStatus().name(), command.getGenerationType().name(), command.getAgencyType()));
+                command.getStatus().name(), command.getGenerationType().name(), command.getAgencyType(),command.getCif(),command.getAddress(),
+                command.getSentB2BPartner(),
+                command.getCityState(),
+                command.getCountry(),
+                command.getMailingAddress(),
+                command.getZipCode(),
+                command.getCity(),
+                command.getCreditDay(),
+                command.getAutoReconcile(),
+                command.getValidateCheckout()
+        ));
     }
 }

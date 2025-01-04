@@ -8,13 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageCityStateResponse implements IResponse {
+public class ManageCityStateResponse implements IResponse , Serializable {
 
     private UUID id;
     private String code;

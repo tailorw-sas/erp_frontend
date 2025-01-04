@@ -22,6 +22,9 @@ public class ManageInvoiceTypeResponse implements IResponse {
     private Status status;
     private String name;
     private Boolean enabledToPolicy;
+    private boolean invoice;
+    private boolean credit;
+    private boolean income;
 
     public ManageInvoiceTypeResponse(ManageInvoiceTypeDto dto){
         this.id = dto.getId();
@@ -30,5 +33,8 @@ public class ManageInvoiceTypeResponse implements IResponse {
         this.status = dto.getStatus();
         this.name = dto.getName();
         this.enabledToPolicy = dto.getEnabledToPolicy();
+        this.invoice = dto.isInvoice();
+        this.credit = dto.isCredit();
+        this.income = dto.isIncome();
     }
 }

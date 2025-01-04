@@ -2,7 +2,7 @@ package com.kynsoft.finamer.invoicing.application.excel;
 
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
-import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingRowErrorEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.excel.event.error.ImportBookingRowErrorEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -13,7 +13,7 @@ import java.util.Map;
 
 public abstract class ValidatorFactory<T> {
 
-    private final ApplicationEventPublisher applicationEventPublisher;
+    protected final ApplicationEventPublisher applicationEventPublisher;
     protected List<ErrorField> errorFieldList;
     protected Map<String, ExcelRuleValidator<BookingRow>> validators;
 

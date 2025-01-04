@@ -31,8 +31,15 @@ public class ParameterizationServiceImpl implements IParameterizationService {
 
     @Override
     public UUID create(ParameterizationDto dto) {
+        ParameterizationDto actual = this.repositoryQuery.findActiveParameterization().map(Parameterization::toAggregate).orElse(null);
         Parameterization entity = new Parameterization(dto);
-        return this.repositoryCommand.save(entity).getId();
+
+        if (actual == null) {
+            return this.repositoryCommand.save(entity).getId();
+        } else {
+            this.delete(actual);
+            return this.repositoryCommand.save(entity).getId();
+        }
     }
 
     @Override

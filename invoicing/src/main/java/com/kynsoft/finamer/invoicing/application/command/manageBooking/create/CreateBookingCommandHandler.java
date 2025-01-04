@@ -7,19 +7,21 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageNightTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomCategoryDto;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckInvoiceTypeIncomeNotMoreBookingRule;
-import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageRoomCategoryService;
+import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageBooking.ProducerReplicateManageBookingService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CreateBookingCommandHandler implements ICommandHandler<CreateBookingCommand> {
+
+    private final Logger log = LoggerFactory.getLogger(CreateBookingCommandHandler.class);
 
     private final IManageBookingService bookingService;
     private final IManageInvoiceService invoiceService;
@@ -28,15 +30,28 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
     private final IManageRoomTypeService roomTypeService;
     private final IManageRoomCategoryService roomCategoryService;
 
-    public CreateBookingCommandHandler(IManageBookingService bookingService, IManageInvoiceService invoiceService,
-            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService) {
+    private final IInvoiceCloseOperationService closeOperationService;
+    private final ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService;
+    private final ProducerReplicateManageBookingService producerReplicateManageBookingService;
+
+    public CreateBookingCommandHandler(IManageBookingService bookingService, 
+                                        IManageInvoiceService invoiceService,
+                                        IManageRatePlanService ratePlanService, 
+                                        IManageNightTypeService nightTypeService,
+                                        IManageRoomTypeService roomTypeService, 
+                                        IManageRoomCategoryService roomCategoryService,
+                                        IInvoiceCloseOperationService closeOperationService,
+                                        ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService,
+                                        ProducerReplicateManageBookingService producerReplicateManageBookingService) {
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
         this.roomTypeService = roomTypeService;
         this.roomCategoryService = roomCategoryService;
+        this.closeOperationService = closeOperationService;
+        this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
+        this.producerReplicateManageBookingService = producerReplicateManageBookingService;
     }
 
     @Override
@@ -46,19 +61,23 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 ? this.invoiceService.findById(command.getInvoice())
                 : null;
 
-        //Agregue esta regla para validar que un invoice de type INCOME no puede tener mas de un Booking.
+        // Agregue esta regla para validar que un invoice de type INCOME no puede tener
+        // mas de un Booking.
         if (invoiceDto != null && invoiceDto.getInvoiceType() != null) {
-            RulesChecker.checkRule(new CheckInvoiceTypeIncomeNotMoreBookingRule(invoiceDto.getInvoiceType()));
+            RulesChecker.checkRule(
+                    new CheckInvoiceTypeIncomeNotMoreBookingRule(invoiceDto.getInvoiceType()));
         }
 
         if (command.getHotelBookingNumber().length() > 2) {
-            int endIndex = command.getHotelBookingNumber().length() - 2;
 
-            if (invoiceDto != null && invoiceDto.getHotel().getId() != null) {
+            if (invoiceDto != null && invoiceDto.getHotel().getId() != null
+                    && invoiceDto.getInvoiceType() != null
+                    && !invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
                 RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
-                        command.getHotelBookingNumber().substring(endIndex,
-                                command.getHotelBookingNumber().length()),
-                        invoiceDto.getHotel().getId()));
+                        command.getHotelBookingNumber()
+                                .split("\\s+")[command.getHotelBookingNumber()
+                        .split("\\s+").length - 1],
+                        invoiceDto.getHotel().getId(), command.getHotelBookingNumber()));
             }
         }
 
@@ -75,7 +94,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 ? this.ratePlanService.findById(command.getRatePlan())
                 : null;
 
-        bookingService.create(new ManageBookingDto(
+        ManageBookingDto newBooking = new ManageBookingDto(
                 command.getId(),
                 null,
                 null,
@@ -104,8 +123,28 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 nightTypeDto,
                 roomTypeDto,
                 roomCategoryDto,
-                null, null));
+                null, 
+                null, 
+                null,
+                command.getContract(),
+                false
+        );
+        bookingService.create(newBooking);
 
-        invoiceService.calculateInvoiceAmount(this.invoiceService.findById(invoiceDto.getId()));
+        try {
+            // TODO: aqui se envia el booking para payment
+            this.producerReplicateManageBookingService.create(newBooking);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
+        ManageInvoiceDto invoiceUpdate = this.invoiceService.findById(invoiceDto.getId());
+        invoiceService.calculateInvoiceAmount(invoiceUpdate);
+        try {
+            // TODO: aqui se envia para actualizar el invoice para payment
+            this.producerUpdateManageInvoiceService.update(invoiceUpdate);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 }

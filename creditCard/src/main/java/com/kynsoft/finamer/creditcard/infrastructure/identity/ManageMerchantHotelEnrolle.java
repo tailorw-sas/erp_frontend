@@ -1,6 +1,9 @@
 package com.kynsoft.finamer.creditcard.infrastructure.identity;
 
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantHotelEnrolleDto;
+import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "manage_merchant_hotel_enrolle")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "manage_merchant_hotel_enrolle",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageMerchantHotelEnrolle implements Serializable {
 
     @Id
@@ -29,12 +34,19 @@ public class ManageMerchantHotelEnrolle implements Serializable {
     private ManageMerchant manageMerchant;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manager_currency_id")
+    private ManagerCurrency managerCurrency;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_hotel_id")
     private ManageHotel manageHotel;
 
-    private String enrolle;
+    private String enrrolle;
+    private String key;
+    private String description;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -43,14 +55,14 @@ public class ManageMerchantHotelEnrolle implements Serializable {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
 
-    private Boolean deleted = false;
-    private LocalDateTime deletedAt;
-
     public ManageMerchantHotelEnrolle(ManageMerchantHotelEnrolleDto dto) {
         this.id = dto.getId();
-        this.manageMerchant = new ManageMerchant(dto.getManageMerchant());
-        this.manageHotel = new ManageHotel(dto.getManageHotel());
-        this.enrolle = dto.getEnrolle();
+        this.manageMerchant = new ManageMerchant(dto.getManagerMerchant());
+        this.managerCurrency = new ManagerCurrency(dto.getManagerCurrency());
+        this.manageHotel = new ManageHotel(dto.getManagerHotel());
+        this.enrrolle = dto.getEnrrolle();
+        this.key = dto.getKey();
+        this.description = dto.getDescription();
         this.status = dto.getStatus();
     }
 
@@ -58,8 +70,9 @@ public class ManageMerchantHotelEnrolle implements Serializable {
         return new ManageMerchantHotelEnrolleDto(
                 id,
                 manageMerchant != null ? manageMerchant.toAggregate() : null,
+                managerCurrency != null ? managerCurrency.toAggregate() : null,
                 manageHotel != null ? manageHotel.toAggregate() : null,
-                enrolle, status);
+                enrrolle, key, description, status);
     }
 
 }

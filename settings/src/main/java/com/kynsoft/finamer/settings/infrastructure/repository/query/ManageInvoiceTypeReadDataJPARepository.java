@@ -20,4 +20,13 @@ public interface ManageInvoiceTypeReadDataJPARepository extends JpaRepository<Ma
 
     @Query("SELECT COUNT(b) FROM ManageInvoiceType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceType b WHERE b.invoice = true AND b.id <> :id")
+    Long countByInvoiceAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceType b WHERE b.income = true AND b.id <> :id")
+    Long countByIncomeAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageInvoiceType b WHERE b.credit = true AND b.id <> :id")
+    Long countByCreditAndNotId(@Param("id") UUID id);
 }

@@ -9,21 +9,20 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentStatusResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentStatusDto;
-import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentStatus;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentStatus;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentStatusWriteDataJpaRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentStatusReadDataJpaRepository;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStatusService {
@@ -105,6 +104,26 @@ public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStat
 
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    @Override
+    public ManagePaymentStatusDto findByApplied() {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByApplied();
+        if (result.isPresent()) {
+            return result.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentStatusDto findByConfirmed() {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByConfirmed();
+        if (result.isPresent()) {
+            return result.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
     }
 
 }

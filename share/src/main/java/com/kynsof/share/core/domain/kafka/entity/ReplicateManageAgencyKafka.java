@@ -31,4 +31,20 @@ public class ReplicateManageAgencyKafka implements Serializable {
     private String generationType;
     @JsonProperty("agencyType")
     private UUID agencyType;
+    @JsonProperty("cif")
+    private String cif;
+    @JsonProperty("address")
+    private String address;
+    @JsonProperty("sentB2BPartner")
+    private UUID sentB2BPartner;
+    @JsonProperty("cityState")
+    private UUID cityState;
+    @JsonProperty("country")
+    private UUID country;
+    private String mailingAddress;
+    private String zipCode;
+    private String city;
+    private Integer creditDay;
+    private Boolean autoReconcile;
+    private Boolean validateCheckout;
 }
