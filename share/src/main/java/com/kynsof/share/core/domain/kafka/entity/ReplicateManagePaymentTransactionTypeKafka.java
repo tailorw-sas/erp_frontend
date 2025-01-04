@@ -27,4 +27,5 @@ public class ReplicateManagePaymentTransactionTypeKafka implements Serializable 
     private Boolean defaults;
     private Boolean paymentInvoice;
     private Boolean debit;
+    private boolean expenseToBooking;
 }

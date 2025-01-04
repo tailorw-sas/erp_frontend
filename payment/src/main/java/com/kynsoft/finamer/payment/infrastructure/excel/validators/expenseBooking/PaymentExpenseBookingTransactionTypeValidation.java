@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooki
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,7 +26,13 @@ public class PaymentExpenseBookingTransactionTypeValidation extends ExcelRuleVal
             return false;
         }
 
-        if(Objects.isNull(managePaymentTransactionTypeService.findByCode(obj.getTransactionType()))){
+        try {
+             ManagePaymentTransactionTypeDto transactionTypeDto = managePaymentTransactionTypeService.findByCode(obj.getTransactionType());
+             if (!transactionTypeDto.isExpenseToBooking()) {
+                errorFieldList.add(new ErrorField("transactionType","Transaction Type is not expense to booking."));
+                return false;
+            }
+        } catch (Exception e) {
             errorFieldList.add(new ErrorField("transactionType","Transaction Type not exist"));
             return false;
         }

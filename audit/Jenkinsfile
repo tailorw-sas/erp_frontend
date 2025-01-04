@@ -25,6 +25,7 @@ pipeline {
         DEPLOYMENT_NAME = 'audit'
         URL_DEV = credentials("URL-K3S-dev")
         URL_QA = credentials("URL-K3S-qa")
+		URL_PROD = credentials("URL-K3S")
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
@@ -88,6 +89,10 @@ pipeline {
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
+                    }
+					if(env.BRANCH_NAME == 'main'){
+                        env.SERVER_K3S_URL = env.URL_PROD
+                        env.EMAIL_LIST = env.EMAIL_LIST_PROD
                     }
                 }
             }

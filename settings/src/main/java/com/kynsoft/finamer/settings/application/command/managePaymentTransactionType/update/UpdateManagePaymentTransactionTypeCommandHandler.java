@@ -2,7 +2,7 @@ package com.kynsoft.finamer.settings.application.command.managePaymentTransactio
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentTransactionTypeKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManagePaymentTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -10,7 +10,7 @@ import com.kynsoft.finamer.settings.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.rules.managePaymentTransactionType.*;
 import com.kynsoft.finamer.settings.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerUpdateManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.managePaymentTransactionType.ProducerReplicateManagePaymentTransactionTypeService;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 public class UpdateManagePaymentTransactionTypeCommandHandler implements ICommandHandler<UpdateManagePaymentTransactionTypeCommand> {
 
     private final IManagePaymentTransactionTypeService service;
-    private final ProducerUpdateManagePaymentTransactionTypeService producerUpdateManagePaymentTransactionTypeService;
+    private final ProducerReplicateManagePaymentTransactionTypeService producerReplicateManagePaymentTransactionTypeService;
 
     public UpdateManagePaymentTransactionTypeCommandHandler(IManagePaymentTransactionTypeService service,
-                                                            ProducerUpdateManagePaymentTransactionTypeService producerUpdateManagePaymentTransactionTypeService) {
+                                                            ProducerReplicateManagePaymentTransactionTypeService producerReplicateManagePaymentTransactionTypeService) {
         this.service = service;
-        this.producerUpdateManagePaymentTransactionTypeService = producerUpdateManagePaymentTransactionTypeService;
+        this.producerReplicateManagePaymentTransactionTypeService = producerReplicateManagePaymentTransactionTypeService;
     }
 
     @Override
@@ -79,20 +79,23 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerUpdateManagePaymentTransactionTypeService.update(new UpdateManagePaymentTransactionTypeKafka(
-                    dto.getId(), 
-                    dto.getName(), 
-                    dto.getStatus().name(),
-                    dto.getDeposit(), 
-                    dto.getApplyDeposit(), 
-                    dto.getCash(), 
-                    dto.getRemarkRequired(), 
-                    dto.getMinNumberOfCharacter(),
-                    command.getDefaultRemark(),
-                    command.getDefaults(),
-                    command.getPaymentInvoice(),
-                    command.getDebit()
-            ));
+            this.producerReplicateManagePaymentTransactionTypeService
+                .create(new ReplicateManagePaymentTransactionTypeKafka(
+                        dto.getId(),
+                        dto.getCode(),
+                        dto.getName(),
+                        dto.getStatus().name(),
+                        dto.getDeposit(),
+                        dto.getApplyDeposit(),
+                        dto.getCash(),
+                        dto.getRemarkRequired(),
+                        dto.getMinNumberOfCharacter(),
+                        dto.getDefaultRemark(),
+                        dto.getDefaults(),
+                        dto.getPaymentInvoice(),
+                        dto.getDebit(),
+                        dto.isExpenseToBooking()
+                ));
         }
     }
 

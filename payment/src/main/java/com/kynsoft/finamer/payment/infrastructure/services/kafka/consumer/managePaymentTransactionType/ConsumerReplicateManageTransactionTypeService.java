@@ -34,7 +34,8 @@ public class ConsumerReplicateManageTransactionTypeService {
                     objKafka.getDefaultRemark(),
                     objKafka.getDefaults(),
                     objKafka.getPaymentInvoice(),
-                    objKafka.getDebit()
+                    objKafka.getDebit(),
+                    objKafka.isExpenseToBooking()
             );
             mediator.send(command);
         } catch (Exception ex) {

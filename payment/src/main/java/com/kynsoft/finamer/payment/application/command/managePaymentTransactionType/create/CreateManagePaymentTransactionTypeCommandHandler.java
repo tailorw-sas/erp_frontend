@@ -29,7 +29,8 @@ public class CreateManagePaymentTransactionTypeCommandHandler implements IComman
                 command.getDefaultRemark(),
                 command.isDefaults(),
                 command.getPaymentInvoice(),
-                command.getDebit()
+                command.getDebit(),
+                command.isExpenseToBooking()
         ));
     }
 }
