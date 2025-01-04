@@ -29,6 +29,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImport
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
 import io.jsonwebtoken.lang.Assert;
+import java.util.Comparator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportHelperService {
@@ -53,16 +55,15 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private final PaymentImportDetailErrorRepository detailErrorRepository;
     private final IManageBookingService bookingService;
 
-
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
-                                                PaymentDetailValidatorFactory paymentDetailValidatorFactory,
-                                                RedisTemplate<String, String> redisTemplate,
-                                                PaymentDetailAntiValidatorFactory paymentDetailAntiValidatorFactory,
-                                                ApplicationEventPublisher applicationEventPublisher,
-                                                IManagePaymentTransactionTypeService transactionTypeService,
-                                                IPaymentService paymentService, IPaymentDetailService paymentDetailService,
-                                                PaymentImportDetailErrorRepository detailErrorRepository,
-                                                IManageBookingService bookingService) {
+            PaymentDetailValidatorFactory paymentDetailValidatorFactory,
+            RedisTemplate<String, String> redisTemplate,
+            PaymentDetailAntiValidatorFactory paymentDetailAntiValidatorFactory,
+            ApplicationEventPublisher applicationEventPublisher,
+            IManagePaymentTransactionTypeService transactionTypeService,
+            IPaymentService paymentService, IPaymentDetailService paymentDetailService,
+            PaymentImportDetailErrorRepository detailErrorRepository,
+            IManageBookingService bookingService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
@@ -77,7 +78,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
-        this.totalProcessRow=0;
+        this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         paymentDetailValidatorFactory.createValidators();
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
@@ -85,8 +86,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         for (PaymentDetailRow row : excelBean) {
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
-            if (Objects.nonNull(request.getPaymentId()) &&
-                    !request.getPaymentId().isEmpty()) {
+            if (Objects.nonNull(request.getPaymentId())
+                    && !request.getPaymentId().isEmpty()) {
                 row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
             }
             if (paymentDetailValidatorFactory.validate(row)) {
@@ -136,7 +137,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             UUID.fromString(request.getEmployeeId()),
                             managePaymentTransactionTypeDto.getId(),
                             null,
-                            getRemarks(paymentImportCache,managePaymentTransactionTypeDto),
+                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
                             bookingDto != null ? bookingDto.getId() : null,
                             applyPayment
                     );
@@ -150,7 +151,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             Double.parseDouble(paymentImportCache.getPaymentAmount()),
                             UUID.fromString(request.getEmployeeId()),
                             managePaymentTransactionTypeDto.getId(),
-                            getRemarks(paymentImportCache,managePaymentTransactionTypeDto),
+                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
                             bookingDto != null ? bookingDto.getId() : null,
                             applyPayment);
                 }
@@ -159,8 +160,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         } while (cacheList.hasNext());
     }
 
-    private String getRemarks(PaymentImportCache paymentImportCache,ManagePaymentTransactionTypeDto transactionTypeDto){
-        if (Objects.isNull(paymentImportCache.getRemarks())|| paymentImportCache.getRemarks().isEmpty()){
+    private String getRemarks(PaymentImportCache paymentImportCache, ManagePaymentTransactionTypeDto transactionTypeDto) {
+        if (Objects.isNull(paymentImportCache.getRemarks()) || paymentImportCache.getRemarks().isEmpty()) {
             return transactionTypeDto.getDefaultRemark();
         }
         return paymentImportCache.getRemarks();
@@ -169,16 +170,22 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     @Override
     public PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable) {
         Page<PaymentDetailRowError> page = detailErrorRepository.findAllByImportProcessId(importProcessId, pageable);
-        return new PaginatedResponse(page.getContent(), page.getTotalPages(), page.getNumberOfElements(), page.getTotalElements(), page.getSize(), page.getNumber());
+        return new PaginatedResponse(
+                page.getContent().stream().sorted(Comparator.comparingInt(PaymentDetailRowError::getRowNumber)).collect(Collectors.toList()),
+                page.getTotalPages(),
+                page.getNumberOfElements(),
+                page.getTotalElements(),
+                page.getSize(),
+                page.getNumber()
+        );
     }
 
-
     private void sendCreatePaymentDetail(UUID paymentId, double amount,
-                                         UUID employee,
-                                         UUID transactionType,
-                                         String remarks,
-                                         UUID bookId,
-                                         boolean applyPayment) {
+            UUID employee,
+            UUID transactionType,
+            String remarks,
+            UUID bookId,
+            boolean applyPayment) {
         CreatePaymentDetailEvent createPaymentDetailEvent = new CreatePaymentDetailEvent(this);
         createPaymentDetailEvent.setPayment(paymentId);
         createPaymentDetailEvent.setAmount(amount);
@@ -192,22 +199,22 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
-                                          UUID transactionTypeIdForAdjustment, String remarks,
-                                          UUID bookId,
-                                          boolean applyPayment) {
-        CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand =
-                new CreatePaymentDetailApplyDepositCommand(
-                    Status.ACTIVE, 
-                    paymentDetail,
-                    transactionType,
-                    amount,
-                    remarks,
-                    employee,
-                    transactionTypeIdForAdjustment,
-                    bookId,
-                    applyPayment
-                    );
-        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand,false);
+            UUID transactionTypeIdForAdjustment, String remarks,
+            UUID bookId,
+            boolean applyPayment) {
+        CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand
+                = new CreatePaymentDetailApplyDepositCommand(
+                        Status.ACTIVE,
+                        paymentDetail,
+                        transactionType,
+                        amount,
+                        remarks,
+                        employee,
+                        transactionTypeIdForAdjustment,
+                        bookId,
+                        applyPayment
+                );
+        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand, false);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }
