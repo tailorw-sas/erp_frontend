@@ -87,6 +87,10 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  bookingPagination: {
+    type: Object as any,
+    required: false
+  },
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
@@ -96,6 +100,8 @@ const props = defineProps({
     required: false
   }
 })
+
+const emit = defineEmits(['onChangePage'])
 
 const toast = useToast()
 const loadingSaveAll = ref(false)
@@ -1108,39 +1114,6 @@ async function ResetListItems() {
   getBookingList()
 }
 
-function searchAndFilter() {
-  Payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
-  if (filterToSearch.value.criterial && filterToSearch.value.search) {
-    Payload.value.filter = [...Payload.value.filter, {
-      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
-      operator: 'LIKE',
-      value: filterToSearch.value.search,
-      logicalOperation: 'AND'
-    }]
-  }
-  getBookingList()
-}
-
-function clearFilterToSearch() {
-  Payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  filterToSearch.value.search = ''
-  getBookingList()
-}
 async function GetItemById(id: string) {
   
   if (id) {
@@ -1402,19 +1375,10 @@ function OnSortField(event: any) {
       return props.sortBooking(event)
     }
 
-
-
-
-
     Payload.value.sortBy = getSortField(event.sortField)
-
-
     Payload.value.sortType = event.sortOrder
 
     getBookingList()
-
-
-
   }
 }
 
@@ -1492,8 +1456,9 @@ function onCellEditComplete(val: any) {
 
 
 watch(PayloadOnChangePage, (newValue) => {
+  emit('onChangePage', newValue)
   Payload.value.page = newValue?.page ? newValue?.page : 0
-  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 50
   getBookingList()
 })
 
@@ -1573,11 +1538,12 @@ onMounted(() => {
 
 <template>
   <div>
+    <!-- <pre>{{ bookingPagination }}</pre> -->
     <DynamicTable 
       :data="isCreationDialog ? listItems as any : ListItems" 
       :columns="finalColumns" 
       :options="Options"
-      :pagination="Pagination" 
+      :pagination="bookingPagination" 
       @on-confirm-create="ClearForm" 
       @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" 
@@ -1648,11 +1614,11 @@ onMounted(() => {
         </ColumnGroup>
       </template>
 
-      <template v-if="isCreationDialog" #pagination-total="props">
+      <!-- <template v-if="isCreationDialog" #pagination-total="props">
         <span class="font-bold font">
           {{ listItems?.length }}
         </span>
-      </template>
+      </template> -->
 
 
     </DynamicTable>
