@@ -22,6 +22,7 @@ import com.kynsoft.finamer.payment.infrastructure.excel.mapper.PaymentRowMapper;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.expense.PaymentValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseErrorRepository;
+import java.util.Comparator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,9 +34,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImportHelperService {
+
     private final PaymentImportCacheRepository paymentImportCacheRepository;
     private final PaymentImportExpenseErrorRepository expenseErrorRepository;
     private final PaymentValidatorFactory paymentValidatorFactory;
@@ -58,18 +61,18 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
     private String PAYMENT_ATTACHMENT_STATUS;
 
     public PaymentImportExpenseHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
-                                                 PaymentImportExpenseErrorRepository expenseErrorRepository,
-                                                 PaymentValidatorFactory paymentValidatorFactory,
-                                                 RedisTemplate<String, String> redisTemplate,
-                                                 IPaymentService paymentService,
-                                                 IManageAgencyService manageAgencyService,
-                                                 IManageHotelService manageHotelService,
-                                                 IManagePaymentSourceService paymentSourceService,
-                                                 IManagePaymentStatusService paymentStatusService,
-                                                 IManagePaymentAttachmentStatusService attachmentStatusService,
-                                                 PaymentRowMapper paymentRowMapper,
-                                                 IPaymentStatusHistoryService paymentStatusHistoryService,
-                                                 IManageEmployeeService employeeService) {
+            PaymentImportExpenseErrorRepository expenseErrorRepository,
+            PaymentValidatorFactory paymentValidatorFactory,
+            RedisTemplate<String, String> redisTemplate,
+            IPaymentService paymentService,
+            IManageAgencyService manageAgencyService,
+            IManageHotelService manageHotelService,
+            IManagePaymentSourceService paymentSourceService,
+            IManagePaymentStatusService paymentStatusService,
+            IManagePaymentAttachmentStatusService attachmentStatusService,
+            PaymentRowMapper paymentRowMapper,
+            IPaymentStatusHistoryService paymentStatusHistoryService,
+            IManageEmployeeService employeeService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.expenseErrorRepository = expenseErrorRepository;
@@ -85,9 +88,8 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
         this.employeeService = employeeService;
     }
 
-
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
-        this.totalProcessRow=0;
+        this.totalProcessRow = 0;
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         paymentValidatorFactory.createValidators();
         ExcelBeanReader<PaymentExpenseRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentExpenseRow.class);
@@ -115,10 +117,9 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
         do {
             cacheList = paymentImportCacheRepository.findAllByImportProcessId(importProcessId, pageable);
             paymentImportCacheRepository.deleteAll(cacheList.getContent());
-            pageable=pageable.next();
+            pageable = pageable.next();
         } while (cacheList.hasNext());
     }
-
 
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
@@ -146,7 +147,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                 }).toList();
                 List<PaymentDto> createdPayment = paymentService.createBulk(paymentDtoList);
                 createdPayment.forEach(paymentDto -> createPaymentAttachmentStatusHistory(employeeService.findById(request.getEmployeeId()), paymentDto));
-               pageable= pageable.next();
+                pageable = pageable.next();
             } while (cacheList.hasNext());
         }
     }
@@ -166,7 +167,13 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
     @Override
     public PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable) {
         Page<PaymentExpenseRowError> page = expenseErrorRepository.findAllByImportProcessId(importProcessId, pageable);
-        return new PaginatedResponse(page.getContent(), page.getTotalPages(), page.getNumberOfElements(),
-                page.getTotalElements(), page.getSize(), page.getNumber());
+        return new PaginatedResponse(
+                page.getContent().stream().sorted(Comparator.comparingInt(PaymentExpenseRowError::getRowNumber)).collect(Collectors.toList()),
+                page.getTotalPages(),
+                page.getNumberOfElements(),
+                page.getTotalElements(),
+                page.getSize(),
+                page.getNumber()
+        );
     }
 }

@@ -71,22 +71,21 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     @Value("${payment.attachment.type.code}")
     private String PAYMENT_EXPENSE_BOOKING_ATTACHMENT_TYPE;
 
-
     public PaymentImportExpenseBookingHelperServiceImpl(PaymentExpenseBookingImportCacheRepository cacheRepository,
-                                                        PaymentImportExpenseBookingErrorRepository errorRepository,
-                                                        RedisTemplate<String, String> redisTemplate,
-                                                        PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
-                                                        IManageBookingService bookingService, IStorageService fileSystemService,
-                                                        PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
-                                                        IPaymentCloseOperationService closeOperationService,
-                                                        IManagePaymentSourceService paymentSourceService,
-                                                        IManagePaymentStatusService paymentStatusService,
-                                                        IManagePaymentTransactionTypeService transactionTypeService,
-                                                        IManagePaymentAttachmentStatusService paymentAttachmentStatusService,
-                                                        IManageAttachmentTypeService attachmentTypeService,
-                                                        IManageResourceTypeService resourceTypeService,
-                                                        IStorageService storageService, IPaymentDetailService paymentDetailService,
-                                                        ServiceLocator<IMediator> serviceLocator
+            PaymentImportExpenseBookingErrorRepository errorRepository,
+            RedisTemplate<String, String> redisTemplate,
+            PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
+            IManageBookingService bookingService, IStorageService fileSystemService,
+            PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
+            IPaymentCloseOperationService closeOperationService,
+            IManagePaymentSourceService paymentSourceService,
+            IManagePaymentStatusService paymentStatusService,
+            IManagePaymentTransactionTypeService transactionTypeService,
+            IManagePaymentAttachmentStatusService paymentAttachmentStatusService,
+            IManageAttachmentTypeService attachmentTypeService,
+            IManageResourceTypeService resourceTypeService,
+            IStorageService storageService, IPaymentDetailService paymentDetailService,
+            ServiceLocator<IMediator> serviceLocator
     ) {
         super(redisTemplate);
         this.cacheRepository = cacheRepository;
@@ -110,7 +109,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
-        this.totalProcessRow=0;
+        this.totalProcessRow = 0;
         availableClient.clear();
         readerConfiguration.setStrictHeaderOrder(false);
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
@@ -155,18 +154,19 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
             PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
             List<ManageBookingDto> bookingDtos = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
-            Map<String,Double> bookingBalance = entry.getValue().stream().collect(Collectors.toMap(PaymentExpenseBookingImportCache::getBookingId, PaymentExpenseBookingImportCache::getBalance));
+            Map<String, Double> bookingBalance = entry.getValue().stream().collect(Collectors.toMap(PaymentExpenseBookingImportCache::getBookingId, PaymentExpenseBookingImportCache::getBalance));
             double paymentAmount = entry.getValue().stream().mapToDouble(PaymentExpenseBookingImportCache::getBalance).sum();
             ManageBookingDto manageBooking = bookingDtos.get(0);
             ManagePaymentTransactionTypeDto paymentTransactionType = transactionTypeService.findByCode(sampleCache.getTransactionType());
             String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
             UUID paymentId = createPayment(request.getHotelId(), request.getEmployeeId(), manageBooking.getInvoice().getAgency(), paymentAmount);
             createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
-            createPaymentDetails(bookingDtos,paymentTransactionType.getId(),request.getEmployeeId(),paymentId,bookingBalance,remarks);
+            createPaymentDetails(bookingDtos, paymentTransactionType.getId(), request.getEmployeeId(), paymentId, bookingBalance, remarks);
 
         }
 
     }
+
     private String getClientName(String bookingId) {
         ManageInvoiceDto manageInvoiceDto = bookingService.findByGenId(Long.parseLong(bookingId)).getInvoice();
         return manageInvoiceDto.getAgency().getClient().getName();
@@ -179,7 +179,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
             do {
                 elements = cacheRepository.findAllByImportProcessIdAndClientName(importProcessId, clientName, pageable);
-                group.computeIfAbsent(clientName,key->new ArrayList<>()).addAll(elements.getContent());
+                group.computeIfAbsent(clientName, key -> new ArrayList<>()).addAll(elements.getContent());
                 pageable = pageable.next();
             } while (elements.hasNext());
         }
@@ -189,8 +189,14 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     @Override
     public PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable) {
         Page<PaymentExpenseBookingRowError> page = errorRepository.findAllByImportProcessId(importProcessId, pageable);
-        return new PaginatedResponse(page.getContent(), page.getTotalPages(), page.getNumberOfElements(),
-                page.getTotalElements(), page.getSize(), page.getNumber());
+        return new PaginatedResponse(
+                page.getContent().stream().sorted(Comparator.comparingInt(PaymentExpenseBookingRowError::getRowNumber)).collect(Collectors.toList()),
+                page.getTotalPages(),
+                page.getNumberOfElements(),
+                page.getTotalElements(),
+                page.getSize(),
+                page.getNumber()
+        );
     }
 
     private UUID createPayment(UUID hotelId, UUID employeeId, ManageAgencyDto agencyDto, double amount) {
@@ -201,17 +207,17 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         CreatePaymentCommand createPaymentCommand = new CreatePaymentCommand(Status.ACTIVE, paymentSource.getId(), "",
                 getTransactionDate(hotelId), paymentStatus.getId(),
                 agencyDto.getClient().getId(), agencyDto.getId(), hotelId, null, attachmentStatusDto.getId(), amount,
-                "Expense generated from action of import files", null, employeeId,true, null);
+                "Expense generated from action of import files", null, employeeId, true, null);
         CreatePaymentMessage createPaymentMessage = serviceLocator.getBean(IMediator.class).send(createPaymentCommand);
         return createPaymentMessage.getPayment().getId();
     }
 
-    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, UUID transactionType, UUID employeeId, UUID paymentId, Map<String,Double> bookingBalance, String remarks) {
+    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, UUID transactionType, UUID employeeId, UUID paymentId, Map<String, Double> bookingBalance, String remarks) {
         for (ManageBookingDto manageBookingDto : manageBookingDtos) {
-            CreatePaymentDetailFromFileCommand createPaymentDetailCommand =
-                    new CreatePaymentDetailFromFileCommand(Status.ACTIVE, paymentId, transactionType,
+            CreatePaymentDetailFromFileCommand createPaymentDetailCommand
+                    = new CreatePaymentDetailFromFileCommand(Status.ACTIVE, paymentId, transactionType,
                             bookingBalance.get(String.valueOf(manageBookingDto.getBookingId())), remarks, employeeId, manageBookingDto.getId(), true, serviceLocator.getBean(IMediator.class));
-           serviceLocator.getBean(IMediator.class).send(createPaymentDetailCommand);
+            serviceLocator.getBean(IMediator.class).send(createPaymentDetailCommand);
         }
     }
 
@@ -226,19 +232,19 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             AttachmentTypeDto attachmentTypeDto = attachmentTypeService.findByCode(PAYMENT_EXPENSE_BOOKING_ATTACHMENT_TYPE);
 
             for (Map.Entry<String, File> attachment : attachmentFields.entrySet()) {
-               try(FileInputStream fileInputStream = new FileInputStream(attachment.getValue())) {
-                   byte[] fileContent = fileInputStream.readAllBytes();
-                   LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
+                try (FileInputStream fileInputStream = new FileInputStream(attachment.getValue())) {
+                    byte[] fileContent = fileInputStream.readAllBytes();
+                    LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent(attachment.getKey(), fileContent);
 
-                   CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand =
-                           new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
-                                   paymentId
-                                   , resourceTypeDto.getId(), attachmentTypeDto.getId(),
-                                   attachment.getKey(), response.get("url") ,
-                                   "Attachment added automatically when the payment was imported",
-                                   String.valueOf(fileContent.length));
-                   serviceLocator.getBean(IMediator.class).send(createMasterPaymentAttachmentCommand);
-               }
+                    CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand
+                            = new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
+                                    paymentId,
+                                     resourceTypeDto.getId(), attachmentTypeDto.getId(),
+                                    attachment.getKey(), response.get("url"),
+                                    "Attachment added automatically when the payment was imported",
+                                    String.valueOf(fileContent.length));
+                    serviceLocator.getBean(IMediator.class).send(createMasterPaymentAttachmentCommand);
+                }
             }
         } catch (Exception e) {
             System.err.println("//////////////////////////////////////////////");
@@ -251,13 +257,12 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         }
     }
 
-
-    private LocalDate getTransactionDate(UUID hotelId){
+    private LocalDate getTransactionDate(UUID hotelId) {
         PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelIds(hotelId);
         LocalDate firstDateOgMonth = LocalDate.now().withDayOfMonth(1);
-        if (closeOperationDto.getEndDate().isBefore(firstDateOgMonth)){
+        if (closeOperationDto.getEndDate().isBefore(firstDateOgMonth)) {
             return closeOperationDto.getEndDate();
         }
-            return LocalDate.now();
+        return LocalDate.now();
     }
 }
