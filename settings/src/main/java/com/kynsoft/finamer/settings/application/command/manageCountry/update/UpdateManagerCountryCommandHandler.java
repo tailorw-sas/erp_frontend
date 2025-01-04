@@ -43,7 +43,7 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        updateDescription(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setIso3, command.getIso3(), test.getIso3(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(test::setIsDefault, command.getIsDefault(), test.getIsDefault(), update::setUpdate);
         this.updateManagerLanguage(test::setManagerLanguage, command.getManagerLanguage(), test.getManagerLanguage().getId(), update::setUpdate);
@@ -89,6 +89,15 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
             setter.accept(languageDto);
             update.accept(1);
 
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateDescription(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
+        if (!newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
             return true;
         }
         return false;
