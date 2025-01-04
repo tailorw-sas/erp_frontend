@@ -91,7 +91,7 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_ADJUSTMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.INVOICE_ADJUSTMENT_NOT_FOUND.getReasonPhrase())));
 
     }
 
