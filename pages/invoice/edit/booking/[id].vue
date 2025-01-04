@@ -1819,6 +1819,12 @@ function formatHotelBookingNumber(value: string): string {
 //   }
 // })
 
+watch(payloadOnChangePageRoomRate, (newValue) => {
+  payloadRoomRate.value.page = newValue?.page ? newValue?.page : 0
+  payloadRoomRate.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getRoomRateList()
+})
+
 onMounted(async () => {
   console.log(route)
   // filterToSearch.value.criterial = ENUM_FILTER[0]
