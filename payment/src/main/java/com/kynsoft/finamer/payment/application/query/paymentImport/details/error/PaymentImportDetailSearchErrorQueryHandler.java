@@ -15,6 +15,7 @@ public class PaymentImportDetailSearchErrorQueryHandler implements IQueryHandler
 
     @Override
     public PaymentImportDetailSearchErrorResponse handle(PaymentImportDetailSearchErrorQuery query) {
+        query.getSearchRequest().setSortBy("rowNumber");
         return  new PaymentImportDetailSearchErrorResponse(paymentImportDetailService.getPaymentImportErrors(query));
     }
 }

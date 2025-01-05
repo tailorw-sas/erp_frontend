@@ -137,7 +137,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 
     @Override
     public void clearPaymentImportCache(String importProcessId) {
-        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
         Page<PaymentExpenseBookingImportCache> cacheList;
         do {
             cacheList = cacheRepository.findAllByImportProcessId(importProcessId, pageable);
@@ -176,7 +176,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         Map<String, List<PaymentExpenseBookingImportCache>> group = new HashMap<>();
         Page<PaymentExpenseBookingImportCache> elements;
         for (String clientName : availableClient) {
-            Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
+            Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
             do {
                 elements = cacheRepository.findAllByImportProcessIdAndClientName(importProcessId, clientName, pageable);
                 group.computeIfAbsent(clientName, key -> new ArrayList<>()).addAll(elements.getContent());
