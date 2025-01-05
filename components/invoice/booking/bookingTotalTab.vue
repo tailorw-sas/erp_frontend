@@ -93,6 +93,10 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  bookingPagination: {
+    type: Object as any,
+    required: false
+  },
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
@@ -113,6 +117,7 @@ const props = defineProps({
 const emits = defineEmits<{
   (e: 'onSaveBookingEdit', value: boolean): void
   (e: 'onSaveRoomRateInBookingEdit', value: any): void
+  (e: 'onChangePage', value: any): void
 }>()
 
 const objBookingsTotals = ref<{ totalHotelAmount: number, totalInvoiceAmount: number, totalDueAmount: number }>({
@@ -2009,6 +2014,7 @@ watch(() => props.forceUpdate, () => {
 
 
 watch(PayloadOnChangePage, (newValue) => {
+  emits('onChangePage', newValue)
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getBookingList()
@@ -2113,7 +2119,7 @@ onMounted(() => {
       :data="isCreationDialog ? listItems as any : ListItems" 
       :columns="finalColumns" 
       :options="Options"
-      :pagination="Pagination" 
+      :pagination="bookingPagination" 
       @on-confirm-create="ClearForm" 
       @open-edit-dialog="OpenEditDialog($event)"
       @on-change-pagination="PayloadOnChangePage = $event" 

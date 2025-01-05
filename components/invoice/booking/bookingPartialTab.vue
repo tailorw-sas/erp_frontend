@@ -89,12 +89,16 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  bookingPagination: {
+    type: Object as any,
+    required: false
+  },
   refetchInvoice: { type: Function, default: () => { } },
   getInvoiceAgency: { type: Function, default: () => { } },
   sortBooking: Function as any,
   nightTypeRequired: Boolean
 })
-
+const emit = defineEmits(['onChangePage'])
 const toast = useToast()
 const loadingSaveAll = ref(false)
 const confirm = useConfirm()
@@ -1342,20 +1346,9 @@ function OnSortField(event: any) {
     if (props?.isCreationDialog) {
       return props.sortBooking(event)
     }
-
-
-
-
-
     Payload.value.sortBy = getSortField(event.sortField)
-
-
     Payload.value.sortType = event.sortOrder
-
     getBookingList()
-
-
-
   }
 }
 
@@ -1438,6 +1431,7 @@ function onCellEditComplete(val: any) {
 
 
 watch(PayloadOnChangePage, (newValue) => {
+  emit('onChangePage', newValue)
   Payload.value.page = newValue?.page ? newValue?.page : 0
   Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
   getBookingList()
@@ -1536,11 +1530,19 @@ onMounted(() => {
 
 <template>
   <div>
-    <DynamicTable :data="isCreationDialog ? listItems as any : ListItems" :columns="finalColumns" :options="Options"
-      :pagination="Pagination" @on-confirm-create="ClearForm" @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-sort-field="OnSortField" 
-      @on-table-cell-edit-complete="onCellEditComplete" @on-row-double-click="($event) => {
+    <DynamicTable 
+      :data="isCreationDialog ? listItems as any : ListItems" 
+      :columns="finalColumns" 
+      :options="Options"
+      :pagination="bookingPagination" 
+      @on-confirm-create="ClearForm" 
+      @open-edit-dialog="OpenEditDialog($event)"
+      @on-change-pagination="PayloadOnChangePage = $event" 
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems" 
+      @on-sort-field="OnSortField" 
+      @on-table-cell-edit-complete="onCellEditComplete" 
+      @on-row-double-click="($event) => {
         // if (route.query.type === InvoiceType.OLD_CREDIT && isCreationDialog){ return }
         // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
         //   return;
