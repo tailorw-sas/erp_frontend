@@ -97,7 +97,7 @@ public class Payment implements Serializable {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
     private List<PaymentDetail> paymentDetails;
 
-    @Column(precision = 2)
+    //@Column(precision = 2)
     private Double paymentAmount;
     private Double paymentBalance;
     private Double depositAmount;
