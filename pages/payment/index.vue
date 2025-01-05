@@ -489,7 +489,7 @@ const options = ref({
   uriApi: 'payment',
   loading: false,
   actionsAsMenu: true,
-  selectionMode: 'multiple',
+  // selectionMode: 'multiple',
   selectAllItemByDefault: false,
   showSelectedItems: false,
   messageToDelete: 'Are you sure you want to delete the account type: {{name}}?'
@@ -920,6 +920,10 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
+    const payloadOfPaymentList = {
+      ...payload.value,
+    }
+    localStorage.setItem('payloadOfPaymentList', JSON.stringify(payloadOfPaymentList))
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -3426,8 +3430,6 @@ async function loadDefaultsConfig() {
 }
 
 function showInconAttachment(objData: any) {
-  console.log(objData)
-
   if (objData.hasAttachment) {
     return true
   }
@@ -3494,7 +3496,7 @@ watch(filterToSearch, (newValue) => {
 onMounted(async () => {
   havePermissionMenu()
   assingFunctionsToExportMenuInItemMenuList()
-  assingFuntionsForPrint()
+  // assingFuntionsForPrint()
 
   await loadDefaultsConfig()
 })
@@ -4056,6 +4058,7 @@ onMounted(async () => {
         Payment
       </div>
     </div>
+    <!-- @update:clicked-item="assingFuntionsForPrint($event)" -->
     <DynamicTable
       :data="listItems"
       :columns="columns"
@@ -4066,7 +4069,6 @@ onMounted(async () => {
       @on-change-filter="parseDataTableFilter"
       @on-list-item="resetListItems"
       @on-sort-field="onSortField"
-      @update:clicked-item="assingFuntionsForPrint($event)"
       @on-row-double-click="goToFormInNewTab($event)"
       @on-row-right-click="onRowContextMenu($event)"
     >
