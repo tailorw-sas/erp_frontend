@@ -47,7 +47,18 @@
 			<properties>
 				<packaging.artifactId>audit-agent-qa</packaging.artifactId>
 			</properties>
-			
+		</profile>
+		<profile>
+			<id>main</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>main</value>
+				</property>
+			</activation>
+			<properties>
+				<packaging.artifactId>audit-agent</packaging.artifactId>
+			</properties>
 		</profile>
 	</profiles>
 
@@ -177,4 +188,3 @@
         </repository>
     </distributionManagement>
 </project>
-
