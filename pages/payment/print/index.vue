@@ -502,7 +502,7 @@ onMounted(async () => {
       <div class="flex justify-content-end">
         <div class="flex align-items-end justify-content-end">
           <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" :disabled="paymentSelectedForPrintList.length === 0" @click="openDialogPrint" />
-          <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
+          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="closeDialogPrint" />
         </div>
       </div>
     </div>
