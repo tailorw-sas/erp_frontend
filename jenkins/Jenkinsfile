@@ -17,7 +17,8 @@ pipeline {
         NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'finamer-admin'
-        DEPLOYMENT_NAME = 'erp-admin'
+        DEPLOYMENT_DEV_QA = 'finamer-admin'
+        DEPLOYMENT_PROD = 'erp-admin'
         URL_DEV = "${URL_K3S_DEV}"
         URL_QA = "${URL_K3S_QA}"
         URL_PROD = "${URL_K3S}"
@@ -56,16 +57,19 @@ pipeline {
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP_FRONTEND
                         env.NAMESPACE = env.NAMESPACE_DEV_QA
+                        env.DEPLOYMENT_NAME = env.DEPLOYMENT_DEV_QA
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
                         env.NAMESPACE = env.NAMESPACE_DEV_QA
+                        env.DEPLOYMENT_NAME = env.DEPLOYMENT_DEV_QA
                     }
                     if(env.BRANCH_NAME == 'main'){
                         env.SERVER_K3S_URL = env.URL_PROD
                         env.EMAIL_LIST = env.EMAIL_LIST_PROD
                         env.NAMESPACE = env.NAMESPACE_PROD
+                        env.DEPLOYMENT_NAME = env.DEPLOYMENT_PROD
                     }
                 }
             }
