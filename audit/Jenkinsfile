@@ -19,7 +19,7 @@ pipeline {
         SRC_SHARE = 'audit-agent'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
-        NAMESPACE = 'finamer'
+        NAMESPACE_DEV_QA = 'finamer'
         NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'audit.yaml'
@@ -31,6 +31,7 @@ pipeline {
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
         DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+        SEND_MAIL = "${SEND_MAIL_STATUS}"
     }
     
     triggers {
@@ -86,10 +87,12 @@ pipeline {
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
+                        env.NAMESPACE = env.NAMESPACE_DEV_QA
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
+                        env.NAMESPACE = env.NAMESPACE_DEV_QA
                     }
                     if(env.BRANCH_NAME == 'main'){
                         env.SERVER_K3S_URL = env.URL_PROD
@@ -126,7 +129,7 @@ pipeline {
     post {
         success {
             script {
-                if(env.BRANCH_NAME != 'main'){
+                if(env.SEND_MAIL == 'SI'){
                     def notificator = new NotificadorEmail(this)
                     notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
                 }
@@ -134,7 +137,7 @@ pipeline {
         }
         failure {
             script {
-                if(env.BRANCH_NAME != 'main'){
+                if(env.SEND_MAIL == 'SI'){
                     def notificator = new NotificadorEmail(this)
                     notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
                 }
