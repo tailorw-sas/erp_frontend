@@ -11,8 +11,8 @@ pipeline {
     
     environment {
         SISTEMA = 'ERP'
-		GITHUB_REPO = 'erp_backend'
-		GIT_TOKEN = "${env.GITHUB_TOKEN}"
+        GITHUB_REPO = 'erp_backend'
+        GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-audit:version'
         SRC = 'audit'
@@ -20,16 +20,17 @@ pipeline {
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
         NAMESPACE = 'finamer'
+        NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'audit.yaml'
         DEPLOYMENT_NAME = 'audit'
         URL_DEV = "${URL_K3S_DEV}"
         URL_QA = "${URL_K3S_QA}"
-		URL_PROD = "${URL_K3S}"
+        URL_PROD = "${URL_K3S}"
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
-	    DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+        DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
     }
     
     triggers {
@@ -72,16 +73,16 @@ pipeline {
                     env.SERVER_K3S_CREDENTIALS = k3sCredentials
 
                     if (!params.FORCE_BUILD){
-			            def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
-			            env.PR_TITLE = prInfo.title
-			            env.PR_AUTHOR = prInfo.author
-			            env.EMAIL_AUTHOR = prInfo.authorEmail
-		            }else{
-			            env.PR_TITLE = 'MANUAL EXECUTION'
-			            env.PR_AUTHOR = 'Jenkins Admin'
-			            env.EMAIL_AUTHOR = env.DEFAULT_EMAIL
-		            }
-					
+                        def prInfo = pullrequests.getPullRequestInfoByGitCommit(env.SISTEMA, env.GITHUB_REPO, env.GIT_COMMIT, env.GIT_TOKEN)
+                        env.PR_TITLE = prInfo.title
+                        env.PR_AUTHOR = prInfo.author
+                        env.EMAIL_AUTHOR = prInfo.authorEmail
+                    }else{
+                        env.PR_TITLE = 'MANUAL EXECUTION'
+                        env.PR_AUTHOR = 'Jenkins Admin'
+                        env.EMAIL_AUTHOR = env.DEFAULT_EMAIL
+                    }
+                    
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
@@ -90,9 +91,10 @@ pipeline {
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
                     }
-					if(env.BRANCH_NAME == 'main'){
+                    if(env.BRANCH_NAME == 'main'){
                         env.SERVER_K3S_URL = env.URL_PROD
                         env.EMAIL_LIST = env.EMAIL_LIST_PROD
+                        env.NAMESPACE = env.NAMESPACE_PROD
                     }
                 }
             }
