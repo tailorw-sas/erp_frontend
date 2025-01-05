@@ -585,7 +585,8 @@ async function getItemById(id: string) {
             status: response.agencyType.status,
           }
         }
-
+        // En reunion con pimienta me dijo que no se puede editar el cliente porque rompe todo el tema de los alias
+        // Pero no se ha implementado todavia el cambio, para desahabilitarlo
         if (response.client) {
           item.value.client = {
             id: response.client.id,
@@ -595,7 +596,8 @@ async function getItemById(id: string) {
         }
         if (response.agencyAlias && response.agencyAlias !== '000-MySelf') {
           await GetAgenciesList(item.value.client.id)
-          item.value.agencyAlias = agencyAliasList.value.find(i => i.name === response.agencyAlias)
+          const codeTemp = response.agencyAlias.split(/\s*-\s*/)[0]
+          item.value.agencyAlias = agencyAliasList.value.find(i => i.code === codeTemp)
         }
         else {
           agencyAliasList.value = []

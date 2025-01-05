@@ -97,6 +97,10 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  bookingPagination: {
+    type: Object,
+    required: false
+  },
   refetchInvoice: { type: Function, default: () => {} },
   getInvoiceAgency: { type: Function, default: () => {} },
   getInvoiceHotel: { type: Function, default: () => {} },
@@ -117,6 +121,8 @@ const props = defineProps({
     default: false,
   },
 })
+
+const emit = defineEmits(['onChangePage'])
 
 const isSaveFormAdjustment = ref<boolean>(false)
 
@@ -283,6 +289,10 @@ function openAdjustmentDialog(roomRate?: any) {
   adjustmentDialogOpen.value = true
 }
 
+function onChangePage($event: any) {
+  emit('onChangePage', $event)
+}
+
 watch(activeTab, () => {
   props.setActive(activeTab.value)
 })
@@ -347,6 +357,8 @@ onMounted(async () => {
             :invoice-hotel="invoiceHotel"
             :is-detail-view="isDetailView"
             :show-totals="showTotals"
+            :booking-pagination="bookingPagination"
+            @on-change-page="onChangePage"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">

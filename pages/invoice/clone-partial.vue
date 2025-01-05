@@ -12,6 +12,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoicePartialTabView from '~/components/invoice/InvoiceTabView/InvoicePartialTabView.vue'
 import type { IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
 const isCreationDialog = ref(true)
 const showAdjustmentDialogFirstTime = ref(false)
@@ -278,7 +279,24 @@ const itemTemp = ref<GenericObject>({
   status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2]
 })
 
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+
 const Pagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+const paginationForBookingList = ref<IPagination>({
   page: 0,
   limit: 50,
   totalElements: 0,
@@ -335,29 +353,23 @@ function handleAttachmentHistoryDialogOpen() {
 
 async function getBookingList(clearFilter: boolean = false) {
   try {
-    const Payload: any = ({
-      filter: [{
+    payload.value.filter = []
+    payload.value.filter = [{
 
-        key: 'invoice.id',
-        operator: 'EQUALS',
-        value: globalSelectedInvoicing,
-        logicalOperation: 'AND'
+      key: 'invoice.id',
+      operator: 'EQUALS',
+      value: globalSelectedInvoicing,
+      logicalOperation: 'AND'
 
-      }],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    })
+    }]
     bookingList.value = []
-    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload)
+    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, payload.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
 
-    Pagination.value.page = page
-    Pagination.value.limit = size
-    Pagination.value.totalElements = totalElements
-    Pagination.value.totalPages = totalPages
+    paginationForBookingList.value.page = page
+    paginationForBookingList.value.limit = size
+    paginationForBookingList.value.totalElements = totalElements
+    paginationForBookingList.value.totalPages = totalPages
 
     for (const iterator of dataList) {
       //    const id = v4()
@@ -1585,6 +1597,12 @@ function updateAttachment(attachment: any) {
   attachmentList.value[index] = attachment
 }
 
+function onChangePage($event: any) {
+  payload.value.page = $event?.page ? $event?.page : 0
+  payload.value.pageSize = $event?.rows ? $event.rows : 50
+  getBookingList()
+}
+
 watch(invoiceAmount, () => {
   invoiceAmountError.value = false
 
@@ -1717,6 +1735,7 @@ onMounted(async () => {
             :invoice-obj="item"
             :selected-invoice="idItemCreated"
             :booking-list="bookingList"
+            :booking-pagination="paginationForBookingList"
             :adjustment-list="adjustmentList"
             :add-adjustment="addAdjustment"
             :update-adjustment="updateAdjustment"
@@ -1724,6 +1743,7 @@ onMounted(async () => {
             :set-active="($event) => {
               active = $event
             }" :open-adjustment-dialog-first-time="showAdjustmentDialogFirstTime"
+            @on-change-page="onChangePage"
           />
 
           <div>
