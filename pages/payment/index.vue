@@ -2617,7 +2617,10 @@ function onRowContextMenu(event: any) {
   //       }
   //     }
   // ( || event.data.attachmentStatus.patWithAttachment || event.data.attachmentStatus.pwaWithOutAttachment)
-  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+
+  // if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+
+  if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -2630,7 +2633,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
+    if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = false
@@ -2642,7 +2645,7 @@ function onRowContextMenu(event: any) {
         menuItemPaymentWithOutAttachment.visible = true
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = false
@@ -2654,7 +2657,7 @@ function onRowContextMenu(event: any) {
         menuItemPaymentWithAttachment.visible = true
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === true) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === true) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
@@ -3422,6 +3425,21 @@ async function loadDefaultsConfig() {
   await searchAndFilter()
 }
 
+function showInconAttachment(objData: any) {
+  console.log(objData)
+
+  if (objData.hasAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus.pwaWithOutAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus.patWithAttachment) {
+    return true
+  }
+  return false
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -4056,7 +4074,7 @@ onMounted(async () => {
         <div class="flex align-items-center justify-content-center p-0 m-0">
           <!-- <pre>{{ objData }}</pre> -->
           <Button
-            v-if="objData.hasAttachment"
+            v-if="showInconAttachment(objData)"
             :icon="column.icon"
             class="p-button-rounded p-button-text w-2rem h-2rem"
             aria-label="Submit"
