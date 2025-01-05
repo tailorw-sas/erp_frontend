@@ -8,6 +8,8 @@ import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import InvoiceTotalTabView from '~/components/invoice/InvoiceTabView/InvoiceTotalTabView.vue'
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import type { IPagination } from '~/components/table/interfaces/ITableInterfaces'
 
 const bookingEdited = ref(false)
 const bookingEdit: any = ref([])
@@ -252,6 +254,23 @@ const itemTemp = ref<GenericObject>({
   status: route.query.type === InvoiceType.CREDIT ? ENUM_INVOICE_STATUS[5] : ENUM_INVOICE_STATUS[2]
 })
 
+const payload = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.DESC
+})
+
+const paginationForBookingList = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
 const Pagination = ref<IPagination>({
   page: 0,
   limit: 50,
@@ -481,7 +500,24 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
 
+  await getInvoiceAgency(item.agency?.id)
+
+  let countBookingWithoutNightType = 0
+  const listOfBookingsWithoutNightType: string[] = []
+
   try {
+    bookingList.value?.forEach((booking) => {
+      // Es aqui donde hay que hacer la validacion de recorrer la lista de booking y verificar si alguno necesita un nightType
+      if (nightTypeRequired.value && !booking.nightType?.id) {
+        countBookingWithoutNightType++
+        listOfBookingsWithoutNightType.push(booking.hotelBookingNumber)
+      }
+    })
+
+    if (countBookingWithoutNightType > 0) {
+      throw new Error(`The Night Type field is required for this Hotel Booking No: ${listOfBookingsWithoutNightType.toString()}`)
+    }
+
     const response: any = await createClonation(item)
     if (response && response.clonedInvoice) {
       isSaveInTotalClone.value = true
@@ -494,6 +530,7 @@ async function saveItem(item: { [key: string]: any }) {
         detail: `The clonation invoice ${invoiceNo} was created successfully`,
         life: 10000
       })
+      navigateTo('/invoice')
     }
   }
   catch (error: any) {
@@ -517,7 +554,6 @@ async function saveItem(item: { [key: string]: any }) {
     // }
 
     // await new Promise(resolve => setTimeout(resolve, 5000))
-    navigateTo('/invoice')
   }
 }
 
@@ -811,29 +847,37 @@ async function assignRoomRatesToBookings(bookings: any[], roomRates: any[]) {
 }
 
 async function createClonation(item: { [key: string]: any }) {
-  try {
-    loadingSaveAll.value = true
+  // Crear el payload inicial
+  const payload: { [key: string]: any } = { ...item }
+  delete payload.invoiceId
+  delete payload.invoiceNumber
+  delete payload.isManual
+  delete payload.status
+  delete payload.invoiceType
+  delete payload.invoiceAmount
+  delete payload.invoiceDate
 
-    // Crear el payload inicial
-    const payload: { [key: string]: any } = { ...item }
-    delete payload.invoiceId
-    delete payload.invoiceNumber
-    delete payload.isManual
-    delete payload.status
-    delete payload.invoiceType
-    delete payload.invoiceAmount
-    delete payload.invoiceDate
+  payload.employeeName = userData?.value?.user?.name
+  payload.invoiceToClone = globalSelectedInvoicing // ID del invoice
+  payload.agency = item.agency.id // Asegúrate de que item.agency exista
+  payload.employeeId = userData?.value?.user?.userId
+  payload.hotel = item.hotel.id // Asegúrate de que item.hotel exista
+  payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
 
-    payload.employeeName = userData?.value?.user?.name
-    payload.invoiceToClone = globalSelectedInvoicing // ID del invoice
-    payload.agency = item.agency.id // Asegúrate de que item.agency exista
-    payload.employeeId = userData?.value?.user?.userId
-    payload.hotel = item.hotel.id // Asegúrate de que item.hotel exista
-    payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
-
-    // Obtener los attachments asociados al invoice
-    /* const attachments = await getAttachments(globalSelectedInvoicing)
-    payload.attachments = attachments.map(att => ({
+  // Obtener los attachments asociados al invoice
+  /* const attachments = await getAttachments(globalSelectedInvoicing)
+  payload.attachments = attachments.map(att => ({
+    attachmentId: att.attachmentId,
+    filename: att.filename,
+    file: att.file,
+    remark: att.remark,
+    type: att.type.id,
+    resourceType: 'INV-Invoice',
+    employeeName: userData?.value?.user?.name,
+    employeeId: userData?.value?.user?.userId,
+    })) */
+  if (LocalAttachmentList.value.length > 0) {
+    payload.attachments = LocalAttachmentList.value.map(att => ({
       attachmentId: att.attachmentId,
       filename: att.filename,
       file: att.file,
@@ -842,57 +886,47 @@ async function createClonation(item: { [key: string]: any }) {
       resourceType: 'INV-Invoice',
       employeeName: userData?.value?.user?.name,
       employeeId: userData?.value?.user?.userId,
-      })) */
-    if (LocalAttachmentList.value.length > 0) {
-      payload.attachments = LocalAttachmentList.value.map(att => ({
-        attachmentId: att.attachmentId,
-        filename: att.filename,
-        file: att.file,
-        remark: att.remark,
-        type: att.type.id,
-        resourceType: 'INV-Invoice',
-        employeeName: userData?.value?.user?.name,
-        employeeId: userData?.value?.user?.userId,
-      }))
-    }
-
-    const listBookingsTemp = JSON.parse(JSON.stringify(bookingList.value))
-    const bookingsEdit = await filterEditFields(listBookingsTemp) || []
-
-    payload.bookings = bookingsEdit
-    // checkIn: item?.checkIn ? formatDate(item?.checkIn) : null,
-    //   checkOut: item?.checkOut ? formatDate(item?.checkOut) : null,
-    const payloadRoomRate = roomRateList.value.filter(item => item).map(item => ({
-      id: item?.id,
-      checkIn: typeof item?.checkIn === 'string' ? formatDate(item?.checkIn) : item?.checkIn,
-      checkOut: typeof item?.checkOut === 'string' ? formatDate(item?.checkOut) : item?.checkOut,
-      invoiceAmount: item?.invoiceAmount,
-      roomNumber: item?.roomNumber,
-      adults: item?.adults,
-      children: item?.children,
-      rateAdult: item?.rateAdult,
-      rateChild: item?.rateChild,
-      hotelAmount: item?.hotelAmount,
-      remark: item?.remark,
-      nights: item?.nights,
-      fullName: item?.fullName,
-      firstName: item?.booking?.firstName,
-      lastName: item?.booking?.lastName,
-      // rateChildren: item?.rateChildren,
-      booking: item?.booking?.id,
     }))
+  }
 
-    payload.bookings = [...await assignRoomRatesToBookings(payload.bookings, payloadRoomRate)]
+  const listBookingsTemp = JSON.parse(JSON.stringify(bookingList.value))
+  const bookingsEdit = await filterEditFields(listBookingsTemp) || []
 
-    return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload)
-  }
-  catch (error: any) {
-    console.error('Error en createClonation:', error?.data?.data?.error?.errorMessage) // Imprimir el error en la consola
-    toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
-  }
-  finally {
-    loadingSaveAll.value = false
-  }
+  payload.bookings = bookingsEdit
+  // checkIn: item?.checkIn ? formatDate(item?.checkIn) : null,
+  //   checkOut: item?.checkOut ? formatDate(item?.checkOut) : null,
+  const payloadRoomRate = roomRateList.value.filter(item => item).map(item => ({
+    id: item?.id,
+    checkIn: typeof item?.checkIn === 'string' ? formatDate(item?.checkIn) : item?.checkIn,
+    checkOut: typeof item?.checkOut === 'string' ? formatDate(item?.checkOut) : item?.checkOut,
+    invoiceAmount: item?.invoiceAmount,
+    roomNumber: item?.roomNumber,
+    adults: item?.adults,
+    children: item?.children,
+    rateAdult: item?.rateAdult,
+    rateChild: item?.rateChild,
+    hotelAmount: item?.hotelAmount,
+    remark: item?.remark,
+    nights: item?.nights,
+    fullName: item?.fullName,
+    firstName: item?.booking?.firstName,
+    lastName: item?.booking?.lastName,
+    // rateChildren: item?.rateChildren,
+    booking: item?.booking?.id,
+  }))
+
+  payload.bookings = [...await assignRoomRatesToBookings(payload.bookings, payloadRoomRate)]
+
+  return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload)
+  // try {
+  // }
+  // catch (error: any) {
+  //   console.error('Error en createClonation:', error?.data?.data?.error?.errorMessage) // Imprimir el error en la consola
+  //   toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage || error?.message, life: 10000 })
+  // }
+  // finally {
+  //   loadingSaveAll.value = false
+  // }
 }
 
 function openRoomRateDialog(booking?: any) {
@@ -955,7 +989,6 @@ function sortRoomRate(event: any) {
 async function getInvoiceAgency(id) {
   try {
     const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
-
     if (agency) {
       nightTypeRequired.value = agency?.client?.isNightType
     }
@@ -1058,33 +1091,27 @@ async function getItem(id: any) {
 
 async function getBookingList(clearFilter: boolean = false) {
   try {
-    const Payload: any = ({
-      filter: [{
+    payload.value.filter = []
+    payload.value.filter = [{
 
-        key: 'invoice.id',
-        operator: 'EQUALS',
-        value: route.query.selected,
-        logicalOperation: 'AND'
+      key: 'invoice.id',
+      operator: 'EQUALS',
+      value: route?.query?.selected || '',
+      logicalOperation: 'AND'
 
-      }],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.ASC
-    })
+    }]
     bookingList.value = []
 
-    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, Payload)
+    const response = await GenericService.search(bookingApi.moduleApi, bookingApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     objBookingsTotals.value = JSON.parse(JSON.stringify(objBookingsTotalsTemp))
 
-    Pagination.value.page = page
-    Pagination.value.limit = size
-    Pagination.value.totalElements = totalElements
-    Pagination.value.totalPages = totalPages
+    paginationForBookingList.value.page = page
+    paginationForBookingList.value.limit = size
+    paginationForBookingList.value.totalElements = totalElements
+    paginationForBookingList.value.totalPages = totalPages
 
     for (const iterator of dataList) {
       // const id = v4()
@@ -1545,6 +1572,12 @@ function onSaveRoomRateInBookingEdit(itemObj: any) {
   calcInvoiceAmount()
 }
 
+function onChangePage($event: any) {
+  payload.value.page = $event?.page ? $event?.page : 0
+  payload.value.pageSize = $event?.rows ? $event.rows : 50
+  getBookingList()
+}
+
 watch(invoiceAmount, () => {
   invoiceAmountError.value = false
 
@@ -1749,6 +1782,7 @@ onMounted(async () => {
             :is-creation-dialog="true"
             :selected-invoice="selectedInvoice"
             :booking-list="bookingList"
+            :booking-pagination="paginationForBookingList"
             :update-booking="updateBookingLocal"
             :adjustment-list="[]"
             :add-adjustment="addAdjustment"
@@ -1764,6 +1798,7 @@ onMounted(async () => {
               updateBookingLocal($event)
             }"
             @on-save-room-rate-in-booking-edit="onSaveRoomRateInBookingEdit"
+            @on-change-page="onChangePage"
           />
           <div>
             <div class="flex justify-content-end">
