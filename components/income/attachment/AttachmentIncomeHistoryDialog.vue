@@ -29,6 +29,10 @@ const props = defineProps({
     type: Object,
     required: true
   },
+  selectedAttachment: {
+    type: String,
+    required: true
+  },
 })
 
 const invoice = ref(props.selectedInvoiceObj)
@@ -123,7 +127,15 @@ watch(() => props.selectedInvoiceObj, () => {
 })
 
 onMounted(() => {
-  if (props.selectedInvoice) {
+  if (props.selectedAttachment) {
+    Payload.value.filter = [{
+      key: 'attachmentId',
+      operator: 'EQUALS',
+      value: props.selectedAttachment,
+      logicalOperation: 'AND'
+    }]
+  }
+  if (props.selectedInvoice && !props.selectedAttachment) {
     Payload.value.filter = [{
       key: 'invoice.id',
       operator: 'EQUALS',

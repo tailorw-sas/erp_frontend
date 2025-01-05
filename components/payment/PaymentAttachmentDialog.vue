@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
-import { date, z } from 'zod'
+import { z } from 'zod'
 import type { IData } from '../table/interfaces/IModelData'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -100,13 +100,20 @@ const { data: userData } = useAuth()
 
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
-const clickedItem = ref<any>([])
 const loadingDelete = ref(false)
-const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
+const isCancelledPayment = ref(false)
 
 const idItem = ref('')
 
 const toast = useToast()
+
+const validationSchema = z.union([
+  z.string().trim().min(1, 'File is required'), // Permite un string
+  z.object({ // Permite un objeto con la estructura deseada
+    name: z.string().min(1), // Ejemplo: el objeto debe tener un campo `name`
+    size: z.number().positive(), // Ejemplo: un campo `size` con un número positivo
+  }),
+])
 
 const fieldsV2: Array<FieldDefinitionType> = [
   {
@@ -159,15 +166,17 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'fileupload',
     class: 'field col-12 required',
     headerClass: 'mb-1',
+    validation: validateFiles(),
   },
   {
     field: 'fileName',
     header: 'Filename',
     dataType: 'text',
-    class: 'field col-12 required',
+    class: 'field col-12',
     headerClass: 'mb-1',
     disabled: true,
-    validation: z.string().trim().min(1, 'This is a required field')
+    hidden: true,
+    validation: z.string().trim()
   },
   {
     field: 'remark',
@@ -175,7 +184,7 @@ const fieldsV2: Array<FieldDefinitionType> = [
     dataType: 'textarea',
     class: 'field col-12',
     headerClass: 'mb-1',
-
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 
 ]
@@ -215,19 +224,19 @@ const objApis = ref({
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px' },
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
+  // { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 const columnsAttachment: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
-  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
+  // { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 
 const historyColumns = ref<IColumn[]>([
@@ -258,20 +267,14 @@ const options = ref({
   loading: false,
   showDelete: false,
   showFilters: true,
+  showPagination: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
-  totalElements: 0,
-  totalPages: 0,
-  search: ''
-})
-const PaginationHistory = ref<IPagination>({
-  page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -281,7 +284,7 @@ const payloadOnChangePageHistory = ref<PageState>()
 const payloadLocal = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: 'ASC'
@@ -290,7 +293,7 @@ const payloadLocal = ref<IQueryRequest>({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: 'ASC'
@@ -360,6 +363,7 @@ function onSortFieldHistory(event: any) {
 }
 
 async function clearForm() {
+  updateFieldProperty(fieldsV2, 'remark', 'disabled', false)
   item.value = { ...itemTemp.value }
   idItem.value = ''
 
@@ -504,15 +508,15 @@ async function loadHistoryList() {
   openDialogHistory.value = true
 }
 
-function clearFilterToSearch() {
+async function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.search = ''
-  getList()
+  await getList()
 }
 
 // paymentId
 
-function searchAndFilter() {
+async function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   if (filterToSearch.value.search) {
     payload.value.filter = [...payload.value.filter, {
@@ -535,12 +539,12 @@ function searchAndFilter() {
       type: 'filterSearch',
     },]
   }
-  getList()
+  await getList()
 }
 async function ParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
   payload.value.filter = [...parseFilter || []]
-  getList()
+  await getList()
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -604,8 +608,16 @@ function mapFunction(data: DataListItem): ListItem {
     defaults: data?.defaults
   }
 }
+function mapFunctionResourceType(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    defaults: data?.defaults
+  }
+}
 async function getResourceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
+  resourceTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionResourceType)
 }
 
 async function getAttachmentTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -655,19 +667,57 @@ async function createItemLocal(item: any) {
       item.id = listItemsLocal.value.length + 1
       const payload: { [key: string]: any } = { ...item }
       payload.employee = userData?.value?.user?.userId
-      if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-        const file = payload.path.files[0]
-        if (file) {
-          const objFile = await getUrlOrIdByFile(file)
-          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+
+      if ('files' in payload.path) {
+        if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+          const file = payload.path.files[0]
+          if (file) {
+            if (payload.fileName === null || payload.fileName === '') {
+              payload.fileName = file.name
+            }
+            const objFile = await getUrlOrIdByFile(file)
+            payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+          }
+          else {
+            payload.path = ''
+          }
+        }
+      }
+      else {
+        if (typeof payload.path === 'object' && payload.path !== null) {
+          const file = payload.path
+          if (file) {
+            if (payload.fileName === null || payload.fileName === '') {
+              payload.fileName = file.name
+            }
+            const objFile = await getUrlOrIdByFile(file)
+            payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+          }
+          else {
+            payload.path = ''
+          }
         }
         else {
           payload.path = ''
         }
       }
-      else {
-        payload.path = ''
-      }
+
+      // if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+      //   const file = payload.path.files[0]
+      //   if (file) {
+      //     if (payload.fileName === null || payload.fileName === '') {
+      //       payload.fileName = file.name
+      //     }
+      //     const objFile = await getUrlOrIdByFile(file)
+      //     payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+      //   }
+      //   else {
+      //     payload.path = ''
+      //   }
+      // }
+      // else {
+      //   payload.path = ''
+      // }
       listItemsLocal.value = [...listItemsLocal.value, payload]
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
       haveError.value = false
@@ -714,20 +764,40 @@ async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
-
-    if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
-      const file = payload.path.files[0]
-      if (file) {
-        const objFile = await getUrlOrIdByFile(file)
-        payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+    if ('files' in payload.path) {
+      if (typeof payload.path === 'object' && payload.path !== null && payload.path?.files && payload.path?.files.length > 0) {
+        const file = payload.path.files[0]
+        if (file) {
+          if (payload.fileName === null || payload.fileName === '') {
+            payload.fileName = file.name
+          }
+          const objFile = await getUrlOrIdByFile(file)
+          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+        }
+        else {
+          payload.path = ''
+        }
+      }
+    }
+    else {
+      if (typeof payload.path === 'object' && payload.path !== null) {
+        const file = payload.path
+        if (file) {
+          if (payload.fileName === null || payload.fileName === '') {
+            payload.fileName = file.name
+          }
+          const objFile = await getUrlOrIdByFile(file)
+          payload.path = objFile && typeof objFile === 'object' ? objFile.url : objFile.id
+        }
+        else {
+          payload.path = ''
+        }
       }
       else {
         payload.path = ''
       }
     }
-    else {
-      payload.path = ''
-    }
+
     payload.attachmentType = item.attachmentType?.id
     payload.resourceType = item.resourceType?.id
     payload.status = 'ACTIVE'
@@ -784,17 +854,20 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
+  if (loadingSaveAll.value === true) { return } // Esto es para que no se ejecute dos veces el save
   loadingSaveAll.value = true
   let successOperation = true
   if (idItem.value) {
     try {
       if (externalProps.isCreateOrEditPayment === 'create') {
         item.id = idItem.value
-        updateItemLocal(item)
+        await updateItemLocal(item)
+        loadingSaveAll.value = false
       }
       else {
         await updateItem(item)
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+        loadingSaveAll.value = false
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${externalProps.selectedPayment.paymentId} was updated successfully`, life: 10000 })
       }
     }
     catch (error: any) {
@@ -806,27 +879,37 @@ async function saveItem(item: { [key: string]: any }) {
     try {
       if (externalProps.isCreateOrEditPayment === 'create') {
         try {
-          createItemLocal(item)
+          await createItemLocal(item)
+          loadingSaveAll.value = false
         }
-        catch (error) {
+        catch (error: any) {
+          if (error?.data?.statusMessage !== '') {
+            toast.add({ severity: 'error', summary: 'Error', detail: error.data.statusMessage, life: 3000 })
+          }
+          else {
+            toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
+          }
           successOperation = false
-          toast.add({ severity: 'error', summary: 'Error', detail: 'Only a payment support by payment is allowed', life: 3000 })
         }
       }
       else {
         await createItem(item)
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+        loadingSaveAll.value = false
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${externalProps.selectedPayment.paymentId} was updated successfully`, life: 10000 })
       }
     }
     catch (error: any) {
       successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      loadingSaveAll.value = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
     }
   }
-  loadingSaveAll.value = false
   if (successOperation && !haveError.value) {
     clearForm()
     getList()
+  }
+  else {
+    loadingSaveAll.value = false
   }
 }
 
@@ -885,7 +968,9 @@ async function getItemById(id: string) {
         item.value.file = response.file
         item.value.remark = response.remark
         item.value.invoice = response.invoice
+        item.value.path = response.fileName
         pathFileLocal.value = response.path
+        updateFieldProperty(fieldsV2, 'remark', 'disabled', true)
       }
 
       formReload.value += 1
@@ -902,13 +987,16 @@ async function getItemById(id: string) {
 }
 
 async function getItemByIdLocal(idItemLocal: string) {
-  if (idItemLocal) {
-    const objToEdit = listItemsLocal.value.find(x => x.id === idItemLocal)
+  const idTemp = typeof idItemLocal === 'number' ? idItemLocal : idItemLocal?.id
+
+  if (idTemp) {
+    const objToEdit = listItemsLocal.value.find(x => x.id === idTemp)
+
     if (objToEdit) {
-      idItem.value = idItemLocal
+      idItem.value = idTemp
       loadingSaveAll.value = true
       try {
-        item.value.id = idItemLocal
+        item.value.id = idTemp
         item.value.resource = objToEdit.resource
         item.value.resourceType = objToEdit.resourceType
         item.value.attachmentType = objToEdit.attachmentType
@@ -916,6 +1004,7 @@ async function getItemByIdLocal(idItemLocal: string) {
         // item.value.file = itemLocal.file
         item.value.remark = objToEdit.remark
         // item.value.invoice = itemLocal.invoice
+        item.value.path = objToEdit.fileName
         pathFileLocal.value = objToEdit.path
 
         formReload.value += 1
@@ -957,23 +1046,36 @@ function requireConfirmationToSave(item: any) {
 
 async function clearFormAndReload() {
   clearForm()
-  // await loadDefaultsValues()
+  await loadDefaultsValues()
 }
 
 function requireConfirmationToDelete(event: any) {
   if (externalProps.isCreateOrEditPayment === 'create') {
-    listItemsLocal.value = listItemsLocal.value.filter((item: any) => item.id !== idItem.value)
-    clearFormAndReload()
+    confirm.require({
+      target: event.currentTarget,
+      group: 'headless',
+      header: 'Delete the record',
+      message: 'Do you want to delete the record?',
+      acceptClass: 'p-button-danger',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: () => {
+        listItemsLocal.value = JSON.parse(JSON.stringify(listItemsLocal.value.filter((item: any) => item.id !== idItem.value)))
+        listItemsLocalTemp.value = JSON.parse(JSON.stringify(listItemsLocalTemp.value.filter((item: any) => item.id !== idItem.value)))
+        clearFormAndReload()
+      },
+      reject: () => {}
+    })
   }
-  else if (!useRuntimeConfig().public.showDeleteConfirm) {
-    deleteItem(idItem.value)
-  }
+  // else if (!useRuntimeConfig().public.showDeleteConfirm) {
+  //   deleteItem(idItem.value)
+  // }
   else {
     confirm.require({
       target: event.currentTarget,
       group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
+      header: 'Delete the record',
+      message: 'Do you want to delete the record?',
       acceptClass: 'p-button-danger',
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
@@ -985,14 +1087,14 @@ function requireConfirmationToDelete(event: any) {
   }
 }
 
-function openOrDownloadFile(url: string) {
-  if (isValidUrl(url)) {
-    window.open(url, '_blank')
-  }
-  else {
-    console.error('Invalid URL')
-  }
-}
+// function openOrDownloadFile(url: string) {
+//   if (isValidUrl(url)) {
+//     window.open(url, '_blank')
+//   }
+//   else {
+//     console.error('Invalid URL')
+//   }
+// }
 
 async function loadDefaultsValues() {
   const filterForEmployee: FilterCriteria[] = [
@@ -1031,6 +1133,7 @@ async function loadDefaultsValues() {
     query: '',
     keys: ['name', 'code'],
   }, filter)
+
   item.value.resourceType = resourceTypeList.value.length > 0 ? resourceTypeList.value[0] : null
 
   formReload.value++
@@ -1072,12 +1175,15 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
-watch(() => listItemsLocal.value, async (newValue) => {
-  if (!newValue) {
+watch(() => listItemsLocal.value, async () => {
+  if (listItemsLocal.value.length === 0) {
     clearForm()
   }
   else {
+    // Esperar almenos 1 segundo antes de cargar el primer item
+    await new Promise(resolve => setTimeout(resolve, 1000))
     await getItemByIdLocal(listItemsLocal.value[0].id)
+    emits('update:listItems', listItemsLocal.value)
   }
 })
 
@@ -1096,42 +1202,67 @@ watch(() => idItem.value, async (newValue) => {
   }
 })
 
-watch(() => listItemsLocal.value, async (newValue) => {
-  if (newValue) {
-    getItemByIdLocal(newValue[0])
+watch(payloadOnChangePageHistory, (newValue) => {
+  payloadHistory.value.page = newValue?.page ? newValue?.page : 0
+  payloadHistory.value.pageSize = newValue?.rows ? newValue.rows : 10
+  historyGetList()
+})
 
-    emits('update:listItems', listItemsLocal.value)
-  }
-}, { deep: true })
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getList()
+})
+
+// watch(() => listItemsLocal.value, async (newValue) => {
+//   console.log('listItemsLocal Se ejecuto el watch', newValue.length)
+
+//   if (newValue.length > 0) {
+//     getItemByIdLocal(newValue[0].id)
+
+//     emits('update:listItems', listItemsLocal.value)
+//   }
+// }, { deep: true })
 
 onMounted(async () => {
-  loadDefaultsValues()
+  if (externalProps.selectedPayment && externalProps.selectedPayment.paymentStatus) {
+    isCancelledPayment.value = externalProps.selectedPayment.paymentStatus.cancelled
+  }
+
   if (externalProps.isCreateOrEditPayment !== 'create') {
     await getList()
     if (idItem.value) {
       await getItemById(idItem.value)
     }
+    else {
+      await clearFormAndReload()
+    }
   }
-
-  // else {
-  // }
+  else {
+    await clearFormAndReload()
+  }
 })
 </script>
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="h-screen"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" :style="{ width: '80%' }"
+    v-model:visible="dialogVisible" modal :header="header"
+    content-class="border-round-bottom border-top-1 surface-border" :block-scroll="true" :style="{ width: '80%' }"
     @hide="closeDialog"
   >
+    <template #header>
+      <div class="inline-flex align-items-center justify-content-between w-full">
+        <span class="font-bold white-space-nowrap">{{ header }}</span>
+        <div class="flex align-items-center mr-3">
+          <strong class="mr-1">Payment Id:</strong>
+          <strong>{{ externalProps.selectedPayment.paymentId }}</strong>
+        </div>
+      </div>
+    </template>
     <template #default>
       <div class="grid p-fluid formgrid">
         <div class="col-12 order-1 md:order-0 md:col-9 pt-5">
-          <div v-if="false" class="bg-primary text-white font-bold mb-3" style="border-radius: 5px; padding: 0.8rem">
-            <strong class="mx-2">Payment:</strong>
-            <span>{{ externalProps.selectedPayment.paymentId }}</span>
-          </div>
-          <Accordion v-if="true" :active-index="0" class="mb-2 card p-0">
+          <Accordion v-if="false" :active-index="0" class="mb-2 card p-0">
             <AccordionTab>
               <template #header>
                 <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full">
@@ -1172,7 +1303,8 @@ onMounted(async () => {
             @update:clicked-item="getItemByIdLocal($event)"
             @on-confirm-create="clearForm"
             @on-change-pagination="payloadOnChangePage = $event"
-            @on-list-item="ResetListItems" @on-sort-field="onSortFieldLocal"
+            @on-list-item="ResetListItems"
+            @on-sort-field="onSortFieldLocal"
           />
           <DynamicTable
             v-else
@@ -1207,6 +1339,7 @@ onMounted(async () => {
                 @submit="requireConfirmationToSave($event)"
               >
                 <template #field-resourceType="{ item: data, onUpdate }">
+                  <!-- :disabled="disabledOrEnabledResourceType()" -->
                   <DebouncedAutoCompleteComponent
                     v-if="!loadingSaveAll"
                     id="autocomplete"
@@ -1214,7 +1347,7 @@ onMounted(async () => {
                     item-value="id"
                     :model="data.resourceType"
                     :suggestions="resourceTypeList"
-                    :disabled="disabledOrEnabledResourceType()"
+                    :disabled="true"
                     @change="($event) => {
                       onUpdate('resourceType', $event)
                     }" @load="($event) => {
@@ -1231,6 +1364,7 @@ onMounted(async () => {
                       <span>{{ props.item.name }}</span>
                     </template>
                   </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #field-attachmentType="{ item: data, onUpdate }">
@@ -1241,6 +1375,7 @@ onMounted(async () => {
                     item-value="id"
                     :model="data.attachmentType"
                     :suggestions="attachmentTypeList"
+                    :disabled="idItem !== '' || idItem === null"
                     @change="($event) => {
                       onUpdate('attachmentType', $event)
                     }" @load="($event) => {
@@ -1258,6 +1393,7 @@ onMounted(async () => {
                       <span>{{ props.item.name }}</span>
                     </template>
                   </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #field-employee="{ item: data, onUpdate }">
@@ -1276,11 +1412,44 @@ onMounted(async () => {
                       <span>{{ props.item.name }}</span>
                     </template>
                   </DebouncedAutoCompleteComponent>
+                  <Skeleton v-else height="2rem" class="mb-2" />
                 </template>
 
                 <template #field-path="{ item: data, onUpdate }">
+                  <InputGroup>
+                    <InputText
+                      v-if="!loadingSaveAll"
+                      v-model="data.fileName"
+                      style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                      placeholder="Upload File"
+                      disabled
+                    />
+                    <Skeleton v-else height="2rem" style="border-radius: 4px;;" />
+                    <FileUpload
+                      mode="basic"
+                      :max-file-size="100000000"
+                      :disabled="idItem !== '' || idItem === null"
+                      :multiple="false"
+                      auto
+                      custom-upload
+                      style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                      accept="application/pdf"
+                      @uploader="($event: any) => {
+                        customBase64Uploader($event, fieldsV2, 'path');
+                        onUpdate('path', $event)
+                        if ($event && $event.files.length > 0) {
+                          onUpdate('fileName', $event?.files[0]?.name)
+                          onUpdate('fileSize', formatSize($event?.files[0]?.size))
+                        }
+                        else {
+                          onUpdate('fileName', '')
+                        }
+                      }"
+                    />
+                  </InputGroup>
+
                   <FileUpload
-                    v-if="!loadingSaveAll" :max-file-size="1000000" :multiple="false" auto custom-upload
+                    v-if="false" :max-file-size="100000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept="application/pdf"
                     @uploader="($event: any) => {
                       customBase64Uploader($event, fieldsV2, 'path');
                       onUpdate('path', $event)
@@ -1291,14 +1460,14 @@ onMounted(async () => {
                       else {
                         onUpdate('fileName', '')
                       }
-
                     }"
                   >
                     <template #header="{ chooseCallback }">
                       <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                         <div class="flex gap-2">
-                          <Button id="btn-choose" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
+                          <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
                           <Button
+                            :disabled="idItem !== '' || idItem === null"
                             icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
                               onUpdate('path', null);
                               onUpdate('fileName', '');
@@ -1326,18 +1495,36 @@ onMounted(async () => {
                 </template>
 
                 <template #form-footer="props">
-                  <Button
-                    v-tooltip.top="'Save'" class="w-3rem sticky" icon="pi pi-save"
-                    @click="props.item.submitForm($event)"
-                  />
-                  <Button v-tooltip.top="'View File'" :disabled="!idItem" class="w-3rem ml-1 sticky" icon="pi pi-eye" @click="openOrDownloadFile(pathFileLocal)" />
-                  <Button
-                    v-if="true"
-                    v-tooltip.top="'Show History'" :disabled="disabledOrEnabledShowHistory()" class="w-3rem ml-1 sticky" icon="pi pi-book"
-                    @click="loadHistoryList"
-                  />
-                  <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" icon="pi pi-plus" @click="clearFormAndReload" />
-                  <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT-ATTACHMENT'] : ['PAYMENT-MANAGEMENT:CREATE-ATTACHMENT']">
+                    <Button
+                      v-tooltip.top="'Save'"
+                      :loading="loadingSaveAll"
+                      :disabled="idItem !== '' && idItem !== null || isCancelledPayment" class="w-3rem sticky" icon="pi pi-save"
+                      @click="props.item.submitForm($event)"
+                    />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:VIEW-FILE-ATTACHMENT']">
+                    <Button
+                      v-tooltip.top="'View File'"
+                      :disabled="!idItem"
+                      class="w-3rem ml-1 sticky"
+                      icon="pi pi-eye"
+                      @click="openOrDownloadFile(pathFileLocal)"
+                    />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:SHOW-HISTORY-ATTACHMENT']">
+                    <Button
+                      v-if="true"
+                      v-tooltip.top="'Show History'" :disabled="disabledOrEnabledShowHistory()" class="w-3rem ml-1 sticky" icon="pi pi-book"
+                      @click="loadHistoryList"
+                    />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-ATTACHMENT']">
+                    <Button v-tooltip.top="'Add'" class="w-3rem ml-1 sticky" :disabled="isCancelledPayment" icon="pi pi-plus" @click="clearFormAndReload" />
+                  </IfCan>
+                  <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-ATTACHMENT']">
+                    <Button v-tooltip.top="'Delete'" :disabled="!idItem || isCancelledPayment" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                  </IfCan>
                   <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
                 <!-- Save, View File, Show History, Add, Delete y Cancel -->
@@ -1362,9 +1549,9 @@ onMounted(async () => {
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
     }"
     @hide="openDialogHistory = false"
   >
@@ -1391,3 +1578,11 @@ onMounted(async () => {
     </template>
   </Dialog>
 </template>
+
+<style scoped lang="scss">
+  .custom-divider {
+    width: 2px; /* Cambia el grosor aquí */
+    background-color: white; /* Cambia el color aquí */
+    height: 1px; /* Se ajustará automáticamente al contenido */
+  }
+</style>

@@ -29,7 +29,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
 })
 
@@ -108,7 +108,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
   loading: false,
   showDelete: false,
@@ -148,7 +148,7 @@ function clearForm() {
   b2bPartnerList.value = []
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -184,7 +184,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -246,9 +246,14 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
-        b2bPartnerList.value = [response.b2bPartner]
-        item.value.b2bPartner = response.b2bPartner
         item.value.defaultm = response.defaultm
+        if (response.b2bPartner) {
+          item.value.b2bPartner = {
+            id: response.b2bPartner.id,
+            name: `${response.b2bPartner.code} - ${response.b2bPartner.name}`,
+            status: response.b2bPartner.status
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -271,7 +276,7 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
     payload.b2bPartner = typeof payload.b2bPartner === 'object' ? payload.b2bPartner.id : payload.b2bPartner
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -280,7 +285,7 @@ async function updateItem(item: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
   payload.b2bPartner = typeof payload.b2bPartner === 'object' ? payload.b2bPartner.id : payload.b2bPartner
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -303,9 +308,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -316,7 +322,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -327,7 +333,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -466,17 +475,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Merchant
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
-      <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
-    </div>
+    </h5>
+    <IfCan :perms="['MERCHANT:CREATE']">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
+        <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
+      </div>
+    </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
@@ -553,6 +564,16 @@ onMounted(() => {
                 @load="($event) => getb2bPartnerList($event)"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #form-footer="props">
+              <div class="flex justify-content-end">
+                <IfCan :perms="idItem ? ['MERCHANT:EDIT'] : ['MERCHANT:CREATE']">
+                  <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
+                </IfCan>
+                <IfCan :perms="['MERCHANT:DELETE']">
+                  <Button v-tooltip.top="'Delete'" class="w-3rem" severity="danger" outlined :loading="loadingDelete" icon="pi pi-trash" @click="props.item.deleteItem($event)" />
+                </IfCan>
+              </div>
             </template>
           </EditFormV2>
         </div>

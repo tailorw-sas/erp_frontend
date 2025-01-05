@@ -14,9 +14,15 @@ const props = defineProps({
     type: Boolean,
     required: true
   },
+  isLocal: {
+    type: Boolean,
+    required: true,
+    default: false
+  }
 })
 const emits = defineEmits<{
   (e: 'onCloseDialog', value: boolean): void
+  (e: 'onSaveLocal', value: any): void
 }>()
 
 const $primevue = usePrimeVue()
@@ -62,13 +68,18 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('transaction subcategory'),
   },
   {
-    field: 'amount',
+    field: 'netAmount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    tabIndex: 0,
+    validation: z.number({
+      invalid_type_error: 'The amount field must be a number',
+      required_error: 'The amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
         message: 'The amount must be greater than zero',
       })
   },
@@ -77,18 +88,21 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reservation Number',
     dataType: 'text',
     class: 'field col-12',
-    validation: z.string().trim().refine(value => value === '' || /^([IG]) \d+ \d+$/i.test(value), {
-      message: 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44'
-    })
+    tabIndex: 0,
+    // validation: z.string().trim().refine(value => value === '' || /^([IG]) \d+ \d+$/i.test(value), {
+    //   message: 'The reservation number field has an invalid format. Examples of valid formats are I 3432 15 , G 1134 44'
+    // })
   },
   {
     field: 'referenceNumber',
     header: 'Reference Number',
     dataType: 'text',
-    class: 'field col-12',
-    validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
-      message: 'Only numeric characters allowed'
-    })
+    class: 'field col-12 required',
+    tabIndex: 0,
+    validation: z.string().trim().min(1, 'The reference number field is required')
+    // validation: z.string().trim().refine(value => value === '' || /^\d+$/.test(value), {
+    //   message: 'Only numeric characters allowed'
+    // })
   },
 ]
 
@@ -96,7 +110,7 @@ const item = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: '0',
+  netAmount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -105,7 +119,7 @@ const itemTemp = ref<GenericObject>({
   agency: null,
   transactionCategory: null,
   subCategory: null,
-  amount: '0',
+  netAmount: 0,
   reservationNumber: '',
   referenceNumber: '',
 })
@@ -131,7 +145,12 @@ function clearForm() {
 
 function requireConfirmationToSave(item: any) {
   if (!useRuntimeConfig().public.showSaveConfirm) {
-    save(item)
+    if (props.isLocal) {
+      saveLocal(item)
+    }
+    else {
+      save(item)
+    }
   }
   else {
     confirm.require({
@@ -142,7 +161,12 @@ function requireConfirmationToSave(item: any) {
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
       accept: async () => {
-        await save(item)
+        if (props.isLocal) {
+          saveLocal(item)
+        }
+        else {
+          await save(item)
+        }
       },
       reject: () => {}
     })
@@ -156,6 +180,8 @@ async function save(item: { [key: string]: any }) {
     payload.transactionCategory = typeof payload.transactionCategory === 'object' ? payload.transactionCategory.id : payload.transactionCategory
     payload.transactionSubCategory = typeof payload.transactionSubCategory === 'object' ? payload.transactionSubCategory.id : payload.transactionSubCategory
     payload.agency = typeof payload.agency === 'object' ? payload.agency.id : payload.agency
+    payload.amount = payload.netAmount
+    delete payload.netAmount
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     onClose(false)
@@ -166,6 +192,11 @@ async function save(item: { [key: string]: any }) {
   finally {
     loadingSaveAll.value = false
   }
+}
+
+function saveLocal(item: { [key: string]: any }) {
+  emits('onSaveLocal', item)
+  onClose(false)
 }
 
 async function getCategoryList(query: string, isDefault: boolean = false) {
@@ -186,19 +217,34 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
             value: false,
             logicalOperation: 'AND'
           }, {
+            key: 'manual',
+            operator: 'EQUALS',
+            value: false,
+            logicalOperation: 'AND'
+          }, {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
             logicalOperation: 'AND'
           }]
         : [{
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'subcategory',
             operator: 'LIKE',
+            value: false,
+            logicalOperation: 'AND'
+          }, {
+            key: 'manual',
+            operator: 'EQUALS',
             value: false,
             logicalOperation: 'AND'
           }, {
@@ -218,7 +264,7 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
     CategoryList.value = []
 
     for (const iterator of dataList) {
-      CategoryList.value = [...CategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      CategoryList.value = [...CategoryList.value, { ...iterator, name: `${iterator.code} - ${iterator.name}` }]
     }
     if (isDefault && CategoryList.value.length > 0) {
       item.value.transactionCategory = CategoryList.value[0]
@@ -259,10 +305,15 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
             logicalOperation: 'AND'
           }]
         : [{
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'subcategory',
             operator: 'LIKE',
@@ -285,7 +336,7 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
     SubCategoryList.value = []
 
     for (const iterator of dataList) {
-      SubCategoryList.value = [...SubCategoryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      SubCategoryList.value = [...SubCategoryList.value, { ...iterator, name: `${iterator.code} - ${iterator.name}` }]
     }
     if (isDefault && SubCategoryList.value.length > 0) {
       item.value.transactionSubCategory = SubCategoryList.value[0]
@@ -321,10 +372,15 @@ async function getAgencyList(query: string, isDefault: boolean = false) {
             logicalOperation: 'AND'
           }]
         : [{
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          }, {
             key: 'name',
             operator: 'LIKE',
             value: query,
-            logicalOperation: 'AND'
+            logicalOperation: 'OR'
           }, {
             key: 'status',
             operator: 'EQUALS',
@@ -386,8 +442,16 @@ watch(() => props.openDialog, (newValue) => {
     v-model:visible="dialogVisible"
     modal
     header="New Adjustment Transaction"
-    class="w-8 md:w-6 lg:w-4 card p-0"
-    content-class="border-round-bottom border-top-1 surface-border pb-0"
+    :style="{ width: '50rem' }"
+    :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
     @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
@@ -410,6 +474,7 @@ watch(() => props.openDialog, (newValue) => {
             item-value="id"
             :model="data.transactionCategory"
             :suggestions="CategoryList"
+            :tabindex="0"
             @change="($event) => {
               onUpdate('transactionCategory', $event)
             }"
@@ -425,6 +490,7 @@ watch(() => props.openDialog, (newValue) => {
             item-value="id"
             :model="data.transactionSubCategory"
             :suggestions="SubCategoryList"
+            :tabindex="0"
             @change="($event) => {
               onUpdate('transactionSubCategory', $event)
             }"
@@ -440,6 +506,7 @@ watch(() => props.openDialog, (newValue) => {
             item-value="id"
             :model="data.agency"
             :suggestions="AgencyList"
+            :tabindex="0"
             @change="($event) => {
               onUpdate('agency', $event)
             }"
@@ -451,12 +518,15 @@ watch(() => props.openDialog, (newValue) => {
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">
-        <Button v-tooltip.top="'Save'" label="Save" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
+        <Button v-tooltip.top="'Apply'" label="Apply" icon="pi pi-save" :loading="loadingSaveAll" class="mr-2" @click="saveSubmit($event)" />
         <Button v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" icon="pi pi-times" @click="onClose(true)" />
       </div>
     </template>
   </Dialog>
 </template>
 
-<style scoped>
+<style>
+/*[tabindex] {
+  outline: 2px solid red !important;
+}*/
 </style>

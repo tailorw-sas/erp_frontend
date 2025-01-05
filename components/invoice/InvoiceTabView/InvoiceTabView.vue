@@ -98,6 +98,8 @@ const props = defineProps({
     default: false,
   },
   refetchInvoice: { type: Function, default: () => {} },
+  getInvoiceAgency: { type: Function, default: () => {} },
+  getInvoiceHotel: { type: Function, default: () => {} },
   setActive: { type: Function, required: true },
   active: { type: Number, required: true },
   bookingList: Array<any>,
@@ -107,7 +109,21 @@ const props = defineProps({
   sortAdjustment: Function as any,
   sortBooking: Function as any,
   invoiceObjAmount: { type: Number, required: true },
-  nightTypeRequired: Boolean
+  nightTypeRequired: Boolean,
+  requiresFlatRate: Boolean,
+  openAdjustmentDialogFirstTime: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  invoiceType: {
+    type: String,
+    required: false
+  },
+  invoiceReactiveData: {
+    type: Object,
+    required: false
+  }
 })
 
 const activeTab = ref(props.active)
@@ -119,6 +135,8 @@ const showTabs = ref<boolean>(true)
 const toast = useToast()
 
 const selectedBooking = ref<string>('')
+const bookingObj = ref<any>(null)
+
 const selectedRoomRate = ref<string>('')
 
 const loadingSaveAll = ref(false)
@@ -255,6 +273,7 @@ function openRoomRateDialog(booking?: any) {
 
   if (booking?.id) {
     selectedBooking.value = booking?.id
+    bookingObj.value = booking
   }
 
   roomRateDialogOpen.value = true
@@ -274,6 +293,12 @@ watch(activeTab, () => {
   props.setActive(activeTab.value)
 })
 
+watch(() => props.openAdjustmentDialogFirstTime, (newValue) => {
+  if (newValue && props.roomRateList && props.roomRateList.length > 0) {
+    openAdjustmentDialog(props.roomRateList[0])
+  }
+})
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
@@ -285,9 +310,8 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
-
   if (props.isCreationDialog) {
-    showTabs.value = route.query.type !== ENUM_INVOICE_TYPE[2]?.id
+    showTabs.value = route.query.type !== InvoiceType.CREDIT
   }
 })
 </script>
@@ -296,9 +320,9 @@ onMounted(async () => {
   <div class="justify-content-center align-center ">
     <div style="width: 100%; height: 100%;">
       <TabView id="tabView" v-model:activeIndex="activeTab" class="no-global-style">
-        <TabPanel>
+        <TabPanel v-if="route.name !== 'invoice-edit-booking-id'">
           <template #header>
-            <div class="flex align-items-center gap-2 p-2" :style="`${active === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+            <div class="flex align-items-center gap-2" :style="`${active === 0 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-calendar" style="font-size: 1.5rem" />
               <span class="font-bold white-space-nowrap">
                 Bookings
@@ -309,19 +333,35 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+          <!-- <pre>{{ invoiceReactiveData }}</pre> -->
+
           <BookingTab
-          :refetch-invoice="refetchInvoice"
-            :is-dialog-open="isDialogOpen" :close-dialog="() => closeDialog()"
-            :open-dialog="openDialog" :open-room-rate-dialog="openRoomRateDialog" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :sort-booking="sortBooking" :selected-invoice="selectedInvoice as any"
-            :add-item="addBooking" :update-item="updateBooking" :list-items="bookingList"
+            :refetch-invoice="refetchInvoice"
+            :get-invoice-agency="getInvoiceAgency"
+            :is-dialog-open="isDialogOpen"
+            :close-dialog="() => closeDialog()"
+            :open-dialog="openDialog"
+            :open-room-rate-dialog="openRoomRateDialog"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :sort-booking="sortBooking"
+            :selected-invoice="selectedInvoice"
+            :add-item="addBooking"
+            :update-item="updateBooking"
+            :list-items="bookingList"
             :night-type-required="nightTypeRequired"
-            :is-creation-dialog="isCreationDialog" :invoice-obj="invoiceObj" :invoice-agency="invoiceAgency" :invoice-hotel="invoiceHotel" :is-detail-view="isDetailView" :show-totals="showTotals"
+            :is-creation-dialog="isCreationDialog"
+            :invoice-obj="invoiceObj"
+            :invoice-agency="invoiceAgency"
+            :invoice-hotel="invoiceHotel"
+            :is-detail-view="isDetailView"
+            :show-totals="showTotals"
+            :invoice-type="props.invoiceType"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">
           <template #header>
-            <div class="flex align-items-center gap-2 p-2" :style="`${active === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+            <div class="flex align-items-center gap-2" :style="`${active === 1 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-receipt" style="font-size: 1.5rem" />
               <span class="font-bold">
                 Room Rates
@@ -332,18 +372,34 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+
+          <!-- RoomRateTab -> components/invoice/roomRate/roomRateTab.vue  -->
           <RoomRateTab
-          :refetch-invoice="refetchInvoice"
-            :is-dialog-open="roomRateDialogOpen" :close-dialog="() => { roomRateDialogOpen = false }"
-            :open-dialog="handleDialogOpen" :selected-booking="selectedBooking"
-            :open-adjustment-dialog="openAdjustmentDialog" :sort-room-rate="sortRoomRate" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="roomRateList" :add-item="addRoomRate" :invoice-obj="invoiceObj"
-            :update-item="updateRoomRate" :is-creation-dialog="isCreationDialog" :is-detail-view="isDetailView" :selected-invoice="selectedInvoice as any" :show-totals="showTotals"
+            :booking-obj="bookingObj"
+            :refetch-invoice="refetchInvoice"
+            :requires-flat-rate="requiresFlatRate"
+            :get-invoice-hotel="getInvoiceHotel"
+            :is-dialog-open="roomRateDialogOpen"
+            :close-dialog="() => { roomRateDialogOpen = false }"
+            :open-dialog="handleDialogOpen"
+            :selected-booking="selectedBooking"
+            :open-adjustment-dialog="openAdjustmentDialog"
+            :sort-room-rate="sortRoomRate"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :list-items="roomRateList"
+            :add-item="addRoomRate"
+            :invoice-obj="invoiceObj"
+            :update-item="updateRoomRate"
+            :is-creation-dialog="isCreationDialog"
+            :is-detail-view="isDetailView"
+            :selected-invoice="selectedInvoice as any"
+            :show-totals="showTotals"
           />
         </TabPanel>
         <TabPanel v-if="showTabs">
           <template #header>
-            <div class="flex align-items-center gap-2 p-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
+            <div class="flex align-items-center gap-2" :style="`${active === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: 130px`">
               <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
               <span class="font-bold white-space-nowrap">
                 Adjustments
@@ -354,18 +410,28 @@ onMounted(async () => {
               </span>
             </div>
           </template>
+
+          <!-- AdjustmentTab -> components/invoice/adjustment/adjustmentTab.vue  -->
           <AdjustmentTab
             :invoice-obj="invoiceObj"
             :invoice-obj-amount="invoiceObjAmount"
             :is-dialog-open="adjustmentDialogOpen"
             :close-dialog="() => {
-
               adjustmentDialogOpen = false;
-
-            }" :open-dialog="handleDialogOpen" :refetch-invoice="refetchInvoice"
-            :selected-room-rate="selectedRoomRate" :sort-adjustment="sortAdjustment" :force-update="forceUpdate"
-            :toggle-force-update="toggleForceUpdate" :list-items="adjustmentList" :add-item="addAdjustment"
-            :update-item="updateAdjustment" :is-creation-dialog="isCreationDialog" :selected-invoice="selectedInvoice as any" :is-detail-view="isDetailView" :show-totals="showTotals"
+            }"
+            :open-dialog="handleDialogOpen"
+            :refetch-invoice="refetchInvoice"
+            :selected-room-rate="selectedRoomRate"
+            :sort-adjustment="sortAdjustment"
+            :force-update="forceUpdate"
+            :toggle-force-update="toggleForceUpdate"
+            :list-items="adjustmentList"
+            :add-item="addAdjustment"
+            :update-item="updateAdjustment"
+            :is-creation-dialog="isCreationDialog"
+            :selected-invoice="selectedInvoice"
+            :is-detail-view="isDetailView"
+            :show-totals="showTotals"
           />
         </TabPanel>
       </TabView>

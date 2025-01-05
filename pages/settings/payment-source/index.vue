@@ -50,6 +50,12 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'expense',
+    header: 'Expense',
+    dataType: 'check',
+    class: 'field col-12 required mb-3 mt-3',
+  },
+  {
     field: 'isBank',
     header: 'Bank',
     dataType: 'check',
@@ -77,6 +83,7 @@ const item = ref<GenericObject>({
   description: '',
   status: true,
   isBank: false,
+  expense: false,
 })
 
 const itemTemp = ref<GenericObject>({
@@ -85,6 +92,7 @@ const itemTemp = ref<GenericObject>({
   description: '',
   status: true,
   isBank: false,
+  expense: false,
 })
 
 const formTitle = computed(() => {
@@ -149,7 +157,7 @@ function existAnyElementWithBankCheckChecked(listItems: any[]) {
   return listItems.some(item => item.isBank === true)
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -187,7 +195,7 @@ async function getList() {
 
     existElementISBankChecked.value = existAnyElementWithBankCheckChecked(listItems.value)
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -238,6 +246,7 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.isBank = response.isBank
+        item.value.expense = response.expense
       }
       fields[0].disabled = true
       fields[1].disabled = true
@@ -260,7 +269,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -268,7 +277,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -291,9 +300,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -304,7 +314,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -315,7 +325,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -415,17 +428,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Payment Source
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>

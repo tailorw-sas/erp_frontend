@@ -30,7 +30,8 @@ export const cards = ref<Card[]>([
     title: 'Collection Management',
     icon: icon_3,
     color: '#D7831D',
-    status: ''
+    status: '',
+    url:'collection'
   },
   {
     title: 'Virtual Credit Card Management',

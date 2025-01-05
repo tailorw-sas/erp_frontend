@@ -95,7 +95,7 @@ const options = ref({
   uriApi: 'mailjet-config',
   loading: false,
   actionsAsMenu: false,
-  messageToDelete: '¿Estás seguro que deseas eliminar la configuración de: {{name}}?'
+  messageToDelete: 'Are you sure you want to delete the settings: {{name}}?'
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({

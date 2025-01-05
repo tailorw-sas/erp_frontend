@@ -30,7 +30,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-vcc-transaction-type',
 })
 
@@ -63,12 +63,12 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'check',
     class: 'field col-12 required',
   },
-  {
-    field: 'policyCredit',
-    header: 'Policy Credit',
-    dataType: 'check',
-    class: 'field col-12 required',
-  },
+  // {
+  //   field: 'policyCredit',
+  //   header: 'Policy Credit',
+  //   dataType: 'check',
+  //   class: 'field col-12 required',
+  // },
   {
     field: 'subcategory',
     header: 'Subcategory',
@@ -77,7 +77,19 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'onlyApplyNet',
-    header: 'Only Apply Net Amount (VCC Module)',
+    header: 'Only Apply Net Amount',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'manual',
+    header: 'Manual',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'refund',
+    header: 'Refund',
     dataType: 'check',
     class: 'field col-12 required',
   },
@@ -125,10 +137,12 @@ const item = ref<GenericObject>({
   status: true,
   isDefault: false,
   negative: false,
-  policyCredit: false,
+  // policyCredit: false,
   remarkRequired: false,
   subcategory: false,
   onlyApplyNet: false,
+  manual: false,
+  refund: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
   description: '',
@@ -140,10 +154,12 @@ const itemTemp = ref<GenericObject>({
   status: true,
   isDefault: false,
   negative: false,
-  policyCredit: false,
+  // policyCredit: false,
   remarkRequired: false,
   subcategory: false,
   onlyApplyNet: false,
+  manual: false,
+  refund: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
   description: '',
@@ -170,7 +186,7 @@ const ENUM_FILTER = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage VCC Transaction Type',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-vcc-transaction-type',
   loading: false,
   actionsAsMenu: false,
@@ -204,7 +220,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -240,7 +256,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -287,14 +303,16 @@ async function getItemById(id: string) {
       if (response) {
         item.value.id = response.id
         item.value.name = response.name
-        item.value.description = response.description
+        item.value.description = response.description || ''
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.negative = response.negative
         item.value.isDefault = response.isDefault
         item.value.subcategory = response.subcategory
         item.value.onlyApplyNet = response.onlyApplyNet
-        item.value.policyCredit = response.policyCredit
+        item.value.manual = response.manual
+        item.value.refund = response.refund
+        // item.value.policyCredit = response.policyCredit
         item.value.remarkRequired = response.remarkRequired
         item.value.minNumberOfCharacter = response.minNumberOfCharacter
         item.value.defaultRemark = response.defaultRemark
@@ -321,7 +339,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -329,7 +347,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -352,9 +370,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -365,7 +384,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -376,7 +395,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -426,8 +448,6 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  console.log(payload)
-
   getList()
 }
 
@@ -477,11 +497,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage VCC Transaction Type
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
@@ -572,8 +592,7 @@ onMounted(() => {
                   updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !$event)
                 }"
               />
-              <label for="remarkRequired" class="ml-2">
-                Remark Required
+              <label for="remarkRequired" class="ml-2 font-bold">Remark Required
                 <span :class="fields.find(field => field.field === 'remarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>
             </template>

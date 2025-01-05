@@ -27,8 +27,12 @@ const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
+const multiSelectLoading = ref({
+  merchant: false,
+  ccType: false,
+})
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-bank-account',
 })
 
@@ -40,10 +44,10 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'managerMerchant',
     header: 'Merchant',
-    dataType: 'select',
+    dataType: 'multi-select',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: validateEntityStatus('merchant'),
+    validation: validateEntitiesForSelectMultiple('merchants').nonempty('The merchant field is required'),
   },
   {
     field: 'manageBank',
@@ -66,6 +70,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Credit Card Type',
     dataType: 'multi-select',
     class: 'field col-12 required',
+    headerClass: 'mb-1',
     validation: validateEntitiesForSelectMultiple('creditCardTypes').nonempty('The credit card type field is required'),
   },
   {
@@ -86,7 +91,7 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  managerMerchant: null,
+  managerMerchant: [],
   manageBank: null,
   description: '',
   accountNumber: '',
@@ -95,7 +100,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  managerMerchant: null,
+  managerMerchant: [],
   manageBank: null,
   description: '',
   accountNumber: '',
@@ -116,7 +121,7 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'manageBank', header: 'Bank', type: 'select', localItems: [], objApi: { moduleApi: 'settings', uriApi: 'manage-bank' }, sortable: true },
   { field: 'description', header: 'Description', type: 'text' },
   { field: 'status', header: 'Active', type: 'bool' },
@@ -125,7 +130,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Bank Account',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-bank-account',
   loading: false,
   showDelete: false,
@@ -161,9 +166,10 @@ function clearForm() {
   formReload.value++
   MerchantList.value = []
   BankList.value = []
+  CreditCardTypeList.value = []
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -187,10 +193,10 @@ async function getList() {
 
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'managerMerchant')) {
-        iterator.managerMerchant = { id: iterator.managerMerchant.id, name: iterator.managerMerchant.description }
+        iterator.managerMerchant = { name: iterator.managerMerchant.map((item: any) => item.description).join(', ') }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBank')) {
-        iterator.manageBank = { id: iterator.manageBank.id, name: iterator.manageBank.name }
+        iterator.manageBank = { id: iterator.manageBank.id, name: `${iterator.manageBank.code} - ${iterator.manageBank.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
@@ -205,7 +211,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -235,23 +241,38 @@ async function getItemById(id: string) {
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
       if (response) {
-        const objMerchant = {
+        /* const objMerchant = {
           id: response.managerMerchant.id,
           name: `${response.managerMerchant.code} ${response.managerMerchant.description ? `- ${response.managerMerchant.description}` : ''}`,
           status: response.managerMerchant.status
         }
+        MerchantList.value = [objMerchant]
+        item.value.managerMerchant = objMerchant */
         item.value.id = response.id
         item.value.description = response.description
         item.value.accountNumber = response.accountNumber
-        MerchantList.value = [objMerchant]
-        item.value.managerMerchant = objMerchant
         BankList.value = [response.manageBank]
-        item.value.manageBank = response.manageBank
-        item.value.status = statusToBoolean(response.status)
-        if (CreditCardTypeList.value.length === 0) {
-          await getCreditCardTypeList()
+        const objBank = {
+          id: response.manageBank.id,
+          name: `${response.manageBank.code} ${response.manageBank.name ? `- ${response.manageBank.name}` : ''}`,
+          status: response.manageBank.status
         }
-        item.value.creditCardTypes = findMatches(response.creditCardTypes, CreditCardTypeList.value)
+        item.value.manageBank = objBank
+        item.value.status = statusToBoolean(response.status)
+        const updatedCCTypeList = response.creditCardTypes.map((elem: any) => ({
+          ...elem, // Copia todas las propiedades existentes
+          name: `${elem.code} - ${elem.name}`, // Añade la nueva propiedad
+          status: 'ACTIVE'
+        }))
+        item.value.creditCardTypes = updatedCCTypeList
+        CreditCardTypeList.value = [...updatedCCTypeList]
+        const updatedMerchants = response.managerMerchant.map((elem: any) => ({
+          ...elem, // Copia todas las propiedades existentes
+          name: `${elem.code} - ${elem.description}`, // Añade la nueva propiedad
+          status: 'ACTIVE'
+        }))
+        item.value.managerMerchant = updatedMerchants
+        MerchantList.value = [...updatedMerchants]
       }
       updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
@@ -299,11 +320,11 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
     payload.managerBank = typeof payload.manageBank === 'object' ? payload.manageBank.id : payload.manageBank
-    payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+    payload.managerMerchant = payload.managerMerchant.map((p: any) => p.id)
     payload.creditCardTypes = payload.creditCardTypes.map((p: any) => p.id)
     delete payload.event
     delete payload.manageBank
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -312,11 +333,11 @@ async function updateItem(item: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
   payload.managerBank = typeof payload.manageBank === 'object' ? payload.manageBank.id : payload.manageBank
-  payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+  payload.managerMerchant = payload.managerMerchant.map((p: any) => p.id)
   payload.creditCardTypes = payload.creditCardTypes.map((p: any) => p.id)
   delete payload.event
   delete payload.manageBank
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -339,9 +360,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -352,7 +374,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -363,24 +385,36 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
 async function getBankList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
@@ -390,7 +424,7 @@ async function getBankList(query: string) {
     const { data: dataList } = response
     BankList.value = []
     for (const iterator of dataList) {
-      BankList.value = [...BankList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      BankList.value = [...BankList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -400,6 +434,7 @@ async function getBankList(query: string) {
 
 async function getCreditCardTypeList(query: string = '') {
   try {
+    multiSelectLoading.value.ccType = true
     const payload = {
       filter: [
         {
@@ -427,19 +462,33 @@ async function getCreditCardTypeList(query: string = '') {
     }
 
     const response = await GenericService.search('settings', 'manage-credit-card-type', payload)
-    const { data: dataList } = response
-    CreditCardTypeList.value = dataList
-    // for (const iterator of dataList) {
-    //   CreditCardTypeList.value = [...CreditCardTypeList.value, { id: iterator.id, name: iterator.name }]
-    // }
+    let { data: dataList } = response
+    CreditCardTypeList.value = []
+
+    dataList = dataList.map((elem: any) => ({
+      ...elem, // Copia todas las propiedades existentes
+      name: `${elem.code} - ${elem.name}`, // Añade la nueva propiedad
+      status: elem.status
+    }))
+
+    const mergedSuggestions = [
+      ...item.value.creditCardTypes, // Mantén los elementos seleccionados previamente
+      ...dataList.filter((s: any) => !item.value.creditCardTypes.some((item: any) => item.id === s.id)) // Filtra duplicados
+    ]
+
+    CreditCardTypeList.value = [...mergedSuggestions]
   }
   catch (error) {
     console.error('Error loading manage credit card type list:', error)
+  }
+  finally {
+    multiSelectLoading.value.ccType = false
   }
 }
 
 async function getMerchantList(query: string) {
   try {
+    multiSelectLoading.value.merchant = true
     const payload = {
       filter: [{
         key: 'description',
@@ -458,19 +507,31 @@ async function getMerchantList(query: string) {
         logicalOperation: 'AND'
       }],
       query: '',
-      pageSize: 20,
+      pageSize: 200,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
-    const { data: dataList } = response
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
+    let { data: dataList } = response
     MerchantList.value = []
 
-    for (const iterator of dataList) {
-      MerchantList.value = [...MerchantList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.description}`, status: iterator.status }]
-    }
+    dataList = dataList.map((elem: any) => ({
+      ...elem, // Copia todas las propiedades existentes
+      name: `${elem.code} - ${elem.description}`, // Añade la nueva propiedad
+      status: elem.status
+    }))
+
+    const mergedSuggestions = [
+      ...item.value.managerMerchant, // Mantén los elementos seleccionados previamente
+      ...dataList.filter((s: any) => !item.value.managerMerchant.some((item: any) => item.id === s.id)) // Filtra duplicados
+    ]
+
+    MerchantList.value = [...mergedSuggestions]
   }
   catch (error) {
     console.error('Error loading merchant list:', error)
+  }
+  finally {
+    multiSelectLoading.value.merchant = false
   }
 }
 
@@ -571,17 +632,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Merchant Bank Account
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2 bg-white">
           <AccordionTab>
             <template #header>
@@ -645,15 +706,17 @@ onMounted(() => {
             @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
           >
             <template #field-managerMerchant="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
                 :model="data.managerMerchant"
                 :suggestions="MerchantList"
+                :loading="multiSelectLoading.merchant"
                 @change="($event) => {
                   onUpdate('managerMerchant', $event)
+                  data.managerMerchant = $event
                 }"
                 @load="($event) => getMerchantList($event)"
               />
@@ -675,37 +738,20 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-creditCardTypes="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <DebouncedMultiSelectComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
                 :model="data.creditCardTypes"
-                :suggestions="[...CreditCardTypeList]"
-                :multiple="true"
+                :suggestions="CreditCardTypeList"
+                :loading="multiSelectLoading.ccType"
                 @change="($event) => {
                   onUpdate('creditCardTypes', $event)
+                  data.creditCardTypes = $event
                 }"
                 @load="($event) => getCreditCardTypeList($event)"
               />
-
-              <!-- <MultiSelect
-                v-if="!loadingSaveAll"
-                v-model="data.creditCardTypes"
-                :options="[...CreditCardTypeList]"
-                option-label="name"
-                autocomplete="off"
-                display="chip"
-                filter @update:model-value="($event) => {
-                  onUpdate('creditCardTypes', $event)
-                }"
-              >
-                <template #option="slotProps">
-                  <div class="flex align-items-center">
-                    <div>{{ slotProps.option.name }}</div>
-                  </div>
-                </template>
-              </MultiSelect> -->
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>

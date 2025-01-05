@@ -39,7 +39,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: false,
     dataType: 'code',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(5, 'Maximum 5 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(5, 'Maximum 5 characters').regex(/^[a-z0-9]+$/i, 'Only alphanumeric characters allowed')
   },
   {
     field: 'name',
@@ -144,7 +144,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -180,7 +180,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -252,7 +252,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -260,7 +260,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -283,9 +283,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -296,7 +297,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -307,7 +308,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -408,19 +412,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Time Zone
-    </h3>
+    </h5>
     <IfCan :perms="['TIMEZONE:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>

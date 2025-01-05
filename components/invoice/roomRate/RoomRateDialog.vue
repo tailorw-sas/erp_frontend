@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import dayjs from 'dayjs'
+import { z } from 'zod'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 
 const props = defineProps({
   fields: {
-    type: Array<Container>,
+    type: Array<FieldDefinitionType>,
     required: true,
 
   },
@@ -55,15 +56,64 @@ const props = defineProps({
   bookingList: {
     type: Array,
     required: true
-  }
+  },
+  bookingObj: {
+    type: Object,
+    required: false
+  },
 })
+const route = useRoute()
 const dialogVisible = ref(props.openDialog)
-const formFields = ref<FieldDefinitionType[]>([])
+
+const errorsListParent = reactive<{ [key: string]: string[] }>({})
+
+function checkValuesForValidation(item: any) {
+  if (item?.children && item?.children > 0) {
+    const decimalSchema = z.object(
+      {
+        adults: z
+          .number()
+          .refine(value => !Number.isNaN(value) && +value >= 0, 'The adults field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+  }
+  else {
+    const decimalSchema = z.object(
+      {
+        adults: z
+          .number()
+          .refine(value => !Number.isNaN(value) && +value > 0, 'The adults field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+  }
+  // -----------------------------------------------------------------------------------------
+
+  if (item?.adults && item?.adults > 0) {
+    const decimalSchema = z.object(
+      {
+        children: z
+          .number()
+          .refine(value => +value >= 0, 'The children field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+  }
+  else {
+    const decimalSchema = z.object(
+      {
+        children: z
+          .number()
+          .refine(value => +value > 0, 'The children field must be greater than 0').nullable(),
+      },
+    )
+    updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+  }
+}
 
 onMounted(() => {
-  props?.fields.forEach((container) => {
-    formFields.value.push(...container.childs)
-  })
+  checkValuesForValidation(props.item)
 })
 </script>
 
@@ -71,19 +121,147 @@ onMounted(() => {
   <Dialog
     v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
     :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
-    @hide="closeDialog"
+    style="width: 600px;" @hide="closeDialog"
   >
-    <div class="w-full h-full overflow-hidden p-2">
-      <EditFormV2WithContainer
-        :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4"
-        @cancel="clearForm" @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
+    <template #header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            {{ header }}
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Booking Id: {{ props.bookingObj?.bookingId }}
+          </h5>
+        </div>
+      </div>
+    </template>
+    <div class="w-full h-full overflow-hidden p-2 mt-3">
+      <EditFormV2
+        :key="formReload"
+        :fields="fields"
+        :item="item"
+        :error-list="errorsListParent"
+        :show-actions="true"
+        :loading-save="loadingSaveAll"
+        :container-class="containerClass"
+        @cancel="clearForm"
+        @delete="requireConfirmationToDelete($event)"
+        @submit="requireConfirmationToSave($event)"
+        @update:errors-list="errorsListParent = $event"
       >
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
             show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('invoiceAmount', $event)"
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
+            @update:model-value="($event) => {
+              onUpdate('invoiceAmount', $event)
+            }"
+          />
+        </template>
+
+        <template #field-adults="{ onUpdate, item: data }">
+          <InputNumber
+            v-model="data.adults"
+            show-clear
+            @update:model-value="($event) => {
+              onUpdate('adults', $event)
+              if ($event && +$event > 0) {
+                delete errorsListParent.children
+              }
+
+              if (data?.adults && data?.adults > 0) {
+                const decimalSchema = z.object(
+                  {
+                    children: z
+                      .number()
+                      .refine(value => !Number.isNaN(value) && +value >= 0, 'The children field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    children: z
+                      .number()
+                      .refine(value => !Number.isNaN(value) && +value > 0, 'The children field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'children', 'validation', decimalSchema.shape.children)
+              }
+            }"
+          />
+        </template>
+
+        <template #field-children="{ onUpdate, item: data }">
+          <InputNumber
+            v-model="data.children"
+            show-clear
+            @update:model-value="($event) => {
+              onUpdate('children', $event)
+
+              if ($event && +$event > 0) {
+                delete errorsListParent.adults
+              }
+
+              if (data?.children && data?.children > 0) {
+                const decimalSchema = z.object(
+                  {
+                    adults: z
+                      .number()
+                      .refine(value => +value >= 0, 'The adults field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    adults: z
+                      .number()
+                      .refine(value => +value > 0, 'The adults field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'adults', 'validation', decimalSchema.shape.adults)
+              }
+            }"
+          />
+        </template>
+
+        <template #field-hotelAmount="{ onUpdate, item: data }">
+          <InputNumber
+            v-model="data.hotelAmount"
+            show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
+            @update:model-value="($event) => {
+              onUpdate('hotelAmount', $event)
+
+              if (data?.invoiceAmount && data?.invoiceAmount > 0) {
+                const decimalSchema = z.object(
+                  {
+                    hotelAmount: z
+                      .number()
+                      .refine(value => +value >= 0, 'The Hotel Amount field cannot be negative').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+              }
+              else {
+                const decimalSchema = z.object(
+                  {
+                    hotelAmount: z
+                      .number()
+                      .refine(value => +value >= 0, 'The Hotel Amount field must be greater than 0').nullable(),
+                  },
+                )
+                updateFieldProperty(props.fields, 'hotelAmount', 'validation', decimalSchema.shape.hotelAmount)
+              }
+            }"
           />
         </template>
 
@@ -106,26 +284,19 @@ onMounted(() => {
             date-format="yy-mm-dd"
             :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
             @update:model-value="($event) => {
-              
-              onUpdate('checkOut',   dayjs($event).startOf('day').toDate())
+
+              onUpdate('checkOut', dayjs($event).startOf('day').toDate())
             }"
-          />
-        </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
-          <InputText
-            v-model="data.hotelAmount"
-            show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('hotelAmount', $event)"
           />
         </template>
         <template #form-footer="props">
           <Button
-            v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
+            v-tooltip.top="'Save'" label="Save" class="w-6rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <Button v-if="false" v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
-      </EditFormV2WithContainer>
+      </EditFormV2>
     </div>
   </Dialog>
 </template>

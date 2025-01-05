@@ -19,11 +19,23 @@ export enum ENUM_SHORT_TYPE {
 }
 
 export const ENUM_INVOICE_TYPE = [
-  { id: 'INVOICE', name: 'Invoice', code: 'INV' },
-  { id: 'INCOME', name: 'Income', code: 'INC' },
   { id: 'CREDIT', name: 'Credit', code: 'CRE' },
+  { id: 'INCOME', name: 'Income', code: 'INC' },
+  { id: 'INVOICE', name: 'Invoice', code: 'INV' },
   { id: 'OLD_CREDIT', name: 'Old Credit', code: 'OLD' }
 ]
+
+export const REPORT_FORMATS_TYPE = [
+  { id: 'PDF', name: 'PDF' },
+  { id: 'XLS', name: 'XLS' },
+]
+
+export enum InvoiceType {
+  INVOICE = 'INVOICE',
+  INCOME = 'INCOME',
+  CREDIT = 'CREDIT',
+  OLD_CREDIT = 'OLD_CREDIT'
+}
 
 export const OBJ_ENUM_INVOICE = {
   INVOICE: 'Invoice',
@@ -37,7 +49,7 @@ export const OBJ_ENUM_INVOICE_STATUS = {
   RECONCILED: 'Reconciled',
   SENT: 'Sent',
   PENDING: 'Pending',
-  CANCELED: 'Canceled'
+  CANCELLED: 'Cancelled'
 }
 export const OBJ_ENUM_INVOICE_TYPE_CODE = {
   INVOICE: 'INV',
@@ -48,7 +60,7 @@ export const OBJ_ENUM_INVOICE_TYPE_CODE = {
 
 export const ENUM_INVOICE_CRITERIA = [
   { id: 'invoiceId', name: 'Invoice Id' },
-  { id: 'invoiceNumber', name: 'Invoice No' },
+  { id: 'invoiceNumberPrefix', name: 'Invoice No' },
   { id: 'bookings.bookingId', name: 'Booking Id' },
   { id: 'bookings.fullName', name: 'Full Name' },
   { id: 'bookings.hotelBookingNumber', name: 'Reservation No' },
@@ -56,12 +68,28 @@ export const ENUM_INVOICE_CRITERIA = [
 ]
 
 export const ENUM_INVOICE_STATUS = [
-  { id: 'PROCECSED', name: 'Processed' },
-  { id: 'RECONCILED', name: 'Reconciled' },
-  { id: 'SENT', name: 'Sent' },
-  { id: 'CANCELED', name: 'Canceled' },
-  { id: 'PENDING', name: 'Pending' }
+  { id: 'CANCELED', name: 'Cancelled', code: 'CANC' },
+  { id: 'PENDING', name: 'Pending', code: 'PEND' },
+  { id: 'PROCECSED', name: 'Processed', code: 'PRO' },
+  { id: 'RECONCILED', name: 'Reconciled', code: 'REC' },
+  { id: 'SENT', name: 'Sent', code: 'SENT' },
 ]
+
+export enum InvoiceStatus {
+  PROCECSED = 'PROCECSED',
+  RECONCILED = 'RECONCILED',
+  SENT = 'SENT',
+  CANCELED = 'CANCELLED',
+  PENDING = 'PENDING'
+}
+
+export const OBJ_INVOICE_STATUS_NAME = {
+  [InvoiceStatus.PROCECSED]: 'PROCESSED',
+  [InvoiceStatus.RECONCILED]: 'RECONCILED',
+  [InvoiceStatus.SENT]: 'SENT',
+  [InvoiceStatus.CANCELED]: 'CANCELED',
+  [InvoiceStatus.PENDING]: 'PENDING',
+}
 
 export const OBJ_INVOICE_TITLE: any = {
   INVOICE: 'New Invoice',
@@ -108,12 +136,13 @@ export const ENUM_ROUTEOFADMINISTRATIONS = [
 ]
 
 export const ENUM_USER_TYPE = [
-  { id: 'PROVIDERS', name: 'PROVEEDOR' },
-  { id: 'DOCTORS', name: 'DOCTOR' },
-  { id: 'NURSES', name: 'ENFERMERA' },
-  { id: 'ASSISTANTS', name: 'ASISTENTE' },
-  { id: 'SYSTEM', name: 'SISTEMA' },
-  { id: 'UNDEFINED', name: 'INDEFINIDO' },
+  { id: 'INTERNAL', name: 'INTERNAL' },
+  { id: 'PROVIDERS', name: 'PROVIDERS' },
+  { id: 'DOCTORS', name: 'DOCTORS' },
+  { id: 'NURSES', name: 'NURSES' },
+  { id: 'ASSISTANTS', name: 'ASSISTANTS' },
+  { id: 'SYSTEM', name: 'SYSTEM' },
+  { id: 'UNDEFINED', name: 'UNDEFINED' },
 ]
 
 export const ENUM_GUIDE = [
@@ -249,7 +278,7 @@ export const ENUM_HOURS = [
 ]
 
 export const ENUM_INVOICE_STATUS_NAVIGATE = [
-  { id: 'Canceled', name: 'Canceled' },
+  { id: 'Cancelled', name: 'Cancelled' },
   { id: 'Pending', name: 'Pending' },
   { id: 'Processed', name: 'Processed' },
   { id: 'Reconciled', name: 'Reconciled' },
@@ -259,7 +288,7 @@ export const ENUM_INVOICE_STATUS_NAVIGATE = [
 
 export const ENUM_TRANSACTION_STATUS_NAVIGATE = [
   { id: 'Created', name: 'Created' },
-  { id: 'Canceled', name: 'Canceled' },
+  { id: 'Cancelled', name: 'Cancelled' },
   { id: 'Declined', name: 'Declined' },
   { id: 'Paid', name: 'Paid' },
   { id: 'Received', name: 'Received' },
@@ -275,7 +304,7 @@ export const ENUM_RECONCILE_TRANSACTION_STATUS_NAVIGATE = [
 
 export const ENUM_PAYMENT_TRANSACTION_STATUS_NAVIGATE = [
   { id: 'InProgress', name: 'In Progress' },
-  { id: 'Canceled', name: 'Canceled' },
+  { id: 'Cancelled', name: 'Cancelled' },
   { id: 'Completed', name: 'Completed' },
   { id: 'Applied', name: 'Applied' },
 ]
@@ -319,5 +348,41 @@ export enum ENUM_INVOICE_IMPORT_TYPE {
 export enum ENUM_PAYMENT_IMPORT_TYPE {
   BANK = 'BANK',
   EXPENSE = 'EXPENSE',
-  ANTI = 'ANTI'
+  ANTI = 'ANTI',
+  DETAIL = 'DETAIL',
+  BOOKING = 'EXPENSE_TO_BOOKING',
 }
+
+export enum ENUM_INVOICE_SEND_TYPE {
+  EMAIL = 'EML',
+  FTP = 'FTP',
+  BAVEL = 'BVL',
+}
+
+export enum CALENDAR_MODE {
+  MONTH = 'month',
+  YEAR = 'year',
+  DATE = 'date',
+  UNDEFINED = 'undefined',
+}
+
+export const FORM_FIELD_TYPE = [
+  { id: 'select', name: 'Select' },
+  { id: 'text', name: 'Text', show: false },
+  { id: 'number', name: 'Number' },
+  { id: 'email', name: 'Email' },
+  { id: 'date', name: 'Date' },
+  // { id: 'time', name: 'Time' },
+  { id: 'checkbox', name: 'Checkbox' },
+  { id: 'radio', name: 'Radio' },
+  { id: 'textarea', name: 'Textarea' },
+  // { id: 'file', name: 'File' },
+]
+
+export const ENUM_MAIL_TEMPLATE_TYPE = [
+  { id: 'PAYMENT_CONFIRMATION_VOUCHER', name: 'Payment Confirmation Voucher' },
+  { id: 'PAYMENT_LINK', name: 'Payment Link' },
+  { id: 'WELCOME', name: 'Welcome' },
+  { id: 'SEND_INVOICE', name: 'Send Invoice' },
+  { id: 'VERIFY_OTP', name: 'Verify OTP' },
+]

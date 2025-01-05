@@ -57,7 +57,7 @@ export const model = ref([
         icon: 'pi pi-fw pi-envelope',
         items: [
           {
-            label: 'Configuration',
+            label: 'Mailjet Configuration',
             icon: 'pi pi-fw pi-folder',
             to: '/mailjet-config'
           },
@@ -120,11 +120,6 @@ export const model = ref([
           //   icon: 'pi pi-fw pi-file-o',
           //   to: '/settings/report'
           // },
-          {
-            label: 'Attachment Type',
-            icon: 'pi pi-fw pi-folder',
-            to: '/settings/attachment-type'
-          },
         ]
       },
       // {
@@ -174,11 +169,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/agency-type'
           },
-          // {
-          //   label: 'Agency',
-          //   icon: 'pi pi-fw pi-folder',
-          //   to: ''
-          // },
+          {
+            label: 'Agency Contact',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/agency-contact'
+          },
           {
             label: 'Client',
             icon: 'pi pi-fw pi-folder',
@@ -388,6 +383,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/night-type'
           },
+          {
+            label: 'Invoice Attachment Type',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/attachment-type'
+          },
           //     {
           //       label: 'Room Type',
           //       icon: 'pi pi-fw pi-folder',
@@ -451,6 +451,11 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/payment-transaction-status'
           },
+          {
+            label: 'VCC Attachment Type',
+            icon: 'pi pi-fw pi-folder',
+            to: '/vcc-management/attachment-type'
+          },
         ]
       },
       // {
@@ -502,6 +507,16 @@ export const model = ref([
             icon: 'pi pi-fw pi-folder',
             to: '/settings/merchant-hotel-enrolle'
           },
+          {
+            label: 'Merchant Config',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/merchant-config'
+          },
+          {
+            label: 'Merchant Language',
+            icon: 'pi pi-fw pi-folder',
+            to: '/settings/merchant-language'
+          },
           // {
           //   label: 'Reconcile Status',
           //   icon: 'pi pi-fw pi-folder',
@@ -552,7 +567,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
             //   items: []
             // },
             {
-              label: 'Configuration',
+              label: 'Mailjet Configuration',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/mailjet-config'),
               items: []
@@ -564,11 +579,29 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
+              label: 'DB Connection',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/db-connection'),
+              items: []
+            },
+            {
               label: 'Report Configuration',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/report-config'),
               items: []
-            }
+            },
+            {
+              label: 'Report View',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/report-config/view'),
+              items: []
+            },
+            {
+              label: 'Logs',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/audit'),
+              items: []
+            },
           ]
         },
       ],
@@ -630,6 +663,12 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Invoice Close Operation',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/close-operation/invoice'),
+              items: []
+            },
+            {
+              label: 'Collection',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/collection'),
               items: []
             },
           ]
@@ -701,12 +740,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/settings/report-param-type'),
               items: []
             },
-            {
-              label: 'Attachment Type',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/attachment-type'),
-              items: []
-            }
           ]
         },
         {
@@ -719,7 +752,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
-              label: 'Invoice Types',
+              label: 'Invoice Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/invoice-type'),
               items: []
@@ -740,6 +773,18 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               label: 'Night Type',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/night-type'),
+              items: []
+            },
+            {
+              label: 'Invoice Resource Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/invoice/resource-type'),
+              items: []
+            },
+            {
+              label: 'Invoice Attachment Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/attachment-type'),
               items: []
             }
           ]
@@ -827,12 +872,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/payment/attachment-type'),
               items: []
             },
-            // {
-            //   label: 'Payment Transaction Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-transaction-status'),
-            //   items: []
-            // }
           ]
         }
       ],
@@ -906,6 +945,18 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
             {
+              label: 'Merchant Config',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/merchant-config'),
+              items: []
+            },
+            {
+              label: 'Merchant Language',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/merchant-language'),
+              items: []
+            },
+            {
               label: 'Reconcile Transaction Status',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/reconcile-transaction-status'),
@@ -916,10 +967,27 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/transaction-status'),
               items: []
+            },
+            {
+              label: 'Payment Transaction Status',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/settings/payment-transaction-status'),
+              items: []
+            },
+            {
+              label: 'VCC Resource Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/vcc-management/resource-type'),
+              items: []
+            },
+            {
+              label: 'VCC Attachment Type',
+              icon: 'pi pi-fw pi-file',
+              command: () => navigateTo('/vcc-management/attachment-type'),
+              items: []
             }
           ]
         }
-
       ],
       [
         {

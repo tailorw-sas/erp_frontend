@@ -169,7 +169,7 @@ function clearForm() {
   AccountTypeList.value = []
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -214,7 +214,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -236,12 +236,15 @@ async function getItemById(id: string) {
         item.value.id = response.id
         item.value.description = response.description
         item.value.accountNumber = response.accountNumber
-        HotelList.value = [response.manageHotel]
-        item.value.manageHotel = response.manageHotel
-        BankList.value = [response.manageBank]
-        item.value.manageBank = response.manageBank
-        AccountTypeList.value = [response.manageAccountType]
-        item.value.manageAccountType = response.manageAccountType
+        if (response.manageHotel) {
+          item.value.manageHotel = { id: response.manageHotel.id, name: `${response.manageHotel.code} - ${response.manageHotel.name}`, status: response.manageHotel.status }
+        }
+        if (response.manageBank) {
+          item.value.manageBank = { id: response.manageBank.id, name: `${response.manageBank.code} - ${response.manageBank.name}`, status: response.manageBank.status }
+        }
+        if (response.manageAccountType) {
+          item.value.manageAccountType = { id: response.manageAccountType.id, name: `${response.manageAccountType.code} - ${response.manageAccountType.name}`, status: response.manageAccountType.status }
+        }
         item.value.status = statusToBoolean(response.status)
       }
       fields[0].disabled = true
@@ -295,7 +298,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.manageHotel = typeof payload.manageHotel === 'object' ? payload.manageHotel.id : payload.manageHotel
     payload.manageAccountType = typeof payload.manageAccountType === 'object' ? payload.manageAccountType.id : payload.manageAccountType
     delete payload.event
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -307,7 +310,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.manageHotel = typeof payload.manageHotel === 'object' ? payload.manageHotel.id : payload.manageHotel
   payload.manageAccountType = typeof payload.manageAccountType === 'object' ? payload.manageAccountType.id : payload.manageAccountType
   delete payload.event
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -330,9 +333,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -343,7 +347,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -354,7 +358,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -362,27 +369,39 @@ async function getBankList(query: string) {
   try {
     const payload
         = {
-          filter: [{
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'AND'
-          }, {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }],
+          filter: [
+            {
+              key: 'name',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'code',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'OR'
+            },
+            {
+              key: 'status',
+              operator: 'EQUALS',
+              value: 'ACTIVE',
+              logicalOperation: 'AND'
+            }
+          ],
           query: '',
           pageSize: 20,
           page: 0,
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search('settings', 'manage-bank', payload)
+
     const { data: dataList } = response
     BankList.value = []
     for (const iterator of dataList) {
-      BankList.value = [...BankList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      BankList.value = [...BankList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -398,7 +417,13 @@ async function getAccountTypeList(query: string = '') {
           key: 'name',
           operator: 'LIKE',
           value: query,
-          logicalOperation: 'AND'
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
         },
         {
           key: 'status',
@@ -410,13 +435,15 @@ async function getAccountTypeList(query: string = '') {
       query: '',
       pageSize: 200,
       page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
     const response = await GenericService.search('settings', 'manage-account-type', payload)
     const { data: dataList } = response
     AccountTypeList.value = []
 
     for (const iterator of dataList) {
-      AccountTypeList.value = [...AccountTypeList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      AccountTypeList.value = [...AccountTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -427,27 +454,38 @@ async function getAccountTypeList(query: string = '') {
 async function getHotelList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
     }
     const response = await GenericService.search('settings', 'manage-hotel', payload)
     const { data: dataList } = response
     HotelList.value = []
 
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -509,9 +547,17 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
-    payload.value.sortBy = event.sortField === 'manageBank'
-      ? 'manageBank.name'
-      : event.sortField === 'manageHotel' ? 'manageHotel.name' : event.sortField
+    if (event.sortField === 'manageAccountType') {
+      event.sortField = 'manageAccountType.name'
+    }
+    if (event.sortField === 'manageBank') {
+      event.sortField = 'manageBank.name'
+    }
+    if (event.sortField === 'manageHotel') {
+      event.sortField = 'manageHotel.name'
+    }
+
+    payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
@@ -553,19 +599,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Bank Account
-    </h3>
+    </h5>
     <IfCan :perms="['BANK-ACCOUNT:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2 bg-white">
           <AccordionTab>
             <template #header>

@@ -6,6 +6,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import type { PageState } from 'primevue/paginator'
+import InputNumber from 'primevue/inputnumber'
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -19,7 +20,8 @@ import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const toast = useToast()
 const confirm = useConfirm()
-const { data: userData } = useAuth()
+// const { data: userData } = useAuth()
+const { userData } = useAuthStore()
 const idItemToLoadFirstTime = ref('')
 const idItem = ref('')
 const idItemDetail = ref('')
@@ -46,6 +48,7 @@ const onOffDialogPaymentDetail = ref(false)
 const attachmentHistoryDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
 const exportAttachmentsDialogOpen = ref<boolean>(false)
+const LocalAttachmentList = ref<any[]>([])
 const AdjustmentList = ref<any[]>([])
 const AdjustmentTableList = ref<any[]>([])
 const activeTab = ref(2)
@@ -180,7 +183,7 @@ const adjustmentPayload = ref<IQueryRequest>({
 
 const objApis = ref({
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
-  invoiceStatus: { moduleApi: 'settings', uriApi: 'manage-invoice-status' },
+  invoiceStatus: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' },
   agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
   hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
   bankAccount: { moduleApi: 'settings', uriApi: 'manage-bank-account' },
@@ -195,149 +198,47 @@ const objApisLoading = ref({
 
 const columns: IColumn[] = [
   { field: 'bookingId', header: 'ID', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
+  // { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'fullName', header: 'Full Name', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No.', type: 'text' },
-  { field: 'cuponNumber', header: 'Cupon No.', type: 'text' },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text' },
+  { field: 'cuponNumber', header: 'Coupon No.', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'nights', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Booking Amount', type: 'number' },
 
 ]
-
 const adjustmentColumns: IColumn[] = [
   { field: 'adjustmentId', header: 'ID', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'date', header: 'Date', type: 'text' },
-  { field: 'transaction', header: 'Transaction', type: 'text' },
-  { field: 'remark', header: 'Description', type: 'text' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  // { field: 'amountTemp', header: 'Amount', type: 'text' },
+  { field: 'roomRateId', header: 'Room Rate', type: 'text' },
+  { field: 'transaction', header: 'Category', type: 'text' },
+  { field: 'date', header: 'Transaction Date', type: 'text' },
+  { field: 'employee', header: 'Employee', type: 'text' },
+  { field: 'remark', header: 'Description', type: 'text', width: '200px' },
 ]
 
 const roomRateColumns: IColumn[] = [
   { field: 'roomRateId', header: 'Id', type: 'text' },
-  { field: 'fullName', header: 'Full Name', type: 'text' },
+  // { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'adults', header: 'Adults', type: 'text' },
   { field: 'children', header: 'Children', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
+  // { field: 'roomType', header: 'Room Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-room-type' } },
   { field: 'nights', header: 'Nights', type: 'text' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  // { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'number' },
 ]
 
 const formTitle = computed(() => {
   return 'New Income'
 })
-
-/*
-const fields: Array<FieldDefinitionType> = [
-  {
-    field: 'incomeId',
-    header: 'Id',
-    disabled: true,
-    dataType: 'text',
-    class: 'field col-12 md:col-1',
-  },
-  {
-    field: 'invoiceNumber',
-    header: 'Invoice Number',
-    dataType: 'text',
-    class: 'field col-12 md:col-2',
-  },
-  {
-    field: 'manual',
-    header: 'Manual',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'invoiceAmount',
-    header: 'Invoice Amount',
-    dataType: 'text',
-    disabled: false,
-    class: 'field col-12 md:col-2 required',
-    validation: decimalSchema.shape.paymentAmmount
-  },
-  {
-    field: 'invoiceType',
-    header: 'Invoice Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Type'),
-  },
-  {
-    field: 'invoiceStatus',
-    header: 'Status',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Status'),
-  },
-  {
-    field: 'dueDate',
-    header: 'Due Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-1 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Due Date field is required',
-      invalid_type_error: 'The Due Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-  {
-    field: 'invoiceDate',
-    header: 'Invoice Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Invoice Date field is required',
-      invalid_type_error: 'The Invoice Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
-  },
-  {
-    field: 'reSend',
-    header: 'Re-Send',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'reSendDate',
-    header: 'Re-Send Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Re-Send Date field is required',
-      invalid_type_error: 'The Re-Send Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Re-Send Date field cannot be greater than current date')
-  },
-  {
-    field: 'hotel',
-    header: 'Hotel',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('hotel'),
-  },
-  {
-    field: 'agency',
-    header: 'Agency',
-    dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    disabled: false,
-    validation: validateEntityStatus('agency'),
-  },
-] */
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -345,36 +246,27 @@ const fields: Array<FieldDefinitionType> = [
     header: 'ID',
     disabled: true,
     dataType: 'text',
-    class: 'field col-12 md:col-1',
+    class: 'field col-12 md:col-3',
   },
+  // {
+  //   field: 'dueDate',
+  //   header: 'Due Date',
+  //   dataType: 'date',
+  //   class: 'field col-12 md:col-2 required ',
+  //   validation: z.date({
+  //     required_error: 'The Due Date field is required',
+  //     invalid_type_error: 'The Due Date field is required',
+  //   }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
+  // },
   {
-    field: 'dueDate',
-    header: 'Due Date',
+    field: 'invoiceDate',
+    header: 'Invoice Date',
     dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
+    class: 'field col-12 md:col-3 required ',
     validation: z.date({
-      required_error: 'The Due Date field is required',
-      invalid_type_error: 'The Due Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  },
-
-  {
-    field: 'manual',
-    header: 'Manual',
-    dataType: 'check',
-    disabled: true,
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'incomeAmount',
-    header: 'Income Amount',
-    dataType: 'text',
-    disabled: true,
-    class: 'field col-12 md:col-2 required',
-
+      required_error: 'The Invoice Date field is required',
+      invalid_type_error: 'The Invoice Date field is required',
+    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
   },
   {
     field: 'hotel',
@@ -384,73 +276,66 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('hotel'),
   },
   {
-    field: 'agency',
-    header: 'Agency',
+    field: 'invoiceType',
+    header: 'Invoice Type',
     dataType: 'select',
-    class: 'field col-12 md:col-3 required',
-    disabled: false,
-    validation: validateEntityStatus('agency'),
+    class: 'field col-12 md:col-3',
+    validation: validateEntityStatus('Invoice Type'),
+    disabled: true,
   },
   {
     field: 'invoiceNumber',
     header: 'Invoice Number',
     dataType: 'text',
     disabled: true,
-    class: 'field col-12 md:col-1',
+    class: 'field col-12 md:col-3',
   },
   {
-    field: 'invoiceDate',
-    header: 'Invoice Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2 required ',
-    headerClass: 'mb-1',
-
-    validation: z.date({
-      required_error: 'The Invoice Date field is required',
-      invalid_type_error: 'The Invoice Date field is required',
-    }).max(dayjs().endOf('day').toDate(), 'The Invoice Date field cannot be greater than current date')
+    field: 'incomeAmount',
+    header: 'Invoice Amount',
+    dataType: 'text',
+    disabled: true,
+    class: 'field col-12 md:col-3 required',
   },
   {
-    field: 'reSend',
-    header: 'Re-Send',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
-  },
-  {
-    field: 'reSendDate',
-    header: 'Re-Send Date',
-    dataType: 'date',
-    class: 'field col-12 md:col-2',
-    headerClass: 'mb-1',
-    validation: z
-      .union([z.date(), z.null()])
-      .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
-        message: 'The Re-Send Date field cannot be greater than current date',
-      })
-  },
-
-  {
-    field: 'invoiceType',
-    header: 'Invoice Type',
+    field: 'agency',
+    header: 'Agency',
     dataType: 'select',
     class: 'field col-12 md:col-3 required',
-    validation: validateEntityStatus('Invoice Type'),
+    disabled: false,
+    validation: validateEntityForAgency('agency'),
   },
   {
     field: 'invoiceStatus',
     header: 'Status',
     dataType: 'select',
-    class: 'field col-12 md:col-3 required',
+    class: 'field col-12 md:col-2',
     validation: validateEntityStatus('Status'),
-  },
-  {
-    field: 'status',
-    header: 'Active',
-    dataType: 'check',
-    class: 'field col-12 md:col-1 mt-3 mb-3',
-    headerClass: 'mb-1',
     disabled: true,
+  },
+  // {
+  //   field: 'reSend',
+  //   header: 'Re-Send',
+  //   dataType: 'check',
+  //   class: 'field col-12 md:col-1 mt-3 mb-3',
+  // },
+  // {
+  //   field: 'reSendDate',
+  //   header: 'Re-Send Date',
+  //   dataType: 'date',
+  //   class: 'field col-12 md:col-2',
+  //   validation: z
+  //     .union([z.date(), z.null()])
+  //     .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
+  //       message: 'The Re-Send Date field cannot be greater than current date',
+  //     })
+  // },
+  {
+    field: 'manual',
+    header: 'Manual',
+    dataType: 'check',
+    disabled: true,
+    class: 'field col-12 md:col-1 flex align-items-end pb-2',
   },
 ]
 
@@ -513,21 +398,34 @@ const itemTemp = ref({
 
 const fieldAdjustments = ref<FieldDefinitionType[]>([
 
+  // {
+  //   field: 'amount',
+  //   header: 'Amount',
+  //   dataType: 'text',
+  //   class: 'field col-12 required',
+  //   validation: z.string().min(1, { message: 'The amount field is required' })
+  //     .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
+  //     .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
+  // },
   {
     field: 'amount',
     header: 'Amount',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12 required',
-    validation: z.string().min(1, { message: 'The amount field is required' })
-      .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-      .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
+    validation: z.number({
+      invalid_type_error: 'The amount field is required',
+      required_error: 'The amount field is required',
+    })
+      // .positive({ message: 'The amount must be a positive number' })
+      .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
+      .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
   },
+
   {
     field: 'date',
     header: 'Date',
     dataType: 'date',
     class: 'field col-12 required ',
-    headerClass: 'mb-1',
     validation: z.date({
       required_error: 'The Date field is required',
       invalid_type_error: 'The Date field is required',
@@ -545,6 +443,7 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     header: 'Remark',
     dataType: 'textarea',
     class: 'field col-12',
+    validation: z.string().trim().max(255, 'Maximum 255 characters')
   },
 ])
 
@@ -695,7 +594,8 @@ async function getAdjustmentList() {
         loadingEdit: false,
         loadingDelete: false,
         date: iterator.date.substring(0, 10),
-        transaction: `${iterator.transaction.code} - ${iterator.transaction.name}`,
+        transaction: iterator.paymentTransactionType ? `${iterator.paymentTransactionType.code} - ${iterator.paymentTransactionType.name}` : '',
+        roomRateId: iterator.roomRate?.roomRateId,
         remark: iterator.description,
       }]
     }
@@ -731,19 +631,37 @@ watch(idItem, () => {
   }
 })
 
+async function validateIncomeCloseOperation(item: { [key: string]: any }) {
+  if (item) {
+    const hotelId = Object.prototype.hasOwnProperty.call(item.hotel, 'id') ? item.hotel.id : item.hotel
+    const dateList: string[] = AdjustmentList.value.map((e: any) => e.date)
+    if (item.invoiceDate) {
+      dateList.push(dayjs(item.invoiceDate).format('YYYY-MM-DD'))
+    }
+    await validateCloseOperation(hotelId, dateList)
+  }
+}
+
+async function validateCloseOperation(hotelId: string, dateList: string[]) {
+  const payload = {
+    hotelId,
+    dates: dateList
+  }
+  await GenericService.create(confApi.moduleApi, 'check-dates', payload)
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = { ...item }
-    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DD') : ''
-    payload.reSendDate = payload.reSendDate ? dayjs(payload.reSendDate).format('YYYY-MM-DD') : ''
-    payload.invoiceDate = payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DD') : ''
+    payload.dueDate = payload.dueDate ? dayjs(payload.dueDate).format('YYYY-MM-DDTHH:mm:ss') : payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.reSendDate = payload.reSendDate ? dayjs(payload.reSendDate).format('YYYY-MM-DDTHH:mm:ss') : ''
+    payload.invoiceDate = payload.invoiceDate ? dayjs(payload.invoiceDate).format('YYYY-MM-DDTHH:mm:ss') : ''
     payload.invoiceType = Object.prototype.hasOwnProperty.call(payload.invoiceType, 'id') ? payload.invoiceType.id : payload.invoiceType
     payload.invoiceStatus = Object.prototype.hasOwnProperty.call(payload.invoiceStatus, 'id') ? payload.invoiceStatus.id : payload.invoiceStatus
     payload.agency = Object.prototype.hasOwnProperty.call(payload.agency, 'id') ? payload.agency.id : payload.agency
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
-    payload.employee = userData?.value?.user?.name
-    payload.employeeId = userData?.value?.user?.userId
+    payload.employee = userData?.data?.userId
 
     let totalIncomeAmount = 0
     if (Array.isArray(payload.incomeAmount)) {
@@ -755,11 +673,24 @@ async function createItem(item: { [key: string]: any }) {
 
     // Asignación del invoiceAmount total al payload
     payload.incomeAmount = totalIncomeAmount
+    if (LocalAttachmentList.value.length > 0) {
+      payload.attachments = LocalAttachmentList.value.map(item => ({
+        filename: item.filename,
+        file: item.file,
+        remark: item.remark,
+        type: item.type.id,
+        employee: item.employee,
+        employeeId: item.employeeId,
+        paymentResourceType: item.paymentResourceType.id,
+      }))
+    }
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment ${response.invoiceId ?? ''} was created successful`, life: 10000 })
+      LocalAttachmentList.value = []
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successfully`, life: 10000 })
+      // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -783,12 +714,13 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
+      // await validateIncomeCloseOperation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
       updateFieldProperty(fields, 'reSendDate', 'disabled', true)
       if (AdjustmentList.value.length > 0) {
-        await createAdjustment(AdjustmentList.value[0])
+        await createAdjustment(AdjustmentList.value)
       }
       await getItemById(idItem.value)
     }
@@ -848,22 +780,24 @@ async function getItemById(id: string) {
   }
 }
 
-async function createAdjustment(item: { [key: string]: any }) {
+async function createAdjustment(items: any[]) {
   try {
-    if (item) {
+    // console.log(item)
+    if (items.length > 0) {
       loadingSaveAdjustment.value = true
-      const payload: { [key: string]: any } = { ...item }
-      payload.amount = Number.parseFloat(payload.amount)
-      payload.employee = userData?.value?.user?.name
-      payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
-      payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
-      payload.remark = item.remark
-      payload.status = 'ACTIVE'
-      payload.date = payload.date ? dayjs(payload.date).format('YYYY-MM-DD') : ''
-      if (selectedRoomRate.value) {
-        payload.roomRate = selectedRoomRate.value.id
+
+      const transformed = {
+        status: 'ACTIVE',
+        income: idItem.value,
+        employee: userData?.data?.userId,
+        adjustments: items.map(item => ({
+          transactionType: item.transactionType ? item.transactionType.id : null,
+          amount: Number.parseFloat(item.amount),
+          date: item.date ? dayjs(item.date).format('YYYY-MM-DD') : '',
+          remark: item.remark
+        }))
       }
-      await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', payload)
+      await GenericService.create(confApiPaymentDetail.moduleApi, 'income-adjustment', transformed)
 
       onOffDialogPaymentDetail.value = false
       loadingSaveAdjustment.value = false
@@ -884,22 +818,24 @@ async function createInvoiceAdjustment(item: { [key: string]: any }) {
       loadingSaveAdjustment.value = true
       const payload: { [key: string]: any } = { ...item }
       payload.amount = Number.parseFloat(payload.amount)
-      payload.employee = userData?.value?.user?.name
-      payload.transactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+      payload.employee = userData?.data?.userId
+      payload.paymentTransactionType = payload.transactionType && Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
       payload.description = item.remark
+      payload.income = idItem.value // Usar el ID del registro de "income" creado anteriormente
       // payload.date = payload.date
       if (selectedRoomRate.value) {
         payload.roomRate = selectedRoomRate.value.id
       }
       delete payload.remark
+      delete payload.transactionType
       await GenericService.create(confApiInvoiceAdjustment.moduleApi, confApiInvoiceAdjustment.uriApi, payload)
 
       onOffDialogPaymentDetail.value = false
       loadingSaveAdjustment.value = false
-      await getBookingList()
-      await getRoomRateList()
-      await getAdjustmentList()
-      await getItemById(idItem.value)
+      getBookingList()
+      getRoomRateList()
+      getAdjustmentList()
+      getItemById(idItem.value)
     }
   }
   finally {
@@ -919,21 +855,73 @@ async function updateItem(item: { [key: string]: any }) {
   clearFormDetails()
 }
 
+function saveLocal(itemP: { [key: string]: any }) {
+  const localAdjustment: { [key: string]: any } = { ...itemP }
+  const adjustmentDate = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
+  const itemAmount = Number(itemP.amount) + Number(item.value.incomeAmount)
+  localAdjustment.date = adjustmentDate
+  localAdjustment.employee = userData?.data ? `${userData?.data?.name} ${userData?.data?.lastName}` : ''
+  localAdjustment.employeeId = userData?.data?.userId
+  localAdjustment.id = AdjustmentList.value.length
+  localAdjustment.amountTemp = formatNumber(itemAmount)
+  if (AdjustmentList.value.length > 0) {
+    AdjustmentList.value.push(localAdjustment)
+  }
+  else {
+    AdjustmentList.value = [localAdjustment]
+  }
+  AdjustmentTableList.value = [...AdjustmentList.value].map(({ transactionType, ...rest }) => ({
+    transaction: transactionType?.name ?? '',
+    ...rest
+  }))
+  pagination.value.totalElements = AdjustmentTableList.value.length
+  totalAmount.value = itemAmount
+  // BOOKING
+  if (AdjustmentList.value.length === 1) {
+    const localBooking: { [key: string]: any } = {}
+    localBooking.checkIn = adjustmentDate
+    localBooking.checkOut = adjustmentDate
+    localBooking.nights = '0'
+    localBooking.hotelAmount = '0'
+    localBooking.invoiceAmount = itemAmount
+    bookingList.value = [localBooking]
+    bookingPagination.value.totalElements = bookingList.value.length
+    // ROOM RATE
+    const localRoomRate: { [key: string]: any } = {}
+    localRoomRate.checkIn = adjustmentDate
+    localRoomRate.checkOut = adjustmentDate
+    localRoomRate.nights = '0'
+    localRoomRate.hotelAmount = '0'
+    localRoomRate.invoiceAmount = itemAmount
+    roomRateList.value = [localRoomRate]
+    roomRatePagination.value.totalElements = roomRateList.value.length
+  }
+  else {
+    bookingList.value[0].invoiceAmount = itemAmount
+    roomRateList.value[0].invoiceAmount = itemAmount
+  }
+  totalamountbooking.value = itemAmount
+  totalInvoice.value = itemAmount
+  item.value.incomeAmount = itemAmount
+  formReload.value++
+}
+
 async function saveAndReload(itemP: { [key: string]: any }) {
   try {
+    loadingSaveAdjustment.value = true
     if (idItem.value) {
+      /* const hotelId = Object.prototype.hasOwnProperty.call(item.value.hotel, 'id') ? item.value.hotel.id : item.value.hotel
+      const dateList: string[] = []
+      if (itemP.date) {
+        dateList.push(dayjs(itemP.date).format('YYYY-MM-DD'))
+      }
+      await validateCloseOperation(hotelId, dateList) */
       await createInvoiceAdjustment(itemP)
+      onOffDialogPaymentDetail.value = false
     }
     else {
-      const data: { [key: string]: any } = { ...itemP }
-      data.date = itemP.date ? dayjs(itemP.date).format('YYYY-MM-DD') : ''
-      AdjustmentList.value = [data]
-      AdjustmentTableList.value = [...AdjustmentList.value].map(({ transactionType, ...rest }) => ({
-        transaction: transactionType?.name ?? '',
-        ...rest
-      }))
-      pagination.value.totalElements = AdjustmentTableList.value.length
-      totalAmount.value = itemP.amount
+      saveLocal(itemP)
+      onOffDialogPaymentDetail.value = false
     }
     // await getItemById(idItem.value)
   }
@@ -941,20 +929,8 @@ async function saveAndReload(itemP: { [key: string]: any }) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
   finally {
-    onOffDialogPaymentDetail.value = false
+    loadingSaveAdjustment.value = false
   }
-  /* try {
-    if (item?.id && !isSplitAction.value) {
-      await updateItem(item)
-    }
-    else {
-      await createPaymentDetails(item)
-    }
-    await getItemById(idItem.value)
-  }
-  catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-  } */
 }
 
 function requireConfirmationToDelete(event: any) {
@@ -990,6 +966,29 @@ function mapFunction(data: DataListItem): ListItem {
     id: data.id,
     name: `${data.code} - ${data.name}`,
     status: data.status
+  }
+}
+
+interface DataListItemAgency {
+  id: string
+  name: string
+  code: string
+  status: string
+  client: any
+}
+
+interface ListItemAgency {
+  id: string
+  name: string
+  status: boolean | string
+  client: any
+}
+function mapFunctionAgency(data: DataListItemAgency): ListItemAgency {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    client: data.client
   }
 }
 
@@ -1101,7 +1100,7 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
     }
   ]
 
-  agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunction)
+  agencyList.value = await getDataList<DataListItemAgency, ListItemAgency>(moduleApi, uriApi, [...(filter || []), ...additionalFilter], queryObj, mapFunctionAgency)
 }
 
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -1132,6 +1131,12 @@ function onCloseDialog($event: any) {
     isSplitAction.value = false
   }
   onOffDialogPaymentDetail.value = $event
+}
+
+function onCloseAdjustmentDialog() {
+  if (AdjustmentList.value.length === 0) {
+    navigateTo('/payment')
+  }
 }
 
 async function loadDefaultsValues() {
@@ -1212,7 +1217,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" />
         </template>
         <template #field-incomeAmount="{ item: data, onUpdate }">
-          <InputText
+          <InputNumber
             v-if="!loadingSaveAll"
             v-model="data.incomeAmount"
             show-clear :disabled="true"
@@ -1230,7 +1235,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceStatus"
             :suggestions="[...invoiceStatusList]"
-            :disabled="idItem !== ''"
+            :disabled="true"
             @change="async ($event) => {
               onUpdate('invoiceStatus', $event)
             }"
@@ -1258,7 +1263,7 @@ onMounted(async () => {
             item-value="id"
             :model="data.invoiceType"
             :suggestions="[...invoiceTypeList]"
-            :disabled="idItem !== ''"
+            :disabled="true"
             @change="($event) => {
               onUpdate('invoiceType', $event)
             }"
@@ -1278,7 +1283,6 @@ onMounted(async () => {
           />
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
-
         <!-- Agency -->
         <template #field-agency="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
@@ -1292,6 +1296,7 @@ onMounted(async () => {
             :disabled="idItem !== ''"
             @change="($event) => {
               onUpdate('agency', $event)
+              item.agency = $event
             }"
             @load="async($event) => {
               const objQueryToSearch = {
@@ -1322,6 +1327,7 @@ onMounted(async () => {
             :disabled="idItem !== ''"
             @change="async ($event) => {
               onUpdate('hotel', $event)
+              item.hotel = $event
             }"
             @load="async($event) => {
               const objQueryToSearch = {
@@ -1354,9 +1360,9 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
-                <Column footer="Totals:" :colspan="10" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="totalhotelbooking" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="totalamountbooking" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column :footer="formatNumber(totalhotelbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalamountbooking)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1381,9 +1387,9 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
-                <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="totalHotel" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :footer="totalInvoice" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column footer="Totals:" :colspan="6" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
+                <Column :footer="formatNumber(totalHotel)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalInvoice)" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1409,8 +1415,8 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center ">
               <Row>
                 <Column footer="Total:" :colspan="1" footer-style="text-align:right; font-weight: bold; color:#ffffff; background-color:#0F8BFD;" />
-                <Column :footer="totalAmount" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
-                <Column :colspan="4" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :footer="formatNumber(totalAmount)" footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
+                <Column :colspan="5" footer-style="text-align:right; font-weight: bold; background-color:#0F8BFD; color:#ffffff;" />
               </Row>
             </ColumnGroup>
           </template>
@@ -1423,13 +1429,13 @@ onMounted(async () => {
       @on-sort-field="onSortField" -->
 
     <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
-      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="idItem.length > 0" @click="forceSave = true" />
+      <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="idItem.length > 0 || (idItem === '' && LocalAttachmentList.length === 0)" @click="forceSave = true" />
       <Button
         v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="!item.hasAttachments" @click="() => {
           exportAttachmentsDialogOpen = true
         }"
       />
-      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" :disabled="idItem.length === 0" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
+      <Button v-tooltip.top="'Attachment'" class="w-3rem ml-1" icon="pi pi-paperclip" severity="primary" @click="handleAttachmentDialogOpen" />
       <Button v-tooltip.top="'Show history'" class="w-3rem ml-1" :disabled="idItem.length === 0" @click="handleAttachmentHistoryDialogOpen">
         <template #icon>
           <span class="flex align-items-center justify-content-center p-0">
@@ -1443,7 +1449,7 @@ onMounted(async () => {
       <!-- <Button v-tooltip.top="'Edit Detail'" class="w-3rem" icon="pi pi-pen-to-square" severity="secondary" @click="deletePaymentDetail($event)" /> -->
       <Button v-tooltip.top="'Import'" class="w-3rem ml-1" disabled icon="pi pi-download" />
 
-      <Button v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
+      <Button v-if="false" v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
 
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="() => navigateTo('/payment')" />
     </div>
@@ -1458,19 +1464,21 @@ onMounted(async () => {
       :is-split-action="isSplitAction"
       @update:visible="onCloseDialog($event)"
       @save="saveAndReload($event)"
-      @on-close="() => navigateTo('/payment')"
+      @on-close="onCloseAdjustmentDialog"
     />
     <div v-if="attachmentDialogOpen">
       <AttachmentIncomeDialog
         :close-dialog="(total: number) => {
           attachmentDialogOpen = false
           item.hasAttachments = total > 0
-        }" :is-creation-dialog="false" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item"
+        }" :is-creation-dialog="idItem === ''" header="Manage Income Attachment" :open-dialog="attachmentDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item"
+        :list-items="LocalAttachmentList" @update:list-items="($event) => LocalAttachmentList = [...LocalAttachmentList, $event]"
+        @delete-list-items="($id) => LocalAttachmentList = LocalAttachmentList.filter(item => item.id !== $id)"
       />
     </div>
 
     <div v-if="attachmentHistoryDialogOpen">
-      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Income Status History" />
+      <IncomeHistoryDialog :close-dialog="() => { attachmentHistoryDialogOpen = false }" :open-dialog="attachmentHistoryDialogOpen" :selected-invoice="idItem" :selected-invoice-obj="item" header="Invoice Status History" />
     </div>
     <div v-if="exportAttachmentsDialogOpen">
       <PrintInvoiceDialog :close-dialog="() => { exportAttachmentsDialogOpen = false }" :open-dialog="exportAttachmentsDialogOpen" :invoice="item" />

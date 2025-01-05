@@ -84,15 +84,15 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.boolean()
   },
   {
-    field: 'remarkRequired',
-    header: 'Remark Required',
+    field: 'deposit',
+    header: 'Deposit',
     dataType: 'check',
     class: 'field col-12',
     validation: z.boolean()
   },
   {
-    field: 'deposit',
-    header: 'Deposit',
+    field: 'debit',
+    header: 'Debit',
     dataType: 'check',
     class: 'field col-12',
     validation: z.boolean()
@@ -108,12 +108,39 @@ const fields: Array<FieldDefinitionType> = [
     field: 'defaults',
     header: 'Defaults',
     dataType: 'check',
-    class: 'field col-12 mb-3',
+    class: 'field col-12',
+    validation: z.boolean()
+  },
+  {
+    field: 'incomeDefault',
+    header: 'Income Default',
+    dataType: 'check',
+    class: 'field col-12',
+  },
+  {
+    field: 'paymentInvoice',
+    header: 'Payment Invoice',
+    dataType: 'check',
+    class: 'field col-12',
     validation: z.boolean()
   },
   {
     field: 'antiToIncome',
     header: 'Anti To Income',
+    dataType: 'check',
+    class: 'field col-12',
+    validation: z.boolean()
+  },
+  {
+    field: 'expenseToBooking',
+    header: 'Expense To Booking',
+    dataType: 'check',
+    class: 'field col-12',
+    validation: z.boolean()
+  },
+  {
+    field: 'remarkRequired',
+    header: 'Remark Required',
     dataType: 'check',
     class: 'field col-12 mb-3',
     validation: z.boolean()
@@ -122,7 +149,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'minNumberOfCharacter',
     header: 'Min Number Of Character',
     dataType: 'number',
-    class: 'field col-12 required',
+    class: 'field col-12',
     disabled: true,
     headerClass: 'mb-1',
     validation: z.number().nonnegative('The value cannot be negative')
@@ -131,10 +158,9 @@ const fields: Array<FieldDefinitionType> = [
     field: 'defaultRemark',
     header: 'Default Remark',
     dataType: 'text',
-    class: 'field col-12 required',
+    class: 'field col-12',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'The default remark field is required').max(50, 'Maximum 50 characters'),
-
+    validation: z.string().trim().min(0, 'The default remark field is required').max(50, 'Maximum 50 characters'),
   },
   {
     field: 'description',
@@ -160,6 +186,7 @@ const item = ref<GenericObject>({
   collected: false,
   status: true,
   cash: false,
+  debit: false,
   agencyRateAmount: false,
   negative: false,
   policyCredit: false,
@@ -168,6 +195,8 @@ const item = ref<GenericObject>({
   applyDeposit: false,
   defaults: false,
   antiToIncome: false,
+  expenseToBooking: false,
+  paymentInvoice: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
 })
@@ -179,6 +208,7 @@ const itemTemp = ref<GenericObject>({
   collected: false,
   status: true,
   cash: false,
+  debit: false,
   agencyRateAmount: false,
   negative: false,
   policyCredit: false,
@@ -187,6 +217,8 @@ const itemTemp = ref<GenericObject>({
   applyDeposit: false,
   defaults: false,
   antiToIncome: false,
+  paymentInvoice: false,
+  expenseToBooking: false,
   minNumberOfCharacter: 0,
   defaultRemark: '',
 })
@@ -246,7 +278,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -282,7 +314,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -343,7 +375,11 @@ async function getItemById(id: string) {
         item.value.deposit = response.deposit
         item.value.applyDeposit = response.applyDeposit
         item.value.defaults = response.defaults
+        item.value.incomeDefault = response.incomeDefault
         item.value.antiToIncome = response.antiToIncome
+        item.value.expenseToBooking = response.expenseToBooking
+        item.value.paymentInvoice = response.paymentInvoice
+        item.value.debit = response.debit
         updateFieldProperty(fields, 'minNumberOfCharacter', 'disabled', !response.remarkRequired)
       }
       fields[0].disabled = true
@@ -366,7 +402,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -374,7 +410,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -397,9 +433,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     }
@@ -410,7 +447,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     }
     catch (error: any) {
@@ -421,7 +458,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -529,11 +569,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Payment Transaction Type
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
@@ -618,7 +658,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Cash
               </label>
             </template>
@@ -636,7 +676,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Deposit
               </label>
             </template>
@@ -654,7 +694,7 @@ onMounted(() => {
                   }
                 }"
               />
-              <label for="cash" class="ml-2 font-bold">
+              <label for="cash" class="ml-1 font-bold">
                 Apply Deposit
               </label>
             </template>
@@ -669,7 +709,7 @@ onMounted(() => {
                   onUpdate('minNumberOfCharacter', 0)
                 }"
               />
-              <label for="remarkRequired" class="ml-2 font-bold">
+              <label for="remarkRequired" class="ml-1 font-bold">
                 Remark Required
                 <span :class="fields.find(field => field.field === 'remarkRequired')?.class.includes('required') ? 'p-error font-semibold' : ''" />
               </label>

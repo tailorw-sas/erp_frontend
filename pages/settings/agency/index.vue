@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useDebounceFn } from '@vueuse/core'
+import { filter } from 'lodash'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -13,6 +14,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import createClientDialog from '~/components/clientForm/createClientDialog.vue'
 import { validateEntityStatus } from '~/utils/schemaValidations'
+import ContactAgencyPage from '~/pages/settings/agency-contact/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -25,10 +27,12 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
 const loadingDelete = ref(false)
+const contactDialogVisible = ref(false)
 const filterToSearch = ref<IData>({
   criterial: null,
   search: '',
 })
+const agencyContact = ref<any>({})
 const confApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
@@ -42,7 +46,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'code',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.string().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z]+$/i, 'Only letters are allowed')
+    validation: z.string().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z0-9]+$/i, 'Only letters and numbers are allowed') // .regex(/^[a-z]+$/i, 'Only letters are allowed')
   },
   {
     field: 'cif',
@@ -76,6 +80,14 @@ const fields: Array<FieldDefinitionType> = [
     hidden: false,
     headerClass: 'mb-1',
     validation: validateEntityStatus('agency type'),
+  },
+
+  {
+    field: 'contact',
+    header: 'Send Agency Contact',
+    hidden: true,
+    dataType: 'text',
+    class: 'field col-12',
   },
   {
     field: 'generationType',
@@ -178,6 +190,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     validation: z.string().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -186,6 +199,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
     validation: z.string().email('Invalid email').or(z.string().length(0))
   },
   {
@@ -194,6 +208,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
+    hidden: true,
   },
   {
     field: 'isDefault',
@@ -220,24 +235,24 @@ const fields: Array<FieldDefinitionType> = [
     field: 'sentB2BPartner',
     header: 'Sent B2BPartner',
     dataType: 'select',
-    class: 'field col-12 required',
+    class: 'field col-12',
     disabled: true,
     hidden: false,
     headerClass: 'mb-1',
-    validation: validateEntityStatus('sent b2b partner'),
+    validation: validateEntityStatusOnOffREquired('sent b2b partner', false),
   },
   {
     field: 'sentFileFormat',
     header: 'Sent File Format',
     dataType: 'select',
-    class: 'field col-12 required',
+    class: 'field col-12',
     disabled: true,
     hidden: false,
     headerClass: 'mb-1',
-    validation: z.object({
-      id: z.string().min(1, 'The sent file format field is required'),
-      name: z.string().min(1, 'The sent file format field is required'),
-    }).nullable().refine(value => value && value.id && value.name, { message: 'The sent file format field is required' }),
+    // validation: z.object({
+    //   id: z.string().min(1, 'The sent file format field is required'),
+    //   name: z.string().min(1, 'The sent file format field is required'),
+    // }).nullable().refine(value => value && value.id && value.name, { message: 'The sent file format field is required' }),
   },
   {
     field: 'rfc',
@@ -272,7 +287,9 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Active',
     dataType: 'check',
     disabled: true,
-    class: 'field col-12 mt-3 mb-3',
+    helpText: '',
+    helpTextClass: 'p-error text-xs ml-3',
+    class: 'field col-12 mt-3 mb-3 mr-3',
   },
 ]
 
@@ -372,9 +389,7 @@ const confCityStateApi = reactive({
   uriApi: 'manage-city-state',
 })
 
-const agencyAliasList = ref<any[]>([
-
-])
+const agencyAliasList = ref<any[]>([])
 const defaultAgencyAlias = ref<any>({
   id: '000-MySelf',
   name: '000-MySelf',
@@ -411,6 +426,7 @@ const options = ref({
   uriApi: 'manage-agency',
   loading: false,
   actionsAsMenu: false,
+  selectFirstItemByDefault: false,
   messageToDelete: 'Are you sure you want to delete the agency: {{name}}?'
 })
 const payloadOnChangePage = ref<PageState>()
@@ -436,12 +452,14 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
   // clientObject.value = {}
+  updateFieldProperty(fields, 'contact', 'hidden', true)
   updateFieldProperty(fields, 'status', 'disabled', true)
+  updateFieldProperty(fields, 'status', 'helpText', '')
   fields[0].disabled = false
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -477,7 +495,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -515,13 +533,24 @@ async function resetListItems() {
   getList()
 }
 
+async function hasAssociatedData(id: string) {
+  try {
+    // inActive
+    const { inActive } = await GenericService.getById('payment', 'payment/agency', id)
+    return inActive
+  }
+  catch (error) {
+    console.error('Error loading hasAssociatedData:', error)
+    return false
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-
       if (response) {
         item.value.id = response.id
         item.value.code = response.code
@@ -548,30 +577,67 @@ async function getItemById(id: string) {
         item.value.validateCheckout = response.validateCheckout
         item.value.bookingCouponFormat = response.bookingCouponFormat
         item.value.sentFileFormat = ENUM_FILE_FORMAT.find(i => i.id === response.sentFileFormat)
-        agencyTypeList.value = [response.agencyType]
-        item.value.agencyType = response.agencyType
-        clientList.value = [response.client]
-        item.value.client = response.client
+
+        if (response.agencyType) {
+          item.value.agencyType = {
+            id: response.agencyType.id,
+            name: `${response.agencyType.code} - ${response.agencyType.name}`,
+            status: response.agencyType.status,
+          }
+        }
+        // En reunion con pimienta me dijo que no se puede editar el cliente porque rompe todo el tema de los alias
+        // Pero no se ha implementado todavia el cambio, para desahabilitarlo
+        if (response.client) {
+          item.value.client = {
+            id: response.client.id,
+            name: `${response.client.code} - ${response.client.name}`,
+            status: response.client.status,
+          }
+        }
         if (response.agencyAlias && response.agencyAlias !== '000-MySelf') {
           await GetAgenciesList(item.value.client.id)
-          item.value.agencyAlias = agencyAliasList.value.find(i => i.name === response.agencyAlias)
+          const codeTemp = response.agencyAlias.split(/\s*-\s*/)[0]
+          item.value.agencyAlias = agencyAliasList.value.find(i => i.code === codeTemp)
         }
         else {
           agencyAliasList.value = []
           agencyAliasList.value = [defaultAgencyAlias.value]
           item.value.agencyAlias = defaultAgencyAlias.value
         }
-        b2BPartnerList.value = [response.sentB2BPartner]
-        item.value.sentB2BPartner = response.sentB2BPartner
+        if (response.sentB2BPartner) {
+          item.value.sentB2BPartner = {
+            id: response.sentB2BPartner.id,
+            name: `${response.sentB2BPartner.code} - ${response.sentB2BPartner.name}`,
+            status: response.sentB2BPartner.status,
+          }
+        }
         countryList.value = [response.country]
         item.value.country = response.country
-        cityStateList.value = [response.cityState]
-        item.value.cityState = response.cityState
+
+        if (response.cityState) {
+          item.value.cityState = {
+            id: response.cityState.id,
+            name: `${response.cityState.code} - ${response.cityState.name}`,
+            status: response.cityState.status,
+          }
+        }
         item.value.isDefault = response.isDefault ?? false
+
         item.value.generationType = ENUM_GENERATION_TYPE.find(i => i.id === response.generationType)
       }
+      const hasAssociated = await hasAssociatedData(response.id)
+
+      if (hasAssociated === false) {
+        updateFieldProperty(fields, 'status', 'disabled', true)
+        updateFieldProperty(fields, 'status', 'helpText', 'Agency has active balances')
+      }
+      else {
+        updateFieldProperty(fields, 'status', 'disabled', false)
+        updateFieldProperty(fields, 'status', 'helpText', '')
+      }
+
       fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
+      updateFieldProperty(fields, 'contact', 'hidden', false)
       formReload.value += 1
     }
     catch (error) {
@@ -598,7 +664,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
     payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -614,7 +680,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.cityState = typeof payload.cityState === 'object' ? payload.cityState.id : payload.cityState
   payload.sentFileFormat = payload.sentFileFormat !== null && typeof payload.sentFileFormat === 'object' ? payload.sentFileFormat.id : payload.sentFileFormat
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -637,9 +703,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -649,7 +716,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -660,7 +727,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -692,15 +762,15 @@ async function getAgencyTypeList(query: string) {
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confAgencyTypeApi.moduleApi, confAgencyTypeApi.uriApi, payload)
     const { data: dataList } = response
     agencyTypeList.value = []
     for (const iterator of dataList) {
-      agencyTypeList.value = [...agencyTypeList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      agencyTypeList.value = [...agencyTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -729,12 +799,45 @@ async function GetAgenciesList(param: any) {
     for (const iterator of agencies) {
       agencyAliasList.value = [...agencyAliasList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
     }
-    // if (agencies.length === 0) {
-    //   agencyAliasList.value = [defaultAgencyAlias.value]
-    // }
   }
   catch (error) {
     console.error('Error loading agency list:', error)
+  }
+}
+
+interface DataListItem {
+  id: string
+  code: string
+  status: string | boolean
+  name: string
+}
+
+interface ListItem {
+  id: string
+  code: string
+  name: string
+  status: string | boolean
+}
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    code: data.code,
+    status: data.status,
+  }
+}
+
+async function getAgenciesListForSelect(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[], short?: IQueryToSort) {
+  // Buscar en los filtro si viene el filtro de client.id, en caso de que si venga se ejecuta la funcion y en caso de que no, solo devolver el listado vacio
+  const filterClientId = filter?.find(item => item.key === 'client.id')
+
+  if (filterClientId && filterClientId.value) {
+    agencyAliasList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, short)
+    agencyAliasList.value.push(defaultAgencyAlias.value)
+  }
+  else {
+    agencyAliasList.value = []
+    agencyAliasList.value.push(defaultAgencyAlias.value)
   }
 }
 
@@ -813,14 +916,14 @@ async function getB2BPartnerList(param: any) {
           pageSize: 20,
           page: 0,
           sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confB2BPartnerApi.moduleApi, confB2BPartnerApi.uriApi, payload)
     const { data: dataList } = response
     b2BPartnerList.value = []
     for (const iterator of dataList) {
-      b2BPartnerList.value = [...b2BPartnerList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      b2BPartnerList.value = [...b2BPartnerList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -836,7 +939,7 @@ async function getCountryList(param: any) {
             {
               key: 'code',
               operator: 'LIKE',
-              value: param.toLowerCase(),
+              value: param,
               logicalOperation: 'OR'
             },
             {
@@ -855,7 +958,7 @@ async function getCountryList(param: any) {
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'code',
+          sortBy: 'name',
           sortType: ENUM_SHORT_TYPE.DESC
         }
 
@@ -863,7 +966,7 @@ async function getCountryList(param: any) {
     const { data: dataList } = response
     countryList.value = []
     for (const iterator of dataList) {
-      countryList.value = [...countryList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      countryList.value = [...countryList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -883,7 +986,12 @@ async function getCityStateList(countryId: string, query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -901,7 +1009,7 @@ async function getCityStateList(countryId: string, query: string) {
     const { data: dataList } = response
     cityStateList.value = []
     for (const iterator of dataList) {
-      cityStateList.value = [...cityStateList.value, { id: iterator.id, code: iterator.code, name: iterator.name, status: iterator.status }]
+      cityStateList.value = [...cityStateList.value, { id: iterator.id, code: iterator.code, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -939,8 +1047,8 @@ function requireConfirmationToDelete(event: any) {
     confirm.require({
       target: event.currentTarget,
       group: 'headless',
-      header: 'Save the record',
-      message: 'Do you want to save the change?',
+      header: 'Delete the record',
+      message: 'Do you want to delete the record?',
       acceptClass: 'p-button-danger',
       rejectLabel: 'Cancel',
       acceptLabel: 'Accept',
@@ -965,6 +1073,11 @@ function onSortField(event: any) {
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
+}
+
+async function openContactDialogVisible(item: any) {
+  agencyContact.value = { agency: { id: item.id, name: item.name, status: 'ACTIVE' } }
+  contactDialogVisible.value = true
 }
 
 // -------------------------------------------------------------------------------------------------------
@@ -998,19 +1111,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Agency
-    </h3>
+    </h5>
     <IFCan :perms="['AGENCY:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IFCan>
   </div>
   <div class="grid">
     <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-1">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab header="Filters">
             <div class="flex gap-4 flex-column lg:flex-row">
@@ -1091,6 +1204,17 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
 
+            <template #field-contact>
+              <InputGroup v-if="!loadingSaveAll">
+                <InputText placeholder="Send Agency Contact" disabled />
+                <Button
+                  icon="pi pi-eye" type="button" text aria-haspopup="true" aria-controls="overlay_menu_filter"
+                  @click="openContactDialogVisible(item)"
+                />
+              </InputGroup>
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+
             <template #field-client="{ item: data, onUpdate }">
               <div class="flex">
                 <InputGroup icon-position="left" class="w-full">
@@ -1127,7 +1251,7 @@ onMounted(() => {
             </template>
 
             <template #field-agencyAlias="{ item: data, onUpdate }">
-              <Dropdown
+              <!-- <Dropdown
                 v-if="!loadingSaveAll"
                 v-model="data.agencyAlias"
                 :options="[...agencyAliasList]"
@@ -1136,6 +1260,34 @@ onMounted(() => {
                 show-clear
                 @update:model-value="($event) => {
                   onUpdate('agencyAlias', $event)
+                }"
+              /> -->
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocompleteAgencyAlias"
+                :model="data.agencyAlias"
+                field="name"
+                item-value="id"
+                :suggestions="agencyAliasList"
+                @change="($event) => {
+                  onUpdate('agencyAlias', $event)
+                }"
+                @load="async ($event) => {
+                  const objQueryToSearch = {
+                    query: $event,
+                    keys: ['name', 'code'],
+                  }
+                  const filter: FilterCriteria[] = []
+                  filter.push(
+                    {
+                      key: 'client.id',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: data.client?.id,
+                    },
+                  )
+                  await getAgenciesListForSelect(options.moduleApi, options.uriApi, objQueryToSearch, filter)
+
                 }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
@@ -1205,6 +1357,7 @@ onMounted(() => {
                 :options="[...ENUM_GENERATION_TYPE]"
                 option-label="name"
                 return-object="false"
+                filter
                 show-clear
                 @update:model-value="($event) => {
                   onUpdate('generationType', $event)
@@ -1220,6 +1373,7 @@ onMounted(() => {
                 :options="[...ENUM_FILE_FORMAT]"
                 option-label="name"
                 return-object="false"
+                filter
                 show-clear
                 @update:model-value="($event) => {
                   onUpdate('sentFileFormat', $event)
@@ -1276,6 +1430,13 @@ onMounted(() => {
               </div>
             </template>
           </EditFormV2>
+          <DynamicContentModal
+            :visible="contactDialogVisible"
+            :component="ContactAgencyPage"
+            :component-props="agencyContact"
+            :header="`Agency ${item.code} - ${item.name}`"
+            @close="contactDialogVisible = $event"
+          />
         </div>
       </div>
     </div>

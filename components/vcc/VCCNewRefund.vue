@@ -4,6 +4,7 @@ import { usePrimeVue } from 'primevue/config'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { z } from 'zod'
+import Divider from 'primevue/divider'
 import { GenericService } from '~/services/generic-services'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
@@ -27,6 +28,7 @@ const $primevue = usePrimeVue()
 defineExpose({
   $primevue
 })
+const { data: userData } = useAuth()
 const formReload = ref(0)
 const forceSave = ref(false)
 let submitEvent = new Event('')
@@ -38,7 +40,7 @@ const confApi = reactive({
   uriApi: 'transactions/refund',
 })
 const toast = useToast()
-let partialErrors = ref<string[]>([])
+const partialErrors = ref<string[]>([])
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -46,7 +48,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Transaction Id',
     dataType: 'text',
     disabled: true,
-    class: 'field col-12 md:col-6',
+    class: 'field col-12 md:col-4',
     validation: z.string().trim().min(1, 'The transaction id field is required'),
   },
   {
@@ -54,19 +56,23 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Reference',
     dataType: 'text',
     disabled: true,
-    class: 'field col-12 md:col-6',
-    validation: z.string().trim().min(1, 'The reference field is required'),
+    class: 'field col-12',
+    // validation: z.string().trim().min(1, 'The reference field is required'),
   },
   {
     field: 'grossAmount',
     header: 'Gross Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
     class: 'field col-12 md:col-4',
-    validation: z.string().trim().min(1, 'The gross amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
-        message: 'The amount must be greater than zero',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The gross amount field must be a number',
+      required_error: 'The gross amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
+        message: 'The gross amount must be greater than zero',
       })
   },
   {
@@ -79,14 +85,24 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'netAmount',
     header: 'Net Amount',
-    dataType: 'text',
+    dataType: 'number',
     disabled: true,
     class: 'field col-12 md:col-4',
-    validation: z.string().trim().min(1, 'The net amount field is required')
-      .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-      .refine(val => Number.parseFloat(val) > 0, {
-        message: 'The amount must be greater than zero',
+    minFractionDigits: 2,
+    maxFractionDigits: 4,
+    validation: z.number({
+      invalid_type_error: 'The net amount field must be a number',
+      required_error: 'The net amount field is required',
+    })
+      .refine(val => Number.parseFloat(String(val)) > 0, {
+        message: 'The net amount must be greater than zero',
       })
+  },
+  {
+    field: 'separator',
+    header: '',
+    dataType: 'text',
+    class: 'field col-12',
   },
   {
     field: 'refundType',
@@ -113,9 +129,11 @@ const fields: Array<FieldDefinitionType> = [
   }
 ]
 
-const validationPartialAmount = z.string().trim().min(1, 'The partial field is required')
-  .regex(/^\d+(\.\d+)?$/, 'Only numeric characters allowed')
-  .refine(val => Number.parseFloat(val) > 0, {
+const validationPartialAmount = z.number({
+  invalid_type_error: 'The partial field must be a number',
+  required_error: 'The partial field is required',
+})
+  .refine(val => Number.parseFloat(String(val)) > 0, {
     message: 'The amount must be greater than zero',
   })
 
@@ -184,13 +202,13 @@ function clearForm() {
   item.value = { ...itemTemp.value }
   item.value.transactionId = String(props.parentTransaction.id)
   item.value.reference = props.parentTransaction.referenceNumber
-  item.value.grossAmount = String(props.parentTransaction.amount)
+  item.value.grossAmount = props.parentTransaction.amount
   item.value.transactionCommission = String(props.parentTransaction.commission)
-  item.value.netAmount = String(props.parentTransaction.netAmount)
+  item.value.netAmount = props.parentTransaction.netAmount
   item.value.selectedAmount = {
     type: '',
-    total: '0',
-    partial: '0',
+    total: 0,
+    partial: 0,
   }
   formReload.value++
 }
@@ -222,6 +240,8 @@ async function save(item: { [key: string]: any }) {
     payload.parentId = item.transactionId
     payload.hasCommission = item.refundCommission
     payload.amount = item.selectedAmount.type === 'TOTAL' ? item.selectedAmount.total : item.selectedAmount.partial
+    payload.employee = userData?.value?.user?.name
+    payload.employeeId = userData?.value?.user?.userId
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was created`, life: 10000 })
     onClose(false)
@@ -276,6 +296,14 @@ watch(() => props.openDialog, (newValue) => {
     header="Refund Transaction Details"
     class="w-10 lg:w-6 card p-0"
     content-class="border-round-bottom border-top-1 surface-border pb-0"
+    :pt="{
+      root: {
+        class: 'custom-dialog',
+      },
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem;',
+      },
+    }"
     @hide="onClose(true)"
   >
     <div class="mt-4 p-4">
@@ -314,10 +342,13 @@ watch(() => props.openDialog, (newValue) => {
               />
               <div class="ml-2">
                 <strong for="total">Total</strong>
-                <InputText
+                <InputNumber
                   v-model="data.selectedAmount.total"
                   show-clear
                   disabled
+                  mode="decimal"
+                  :min-fraction-digits="2"
+                  :max-fraction-digits="4"
                   @change="($event) => {
                     onUpdate('amountTotal', $event)
                   }"
@@ -333,10 +364,13 @@ watch(() => props.openDialog, (newValue) => {
               />
               <div class="ml-2">
                 <strong for="partial">Partial</strong>
-                <InputText
+                <InputNumber
                   v-model="data.selectedAmount.partial"
                   show-clear
                   :disabled="!data.refundType || data.selectedAmount.type === 'TOTAL'"
+                  mode="decimal"
+                  :min-fraction-digits="2"
+                  :max-fraction-digits="4"
                   @update:model-value="validatePartialField"
                 />
                 <div v-if="partialErrors.length > 0" class="w-full p-error text-xs">
@@ -346,6 +380,11 @@ watch(() => props.openDialog, (newValue) => {
                 </div>
               </div>
             </div>
+          </div>
+        </template>
+        <template #field-separator="{ item: data, onUpdate }">
+          <div class="w-full">
+            <Divider />
           </div>
         </template>
       </EditFormV2>
@@ -359,5 +398,15 @@ watch(() => props.openDialog, (newValue) => {
   </Dialog>
 </template>
 
-<style scoped>
+<style lang="scss">
+.custom-dialog .p-dialog-content {
+  //background-color: #ffffff;
+  padding-right: 0px;
+  padding-left: 0px;
+}
+.custom-dialog .p-dialog-footer {
+  //background-color: #ffffff;
+  padding-right: 0px;
+  padding-left: 0px;
+}
 </style>

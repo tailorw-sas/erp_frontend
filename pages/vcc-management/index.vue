@@ -3,19 +3,36 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
+import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import type { MenuItem } from '~/components/menu/MenuItems'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import { formatCardNumber } from '~/components/vcc/vcc_utils'
+import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
 // VARIABLES -----------------------------------------------------------------------------------------
+const toast = useToast()
+const authStore = useAuthStore()
+const { status, data } = useAuth()
+const isAdmin = (data.value?.user as any)?.isAdmin === true
+
 const listItems = ref<any[]>([])
 const newManualTransactionDialogVisible = ref(false)
-const newAdjustmentTransactionDialogVisible = ref(false)
+const editManualTransactionDialogVisible = ref(false)
+const resendLinkDialogVisible = ref(false)
+const transactionHistoryDialogVisible = ref<boolean>(false)
+const attachmentDialogOpen = ref<boolean>(false)
 const newRefundDialogVisible = ref(false)
 const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const loadingSearch = ref(false)
+const accordionLoading = ref({
+  merchant: false,
+  hotel: false,
+  ccType: false,
+  status: false,
+})
 const contextMenuTransaction = ref()
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
@@ -28,14 +45,68 @@ const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
+const selectedTransactionId = ref('')
 const contextMenu = ref()
+
+enum MenuType {
+  refund, resendLink, resendPost, cancelled, document
+}
 
 const allMenuListItems = [
   {
+    index: 0,
+    label: 'Status History',
+    icon: 'pi pi-history',
+    command: () => { transactionHistoryDialogVisible.value = true },
+    default: true,
+    disabled: false,
+  },
+  {
+    index: 1,
+    type: MenuType.document,
+    label: 'Document',
+    icon: 'pi pi-paperclip',
+    command: () => handleAttachmentDialogOpen(),
+    disabled: false,
+    isCollection: false,
+    default: true
+  },
+  {
+    index: 2,
+    type: MenuType.refund,
     label: 'Refund',
     icon: 'pi pi-dollar',
     command: () => openNewRefundDialog(),
-    disabled: false
+    disabled: false,
+    isCollection: true // que pertenecen a un status en el collection status
+  },
+  {
+    // Mostrar siempre
+    index: 3,
+    type: MenuType.cancelled,
+    label: 'Cancelled',
+    icon: 'pi pi-times-circle',
+    command: () => cancelTransaction(),
+    disabled: false,
+    isCollection: true
+  },
+  {
+    index: 4,
+    type: MenuType.resendLink,
+    label: 'ReSend Link',
+    icon: 'pi pi-send',
+    command: () => resendLink(),
+    disabled: false,
+    isCollection: false
+  },
+  {
+    index: 5,
+    type: MenuType.resendPost,
+    label: 'ReSend Post',
+    icon: 'pi pi-send',
+    command: () => resendPost(),
+    disabled: false,
+    isCollection: false
   },
 ]
 
@@ -48,11 +119,11 @@ const merchantList = ref<any[]>([])
 const ccTypeList = ref<any[]>([])
 
 const confStatusListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
 })
 const confMerchantListApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
 })
 
@@ -65,6 +136,15 @@ const confCCTypeListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-credit-card-type',
 })
+
+const activeStatusFilter: IFilter[] = [
+  {
+    key: 'status',
+    operator: 'EQUALS',
+    value: 'ACTIVE',
+    logicalOperation: 'AND'
+  }
+]
 
 const legend = ref(
   [
@@ -94,8 +174,8 @@ const legend = ref(
       colClass: 'pr-3',
     },
     {
-      name: 'Canceled',
-      color: '#FF1405',
+      name: 'Cancelled',
+      color: '#888888',
       colClass: 'pr-3',
     },
     {
@@ -112,43 +192,42 @@ const legend = ref(
 )
 
 const sClassMap: IStatusClass[] = [
-  { status: 'Sent', class: 'text-sent' },
-  { status: 'Created', class: 'text-created' },
-  { status: 'Received', class: 'text-received' },
-  { status: 'Declined', class: 'text-declined' },
-  { status: 'Paid', class: 'text-paid' },
-  { status: 'Canceled', class: 'text-canceled' },
-  { status: 'Reconciled', class: 'text-reconciled' },
-  { status: 'Refund', class: 'text-refund' },
+  { status: 'Sent', class: 'vcc-text-sent' },
+  { status: 'Created', class: 'vcc-text-created' },
+  { status: 'Received', class: 'vcc-text-received' },
+  { status: 'Declined', class: 'vcc-text-declined' },
+  { status: 'Paid', class: 'vcc-text-paid' },
+  { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Reconciled', class: 'vcc-text-reconciled' },
+  { status: 'Refund', class: 'vcc-text-refund' },
 ]
 ////
 
-const createItems: Array<MenuItem> = ref([{
-  label: 'Manual Transaction',
-  command: () => openNewManualTransactionDialog(),
-  disabled: false
-}, {
-  label: 'Adjustment Transaction',
-  command: () => openNewAdjustmentTransactionDialog(),
-  disabled: false
-}])
+const computedShowMenuItemManualTransaction = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
+})
+
+const computedShowMenuItemAdjustmentTransaction = computed(() => {
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:ADJUSTMENT-TRANSACTION'])))
+})
 
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
+  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
   { field: 'id', header: 'Id', type: 'text' },
   { field: 'parent', header: 'Parent Id', type: 'text' },
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }, sortable: true },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'text', },
-  { field: 'referenceNumber', header: 'Reference', type: 'text' },
-  { field: 'amount', header: 'Amount', type: 'text' },
-  { field: 'commission', header: 'Commission', type: 'text' },
-  { field: 'netAmount', header: 'T.Amount', type: 'text' },
-  { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'status', header: 'Status', type: 'custom-badge', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-transaction-status' }, sortable: true },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
+  { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', maxWidth: '220px' },
+  { field: 'amount', header: 'Amount', type: 'number' },
+  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number' },
+  { field: 'transactionDate', header: 'Trans Date', type: 'date' },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
@@ -186,12 +265,12 @@ const pagination = ref<IPagination>({
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
-  const count = { amount: 0, commission: 0, net: 0 }
-  subTotals.value = { ...count }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
+  const count = { amount: 0, commission: 0, net: 0 }
+  subTotals.value = { ...count }
   try {
     idItemToLoadFirstTime.value = ''
     options.value.loading = true
@@ -200,7 +279,8 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { transactionSearchResponse, transactionTotalResume } = response
+    const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -210,8 +290,11 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = iterator.status.name
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
+        iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
@@ -219,21 +302,21 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
       }
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
+      //   iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
+      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
-        iterator.amount = String(iterator.amount)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'commission')) {
         count.commission += iterator.commission
-        iterator.commission = String(iterator.commission)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'netAmount')) {
         count.net += iterator.netAmount
-        iterator.netAmount = iterator.netAmount ? String(iterator.netAmount) : '0'
       }
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, invoiceDate: new Date(iterator?.invoiceDate) })
+        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -256,7 +339,13 @@ async function resetListItems() {
 
 function searchAndFilter() {
   const newPayload: IQueryRequest = {
-    filter: [],
+    filter: [{
+      key: 'adjustment',
+      operator: 'EQUALS',
+      value: false,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }],
     query: '',
     pageSize: 50,
     page: 0,
@@ -264,7 +353,7 @@ function searchAndFilter() {
     sortType: ENUM_SHORT_TYPE.DESC
   }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [{
+    newPayload.filter = [...newPayload.filter, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -273,7 +362,14 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    newPayload.filter = [...newPayload.filter, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    // Filtro para no mostrar transacciones de ajuste
+    // newPayload.filter = [...newPayload.filter, {
+    //   key: 'adjustment',
+    //   operator: 'EQUALS',
+    //   value: false,
+    //   logicalOperation: 'AND',
+    // }]
     // Date
     if (filterToSearch.value.from) {
       newPayload.filter = [...newPayload.filter, {
@@ -351,7 +447,6 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value = {
     criteria: null,
     search: '',
@@ -362,8 +457,8 @@ function clearFilterToSearch() {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  getList()
+  filterToSearch.value.criteria = ENUM_FILTER[0]
+  searchAndFilter()
 }
 
 async function getCollectionStatusList() {
@@ -399,6 +494,7 @@ async function getCollectionStatusList() {
 
 async function getHotelList(query: string = '') {
   try {
+    accordionLoading.value.hotel = true
     const payload = {
       filter: [
         {
@@ -431,16 +527,20 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+  finally {
+    accordionLoading.value.hotel = false
+  }
 }
 
 async function getMerchantList(query: string = '') {
   try {
+    accordionLoading.value.merchant = true
     const payload = {
       filter: [
         {
@@ -473,16 +573,20 @@ async function getMerchantList(query: string = '') {
     const { data: dataList } = response
     merchantList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      merchantList.value = [...merchantList.value, { id: iterator.id, name: iterator.description, code: iterator.code }]
+      merchantList.value = [...merchantList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.description}`, code: iterator.code }]
     }
   }
   catch (error) {
     console.error('Error loading merchant list:', error)
   }
+  finally {
+    accordionLoading.value.merchant = false
+  }
 }
 
 async function getStatusList(query: string = '') {
   try {
+    accordionLoading.value.status = true
     const payload = {
       filter: [
         {
@@ -521,10 +625,14 @@ async function getStatusList(query: string = '') {
   catch (error) {
     console.error('Error loading status list:', error)
   }
+  finally {
+    accordionLoading.value.status = false
+  }
 }
 
 async function getCCTypeList(query: string = '') {
   try {
+    accordionLoading.value.ccType = true
     const payload = {
       filter: [
         {
@@ -557,11 +665,14 @@ async function getCCTypeList(query: string = '') {
     const { data: dataList } = response
     ccTypeList.value = [allDefaultItem]
     for (const iterator of dataList) {
-      ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
     console.error('Error loading credit card type list:', error)
+  }
+  finally {
+    accordionLoading.value.ccType = false
   }
 }
 
@@ -569,54 +680,105 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-
-  const statusFilter: any = getStatusFilter(payloadFilter.status)
-  if (statusFilter) {
-    const index = payload.value.filter.findIndex((filter: IFilter) => filter.key === statusFilter.key)
-    if (index !== -1) {
-      payload.value.filter[index] = statusFilter
-    }
-    else {
-      payload.value.filter.push(statusFilter)
-    }
-  }
-
   getList()
-}
-
-function getStatusFilter(element: any) {
-  if (element && Array.isArray(element.constraints) && element.constraints.length > 0) {
-    for (const iterator of element.constraints) {
-      if (iterator.value) {
-        const ketTemp = 'status.name'
-        let operator: string = ''
-        if ('matchMode' in iterator) {
-          if (typeof iterator.matchMode === 'object') {
-            operator = iterator.matchMode.id.toUpperCase()
-          }
-          else {
-            operator = iterator.matchMode.toUpperCase()
-          }
-        }
-        if (Array.isArray(iterator.value) && iterator.value.length > 0) {
-          const objFilter: IFilter = {
-            key: ketTemp,
-            operator,
-            value: iterator.value.length > 0 ? [...iterator.value.map((item: any) => item.name)] : [],
-            logicalOperation: 'AND',
-          }
-          return objFilter
-        }
-      }
-    }
-  }
 }
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'status') {
+      event.sortField = 'status.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
+  }
+}
+
+async function resendLink() {
+  if (contextMenuTransaction.value.id) {
+    resendLinkDialogVisible.value = true
+  }
+}
+
+async function resendPost() {
+  try {
+    if (contextMenuTransaction.value.id) {
+      options.value.loading = true
+      const response: any = await GenericService.create('creditcard', 'transactions/resend-post', { id: contextMenuTransaction.value.id })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      const htmlBody = response.result
+      const newTab = window.open('', '_blank')
+      newTab?.document.write(await htmlBody)
+      newTab?.document.close()
+    }
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+async function cancelTransaction() {
+  options.value.loading = true
+  const payload: { [key: string]: any } = {}
+  try {
+    if (contextMenuTransaction.value.id) {
+      const cancelledStatus = await findCancelledStatus()
+      if (cancelledStatus && cancelledStatus.length > 0) {
+        payload.transactionStatus = cancelledStatus[0].id
+        payload.employee = data?.value?.user?.name
+        payload.employeeId = data?.value?.user?.userId
+        delete payload.event
+        const response: any = await GenericService.update('creditcard', 'transactions', contextMenuTransaction.value.id, payload)
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
+        options.value.loading = false
+        await getList()
+      }
+      else {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Cancelled Config not found in Manage Transaction Status', life: 10000 })
+      }
+    }
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+async function findCancelledStatus() {
+  try {
+    const payload = {
+      filter: [
+        {
+          key: 'cancelledStatus',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
+    const { data: dataList } = response
+    return dataList
+  }
+  catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
   }
 }
 
@@ -624,23 +786,23 @@ async function openNewManualTransactionDialog() {
   newManualTransactionDialogVisible.value = true
 }
 
-async function openNewAdjustmentTransactionDialog() {
-  newAdjustmentTransactionDialogVisible.value = true
-}
-
 async function openNewRefundDialog() {
   newRefundDialogVisible.value = true
 }
 
-async function onCloseNewManualTransactionDialog(isCancel: boolean) {
-  newManualTransactionDialogVisible.value = false
+function handleAttachmentDialogOpen() {
+  attachmentDialogOpen.value = true
+}
+
+async function onCloseEditManualTransactionDialog(isCancel: boolean) {
+  editManualTransactionDialogVisible.value = false
   if (!isCancel) {
     getList()
   }
 }
 
-async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
-  newAdjustmentTransactionDialogVisible.value = false
+async function onCloseNewManualTransactionDialog(isCancel: boolean) {
+  newManualTransactionDialogVisible.value = false
   if (!isCancel) {
     getList()
   }
@@ -653,26 +815,67 @@ async function onCloseNewRefundDialog(isCancel: boolean = true) {
   }
 }
 
+function onDoubleClick(item: any) {
+  if (item.manual || item.parent) {
+    const id = Object.prototype.hasOwnProperty.call(item, 'id') ? item.id : item
+    selectedTransactionId.value = id
+    editManualTransactionDialogVisible.value = true
+  }
+}
+
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criteria && filterToSearch.value.search)
   return false
 })
 
-async function findMenuItems(status: string) {
-  const collection: any = collectionStatusList.value.find(item => item?.name.toLowerCase() === status.toLowerCase())
-  menuListItems.value = []
-  if (collection) {
-    const navigateOptions = collection.navigate.map((n: any) => n.name.toLowerCase())
-    menuListItems.value = allMenuListItems.filter((element: any) => navigateOptions.includes(element.label.toLowerCase()))
+async function findCollectionStatusMenuOptions(status: any) {
+  const collectionItems: any[] = allMenuListItems.filter((element: any) => element.isCollection)
+
+  for (let i = 0; i < collectionItems.length; i++) {
+    const element = collectionItems[i]
+    if (element.type === MenuType.refund && !status.isCancelled) {
+      const refund = collectionStatusList.value.find(item => item?.refundStatus)
+      if (refund && refund.visible) {
+        menuListItems.value.push(element)
+      }
+    }
+    if (element.type === MenuType.cancelled && !status.isCancelled) {
+      const cancelled = collectionStatusList.value.find(item => item?.cancelledStatus)
+      if (cancelled && cancelled.visible) {
+        menuListItems.value.push(element)
+      }
+    }
+  }
+}
+
+function findNoCollectionStatusMenuOptions() {
+  const data = contextMenuTransaction.value
+  const noCollectionItems: any[] = allMenuListItems.filter((element: any) => !element.isCollection)
+  for (let i = 0; i < noCollectionItems.length; i++) {
+    const element = noCollectionItems[i]
+    if ([MenuType.resendPost, MenuType.resendLink].includes(element.type) && (data.status.isSent || data.status.isDeclined)) {
+      menuListItems.value.push(element)
+    }
   }
 }
 
 async function onRowRightClick(event: any) {
+  // console.log(event.data)
   contextMenu.value.hide()
   contextMenuTransaction.value = event.data
-  await findMenuItems(contextMenuTransaction.value.status)
+  menuListItems.value = [] // Elementos que se van a mostrar en el menu
+  menuListItems.value = allMenuListItems.filter((e: any) => e.default) // Agregar elementos por defecto
+  // Agrega a la lista las opciones las que son de tipo collection (cancelled and refund)
+  await findCollectionStatusMenuOptions(contextMenuTransaction.value.status)
   if (menuListItems.value.length > 0) {
-    setRefundAvailable(contextMenuTransaction.value.permitRefund)
+    const enableManualTransaction = (status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
+    // aqui se valida que hayan fondos disponibles para la devolucion
+    setRefundAvailable(enableManualTransaction ? contextMenuTransaction.value.permitRefund : false)
+  }
+  // Agregar opciones que no son tipo coleccion
+  findNoCollectionStatusMenuOptions()
+  if (menuListItems.value.length > 0) {
+    menuListItems.value = menuListItems.value.sort((a, b) => a.index - b.index)
     contextMenu.value.show(event.originalEvent)
   }
 }
@@ -682,6 +885,14 @@ function setRefundAvailable(isAvailable: boolean) {
   if (menuItem) {
     menuItem.disabled = !isAvailable
   }
+}
+
+function openBankReconciliation() {
+  window.open('/vcc-management/bank-reconciliation', '_blank')
+}
+
+function openHotelPayment() {
+  window.open('/vcc-management/hotel-payment', '_blank')
 }
 // -------------------------------------------------------------------------------------------------------
 
@@ -706,13 +917,15 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+    <h5 class="mb-0">
       Virtual Credit Card Management
-    </h3>
+    </h5>
     <div class="my-2 flex justify-content-end px-0">
-      <PopupNavigationMenu menu-id="vcc-menu" :items="createItems" icon="pi pi-plus" label="New" class="vcc-menu" />
+      <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
+      <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
+      <Button class="ml-2" icon="pi pi-dollar" label="Hotel Payment" @click="openHotelPayment()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
-      <Button class="ml-2" icon="pi pi-upload" label="Export" disabled />
+      <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
     </div>
   </div>
   <div class="grid">
@@ -734,102 +947,103 @@ onMounted(() => {
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label" for="">Merchant:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.merchant" :suggestions="merchantList"
-                        @load="($event) => getMerchantList($event)" @change="($event) => {
-                          if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <label class="filter-label font-bold" for="">Merchant:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.merchant"
+                      :suggestions="merchantList"
+                      :loading="accordionLoading.merchant"
+                      @change="($event) => {
+                        if (!filterToSearch.merchant.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.merchant = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.merchant = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getMerchantList($event)"
+                    >
+                    </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                        @load="($event) => getHotelList($event)" @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <label class="filter-label font-bold" for="">Hotel:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="accordionLoading.hotel"
+                      @change="($event) => {
+                        if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    >
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
               </div>
               <div class="col-12 md:col-6 lg:col-3 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label" for="">CC Type:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.ccType" :suggestions="ccTypeList" @change="($event) => {
-                          if (!filterToSearch.ccType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.ccType = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.ccType = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }" @load="($event) => getCCTypeList($event)"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <label class="filter-label font-bold" for="">CC Type:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.ccType"
+                      :suggestions="ccTypeList"
+                      :loading="accordionLoading.ccType"
+                      @change="($event) => {
+                        if (!filterToSearch.ccType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.ccType = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.ccType = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getCCTypeList($event)"
+                    >
+                    </DebouncedMultiSelectComponent>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label" for="">Status:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.status" :suggestions="statusList"
-                        @load="($event) => getStatusList($event)" @change="($event) => {
-                          if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+                    <label class="filter-label font-bold" for="">Status:</label>
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.status"
+                      :suggestions="statusList"
+                      :loading="accordionLoading.status"
+                      @change="($event) => {
+                        if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.status = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                      @load="($event) => getStatusList($event)"
+                    >
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
               </div>
               <div class="col-12 md:col-6 lg:col-2 flex pb-0">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label" for="">From:</label>
+                    <label class="filter-label font-bold" for="">From:</label>
                     <div class="w-full" style=" z-index:5 ">
                       <Calendar
                         v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
@@ -838,7 +1052,7 @@ onMounted(() => {
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label" for="">To:</label>
+                    <label class="filter-label font-bold" for="">To:</label>
                     <div class="w-full">
                       <Calendar
                         v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
@@ -853,7 +1067,7 @@ onMounted(() => {
                   <div class="flex flex-row w-full">
                     <div class="flex flex-column gap-2 w-full">
                       <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                        <label class="filter-label" for="">Criteria:</label>
+                        <label class="filter-label font-bold" for="">Criteria:</label>
                         <div class="w-full">
                           <Dropdown
                             v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
@@ -862,12 +1076,9 @@ onMounted(() => {
                         </div>
                       </div>
                       <div class="flex align-items-center gap-2">
-                        <label class="filter-label" for="">Search:</label>
+                        <label class="filter-label font-bold" for="">Search:</label>
                         <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <InputIcon class="pi pi-search" />
-                          </IconField>
+                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
                         </div>
                       </div>
                     </div>
@@ -903,14 +1114,36 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
         @on-row-right-click="onRowRightClick"
+        @on-row-double-click="onDoubleClick($event)"
       >
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0">
+            <!-- <pre>{{ objData }}</pre> -->
+            <Button
+              v-if="objData.hasAttachments"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+              :style="{ color: '#000' }"
+            />
+          </div>
+          <!-- style="color: #616161;" -->
+          <!-- :style="{ 'background-color': '#00b816' }" -->
+        </template>
+        <template #column-status="{ data, column }">
+          <Badge
+            v-tooltip.top="data.status.name.toString()"
+            :value="data.status.name"
+            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+          />
+        </template>
         <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center">
             <Row>
-              <Column footer="Totals:" :colspan="7" footer-style="text-align:right" />
-              <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" />
-              <Column :footer="Math.round((subTotals.commission + Number.EPSILON) * 100) / 100" />
-              <Column :footer="Math.round((subTotals.net + Number.EPSILON) * 100) / 100" />
+              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
+              <Column :footer="formatNumber(subTotals.amount)" />
+              <Column :footer="formatNumber(subTotals.commission)" />
+              <Column :footer="formatNumber(subTotals.net)" />
               <Column :colspan="2" />
             </Row>
           </ColumnGroup>
@@ -919,8 +1152,22 @@ onMounted(() => {
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
-    <VCCNewAdjustmentTransaction :open-dialog="newAdjustmentTransactionDialogVisible" @on-close-dialog="onCloseNewAdjustmentTransactionDialog($event)" />
     <VCCNewRefund :open-dialog="newRefundDialogVisible" :parent-transaction="contextMenuTransaction" @on-close-dialog="onCloseNewRefundDialog($event)" />
+    <VCCEditManualTransaction :open-dialog="editManualTransactionDialogVisible" :transaction-id="selectedTransactionId" @on-close-dialog="onCloseEditManualTransactionDialog($event)" />
+    <VCCResendLink :open-dialog="resendLinkDialogVisible" :transaction-id="contextMenuTransaction?.id" @on-close-dialog="($event) => { resendLinkDialogVisible = false }" />
+    <div v-if="transactionHistoryDialogVisible">
+      <TransactionStatusHistoryDialog :close-dialog="() => { transactionHistoryDialogVisible = false }" :open-dialog="transactionHistoryDialogVisible" :selected-transaction="contextMenuTransaction" :s-class-map="sClassMap" />
+    </div>
+    <div v-if="attachmentDialogOpen">
+      <AttachmentTransactionDialog
+        :close-dialog="(refreshTransactions: boolean) => {
+          attachmentDialogOpen = false
+          if (refreshTransactions) {
+            getList()
+          }
+        }" header="Manage Transaction Attachment" :open-dialog="attachmentDialogOpen" :selected-transaction="contextMenuTransaction"
+      />
+    </div>
   </div>
 </template>
 
@@ -940,44 +1187,4 @@ onMounted(() => {
     cursor: pointer;
   }
 }
-
-.text-sent {
-  background-color: #006400;
-  color: #fff;
-}
-.text-created {
-  background-color: #FF8D00;
-  color: #fff;
-}
-.text-received {
-  background-color: #3403F9;
-  color: #fff;
-}
-.text-declined {
-  background-color: #661E22;
-  color: #fff;
-}
-.text-paid {
-  background-color: #2E892E;
-  color: #fff;
-}
-.text-canceled {
-  background-color: #FF1405;
-  color: #fff;
-}
-.text-reconciled {
-  background-color: #05D2FF;
-  color: #fff;
-}
-.text-refund {
-  background-color: #666666;
-  color: #fff;
-}
-
-// .p-datatable-tfoot {
-//   background-color: #42A5F5;
-//   tr td {
-//     color: #fff;
-//   }
-// }
 </style>

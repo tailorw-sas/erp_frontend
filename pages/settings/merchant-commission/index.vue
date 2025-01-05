@@ -29,7 +29,7 @@ const filterToSearch = ref<IData>({
   to: null,
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-commission',
 })
 const decimalRegex = /^\d+(\.\d+)?$/
@@ -42,7 +42,7 @@ const commissionSchema = z.object({
 })
 const fields: Array<FieldDefinitionType> = [
   {
-    field: 'managerMerchant',
+    field: 'manageMerchant',
     header: 'Merchant',
     dataType: 'select',
     class: 'field col-12 required',
@@ -128,7 +128,7 @@ const fields: Array<FieldDefinitionType> = [
 ]
 
 const item = ref<GenericObject>({
-  managerMerchant: null,
+  manageMerchant: null,
   manageCreditCartType: null,
   commission: null,
   calculationType: null,
@@ -139,7 +139,7 @@ const item = ref<GenericObject>({
 })
 
 const itemTemp = ref<GenericObject>({
-  managerMerchant: null,
+  manageMerchant: null,
   manageCreditCartType: null,
   commission: null,
   calculationType: null,
@@ -151,7 +151,7 @@ const itemTemp = ref<GenericObject>({
 
 const merchantList = ref<any[]>([])
 const confMerchantApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
 })
 
@@ -168,7 +168,7 @@ const formTitle = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'manageMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'manageCreditCartType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', keyValue: 'name' }, sortable: true },
   { field: 'commission', header: 'Commission', type: 'text' },
   { field: 'calculationType', header: 'Calculation Type', type: 'text' },
@@ -182,7 +182,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Commission',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-commission',
   loading: false,
   actionsAsMenu: false,
@@ -215,7 +215,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -241,7 +241,7 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
-      iterator.managerMerchant = { id: iterator.managerMerchant?.id, name: `${iterator.managerMerchant?.code} ${iterator.managerMerchant?.description ? `- ${iterator.managerMerchant?.description}` : ''}` }
+      iterator.manageMerchant = { id: iterator.manageMerchant?.id, name: `${iterator.manageMerchant?.code} ${iterator.manageMerchant?.description ? `- ${iterator.manageMerchant?.description}` : ''}` }
       iterator.manageCreditCartType = { id: iterator.manageCreditCartType?.id, name: `${iterator.manageCreditCartType?.name}` }
       creditCardTypeList.value.find(i => i.id === iterator.manageCreditCartType?.id)
 
@@ -254,7 +254,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -312,23 +312,29 @@ async function getItemById(id: string) {
 
       if (response) {
         const objMerchant = {
-          id: response.managerMerchant.id,
-          name: `${response.managerMerchant.code} ${response.managerMerchant.description ? `- ${response.managerMerchant.description}` : ''}`,
-          status: response.managerMerchant.status
+          id: response.manageMerchant.id,
+          name: `${response.manageMerchant.code} ${response.manageMerchant.description ? `- ${response.manageMerchant.description}` : ''}`,
+          status: response.manageMerchant.status
         }
         merchantList.value = [objMerchant]
         item.value.id = response.id
-        item.value.managerMerchant = merchantList.value.find(i => i.id === response.managerMerchant.id)
-        creditCardTypeList.value = [response.manageCreditCartType]
-        item.value.manageCreditCartType = response.manageCreditCartType
+        item.value.manageMerchant = merchantList.value.find(i => i.id === response.manageMerchant.id)
         item.value.commission = response.commission
         item.value.calculationType = ENUM_CALCULATION_TYPE.find(i => i.id === response.calculationType)
-        item.value.description = response.description
+        item.value.description = response.description || ''
         item.value.status = statusToBoolean(response.status)
         const newDate = new Date(response.fromDate)
         newDate.setDate(newDate.getDate() + 1)
         item.value.fromDate = newDate || null
         item.value.toDate = response.toDate ? dayjs(response.toDate).format('YYYY-MM-DD') : null
+
+        if (response.manageCreditCartType) {
+          item.value.manageCreditCartType = {
+            id: response.manageCreditCartType.id,
+            name: `${response.manageCreditCartType.code} - ${response.manageCreditCartType.name}`,
+            status: response.manageCreditCartType.status
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -352,12 +358,12 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.fromDate = payload.fromDate ? dayjs(payload.fromDate).format('YYYY-MM-DD') : ''
     payload.toDate = payload.toDate ? dayjs(payload.toDate).format('YYYY-MM-DD') : ''
-    payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+    payload.managerMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
     payload.manageCreditCartType = typeof payload.manageCreditCartType === 'object' ? payload.manageCreditCartType.id : payload.manageCreditCartType
     payload.calculationType = payload.calculationType?.id
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    delete payload.manageMerchant
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -367,12 +373,12 @@ async function updateItem(item: { [key: string]: any }) {
 
   payload.fromDate = payload.fromDate ? dayjs(payload.fromDate).format('YYYY-MM-DD') : ''
   payload.toDate = payload.toDate ? dayjs(payload.toDate).format('YYYY-MM-DD') : ''
-  payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
+  payload.managerMerchant = typeof payload.manageMerchant === 'object' ? payload.manageMerchant.id : payload.manageMerchant
   payload.manageCreditCartType = typeof payload.manageCreditCartType === 'object' ? payload.manageCreditCartType.id : payload.manageCreditCartType
   payload.calculationType = payload.calculationType?.id
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
-  toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  delete payload.manageMerchant
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -395,9 +401,11 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -406,7 +414,8 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
@@ -416,7 +425,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -603,17 +615,17 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Merchant Commission
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
@@ -667,16 +679,16 @@ onMounted(async () => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-            <template #field-managerMerchant="{ item: data, onUpdate }">
+            <template #field-manageMerchant="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
                 item-value="id"
-                :model="data.managerMerchant"
+                :model="data.manageMerchant"
                 :suggestions="merchantList"
                 @change="($event) => {
-                  onUpdate('managerMerchant', $event)
+                  onUpdate('manageMerchant', $event)
                 }"
                 @load="($event) => getMerchantList($event)"
               />

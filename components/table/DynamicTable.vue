@@ -4,15 +4,20 @@ import { FilterMatchMode } from 'primevue/api'
 import BlockUI from 'primevue/blockui'
 import type { DataTableFilterMeta } from 'primevue/datatable'
 import type { PageState } from 'primevue/paginator'
+import type { PropType } from 'vue'
 import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
 import { getLastDayOfMonth } from '../../utils/helpers'
-import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
+import type { IColumn, IObjApi, ISortOptions } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
-import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
+import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
 const props = defineProps({
+  componentTableId: {
+    type: String,
+    required: false,
+  },
   data: {
     type: Array as () => Array<any>,
     required: true,
@@ -27,20 +32,26 @@ const props = defineProps({
       moduleApi: string
       uriApi: string
       loading: boolean
-      actionsAsMenu: boolean
+      actionsAsMenu?: boolean
       showAcctions?: boolean
       showCreate?: boolean
       showEdit?: boolean
       showDelete?: boolean
       showLocalDelete?: boolean
       showFilters?: boolean
-      showToolBar?: boolean
       showTitleBar?: boolean
       messageToDelete: string
       search?: boolean
       selectionMode?: 'single' | 'multiple' | undefined
       expandableRows?: boolean
-    }>
+      selectAllItemByDefault?: boolean
+      selectFirstItemByDefault?: boolean
+      showPagination?: boolean
+      showCustomEmptyTable?: boolean
+      scrollHeight?: string | undefined
+      showSelectedItems?: boolean
+    }>,
+    required: true,
   },
   pagination: {
     type: Object as PropType<{
@@ -56,6 +67,27 @@ const props = defineProps({
     type: Number,
     default: 90,
   },
+  parentComponentLoading: {
+    type: Boolean,
+    required: false,
+  },
+  // Esta propiedad de va a usar para el ordenamiento local, para que ordene local debe venir en false
+  // En el manejo del onSortField se debe validar que no se llame al api en el padre
+  isCustomSorting: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  selectedItems: {
+    type: Array as PropType<any[]>,
+    required: false,
+  },
+  // Mostrar el componente de paginación
+  showLocalPagination: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 })
 
 const emits = defineEmits<{
@@ -68,10 +100,13 @@ const emits = defineEmits<{
   (e: 'openDeleteDialog', value: any): void
   (e: 'onLocalDelete', value: any): void
   (e: 'update:clickedItem', value: any): void
+  (e: 'update:selectedItems', value: any): void
   (e: 'onSortField', value: any): void
   (e: 'onRowDoubleClick', value: any): void
   (e: 'onRowRightClick', value: any): void
   (e: 'onCellEditComplete', value: any): void
+  (e: 'onTableCellEditComplete', value: any): void
+  (e: 'onExpandRow', value: any): void
 }>()
 
 const menu = ref()
@@ -140,12 +175,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -155,9 +190,17 @@ const menuItems = ref([
 const menuItemsDate = ref(ENUM_OPERATOR_DATE)
 const menuItemsString = ref(ENUM_OPERATOR_STRING)
 const menuItemsSelect = ref(ENUM_OPERATOR_SELECT)
+const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
 // const menuItemsBoolean = ref(ENUM_OPERATOR_BOOLEAN)
 
 const selectMultiple1: Ref = ref(null)
+
+async function onRowExpand({ data }: any) {
+  emits('onExpandRow', data?.id)
+}
+function onRowCollapse(event: { data: { name: any } }) {
+  emits('onExpandRow', '')
+}
 
 function onListItem() {
   emits('onListItem')
@@ -204,12 +247,16 @@ function onEdit(item: any) {
 }
 
 function onSelectItem(item: any) {
-  // console.log(item, typeof item === 'object', Array.isArray(item))
   if (item) {
     if (Array.isArray(item)) {
       if (item.length > 0) {
         const ids = item.map((i: any) => i.id)
         emits('update:clickedItem', ids)
+        emits('update:selectedItems', item)
+      }
+      else if (item.length === 0) {
+        emits('update:clickedItem', [])
+        emits('update:selectedItems', [])
       }
     }
     else {
@@ -234,7 +281,11 @@ function onRowRightClick(event: any) {
 }
 
 function onCellEditComplete(event: any, data: any) {
-  emits('onCellEditComplete', { newDate: event, data })
+  emits('onCellEditComplete', { newDate: event, data, event })
+}
+
+function onTableCellEditComplete(event: any) {
+  emits('onTableCellEditComplete', { data: event?.data, event, field: event?.field, newValue: event?.newValue, newData: event?.newData })
 }
 
 function showConfirmDelete(item: any) {
@@ -272,7 +323,7 @@ async function deleteItem(id: string, isLocal = false) {
   }
 }
 
-async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = []) {
+async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined, sortOptions?: ISortOptions | undefined) {
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
@@ -280,18 +331,23 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
         filter,
         query: '',
         pageSize: 200,
-        page: 0
+        page: 0,
+        sortBy: sortOptions?.sortBy || 'createdAt',
+        sortType: sortOptions?.sortType || 'DESC'
       }
       if (objApi) {
         const response = await GenericService.search(objApi.moduleApi, objApi.uriApi, payload)
-        for (const iterator of response.data) {
-          listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+        if (mapFunction) {
+          listItems = response.data.map(mapFunction)
+        }
+        else {
+          for (const iterator of response.data) {
+            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+          }
         }
       }
     }
     else {
-      console.log('localItems', localItems)
-
       listItems = [...localItems]
     }
     return [...listItems]
@@ -310,6 +366,9 @@ async function getOptionsList() {
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'slot-text':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -353,7 +412,9 @@ async function getOptionsListOldVersion() {
     for (const iterator of props.columns) {
       switch (iterator.type) {
         case 'text':
-
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -389,7 +450,18 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
-        const response = await getList({ moduleApi: iterator.objApi?.moduleApi || '', uriApi: iterator.objApi?.uriApi || '', keyValue: iterator.objApi?.keyValue }, [], iterator.localItems || [])
+        const response = await getList(
+          {
+            moduleApi: iterator.objApi?.moduleApi || '',
+            uriApi: iterator.objApi?.uriApi || '',
+            keyValue: iterator.objApi?.keyValue
+          },
+          iterator.objApi?.filter || [],
+          iterator.localItems || [],
+          iterator.objApi?.mapFunction,
+          iterator.objApi?.sortOption
+        )
+
         objListData[iterator.field] = response
       }
     }
@@ -411,7 +483,6 @@ function onSortField(event: any) {
 
 function haveFilterApplay(filtersValue: any, column: any) {
   let result = false
-
   if (column.type === 'bool') {
     result = filtersValue[column.field].value !== null
   }
@@ -448,20 +519,54 @@ function formatRangeDate(date: string): string {
   return `${startDate} - ${endDate}`
 }
 
+function clearSelectedItems() {
+  clickedItem.value = []
+}
+
 watch(() => props.data, async (newValue) => {
-  if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
-    clickedItem.value = props.data[0]
+  if (props.options?.selectAllItemByDefault) {
+    clickedItem.value = props.data
   }
+  else {
+    if (newValue.length > 0 && props.options?.selectionMode === 'multiple' && props.selectedItems && props.selectedItems.length > 0) {
+      // Filtra los elementos de newValue que están en selectedItems comparando por id
+      clickedItem.value = newValue.filter((item: any) =>
+        props.selectedItems?.some(selected => selected.id === item.id)
+      )
+    }
+    else if ('selectFirstItemByDefault' in props.options) {
+      if (props.options?.selectFirstItemByDefault) {
+        if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+          clickedItem.value = props.data[0]
+        }
+      }
+    }
+    // else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+    //   clickedItem.value = props.data[0]
+    // }
+  }
+})
+
+watch(() => props.selectedItems, async (newValue) => {
+  clickedItem.value = newValue
 })
 
 onMounted(() => {
   getDataFromSelectors()
-  if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
-    clickedItem.value = props.data[0]
+  if (props.options?.selectAllItemByDefault) {
+    clickedItem.value = props.data
+  }
+  else if ('selectFirstItemByDefault' in props.options) {
+    if (props.options?.selectFirstItemByDefault) {
+      if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
+        clickedItem.value = props.data[0]
+      }
+    }
   }
 })
 
 getOptionsList()
+defineExpose({ clearSelectedItems })
 </script>
 
 <template>
@@ -479,13 +584,20 @@ getOptionsList()
     </template>
   </Toolbar>
 
-  <BlockUI :blocked="options?.loading">
-    <div class="card p-0">
+  <BlockUI :blocked="options?.loading || parentComponentLoading" class="block-ui-container">
+    <div
+      v-if="options?.loading"
+      class="flex flex-column align-items-center justify-content-center full-size"
+    >
+      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+    </div>
+    <div class="card p-0 mb-0">
+      <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
+        :id="'componentTableId' in props ? props.componentTableId : ''"
         v-model:filters="filters1"
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
-        v-model:contextMenuSelection="clickedItem"
         context-menu
         :meta-key-selection="metaKey"
         :selection-mode="options?.selectionMode ?? 'single'"
@@ -497,9 +609,9 @@ getOptionsList()
         show-gridlines
         striped-rows
         removable-sort
-        lazy
+        :lazy="props.isCustomSorting"
         scrollable
-        scroll-height="60vh"
+        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '75vh'"
         :filters="filters1"
         edit-mode="cell"
         @sort="onSortField"
@@ -507,31 +619,23 @@ getOptionsList()
         @update:filters="onChangeFilters"
         @row-dblclick="onRowDoubleClick"
         @row-contextmenu="onRowRightClick"
+        @cell-edit-complete="onTableCellEditComplete"
+        @row-expand="onRowExpand"
+        @row-collapse="onRowCollapse"
       >
-        <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
-          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <span class="flex mt-2 md:mt-0">
-              <div class="my-2">
-                <h5 class="m-0">{{ options?.tableName }}</h5>
-              </div>
-              <Divider layout="vertical" />
-              <Button v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear" outlined @click="clearFilter1(filters1)" />
-              <Divider layout="vertical" />
-              <span v-if="props.options?.search || false">
-                <InputText v-model="filters1.search.value" class="w-full sm:w-auto" placeholder="Press enter to search..." />
-                <Button label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary" @click="onChangeFilters(filters1)">
-                  <i class="pi pi-search" />
-                </Button>
-              </span>
+        <template #loading>
+          <!-- Loading customers data. Please wait. -->
+          <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+            <span class="flex flex-column align-items-center justify-content-center">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
             </span>
-            <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
-              <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary" @click="openNew" />
-            </div>
           </div>
         </template>
-
         <template #empty>
-          <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+          <div v-if="'showCustomEmptyTable' in props?.options ? props.options.showCustomEmptyTable : false">
+            <slot name="emptyTable" :data="{ messageForEmptyTable }" />
+          </div>
+          <div v-else class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
               <div class="row">
                 <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
@@ -540,9 +644,9 @@ getOptionsList()
                 <p>{{ messageForEmptyTable }}</p>
               </div>
             </span>
-            <span v-else class="flex flex-column align-items-center justify-content-center">
-              <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-            </span>
+          <!-- <span v-else class="flex flex-column align-items-center justify-content-center">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+          </span> -->
           </div>
         </template>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
@@ -568,9 +672,9 @@ getOptionsList()
           class="custom-table-head" :class="column.columnClass"
           :style="{
             width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-            minWidth: column?.width ? column?.width : 'auto',
+            minWidth: column?.minWidth ? column?.minWidth : 'auto',
             display: column?.hidden ? 'none' : 'table-cell',
-            // maxWidth: column?.width ? column?.width : 'auto',
+            maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
@@ -581,24 +685,24 @@ getOptionsList()
             <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="data" :column="column" />
+            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :data="data" :column="column" />
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
-            </span>
-
-            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
-              <span v-if="column.type === 'select' || column.type === 'local-select'">
-                {{ data[column.field].name }}
-              </span>
-            </span>
-            <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}
-            </span>
-            <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
             </span>
             <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
               <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
               <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
+            </span>
+            <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
+              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
+            </span>
+            <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
+              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
+            </span>
+            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
+              <span v-if="column.type === 'select' || column.type === 'local-select'">
+                {{ data[column.field].name }}
+              </span>
             </span>
             <span v-else-if="column.type === 'image'">
               <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
@@ -608,6 +712,9 @@ getOptionsList()
             </span>
             <span v-else-if="column.type === 'bool'">
               <Badge v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'" :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)" :severity="data[column.field] ? 'success' : 'danger'" class="success" />
+            </span>
+            <span v-else-if="column.type === 'number'">
+              {{ formatNumber(data[column.field]) }}
             </span>
             <span v-else-if="column.type === 'custom-badge'">
               <Badge
@@ -619,7 +726,7 @@ getOptionsList()
               <span v-if="column.type === 'local-select'" v-tooltip.top="data[column.field].name" class="truncate">
                 {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field], column.localItems) : '' }}
               </span>
-              <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field]" class="truncate">
+              <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field] ? data[column.field].toString() : ''" class="truncate">
                 <span v-if="column.badge && data[column.field]">
                   <Badge v-tooltip.top="data[column.field]" :value="data[column.field] ? 'True' : 'False'" :severity="data[column.field] ? 'success' : 'danger'" class="}" />
                 </span>
@@ -657,6 +764,33 @@ getOptionsList()
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                    <span :class="item.icon" />
+                    <span class="ml-2">{{ item.label }}</span>
+                  </a>
+                </template>
+              </Menu>
+            </div>
+
+            <div v-if="column.type === 'number'" class="flex flex-column">
+              <Dropdown
+                v-if="true"
+                v-model="filterModel.matchMode"
+                :options="menuItemsNumeric"
+                option-label="label"
+                placeholder="Select a operator"
+                class="w-full mb-2"
+              />
+              <InputNumber
+                v-model="filterModel.value"
+                class="p-column-filter w-full"
+                placeholder="Write a number"
+                :min-fraction-digits="2"
+                :max-fraction-digits="4"
+              />
+
+              <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">
                   <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
@@ -744,8 +878,8 @@ getOptionsList()
               <Calendar
                 v-model="filterModel.value"
                 type="text"
-                showTime 
-                hourFormat="12"
+                show-time
+                hour-format="12"
                 date-format="yy-mm-dd"
                 placeholder="yyyy-mm-dd"
                 mask="99/99/9999"
@@ -763,13 +897,24 @@ getOptionsList()
           <template #filterclear="{ field }">
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
-          <template v-if="column.type === 'date-editable'" #editor="{ data, field }">
-            <Calendar
-              v-model="data[field]" :manual-input="false"
-              style="width: 100%" view="month"
-              date-format="yy-mm-dd"
-              @update:model-value="onCellEditComplete($event, data)"
-            />
+          <template v-if="column.type === 'date-editable'" #editor="{ data: dataList, field }">
+            <slot :name="`column-${column.field}`" :item="{ dataList, field, column, onCellEditComplete }">
+              <Calendar
+                v-model="dataList[field]"
+                :manual-input="false"
+                style="width: 100%"
+                :view="column.props?.calendarMode || 'month'"
+                date-format="yy-mm-dd"
+                :max-date="column.props?.maxDate"
+                @update:model-value="onCellEditComplete($event, dataList)"
+              />
+            </slot>
+          </template>
+          <template v-if="column.editable && (column.type === 'text' || column.type === 'number')" #editor="{ data, field }">
+            <slot :name="`column-editable-${column.field}`" :item="{ data, field, column, onCellEditComplete }">
+              <InputText v-if="column.type === 'text'" v-model="data[field]" style="width: 100%" autofocus fluid />
+              <InputNumber v-if="column.type === 'number'" v-model="data[field]" style="width: 100%" autofocus fluid />
+            </slot>
           </template>
         </Column>
         <Column v-if="options?.hasOwnProperty('showAcctions') ? options?.showAcctions : false" field="action" header="" :style="{ 'width': `${props.actionsWidth}px`, 'text-align': 'center' }">
@@ -840,17 +985,26 @@ getOptionsList()
         <slot name="datatable-footer" />
       </DataTable>
     </div>
+  </BlockUI>
 
-    <div class="flex justify-content-center align-items-center mt-3 card p-0">
-      <Paginator
-        v-if="props.pagination"
-        :rows="Number(props.pagination.limit) || 50"
-        :total-records="props.pagination.totalElements"
-        :rows-per-page-options="[10, 20, 30, 50]"
-        @page="onChangePageOrLimit($event)"
-      />
-      <Divider layout="vertical" />
-      <div class="flex align-items-center mx-3">
+  <div v-if="'showPagination' in props?.options ? props.options.showPagination : true" class="flex justify-content-center align-items-center mt-2 card py-0">
+    <div v-if="props.showLocalPagination">
+      <slot name="pagination" />
+    </div>
+    <div v-else class="flex justify-content-between align-items-center w-full">
+      <!-- cantidad de elementos seleccionados -->
+      <div class="flex align-items-center w-15rem">
+        <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
+      </div>
+      <!-- paginacion -->
+      <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
+      <div class="flex align-items-center">
+        <Paginator
+          :rows="Number(props.pagination.limit) || 50"
+          :total-records="props.pagination.totalElements"
+          :rows-per-page-options="[10, 20, 30, 50, 100, 200, 500]"
+          @page="onChangePageOrLimit($event)"
+        />
         <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
           <span>
             Total:
@@ -862,21 +1016,36 @@ getOptionsList()
           </slot>
         </Badge>
       </div>
+      <!-- Other actions -->
+      <div class="flex align-items-center w-15rem">
+        <slot name="pagination-right" />
+      </div>
     </div>
-  </BlockUI>
+  </div>
 
   <!-- Dialog Delete -->
   <DialogDelete
     v-if="clickedItem"
     :open-dialog="openDialogDelete"
     :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected item?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />
 </template>
 
 <style lang="scss" scoped>
+.block-ui-container {
+  position: relative; /* Asegura que los hijos puedan posicionarse dentro del contenedor */
+}
+
+.full-size {
+  position: absolute; /* Permite ocupar todo el espacio del contenedor padre */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 .truncate {
   white-space: nowrap;
   overflow: hidden;

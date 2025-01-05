@@ -336,17 +336,26 @@ const goToList = async () => await navigateTo('/settings/employee')
 async function getDepartmentGroupList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
@@ -358,7 +367,7 @@ async function getDepartmentGroupList(query: string) {
     const { data: dataList } = response
     DepartmentGroupList.value = []
     for (const iterator of dataList) {
-      DepartmentGroupList.value = [...DepartmentGroupList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      DepartmentGroupList.value = [...DepartmentGroupList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {

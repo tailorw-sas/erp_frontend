@@ -11,6 +11,7 @@ const props = defineProps<{
   loadingSave?: boolean
   loadingDelete?: boolean
   showActions?: boolean
+  showActionsInline?: boolean
   forceSave?: boolean
   formClass?: string
   containerClass?: string
@@ -18,14 +19,17 @@ const props = defineProps<{
   backendValidation?: { [key: string]: string[] }
   hideDeleteButton?: boolean
   showCancel?: boolean
+  errorList?: { [key: string]: string[] }
 }>()
 
-const emit = defineEmits(['update:field', 'clearField', 'submit', 'cancel', 'delete', 'forceSave'])
+const emit = defineEmits(['update:field', 'reactiveUpdateField', 'clearField', 'submit', 'cancel', 'delete', 'forceSave', 'update:errorsList'])
 
+const formElement: Ref<HTMLDivElement | null> = ref<HTMLDivElement | null>(null)
+const scrollPosition = ref(0)
 const hideCancelLocal = ref(props.hideCancel)
 const $primevue = usePrimeVue()
 const fieldValues = reactive<{ [key: string]: any }>({})
-const errors = reactive<{ [key: string]: string[] }>({})
+const errors = reactive<{ [key: string]: string[] }>(props.errorList || {})
 const objFile = ref<IFileMetadata | null>(null)
 
 props.fields.forEach((field) => {
@@ -63,6 +67,9 @@ function deleteItem($event: Event) {
 function submitForm($event: Event = new Event('')) {
   $event.preventDefault()
   if (validateForm()) {
+    if (formElement.value) {
+      scrollPosition.value = formElement.value.scrollTop
+    }
     emit('submit', { ...fieldValues, event: $event })
   }
 }
@@ -86,7 +93,7 @@ function validateField(fieldKey: string, value: any) {
   if (field && field.validation) {
     const result = field.validation.safeParse(value)
     if (!result.success) {
-      errors[fieldKey] = result.error.issues.map(e => e.message)
+      errors[fieldKey] = result && result.error ? result.error.issues.map(e => e.message) : []
     }
     else {
       delete errors[fieldKey]
@@ -127,17 +134,49 @@ function formatSize(bytes: number) {
   return `${formattedSize} ${sizes[i]}`
 }
 
+// Función para manejar el scroll
+function handleScroll(event: Event) {
+  if (!formElement.value) { return }
+  const scrollTop = formElement.value.scrollTop
+  localStorage.setItem('scrollPosition', scrollTop.toString())
+}
+
+watch(errors, (newVal, oldVal) => {
+  emit('update:errorsList', errors)
+}, { deep: true })
+
 watch(() => props.forceSave, () => {
   if (props.forceSave) {
     submitForm()
     emit('forceSave')
   }
 })
+
+watch(fieldValues, (newVal) => {
+  emit('reactiveUpdateField', newVal)
+})
+
+onMounted(() => {
+  if (formElement.value) {
+    formElement.value.addEventListener('scroll', handleScroll)
+  }
+  if (formElement.value) {
+    const scrollPosition = localStorage.getItem('scrollPosition')
+    formElement.value.scrollTop = scrollPosition ? Number.parseInt(scrollPosition, 10) : 0
+  }
+})
+// Remover el listener al desmontar el componente
+onBeforeUnmount(() => {
+  if (formElement.value) {
+    formElement.value.removeEventListener('scroll', handleScroll)
+  }
+  // localStorage.removeItem('scrollPosition')
+})
 </script>
 
 <template>
   <div :class="formClass || 'p-fluid formgrid grid flex justify-content-center'">
-    <div :class="props.containerClass ? `${props.containerClass} px-3` : 'col-12 p-0'" :style="unRestrictedContentHeight ? { width: '100%' } : { 'max-height': '65vh', 'overflow-y': 'auto', 'width': '100%' }">
+    <div ref="formElement" :class="props.containerClass ? `${props.containerClass} px-3` : 'col-12 p-0'" :style="unRestrictedContentHeight ? { width: '100%' } : { 'max-height': '65vh', 'overflow-y': 'auto', 'width': '100%' }">
       <div
         v-for="(field, index) in fields" v-show="!field.hidden" :key="field.field || index" :style="field.style"
         :class="field.class ? `${field.class} mb-2` : 'mb-2'"
@@ -154,9 +193,18 @@ watch(() => props.forceSave, () => {
 
         <!-- Field slot -->
         <div :class="field.containerFieldClass">
+          <slot :name="`field-${field.field}-custom`" :field="field" :item="fieldValues" :fields="fields" :on-update="updateField" />
           <slot :name="`field-${field.field}`" :item="fieldValues" :field="field.field" :fields="fields" :on-update="updateField">
             <div v-if="field.dataType === 'image'" class="flex flex-wrap justify-content-center">
-              <FileUpload hidden auto custom-upload accept="image/*" :max-file-size="1000000" @uploader="customBase64Uploader($event, fieldValues, field.field)">
+              <FileUpload
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                hidden
+                auto
+                custom-upload
+                accept="image/*"
+                :max-file-size="1000000"
+                @uploader="customBase64Uploader($event, fieldValues, field.field)"
+              >
                 <template #header="{ chooseCallback }">
                   <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
                     <div class="flex gap-2">
@@ -174,7 +222,7 @@ watch(() => props.forceSave, () => {
                   :style="{ backgroundImage: `url(${typeof fieldValues[field.field] === 'string' ? fieldValues[field.field] : (fieldValues[field.field].hasOwnProperty('objectURL') ? fieldValues[field.field].objectURL : '')})`, backgroundSize: (objFile !== null && typeof objFile === 'object' && objFile.type === 'image/svg+xml') ? 'contain' : 'cover' }"
                 />
               </div>
-              <Skeleton v-else height="2rem" />
+              <Skeleton v-else height="180px" width="180px" />
               <div class="col-12">
                 <div class="flex justify-content-center align-items-center my-2">
                   <span>
@@ -187,7 +235,9 @@ watch(() => props.forceSave, () => {
 
             <span v-if="field.dataType === 'text' || field.dataType === 'code'">
               <InputText
-                v-if="!loadingSave" v-model="fieldValues[field.field]"
+                v-if="!loadingSave"
+                v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                 show-clear :disabled="field?.disabled"
                 @update:model-value="updateField(field.field, $event)"
               />
@@ -196,7 +246,10 @@ watch(() => props.forceSave, () => {
 
             <span v-else-if="field.dataType === 'textarea'">
               <Textarea
-                v-if="!loadingSave" v-model="fieldValues[field.field]" rows="5"
+                v-if="!loadingSave"
+                v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                rows="5"
                 :disabled="field?.disabled"
                 show-clear
                 @update:model-value="updateField(field.field, $event)"
@@ -208,7 +261,9 @@ watch(() => props.forceSave, () => {
               <Calendar
                 v-if="!loadingSave"
                 v-model="fieldValues[field.field]"
-                date-format="yy-mm-dd" :disabled="field?.disabled"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                date-format="yy-mm-dd"
+                :disabled="field?.disabled"
                 @update:model-value="(value) => updateField(field.field, value)"
               />
               <Skeleton v-else height="2rem" />
@@ -218,7 +273,11 @@ watch(() => props.forceSave, () => {
               <InputNumber
                 v-if="!loadingSave"
                 v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                 :disabled="field?.disabled"
+                mode="decimal"
+                :min-fraction-digits="field?.minFractionDigits ? field.minFractionDigits : 0"
+                :max-fraction-digits="field?.maxFractionDigits ? field.maxFractionDigits : 0"
                 @update:model-value="updateField(field.field, $event)"
               />
               <Skeleton v-else height="2rem" />
@@ -227,7 +286,9 @@ watch(() => props.forceSave, () => {
             <span v-else-if="field.dataType === 'password'">
               <Password
                 v-if="!loadingSave"
-                v-model="fieldValues[field.field]" :disabled="field?.disabled"
+                v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                :disabled="field?.disabled"
                 toggle-mask
                 @update:model-value="updateField(field.field, $event)"
               />
@@ -236,7 +297,13 @@ watch(() => props.forceSave, () => {
 
             <span v-else-if="field.dataType === 'file'">
               <FileUpload
-                v-if="!loadingSave" accept=".jrxml" :max-file-size="1000000" :multiple="false" auto custom-upload
+                v-if="!loadingSave"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                accept=".jrxml"
+                :max-file-size="1000000"
+                :multiple="false"
+                auto
+                custom-upload
                 @uploader="customBase64Uploader($event, fieldValues, field.field)"
               >
                 <!-- <template #header="{ chooseCallback }">
@@ -273,7 +340,41 @@ watch(() => props.forceSave, () => {
             </span>
 
             <span v-else-if="field.dataType === 'fileupload'">
-              <FileUpload
+              <InputGroup>
+                <span v-if="!loadingSave" class="w-full">
+                  <InputText
+                    v-if="typeof fieldValues[field.field] === 'object'"
+                    v-model="fieldValues[field.field].name"
+                    :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                    class="w-full"
+                    placeholder="Upload a file"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                  />
+                  <InputText
+                    v-if="typeof fieldValues[field.field] === 'string'"
+                    v-model="fieldValues[field.field]"
+                    :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                    class="w-full"
+                    placeholder="Upload a file"
+                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                  />
+                </span>
+                <Skeleton v-else height="7rem" />
+                <FileUpload
+                  v-if="!loadingSave"
+                  :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
+                  mode="basic"
+                  :max-file-size="100000000"
+                  :multiple="false"
+                  auto
+                  custom-upload
+                  accept="application/pdf"
+                  style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                  @uploader="customBase64Uploader($event, fieldValues, field.field)"
+                />
+              </InputGroup>
+
+              <!-- <FileUpload
                 v-if="!loadingSave" :max-file-size="1000000" :multiple="false" auto custom-upload
                 @uploader="customBase64Uploader($event, fieldValues, field.field)"
               >
@@ -300,15 +401,14 @@ watch(() => props.forceSave, () => {
                     </li>
                   </ul>
                 </template>
-              </FileUpload>
-
-              <Skeleton v-else height="7rem" />
+              </FileUpload> -->
 
             </span>
 
             <span v-else-if="field.dataType === 'check'">
               <Checkbox
                 v-model="fieldValues[field.field]"
+                :tabindex="field.tabIndex !== undefined && field.tabIndex !== null ? field.tabIndex : -1"
                 :binary="true"
                 :disabled="field?.disabled"
                 @update:model-value="updateField(field.field, $event)"
@@ -317,7 +417,7 @@ watch(() => props.forceSave, () => {
             </span>
           </slot>
           <!-- Field Help -->
-          <small v-if="field.helpText">{{ field.helpText }}</small>
+          <small v-if="field.helpText" :class="field.helpTextClass ? field.helpTextClass : ''">{{ field.helpText }}</small>
 
           <!-- Validation errors -->
           <div v-if="true" class="flex">
@@ -346,9 +446,16 @@ watch(() => props.forceSave, () => {
           Clear
         </button>
       </div>
+      <div v-if="showActionsInline" class="flex align-self-center justify-content-end my-2">
+        <slot name="form-btns-inline" :item="{ fieldValues, submitForm, cancelForm, deleteItem, item }">
+          <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSave" @click="submitForm($event)" />
+          <Button v-if="!hideDeleteButton" v-tooltip.top="'Delete'" outlined class="w-3rem" severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem($event)" />
+          <Button v-if="props.showCancel" v-tooltip.top="'Cancel'" class="w-3rem mx-2" icon="pi pi-times" severity="secondary" :loading="loadingSave" @click="cancelForm" />
+        </slot>
+      </div>
     </div>
     <!-- General Footer slot of the form -->
-    <div v-if="showActions" class="col-12 form-footer mt-4 flex justify-content-between md:justify-content-end">
+    <div v-if="showActions" class="col-12 form-footer py-0 py-0 my-0 flex justify-content-between md:justify-content-end">
       <slot name="form-footer" :item="{ fieldValues, submitForm, cancelForm, deleteItem, item }">
         <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSave" @click="submitForm($event)" />
         <Button v-if="!hideDeleteButton" v-tooltip.top="'Delete'" outlined class="w-3rem" severity="danger" :disabled="item?.id === null || item?.id === undefined" :loading="loadingDelete" icon="pi pi-trash" @click="deleteItem($event)" />

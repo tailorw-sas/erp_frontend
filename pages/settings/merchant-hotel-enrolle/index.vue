@@ -28,7 +28,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-hotel-enrolle',
 })
 
@@ -128,7 +128,7 @@ const ENUM_FILTER = [
 ]
 
 const columns: IColumn[] = [
-  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
+  { field: 'managerMerchant', header: 'Merchant', type: 'select', objApi: { moduleApi: 'creditcard', uriApi: 'manage-merchant', keyValue: 'description' }, sortable: true },
   { field: 'managerHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
   { field: 'enrrolle', header: 'Enrolle', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
@@ -139,7 +139,7 @@ const columns: IColumn[] = [
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Merchant Hotel Enrolle',
-  moduleApi: 'settings',
+  moduleApi: 'creditcard',
   uriApi: 'manage-merchant-hotel-enrolle',
   loading: false,
   showDelete: false,
@@ -182,7 +182,7 @@ function clearForm() {
   HotelList.value = []
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -208,7 +208,7 @@ async function getList() {
       const obj = {
         managerMerchant: { id: iterator.managerMerchant.id, name: `${iterator.managerMerchant.code} - ${iterator.managerMerchant.description}` },
         managerHotel: { id: iterator.managerHotel.id, name: `${iterator.managerHotel.code} - ${iterator.managerHotel.name}` },
-        managerCurrency: { id: iterator.managerCurrency.id, name: iterator.managerCurrency.description },
+        managerCurrency: { id: iterator.managerCurrency?.id, name: iterator.managerCurrency?.description },
         id: iterator.id,
         enrrolle: iterator.enrrolle,
         key: iterator.key,
@@ -225,7 +225,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -243,10 +243,10 @@ function searchAndFilter() {
   if (filterToSearch.value.criterial && filterToSearch.value.search) {
     let key
     if (filterToSearch.value.criterial.id === 'managerMerchant') {
-      key = 'managerMerchant.description'
+      key = 'manageMerchant.description'
     }
     else if (filterToSearch.value.criterial.id === 'managerHotel') {
-      key = 'managerHotel.name'
+      key = 'manageHotel.name'
     }
     else {
       key = filterToSearch.value.criterial.id
@@ -301,10 +301,20 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         MerchantList.value = [objMerchant]
         item.value.managerMerchant = objMerchant
-        CurrencyList.value = [response.managerCurrency]
-        item.value.managerCurrency = response.managerCurrency
-        HotelList.value = [response.managerHotel]
-        item.value.managerHotel = response.managerHotel
+        if (response.managerCurrency) {
+          item.value.managerCurrency = {
+            id: response.managerCurrency.id,
+            name: `${response.managerCurrency.code} ${response.managerCurrency.name ? `- ${response.managerCurrency.name}` : ''}`,
+            status: response.managerCurrency.status
+          }
+        }
+        if (response.managerHotel) {
+          item.value.managerHotel = {
+            id: response.managerHotel.id,
+            name: `${response.managerHotel.code} ${response.managerHotel.name ? `- ${response.managerHotel.name}` : ''}`,
+            status: response.managerHotel.status
+          }
+        }
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -329,7 +339,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.managerCurrency = typeof payload.managerCurrency === 'object' ? payload.managerCurrency.id : payload.managerCurrency
     payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
     payload.managerHotel = typeof payload.managerHotel === 'object' ? payload.managerHotel.id : payload.managerHotel
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -340,7 +350,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.managerCurrency = typeof payload.managerCurrency === 'object' ? payload.managerCurrency.id : payload.managerCurrency
   payload.managerMerchant = typeof payload.managerMerchant === 'object' ? payload.managerMerchant.id : payload.managerMerchant
   payload.managerHotel = typeof payload.managerHotel === 'object' ? payload.managerHotel.id : payload.managerHotel
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -363,9 +373,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -376,7 +387,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -387,7 +398,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -416,7 +430,7 @@ async function getMerchantList(query: string) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-merchant', payload)
+    const response = await GenericService.search('creditcard', 'manage-merchant', payload)
     const { data: dataList } = response
     MerchantList.value = []
 
@@ -438,6 +452,11 @@ async function getCurrencyList(query: string) {
         value: query,
         logicalOperation: 'AND'
       }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
@@ -452,7 +471,7 @@ async function getCurrencyList(query: string) {
     const { data: dataList } = response
     CurrencyList.value = []
     for (const iterator of dataList) {
-      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      CurrencyList.value = [...CurrencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -469,6 +488,11 @@ async function getHotelList(query: string) {
         value: query,
         logicalOperation: 'AND'
       }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      }, {
         key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
@@ -483,7 +507,7 @@ async function getHotelList(query: string) {
     const { data: dataList } = response
     HotelList.value = []
     for (const iterator of dataList) {
-      HotelList.value = [...HotelList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      HotelList.value = [...HotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -513,6 +537,7 @@ function requireConfirmationToSave(item: any) {
     })
   }
 }
+
 function requireConfirmationToDelete(event: any) {
   if (!useRuntimeConfig().public.showDeleteConfirm) {
     deleteItem(idItem.value)
@@ -537,6 +562,19 @@ function requireConfirmationToDelete(event: any) {
 // FILTER -------------------------------------------------------------------------------------------------------
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'managerMerchant.id') {
+        parseFilter[i].key = 'manageMerchant.id'
+      }
+
+      if (parseFilter[i]?.key === 'managerHotel.id') {
+        parseFilter[i].key = 'manageHotel.id'
+      }
+    }
+  }
+
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
@@ -544,6 +582,12 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
+    if (event.sortField === 'managerMerchant') {
+      event.sortField = 'manageMerchant.description'
+    }
+    if (event.sortField === 'managerHotel') {
+      event.sortField = 'manageHotel.name'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
@@ -586,17 +630,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Merchant Hotel Enrolle
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>

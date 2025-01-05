@@ -15,6 +15,9 @@ interface FieldDefinition {
   footerStyle?: any | null
   footerClass?: any | null
   errorClass?: any | null
+  resetValidation?: boolean
+  minFractionDigits?: number
+  maxFractionDigits?: number
   containerFieldClass?: any | null
   showClearButton?: boolean | null
   maxConstraints?: number | null
@@ -27,7 +30,7 @@ interface FieldDefinition {
 }
 
 interface Container {
-  containerClass: string,
+  containerClass: string
   childs: FieldDefinition[]
 }
 

@@ -17,7 +17,7 @@ const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const formReload = ref(0)
-
+const loadingData = ref(false)
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -83,6 +83,36 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mb-3',
   },
   {
+    field: 'nonNone',
+    header: 'Non None',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'patWithAttachment',
+    header: 'Pay With Attachment',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'pwaWithOutAttachment',
+    header: 'Pay WithOut Attachment',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'supported',
+    header: 'Supported',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
+    field: 'otherSupport',
+    header: 'Other Support',
+    dataType: 'check',
+    class: 'field col-12 mb-3',
+  },
+  {
     field: 'permissionCode',
     header: 'Permission Code',
     dataType: 'text',
@@ -114,6 +144,11 @@ const item = ref<GenericObject>({
   permissionCode: '',
   show: false,
   defaults: false,
+  nonNone: false,
+  patWithAttachment: false,
+  pwaWithOutAttachment: false,
+  supported: false,
+  otherSupport: false,
   status: true
 })
 
@@ -126,6 +161,11 @@ const itemTemp = ref<GenericObject>({
   permissionCode: '',
   show: false,
   defaults: false,
+  nonNone: false,
+  patWithAttachment: false,
+  pwaWithOutAttachment: false,
+  supported: false,
+  otherSupport: false,
   status: true
 })
 
@@ -196,7 +236,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -232,7 +272,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -286,6 +326,11 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.show = response.show === null ? false : response.show
         item.value.defaults = response.defaults === null ? false : response.defaults
+        item.value.nonNone = response.nonNone === null ? false : response.nonNone
+        item.value.patWithAttachment = response.patWithAttachment === null ? false : response.patWithAttachment
+        item.value.pwaWithOutAttachment = response.pwaWithOutAttachment === null ? false : response.pwaWithOutAttachment
+        item.value.supported = response.supported === null ? false : response.supported
+        item.value.otherSupport = response.otherSupport === null ? false : response.otherSupport
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
@@ -324,7 +369,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.module = payload.module?.id ?? ''
     payload.navigate = payload.navigate.length > 0 ? payload.navigate.map((p: any) => p.id) : []
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -334,7 +379,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.module = payload.module?.id ?? ''
   payload.navigate = payload.navigate.length > 0 ? payload.navigate.map((p: any) => p.id) : []
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -357,9 +402,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -369,20 +415,21 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
       successOperation = false
-      console.log(error)
-
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -401,27 +448,27 @@ async function getIdentityModuleList(query: string = '') {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             },
             {
               key: 'code',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             }
           ],
           query: '',
           pageSize: 100,
           page: 0,
           sortBy: 'name',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(confModuleApi.moduleApi, confModuleApi.uriApi, payload)
     const { data: dataList } = response
     moduleList.value = []
     for (const iterator of dataList) {
-      moduleList.value = [...moduleList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      moduleList.value = [...moduleList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -431,6 +478,7 @@ async function getIdentityModuleList(query: string = '') {
 
 async function getForSelectNavigateList(query: string = '') {
   try {
+    loadingData.value = true
     const payload
         = {
           filter: [
@@ -444,31 +492,34 @@ async function getForSelectNavigateList(query: string = '') {
               key: 'name',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             },
             {
               key: 'code',
               operator: 'LIKE',
               value: query,
-              logicalOperation: 'AND'
+              logicalOperation: 'OR'
             }
           ],
           query: '',
           pageSize: 200,
           page: 0,
-          sortBy: 'code',
-          sortType: ENUM_SHORT_TYPE.DESC
+          sortBy: 'name',
+          sortType: ENUM_SHORT_TYPE.ASC
         }
 
     navigateListItems.value = []
     const response = await GenericService.search(confPaymentAttachmentStatusApi.moduleApi, confPaymentAttachmentStatusApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      navigateListItems.value = [...navigateListItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      navigateListItems.value = [...navigateListItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
     console.error('Error loading payment attachment status list:', error)
+  }
+  finally {
+    loadingData.value = false
   }
 }
 
@@ -572,17 +623,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Payment Attachment Status
-    </h3>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
   <div class="grid">
     <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
@@ -685,7 +736,7 @@ onMounted(() => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <!--   <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -698,7 +749,22 @@ onMounted(() => {
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />
-
+-->
+              <DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>

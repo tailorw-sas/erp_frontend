@@ -22,12 +22,12 @@ const messageForEmptyTable = ref('The data does not correspond to the selected c
 
 interface SubTotals {
   amount: number
+  depositBalance: number
 }
-const subTotals = ref<SubTotals>({ amount: 0 })
+const subTotals = ref<SubTotals>({ amount: 0, depositBalance: 0 })
 
 // Table
 const columnsExpandTable: IColumn[] = [
-  // { field: 'id', header: 'ID', width: '80px', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', width: '120px', type: 'text' },
   { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text' },
   { field: 'firstName', header: 'First Name', width: '200px', type: 'text' },
@@ -36,16 +36,20 @@ const columnsExpandTable: IColumn[] = [
   { field: 'adult', header: 'Adult', width: '120px', type: 'text' },
   { field: 'children', header: 'Children', width: '100px', type: 'text' },
   { field: 'paymentAmount', header: 'Payment Amount', width: '100px', type: 'text' },
-  { field: 'remark', header: 'Remark', width: '100px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '100px', maxWidth: '200px', type: 'text' },
 ]
 
 const columns: IColumn[] = [
+  { field: 'paymentDetailId', header: 'Id', width: '80px', type: 'text' },
   { field: 'transactionDate', header: 'Transaction Date', width: '200px', type: 'date' },
-  { field: 'createdAt', header: 'Created At', width: '200px', type: 'date' },
+  { field: 'createdAt', header: 'Create Date', width: '200px', type: 'date' },
   // { field: 'paymentId', header: 'Payment Id', width: '200px', type: 'text' },
 
-  { field: 'amount', header: 'Amount', width: '200px', type: 'text' },
-  { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
+  // { field: 'amount', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
+  { field: 'amountTemp', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
+  // { field: 'depositBalance', header: 'Deposit Balance', width: '200px', type: 'text' },
+  { field: 'depositBalanceTemp', header: 'Deposit Balance', width: '200px', type: 'text' },
+  { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 const options = ref({
   tableName: 'Payment Details',
@@ -91,7 +95,7 @@ const pagination = ref<IPagination>({
 })
 
 async function getListPaymentDetailSummary() {
-  const count: SubTotals = { amount: 0 }
+  const count: SubTotals = { amount: 0, depositBalance: 0 }
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -106,8 +110,20 @@ async function getListPaymentDetailSummary() {
     if (objFilter) {
       objFilter.value = idItem.value
     }
+    else {
+      payload.value.filter.push(
+        {
+          key: 'payment.id',
+          operator: 'EQUALS',
+          value: idItem.value,
+          type: 'filterTable',
+          logicalOperation: 'AND'
+        }
+      )
+    }
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -123,6 +139,10 @@ async function getListPaymentDetailSummary() {
         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
           ? Number.parseFloat(iterator.amount).toString()
           : '0'
+
+        if (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '') {
+          iterator.amountTemp = formatNumber(iterator.amount)
+        }
       }
 
       for (const child of iterator.children) {
@@ -131,6 +151,18 @@ async function getListPaymentDetailSummary() {
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
+        count.depositBalance += Number.parseFloat(iterator.applyDepositValue)
+        if (iterator.applyDepositValue !== null && iterator.applyDepositValue !== '' && iterator.applyDepositValue !== undefined && iterator.applyDepositValue !== '0' && iterator.applyDepositValue !== '0.00' && iterator.applyDepositValue !== 0) {
+          iterator.depositBalance = Number.parseFloat(iterator.applyDepositValue) * -1
+          const valueTemp = Number.parseFloat(iterator.applyDepositValue) * -1
+          iterator.depositBalanceTemp = formatNumber(valueTemp)
+        }
+        else {
+          iterator.depositBalance = 0
+        }
       }
 
       // Verificar si el ID ya existe en la lista
@@ -157,6 +189,13 @@ function onCloseDialog() {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'depositBalance') {
+        parseFilter[i].key = 'applyDepositValue'
+      }
+    }
+  }
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterTable')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getListPaymentDetailSummary()
@@ -167,26 +206,61 @@ function onSortField(event: any) {
     if (event.sortField === 'transactionType') {
       event.sortField = 'transactionType.name'
     }
+    if (event.sortField === 'depositBalance') {
+      event.sortField = 'applyDepositValue'
+    }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
 }
 
-watch(() => props.visible, (newValue) => {
+watch(() => props.visible, async (newValue) => {
   onOffDialog.value = newValue
   emit('update:visible', newValue)
+
+  if (newValue) {
+    if (route?.query?.id) {
+      idItem.value = route.query.id.toString() || '0'
+      // payload.value.filter = [...payload.value.filter, {
+      //   key: 'payment.id',
+      //   operator: 'EQUALS',
+      //   value: idItem.value,
+      //   logicalOperation: 'AND'
+      // }]
+    }
+    else {
+      idItem.value = props.selectedPayment.id || '0'
+      // payload.value.filter = [...payload.value.filter, {
+      //   key: 'payment.id',
+      //   operator: 'EQUALS',
+      //   value: idItem.value,
+      //   logicalOperation: 'AND'
+      // }]
+    }
+    await getListPaymentDetailSummary()
+  }
 })
 
 onMounted(async () => {
   if (route?.query?.id) {
-    idItem.value = route.query.id.toString()
-    payload.value.filter = [...payload.value.filter, {
-      key: 'payment.id',
-      operator: 'EQUALS',
-      value: idItem.value,
-      logicalOperation: 'AND'
-    }]
+    idItem.value = route.query.id.toString() || '0'
+
+    // payload.value.filter = [...payload.value.filter, {
+    //   key: 'payment.id',
+    //   operator: 'EQUALS',
+    //   value: idItem.value,
+    //   logicalOperation: 'AND'
+    // }]
+  }
+  else {
+    idItem.value = props.selectedPayment.id || '0'
+    // payload.value.filter = [...payload.value.filter, {
+    //   key: 'payment.id',
+    //   operator: 'EQUALS',
+    //   value: idItem.value,
+    //   logicalOperation: 'AND'
+    // }]
   }
   await getListPaymentDetailSummary()
 })
@@ -197,30 +271,31 @@ onMounted(async () => {
     id="dialogPaymentDetailSummary"
     v-model:visible="onOffDialog"
     modal
-    :closable="false"
+    :closable="true"
     header="Payment Details"
     :style="{ width: '65%' }"
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-summary',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
       },
-      mask: {
-        style: 'backdrop-filter: blur(5px)',
-      },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
     }"
+    @hide="onCloseDialog"
   >
     <template #header>
       <div class="flex justify-content-between align-items-center justify-content-between w-full">
         <h5 class="m-0 py-2">
           {{ props.title }}
         </h5>
-        <div>
+        <div class="font-bold mr-4">
           <strong class="mx-2">Payment:</strong>
-          <span>{{ props.selectedPayment.paymentId }}</span>
+          <strong>{{ props.selectedPayment.paymentId }}</strong>
         </div>
       </div>
     </template>
@@ -262,10 +337,10 @@ onMounted(async () => {
           <template #datatable-footer>
             <ColumnGroup type="footer" class="flex align-items-center">
               <Row>
-                <Column footer="Totals:" :colspan="2" footer-style="text-align:right; font-weight: bold;" />
-                <Column :footer="Math.round((subTotals.amount + Number.EPSILON) * 100) / 100" footer-style="font-weight: bold;" />
-                <Column :colspan="1" />
-                <!-- <Column :colspan="0" /> -->
+                <Column footer="Totals:" :colspan="3" footer-style="text-align:right; font-weight: bold;" />
+                <Column :footer="formatNumber((-Math.abs(Math.round((subTotals.amount + Number.EPSILON) * 100) / 100)).toString())" footer-style="font-weight: bold;" />
+                <Column :footer="formatNumber((-Math.abs(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)).toString())" footer-style="font-weight: bold;" />
+                <Column :colspan="0" />
               </Row>
             </ColumnGroup>
           </template>
@@ -273,19 +348,19 @@ onMounted(async () => {
       </div>
     </template>
 
-    <template #footer>
+    <!-- <template #footer>
       <div class="flex justify-content-end align-items-center">
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="onCloseDialog" />
       </div>
-    </template>
+    </template> -->
   </Dialog>
 </template>
 
 <style lang="scss">
-.custom-dialog .p-dialog-content {
+.custom-dialog-summary .p-dialog-content {
   background-color: #ffffff;
 }
-.custom-dialog .p-dialog-footer {
+.custom-dialog-summary .p-dialog-footer {
   background-color: #ffffff;
 }
 </style>

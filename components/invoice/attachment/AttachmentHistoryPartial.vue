@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
-import {jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import type { GenericObject } from '~/types'
 
 const props = defineProps({
@@ -35,6 +35,10 @@ const props = defineProps({
   },
   selectedInvoiceObj: {
     type: Object,
+    required: true
+  },
+  selectedAttachment: {
+    type: String,
     required: true
   },
   listItems: {
@@ -85,81 +89,22 @@ const itemTemp = ref<GenericObject>({
 })
 const toast = useToast()
 
-const Fields: Array<Container> = [
-  {
-    childs: [
-      {
-        field: 'resource',
-        header: 'Resource',
-        dataType: 'number',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
-      {
-        field: 'resourceType',
-        header: 'Resource Type',
-        dataType: 'text',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        disabled: true
-      },
+const Columns: IColumn[] = [
+  { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px' },
+  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px' },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
 
-      {
-        field: 'type',
-        header: 'Attachment Type',
-        dataType: 'select',
-        class: 'field col-12 md: required',
-        headerClass: 'mb-1',
-        validation: z.object({
-          id: z.string(),
-          name: z.string(),
-
-        }).nullable()
-          .refine((value: any) => value && value.id && value.name, { message: `The Transaction Type field is required` })
-          .refine((value: any) => value.status !== 'ACTIVE', {
-            message: `This Attachment Type is not active`
-          })
-
-      },
-      {
-        field: 'filename',
-        header: 'Filename',
-        dataType: 'text',
-        class: 'field col-12 required',
-        headerClass: 'mb-1',
-
-      },
-      {
-        field: 'file',
-        header: 'Path',
-        dataType: 'fileupload',
-        class: 'field col-12 required',
-        headerClass: 'mb-1',
-
-      },
-      {
-        field: 'remark',
-        header: 'Remark',
-        dataType: 'textarea',
-        class: 'field col-12',
-        headerClass: 'mb-1',
-
-      },
-
-    ],
-    containerClass: 'w-full'
-  }
+  { field: 'description', header: 'Remark', type: 'text', width: '200px' },
+  { field: 'status', header: 'Status', type: 'text', width: '100px' },
 
 ]
 
-const Columns: IColumn[] = [
+const incomeColumns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
-  { field: 'invoice_id', header: 'Invoice Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'date', width: '90px' },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px' },
+  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px' },
   { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
-  
-  { field: 'remark', header: 'Remark', type: 'text', width: '200px' },
   { field: 'status', header: 'Status', type: 'text', width: '100px' },
 
 ]
@@ -168,7 +113,7 @@ const dialogVisible = ref(props.openDialog)
 const options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: 'manage-attachment',
+  uriApi: 'attachment-status-history',
   loading: false,
   showDelete: false,
   showFilters: false,
@@ -203,21 +148,35 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
-    Payload.value.sortBy = event.sortField
+    console.log(event);
+    Payload.value.sortBy = getSortField(event.sortField)
     Payload.value.sortType = event.sortOrder
     getList()
   }
 }
 
 
+function getSortField(field: any) {
+  
+  switch (field) {
+    case 'status':
+      return 'type.status'
+
+    case 'invoiceId'  :
+      return 'invoice.invoiceId'
+   
+
+
+    default: return field
+      
+  }
+}
+
 
 function clearForm() {
- 
   item.value = { ...itemTemp.value }
   idItem.value = ''
-  
-  
-  
+
   formReload.value++
 }
 
@@ -237,7 +196,7 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoice_id: iterator?.invoice?.invoiceId, status: 'NON-NONE' }]
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, status: iterator?.type?.status || 'ACTIVE' }]
     }
   }
   catch (error) {
@@ -360,7 +319,16 @@ watch(() => props.selectedInvoiceObj, () => {
 })
 
 onMounted(() => {
-  if (props.selectedInvoice) {
+  if (props.selectedAttachment) {
+    Payload.value.filter = [{
+      key: 'attachmentId',
+      operator: 'EQUALS',
+      value: props.selectedAttachment,
+      logicalOperation: 'AND'
+    }]
+  }
+
+  if (props.selectedInvoice && !props.selectedAttachment) {
     Payload.value.filter = [{
       key: 'invoice.id',
       operator: 'EQUALS',
@@ -368,6 +336,7 @@ onMounted(() => {
       logicalOperation: 'AND'
     }]
   }
+
   if (!props.isCreationDialog) {
     getList()
   }
@@ -376,7 +345,7 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" class="p-4 h-fit w-fit"
+    v-model:visible="dialogVisible" modal :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? 'Income Status History' : header" class="p-4 h-fit w-fit"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
     style="width: 800px;" @hide="closeDialog"
   >
@@ -384,7 +353,7 @@ onMounted(() => {
       <div class="flex flex-row align-items-center">
         <div class="flex flex-column" style="max-width: 900px;overflow: auto;">
           <DynamicTable
-            :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
+            :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === InvoiceType.INVOICE ? incomeColumns : Columns"
             :options="options" :pagination="Pagination"
 
             @on-confirm-create="clearForm"

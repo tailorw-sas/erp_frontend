@@ -50,7 +50,26 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'enabledToPolicy',
-    header: 'Enabled to policy',
+    header: 'Enabled To Policy',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+  {
+    field: 'income',
+    header: 'Income',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+
+  {
+    field: 'credit',
+    header: 'Credit',
+    dataType: 'check',
+    class: 'field col-12 required mb-3',
+  },
+  {
+    field: 'invoice',
+    header: 'Invoice',
     dataType: 'check',
     class: 'field col-12 required mb-3',
   },
@@ -76,6 +95,9 @@ const item = ref<GenericObject>({
   description: '',
   status: true,
   enabledToPolicy: false,
+  income: false,
+  credit: false,
+  invoice: false,
 })
 
 const itemTemp = ref<GenericObject>({
@@ -84,6 +106,9 @@ const itemTemp = ref<GenericObject>({
   description: '',
   status: true,
   enabledToPolicy: false,
+  income: false,
+  credit: false,
+  invoice: false,
 })
 
 const formTitle = computed(() => {
@@ -143,7 +168,7 @@ function clearForm() {
   updateFieldProperty(fields, 'status', 'disabled', true)
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -179,7 +204,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -230,6 +255,9 @@ async function getItemById(id: string) {
         item.value.status = statusToBoolean(response.status)
         item.value.code = response.code
         item.value.enabledToPolicy = response.enabledToPolicy
+        item.value.income = response.income
+        item.value.credit = response.credit
+        item.value.invoice = response.invoice
       }
       fields[0].disabled = true
       updateFieldProperty(fields, 'status', 'disabled', false)
@@ -251,7 +279,7 @@ async function createItem(item: { [key: string]: any }) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
     payload.status = statusToString(payload.status)
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -259,7 +287,7 @@ async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -282,9 +310,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -295,7 +324,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -306,7 +335,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -406,19 +438,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
-      Manage Invoice Types
-    </h3>
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
+      Manage Invoice Type
+    </h5>
     <IfCan :perms="['INVOICE-TYPE:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
@@ -490,6 +522,57 @@ onMounted(() => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
+            <template #field-income="{ item: data, onUpdate, fields: dataFields, field }">
+              <Checkbox
+                id="income"
+                v-model="data.income"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('income', $event)
+                  if ($event) {
+                    onUpdate('credit', false)
+                    onUpdate('invoice', false)
+                  }
+                }"
+              />
+              <label for="income" class="ml-1 font-bold">
+                {{ dataFields.find((f) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-credit="{ item: data, onUpdate, fields: dataFields, field }">
+              <Checkbox
+                id="credit"
+                v-model="data.credit"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('credit', $event)
+                  if ($event) {
+                    onUpdate('income', false)
+                    onUpdate('invoice', false)
+                  }
+                }"
+              />
+              <label for="credit" class="ml-1 font-bold">
+                {{ dataFields.find((f) => f.field === field)?.header }}
+              </label>
+            </template>
+            <template #field-invoice="{ item: data, onUpdate, fields: dataFields, field }">
+              <Checkbox
+                id="invoice"
+                v-model="data.invoice"
+                :binary="true"
+                @update:model-value="($event) => {
+                  onUpdate('invoice', $event)
+                  if ($event) {
+                    onUpdate('income', false)
+                    onUpdate('credit', false)
+                  }
+                }"
+              />
+              <label for="invoice" class="ml-1 font-bold">
+                {{ dataFields.find((f) => f.field === field)?.header }}
+              </label>
+            </template>
             <template #form-footer="props">
               <div class="flex justify-content-end">
                 <IfCan :perms="idItem ? ['INVOICE-TYPE:EDIT'] : ['INVOICE-TYPE:CREATE']">

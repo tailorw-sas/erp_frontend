@@ -1,0 +1,32 @@
+.vcc-text-sent {
+    background-color: #006400 !important;
+    color: #fff;
+}
+.vcc-text-created {
+    background-color: #FF8D00 !important;
+    color: #fff;
+}
+.vcc-text-received {
+    background-color: #3403F9 !important;
+    color: #fff;
+}
+.vcc-text-declined {
+    background-color: #661E22 !important;
+    color: #fff;
+}
+.vcc-text-paid {
+    background-color: #2E892E !important;
+    color: #fff;
+}
+.vcc-text-reconciled {
+    background-color: #05D2FF !important;
+    color: #fff;
+}
+.vcc-text-refund {
+    background-color: #666666 !important;
+    color: #fff;
+}
+.vcc-text-cancelled {
+    background-color: #888888 !important;
+    color: #fff;
+}

@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { FieldDefinitionType } from '../form/EditFormV2'
+import type { FilterCriteria } from '~/composables/list'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -18,6 +20,7 @@ const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
 const formReload = ref(0)
+const loadingDefaultTransactionType = ref(false)
 
 const forceSave = ref(false)
 let submitEvent: Event = new Event('')
@@ -25,7 +28,7 @@ let submitEvent: Event = new Event('')
 const item = ref({ ...props.item })
 
 const objApis = ref({
-  transactionType: { moduleApi: 'settings', uriApi: 'manage-invoice-transaction-type' },
+  transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
 })
 function closeDialog() {
   onOffDialog.value = false
@@ -84,8 +87,45 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
-async function getTransactionTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[], short?: IQueryToSort) {
-  transactionTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, short)
+async function getTransactionTypeList(queryFilter: string, isDefault: boolean = false) {
+  try {
+    console.log(`listing default: ${isDefault}`)
+    const objQueryToSearch = {
+      query: queryFilter,
+      keys: ['name', 'code'],
+    }
+    let filter: FilterCriteria[] = []
+    const sortObj = {
+      sortBy: '',
+      // sortType: ENUM_SHORT_TYPE.DESC,
+    }
+    if (isDefault) {
+      loadingDefaultTransactionType.value = true
+      filter = [{
+        key: 'incomeDefault',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }, {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }]
+    }
+
+    // await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
+    transactionTypeList.value = await getDataList<DataListItem, ListItem>(objApis.value.transactionType.moduleApi, objApis.value.transactionType.uriApi, filter, objQueryToSearch, mapFunction, sortObj,)
+    if (isDefault && transactionTypeList.value.length > 0) {
+      item.value.transactionType = transactionTypeList.value[0]
+      formReload.value += 1
+    }
+  }
+  finally {
+    if (isDefault) {
+      loadingDefaultTransactionType.value = false
+    }
+  }
 }
 
 function requireConfirmationToSave(item: any) {
@@ -106,6 +146,9 @@ function requireConfirmationToSave(item: any) {
 watch(() => props.visible, (newValue) => {
   onOffDialog.value = newValue
   emit('update:visible', newValue)
+  if (newValue) {
+    getTransactionTypeList('', true)
+  }
 })
 // watch(() => item.value, async (newValue) => {
 //   if (newValue) {
@@ -131,7 +174,7 @@ watch(() => props.item, async (newValue) => {
     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     :pt="{
       root: {
-        class: 'custom-dialog',
+        class: 'custom-dialog-history',
       },
       header: {
         style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
@@ -159,9 +202,22 @@ watch(() => props.item, async (newValue) => {
         @force-save="forceSave = $event"
         @submit="handleSaveForm($event)"
       >
+        <template #field-amount="{ item: data, onUpdate }">
+          <InputNumber
+            v-if="!loadingSaveAll"
+            v-model="data.amount"
+            show-clear
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
+            @update:model-value="($event: any) => {
+              onUpdate('amount', $event)
+            }"
+          />
+          <Skeleton v-else height="2rem" class="mb-2" />
+        </template>
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!props.loadingSaveAll"
+            v-if="!loadingDefaultTransactionType && !props.loadingSaveAll"
             id="autocomplete"
             field="name"
             item-value="id"
@@ -171,38 +227,7 @@ watch(() => props.item, async (newValue) => {
               onUpdate('transactionType', $event)
             }"
             @load="async($event) => {
-              const objQueryToSearch = {
-                query: $event,
-                keys: ['name', 'code'],
-              }
-              const filter: FilterCriteria[] = []
-              const sortObj = {
-                sortBy: '',
-                // sortType: ENUM_SHORT_TYPE.DESC,
-              }
-              switch (props.action) {
-              case 'new-detail':
-                // sortObj.sortBy = 'defaults'
-                break
-
-              case 'deposit-transfer':
-                filter.push(
-                  // {
-                  //   key: 'deposit',
-                  //   logicalOperation: 'AND',
-                  //   operator: 'EQUALS',
-                  //   value: true,
-                  // },
-                  {
-                    key: 'defaults',
-                    logicalOperation: 'OR',
-                    operator: 'EQUALS',
-                    value: true,
-                  },
-                )
-                break
-              }
-              await getTransactionTypeList(objApis.transactionType.moduleApi, objApis.transactionType.uriApi, objQueryToSearch, filter, sortObj)
+              await getTransactionTypeList($event, false)
             }"
           />
           <Skeleton v-else height="2rem" class="mb-2" />
@@ -222,8 +247,8 @@ watch(() => props.item, async (newValue) => {
     </template>
 
     <template #footer>
-      <Button v-tooltip.top="'Apply'" label="Apply" class="w-6rem p-button" icon="pi pi-check" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-      <Button v-tooltip.top="'Cancel'" label="Cancel" class=" w-7rem p-button-color color" icon="pi pi-times" @click="closeDialog" />
+      <Button v-tooltip.top="'Save'" label="Save" class="w-6rem p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
+      <Button v-tooltip.top="'Cancel'" label="Cancel" class=" w-6rem p-button-color color" icon="pi pi-times" @click="closeDialog" />
 
       <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
     </template>

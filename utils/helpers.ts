@@ -26,6 +26,16 @@ export function isValidUrl(urlString: string) {
   }
 }
 
+export function openOrDownloadFile(url: string) {
+  if (isValidUrl(url)) {
+    // window.open(url, '_blank')
+    navigateTo(`/view-file/?url=${url}`, { open: { target: '_blank' } })
+  }
+  else {
+    console.error('Invalid URL')
+  }
+}
+
 export function formatSize(bytes: number) {
   const $primevue = usePrimeVue()
   const k = 1024
@@ -279,4 +289,162 @@ export async function base64ToFile(base64String: string, filename: string, mimeT
   const blob = new Blob([byteArray], { type: mimeType })
 
   return new File([blob], filename, { type: mimeType })
+}
+
+export function convertirAFechav2(fecha: string | null): string | null {
+  if (!fecha) {
+    return null
+  }
+
+  // if (/^\d{8}$/.test(fecha)) {
+  //   // Formato YYYYMMDD
+  //   return fecha
+  // }
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha)) { // || /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(fecha)
+    // Formato DD/MM/YYYY
+    const [dia, mes, anio] = fecha.split('/').map(Number)
+    return `${anio}${mes.toString().padStart(2, '0')}${dia.toString().padStart(2, '0')}`
+  }
+
+  return 'Invalid date format'
+}
+
+export function convertirFecha(value: string) {
+  // Verifica si la fecha tiene el formato esperado
+
+  if (!value || typeof value === 'boolean') {
+    return value
+  }
+
+  let subStringValue = ''
+  const fechaRegex = /^\d{2}\/\d{2}\/\d{4}$/
+  if (!fechaRegex.test(value)) {
+    subStringValue = dayjs(value).format('YYYY-MM-DD')
+    const dateTypeOne = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateTypeOne.test(subStringValue)) {
+      return value
+    }
+    subStringValue = dayjs(subStringValue).format('YYYY-MM-DD').substring(0, 10)
+  }
+  else {
+    const [dia, mes, anio] = value.split('/')
+    const aux = `${anio}-${mes}-${dia}`
+    subStringValue = dayjs(aux).format('YYYY-MM-DD').substring(0, 10)
+  }
+  return subStringValue
+
+  // formatDate(value)
+}
+
+export function isValidFormatDate(value: any) {
+  try {
+    if (!value || typeof value === 'boolean') {
+      return false
+    }
+    // const subStringValue = dayjs(value).format('YYYY-MM-DD').substring(0, 10)
+
+    const fechaRegex1 = /^\d{2}\/\d{2}\/\d{4}$/
+    const fechaRegex2 = /^\d{8}$/
+
+    if (!fechaRegex1.test(value) && !fechaRegex2.test(value)) {
+      return false
+    }
+    // const date = dayjs(subStringValue, 'YYYY-MM-DD')
+
+    return true
+  }
+  catch (error) {
+    return false
+  }
+}
+
+function formatDate(value) {
+  // Helper function to check if a date is valid
+  function isValidDate(date) {
+    return date instanceof Date && !Number.isNaN(date.getTime())
+  }
+
+  // Helper function to parse and format date
+  function parseAndFormatDate(input) {
+    let date
+
+    // Handle formats like DD/MM/YYYY
+    const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/
+    // Handle formats like YYYYMMDD or YYYYMMDDHHmmss
+    const yyyymmdd = /^(\d{4})(\d{2})(\d{2})$/
+
+    if (ddmmyyyy.test(input)) {
+      const [, day, month, year] = input.match(ddmmyyyy)
+      date = new Date(`${year}-${month}-${day}`)
+      // date = dayjs(input).format('YYYY-MM-DD')
+    }
+    else if (yyyymmdd.test(input)) {
+      const [, year, month, day] = input.match(yyyymmdd)
+      date = new Date(`${year}-${month}-${day}`)
+      // date = dayjs(input).format('YYYY-MM-DD')
+    }
+    else {
+      // For other formats or invalid formats, just return the input
+      return input
+    }
+
+    if (isValidDate(date)) {
+      // Format date to YYYY-MM-DD
+      // const yearStr = date.getFullYear()
+      // const monthStr = (date.getMonth() + 1).toString().padStart(2, '0')
+      // const dayStr = date.getDate().toString().padStart(2, '0')
+      const temp = dayjs(date).format('YYYY-MM-DD')
+      return temp
+      // return `${yearStr}-${monthStr}-${dayStr}`
+    }
+    else {
+      return input
+    }
+  }
+
+  return parseAndFormatDate(value)
+}
+
+export function formatNumber(number: any, minDecimals: number = 2, maxDecimals: number = 4) {
+  // Asegúrate de que el número sea válido
+  if (Number.isNaN(number)) {
+    throw new TypeError('El valor proporcionado no es un número.')
+  }
+
+  // Utiliza Intl.NumberFormat para formatear el número
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: minDecimals,
+    maximumFractionDigits: maxDecimals
+  }).format(number)
+}
+
+export function parseFormattedNumber(formattedNumber: string): number {
+  // Elimina cualquier carácter que no sea un número, punto o signo negativo
+  const sanitizedNumber = formattedNumber.replace(/[^0-9.-]/g, '')
+
+  // Convierte el string en un número
+  const parsedNumber = Number.parseFloat(sanitizedNumber)
+
+  // Verifica si el resultado es un número válido
+  if (Number.isNaN(parsedNumber)) {
+    throw new TypeError('El valor proporcionado no se puede convertir en un número.')
+  }
+
+  return parsedNumber
+}
+
+export function formatCurrency(value: any) {
+  if (Number.isNaN(value) || value === null || value === undefined) {
+    return 'Invalid value' // Mensaje de error o valor predeterminado
+  }
+
+  // Convertir a número en caso de que sea un string válido
+  const numericValue = Number(value)
+
+  return numericValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
+
+export async function customBase64Uploader(event: any, listFields: any, fieldKey: any) {
+  const file = event.files[0]
+  listFields[fieldKey] = file
 }

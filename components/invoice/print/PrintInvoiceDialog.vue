@@ -143,9 +143,11 @@ async function getPrintObj() {
   const obj: InvoiceParams = {
     bookings: [],
     companyName: '',
+    invoiceId: '',
     companyAddress: '',
     companyCif: '',
     hotelName: '',
+    hotelCode: '',
     invoiceNumber: props?.invoice?.invoiceNumber,
     agencyCode: '',
     agencyName: '',
@@ -162,6 +164,8 @@ async function getPrintObj() {
   else {
     obj.invoiceNumber = props?.invoice?.invoiceNumber
   }
+
+  obj.invoiceId = props?.invoice?.invoiceId
 
   const agency = await getAgencyById(props?.invoice?.agency?.id)
   const hotel = await getHotelById(props?.invoice?.hotel?.id)
@@ -181,6 +185,7 @@ async function getPrintObj() {
     obj.companyAddress = hotel?.manageTradingCompanies?.address || ''
     obj.companyCif = hotel?.manageTradingCompanies?.cif || ''
     obj.hotelName = hotel?.name || ''
+    obj.hotelCode = hotel?.code
   }
 
   if (bookingList && bookingList?.length > 0) {
@@ -194,14 +199,50 @@ async function getPrintObj() {
         from: dayjs(booking?.checkIn).format('DD/MM/YYYY') || '',
         to: dayjs(booking?.checkOut).format('DD/MM/YYYY') || '',
         quantity: booking?.nights || '',
-        plan: '',
+        plan: booking?.ratePlan?.name || '',
         price: '',
-        total: ''
+        total: booking?.invoiceAmount
       }
     })
   }
 
   return obj
+}
+
+async function invoicePrint() {
+  try {
+    loading.value = true
+    let nameOfPdf = ''
+    const arrayInvoiceType: string[] = []
+    if (invoiceSupport.value) { arrayInvoiceType.push('INVOICE_SUPPORT') }
+    if (invoiceAndBookings.value) { arrayInvoiceType.push('INVOICE_AND_BOOKING') }
+
+    const payloadTemp = {
+      invoiceId: [props.invoice.id],
+      invoiceType: arrayInvoiceType
+    }
+    // En caso de que solo este marcado el paymentAndDetails
+    nameOfPdf = `${props.invoice?.hotel?.code}-${props.invoice?.invoiceId}.pdf`
+
+    const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
+
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nameOfPdf // Nombre del archivo que se descargará
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    loading.value = false
+  }
+  catch (error) {
+    loading.value = false
+  }
+  finally {
+    loading.value = false
+    dialogVisible.value = false
+  }
 }
 
 async function handleDownload() {
@@ -222,7 +263,7 @@ async function handleDownload() {
     doc.html(elementHTML, {
       callback(doc) {
         // Guardamos el PDF
-        doc.save(`${obj?.agencyCode}-${obj?.agencyName}-${dayjs().format("MMMM")}.pdf`)
+        doc.save(`${obj?.hotelCode}-${obj?.invoiceId}.pdf`)
       },
       x: 10,
       y: 10,
@@ -246,10 +287,24 @@ async function handleDownload() {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal header="Invoice to print" class="p-4 h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 800px;"
+    v-model:visible="dialogVisible" modal header="Invoice to print" class="p-4"
+    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 500px;"
     @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            Invoice to print
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Invoice: {{ props.invoice.invoiceId }}
+          </h5>
+        </div>
+      </div>
+    </template>
     <div class=" h-fit overflow-hidden mt-4">
       <div class="flex gap-2 flex-column align-items-start h-fit ">
         <div class="flex flex-column gap-5" />
@@ -265,16 +320,18 @@ async function handleDownload() {
               <span>Invoice Support</span>
             </div>
           </div>
-
-         
         </div>
       </div>
       <div class=" flex w-full justify-content-end ">
         <Button
-          v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loading" 
-          @click="() => { handleDownload() }"
+          v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loading"
+          @click="() => {
+            invoicePrint()
+            // handleDownload()
+          }"
         />
         <Button
+          v-if="false"
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
             closeDialog()

@@ -11,7 +11,6 @@ const props = defineProps({
   fieldsv2: {
     type: Array<FieldDefinitionType>,
     required: true,
-
   },
   header: {
     type: String,
@@ -108,8 +107,6 @@ const formFields = ref<FieldDefinitionType[]>([])
 
 const couponValidation = ref<string>('')
 
-const couponValid = ref(true)
-
 watch(() => props.couponNumberValidation, () => {
   if (props.couponNumberValidation) {
     couponValidation.value = props.couponNumberValidation
@@ -129,10 +126,29 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="header" :class="props.class || 'p-4 h-fit'"
-    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
-    style="width: 900px;" @hide="closeDialog"
+    v-model:visible="dialogVisible"
+    modal
+    :header="header"
+    :class="props.class || 'p-4 h-fit'"
+    :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'"
+    :block-scroll="true"
+    style="width: 900px;"
+    @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex align-items-center justify-content-between w-full">
+        <div class="flex align-items-center">
+          <h5 class="m-0">
+            {{ header }}
+          </h5>
+        </div>
+        <div class="flex align-items-center">
+          <h5 class="m-0 mr-4">
+            Invoice: {{ item.hotelBookingNumber }}
+          </h5>
+        </div>
+      </div>
+    </template>
     <div class=" h-full overflow-hidden p-2">
       <EditFormV2
         v-if="true"
@@ -158,29 +174,31 @@ onMounted(() => {
           />
         </template>
         <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
+          <InputNumber
             v-model="data.invoiceAmount"
-            show-clear :disabled="!!item?.id && route.query.type !== ENUM_INVOICE_TYPE[2]?.id"
+            show-clear
+            :disabled="!!item?.id && route.query.type !== InvoiceType.CREDIT"
+            :min-fraction-digits="2"
+            :max-fraction-digits="2"
             @update:model-value="($event) => {
-              console.log(invoiceObj)
               let value: any = $event
-              if (route.query.type === ENUM_INVOICE_TYPE[3]?.id || route.query.type === ENUM_INVOICE_TYPE[2]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[3]?.id || invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[2]?.id){
+              if (route.query.type === InvoiceType.OLD_CREDIT || route.query.type === InvoiceType.CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.OLD_CREDIT || invoiceObj?.invoiceType?.id === InvoiceType.CREDIT){
                 value = toNegative(value)
               }
               else {
                 value = toPositive(value)
               }
-              onUpdate('invoiceAmount', String(value))
+              onUpdate('invoiceAmount', value)
             }"
           />
         </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
+        <!-- <template #field-hotelAmount="{ onUpdate, item: data }">
           <InputText
             v-model="data.hotelAmount"
-            show-clear :disabled="!!item?.id"
+            show-clear
             @update:model-value="onUpdate('hotelAmount', $event)"
           />
-        </template>
+        </template> -->
         <template #field-checkIn="{ item: data, onUpdate }">
           <Calendar
             v-if="!loadingSaveAll"
@@ -215,7 +233,6 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #field-roomCategory="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -228,7 +245,17 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
+        <template #field-bookingDate="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.bookingDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('bookingDate', $event)
+            }"
+          />
+        </template>
         <template #field-roomType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -241,18 +268,21 @@ onMounted(() => {
             </template>
           </DebouncedAutoCompleteComponent>
         </template>
-
         <template #header-nightType="{ field }">
           <strong>
             {{ typeof field.header === 'function' ? field.header() : field.header }}
           </strong>
           <span v-if="isNightTypeRequired" class="p-error">*</span>
         </template>
-
         <template #field-nightType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.nightType" :suggestions="nightTypeList" @change="($event) => {
+            v-if="!loadingSaveAll"
+            id="autocomplete"
+            field="name"
+            item-value="id"
+            :model="data.nightType"
+            :suggestions="nightTypeList"
+            @change="($event) => {
               onUpdate('nightType', $event)
             }" @load="($event) => getNightTypeList($event)"
           >
@@ -343,6 +373,17 @@ onMounted(() => {
             }"
           />
         </template>
+        <template #field-bookingDate="{ item: data, onUpdate }">
+          <Calendar
+            v-if="!loadingSaveAll"
+            v-model="data.bookingDate"
+            date-format="yy-mm-dd"
+            :max-date="new Date()"
+            @update:model-value="($event) => {
+              onUpdate('bookingDate', $event)
+            }"
+          />
+        </template>
         <template #field-ratePlan="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
             v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
@@ -418,4 +459,6 @@ onMounted(() => {
       </EditFormV2WithContainer>
     </div>
   </Dialog>
+  <!-- <span v-if="dialogVisible">
+  </span> -->
 </template>

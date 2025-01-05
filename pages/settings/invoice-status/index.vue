@@ -23,6 +23,7 @@ const formReload = ref(0)
 
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
+const loadingData = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const filterToSearch = ref<IData>({
@@ -30,7 +31,7 @@ const filterToSearch = ref<IData>({
   search: '',
 })
 const confApi = reactive({
-  moduleApi: 'settings',
+  moduleApi: 'invoicing',
   uriApi: 'manage-invoice-status',
 })
 
@@ -83,7 +84,31 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'processStatus',
-    header: 'Process Status',
+    header: 'Processed Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'sentStatus',
+    header: 'Sent Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'reconciledStatus',
+    header: 'Reconciled Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'canceledStatus',
+    header: 'Cancelled Status',
+    dataType: 'check',
+    class: 'field col-12 required',
+  },
+  {
+    field: 'showClone',
+    header: 'Show Clone',
     dataType: 'check',
     class: 'field col-12 required mb-3',
   },
@@ -112,6 +137,10 @@ const item = ref<GenericObject>({
   enabledToApply: false,
   enabledToPolicy: false,
   processStatus: false,
+  sentStatus: false,
+  canceledStatus: false,
+  reconciledStatus: false,
+  showClone: false,
   navigate: [],
 })
 
@@ -125,6 +154,10 @@ const itemTemp = ref<GenericObject>({
   enabledToApply: false,
   enabledToPolicy: false,
   processStatus: false,
+  sentStatus: false,
+  canceledStatus: false,
+  reconciledStatus: false,
+  showClone: false,
   navigate: [],
 })
 
@@ -154,7 +187,7 @@ const formTitle = computed(() => {
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Invoice Status',
-  moduleApi: 'settings',
+  moduleApi: 'invoicing',
   uriApi: 'manage-invoice-status',
   loading: false,
   actionsAsMenu: false,
@@ -187,7 +220,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -223,7 +256,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -235,35 +268,58 @@ async function getList() {
   }
 }
 
-async function getForSelectNavigateList(id: string = '') {
+async function getForSelectNavigateList(query: string = '') {
   try {
-    navigateListItems.value = []
+    loadingData.value = true
     const payload = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
-      pageSize: 200,
+      pageSize: 50,
       page: 0,
       sortBy: 'code',
       sortType: ENUM_SHORT_TYPE.DESC
     }
+    if (idItem.value) {
+      payload.filter = [...payload.filter, {
+        key: 'id',
+        operator: 'NOT_EQUALS',
+        value: idItem.value,
+        logicalOperation: 'AND'
+      }]
+    }
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload)
     const { data: dataList } = response
-
     navigateListItems.value = dataList
-      .filter((item: any) => item.id !== id)
       .map((item: any) => ({
         id: item.id,
-        name: item.name,
+        name: `${item.code} - ${item.name}`,
         status: item.status
       }))
   }
   catch (error) {
     console.error(error)
+  }
+  finally {
+    loadingData.value = false
   }
 }
 
@@ -311,10 +367,14 @@ async function getItemById(id: string) {
         item.value.enabledToApply = response.enabledToApply
         item.value.enabledToPolicy = response.enabledToPolicy
         item.value.processStatus = response.processStatus
+        item.value.sentStatus = response.sentStatus
+        item.value.reconciledStatus = response.reconciledStatus
+        item.value.canceledStatus = response.canceledStatus
+        item.value.showClone = response.showClone
         item.value.navigate = response.navigate.map((nav: any) => {
           let enumStatus = navigateListItems.value.find(enumItem => enumItem.id === nav.id)
           if (!enumStatus) {
-            enumStatus = { id: nav.id, name: nav.name, status: nav.status }
+            enumStatus = { id: nav.id, name: `${nav.code} - ${nav.name}`, status: nav.status }
             navigateListItems.value.push(enumStatus)
           }
           return enumStatus
@@ -342,7 +402,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.status = statusToString(payload.status)
     payload.navigate = payload.navigate.map((p: any) => p.id)
     delete payload.event
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -352,7 +412,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.status = statusToString(payload.status)
   payload.navigate = payload.navigate.map((p: any) => p.id)
   delete payload.event
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -375,9 +435,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -388,7 +449,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -399,7 +460,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -500,19 +564,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Invoice Status
-    </h3>
+    </h5>
     <IfCan :perms="['INVOICE-STATUS:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
@@ -585,7 +649,7 @@ onMounted(() => {
             @submit="requireConfirmationToSave($event)"
           >
             <template #field-navigate="{ item: data, onUpdate }">
-              <DebouncedAutoCompleteComponent
+              <!--              <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
                 field="name"
@@ -595,6 +659,21 @@ onMounted(() => {
                 :suggestions="[...navigateListItems]"
                 @change="($event) => {
                   onUpdate('navigate', $event)
+                }"
+                @load="($event) => getForSelectNavigateList($event)"
+              /> -->
+              <DebouncedMultiSelectComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.navigate"
+                :suggestions="[...navigateListItems]"
+                :loading="loadingData"
+                :max-selected-labels="2"
+                @change="($event) => {
+                  onUpdate('navigate', $event)
+                  data.navigate = $event
                 }"
                 @load="($event) => getForSelectNavigateList($event)"
               />

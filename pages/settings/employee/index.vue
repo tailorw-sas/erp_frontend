@@ -56,7 +56,6 @@ const options = ref({
   moduleApi: 'settings',
   uriApi: 'manage-employee',
   loading: false,
-  showToolBar: false,
   showAcctions: false,
 })
 const payloadOnChangePage = ref<PageState>()
@@ -100,7 +99,7 @@ function clearFilterToSearch() {
   getList()
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -135,7 +134,7 @@ async function getList() {
     }
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
       userToClone.value = listItems.value[0]
     }
@@ -176,6 +175,12 @@ function onSortField(event: any) {
   }
 }
 
+async function onSuccessAction(employeeId: string) {
+  await getList(false)
+  if (employeeId) {
+    idItemToLoadFirstTime.value = employeeId
+  }
+}
 // Form Operations
 function setOperation(operation: E_OPERATION) {
   selectedOperation.value = operation
@@ -226,11 +231,11 @@ const disabledClearSearch = computed(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Employee
-    </h3>
-    <div class="my-2 flex justify-content-end px-0">
+    </h5>
+    <div class="flex justify-content-end px-0">
       <IfCan :perms="['EMPLOYEE:CREATE']">
         <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true">
           <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="setOperation(E_OPERATION.CREATE)" />
@@ -252,7 +257,7 @@ const disabledClearSearch = computed(() => {
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-7">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>
@@ -310,9 +315,9 @@ const disabledClearSearch = computed(() => {
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           {{ selectedOperation }}
         </div>
-        <div class="card p-0">
+        <div class="card p-0 mb-0">
           <CreateEmployeePage v-if="selectedOperation === E_OPERATION.CREATE" @on-success-create="getList" />
-          <EditEmployeePage v-if="selectedOperation === E_OPERATION.EDIT" :key="editReload" :employee-id="idItemToLoadFirstTime" @on-success-edit="getList" />
+          <EditEmployeePage v-if="selectedOperation === E_OPERATION.EDIT" :key="editReload" :employee-id="idItemToLoadFirstTime" @on-success-edit="($event) => onSuccessAction($event)" />
           <CloneEmployeePage v-if="selectedOperation === E_OPERATION.CLONE" :key="editReload" :employee-id="idItemToLoadFirstTime" @on-success-clone="getList" />
         </div>
       </div>

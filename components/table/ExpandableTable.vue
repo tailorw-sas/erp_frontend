@@ -10,7 +10,7 @@ import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterf
 import type { IData } from './interfaces/IModelData'
 import type { IColumn, IObjApi } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
-import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
+import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
 
 const props = defineProps({
@@ -36,7 +36,6 @@ const props = defineProps({
       showDelete?: boolean
       showLocalDelete?: boolean
       showFilters?: boolean
-      showToolBar?: boolean
       showTitleBar?: boolean
       messageToDelete: string
       search?: boolean
@@ -87,6 +86,7 @@ type FilterDisplayMode = 'row' | 'menu' | undefined
 const modeFilterDisplay: Ref<FilterDisplayMode> = ref('menu')
 const menuFilter: { [key: string]: Ref<any> } = {}
 const menuFilterForRowDisplay: Ref = ref()
+const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
 
 // Iteramos sobre el array de campos y añadimos las propiedades a menuFilter
 props.columns.forEach((field) => {
@@ -140,12 +140,12 @@ const menuItems = ref([
   {
     items: [
       {
-        label: 'Editar',
+        label: 'Edit',
         icon: 'pi pi-pencil',
         action: 'edit'
       },
       {
-        label: 'Eliminar',
+        label: 'Delete',
         icon: 'pi pi-trash',
         action: 'delete'
       }
@@ -194,7 +194,7 @@ function onSelectItem(item: any) {
 
 function onDoubleClickItem(item: any) {
   if (item?.data) {
-    emits('update:doubleClicked', { id: item?.data?.id, type: item?.data?.invoiceType })
+    emits('update:doubleClicked', { id: item?.data?.id, type: item?.data?.invoiceType, status: item?.data?.status })
   }
 }
 
@@ -274,7 +274,9 @@ async function getOptionsList() {
     for (const iterator of props.columns) {
       switch (iterator.type) {
         case 'text':
-
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
           filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
           break
         case 'select':
@@ -481,43 +483,9 @@ getOptionsList()
         v-model:filters="filters1" v-model:expandedRows="expandedRows" v-model:selection="clickedItem" :filter-display="modeFilterDisplay"
         :meta-key-selection="metaKey" selection-mode="single" sort-mode="single"
         :value="data" data-key="id" show-gridlines striped-rows removable-sort lazy
-        scrollable scroll-height="60vh" @row-dblclick="onDoubleClickItem" @row-expand="onRowExpand" @row-collapse="onRowCollapse"
+        scrollable scroll-height="75vh" @row-dblclick="onDoubleClickItem" @row-expand="onRowExpand" @row-collapse="onRowCollapse"
         @sort="onSortField" @update:selection="onSelectItem" @update:filters="onChangeFilters" @row-contextmenu="onRowRightClick"
       >
-        <template v-if="props.options?.hasOwnProperty('showToolBar') ? props.options?.showToolBar : false" #header>
-          <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <span class="flex mt-2 md:mt-0">
-              <div class="my-2">
-                <h5 class="m-0">{{ options?.tableName }}</h5>
-              </div>
-              <Divider layout="vertical" />
-              <Button
-                v-tooltip.right="'Clear'" type="button" icon="pi pi-filter-slash" severity="primary" label="Clear"
-                outlined @click="clearFilter1(filters1)"
-              />
-              <Divider layout="vertical" />
-              <span v-if="props.options?.search || false">
-                <InputText
-                  v-model="filters1.search.value" class="w-full sm:w-auto"
-                  placeholder="Press enter to search..."
-                />
-                <Button
-                  label="Buscar" icon="pi pi-plus" class="mx-2" severity="primary"
-                  @click="onChangeFilters(filters1)"
-                >
-                  <i class="pi pi-search" />
-                </Button>
-              </span>
-            </span>
-            <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2">
-              <Button
-                v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" class="mr-2" severity="primary"
-                @click="openNew"
-              />
-            </div>
-          </div>
-        </template>
-
         <template #empty>
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -534,11 +502,11 @@ getOptionsList()
           </div>
         </template>
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
-        <Column expander style="width: 5rem">
+        <Column expander style="width: 1rem">
           <template #rowtogglericon="props">
             <i
               :class="`${props.rowExpanded ? 'pi pi-minus' : 'pi pi-plus'}`"
-              style=" color: black; border: 1px solid black; border-radius: 4px; padding: 2px;" </i
+              style=" color: black; border: 1px solid black; border-radius: 4px; padding: 0px;" </i
             />
           </template>
         </Column>
@@ -590,6 +558,9 @@ getOptionsList()
               <span v-else-if="column.type === 'bool'">
                 <Badge v-tooltip.top="data[column.field] ? 'Manual' : 'Imported'" :value="data[column.field]?.toString()?.charAt(0)?.toUpperCase() + data[column.field]?.toString()?.slice(1)" :severity="data[column.field] ? 'success' : 'danger'" class="success" />
               </span>
+              <span v-else-if="column.type === 'number'">
+                {{ formatNumber(data[column.field]) }}
+              </span>
               <span v-else-if="column.type === 'custom-badge'">
                 <Badge
                   v-tooltip.top="data[column.field]" :value="data[column.field].toString()"
@@ -600,7 +571,7 @@ getOptionsList()
                 <span v-if="column.type === 'local-select'" v-tooltip.top="data[column.field].name" class="truncate">
                   {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field], column.localItems) : '' }}
                 </span>
-                <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field]" class="truncate">
+                <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field] ? data[column.field].toString() : ''" class="truncate">
                   <span v-if="column.badge && data[column.field]">
                     <Badge v-tooltip.top="data[column.field]" :value="data[column.field] ? 'True' : 'False'" :severity="data[column.field] ? 'success' : 'danger'" class="}" />
                   </span>
@@ -639,6 +610,33 @@ getOptionsList()
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                    <span :class="item.icon" />
+                    <span class="ml-2">{{ item.label }}</span>
+                  </a>
+                </template>
+              </Menu>
+            </div>
+
+            <div v-if="column.type === 'number'" class="flex flex-column">
+              <Dropdown
+                v-if="true"
+                v-model="filterModel.matchMode"
+                :options="menuItemsNumeric"
+                option-label="label"
+                placeholder="Select a operator"
+                class="w-full mb-2"
+              />
+              <InputNumber
+                v-model="filterModel.value"
+                class="p-column-filter w-full"
+                placeholder="Write a number"
+                :min-fraction-digits="2"
+                :max-fraction-digits="4"
+              />
+
+              <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props }">
                   <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
@@ -780,13 +778,13 @@ getOptionsList()
                 aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onAttend(data)"
               />
               <Button
-                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Editar'"
+                v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true" v-tooltip.left="'Edit'"
                 type="button" icon="pi pi-pencil" severity="primary" class="mx-1" text aria-haspopup="true"
                 aria-controls="overlay_menu" :loading="data.loadingEdit" @click="onEdit(data)"
               />
               <Button
                 v-if="options?.hasOwnProperty('showDelete') ? options?.showDelete : true"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
+                v-tooltip.left="'Delete'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
                 aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
                 @click="showConfirmDelete(data)"
               />
@@ -794,7 +792,7 @@ getOptionsList()
               <!-- Local -->
               <Button
                 v-if="options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false"
-                v-tooltip.left="'Eliminar'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
+                v-tooltip.left="'Delete'" type="button" icon="pi pi-trash" class="mx-1" severity="danger" text
                 aria-haspopup="true" aria-controls="overlay_menu" :loading="data.loadingDelete"
                 @click="showConfirmDelete(data)"
               />
@@ -808,7 +806,7 @@ getOptionsList()
     <div class="flex justify-content-center align-items-center mt-3 card p-0">
       <Paginator
         v-if="props.pagination" :rows="Number(props.pagination.limit) || 50"
-        :total-records="props.pagination.totalElements" :rows-per-page-options="[10, 20, 30, 50]"
+        :total-records="props.pagination.totalElements" :rows-per-page-options="[10, 20, 30, 50, 100, 200, 500]"
         @page="onChangePageOrLimit($event)"
       />
       <Divider layout="vertical" />
@@ -830,7 +828,7 @@ getOptionsList()
   <!-- Dialog Delete -->
   <DialogDelete
     v-if="clickedItem" :open-dialog="openDialogDelete" :data="clickedItem"
-    :message="props.options?.messageToDelete ? props.options.messageToDelete : '¿Estás seguro que desea eliminar el elemento seleccionado?'"
+    :message="props.options?.messageToDelete ? props.options.messageToDelete : 'Are you sure you want to delete the selected item?'"
     @on-close-dialog="closeDialogDelete"
     @on-delete-confirmed="deleteItem($event, options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false)"
   />

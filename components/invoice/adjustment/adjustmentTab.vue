@@ -5,12 +5,10 @@ import { useToast } from 'primevue/usetoast'
 import type { PageState } from 'primevue/paginator'
 import { v4 } from 'uuid'
 import AdjustmentDialog from './AdjustmentDialog.vue'
-import getUrlByImage from '~/composables/files'
-import { ModulesService } from '~/services/modules-services'
 import { GenericService } from '~/services/generic-services'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 
@@ -79,7 +77,7 @@ const props = defineProps({
     default: false,
   },
   sortAdjustment: Function as any,
-  refetchInvoice: { type: Function, default: () => {} },
+  refetchInvoice: { type: Function, default: () => { } },
   invoiceObjAmount: { type: Number, required: true }
 })
 
@@ -118,13 +116,21 @@ const Fields: Array<Container> = [
       {
         field: 'amount',
         header: 'Amount',
-        dataType: 'number',
+        dataType: 'text',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.number().refine((value: number) => {
+        validation: z.number({ invalid_type_error: 'The Amount field is required' }).refine((value: number) => {
+          // eslint-disable-next-line style/max-statements-per-line
           if (!value) { return false }
           return true
         }, { message: 'The Amount field cannot be 0' })
+          .refine((value: number) => {
+            const decimalPart = value.toString().split('.')[1] // Obtén la parte decimal
+            // Permitir hasta 2 dígitos decimales, incluyendo casos como 16.000000
+            return !decimalPart || decimalPart.length <= 2
+          }, {
+            message: 'The Amount field must have up to two decimal places',
+          })
       },
       {
         field: 'date',
@@ -153,10 +159,55 @@ const Fields: Array<Container> = [
         field: 'description',
         header: 'Remark',
         dataType: 'text',
+        class: 'field col-12',
+        headerClass: 'mb-1',
+        validation: z.string().trim().max(255, 'Maximum 255 characters')
+      },
+
+    ],
+    containerClass: 'w-full'
+  }
+
+]
+
+const IncomeAttachmentFields: Array<Container> = [
+  {
+    childs: [
+      {
+        field: 'amount',
+        header: 'Amount',
+        dataType: 'number',
         class: 'field col-12 md: required',
         headerClass: 'mb-1',
-        validation: z.string().min(1, 'The remark field is required')
+        validation: z.number().refine((value: number) => {
+          if (!value) { return false }
+          return true
+        }, { message: 'The Amount field cannot be 0' })
+      },
+      {
+        field: 'date',
+        header: 'Date',
+        dataType: 'date',
+        class: 'field col-12 md: required ',
+        headerClass: 'mb-1',
 
+      },
+
+      {
+        field: 'transactionType',
+        header: 'Transaction',
+        dataType: 'select',
+        class: 'field col-12',
+        headerClass: 'mb-1',
+
+      },
+      {
+        field: 'description',
+        header: 'Remark',
+        dataType: 'text',
+        class: 'field col-12',
+        headerClass: 'mb-1',
+        validation: z.string().trim().max(255, 'Maximum 255 characters')
       },
 
     ],
@@ -196,9 +247,10 @@ const confApi = reactive({
 const Columns: IColumn[] = [
 
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'amount', header: 'Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'roomRateId', header: 'Room Rate', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'transaction', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
+  // { field: 'amount', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'amountTemp', header: 'Adjustment Amount', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'roomRateId', header: 'Room Rate Id', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
+  { field: 'paymentTransactionType', header: 'Category', type: 'select', objApi: transactionTypeApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'date', header: 'Transaction Date', type: 'date', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'employee', header: 'Employee', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'description', header: 'Description', type: 'text', sortable: !props.isDetailView && !props.isCreationDialog },
@@ -212,7 +264,6 @@ const ENUM_FILTER = [
 ]
 
 async function openEditDialog(item: any) {
-  console.log(item)
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -247,11 +298,13 @@ const route = useRoute()
 
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
-  filter: [],
+  filter: [
+
+  ],
   query: '',
   pageSize: 10,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'adjustmentId',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const Pagination = ref<IPagination>({
@@ -297,9 +350,24 @@ async function getAdjustmentList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId, date: iterator?.date,
-        transaction: {...iterator?.transaction, name: `${iterator?.transaction?.code || ""}-${iterator?.transaction?.name || ""}` }
-        }]
+      /* let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
+
+      if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
+        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
+      }
+
+      iterator.paymentTransactionType = transaction */
+      // iterator.paymentTransactionType = iterator.paymentTransactionType || iterator.transaction
+      ListItems.value = [...ListItems.value, {
+        ...iterator,
+        paymentTransactionType: iterator.transaction ? { ...iterator.transaction, name: `${iterator.transaction?.code || ''}-${iterator.transaction?.name || ''}` } : null,
+        loadingEdit: false,
+        loadingDelete: false,
+        roomRateId: iterator?.roomRate?.roomRateId,
+        date: iterator?.date,
+        amountTemp: iterator?.amount ? formatNumber(iterator?.amount) : 0,
+
+      }]
 
       if (typeof +iterator?.amount === 'number') {
         totalAmount.value += Number(iterator?.amount)
@@ -505,11 +573,30 @@ function requireConfirmationToSaveAdjustment(item: any) {
   })
 }
 
-async function getTransactionTypeList() {
+async function getTransactionTypeList(query = '') {
   try {
     const payload
       = {
-        filter: [],
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          }
+        ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -517,11 +604,18 @@ async function getTransactionTypeList() {
         sortType: ENUM_SHORT_TYPE.DESC
       }
 
-    transactionTypeList.value = []
     const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
     const { data: dataList } = response
+    transactionTypeList.value = []
     for (const iterator of dataList) {
-      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
+      transactionTypeList.value = [...transactionTypeList.value, {
+        id: iterator.id,
+        name: iterator.name,
+        code: iterator.code,
+        fullName: `${iterator?.code}-${iterator?.name}`,
+        defaultRemark: iterator.defaultRemark,
+        isRemarkRequired: iterator.isRemarkRequired
+      }]
     }
   }
   catch (error) {
@@ -530,7 +624,9 @@ async function getTransactionTypeList() {
 }
 
 function onRowRightClick(event: any) {
-  if (route.query.type === ENUM_INVOICE_TYPE[1]?.id || props.invoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id) {
+  return
+
+  if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
     return
   }
 
@@ -574,11 +670,6 @@ function OnSortField(event: any) {
   }
 }
 
-function openDialog() {
-  dialogOpen.value = true
-  console.log(dialogOpen)
-}
-
 watch(() => props.forceUpdate, () => {
   if (props.forceUpdate) {
     getAdjustmentList()
@@ -595,6 +686,12 @@ watch(() => props.listItems, () => {
   }
 }, { deep: true })
 
+watch(PayloadOnChangePage, (newValue) => {
+  Payload.value.page = newValue?.page ? newValue?.page : 0
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  getAdjustmentList()
+})
+
 onMounted(() => {
   if (props.selectedInvoice) {
     Payload.value.filter = [{
@@ -602,7 +699,17 @@ onMounted(() => {
       operator: 'EQUALS',
       value: props.selectedInvoice,
       logicalOperation: 'AND'
-    }]
+    }/* , {
+      key: 'roomRate.booking.invoice.cloneParent',
+      operator: 'EQUALS',
+      value: true,
+      logicalOperation: 'OR'
+    }, {
+      key: 'roomRate.booking.invoice.isCloned',
+      operator: 'EQUALS', // Usamos 'EQUALS' para igualar
+      value: false, // Buscamos aquellos que no están clonados
+      logicalOperation: 'OR' // Operación lógica
+    } */]
   }
   if (!props.isCreationDialog) {
     getAdjustmentList()
@@ -613,15 +720,18 @@ onMounted(() => {
 <template>
   <div>
     <DynamicTable
-      :data="isCreationDialog ? listItems as any : ListItems" :columns="Columns"
-      :options="Options" :pagination="Pagination" @on-confirm-create="ClearForm"
+      :data="isCreationDialog ? listItems as any : ListItems"
+      :columns="Columns"
+      :options="Options"
+      :pagination="Pagination"
+      @on-confirm-create="ClearForm"
       @open-edit-dialog="OpenEditDialog($event)"
-      @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
-      @on-list-item="ResetListItems" @on-row-right-click="onRowRightClick" @on-sort-field="OnSortField" @on-row-double-click="($event) => {
-
-        if (!props.isDetailView){
-          openEditDialog($event)
-        }
+      @on-change-pagination="PayloadOnChangePage = $event"
+      @on-change-filter="ParseDataTableFilter"
+      @on-list-item="ResetListItems"
+      @on-row-right-click="onRowRightClick"
+      @on-sort-field="OnSortField"
+      @on-row-double-click="($event) => {
 
       }"
     >
@@ -634,9 +744,8 @@ onMounted(() => {
       <template #datatable-footer>
         <ColumnGroup type="footer" class="flex align-items-center">
           <Row>
-            <Column footer="Totals:" :colspan="1" footer-style="text-align:right" />
-            <Column :footer="totalAmount" />
-
+            <Column footer="Totals:" :colspan="1" footer-style="text-align:right; font-weight: 700" />
+            <Column :footer="formatNumber(Number.parseFloat(totalAmount.toFixed(2)))" footer-style="font-weight: 700" />
             <Column :colspan="6" />
           </Row>
         </ColumnGroup>
@@ -647,21 +756,20 @@ onMounted(() => {
 
   <div v-if="isDialogOpen">
     <AdjustmentDialog
-      :invoice-obj="invoiceObj"
-      :invoice-amount="invoiceObjAmount"
-      :fields="Fields" :item="item" :open-dialog="isDialogOpen" :form-reload="formReload"
-      :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
+      :invoice-obj="invoiceObj" :invoice-amount="invoiceObjAmount"
+      :fields="route.query.type === InvoiceType.INCOME ? IncomeAttachmentFields : Fields" :item="item"
+      :open-dialog="isDialogOpen" :form-reload="formReload" :loading-save-all="loadingSaveAll" :clear-form="ClearForm"
       :require-confirmation-to-save="saveAdjustment"
-      :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment" :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'"
-      :id-item="idItem"
-      :close-dialog="() => {
+      :require-confirmation-to-delete="requireConfirmationToDeleteAdjustment"
+      :header="isCreationDialog || !idItem ? 'New Adjustment' : 'Edit Adjustment'" :id-item="idItem" :close-dialog="() => {
         ClearForm()
         idItem = ''
 
         closeDialog()
 
-      }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full"
-      class="h-fit p-2 overflow-y-hidden" content-class="w-full h-fit" :transaction-type-list="transactionTypeList" :get-transaction-type-list="getTransactionTypeList"
+      }" container-class="flex flex-row justify-content-between mx-4 my-2 w-full" class="h-fit p-2 overflow-y-hidden"
+      content-class="w-full h-fit" :transaction-type-list="transactionTypeList"
+      :get-transaction-type-list="getTransactionTypeList"
     />
   </div>
 </template>

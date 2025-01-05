@@ -58,9 +58,6 @@ const confattachmentTypeListApi = reactive({
 
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
-const confirm = useConfirm()
-
-console.log(invoice.value)
 
 const loadingDelete = ref(false)
 
@@ -101,10 +98,12 @@ const Columns: IColumn[] = [
 ]
 
 const incomeColumns: IColumn[] = [
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '70px' },
-  { field: 'createdAt', header: 'Date', type: 'datetime', width: '90px' },
-  { field: 'employee', header: 'Employee', type: 'text', width: '100px' },
-  { field: 'status', header: 'Status', type: 'text', width: '100px' },
+  { field: 'invoiceHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'createdAt', header: 'Date', type: 'date', width: '90px', sortable: false, showFilter: false },
+  { field: 'employee', header: 'Employee', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'description', header: 'Remark', type: 'text', width: '200px', sortable: false, showFilter: false },
+  { field: 'invoiceStatus', header: 'Status', type: 'slot-text', width: '100px', sortable: false, showFilter: false },
 
 ]
 
@@ -112,11 +111,12 @@ const dialogVisible = ref(props.openDialog)
 const options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: props.selectedInvoiceObj?.invoiceType === ENUM_INVOICE_TYPE[1]?.id || props.selectedInvoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id ? 'invoice-status-history' : 'attachment-status-history',
+  uriApi: 'invoice-status-history',
   loading: false,
   showDelete: false,
   showFilters: false,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -147,7 +147,6 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
-    console.log(event);
     Payload.value.sortBy = getSortField(event.sortField)
     Payload.value.sortType = event.sortOrder
     getList()
@@ -155,17 +154,14 @@ function OnSortField(event: any) {
 }
 
 function getSortField(field: any) {
-  
   switch (field) {
     case 'status':
-      return 'invoice.status'
+      return 'invoiceStatus'
 
-      case 'invoiceId'  :
+    case 'invoiceId':
       return 'invoice.invoiceId'
 
-
     default: return field
-      
   }
 }
 
@@ -183,7 +179,6 @@ async function getList() {
     ListItems.value = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     Pagination.value.page = page
@@ -192,7 +187,18 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, invoiceId: iterator?.invoice?.invoiceId, status: iterator?.invoice?.status || 'ACTIVE' }]
+      ListItems.value = [
+        ...ListItems.value,
+        {
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          invoiceId: iterator?.invoice?.invoiceId,
+          // @ts-expect-error
+          invoiceStatus: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus === 'CANCELED' ? 'CANCELLED' : iterator?.invoiceStatus]
+        }
+      ]
+      // status: OBJ_INVOICE_STATUS_NAME[iterator?.invoiceStatus || iterator?.invoice?.status] }]
     }
   }
   catch (error) {
@@ -270,6 +276,14 @@ async function deleteItem(id: string) {
   }
 }
 
+function getStatusBadgeBackgroundColorByItem(item: string) {
+  if (!item) { return }
+  if (item === 'PROCESSED') { return '#FF8D00' }
+  if (item === 'SENT') { return '#006400' }
+  if (item === 'RECONCILED') { return '#005FB7' }
+  if (item === 'CANCELED') { return '#888888' }
+}
+
 watch(() => props.selectedInvoiceObj, () => {
   invoice.value = props.selectedInvoiceObj
 })
@@ -301,21 +315,45 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal :header="props.selectedInvoiceObj?.invoiceType === ENUM_INVOICE_TYPE[1]?.id || props.selectedInvoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id ? 'Income Status history' : header" class="p-4 h-fit w-fit"
-    content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true"
-    style="width: 800px;" @hide="closeDialog"
+    v-model:visible="dialogVisible"
+    modal
+    :header="props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header"
+    content-class="border-round-bottom border-top-1 surface-border h-fit"
+    :block-scroll="true"
+    style="width: 50%;" :pt="{
+      header: {
+        style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+      },
+    }"
+    @hide="closeDialog"
   >
+    <template #header>
+      <div class="flex justify-content-between w-full">
+        <h5 class="m-0">
+          {{ props.selectedInvoiceObj?.invoiceType === InvoiceType.INCOME || props.selectedInvoiceObj?.invoiceType?.id === InvoiceType.INCOME ? 'Income Status History' : header }}
+        </h5>
+        <h5 class="m-0 mr-2">
+          Invoice Id: {{ props.selectedInvoiceObj?.invoiceId }}
+        </h5>
+      </div>
+    </template>
     <div class=" h-fit overflow-hidden mt-4">
       <div class="flex flex-row align-items-center">
-        <div class="flex flex-column" style="width: 700px;overflow: auto;">
+        <div class="flex flex-column" style="width: 100%;overflow: auto;">
           <DynamicTable
-            :data="isCreationDialog ? listItems as any : ListItems" :columns="props.selectedInvoiceObj?.invoiceType === ENUM_INVOICE_TYPE[1]?.id || props.selectedInvoiceObj?.invoiceType?.id === ENUM_INVOICE_TYPE[1]?.id ? incomeColumns : Columns"
-            :options="options" :pagination="Pagination"
-
-            @on-confirm-create="clearForm"
-            @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter" @on-list-item="ResetListItems" @on-sort-field="OnSortField"
-          />
-          <div class=" flex w-full justify-content-end ">
+            :data="isCreationDialog ? listItems as any : ListItems" :columns="incomeColumns"
+            :options="options" :pagination="Pagination" @on-confirm-create="clearForm"
+            @on-change-pagination="PayloadOnChangePage = $event" @on-change-filter="ParseDataTableFilter"
+            @on-list-item="ResetListItems" @on-sort-field="OnSortField"
+          >
+            <template #column-invoiceStatus="{ data }">
+              <Badge
+                :value="data.invoiceStatus"
+                :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.invoiceStatus)}`"
+              />
+            </template>
+          </DynamicTable>
+          <div v-if="false" class=" flex w-full justify-content-end ">
             <Button
               v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 

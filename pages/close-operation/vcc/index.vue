@@ -39,8 +39,8 @@ const confHotelApi = reactive({
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
-  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '50px', widthTruncate: '50px', props: { isRange: true } },
-  { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
+  { field: 'date', header: 'Current Close Operation', type: 'date-editable', width: '220px', widthTruncate: '50px', props: { isRange: true, maxDate: new Date() } },
+  // { field: 'status', header: 'Active', type: 'bool', width: '25px', widthTruncate: '25px', showFilter: false },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -102,7 +102,7 @@ async function getList() {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'beginDate')) {
-        iterator.date = iterator.beginDate
+        iterator.date = dayjs(iterator.beginDate).toDate()
       }
     }
     listItems.value = [...dataList]
@@ -131,10 +131,11 @@ function searchAndFilter() {
       }]
     }
   }
+  // filterToSearch.value.active ? 'ACTIVE' : 'INACTIVE',
   payload.value.filter = [...payload.value.filter, {
     key: 'hotel.status',
     operator: 'EQUALS',
-    value: filterToSearch.value.active ? 'ACTIVE' : 'INACTIVE',
+    value: 'ACTIVE',
     logicalOperation: 'AND',
     type: 'filterSearch',
   }]
@@ -378,7 +379,7 @@ onMounted(async () => {
                   </template>
                 </DebouncedAutoCompleteComponent>
               </div>
-              <div class="flex align-items-center">
+              <div v-if="false" class="flex align-items-center">
                 <Checkbox v-model="filterToSearch.active" :binary="true" />
                 <label class="ml-2 font-bold"> Active </label>
               </div>
@@ -405,12 +406,12 @@ onMounted(async () => {
         @on-sort-field="onSortField"
         @on-cell-edit-complete="saveItem"
       />
-      <div class="flex justify-content-end">
-        <Button class="ml-2" icon="pi pi-times" label="Cancel" severity="secondary" @click="() => { navigateTo('/') }" />
+      <div v-if="false" class="flex justify-content-end">
+        <Button class="ml-2" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/') }" />
       </div>
     </div>
   </div>
-  <Menu id="vcc_co" ref="menu" :popup="true" style="max-width: 220px">
+  <Menu id="vcc_co" ref="menu" :popup="true">
     <template #start>
       <Calendar v-model="selectedDate" inline view="month" @update:model-value="handleCalendarSelect" />
     </template>

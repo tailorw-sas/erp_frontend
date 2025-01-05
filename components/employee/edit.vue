@@ -18,7 +18,7 @@ const props = defineProps({
   },
 })
 const emits = defineEmits<{
-  (e: 'onSuccessEdit', value: boolean): void
+  (e: 'onSuccessEdit', value: string): void
 }>()
 const toast = useToast()
 const confirm = useConfirm()
@@ -186,7 +186,6 @@ async function getItemById() {
       item.value.innsistCode = response.innsistCode
       item.value.isLock = response.isLock
       item.value.phoneExtension = String(response.phoneExtension)
-      item.value.departmentGroup = response.departmentGroup
       item.value.status = statusToBoolean(response.status)
       item.value.managePermissionList = response.managePermissionList.map((e: any) => e.id)
       item.value.manageAgencyList = response.manageAgencyList.map((e: any) => e.id)
@@ -194,6 +193,9 @@ async function getItemById() {
       item.value.manageReportList = response.manageReportList.map((e: any) => e.id)
       item.value.manageTradingCompaniesList = response.manageTradingCompaniesList.map((e: any) => e.id)
       item.value.userType = response.userType
+      if (response.departmentGroup) {
+        item.value.departmentGroup = { id: response.departmentGroup.id, name: `${response.departmentGroup.code} - ${response.departmentGroup.name}`, status: response.departmentGroup.status }
+      }
     }
     dialogReload.value += 1
   }
@@ -405,7 +407,7 @@ async function requireConfirmationToSelectItem(items: any[]) {
   const confirmItemSelection = (item: any) => {
     return new Promise((resolve) => {
       confirm.require({
-        header: 'High risk item',
+        header: 'High Risk Item',
         message: `Are you sure you want to assign ${item.parentName} - ${item.label} high-risk permission?`,
         rejectLabel: 'Cancel',
         acceptLabel: 'Accept',
@@ -514,29 +516,38 @@ const goToList = async () => await navigateTo('/settings/employee')
 async function getDepartmentGroupList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-department-group', payload)
     const { data: dataList } = response
     DepartmentGroupList.value = []
     for (const iterator of dataList) {
-      DepartmentGroupList.value = [...DepartmentGroupList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      DepartmentGroupList.value = [...DepartmentGroupList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -571,10 +582,10 @@ async function save(item: { [key: string]: any }) {
   payload.manageTradingCompaniesList = filterSelectedIds(selectedTradingCompanyKey.value)
   try {
     await editUser(item)
-    const response = await GenericService.update(confApi.moduleApi, confApi.uriApi, props.employeeId, payload)
+    const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, props.employeeId, payload)
     if (response) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-      emits('onSuccessEdit', true)
+      emits('onSuccessEdit', response.id)
     }
   }
   catch (error: any) {

@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import type { PageState } from 'primevue/paginator'
-import { z } from 'zod'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { FieldDefinitionType } from '~/components/form/EditFormV2'
-import type { GenericObject } from '~/types'
-import { GenericService } from '~/services/generic-services'
-import { statusToBoolean, statusToString, updateFieldProperty } from '~/utils/helpers'
-import type { IData } from '~/components/table/interfaces/IModelData'
+import {onMounted, ref, watch} from 'vue'
+import type {PageState} from 'primevue/paginator'
+import {z} from 'zod'
+import {useToast} from 'primevue/usetoast'
+import {useConfirm} from 'primevue/useconfirm'
+import type {IFilter, IQueryRequest} from '~/components/fields/interfaces/IFieldInterfaces'
+import type {IColumn, IPagination} from '~/components/table/interfaces/ITableInterfaces'
+import type {FieldDefinitionType} from '~/components/form/EditFormV2'
+import type {GenericObject} from '~/types'
+import {GenericService} from '~/services/generic-services'
+import {statusToBoolean, statusToString, updateFieldProperty} from '~/utils/helpers'
+import type {IData} from '~/components/table/interfaces/IModelData'
 import ContactPage from '~/pages/settings/contact/index.vue'
-import {
-  validateEntityStatus
-} from '~/utils/schemaValidations'
+import {validateEntityStatus} from '~/utils/schemaValidations'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -48,7 +46,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: false,
     dataType: 'code',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(20, 'Maximum 20 characters') // .regex(/^[a-z]+$/i, 'Only text characters allowed')
   },
   {
     field: 'babelCode',
@@ -117,13 +115,14 @@ const fields: Array<FieldDefinitionType> = [
     field: 'manageTradingCompanies',
     header: 'Trading Company',
     dataType: 'select',
-    class: 'field col-12',
+    class: 'field col-12 required',
     headerClass: 'mb-1',
     validation: z.object({
       id: z.string(),
       company: z.string(),
       status: z.enum(['ACTIVE', 'INACTIVE'], { message: 'The trading company must be either ACTIVE or INACTIVE' })
     }).nullable()
+      .refine(value => value && value.id && value.company, { message: `The Trading Company field is required` })
       .refine(value => value === null || value.status === 'ACTIVE', {
         message: 'This trading company is not active',
       })
@@ -140,11 +139,17 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
   },
+  // {
+  //   field: 'isNightType',
+  //   header: 'Night Type',
+  //   dataType: 'check',
+  //   class: 'field col-12 mt-3',
+  // },
   {
-    field: 'isNightType',
-    header: 'Night Type',
+    field: 'autoApplyCredit',
+    header: 'No Auto Apply Credit',
     dataType: 'check',
-    class: 'field col-12 mt-3',
+    class: 'field col-12',
   },
   {
     field: 'isVirtual',
@@ -193,7 +198,8 @@ const item = ref<GenericObject>({
   manageTradingCompanies: null,
   applyByTradingCompany: false,
   prefixToInvoice: '',
-  isNightType: false,
+  // isNightType: false,
+  autoApplyCredit: false,
   isVirtual: false,
   requiresFlatRate: false,
   isApplyByVCC: false,
@@ -214,7 +220,8 @@ const itemTemp = ref<GenericObject>({
   manageTradingCompanies: null,
   applyByTradingCompany: false,
   prefixToInvoice: '',
-  isNightType: false,
+  // isNightType: false,
+  autoApplyCredit: false,
   isVirtual: false,
   requiresFlatRate: false,
   isApplyByVCC: false,
@@ -284,7 +291,7 @@ function clearForm() {
   formReload.value++
 }
 
-async function getList() {
+async function getList(loadFirstItem: boolean = true) {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -320,7 +327,7 @@ async function getList() {
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    if (listItems.value.length > 0) {
+    if (listItems.value.length > 0 && loadFirstItem) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
   }
@@ -375,23 +382,24 @@ async function getItemById(id: string) {
         item.value.address = response.address
         item.value.applyByTradingCompany = response.applyByTradingCompany
         item.value.prefixToInvoice = response.prefixToInvoice
-        item.value.isNightType = response.isNightType
+        item.value.autoApplyCredit = response.autoApplyCredit
+        // item.value.isNightType = response.isNightType
         item.value.isVirtual = response.isVirtual
         item.value.requiresFlatRate = response.requiresFlatRate
         item.value.isApplyByVCC = response.isApplyByVCC
         item.value.description = response.description
         listCountryItems.value = [response.manageCountry]
-        item.value.manageCountry = { id: response.manageCountry.id, name: response.manageCountry.name, status: response.manageCountry.status }
+        item.value.manageCountry = { id: response.manageCountry.id, name: `${response.manageCountry.code} - ${response.manageCountry.name}`, status: response.manageCountry.status }
         if (response.manageCountry) {
           listCityStateItems.value = [response.manageCityState]
-          item.value.manageCityState = { id: response.manageCityState.id, name: response.manageCityState.name, status: response.manageCityState.status }
+          item.value.manageCityState = { id: response.manageCityState.id, name: `${response.manageCityState.code} - ${response.manageCityState.name}`, status: response.manageCityState.status }
         }
         listCurrencyItems.value = [response.manageCurrency]
-        item.value.manageCurrency = { id: response.manageCurrency.id, name: response.manageCurrency.name, status: response.manageCurrency.status }
+        item.value.manageCurrency = { id: response.manageCurrency.id, name: `${response.manageCurrency.code} - ${response.manageCurrency.name}`, status: response.manageCurrency.status }
         listRegionItems.value = [response.manageRegion]
-        item.value.manageRegion = { id: response.manageRegion.id, name: response.manageRegion.name, status: response.manageRegion.status }
+        item.value.manageRegion = { id: response.manageRegion.id, name: `${response.manageRegion.code} - ${response.manageRegion.name}`, status: response.manageRegion.status }
         if (response.manageTradingCompanies) {
-          const objTradingCompany = { id: response.manageTradingCompanies.id, company: response.manageTradingCompanies.company, status: response.manageTradingCompanies.status }
+          const objTradingCompany = { id: response.manageTradingCompanies.id, company: `${response.manageTradingCompanies.code} - ${response.manageTradingCompanies.company}`, status: response.manageTradingCompanies.status }
           listTradingCompanyItems.value = [objTradingCompany]
           item.value.manageTradingCompanies = objTradingCompany
         }
@@ -423,7 +431,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
     payload.manageTradingCompanies = payload.manageTradingCompanies && typeof payload.manageTradingCompanies === 'object' ? payload.manageTradingCompanies.id : payload.manageTradingCompanies
     delete payload.event
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
+    return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
 
@@ -436,7 +444,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.manageCurrency = typeof payload.manageCurrency === 'object' ? payload.manageCurrency.id : payload.manageCurrency
   payload.manageRegion = typeof payload.manageRegion === 'object' ? payload.manageRegion.id : payload.manageRegion
   payload.manageTradingCompanies = !payload.manageTradingCompanies ? '' : typeof payload.manageTradingCompanies === 'object' ? payload.manageTradingCompanies.id : payload.manageTradingCompanies
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
+  return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -459,9 +467,10 @@ async function deleteItem(id: string) {
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   let successOperation = true
+  let response: any
   if (idItem.value) {
     try {
-      await updateItem(item)
+      response = await updateItem(item)
       idItem.value = ''
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
@@ -472,7 +481,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      await createItem(item)
+      response = await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     }
     catch (error: any) {
@@ -483,7 +492,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    await getList(false)
+    if (response) {
+      idItemToLoadFirstTime.value = response.id
+    }
   }
 }
 
@@ -552,7 +564,12 @@ async function getCountriesList(query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -563,14 +580,14 @@ async function getCountriesList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-country', payload)
     const { data: dataList } = response
     listCountryItems.value = []
     for (const iterator of dataList) {
-      listCountryItems.value = [...listCountryItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCountryItems.value = [...listCountryItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -590,7 +607,12 @@ async function getCityStatesList(countryId: string, query: string) {
         key: 'name',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -601,14 +623,14 @@ async function getCityStatesList(countryId: string, query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-city-state', payload)
     const { data: dataList } = response
     listCityStateItems.value = []
     for (const iterator of dataList) {
-      listCityStateItems.value = [...listCityStateItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCityStateItems.value = [...listCityStateItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -643,14 +665,14 @@ async function getCurrencyList(query: string) {
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-currency', payload)
     const { data: dataList } = response
     listCurrencyItems.value = []
     for (const iterator of dataList) {
-      listCurrencyItems.value = [...listCurrencyItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listCurrencyItems.value = [...listCurrencyItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -661,29 +683,38 @@ async function getCurrencyList(query: string) {
 async function getRegionList(query: string) {
   try {
     const payload = {
-      filter: [{
-        key: 'name',
-        operator: 'LIKE',
-        value: query,
-        logicalOperation: 'AND'
-      }, {
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }],
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        }
+      ],
       query: '',
       pageSize: 20,
       page: 0,
       sortBy: 'name',
-      sortType: ENUM_SHORT_TYPE.DESC
+      sortType: ENUM_SHORT_TYPE.ASC
     }
 
     const response = await GenericService.search('settings', 'manage-region', payload)
     const { data: dataList } = response
     listRegionItems.value = []
     for (const iterator of dataList) {
-      listRegionItems.value = [...listRegionItems.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
+      listRegionItems.value = [...listRegionItems.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -697,7 +728,12 @@ async function getTradingCompanyList(query: string) {
         key: 'company',
         operator: 'LIKE',
         value: query,
-        logicalOperation: 'AND'
+        logicalOperation: 'OR'
+      }, {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
       }, {
         key: 'status',
         operator: 'EQUALS',
@@ -712,10 +748,11 @@ async function getTradingCompanyList(query: string) {
     }
 
     const response = await GenericService.search('settings', 'manage-trading-companies', payload)
+
     const { data: dataList } = response
     listTradingCompanyItems.value = []
     for (const iterator of dataList) {
-      listTradingCompanyItems.value = [...listTradingCompanyItems.value, { id: iterator.id, company: iterator.company, status: iterator.status }]
+      listTradingCompanyItems.value = [...listTradingCompanyItems.value, { id: iterator.id, company: `${iterator.code} - ${iterator.company}`, status: iterator.status }]
     }
   }
   catch (error) {
@@ -761,19 +798,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
+  <div class="flex justify-content-between align-items-center mb-1">
+    <h5 class="mb-0">
       Manage Hotel
-    </h3>
+    </h5>
     <IfCan :perms="['HOTEL:CREATE']">
-      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="my-2 flex justify-content-end px-0">
+      <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
         <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
       </div>
     </IfCan>
   </div>
   <div class="grid">
     <div class="col-12 md:order-1 md:col-6 xl:col-9">
-      <div class="card p-0">
+      <div class="card p-0 mb-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
             <template #header>

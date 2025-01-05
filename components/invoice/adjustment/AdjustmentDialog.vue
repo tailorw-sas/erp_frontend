@@ -67,7 +67,12 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  invoiceAmount: { type: Number, required: true }
+  invoiceAmount: { type: Number, required: true },
+  loadingDefaultTransactionType: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
 })
 const dialogVisible = ref(props.openDialog)
 const formFields = ref<FieldDefinitionType[]>([])
@@ -84,12 +89,12 @@ function validateInvoiceAmount(newAmount: number) {
   }
 
   amountError.value = false
-  if (invoiceType.value === ENUM_INVOICE_TYPE[0]?.id) {
+  if (invoiceType.value === InvoiceType.INVOICE) {
     if (Number(amount) + newAmount < 0) {
       amountError.value = true
     }
   }
-  if (invoiceType.value === ENUM_INVOICE_TYPE[2]?.id || invoiceType.value === ENUM_INVOICE_TYPE[3]?.id) {
+  if (invoiceType.value === InvoiceType.CREDIT || invoiceType.value === InvoiceType.OLD_CREDIT) {
     if (Number(amount) + newAmount > 0) {
       amountError.value = true
     }
@@ -116,6 +121,7 @@ onMounted(() => {
   else {
     invoiceType.value = route.query.type as string
   }
+  props.getTransactionTypeList('', true)
 })
 </script>
 
@@ -125,10 +131,10 @@ onMounted(() => {
     :content-class="contentClass || 'border-round-bottom border-top-1 surface-border h-fit'" :block-scroll="true"
     @hide="closeDialog"
   >
-    <div class="w-full h-full overflow-hidden p-2">
+    <div class="w-full h-full overflow-hidden mt-2">
       <EditFormV2WithContainer
         :key="formReload" :fields-with-containers="fields" :item="item" :show-actions="true"
-        :loading-save="loadingSaveAll" :container-class="containerClass" class="w-full h-fit m-4" @cancel="clearForm"
+        :loading-save="loadingSaveAll" :container-class="containerClass" @cancel="clearForm"
         @delete="requireConfirmationToDelete($event)" @submit="requireConfirmationToSave($event)"
       >
         <template #field-date="{ item: data, onUpdate }">
@@ -136,64 +142,82 @@ onMounted(() => {
             v-if="!loadingSaveAll" v-model="data.date" date-format="yy-mm-dd"
             :max-date="dayjs().endOf('day').toDate()" @update:model-value="($event) => {
 
-              onUpdate('date', dayjs($event).startOf('day').toDate())
+              if (dayjs($event).isValid()){
+                onUpdate('date', dayjs($event).startOf('day').toDate())
+              }
             }"
           />
         </template>
 
         <template #field-amount="{ item: data, onUpdate }">
           <InputNumber
-            v-model="data.amount" @update:model-value="($event: any) => {
-
+            v-if="!loadingSaveAll"
+            v-model="data.amount" :min-fraction-digits="0" :max-fraction-digits="2" @input="($event: any) => {
+              $event = $event.value
+              if (isNaN(+$event)){
+                $event = 0
+              }
               let amount = invoiceAmount
-
               if (idItem){
                 amount -= item?.amount
               }
-
               amountError = false
-              onUpdate('amount', $event)
+              onUpdate('amount', Number($event))
 
-              if (invoiceType === ENUM_INVOICE_TYPE[0]?.id) {
+              if (invoiceType === InvoiceType.INVOICE) {
                 if (Number(amount) + Number($event) < 0) {
                   amountError = true
                 }
               }
-              if (invoiceType === ENUM_INVOICE_TYPE[2]?.id || invoiceType === ENUM_INVOICE_TYPE[3]?.id) {
+              if (invoiceType === InvoiceType.CREDIT || invoiceType === InvoiceType.OLD_CREDIT) {
                 if (Number(amount) + Number($event) > 0) {
                   amountError = true
                 }
               }
-
             }"
           />
-          <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === ENUM_INVOICE_TYPE[0]?.id ? 'under' : 'over' }} 0</span>
+          <Skeleton v-else height="2rem" class="mb-2" />
+          <span v-if="amountError" class="error-message p-error text-xs">The sum of the amount field and invoice amount field is {{ invoiceType === InvoiceType.INVOICE ? 'under' : 'over' }} 0</span>
         </template>
 
         <template #field-transactionType="{ item: data, onUpdate }">
           <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="fullName" item-value="id"
-            :model="data.transactionType" :suggestions="transactionTypeList" @change="($event) => {
+            v-if="!loadingSaveAll && !loadingDefaultTransactionType"
+            id="autocomplete"
+            field="fullName"
+            item-value="id"
+            :model="data.transactionType"
+            :suggestions="transactionTypeList"
+            @change="($event) => {
               onUpdate('transactionType', $event)
+              if ($event !== null && $event?.isRemarkRequired){
+                onUpdate('description', $event?.defaultRemark)
+              }
+              else {
+                onUpdate('description', '')
+              }
             }" @load="($event) => getTransactionTypeList($event)"
           />
+          <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
         <template #form-footer="props">
-          <Button
-            v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save" @click="($event) => {
-              if (!amountError) {
-                props.item.submitForm($event)
-              }
-            }"
-          />
-          <Button
-            v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
+          <div class="field flex justify-content-end mr-3 mb-2">
+            <Button
+              v-tooltip.top="'Save'" label="Save" class="w-6rem mx-1" icon="pi pi-save" @click="($event) => {
+                if (!amountError) {
+                  props.item.submitForm($event)
+                }
+              }"
+            />
+            <Button
+              v-tooltip.top="'Cancel'" label="Cancel" severity="secondary" class="w-6rem mx-1 " icon="pi pi-times" @click="() => {
 
-              clearForm()
-              closeDialog()
-            }"
-          />
+                clearForm()
+                closeDialog()
+              }"
+            />
+          </div>
         </template>
       </EditFormV2WithContainer>
     </div>
