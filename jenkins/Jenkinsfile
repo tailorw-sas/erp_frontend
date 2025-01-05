@@ -7,21 +7,25 @@ pipeline {
 
     environment {
         SISTEMA = 'ERP'
-		GITHUB_REPO = 'erp_frontend'
-		GIT_TOKEN = "${env.GITHUB_TOKEN}"
+        GITHUB_REPO = 'erp_frontend'
+        GIT_TOKEN = "${env.GITHUB_TOKEN}"
         SRC = 'finamer-admin'
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
         DOCKER_IMAGE_NAME = 'tailorw/erp-admin:version'
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
-        NAMESPACE = 'finamer'
+        NAMESPACE_DEV_QA = 'finamer'
+        NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'finamer-admin'
-        DEPLOYMENT_NAME = 'finamer-admin'
-        URL_DEV = credentials("URL-K3S-dev")
-        URL_QA = credentials("URL-K3S-qa")
+        DEPLOYMENT_NAME = 'erp-admin'
+        URL_DEV = "${URL_K3S_DEV}"
+        URL_QA = "${URL_K3S_QA}"
+        URL_PROD = "${URL_K3S}"
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
+        DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+        SEND_MAIL = "${SEND_MAIL_STATUS}"
     }
     
     triggers {
@@ -47,17 +51,22 @@ pipeline {
                     env.PR_TITLE = prInfo.title
                     env.PR_AUTHOR = prInfo.author
                     env.EMAIL_AUTHOR = prInfo.authorEmail
-					
+                    
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP_FRONTEND
+                        env.NAMESPACE = env.NAMESPACE_DEV_QA
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
+                        env.NAMESPACE = env.NAMESPACE_DEV_QA
                     }
-                    
-
+                    if(env.BRANCH_NAME == 'main'){
+                        env.SERVER_K3S_URL = env.URL_PROD
+                        env.EMAIL_LIST = env.EMAIL_LIST_PROD
+                        env.NAMESPACE = env.NAMESPACE_PROD
+                    }
                 }
             }
         }
@@ -80,18 +89,22 @@ pipeline {
             }
         }
     }
-	
-	post {
+
+    post {
         success {
             script {
-                def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+                if(env.SEND_MAIL == 'SI'){
+                    def notificator = new NotificadorEmail(this)
+                    notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
+                }
             }
         }
         failure {
             script {
-                def notificator = new NotificadorEmail(this)
-                notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR)
+                if(env.SEND_MAIL == 'SI'){
+                    def notificator = new NotificadorEmail(this)
+                    notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR)
+                }
             }
         }
     }
