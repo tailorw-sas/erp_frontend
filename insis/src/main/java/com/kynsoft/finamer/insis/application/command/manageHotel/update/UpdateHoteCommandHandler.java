@@ -50,7 +50,16 @@ public class UpdateHoteCommandHandler implements ICommandHandler<UpdateHoteComma
 
             service.update(dto);
         }else{
-            //se crea el hotel
+            ManageTradingCompanyDto tradingCompanyDto = tradingCompanyService.findById(command.getTradingCompanyId());
+            ManageHotelDto hotelDto = new ManageHotelDto(
+                    command.getId(),
+                    command.getCode(),
+                    command.getName(),
+                    command.getStatus(),
+                    false,
+                    null,
+                    tradingCompanyDto
+            );
         }
 
         InnsistHotelRoomTypeDto tradingCompanyHotelDto = tradingCompanyHotelService.findByHotelAndActive(dto.getId(), "ACTIVE");
