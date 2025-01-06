@@ -189,7 +189,7 @@ async function getItemById(id: string) {
         item.value.status = ENUM_STATUS.find(x => x.id === response.status)
       }
       fields[0].disabled = true
-      updateFieldProperty(fields, 'status', 'disabled', false)
+      // updateFieldProperty(fields, 'status', 'disabled', false)
       formReload.value += 1
     }
     catch (error) {
@@ -245,6 +245,7 @@ onMounted(() => {
               option-label="name"
               return-object="false"
               filter
+              disabled
               @update:model-value="($event) => {
                 onUpdate('status', $event)
               }"
