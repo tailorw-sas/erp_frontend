@@ -3,10 +3,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.createBu
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
-import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
-import com.kynsof.share.core.domain.exception.GlobalBusinessException;
-import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -331,9 +328,6 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
-            if (command.getAttachmentCommands().get(i).getPaymentResourceType() == null){
-                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.RESOURCE_TYPE_NOT_FOUND.getReasonPhrase())));
-            }
             ResourceTypeDto resourceTypeDto = this.resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
             if (attachmentType.isAttachInvDefault()) {
                 cont++;
