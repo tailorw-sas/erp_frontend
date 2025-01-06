@@ -89,7 +89,7 @@ const pagination = ref<IPagination>({
   limit: 50,
   totalElements: 0,
   totalPages: 0,
-  search: ''
+  search: 'row.rowNumber'
 })
 // -------------------------------------------------------------------------------------------------------
 

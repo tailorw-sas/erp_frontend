@@ -86,7 +86,7 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: '',
+  sortBy: 'row.rowNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 
