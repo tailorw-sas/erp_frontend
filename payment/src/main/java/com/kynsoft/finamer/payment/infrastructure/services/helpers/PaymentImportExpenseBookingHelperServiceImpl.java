@@ -153,7 +153,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         Map<String, List<PaymentExpenseBookingImportCache>> grouped = this.groupCacheByClient(request.getImportProcessId());
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
-            PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
+            //PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
             List<ManageBookingDto> bookingDtos = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
             List<PaymentExpenseBookingHelper> data = entry.getValue().stream().map(cache -> 
                     new PaymentExpenseBookingHelper(

@@ -17,22 +17,23 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentExpenseRow extends Row implements Serializable {
-    @Cell(position = -1,headerName = "")
+
+    @Cell(position = -1, headerName = "")
     protected int rowNumber;
-    @Cell(position = 0,headerName = "Agency")
+    @Cell(position = 0, headerName = "Agency")
     private String manageAgencyCode;
-    @Cell(position = 1,headerName = "Hotel")
+    @Cell(position = 1, headerName = "Hotel")
     private String manageHotelCode;
-    @Cell(position = 2,cellType = CustomCellType.NUMERIC,headerName = "Payment Exp")
+    @Cell(position = 2, cellType = CustomCellType.NUMERIC, headerName = "Payment Exp")
     private Double amount;
-    @Cell(position = 3,headerName = "Remarks")
+    @Cell(position = 3, cellType = CustomCellType.DATAFORMAT, headerName = "Remarks")
     private String remarks;
-    @Cell(position = 4,cellType = CustomCellType.DATAFORMAT,headerName = "Transaction Date")
+    @Cell(position = 4, cellType = CustomCellType.DATAFORMAT, headerName = "Transaction Date")
     private String transactionDate;
 
     private String manageClientCode;
 
-    public PaymentDto toAggregate(){
+    public PaymentDto toAggregate() {
         PaymentDto paymentDto = new PaymentDto();
         paymentDto.setPaymentAmount(this.amount);
         paymentDto.setPaymentBalance(this.amount);
@@ -44,7 +45,7 @@ public class PaymentExpenseRow extends Row implements Serializable {
         paymentDto.setOtherDeductions(0.0);
         paymentDto.setApplied(0.0);
         paymentDto.setRemark(this.remarks);
-        paymentDto.setTransactionDate(DateUtil.parseDateToLocalDate(this.transactionDate,"dd/MM/yyyy"));
+        paymentDto.setTransactionDate(DateUtil.parseDateToLocalDate(this.transactionDate, "dd/MM/yyyy"));
         return paymentDto;
     }
 }
