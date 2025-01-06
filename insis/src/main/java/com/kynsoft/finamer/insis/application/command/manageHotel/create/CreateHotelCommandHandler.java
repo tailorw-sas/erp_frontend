@@ -64,7 +64,9 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
                     null,
                     tradingCompanyDto
             );
-            ReplicateManageHotel(hotelDto);
+            UUID newHotelId = service.create(hotelDto);
+            ManageHotelDto newHotel = service.findById(newHotelId);
+            ReplicateManageHotel(newHotel);
         }
     }
 
