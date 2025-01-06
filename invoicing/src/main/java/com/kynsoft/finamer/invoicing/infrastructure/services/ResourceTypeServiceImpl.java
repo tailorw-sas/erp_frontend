@@ -89,6 +89,16 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
         return getPaginatedResponse(data);
     }
 
+    @Override
+    public Long countByDefaultsAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultsAndNotId(id);
+    }
+
+    @Override
+    public ResourceTypeDto findByDefaults() {
+        return this.repositoryQuery.findByDefaults().map(ManageResourceType::toAggregate).orElse(null);
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManageResourceType> data) {
         List<GetSearchResourceTypeResponse> responses = data.stream()
                 .map(resourceType -> new GetSearchResourceTypeResponse(resourceType.toAggregate())

@@ -23,5 +23,7 @@ public interface IManageResourceTypeService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    Long countByDefaultsAndNotId(UUID id);
 
+    ResourceTypeDto findByDefaults();
 }
