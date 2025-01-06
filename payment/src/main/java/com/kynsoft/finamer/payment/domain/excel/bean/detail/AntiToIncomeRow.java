@@ -18,13 +18,14 @@ import java.time.ZoneId;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AntiToIncomeRow extends Row implements Serializable {
-    @Cell(position = -1,headerName = "")
+
+    @Cell(position = -1, headerName = "")
     protected int rowNumber;
-    @Cell(position = 0,cellType = CustomCellType.NUMERIC,headerName = "Id ANTI")
+    @Cell(position = 0, cellType = CustomCellType.NUMERIC, headerName = "Id ANTI")
     private Double transactionId;
-    @Cell(position = 1,cellType = CustomCellType.NUMERIC,headerName = "AMOUNT")
+    @Cell(position = 1, cellType = CustomCellType.NUMERIC, headerName = "AMOUNT")
     private Double amount;
-    @Cell(position = 2,headerName = "Remark")
+    @Cell(position = 2, cellType = CustomCellType.DATAFORMAT, headerName = "Remark")
     private String remarks;
 
     private String paymentId;
@@ -32,8 +33,7 @@ public class AntiToIncomeRow extends Row implements Serializable {
     private String transactionCheckDepositAmount;
     private String transactionCheckDepositBalance;
 
-
-    public PaymentDetailDto toAggregate(){
+    public PaymentDetailDto toAggregate() {
         PaymentDetailDto paymentDetailDto = new PaymentDetailDto();
         paymentDetailDto.setAmount(this.amount);
         paymentDetailDto.setRemark(this.remarks);
