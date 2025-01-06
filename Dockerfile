@@ -25,9 +25,9 @@ ENV NODE_OPTIONS="--max-old-space-size=8192"
 ENV UV_THREADPOOL_SIZE=64
 ENV NODE_MAX_OLD_SPACE_SIZE=8192
 
+# Limpiar caché y ejecutar build con retry en caso de fallo
 RUN npm cache clean --force && \
-    npm ci && \
-    npm cache clean --force
+    (npm run build || (echo "Build failed, retrying..." && sleep 5 && NODE_OPTIONS="--max-old-space-size=8192" npm run build))
 
 FROM $NODE_VERSION-slim AS production
 
