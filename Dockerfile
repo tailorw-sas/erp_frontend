@@ -18,6 +18,8 @@ FROM dependency-base AS production-base
 # build will also take care of building
 # if necessary
 COPY . .
+
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm build
 
 FROM $NODE_VERSION-slim AS production
