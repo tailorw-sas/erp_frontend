@@ -96,6 +96,11 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
     }
 
     private boolean updateIfIntegerNotEquals(Consumer<Integer> setter, Integer newValue, Integer oldValue, Consumer<Integer> update) {
+        if (newValue == null) {
+            setter.accept(0);
+            update.accept(1);
+            return true;
+        }
         if (!newValue.equals(oldValue)) {
             setter.accept(newValue);
             update.accept(1);
