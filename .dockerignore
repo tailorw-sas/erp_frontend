@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules
+dist
+.nuxt
+.output
+*.log
+.env*
+README.md
+.vscode
+.idea
+coverage
+test
+tests
+__tests__
+*.test.*
+*.spec.*
