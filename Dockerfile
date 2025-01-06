@@ -19,7 +19,9 @@ FROM dependency-base AS production-base
 # if necessary
 COPY . .
 
-RUN pnpm build
+RUN rm -rf .nuxt node_modules .output && \
+    pnpm install --frozen-lockfile && \
+    NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 FROM $NODE_VERSION-slim AS production
 
