@@ -14,7 +14,7 @@ pipeline {
         GITHUB_REPO = 'erp_backend'
         GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
-        DOCKER_IMAGE_NAME = 'tailorw/erp-insis:version'
+        DOCKER_IMAGE_NAME = 'tailorw/erp-innsist:version'
         SRC = 'insis'
         SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
@@ -22,8 +22,8 @@ pipeline {
         NAMESPACE_DEV_QA = 'finamer'
         NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
-        YAML = 'insis.yaml'
-        DEPLOYMENT_NAME = 'insis'
+        YAML = 'innsist.yaml'
+        DEPLOYMENT_NAME = 'innsist'
         URL_DEV = "${URL_K3S_DEV}"
         URL_QA = "${URL_K3S_QA}"
         URL_PROD = "${URL_K3S}"
