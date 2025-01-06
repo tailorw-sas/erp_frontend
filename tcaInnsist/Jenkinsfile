@@ -31,7 +31,7 @@ pipeline {
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
         DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
-        SEND_MAIL = "${SEND_MAIL_STATUS}"
+        SEND_MAIL = 'NO'
     }
 
     triggers {
