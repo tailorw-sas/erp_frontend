@@ -33,6 +33,7 @@ const confApi = reactive({
 
 const fields: Array<FieldDefinitionType> = [
   {
+    tabIndex: 0,
     field: 'code',
     header: 'Code',
     disabled: false,
@@ -42,6 +43,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(5, 'Maximum 5 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
   },
   {
+    tabIndex: 0,
     field: 'name',
     header: 'Name',
     dataType: 'text',
@@ -50,14 +52,19 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    tabIndex: 0,
     field: 'firstDigit',
     header: 'First Digit',
-    dataType: 'text',
+    dataType: 'number',
     class: 'field col-12',
-    headerClass: 'mb-1'
-
+    headerClass: 'mb-1',
+    // validation: z.number().refine(val => +val > 0 , 'Invoice amount must have negative values'),
+    validation: z.number().refine(value => value >= 0 && value <= 9, {
+      message: 'The first digit field must be a single digit between 0 and 9'
+    }).optional(),
   },
   {
+    tabIndex: 0,
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
@@ -66,6 +73,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().max(250, 'Maximum 250 characters')
   },
   {
+    tabIndex: 0,
     field: 'status',
     header: 'Active',
     dataType: 'check',
@@ -239,7 +247,12 @@ async function getItemById(id: string) {
     }
     catch (error) {
       if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Credit card type methods could not be loaded', life: 3000 })
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Credit card type methods could not be loaded',
+          life: 3000
+        })
       }
     }
     finally {
@@ -338,6 +351,7 @@ function requireConfirmationToSave(item: any) {
     })
   }
 }
+
 function requireConfirmationToDelete(event: any) {
   if (!useRuntimeConfig().public.showDeleteConfirm) {
     deleteItem(idItem.value)
@@ -354,7 +368,8 @@ function requireConfirmationToDelete(event: any) {
       accept: () => {
         deleteItem(idItem.value)
       },
-      reject: () => {}
+      reject: () => {
+      }
     })
   }
 }
@@ -416,7 +431,10 @@ onMounted(() => {
     <h5 class="mb-0">
       Manage Credit Card Type
     </h5>
-    <div v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true" class="flex justify-content-end px-0">
+    <div
+      v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
+      class="flex justify-content-end px-0"
+    >
       <Button v-tooltip.left="'Add'" label="Add" icon="pi pi-plus" severity="primary" @click="clearForm" />
     </div>
   </div>
@@ -455,19 +473,24 @@ onMounted(() => {
                 </div>
               </div>
               <div class="flex align-items-center">
-                <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
-                <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :disabled="disabledClearSearch" :loading="loadingSearch" @click="clearFilterToSearch" />
+                <Button
+                  v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
+                  :loading="loadingSearch" @click="searchAndFilter"
+                />
+                <Button
+                  v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                  :disabled="disabledClearSearch" :loading="loadingSearch" @click="clearFilterToSearch"
+                />
               </div>
-            <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
-            </div> -->
-            <!-- <div class="col-12 md:col-5 flex justify-content-end">
-            </div> -->
+              <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
+              </div> -->
+              <!-- <div class="col-12 md:col-5 flex justify-content-end">
+              </div> -->
             </div>
           </AccordionTab>
         </Accordion>
       </div>
       <DynamicTable
-
         :data="listItems"
         :columns="columns"
         :options="options"
@@ -497,7 +520,21 @@ onMounted(() => {
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
-          />
+          >
+            <template #field-firstDigit="{ item: data, onUpdate }">
+              <InputNumber
+                :tabindex="0"
+                v-if="!loadingSaveAll"
+                v-model="data.firstDigit"
+                :use-grouping="false"
+                @update:model-value="($event) => {
+                  onUpdate('firstDigit', $event)
+                  item.firstDigit = $event
+                }"
+              />
+              <Skeleton v-else height="2rem" />
+            </template>
+          </EditFormV2>
         </div>
       </div>
     </div>
