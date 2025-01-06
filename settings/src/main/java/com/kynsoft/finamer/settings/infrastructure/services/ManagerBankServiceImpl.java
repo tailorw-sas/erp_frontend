@@ -105,4 +105,14 @@ public class ManagerBankServiceImpl implements IManagerBankService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public List<ManagerBankDto> findAllToReplicate() {
+        List<ManagerBank> objects = this.repositoryQuery.findAll();
+        List<ManagerBankDto> objectDtos = new ArrayList<>();
+        for (ManagerBank object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+        return objectDtos;
+    }
+
 }
