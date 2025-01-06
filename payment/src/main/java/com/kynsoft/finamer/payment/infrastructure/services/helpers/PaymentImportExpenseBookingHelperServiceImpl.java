@@ -154,15 +154,18 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
             PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
             List<ManageBookingDto> bookingDtos = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
-            Map<String, Double> bookingBalance = entry.getValue().stream().collect(Collectors.toMap(PaymentExpenseBookingImportCache::getBookingId, PaymentExpenseBookingImportCache::getBalance));
+            List<String> transactions = entry.getValue().stream().map(cache -> cache.getTransactionType()).toList();
+            List<Double> balance = entry.getValue().stream().map(cache -> cache.getBalance()).toList();
+            //Map<String, Double> bookingBalance = entry.getValue().stream().collect(Collectors.toMap(PaymentExpenseBookingImportCache::getBookingId, PaymentExpenseBookingImportCache::getBalance));
             double paymentAmount = entry.getValue().stream().mapToDouble(PaymentExpenseBookingImportCache::getBalance).sum();
             ManageBookingDto manageBooking = bookingDtos.get(0);
             ManagePaymentTransactionTypeDto paymentTransactionType = transactionTypeService.findByCode(sampleCache.getTransactionType());
             String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
             UUID paymentId = createPayment(request.getHotelId(), request.getEmployeeId(), manageBooking.getInvoice().getAgency(), paymentAmount);
             createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
-            createPaymentDetails(bookingDtos, paymentTransactionType.getId(), request.getEmployeeId(), paymentId, bookingBalance, remarks);
-
+            createPaymentDetails(bookingDtos, transactions, request.getEmployeeId(), paymentId, balance, remarks);
+            //createPaymentDetails(bookingDtos, transactions, request.getEmployeeId(), paymentId, bookingBalance, remarks);
+            //createPaymentDetails(bookingDtos, paymentTransactionType.getId(), request.getEmployeeId(), paymentId, bookingBalance, remarks);
         }
 
     }
@@ -212,11 +215,21 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         return createPaymentMessage.getPayment().getId();
     }
 
-    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, UUID transactionType, UUID employeeId, UUID paymentId, Map<String, Double> bookingBalance, String remarks) {
-        for (ManageBookingDto manageBookingDto : manageBookingDtos) {
-            CreatePaymentDetailFromFileCommand createPaymentDetailCommand
-                    = new CreatePaymentDetailFromFileCommand(Status.ACTIVE, paymentId, transactionType,
-                            bookingBalance.get(String.valueOf(manageBookingDto.getBookingId())), remarks, employeeId, manageBookingDto.getId(), true, serviceLocator.getBean(IMediator.class));
+    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, List<String> transactions, UUID employeeId, UUID paymentId, List<Double> balance, String remarks) {
+        for (int i = 0; i < manageBookingDtos.size(); i++) {
+        //for (ManageBookingDto manageBookingDto : manageBookingDtos) {
+            CreatePaymentDetailFromFileCommand createPaymentDetailCommand = new CreatePaymentDetailFromFileCommand(
+                            Status.ACTIVE, 
+                            paymentId, 
+                            transactionTypeService.findByCode(transactions.get(i)).getId(),
+                            //bookingBalance.get(String.valueOf(manageBookingDtos.get(i).getBookingId())), 
+                            balance.get(i),
+                            remarks, 
+                            employeeId, 
+                            manageBookingDtos.get(i).getId(), 
+                            true, 
+                            serviceLocator.getBean(IMediator.class)
+                    );
             serviceLocator.getBean(IMediator.class).send(createPaymentDetailCommand);
         }
     }
