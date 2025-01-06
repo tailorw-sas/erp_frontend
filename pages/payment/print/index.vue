@@ -463,7 +463,6 @@ onMounted(async () => {
         >
           <template #column-icon="{ data: objData, column }">
             <div class="flex align-items-center justify-content-center p-0 m-0">
-              <!-- <pre>{{ objData }}</pre> -->
               <Button
                 v-if="showInconAttachment(objData)"
                 :icon="column.icon"
@@ -473,8 +472,6 @@ onMounted(async () => {
                 :style="{ color: objData.color }"
               />
             </div>
-            <!-- style="color: #616161;" -->
-            <!-- :style="{ 'background-color': '#00b816' }" -->
           </template>
 
           <template #column-paymentStatus="{ data, column }">
