@@ -73,6 +73,7 @@ const options = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -84,7 +85,7 @@ const payload = ref<IQueryRequest>({
     logicalOperation: 'AND'
   }],
   query: '',
-  pageSize: 50,
+  pageSize: 1000,
   page: 0,
   sortBy: 'row.rowNumber',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -456,7 +457,7 @@ onMounted(async () => {
         </template>
       </DynamicTable>
 
-      <div class="flex align-items-end justify-content-end">
+      <div class="flex align-items-end justify-content-end mt-2">
         <Button
           v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
           :loading="options.loading"
