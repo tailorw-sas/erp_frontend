@@ -16,6 +16,7 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentExpenseBookingImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
+import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingHelper;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -154,18 +155,19 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
             PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
             List<ManageBookingDto> bookingDtos = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
-            List<String> transactions = entry.getValue().stream().map(cache -> cache.getTransactionType()).toList();
-            List<Double> balance = entry.getValue().stream().map(cache -> cache.getBalance()).toList();
-            //Map<String, Double> bookingBalance = entry.getValue().stream().collect(Collectors.toMap(PaymentExpenseBookingImportCache::getBookingId, PaymentExpenseBookingImportCache::getBalance));
+            List<PaymentExpenseBookingHelper> data = entry.getValue().stream().map(cache -> 
+                    new PaymentExpenseBookingHelper(
+                            cache.getTransactionType(), 
+                            cache.getBalance(), 
+                            cache.getRemarks()
+                    )).toList();
             double paymentAmount = entry.getValue().stream().mapToDouble(PaymentExpenseBookingImportCache::getBalance).sum();
             ManageBookingDto manageBooking = bookingDtos.get(0);
-            ManagePaymentTransactionTypeDto paymentTransactionType = transactionTypeService.findByCode(sampleCache.getTransactionType());
-            String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
+//            ManagePaymentTransactionTypeDto paymentTransactionType = transactionTypeService.findByCode(sampleCache.getTransactionType());
+//            String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
             UUID paymentId = createPayment(request.getHotelId(), request.getEmployeeId(), manageBooking.getInvoice().getAgency(), paymentAmount);
             createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
-            createPaymentDetails(bookingDtos, transactions, request.getEmployeeId(), paymentId, balance, remarks);
-            //createPaymentDetails(bookingDtos, transactions, request.getEmployeeId(), paymentId, bookingBalance, remarks);
-            //createPaymentDetails(bookingDtos, paymentTransactionType.getId(), request.getEmployeeId(), paymentId, bookingBalance, remarks);
+            createPaymentDetails(bookingDtos, request.getEmployeeId(), paymentId, data);
         }
 
     }
@@ -215,16 +217,17 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         return createPaymentMessage.getPayment().getId();
     }
 
-    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, List<String> transactions, UUID employeeId, UUID paymentId, List<Double> balance, String remarks) {
+    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, UUID employeeId, UUID paymentId, List<PaymentExpenseBookingHelper> data) {
         for (int i = 0; i < manageBookingDtos.size(); i++) {
         //for (ManageBookingDto manageBookingDto : manageBookingDtos) {
             CreatePaymentDetailFromFileCommand createPaymentDetailCommand = new CreatePaymentDetailFromFileCommand(
                             Status.ACTIVE, 
                             paymentId, 
-                            transactionTypeService.findByCode(transactions.get(i)).getId(),
+                            //transactionTypeService.findByCode(transactions.get(i)).getId(),
+                            transactionTypeService.findByCode(data.get(i).getTransactionType()).getId(),
                             //bookingBalance.get(String.valueOf(manageBookingDtos.get(i).getBookingId())), 
-                            balance.get(i),
-                            remarks, 
+                            data.get(i).getBalance(),
+                            data.get(i).getRemark(), 
                             employeeId, 
                             manageBookingDtos.get(i).getId(), 
                             true, 
