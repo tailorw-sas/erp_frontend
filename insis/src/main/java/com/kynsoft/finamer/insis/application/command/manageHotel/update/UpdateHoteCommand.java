@@ -15,13 +15,15 @@ import java.util.UUID;
 public class UpdateHoteCommand implements ICommand {
 
     private UUID id;
+    private String code;
     private String name;
     private String status;
     private LocalDateTime updatedAt;
     private UUID tradingCompanyId;
 
-    public UpdateHoteCommand(UUID id, String name, String status, UUID tradingCompanyId){
+    public UpdateHoteCommand(UUID id, String code, String name, String status, UUID tradingCompanyId){
         this.id = Objects.nonNull(id) ? id:UUID.randomUUID();
+        this.code = code;
         this.name = name;
         this.status = status;
         this.updatedAt = LocalDateTime.now();

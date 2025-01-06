@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.insis.infrastructure.services.kafka.consumer.manageHotel;
 
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageHotelKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageHotelKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.insis.application.command.manageHotel.update.UpdateHoteCommand;
@@ -18,10 +19,11 @@ public class ConsumerUpdateManageHotelService {
     }
 
     @KafkaListener(topics = "finamer-update-manage-hotel", groupId = "innsist-entity-replica")
-    public void listen(UpdateManageHotelKafka entity){
+    public void listen(ReplicateManageHotelKafka entity){
         try {
             UpdateHoteCommand command = new UpdateHoteCommand(
                     entity.getId(),
+                    entity.getCode(),
                     entity.getName(),
                     entity.getStatus(),
                     entity.getManageTradingCompany()
