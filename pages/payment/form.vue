@@ -368,7 +368,7 @@ const columns: IColumn[] = [
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-  { field: 'reservationNumber', header: 'Reservation No.', width: '150px', maxWidth: '150px', tooltip: 'Reservation', width: 'auto', type: 'text' },
+  { field: 'reservationNumber', header: 'Reservation No.', width: '150px', maxWidth: '150px', tooltip: 'Reservation', type: 'text' },
   { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: '140px', maxWidth: '140px', type: 'text' },
   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
