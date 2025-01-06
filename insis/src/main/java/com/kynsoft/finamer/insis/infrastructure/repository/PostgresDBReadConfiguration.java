@@ -37,7 +37,7 @@ public class PostgresDBReadConfiguration {
     public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean(EntityManagerFactoryBuilder builder,
             @Qualifier("readDataSource") DataSource dataSource) {
         return builder.dataSource(dataSource)
-                .packages("com.kynsoft.finamer.insis.infrastructure.identity")
+                .packages("com.kynsoft.finamer.insis.infrastructure.model")
                 .persistenceUnit("ReadDB").build();
     }
 

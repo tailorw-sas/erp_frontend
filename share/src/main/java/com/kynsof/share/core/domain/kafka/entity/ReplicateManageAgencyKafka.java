@@ -47,4 +47,5 @@ public class ReplicateManageAgencyKafka implements Serializable {
     private Integer creditDay;
     private Boolean autoReconcile;
     private Boolean validateCheckout;
+    private String agencyAlias;
 }
