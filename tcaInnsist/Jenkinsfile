@@ -14,7 +14,7 @@ pipeline {
         GITHUB_REPO = 'erp_backend'
         GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
-        DOCKER_IMAGE_NAME = 'tailorw/erp-tcaInnsist:version'
+        DOCKER_IMAGE_NAME = 'tailorw/erp-tcainnsist:version'
         SRC = 'tcaInnsist'
         SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
