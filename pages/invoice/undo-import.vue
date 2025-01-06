@@ -667,6 +667,28 @@ async function getRoomRateList(invoiceId: string = '') {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
+      let roomTypeTemp = ''
+      if (iterator?.booking?.roomType && iterator?.booking?.roomType?.name && iterator?.booking?.roomType?.code) {
+        roomTypeTemp = `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}`
+      }
+      else if (iterator?.booking?.roomType && iterator?.booking?.roomType?.name && !iterator?.booking?.roomType?.code) {
+        roomTypeTemp = `${iterator?.booking?.roomType?.name || ''}`
+      }
+      else if (iterator?.booking?.roomType && !iterator?.booking?.roomType?.name && iterator?.booking?.roomType?.code) {
+        roomTypeTemp = `${iterator?.booking?.roomType?.code || ''}`
+      }
+
+      let ratePlanTemp = ''
+      if (iterator?.booking?.ratePlan && iterator?.booking?.ratePlan?.name && iterator?.booking?.ratePlan?.code) {
+        ratePlanTemp = `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}`
+      }
+      else if (iterator?.booking?.ratePlan && iterator?.booking?.ratePlan?.name && !iterator?.booking?.ratePlan?.code) {
+        ratePlanTemp = `${iterator?.booking?.ratePlan?.name || ''}`
+      }
+      else if (iterator?.booking?.ratePlan && !iterator?.booking?.ratePlan?.name && iterator?.booking?.ratePlan?.code) {
+        ratePlanTemp = `${iterator?.booking?.ratePlan?.code || ''}`
+      }
+
       listRoomRateTemp = [...listRoomRateTemp, {
         ...iterator,
         firstName: iterator?.booking?.firstName,
@@ -675,8 +697,10 @@ async function getRoomRateList(invoiceId: string = '') {
         checkOut: iterator?.checkOut ? dayjs(iterator?.checkOut).format('YYYY-MM-DD') : '',
         children: iterator?.children || 0,
         adults: iterator?.adults || 0,
-        roomType: iterator?.booking?.roomType ? { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` } : null,
-        ratePlan: iterator?.booking?.ratePlan ? { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` } : null,
+        // roomType: iterator?.booking?.roomType ? { ...iterator.booking.roomType, name: `${iterator?.booking?.roomType?.code || ''}-${iterator?.booking?.roomType?.name || ''}` } : null,
+        // ratePlan: iterator?.booking?.ratePlan ? { ...iterator.booking.ratePlan, name: `${iterator?.booking?.ratePlan?.code || ''}-${iterator?.booking?.ratePlan?.name || ''}` } : null,
+        roomType: roomTypeTemp,
+        ratePlan: ratePlanTemp,
         invoiceAmount: formatNumber(iterator?.invoiceAmount) || 0,
         hotelAmount: formatNumber(iterator?.hotelAmount) || 0,
       }]
