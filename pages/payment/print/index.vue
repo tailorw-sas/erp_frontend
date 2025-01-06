@@ -445,7 +445,7 @@ onMounted(async () => {
 
 <template>
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    Invoice to Print
+    Payments to Print
   </div>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-2">
@@ -540,7 +540,6 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
-          <pre>{{ paymentSelectedForPrintList }}</pre>
           <EditFormV2
             :key="formReload"
             class="mt-3"
