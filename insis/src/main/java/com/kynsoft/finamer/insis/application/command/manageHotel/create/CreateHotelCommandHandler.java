@@ -39,7 +39,7 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
     @Override
     public void handle(CreateHotelCommand command) {
         ManageHotelDto dto = getHotelIfExits(command.getId());
-        if(Objects.nonNull(getHotelIfExits(command.getId()))){
+        if(getHotelIfExits(command.getId()) != null){
             ManageTradingCompanyDto tradingCompanyDto = tradingCompanyService.findById(command.getTradingCompany());
 
             ConsumerUpdate update = new ConsumerUpdate();
