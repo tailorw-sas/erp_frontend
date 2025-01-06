@@ -422,6 +422,7 @@ async function openDialogPrint() {
 }
 
 async function closeDialogPrint() {
+  openPrint.value = false
   navigateTo({ path: '/payment' })
 }
 
@@ -617,7 +618,11 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+              <Button
+                v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="() => {
+                  navigateTo('/payment')
+                }"
+              />
             </template>
           </EditFormV2>
         </div>
