@@ -413,7 +413,6 @@ async function paymentPrint(event: any) {
   }
   finally {
     loadingPrintDetail.value = false
-    openPrint.value = false
   }
 }
 
@@ -521,7 +520,7 @@ onMounted(async () => {
         //   style: 'backdrop-filter: blur(5px)',
         // },
       }"
-      @hide="closeDialogPrint()"
+      @hide="closeDialogPrint"
     >
       <template #header>
         <div class="flex justify-content-between w-full">
