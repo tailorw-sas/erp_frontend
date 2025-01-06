@@ -79,8 +79,8 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  // sortBy: 'name',
-  // sortType: ENUM_SHORT_TYPE.ASC
+  sortBy: '',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 
 const payloadOnChangePage = ref<PageState>()
