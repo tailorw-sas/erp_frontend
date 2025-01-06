@@ -36,13 +36,14 @@ public class ConsumerCreateIncomeTransactionService {
     private final IPaymentDetailService detailService;
     private final InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil;
     private final IManageAttachmentTypeService attachmentTypeService;
+    private final IManageResourceTypeService resourceTypeService;
 
     public ConsumerCreateIncomeTransactionService(IMediator mediator, IManageInvoiceService manageInvoiceService,
                                                   ProducerCreateIncomeTransactionSuccess producerCreateIncomeTransactionSuccess,
                                                   ProducerCreateIncomeTransactionFailed producerCreateIncomeTransactionFailed,
                                                   IPaymentService paymentService,
                                                   IPaymentDetailService detailService,
-                                                  IManageBookingService manageBookingService, InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService) {
+                                                  IManageBookingService manageBookingService, InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService) {
 
         this.mediator = mediator;
         this.manageInvoiceService = manageInvoiceService;
@@ -53,6 +54,7 @@ public class ConsumerCreateIncomeTransactionService {
         this.manageBookingService = manageBookingService;
         this.invoiceUploadAttachmentUtil = invoiceUploadAttachmentUtil;
         this.attachmentTypeService = attachmentTypeService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     @KafkaListener(topics = "finamer-create-income-transaction", groupId = "invoicing-entity-replica")
@@ -174,10 +176,17 @@ public class ConsumerCreateIncomeTransactionService {
             return null;
         }
         ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findDefault().orElse(null);
-        //todo: cargar un resource type
+        ResourceTypeDto resourceTypeDto = this.resourceTypeService.findByDefaults();
+
         List<CreateIncomeAttachmentRequest> attachments = new ArrayList<>();
         attachments.add(new CreateIncomeAttachmentRequest(
-                filename, file, "From payment.", attachmentTypeDto.getId(), null, null, null
+                filename,
+                file,
+                "From payment.",
+                attachmentTypeDto != null ? attachmentTypeDto.getId() : null,
+                null,
+                null,
+                resourceTypeDto != null ? resourceTypeDto.getId() : null
         ));
         return attachments;
     }
