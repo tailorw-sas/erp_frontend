@@ -80,10 +80,8 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
     private ManageHotelDto getHotelIfExits(UUID id){
         try{
             return service.findById(id);
-        }catch (BusinessNotFoundException ex){
-            return null;
         }catch (Exception ex){
-            throw new RuntimeException(ex.toString());
+            return null;
         }
     }
 
