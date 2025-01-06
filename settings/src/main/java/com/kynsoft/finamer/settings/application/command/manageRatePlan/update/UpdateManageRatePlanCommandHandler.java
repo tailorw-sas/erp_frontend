@@ -13,6 +13,7 @@ import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRatePlan.ProducerReplicateManageRatePlanService;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
@@ -49,7 +50,7 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(test.getId(), test.getCode(), test.getName(), test.getStatus().name()));
+            this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(test.getId(), test.getCode(), test.getName(), test.getStatus().name(), Objects.nonNull(test.getHotel()) ? test.getHotel().getId() : null));
         }
 
     }

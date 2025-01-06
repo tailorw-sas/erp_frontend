@@ -123,7 +123,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
         Page<PaymentImportCache> cacheList;
         if (!paymentImportErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
             do {

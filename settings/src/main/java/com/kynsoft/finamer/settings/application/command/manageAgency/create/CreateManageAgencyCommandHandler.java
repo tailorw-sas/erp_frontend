@@ -84,7 +84,8 @@ public class CreateManageAgencyCommandHandler implements ICommandHandler<CreateM
                 command.getCity(),
                 command.getCreditDay(),
                 command.getAutoReconcile(),
-                command.getValidateCheckout()
+                command.getValidateCheckout(),
+                command.getAgencyAlias()
         ));
     }
 }
