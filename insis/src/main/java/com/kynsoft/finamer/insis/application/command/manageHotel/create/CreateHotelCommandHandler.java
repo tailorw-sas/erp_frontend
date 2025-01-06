@@ -38,7 +38,8 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
 
     @Override
     public void handle(CreateHotelCommand command) {
-        if(getHotelIfExits(command.getId()) != null){
+        ManageHotelDto dto = getHotelIfExits(command.getId());
+        if(Objects.nonNull(dto)){
             ManageTradingCompanyDto tradingCompanyDto = tradingCompanyService.findById(command.getTradingCompany());
 
             ConsumerUpdate update = new ConsumerUpdate();
@@ -50,6 +51,8 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
             updateTradingCompanies(dto::setManageTradingCompany, tradingCompanyDto.getId(), dto.getManageTradingCompany().getId(), updateTradingCompany::setUpdate);
 
             service.update(dto);
+
+            ReplicateManageHotel(dto);
         }else{
             ManageTradingCompanyDto tradingCompanyDto = tradingCompanyService.findById(command.getTradingCompany());
             ManageHotelDto hotelDto = new ManageHotelDto(
@@ -61,8 +64,11 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
                     null,
                     tradingCompanyDto
             );
+            ReplicateManageHotel(hotelDto);
         }
+    }
 
+    private void ReplicateManageHotel(ManageHotelDto dto){
         InnsistHotelRoomTypeDto tradingCompanyHotelDto = tradingCompanyHotelService.findByHotelAndActive(dto.getId(), "ACTIVE");
 
         ReplicateManageHotelKafka replicateManageHotelKafka = new ReplicateManageHotelKafka(
@@ -73,7 +79,6 @@ public class CreateHotelCommandHandler implements ICommandHandler<CreateHotelCom
                 dto.getManageTradingCompany().getId()
         );
         producerReplicateManageHotelService.create(replicateManageHotelKafka);
-
     }
 
     private ManageHotelDto getHotelIfExits(UUID id){
