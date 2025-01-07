@@ -82,6 +82,10 @@ const confResourceApi = reactive({
   moduleApi: 'payment',
   uriApi: 'resource-type',
 })
+const confResourceTypeOfInvoiceApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
+})
 const confReconcileApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice/reconcile-manual',
@@ -275,12 +279,12 @@ async function getResource() {
   try {
     const payload = {
       filter: [
-        {
-          key: 'invoice',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'AND'
-        }
+        // {
+        //   key: 'invoice',
+        //   operator: 'EQUALS',
+        //   value: true,
+        //   logicalOperation: 'AND'
+        // }
       ],
       query: '',
       pageSize: 20,
@@ -289,7 +293,7 @@ async function getResource() {
       sortType: ENUM_SHORT_TYPE.DESC
     }
 
-    const response = await GenericService.search(confResourceApi.moduleApi, confResourceApi.uriApi, payload)
+    const response = await GenericService.search(confResourceTypeOfInvoiceApi.moduleApi, confResourceTypeOfInvoiceApi.uriApi, payload)
     const { data: dataList } = response
 
     // Verificar si hay resultados
