@@ -266,7 +266,6 @@ const ENUM_FILTER = [
 ]
 
 async function openEditDialog(item: any) {
-  console.log(item)
   props.openDialog()
   if (item?.id) {
     idItem.value = item?.id
@@ -294,7 +293,7 @@ const Options = ref({
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
-
+  showPagination: false
 })
 
 const route = useRoute()
@@ -303,14 +302,14 @@ const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'adjustmentId',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -392,7 +391,7 @@ function searchAndFilter() {
   Payload.value = {
     filter: [],
     query: '',
-    pageSize: 50,
+    pageSize: 1000,
     page: 0,
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
@@ -412,7 +411,7 @@ function clearFilterToSearch() {
   Payload.value = {
     filter: [],
     query: '',
-    pageSize: 50,
+    pageSize: 1000,
     page: 0,
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
@@ -595,7 +594,7 @@ async function getTransactionTypeList(query = '') {
           }
         ],
         query: '',
-        pageSize: 200,
+        pageSize: 1000,
         page: 0,
         sortBy: 'createdAt',
         sortType: ENUM_SHORT_TYPE.DESC
@@ -662,7 +661,6 @@ function OnSortField(event: any) {
 
 function openDialog() {
   dialogOpen.value = true
-  console.log(dialogOpen)
 }
 
 watch(() => props.forceUpdate, () => {
@@ -683,7 +681,7 @@ watch(() => props.listItems, () => {
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
-  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 1000
   getAdjustmentList()
 })
 
