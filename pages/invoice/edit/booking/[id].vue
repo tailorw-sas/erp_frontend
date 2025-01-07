@@ -1826,7 +1826,6 @@ watch(payloadOnChangePageRoomRate, (newValue) => {
 })
 
 onMounted(async () => {
-  console.log(route)
   // filterToSearch.value.criterial = ENUM_FILTER[0]
   // //@ts-ignore
   // await getItemById(route.params.id.toString())
