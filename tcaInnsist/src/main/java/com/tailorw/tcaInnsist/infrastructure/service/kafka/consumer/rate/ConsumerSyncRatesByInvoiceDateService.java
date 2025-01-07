@@ -22,6 +22,7 @@ public class ConsumerSyncRatesByInvoiceDateService {
     private final IMediator mediator;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private Logger logger = Logger.getLogger(ConsumerSyncRatesByInvoiceDateService.class.getName());
 
     public ConsumerSyncRatesByInvoiceDateService(IMediator mediator){
         this.mediator = mediator;
@@ -30,12 +31,14 @@ public class ConsumerSyncRatesByInvoiceDateService {
     @KafkaListener(topics = "finamer-sync-rates-by-date", groupId = "tcaInnsist-replicate-entity")
     public void listen(String message){
         try{
-            System.out.println(String.format("Ingreso a ConsumerSyncRatesByInvoiceDateService. Data: %s", message));
+            logInfo(String.format("Ingreso a ConsumerSyncRatesByInvoiceDateService. Data: %s", message));
             ObjectMapper mapper = new ObjectMapper();
             SyncRatesByInvoiceDateKafka objKafka = mapper.readValue(message, new TypeReference<SyncRatesByInvoiceDateKafka>() {});
 
             int count = 1;
             for(String hotel : objKafka.getHotels()){
+                logInfo(String.format("Rates By InvoiceDate Sync start. Hotel: %s", hotel));
+
                 SycnRateByInvoiceDateCommand command = new SycnRateByInvoiceDateCommand(
                         objKafka.getProcessId(),
                         hotel,
@@ -50,5 +53,9 @@ public class ConsumerSyncRatesByInvoiceDateService {
         }catch (Exception ex){
             Logger.getLogger(ConsumerSyncRatesByInvoiceDateService.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void logInfo(String message){
+        logger.log(Level.INFO, message);
     }
 }

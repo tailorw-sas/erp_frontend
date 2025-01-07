@@ -22,6 +22,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,6 +66,8 @@ public class RateServiceImpl implements IRateService {
         configurationProperties.setUserName(encryptionService.decrypt(configurationDto.getUserName()));
         configurationProperties.setPassword(encryptionService.decrypt(configurationDto.getPassword()));
 
+        Logger.getLogger(RateServiceImpl.class.getName()).log(Level.INFO, String.format("ConnectionProperties. User: %s, Pass: %s Bdd: %s, IP: %s, Puerto: %s", configurationProperties.getUserName(), configurationProperties.getPassword(), configurationProperties.getDbName(), configurationProperties.getId(), configurationProperties.getPort()));
+
         List<RateDto> rateDtos = manageRateRepository.findByInvoiceCreatedAt(configurationProperties, invoiceDate, hotelDto.getRoomType()).stream()
                 .map(Rate::toAggregate)
                 .collect(Collectors.toList());
@@ -87,21 +91,6 @@ public class RateServiceImpl implements IRateService {
 
     @Override
     public boolean validateRate(ManageRateDto newRate, ManageRateDto oldRate){
-        /*boolean replicateRate = false;
-
-        if(Objects.isNull(oldRate)){
-            replicateRate = true;
-        }
-
-        if(Objects.nonNull(oldRate)){
-            if(!oldRate.getHash().equals(newRate.getHash())){
-                replicateRate = true;
-            }
-        }
-
-        return replicateRate;
-         */
-
         return oldRate == null || !Objects.equals(oldRate.getHash(), newRate.getHash());
     }
 
