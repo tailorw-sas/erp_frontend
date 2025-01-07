@@ -17,4 +17,5 @@ public class ReplicateManageRoomTypeKafka {
     private String code;
     private String name;
     private String status;
+    private UUID manageHotel;
 }

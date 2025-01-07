@@ -407,6 +407,26 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_ATTACHMENT_TYPE_NOT_FOUND_(1184, Series.DOMAIN_ERROR, "The attachment type not found."),
     MANAGE_RESOURCE_TYPE_DEFAULT(1185, Series.DOMAIN_ERROR,"Another item already exists with default."),
     MANAGE_RESOURCE_TYPE_DEFAULT_NOT_FOUND(1186, Series.DOMAIN_ERROR,"There is no resource type by default.");
+    INNSIST_CONNECTION_PARAMETER_HOSTNAME_INVALID(2000, Series.DOMAIN_ERROR, "The hostname value is not accepted."),
+    INNSIST_CONNECTION_PARAMETER_PORT_NUMBER_INVALID(2001, Series.DOMAIN_ERROR, "The port number must be between 0 and 65535"),
+    INNSIST_TRADING_COMPANY_HOTEL_ROOM_TYPE_PREFIX_CHECK_SIZE(2002, Series.DOMAIN_ERROR, "The size of room type must be 1 character."),
+    INNSIST_TRADING_COMPANY_HOTEL_ROOM_TYPE_PREFIX_EXISTS(2003, Series.DOMAIN_ERROR, "The room type already exists assigned to another hotel"),
+    INNSIST_CONNECTION_PARAMETER_WITHOUT_TRADING_COMPANY(2004, Series.DOMAIN_ERROR, "The connection parameter must be associated with a trading company."),
+    SCHEDULER_STATUS_CODE_NOT_FOUND(2005, Series.DOMAIN_ERROR, "SchedulerStatus not found"),
+    BUSINESS_PROCESS_NOT_FOUND(2006, Series.DOMAIN_ERROR, "BusinessProcess not found"),
+    BUSINESS_PROCESS_CODE_MUST_BE_UNIQUE(2007, Series.DOMAIN_ERROR, "Business Process Code must be unique"),
+    BUSINESS_PROCESS_HAS_SCHEDULERS(2008, Series.DOMAIN_ERROR, "Business Process has Business Process Schedulers configured"),
+    BUSINESS_PROCESS_IS_INACTIVE(2009, Series.DOMAIN_ERROR, "The Business Process is inactive and cannot be used."),
+    BUSINESS_PROCESS_SCHEDULER_NOT_FOUND(2010, Series.DOMAIN_ERROR, "BusinessProcessScheduler not found"),
+    BUSINESS_PROCESS_SCHEDULER_FRECUENCY_TYPE_NOT_FOUND(2011, Series.DOMAIN_ERROR, "Frecuency type not found"),
+    BUSINESS_PROCESS_SCHEDULER_INTERVAL_TYPE_NOT_FOUND(2012, Series.DOMAIN_ERROR, "Interval type not found"),
+    BUSINESS_PROCESS_SCHEDULER_EXECUTION_DATE_TYPE_NOT_FOUND(2013, Series.DOMAIN_ERROR, "Execution Date type not found"),
+    BUSINESS_PROCESS_SCHEDULER_PROCESSING_DATE_TYPE_NOT_FOUND(2014, Series.DOMAIN_ERROR, "Processing Date type not found"),
+    BUSINESS_PROCESS_SCHEDULER_EXECUTION_DATE_FORMAT_IS_NOT_VALID(2015, Series.DOMAIN_ERROR, "Execution Date format is not valid"),
+    BUSINESS_PROCESS_SCHEDULER_EXECUTION_TIME_FORMAT_IS_NOT_VALID(2016, Series.DOMAIN_ERROR, "Execution Time format is not valid"),
+    BUSINESS_PROCESS_SCHEDULER_PROCESSING_DATE_FORMAT_IS_NOT_VALID(2017, Series.DOMAIN_ERROR, "Processing Date format is not valid"),
+    BUSINESS_PROCESS_SCHEDULER_RULE_NOT_FOUND(2018, Series.DOMAIN_ERROR, "Business Process Scheduler Rule not found"),
+    ;
 
     private static final DomainErrorMessage[] VALUES;
 

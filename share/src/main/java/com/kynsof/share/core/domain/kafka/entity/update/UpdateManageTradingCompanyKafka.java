@@ -18,5 +18,5 @@ public class UpdateManageTradingCompanyKafka {
     private String cif;
     private String address;
     private String company;
-
+    private String innsistCode;
 }
