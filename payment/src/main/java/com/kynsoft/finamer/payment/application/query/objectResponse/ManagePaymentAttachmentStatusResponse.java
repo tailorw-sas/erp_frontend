@@ -22,6 +22,7 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
     private boolean patWithAttachment;
     private boolean pwaWithOutAttachment;
     private boolean supported;
+    private boolean otherSupport;
 
     public ManagePaymentAttachmentStatusResponse(ManagePaymentAttachmentStatusDto dto) {
         this.id = dto.getId();
@@ -33,6 +34,7 @@ public class ManagePaymentAttachmentStatusResponse implements IResponse {
         this.patWithAttachment = dto.isPatWithAttachment();
         this.pwaWithOutAttachment = dto.isPwaWithOutAttachment();
         this.supported = dto.isSupported();
+        this.otherSupport = dto.isOtherSupport();
     }
 
     public ManagePaymentAttachmentStatusResponse() {

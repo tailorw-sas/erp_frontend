@@ -124,7 +124,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         if (!command.isIgnoreBankAccount() || !paymentSourceDto.getExpense()) {
             bankAccountDto = this.bankAccountService.findById(command.getBankAccount());
         }
-        ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
+        //ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
+        ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByNonNone();
 
         PaymentDto paymentDto = new PaymentDto(
                 command.getId(),
@@ -186,6 +187,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
         ManagePaymentAttachmentStatusDto attachmentStatusSupport = this.attachmentStatusService.findBySupported();
         ManagePaymentAttachmentStatusDto attachmentStatusNonNone = this.attachmentStatusService.findByNonNone();
+        ManagePaymentAttachmentStatusDto attachmentOtherSupport = this.attachmentStatusService.findByOtherSupported();
         Integer countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
         for (CreateAttachmentRequest attachment : attachments) {
             AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
@@ -206,7 +208,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 countDefaults++;
                 newAttachmentDto.setStatusHistory(attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName());
             } else {
-                newAttachmentDto.setStatusHistory(attachmentStatusNonNone.getCode() + "-" + attachmentStatusNonNone.getName());
+                //newAttachmentDto.setStatusHistory(attachmentStatusNonNone.getCode() + "-" + attachmentStatusNonNone.getName());
+                newAttachmentDto.setStatusHistory(attachmentOtherSupport.getCode() + "-" + attachmentOtherSupport.getName());
             }
             dtos.add(newAttachmentDto);
         }
@@ -219,8 +222,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             paymentDto.setAttachmentStatus(attachmentStatusSupport);
             //paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
         } else {
-            paymentDto.setAttachmentStatus(attachmentStatusNonNone);
-            //paymentDto.setAttachmentStatus(this.attachmentStatusService.findByNonNone());
+            paymentDto.setAttachmentStatus(attachmentOtherSupport);
+            //paymentDto.setAttachmentStatus(attachmentStatusNonNone);
             paymentDto.setPaymentSupport(false);
         }
 
