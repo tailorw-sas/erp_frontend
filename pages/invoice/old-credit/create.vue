@@ -535,6 +535,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = item.hotel?.id
     payload.agency = item.agency?.id
     payload.invoiceType = InvoiceType.OLD_CREDIT
+    payload.resourceType = typeof item.resourceType === 'object' ? item.resourceType.id : item.resourceType
 
     if (invoiceAmount.value === 0) {
       throw new Error('The Invoice amount field cannot be 0')
@@ -615,6 +616,7 @@ async function createItem(item: { [key: string]: any }) {
           ...attachmentList.value[i],
           type: attachmentList.value[i]?.type?.id,
           file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+          paymentResourceType: attachmentList.value[i]?.resourceType.id || ''
         })
       }
     }
