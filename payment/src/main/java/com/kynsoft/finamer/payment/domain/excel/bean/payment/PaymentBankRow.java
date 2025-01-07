@@ -18,6 +18,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentBankRow extends Row implements Serializable {
+
     @Cell(position = -1, headerName = "")
     protected int rowNumber;
     @Cell(position = 0, headerName = "Agency")
@@ -28,13 +29,12 @@ public class PaymentBankRow extends Row implements Serializable {
     private String bankAccount;
     @Cell(position = 3, cellType = CustomCellType.NUMERIC, headerName = "Payment Amount")
     private Double amount;
-    @Cell(position = 4, headerName = "Remarks")
+    @Cell(position = 4, cellType = CustomCellType.DATAFORMAT, headerName = "Remarks")
     private String remarks;
     @Cell(position = 5, cellType = CustomCellType.DATAFORMAT, headerName = "Transaction Date")
     private String transactionDate;
 
     private String manageClientCode;
-
 
     public PaymentDto toAggregate() {
         PaymentDto paymentDto = new PaymentDto();

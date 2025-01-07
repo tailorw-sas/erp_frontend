@@ -35,6 +35,7 @@ public class ManageInvoiceSearchResponse {
     private Double originalAmount;
     private ImportType importType;
     private boolean cloneParent;
+    private Integer aging;
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
@@ -60,6 +61,7 @@ public class ManageInvoiceSearchResponse {
         this.originalAmount = projection.getOriginalAmount() != null ? projection.getOriginalAmount() : null;
         this.importType = projection.getImportType();
         this.cloneParent = projection.isCloneParent();
+        this.aging = projection.getAging();
     }
 
     private String deleteHotelInfo(String input) {

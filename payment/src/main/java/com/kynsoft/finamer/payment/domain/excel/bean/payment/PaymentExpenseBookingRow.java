@@ -23,7 +23,7 @@ public class PaymentExpenseBookingRow extends Row implements Serializable {
     private String transactionType;
     @Cell(position = 2,cellType = CustomCellType.NUMERIC)
     private Double balance;
-    @Cell(position = 3)
+    @Cell(position = 3,cellType = CustomCellType.DATAFORMAT)
     private String remarks;
 
     private String hotelId;
