@@ -492,21 +492,21 @@ const Options = ref({
   showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
-
+  showPagination: false
 })
 
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'roomRateId',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -639,7 +639,6 @@ async function GetItemById(id: string) {
     if (props.isCreationDialog) {
       // @ts-expect-error
       const element: any = props.listItems.find((item: any) => item.id === id)
-      console.log(element)
       item.value.id = element.id
       item.value.roomRateId = element.roomRateId
       item.value.checkIn = new Date(element.checkIn)
@@ -730,7 +729,6 @@ async function saveRoomRate(item: { [key: string]: any }) {
     }
   }
 
-  console.log(item)
   loadingSaveAll.value = true
   let successOperation = true
   item.nights = dayjs(item.checkOut).endOf('day').diff(dayjs(item.checkIn).startOf('day'), 'day', false)
@@ -832,7 +830,7 @@ function OnSortField(event: any) {
 
 watch(PayloadOnChangePage, (newValue) => {
   Payload.value.page = newValue?.page ? newValue?.page : 0
-  Payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  Payload.value.pageSize = newValue?.rows ? newValue.rows : 1000
   getRoomRateList()
 })
 
