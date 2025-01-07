@@ -23,7 +23,7 @@ pipeline {
         NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
         YAML = 'tcaInnsist.yaml'
-        DEPLOYMENT_NAME = 'tcaInnsist'
+        DEPLOYMENT_NAME = 'tca-innsist'
         URL_DEV = "${URL_K3S_DEV}"
         URL_QA = "${URL_K3S_QA}"
         URL_PROD = "${URL_K3S}"
