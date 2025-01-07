@@ -31,4 +31,6 @@ public interface IManagePaymentAttachmentStatusService {
     ManagePaymentAttachmentStatusDto findByPwaWithOutAttachment();
 
     ManagePaymentAttachmentStatusDto findBySupported();
+
+    ManagePaymentAttachmentStatusDto findByOtherSupported();
 }
