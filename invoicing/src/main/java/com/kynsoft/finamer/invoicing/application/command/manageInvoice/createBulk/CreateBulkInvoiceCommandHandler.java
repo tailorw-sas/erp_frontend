@@ -14,6 +14,7 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHot
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceValidateClienteRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -121,6 +122,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         StringBuilder hotelBookingNumber = new StringBuilder();
         for (int i = 0; i < command.getBookingCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageRoomRateCheckInCheckOutRule(
+                    command.getBookingCommands().get(i).getCheckIn(),
+                    command.getBookingCommands().get(i).getCheckOut()));
 
             if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2
                     && command.getInvoiceCommand().getInvoiceType() != null
