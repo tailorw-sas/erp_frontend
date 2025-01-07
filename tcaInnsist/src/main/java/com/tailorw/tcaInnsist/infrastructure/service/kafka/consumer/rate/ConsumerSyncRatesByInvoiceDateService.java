@@ -30,6 +30,7 @@ public class ConsumerSyncRatesByInvoiceDateService {
     @KafkaListener(topics = "finamer-sync-rates-by-date", groupId = "tcaInnsist-replicate-entity")
     public void listen(String message){
         try{
+            System.out.println(String.format("Ingreso a ConsumerSyncRatesByInvoiceDateService. Data: %s", message));
             ObjectMapper mapper = new ObjectMapper();
             SyncRatesByInvoiceDateKafka objKafka = mapper.readValue(message, new TypeReference<SyncRatesByInvoiceDateKafka>() {});
 
