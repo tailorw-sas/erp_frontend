@@ -574,7 +574,7 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -655,7 +655,7 @@ async function getAdjustmentList() {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.ASC
