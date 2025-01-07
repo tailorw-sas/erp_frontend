@@ -473,8 +473,6 @@ async function getResourceTypeList(query = '') {
 
     resourceTypeList.value = []
     const response = await GenericService.search(confResourceTypeApi.moduleApi, confResourceTypeApi.uriApi, payload)
-    console.log(response)
-
     const { data: dataList } = response
     for (const iterator of dataList) {
       resourceTypeList.value = [
