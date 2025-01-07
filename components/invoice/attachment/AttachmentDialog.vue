@@ -473,9 +473,19 @@ async function getResourceTypeList(query = '') {
 
     resourceTypeList.value = []
     const response = await GenericService.search(confResourceTypeApi.moduleApi, confResourceTypeApi.uriApi, payload)
+    console.log(response)
+
     const { data: dataList } = response
     for (const iterator of dataList) {
-      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
+      resourceTypeList.value = [
+        ...resourceTypeList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -941,6 +951,7 @@ onMounted(async () => {
 
     if (listItemsLocal.value?.length === 0) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+      item.value.resourceType = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
   }
   else {
@@ -950,6 +961,7 @@ onMounted(async () => {
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+      item.value.resourceType = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
   }
