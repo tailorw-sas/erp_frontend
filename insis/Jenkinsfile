@@ -30,8 +30,8 @@ pipeline {
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
-	DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
-        SEND_MAIL = "NO"
+        DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+        SEND_MAIL = "${SEND_MAIL_STATUS}"
     }
     
     triggers {
