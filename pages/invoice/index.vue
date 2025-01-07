@@ -706,6 +706,11 @@ const itemsMenuImport = ref([
     label: 'Undo Import',
     command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
     //disabled: computedShowMenuItemUndoImport
+  },
+  {
+    label: 'Import From Innsist',
+    command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
+    //disabled: computedShowMenuItemUndoImport
   }
 ])
 
