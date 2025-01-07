@@ -21,7 +21,7 @@ public class ManageRoomRateCheckInCheckOutRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return !checkIn.isBefore(checkOut);
+        return checkIn.isAfter(checkOut);
     }
 
 }
