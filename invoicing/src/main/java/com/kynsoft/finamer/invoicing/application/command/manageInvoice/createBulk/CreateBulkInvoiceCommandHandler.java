@@ -10,11 +10,11 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceValidateClienteRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
-import com.kynsoft.finamer.invoicing.domain.rules.manageRoomRate.ManageRoomRateCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -122,7 +122,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         StringBuilder hotelBookingNumber = new StringBuilder();
         for (int i = 0; i < command.getBookingCommands().size(); i++) {
-            RulesChecker.checkRule(new ManageRoomRateCheckInCheckOutRule(
+            RulesChecker.checkRule(new ManageBookingCheckInCheckOutRule(
                     command.getBookingCommands().get(i).getCheckIn(),
                     command.getBookingCommands().get(i).getCheckOut()));
 
