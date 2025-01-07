@@ -28,5 +28,8 @@ public interface ManagePaymentAttachmentStatusReadDataJpaRepository extends JpaR
     @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.supported = true")
     Optional<ManagePaymentAttachmentStatus> findBySupported();
 
+    @Query("SELECT b FROM ManagePaymentAttachmentStatus b WHERE b.otherSupport = true")
+    Optional<ManagePaymentAttachmentStatus> findByOtherSupported();
+
     Optional<ManagePaymentAttachmentStatus> findManagePaymentAttachmentStatusByCodeAndStatus(String code,String status);
 }
