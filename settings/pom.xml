@@ -52,13 +52,11 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>com.kynsoft.finamer</groupId>
             <artifactId>audit-agent-dev</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-
 
         <!-- Spring Boot dependencies -->
         <dependency>
@@ -130,11 +128,11 @@
         </dependency>
 
         <!-- Otros -->
-<!--        <dependency>-->
-<!--            <groupId>jakarta.servlet</groupId>-->
-<!--            <artifactId>jakarta.servlet-api</artifactId>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
@@ -171,7 +169,6 @@
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>

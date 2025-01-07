@@ -6,26 +6,20 @@ import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionSuccessK
 import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeAttachmentRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustmentCommand;
 import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.NewIncomeAdjustmentRequest;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.invoicing.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.invoicing.domain.dto.PaymentDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
-import com.kynsoft.finamer.invoicing.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.invoicing.domain.services.IPaymentService;
+import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.income.ProducerCreateIncomeTransactionFailed;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.income.ProducerCreateIncomeTransactionSuccess;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,13 +34,16 @@ public class ConsumerCreateIncomeTransactionService {
 
     private final IPaymentService paymentService;
     private final IPaymentDetailService detailService;
+    private final InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil;
+    private final IManageAttachmentTypeService attachmentTypeService;
+    private final IManageResourceTypeService resourceTypeService;
 
     public ConsumerCreateIncomeTransactionService(IMediator mediator, IManageInvoiceService manageInvoiceService,
-            ProducerCreateIncomeTransactionSuccess producerCreateIncomeTransactionSuccess,
-            ProducerCreateIncomeTransactionFailed producerCreateIncomeTransactionFailed,
-            IPaymentService paymentService,
-            IPaymentDetailService detailService,
-            IManageBookingService manageBookingService) {
+                                                  ProducerCreateIncomeTransactionSuccess producerCreateIncomeTransactionSuccess,
+                                                  ProducerCreateIncomeTransactionFailed producerCreateIncomeTransactionFailed,
+                                                  IPaymentService paymentService,
+                                                  IPaymentDetailService detailService,
+                                                  IManageBookingService manageBookingService, InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService) {
 
         this.mediator = mediator;
         this.manageInvoiceService = manageInvoiceService;
@@ -55,6 +52,9 @@ public class ConsumerCreateIncomeTransactionService {
         this.paymentService = paymentService;
         this.detailService = detailService;
         this.manageBookingService = manageBookingService;
+        this.invoiceUploadAttachmentUtil = invoiceUploadAttachmentUtil;
+        this.attachmentTypeService = attachmentTypeService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     @KafkaListener(topics = "finamer-create-income-transaction", groupId = "invoicing-entity-replica")
@@ -107,7 +107,7 @@ public class ConsumerCreateIncomeTransactionService {
                 objKafka.getReSend(),
                 objKafka.getReSendDate(),
                 objKafka.getInvoiceStatus(),
-                objKafka.getEmployeeId().toString(), null);
+                objKafka.getEmployeeId().toString(), objKafka.getAttachment() != null ? attachments(objKafka.getAttachment()) : null);
     }
 
     private CreateIncomeAdjustmentCommand createIncomeAdjustmentCommand(CreateIncomeTransactionKafka objKafka) {
@@ -166,4 +166,28 @@ public class ConsumerCreateIncomeTransactionService {
         )).collect(Collectors.toList());
     }
 
+    private List<CreateIncomeAttachmentRequest> attachments(byte[] attachment){
+        String filename = "detail.pdf";
+        String file = "";
+        try {
+            LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent(filename, attachment);
+            file = response.get("url");
+        } catch (Exception e) {
+            return null;
+        }
+        ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findDefault().orElse(null);
+        ResourceTypeDto resourceTypeDto = this.resourceTypeService.findByDefaults();
+
+        List<CreateIncomeAttachmentRequest> attachments = new ArrayList<>();
+        attachments.add(new CreateIncomeAttachmentRequest(
+                filename,
+                file,
+                "From payment.",
+                attachmentTypeDto != null ? attachmentTypeDto.getId() : null,
+                null,
+                null,
+                resourceTypeDto != null ? resourceTypeDto.getId() : null
+        ));
+        return attachments;
+    }
 }

@@ -404,7 +404,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_STATUS_HISTORY(1181, Series.DOMAIN_ERROR, "The invoice status history not found."),
     INVOICE_ADJUSTMENT_NOT_FOUND(1182, Series.DOMAIN_ERROR, "The invoice adjustment not found."),
     INVOICE_ATTACHMENT_NOT_FOUND(1183, Series.DOMAIN_ERROR, "The attachment not found."),
-    MANAGE_ATTACHMENT_TYPE_NOT_FOUND_(1184, Series.DOMAIN_ERROR, "The attachment type not found.");
+    MANAGE_ATTACHMENT_TYPE_NOT_FOUND_(1184, Series.DOMAIN_ERROR, "The attachment type not found."),
+    MANAGE_RESOURCE_TYPE_DEFAULT(1185, Series.DOMAIN_ERROR,"Another item already exists with default."),
+    MANAGE_RESOURCE_TYPE_DEFAULT_NOT_FOUND(1186, Series.DOMAIN_ERROR,"There is no resource type by default.");
 
     private static final DomainErrorMessage[] VALUES;
 
