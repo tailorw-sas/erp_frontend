@@ -52,7 +52,7 @@ public class CreateManageVCCTransactionTypeCommandHandler implements ICommandHan
                 command.getOnlyApplyNet(),
                 command.getPolicyCredit(),
                 command.getRemarkRequired(),
-                command.getMinNumberOfCharacter(),
+                command.getMinNumberOfCharacter() != null ? command.getMinNumberOfCharacter() : 0,
                 command.getDefaultRemark(),
                 command.isManual(),
                 command.isRefund()

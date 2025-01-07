@@ -405,6 +405,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_ADJUSTMENT_NOT_FOUND(1182, Series.DOMAIN_ERROR, "The invoice adjustment not found."),
     INVOICE_ATTACHMENT_NOT_FOUND(1183, Series.DOMAIN_ERROR, "The attachment not found."),
     MANAGE_ATTACHMENT_TYPE_NOT_FOUND_(1184, Series.DOMAIN_ERROR, "The attachment type not found."),
+    MANAGE_RESOURCE_TYPE_DEFAULT(1185, Series.DOMAIN_ERROR,"Another item already exists with default."),
+    MANAGE_RESOURCE_TYPE_DEFAULT_NOT_FOUND(1186, Series.DOMAIN_ERROR,"There is no resource type by default.");
     INNSIST_CONNECTION_PARAMETER_HOSTNAME_INVALID(2000, Series.DOMAIN_ERROR, "The hostname value is not accepted."),
     INNSIST_CONNECTION_PARAMETER_PORT_NUMBER_INVALID(2001, Series.DOMAIN_ERROR, "The port number must be between 0 and 65535"),
     INNSIST_TRADING_COMPANY_HOTEL_ROOM_TYPE_PREFIX_CHECK_SIZE(2002, Series.DOMAIN_ERROR, "The size of room type must be 1 character."),

@@ -52,10 +52,9 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
-        UpdateIfNotNull.updateInteger(dto::setMinNumberOfCharacter, command.getMinNumberOfCharacter(), dto.getMinNumberOfCharacter(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        updateIfStringNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        updateIfStringNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
+        updateIfIntegerNotEquals(dto::setMinNumberOfCharacter, command.getMinNumberOfCharacter(), dto.getMinNumberOfCharacter(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsActive, command.getIsActive(), dto.getIsActive(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setNegative, command.getNegative(), dto.getNegative(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
@@ -82,6 +81,29 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
             setter.accept(newValue);
             update.accept(1);
 
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateIfStringNotEquals(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
+        if (!newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateIfIntegerNotEquals(Consumer<Integer> setter, Integer newValue, Integer oldValue, Consumer<Integer> update) {
+        if (newValue == null) {
+            setter.accept(0);
+            update.accept(1);
+            return true;
+        }
+        if (!newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
             return true;
         }
         return false;
