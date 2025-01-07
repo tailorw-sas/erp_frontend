@@ -19,6 +19,9 @@ public interface ManageRatePlanReadDataJPARepository extends JpaRepository<Manag
 
     Optional<ManageRatePlan> findManageRatePlanByCode(String code);
 
+    @Query("SELECT b FROM ManageRatePlan b WHERE b.code = :code AND b.hotel.code = :hotelCode")
+    Optional<ManageRatePlan> findManageRatePlanByCodeAndHotelCode(@Param("code") String code, @Param("hotelCode") String hotelCode);
+
     @Query("SELECT COUNT(b) FROM ManageRatePlan b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 

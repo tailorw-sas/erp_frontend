@@ -25,4 +25,6 @@ public interface IManageRatePlanService {
     Long countByCodeAndNotId(String code, UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManageRatePlanDto findManageRatePlanByCodeAndHotelCode(String code, String hotelCode);
 }
