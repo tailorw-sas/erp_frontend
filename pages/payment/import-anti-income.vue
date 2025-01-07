@@ -66,6 +66,7 @@ const options = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -77,10 +78,10 @@ const payload = ref<IQueryRequest>({
     logicalOperation: 'AND'
   }],
   query: '',
-  pageSize: 50,
+  pageSize: 1000,
   page: 0,
-  // sortBy: 'name',
-  // sortType: ENUM_SHORT_TYPE.ASC
+  sortBy: '',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 
 const payloadOnChangePage = ref<PageState>()
@@ -89,7 +90,7 @@ const pagination = ref<IPagination>({
   limit: 50,
   totalElements: 0,
   totalPages: 0,
-  search: ''
+  search: 'row.rowNumber'
 })
 // -------------------------------------------------------------------------------------------------------
 
@@ -431,7 +432,7 @@ onMounted(async () => {
         </template>
       </DynamicTable>
 
-      <div class="flex align-items-end justify-content-end">
+      <div class="flex align-items-end justify-content-end mt-2">
         <Button
           v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
           :disabled="uploadComplete || !importModel.transactionType || !inputFile || !attachFile"

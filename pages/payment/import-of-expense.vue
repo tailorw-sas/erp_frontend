@@ -53,6 +53,7 @@ const options = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
@@ -65,10 +66,10 @@ const payload = ref<IQueryRequest>({
   }
   ],
   query: '',
-  pageSize: 50,
+  pageSize: 1000,
   page: 0,
-  // sortBy: 'name',
-  // sortType: ENUM_SHORT_TYPE.ASC
+  sortBy: 'row.rowNumber',
+  sortType: ENUM_SHORT_TYPE.ASC
 })
 
 const payloadOnChangePage = ref<PageState>()
@@ -307,7 +308,7 @@ onMounted(async () => {
         </template>
       </DynamicTable>
 
-      <div class="flex align-items-end justify-content-end">
+      <div class="flex align-items-end justify-content-end mt-2">
         <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete || !inputFile" @click="importFile" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>

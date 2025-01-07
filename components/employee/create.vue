@@ -63,12 +63,14 @@ const errorInTab = ref({
 
 const fields: Array<FieldDefinitionType> = [
   {
+    tabIndex: 0,
     field: 'userType',
     dataType: 'text',
     class: 'field col-12 pt-0 pb-2 flex',
     validation: z.string().trim().min(1, 'The user type field is required')
   },
   {
+    tabIndex: 0,
     field: 'firstName',
     header: 'First Name',
     dataType: 'text',
@@ -77,6 +79,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The first name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    tabIndex: 0,
     field: 'lastName',
     header: 'Last Name',
     dataType: 'text',
@@ -85,6 +88,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The last name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    tabIndex: 0,
     field: 'loginName',
     header: 'Login Name',
     dataType: 'text',
@@ -93,6 +97,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The login name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    tabIndex: 0,
     field: 'email',
     header: 'Email',
     dataType: 'text',
@@ -101,6 +106,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The email field is required').email('Invalid email')
   },
   {
+    tabIndex: 0,
     field: 'departmentGroup',
     header: 'Department Group',
     dataType: 'select',
@@ -109,6 +115,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('department group'),
   },
   {
+    tabIndex: 0,
     field: 'phoneExtension',
     header: 'Phone Extension',
     headerClass: 'mb-1',
@@ -124,6 +131,7 @@ const fields: Array<FieldDefinitionType> = [
     })
   },
   {
+    tabIndex: 0,
     field: 'innsistCode',
     header: 'Innsist Code',
     headerClass: 'mb-1',
@@ -131,6 +139,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12',
   },
   {
+    tabIndex: 0,
     field: 'status',
     header: 'Active',
     disabled: true,
@@ -528,18 +537,23 @@ async function rejectInactiveTradingCompanyItem(item: any) {
 }
 
 function requireConfirmationToSave(item: any) {
-  confirm.require({
-    target: submitEvent.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: async () => {
-      await save(item)
-    },
-    reject: () => {}
-  })
+  if (!useRuntimeConfig().public.showSaveConfirm) {
+    save(item)
+  }
+  else {
+    confirm.require({
+      target: submitEvent.currentTarget,
+      group: 'headless',
+      header: 'Save the record',
+      message: 'Do you want to save the change?',
+      rejectLabel: 'Cancel',
+      acceptLabel: 'Accept',
+      accept: async () => {
+        await save(item)
+      },
+      reject: () => {}
+    })
+  }
 }
 
 function saveSubmit(event: Event) {
