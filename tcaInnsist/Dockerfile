@@ -58,7 +58,7 @@ EXPOSE 9909
 
 #Configurar Zona Horaria
 RUN apk upgrade --no-cache
-RUN apk add --no-cache tzdata telnet
+RUN apk add --no-cache tzdata busybox-extras traceroute
 ENV TZ="America/Guayaquil"
 
 # Copy the native executable into the containers
