@@ -158,7 +158,8 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field mb-3 col-12 md: required',
     headerClass: 'mb-1',
-    disabled: true
+    disabled: true,
+    validation: validateEntityStatus('Resource Type'),
   },
 
   {
@@ -509,6 +510,7 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
+    payload.resourceType = typeof item.resourceType === 'object' ? item.resourceType.id : item.resourceType
 
     payload.type = item.type?.id
     if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
@@ -543,6 +545,7 @@ async function updateItem(item: { [key: string]: any }) {
 
   payload.employee = userData?.value?.user?.name
   payload.employeeId = userData?.value?.user?.userId
+  payload.resourceType = typeof item.resourceType === 'object' ? item.resourceType.id : item.resourceType
 
   payload.type = item.type?.id
   if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
