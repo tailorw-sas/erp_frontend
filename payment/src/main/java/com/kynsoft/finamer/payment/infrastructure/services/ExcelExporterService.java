@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.PaymentExcelExporterCellColorEnum;
@@ -115,13 +116,26 @@ public class ExcelExporterService {
         return outputStream.toByteArray();
     }
 
+    private boolean attachemntSupport(List<MasterPaymentAttachmentDto> attachment) {
+        if (attachment.isEmpty()) {
+            return false;
+        }
+        for (MasterPaymentAttachmentDto masterPaymentAttachmentDto : attachment) {
+            if (masterPaymentAttachmentDto.getAttachmentType().getDefaults()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void addPaymentData(PaymentDto entity, CellStyle style, Row dataRow) {
 
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         dataRow.createCell(0).setCellValue(entity.getPaymentId());
         dataRow.getCell(0).setCellStyle(style);
 
-        dataRow.createCell(1).setCellValue(!entity.getAttachments().isEmpty());
+        //dataRow.createCell(1).setCellValue(!entity.getAttachments().isEmpty());
+        dataRow.createCell(1).setCellValue(attachemntSupport(entity.getAttachments()));
         dataRow.getCell(1).setCellStyle(style);
 
         dataRow.createCell(2).setCellValue(entity.getPaymentSource().getName());
