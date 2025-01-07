@@ -1100,25 +1100,25 @@ const Options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
-
   messageToDelete: 'Do you want to save the change?',
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
+  showPagination: false
 })
 
 const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'bookingId',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1167,7 +1167,7 @@ async function getratePlanList(query = '') {
         }
       ],
       query: '',
-      pageSize: 200,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -1210,7 +1210,7 @@ async function getRoomTypeList(query = '') {
         }
       ],
       query: '',
-      pageSize: 200,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -1253,7 +1253,7 @@ async function getNightTypeList(query = '') {
         }
       ],
       query: '',
-      pageSize: 200,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -1296,7 +1296,7 @@ async function getRoomCategoryList(query = '') {
         }
       ],
       query: '',
-      pageSize: 200,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC

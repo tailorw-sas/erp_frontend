@@ -295,7 +295,7 @@ const Options = ref({
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
-
+  showPagination: false
 })
 
 const route = useRoute()
@@ -304,14 +304,14 @@ const PayloadOnChangePage = ref<PageState>()
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'adjustmentId',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const Pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
