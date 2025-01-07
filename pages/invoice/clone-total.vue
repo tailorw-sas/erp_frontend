@@ -736,7 +736,8 @@ async function getParentAttachmentList(invoiceId: string) {
           type: {
             ...iterator?.type,
             fullName: `${iterator?.type?.code}-${iterator?.type?.name}`
-          }
+          },
+          resourceType: iterator?.paymenResourceType
         }
       ]
     }
@@ -877,6 +878,7 @@ async function createClonation(item: { [key: string]: any }) {
     employeeId: userData?.value?.user?.userId,
     })) */
   if (LocalAttachmentList.value.length > 0) {
+    console.log(LocalAttachmentList.value)
     payload.attachments = LocalAttachmentList.value.map(att => ({
       attachmentId: att.attachmentId,
       filename: att.filename,
@@ -884,6 +886,7 @@ async function createClonation(item: { [key: string]: any }) {
       remark: att.remark,
       type: att.type.id,
       resourceType: 'INV-Invoice',
+      paymentResourceType: att?.resourceType?.id || '',
       employeeName: userData?.value?.user?.name,
       employeeId: userData?.value?.user?.userId,
     }))
