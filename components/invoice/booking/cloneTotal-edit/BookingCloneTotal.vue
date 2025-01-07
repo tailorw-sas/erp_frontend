@@ -795,6 +795,28 @@ async function onCellEditRoomRate(event: any) {
     }
   }
 
+  if (field === 'checkIn') {
+    if (!newData.checkOut) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Check Out is required', life: 3000 })
+      return
+    }
+    if (dayjs(newData.checkIn).isAfter(dayjs(newData.checkOut))) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The check-in date must be earlier than the check-out date.', life: 3000 })
+      return
+    }
+  }
+
+  if (field === 'checkOut') {
+    if (!newData.checkIn) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Check In is required', life: 3000 })
+      return
+    }
+    if (dayjs(newData.checkIn).isAfter(dayjs(newData.checkOut))) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The check-out date must be later than the check-in date.', life: 3000 })
+      return
+    }
+  }
+
   const payload: { [key: string]: any } = {
     roomRateId: newData.roomRateId,
     roomNumber: newData.roomNumber ? Number(newData.roomNumber) : 0,
