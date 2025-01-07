@@ -260,4 +260,35 @@ export const GenericService = {
       body: payload
     })
   },
+
+  async assign(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/assign`
+    return $api(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
+  async unassign(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/unassign`
+    return $api(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
+  async import(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/import-innsist`
+    return $api(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
 }
