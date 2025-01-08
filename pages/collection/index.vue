@@ -373,9 +373,9 @@ const columnsInvoice: IColumn[] = [
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'invoiceNumber', header: 'Inv.No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen.Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
   { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
 
