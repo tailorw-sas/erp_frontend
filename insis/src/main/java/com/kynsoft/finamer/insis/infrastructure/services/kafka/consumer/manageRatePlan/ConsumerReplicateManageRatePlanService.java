@@ -24,7 +24,7 @@ public class ConsumerReplicateManageRatePlanService {
                     entity.getId(),
                     entity.getCode(),
                     entity.getName(),
-                    entity.getManageHotel()
+                    entity.getHotelId()
             );
             mediator.send(command);
         }catch (Exception ex){

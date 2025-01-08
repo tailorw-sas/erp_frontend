@@ -15,14 +15,12 @@ public class UpdateTradingCompanyCommand implements ICommand {
 
     private UUID id;
     private String company;
-    private String innsistCode;
     private LocalDateTime updatedAt;
 
 
-    public UpdateTradingCompanyCommand(UUID id, String company, String innsistCode){
+    public UpdateTradingCompanyCommand(UUID id, String company){
         this.id = id;
         this.company = company;
-        this.innsistCode = innsistCode;
         this.updatedAt = LocalDateTime.now();
     }
 

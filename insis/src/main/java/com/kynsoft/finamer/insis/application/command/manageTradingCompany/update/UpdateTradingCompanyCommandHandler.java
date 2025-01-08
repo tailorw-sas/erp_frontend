@@ -21,7 +21,6 @@ public class UpdateTradingCompanyCommandHandler implements ICommandHandler<Updat
         ManageTradingCompanyDto dto = service.findById(command.getId());
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setInnsistCode, command.getInnsistCode(), dto.getInnsistCode(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCompany, command.getCompany(), dto.getCompany(), update::setUpdate);
 
         dto.setUpdatedAt(command.getUpdatedAt());

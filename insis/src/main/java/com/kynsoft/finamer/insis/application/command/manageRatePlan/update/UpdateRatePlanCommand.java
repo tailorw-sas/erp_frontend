@@ -16,14 +16,12 @@ public class UpdateRatePlanCommand implements ICommand {
     private UUID id;
     private String name;
     private String status;
-    private UUID hotelId;
     private LocalDateTime updatedAt;
 
-    public UpdateRatePlanCommand(UUID id, String name, String status, UUID hotelId){
+    public UpdateRatePlanCommand(UUID id, String name, String status){
         this.id = id;
         this.name = name;
         this.status = status;
-        this.hotelId = hotelId;
         this.updatedAt = LocalDateTime.now();
     }
 
