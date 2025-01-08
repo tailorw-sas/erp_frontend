@@ -19,6 +19,6 @@ public class ReplicateManageTradingCompanyKafka {
     private String cif;
     private String address;
     private String company;
-    private String innsistCode;
     private String status;
+
 }

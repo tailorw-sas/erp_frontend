@@ -77,8 +77,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
                     dto.getCity(),
                     dto.getCreditDay(),
                     dto.getAutoReconcile(),
-                    dto.getValidateCheckout(),
-                    dto.getAgencyAlias()
+                    dto.getValidateCheckout()
             ));
         }
     }

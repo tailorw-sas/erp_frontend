@@ -52,7 +52,7 @@ public class ManageInvoiceSearchResponse {
         this.invoiceStatus = projection.getInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getInvoiceStatus()) : null;
         this.hasAttachments = projection.getHasAttachments() != null ? projection.getHasAttachments() : null;
         this.status = EInvoiceStatus.fromName(projection.getStatus());
-        this.isInCloseOperation = projection.getIsInCloseOperation();
+        this.isInCloseOperation = projection.getIsCloseOperation();
         this.invoiceType = projection.getInvoiceType();
         this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
         this.manageInvoiceType = projection.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(projection.getManageInvoiceType()) : null;

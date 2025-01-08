@@ -270,7 +270,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_RATE_PLAN -> {
                     for (ManageRatePlanDto ratePlanDto : this.ratePlanService.findAllToReplicate()) {
-                        this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(ratePlanDto.getId(), ratePlanDto.getCode(), ratePlanDto.getName(), ratePlanDto.getStatus().name()));
+                        this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(ratePlanDto.getId(), ratePlanDto.getHotel().getId(), ratePlanDto.getCode(), ratePlanDto.getName(), ratePlanDto.getStatus().name()));
                     }
                 }
                 case MANAGE_ACCOUNT_TYPE -> {
@@ -358,8 +358,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getCity(),
                                 agencyDto.getCreditDay(),
                                 agencyDto.getAutoReconcile(),
-                                agencyDto.getValidateCheckout(),
-                                agencyDto.getAgencyAlias()
+                                agencyDto.getValidateCheckout()
                         ));
                     }
                 }
@@ -533,7 +532,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     for (ManageTradingCompaniesDto manageTradingCompaniesDto : this.tradingCompaniesService.findAll()) {
                         producerReplicateManageTradingCompanyService.create(new ReplicateManageTradingCompanyKafka(manageTradingCompaniesDto.getId(),
                                 manageTradingCompaniesDto.getCode(), manageTradingCompaniesDto.getIsApplyInvoice(),
-                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany(), manageTradingCompaniesDto.getInnsistCode(), manageTradingCompaniesDto.getStatus().name()));
+                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany(), manageTradingCompaniesDto.getStatus().name()));
                     }
                 }
                 case MANAGE_CURRENCY -> {
