@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.insis.application.command.manageRoomType.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateManageRoomTypeKafka;
 import com.kynsoft.finamer.insis.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.insis.domain.dto.ManageRoomTypeDto;
 import com.kynsoft.finamer.insis.domain.services.IManageHotelService;
@@ -36,5 +37,11 @@ public class CreateRoomTypeCommandHandler implements ICommandHandler<CreateRoomT
                 null,
                 hotelDto
         ));
+
+        producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(command.getId(),
+                command.getCode(),
+                command.getName(),
+                command.getStatus(),
+                command.getHotelId()));
     }
 }
