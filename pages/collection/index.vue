@@ -911,7 +911,7 @@ async function getListInvoice() {
   }
   finally {
     optionsInv.value.loading = false
-    if (pagination.value.totalElements !== 0) {
+    if (paginationInvoice.value.totalElements !== 0) {
       const days30 = listItemsInvoice.value.filter(item => item.aging === 30)
       count.days30Count = days30.length
       count.days30Balance = days30.reduce((sum, item) => sum + item.dueAmount, 0)
@@ -935,6 +935,7 @@ async function getListInvoice() {
       const days0 = listItemsInvoice.value.filter(item => item.aging === 0)
       count.days0Count = days0.length
     }
+    console.log(count)
     subTotalsInvoice.value = { ...count }
   }
 }
