@@ -50,22 +50,23 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IInvoiceCloseOperationService closeOperationService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IManageEmployeeService employeeService;
+    private final IManageResourceTypeService resourceTypeService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
-            IManageAgencyService agencyService,
-            IManageHotelService hotelService,
-            IManageAttachmentTypeService attachmentTypeService,
-            IManageBookingService bookingService,
-            IManageInvoiceStatusService invoiceStatusService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-            IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
-            IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
-            IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
-            IInvoiceCloseOperationService closeOperationService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IManageEmployeeService employeeService) {
+                                    IManageAgencyService agencyService,
+                                    IManageHotelService hotelService,
+                                    IManageAttachmentTypeService attachmentTypeService,
+                                    IManageBookingService bookingService,
+                                    IManageInvoiceStatusService invoiceStatusService,
+                                    ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                    IManageRatePlanService ratePlanService, IManageNightTypeService nightTypeService,
+                                    IManageRoomTypeService roomTypeService, IManageRoomCategoryService roomCategoryService,
+                                    IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                    IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                    IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
+                                    IInvoiceCloseOperationService closeOperationService,
+                                    IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -83,6 +84,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.closeOperationService = closeOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.employeeService = employeeService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     @Override
@@ -110,6 +112,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     attachmentRequest.getType());
+            ResourceTypeDto resourceTypeDto = this.resourceTypeService.findById(attachmentRequest.getPaymentResourceType());
 
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
                     UUID.randomUUID(),
@@ -122,7 +125,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     attachmentRequest.getEmployeeName(),
                     attachmentRequest.getEmployeeId(),
                     null,
-                    null,
+                    resourceTypeDto,
                     false
             );
 

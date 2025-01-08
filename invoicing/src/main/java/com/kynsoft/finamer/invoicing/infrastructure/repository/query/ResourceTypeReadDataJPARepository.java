@@ -23,4 +23,10 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<ManageR
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
 
     Optional<ManageResourceType> findResourceTypeByCode(String code);
+
+    @Query("SELECT COUNT(b) FROM ManageResourceType b WHERE b.defaults = true AND b.id <> :id")
+    Long countByDefaultsAndNotId(@Param("id") UUID id);
+
+    @Query("SELECT r FROM ManageResourceType r WHERE r.defaults = true AND r.status = 'ACTIVE'")
+    Optional<ManageResourceType> findByDefaults();
 }

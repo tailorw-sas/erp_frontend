@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageCityStateResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManagerCountryResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceAgencyProjection;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,4 +30,9 @@ public class ManageInvoiceAgencyResponse {
         this.cityState = projection.getCityState() != null ? new ManageCityStateResponse(projection.getCityState()) : null;
     }
 
+    public ManageInvoiceAgencyResponse(ManageInvoiceAgencyProjection agency) {
+        this.id = agency.getId();
+        this.code = agency.getCode();
+        this.name = agency.getName();
+    }
 }

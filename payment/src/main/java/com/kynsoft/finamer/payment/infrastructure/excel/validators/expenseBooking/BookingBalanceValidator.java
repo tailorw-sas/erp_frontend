@@ -28,12 +28,17 @@ public class BookingBalanceValidator extends ExcelRuleValidator<PaymentExpenseBo
             errorFieldList.add(new ErrorField("balance","Balance field must be greater than 0"));
             return false;
         }
-        if (Objects.nonNull(obj.getBookingId()) && bookingService.exitBookingByGenId(Long.parseLong(obj.getBookingId()))){
-            ManageBookingDto manageBookingDto = bookingService.findByGenId(Long.parseLong(obj.getBookingId()));
-            if (obj.getBalance()>manageBookingDto.getAmountBalance()){
-                errorFieldList.add(new ErrorField("balance","Balance can't be greater than Booking balance"));
-                return false;
+        try {
+            if (Objects.nonNull(obj.getBookingId()) && bookingService.exitBookingByGenId(Long.parseLong(obj.getBookingId()))){
+                ManageBookingDto manageBookingDto = bookingService.findByGenId(Long.parseLong(obj.getBookingId()));
+                if (obj.getBalance()>manageBookingDto.getAmountBalance()){
+                    errorFieldList.add(new ErrorField("balance","Balance can't be greater than Booking balance"));
+                    return false;
+                }
             }
+        } catch (Exception e) {
+            errorFieldList.add(new ErrorField("bookingId", "The booking not exist"));
+            return false;
         }
 
         return true;

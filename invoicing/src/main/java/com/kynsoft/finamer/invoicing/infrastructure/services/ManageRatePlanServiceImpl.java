@@ -105,4 +105,13 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }
 
+    @Override
+    public ManageRatePlanDto findManageRatePlanByCodeAndHotelCode(String code, String hotelCode) {
+        Optional<ManageRatePlan> rate = this.repositoryQuery.findManageRatePlanByCodeAndHotelCode(code, hotelCode);
+        if (rate.isPresent()) {
+            return rate.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_RATE_PLAN_NOT_FOUND, new ErrorField("code", "Manage Rate Plan not found.")));
+    }
+
 }

@@ -120,11 +120,11 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         this.paymentService.update(paymentUpdate);
         command.setPaymentResponse(paymentUpdate);
         ManageInvoiceStatusDto manageInvoiceStatusDto = statusService.findByCode(RELATE_INCOME_STATUS_CODE);
-        this.sendToCreateRelatedIncome(children,employeeDto.getId(),employeeDto.getFirstName(), command.getTransactionTypeForAdjustment(),manageInvoiceStatusDto.getId());
+        this.sendToCreateRelatedIncome(children,employeeDto.getId(),employeeDto.getFirstName(), command.getTransactionTypeForAdjustment(),manageInvoiceStatusDto.getId(), command.getAttachment());
 
     }
 
-    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,UUID employeeId, String employeeName, UUID transactionType,UUID status) {
+    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,UUID employeeId, String employeeName, UUID transactionType,UUID status, byte[] attachment) {
         PaymentDto paymentDto = paymentDetailDto.getPayment();
         CreateIncomeTransactionKafka createIncomeTransactionSuccessKafka = new CreateIncomeTransactionKafka();
         UUID incomeId = UUID.randomUUID();
@@ -143,6 +143,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         createIncomeTransactionSuccessKafka.setStatusAdjustment(Status.ACTIVE.name());
         createIncomeTransactionSuccessKafka.setEmployeeId(employeeId);
         createIncomeTransactionSuccessKafka.setPaymentKafka(new ReplicatePaymentKafka(paymentDto.getId(), paymentDto.getPaymentId(), new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getParentId())));
+        createIncomeTransactionSuccessKafka.setAttachment(attachment);
         producerCreateIncomeService.create(createIncomeTransactionSuccessKafka);
     }
 

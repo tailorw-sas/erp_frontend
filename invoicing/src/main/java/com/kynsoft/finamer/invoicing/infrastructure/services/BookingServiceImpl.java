@@ -90,6 +90,7 @@ public class BookingServiceImpl implements ImportBookingService {
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
             bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
         } catch (Exception e) {
+            e.printStackTrace();
             BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                     .hasError(true)
                     .exceptionMessage(e.getMessage())

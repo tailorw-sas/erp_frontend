@@ -1,11 +1,13 @@
 package com.kynsoft.finamer.invoicing.application.command.resourceType.update;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import com.kynsoft.finamer.invoicing.domain.rules.resourceType.ResourceTypeDefaultsMustBeUniqueRule;
 import com.kynsoft.finamer.invoicing.domain.services.IManageResourceTypeService;
 import java.util.function.Consumer;
 
@@ -22,7 +24,9 @@ public class UpdateManageResourceTypeCommandHandler implements ICommandHandler<U
 
     @Override
     public void handle(UpdateManageResourceTypeCommand command) {
-
+        if (command.getDefaults() != null && command.getDefaults()) {
+            RulesChecker.checkRule(new ResourceTypeDefaultsMustBeUniqueRule(this.service, command.getId()));
+        }
         ResourceTypeDto resourceTypeDto = this.service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();

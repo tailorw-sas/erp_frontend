@@ -26,13 +26,16 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -43,6 +46,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus.*;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -57,7 +62,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final IInvoiceCloseOperationService closeOperationService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-            ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
+                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -120,11 +125,40 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
+        if (pageable.getSort().isSorted()) {
+            boolean hasCreatedAt = pageable.getSort().stream()
+                    .anyMatch(order -> order.getProperty().equals("createdAt"));
+            if (hasCreatedAt) {
+                Sort sort = Sort.by(Sort.Order.desc("createdAt"));
+                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+            }
+        }
+
+
+        Page<ManageInvoiceSearchProjection> data1 = repositoryQuery.findAllProjected(specifications, pageable);
+        //   Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
         //getPaginatedResponseTest(example);
         //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
-        return getPaginatedResponse(data);
+        return getPaginatedResponseProjection(data1);
+        //  return getPaginatedResponse(data);
+    }
+
+    private PaginatedResponse getPaginatedResponseProjection(Page<ManageInvoiceSearchProjection> data) {
+        List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
+        for (ManageInvoiceSearchProjection entity : data.getContent()) {
+            try {
+//                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
+//                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
+//                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
+                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity);
+                responseList.add(response);
+            } catch (Exception e) {
+                System.err.print(e.getMessage());
+            }
+        }
+        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
+                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     @Override
@@ -462,7 +496,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryQuery.findByInvoiceId(id)
                 .map(Invoice::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
-                new ErrorField("invoiceId", "The invoice not found."))));
+                        new ErrorField("invoiceId", "The invoice not found."))));
     }
 
     @Override
@@ -497,7 +531,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                                 DomainErrorMessage.HOTEL_BOOKING_NUMBER_NOT_VALID,
                                 new ErrorField("hotelBookingNumber", errorList.toString())));
             }
-            dto.setStatus(EInvoiceStatus.RECONCILED);
+            dto.setStatus(RECONCILED);
             dto.setManageInvoiceStatus(status);
         }
         return dto;

@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceValidateClienteRule;
@@ -52,22 +53,23 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
+    private final IManageResourceTypeService resourceTypeService;
 
     public CreateBulkInvoiceCommandHandler(IManageRatePlanService ratePlanService,
-            IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
-            IManageRoomCategoryService roomCategoryService,
-            IManageInvoiceTransactionTypeService transactionTypeService,
-            IManageInvoiceService service, IManageAgencyService agencyService,
-            IManageHotelService hotelService,
-            IManageInvoiceTypeService iManageInvoiceTypeService,
-            IManageInvoiceStatusService manageInvoiceStatusService,
-            IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
-            IInvoiceCloseOperationService closeOperationService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, 
-            IInvoiceStatusHistoryService invoiceStatusHistoryService, 
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageEmployeeService employeeService) {
+                                           IManageNightTypeService nightTypeService, IManageRoomTypeService roomTypeService,
+                                           IManageRoomCategoryService roomCategoryService,
+                                           IManageInvoiceTransactionTypeService transactionTypeService,
+                                           IManageInvoiceService service, IManageAgencyService agencyService,
+                                           IManageHotelService hotelService,
+                                           IManageInvoiceTypeService iManageInvoiceTypeService,
+                                           IManageInvoiceStatusService manageInvoiceStatusService,
+                                           IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
+                                           IInvoiceCloseOperationService closeOperationService,
+                                           IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                           ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                           IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                           IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                           IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService) {
 
         this.ratePlanService = ratePlanService;
         this.nightTypeService = nightTypeService;
@@ -87,6 +89,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     @Override
@@ -119,6 +122,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         StringBuilder hotelBookingNumber = new StringBuilder();
         for (int i = 0; i < command.getBookingCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageBookingCheckInCheckOutRule(
+                    command.getBookingCommands().get(i).getCheckIn(),
+                    command.getBookingCommands().get(i).getCheckOut()));
 
             if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2
                     && command.getInvoiceCommand().getInvoiceType() != null
@@ -326,6 +332,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
+            ResourceTypeDto resourceTypeDto = this.resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
             if (attachmentType.isAttachInvDefault()) {
                 cont++;
             }
@@ -339,7 +346,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     null, command.getAttachmentCommands().get(i).getEmployee(),
                     command.getAttachmentCommands().get(i).getEmployeeId(),
                     null,
-                    null,
+                    resourceTypeDto,
                     false
             );
 

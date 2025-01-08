@@ -4,6 +4,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -35,6 +36,34 @@ public class ManageInvoiceSearchResponse {
     private Double originalAmount;
     private ImportType importType;
     private boolean cloneParent;
+    private Integer aging;
+
+    public ManageInvoiceSearchResponse(ManageInvoiceSearchProjection projection) {
+        //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+        this.id = projection.getId();
+        this.invoiceId = projection.getInvoiceId();
+        this.isManual = projection.getIsManual();
+        this.invoiceNo = projection.getInvoiceNo();
+        this.invoiceAmount = projection.getInvoiceAmount() != null ? projection.getInvoiceAmount() : null;
+        this.dueAmount = projection.getDueAmount() != null ? projection.getDueAmount() : null;
+        this.invoiceDate = projection.getInvoiceDate();
+        this.hotel = new ManageInvoiceHotelResponse(projection.getHotel());
+        this.agency = new ManageInvoiceAgencyResponse(projection.getAgency());
+        this.invoiceStatus = projection.getInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getInvoiceStatus()) : null;
+        this.hasAttachments = projection.getHasAttachments() != null ? projection.getHasAttachments() : null;
+        this.status = EInvoiceStatus.fromName(projection.getStatus());
+        this.isInCloseOperation = projection.getIsInCloseOperation();
+        this.invoiceType = projection.getInvoiceType();
+        this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
+        this.manageInvoiceType = projection.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(projection.getManageInvoiceType()) : null;
+        this.sendStatusError = projection.getSendStatusError();
+         this.parent = projection.getParentId() != null ? projection.getParentId().toString() : null;
+        this.autoRec = projection.getAutoRec();
+        this.originalAmount = projection.getOriginalAmount() != null ? projection.getOriginalAmount() : null;
+        this.importType = projection.getImportType();
+          this.cloneParent = projection.getCloneParent();
+        this.aging = projection.getAging();
+    }
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
         //DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
@@ -60,6 +89,7 @@ public class ManageInvoiceSearchResponse {
         this.originalAmount = projection.getOriginalAmount() != null ? projection.getOriginalAmount() : null;
         this.importType = projection.getImportType();
         this.cloneParent = projection.isCloneParent();
+        this.aging = projection.getAging();
     }
 
     private String deleteHotelInfo(String input) {

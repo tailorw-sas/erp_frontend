@@ -29,7 +29,8 @@ public class PaymentExpenseBookingExtrasFieldProcessor implements IPaymentImport
     public PaymentExpenseBookingRowError addExtrasField(PaymentExpenseBookingRowError rowError) {
         String bookingId =rowError.getRow().getBookingId();
         if (Objects.nonNull(bookingId) && !bookingId.isEmpty()) {
-            ManageBookingDto bookingDto = bookingService.findByGenId(Long.parseLong(bookingId));
+            try {
+                ManageBookingDto bookingDto = bookingService.findByGenId(Long.parseLong(bookingId));
             PaymentExpenseBookingRow expenseBookingRow = rowError.getRow();
             expenseBookingRow.setInvoiceNo(String.valueOf(bookingDto.getInvoice().getInvoiceNo()));
             expenseBookingRow.setFullName(bookingDto.getFullName());
@@ -41,6 +42,9 @@ public class PaymentExpenseBookingExtrasFieldProcessor implements IPaymentImport
             expenseBookingRow.setChildren(bookingDto.getChildren());
             rowError.setRow(expenseBookingRow);
             return errorRepository.save(rowError);
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
         }
         return rowError;
     }
