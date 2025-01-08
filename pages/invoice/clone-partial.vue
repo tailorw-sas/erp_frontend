@@ -766,7 +766,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
         resourceType: 'INV-Invoice',
         resource: globalSelectedInvoicing,
         file: fileurl,
-
+        paymentResourceType: attachmentList.value[i]?.resourceType?.id || ''
       })
     }
 

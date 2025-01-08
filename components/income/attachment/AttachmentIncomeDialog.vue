@@ -76,8 +76,8 @@ const confattachmentTypeListApi = reactive({
   uriApi: 'manage-attachment-type',
 })
 const confResourceTypeListApi = reactive({
-  moduleApi: 'payment',
-  uriApi: 'resource-type',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-resource-type',
 })
 
 const formReload = ref(0)
@@ -376,7 +376,7 @@ async function loadDefaultResourceType() {
     // Listar solo si el resource type esta en null, ya que no cambia. O si viene en null el status
     const filter: FilterCriteria[] = [
       {
-        key: 'invoice',
+        key: 'defaults',
         logicalOperation: 'AND',
         operator: 'EQUALS',
         value: true,
