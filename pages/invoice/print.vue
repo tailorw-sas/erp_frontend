@@ -189,7 +189,7 @@ async function getPrintList() {
         loadingDelete: false,
         //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
-        hasAttachments: iterator.hasAttachments,
+        hasAttachments: iterator.hasAttachments || false,
         aging: iterator?.aging || 0,
         dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
         invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
