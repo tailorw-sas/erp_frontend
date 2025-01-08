@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingCheckInCheckOutRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceValidateClienteRule;
@@ -121,6 +122,9 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         StringBuilder hotelBookingNumber = new StringBuilder();
         for (int i = 0; i < command.getBookingCommands().size(); i++) {
+            RulesChecker.checkRule(new ManageBookingCheckInCheckOutRule(
+                    command.getBookingCommands().get(i).getCheckIn(),
+                    command.getBookingCommands().get(i).getCheckOut()));
 
             if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2
                     && command.getInvoiceCommand().getInvoiceType() != null
