@@ -158,7 +158,8 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field mb-3 col-12 md: required',
     headerClass: 'mb-1',
-    disabled: true
+    disabled: true,
+    validation: validateEntityStatus('Resource Type'),
   },
 
   {
@@ -474,7 +475,15 @@ async function getResourceTypeList(query = '') {
     const response = await GenericService.search(confResourceTypeApi.moduleApi, confResourceTypeApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
+      resourceTypeList.value = [
+        ...resourceTypeList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -509,6 +518,7 @@ async function createItem(item: { [key: string]: any }) {
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
+    payload.resourceType = typeof item.resourceType === 'object' ? item.resourceType.id : item.resourceType
 
     payload.type = item.type?.id
     if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
@@ -543,6 +553,7 @@ async function updateItem(item: { [key: string]: any }) {
 
   payload.employee = userData?.value?.user?.name
   payload.employeeId = userData?.value?.user?.userId
+  payload.resourceType = typeof item.resourceType === 'object' ? item.resourceType.id : item.resourceType
 
   payload.type = item.type?.id
   if (typeof payload.file === 'object' && payload.file !== null && payload.file?.files && payload.file?.files.length > 0) {
@@ -938,6 +949,7 @@ onMounted(async () => {
 
     if (listItemsLocal.value?.length === 0) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+      item.value.resourceType = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
   }
   else {
@@ -947,6 +959,7 @@ onMounted(async () => {
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+      item.value.resourceType = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
   }

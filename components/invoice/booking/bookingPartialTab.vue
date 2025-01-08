@@ -777,11 +777,11 @@ const Options = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
-
   messageToDelete: 'Do you want to save the change?',
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
+  showPagination: false
 })
 
 const PayloadOnChangePage = ref<PageState>()

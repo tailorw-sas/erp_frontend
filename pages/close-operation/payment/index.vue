@@ -3,7 +3,6 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import dayjs from 'dayjs'
-import Menu from 'primevue/menu'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
@@ -411,11 +410,16 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <Menu id="payment_co" ref="menu" :popup="true">
-    <template #start>
-      <Calendar v-model="selectedDate" inline view="month" @update:model-value="handleCalendarSelect" />
-    </template>
-  </Menu>
+  <OverlayPanel ref="menu">
+    <Calendar
+      v-model="selectedDate"
+      inline
+      view="month"
+      :manual-input="false"
+      :max-date="new Date()"
+      @update:model-value="handleCalendarSelect"
+    />
+  </OverlayPanel>
 </template>
 
 <style lang="scss">
@@ -423,6 +427,19 @@ onMounted(async () => {
     background-color: #E7F5FF;
     .p-button-icon-only .pi {
       font-size: 1.3em;
+    }
+  }
+  .p-overlaypanel:before,
+  .p-overlaypanel:after {
+    display: none; /* Oculta el pico */
+  }
+
+  .p-overlaypanel {
+    margin-top: 0px;
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.2); /* Sombra ligera */
+    .p-overlaypanel-content {
+      padding: 0.429rem; /* Quita el padding interno */
     }
   }
 </style>

@@ -413,7 +413,6 @@ async function paymentPrint(event: any) {
   }
   finally {
     loadingPrintDetail.value = false
-    openPrint.value = false
   }
 }
 
@@ -423,6 +422,7 @@ async function openDialogPrint() {
 }
 
 async function closeDialogPrint() {
+  openPrint.value = false
   navigateTo({ path: '/payment' })
 }
 
@@ -445,7 +445,7 @@ onMounted(async () => {
 
 <template>
   <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    Invoice to Print
+    Payments to Print
   </div>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-2">
@@ -463,7 +463,6 @@ onMounted(async () => {
         >
           <template #column-icon="{ data: objData, column }">
             <div class="flex align-items-center justify-content-center p-0 m-0">
-              <!-- <pre>{{ objData }}</pre> -->
               <Button
                 v-if="showInconAttachment(objData)"
                 :icon="column.icon"
@@ -473,8 +472,6 @@ onMounted(async () => {
                 :style="{ color: objData.color }"
               />
             </div>
-            <!-- style="color: #616161;" -->
-            <!-- :style="{ 'background-color': '#00b816' }" -->
           </template>
 
           <template #column-paymentStatus="{ data, column }">
@@ -524,7 +521,7 @@ onMounted(async () => {
         //   style: 'backdrop-filter: blur(5px)',
         // },
       }"
-      @hide="closeDialogPrint()"
+      @hide="closeDialogPrint"
     >
       <template #header>
         <div class="flex justify-content-between w-full">
@@ -540,7 +537,6 @@ onMounted(async () => {
       </template>
       <template #default>
         <div class="p-fluid pt-3">
-          <pre>{{ paymentSelectedForPrintList }}</pre>
           <EditFormV2
             :key="formReload"
             class="mt-3"
@@ -622,7 +618,11 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" />
+              <Button
+                v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="() => {
+                  navigateTo('/payment')
+                }"
+              />
             </template>
           </EditFormV2>
         </div>

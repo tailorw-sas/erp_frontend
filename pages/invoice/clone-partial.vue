@@ -282,7 +282,7 @@ const itemTemp = ref<GenericObject>({
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -461,7 +461,7 @@ async function getRoomRateClonationList(idItemCreated: any) {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -532,7 +532,7 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -612,7 +612,7 @@ async function getAdjustmentList() {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.ASC
@@ -766,7 +766,7 @@ async function createPartialClonation(item: { [key: string]: any }) {
         resourceType: 'INV-Invoice',
         resource: globalSelectedInvoicing,
         file: fileurl,
-
+        paymentResourceType: attachmentList.value[i]?.resourceType?.id || ''
       })
     }
 
@@ -1599,7 +1599,7 @@ function updateAttachment(attachment: any) {
 
 function onChangePage($event: any) {
   payload.value.page = $event?.page ? $event?.page : 0
-  payload.value.pageSize = $event?.rows ? $event.rows : 50
+  payload.value.pageSize = $event?.rows ? $event.rows : 1000
   getBookingList()
 }
 
@@ -1747,7 +1747,7 @@ onMounted(async () => {
           />
 
           <div>
-            <div class="flex justify-content-end">
+            <div class="flex justify-content-end mt-2">
               <Button
                 v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
                 :disabled="disabledButtonSave()" @click="() => {

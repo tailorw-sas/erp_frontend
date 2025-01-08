@@ -97,6 +97,7 @@ const options = ref({
   actionsAsMenu: false,
   showEdit: false,
   showAcctions: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })

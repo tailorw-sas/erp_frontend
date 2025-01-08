@@ -611,7 +611,7 @@ defineExpose({ clearSelectedItems })
         removable-sort
         :lazy="props.isCustomSorting"
         scrollable
-        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '75vh'"
+        :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '70vh'"
         :filters="filters1"
         edit-mode="cell"
         @sort="onSortField"

@@ -574,7 +574,7 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -655,7 +655,7 @@ async function getAdjustmentList() {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.ASC
@@ -736,7 +736,8 @@ async function getParentAttachmentList(invoiceId: string) {
           type: {
             ...iterator?.type,
             fullName: `${iterator?.type?.code}-${iterator?.type?.name}`
-          }
+          },
+          resourceType: iterator?.paymenResourceType
         }
       ]
     }
@@ -877,6 +878,7 @@ async function createClonation(item: { [key: string]: any }) {
     employeeId: userData?.value?.user?.userId,
     })) */
   if (LocalAttachmentList.value.length > 0) {
+    console.log(LocalAttachmentList.value)
     payload.attachments = LocalAttachmentList.value.map(att => ({
       attachmentId: att.attachmentId,
       filename: att.filename,
@@ -884,6 +886,7 @@ async function createClonation(item: { [key: string]: any }) {
       remark: att.remark,
       type: att.type.id,
       resourceType: 'INV-Invoice',
+      paymentResourceType: att?.resourceType?.id || '',
       employeeName: userData?.value?.user?.name,
       employeeId: userData?.value?.user?.userId,
     }))
@@ -1801,7 +1804,7 @@ onMounted(async () => {
             @on-change-page="onChangePage"
           />
           <div>
-            <div class="flex justify-content-end">
+            <div class="flex justify-content-end mt-2">
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"

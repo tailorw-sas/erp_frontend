@@ -483,7 +483,7 @@ const Options = ref({
   showFilters: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
-
+  showPagination: false
 })
 
 const PayloadOnChangePage = ref<PageState>()
