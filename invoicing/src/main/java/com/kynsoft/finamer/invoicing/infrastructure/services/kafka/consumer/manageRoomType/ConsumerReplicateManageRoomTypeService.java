@@ -24,7 +24,7 @@ public class ConsumerReplicateManageRoomTypeService {
         try {
 
             CreateManageRoomTypeCommand command = new CreateManageRoomTypeCommand(objKafka.getId(), objKafka.getCode(),
-                    objKafka.getName(), objKafka.getStatus());
+                    objKafka.getName(), objKafka.getStatus(), objKafka.getHotelId());
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageRoomTypeService.class.getName()).log(Level.SEVERE, null, ex);

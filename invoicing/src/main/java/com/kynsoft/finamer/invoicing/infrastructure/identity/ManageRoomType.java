@@ -1,9 +1,13 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,6 +41,10 @@ public class ManageRoomType implements Serializable {
 
     private String name;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_id")
+    private ManageHotel hotel;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -52,11 +60,13 @@ public class ManageRoomType implements Serializable {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
+        this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
     }
 
     public ManageRoomTypeDto toAggregate() {
+        ManageHotelDto hotel = this.hotel != null ? this.hotel.toAggregate() : null;
         return new ManageRoomTypeDto(
-                id, code, name, status
+                id, code, name, status, hotel
         );
     }
 

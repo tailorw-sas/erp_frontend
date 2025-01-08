@@ -213,8 +213,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         return bookingRowList.stream().map(bookingRow -> {
             //ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
             ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRow.getRatePlan(), hotel.getCode()) : null;
-            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
-                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
+            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRow.getRoomType(), hotel.getCode()) : null;
             ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightType()) ?
                     nightTypeService.findByCode(bookingRow.getNightType()) : null;
             ManageBookingDto bookingDto = bookingRow.toAggregate();

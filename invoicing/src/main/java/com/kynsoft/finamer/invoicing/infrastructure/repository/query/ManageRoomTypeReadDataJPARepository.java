@@ -28,4 +28,8 @@ public interface ManageRoomTypeReadDataJPARepository extends JpaRepository<Manag
     Long countByCodeAndManageHotelIdAndNotId(@Param("code") String code, @Param("id") UUID id);
 
     boolean existsManageRoomTypeByCode(String code);
+    
+    @Query("SELECT b FROM ManageRoomType b WHERE b.code = :code AND b.hotel.code = :hotelCode")
+    Optional<ManageRoomType> findManageRatePlanByCodeAndHotelCode(@Param("code") String code, @Param("hotelCode") String hotelCode);
+
 }

@@ -48,4 +48,12 @@ public class GenericSpecificationsBuilder<T> implements Specification<T> {
             return andPredicate;
         }
     }
+
+    public Specification<T> build() {
+        if (params.isEmpty()) {
+            return null;
+        }
+
+        return (root, query, cb) -> toPredicate(root, query, cb);
+    }
 }
