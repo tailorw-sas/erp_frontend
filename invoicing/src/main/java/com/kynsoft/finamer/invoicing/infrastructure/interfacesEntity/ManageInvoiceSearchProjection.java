@@ -19,7 +19,7 @@ public interface ManageInvoiceSearchProjection {
     ManageInvoiceStatusProjection getInvoiceStatus();
     Boolean getHasAttachments();
     String getStatus();
-    //Boolean getIsInCloseOperation();
+    Boolean getIsCloseOperation();
     EInvoiceType getInvoiceType();
     String getInvoiceNumber();
     ManageInvoiceTypeProjection getManageInvoiceType();
@@ -30,11 +30,6 @@ public interface ManageInvoiceSearchProjection {
     ImportType getImportType();
     boolean getCloneParent();
     Integer getAging();
-
-    default Boolean getIsInCloseOperation() {
-        return true;
-    }
-
    // boolean getIsCloneParent();
 }
 

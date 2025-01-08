@@ -43,13 +43,19 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoic
            i.originalAmount AS originalAmount,
            i.importType AS importType,
            i.cloneParent AS cloneParent,
-           i.aging AS aging
+           i.aging AS aging,
+           CASE 
+               WHEN h.closeOperation IS NOT NULL 
+                    AND i.invoiceDate >= h.closeOperation.beginDate 
+                    AND i.invoiceDate <= h.closeOperation.endDate 
+               THEN TRUE 
+               ELSE FALSE 
+           END AS isCloseOperation
     FROM Invoice i
     LEFT JOIN i.hotel h
     LEFT JOIN i.agency a
     LEFT JOIN i.manageInvoiceStatus s
     LEFT JOIN i.manageInvoiceType t
-   
 """)
     Page<ManageInvoiceSearchProjection> findAllProjected(Specification<Invoice> specification, Pageable pageable);
 
