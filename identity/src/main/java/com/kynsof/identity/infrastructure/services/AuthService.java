@@ -165,7 +165,7 @@ public class AuthService implements IAuthService {
             CredentialRepresentation credential = new CredentialRepresentation();
             credential.setType(CredentialRepresentation.PASSWORD);
             credential.setValue(newPassword);
-            credential.setTemporary(false); // True si quieres que sea una contraseña temporal
+            credential.setTemporary(true); // True si quieres que sea una contraseña temporal
 
             keycloakProvider.getRealmResource().users().get(userId).resetPassword(credential);
             return true;
