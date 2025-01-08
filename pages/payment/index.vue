@@ -2899,7 +2899,7 @@ async function saveApplyPayment() {
     }
   }
   catch (error) {
-    objItemSelectedForRightClickApplyPayment.value = {}
+    // objItemSelectedForRightClickApplyPayment.value = {}
     idInvoicesSelectedToApplyPayment.value = []
     paymentDetailsTypeDepositSelected.value = []
     loadingSaveApplyPayment.value = false
