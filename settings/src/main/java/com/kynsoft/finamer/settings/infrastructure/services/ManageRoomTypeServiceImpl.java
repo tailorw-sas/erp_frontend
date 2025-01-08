@@ -117,4 +117,17 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+    @Override
+    public List<ManageRoomTypeDto> findAllToReplicate() {
+        List<ManageRoomType> objects = this.repositoryQuery.findAll();
+        List<ManageRoomTypeDto> objectDtos = new ArrayList<>();
+
+        for (ManageRoomType object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+
+        return objectDtos;
+    }
+
 }

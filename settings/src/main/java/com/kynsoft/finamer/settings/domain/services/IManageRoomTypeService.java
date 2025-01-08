@@ -23,4 +23,6 @@ public interface IManageRoomTypeService {
     Long countByCodeAndNotId(String code, UUID id);
 
     Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id);
+
+    List<ManageRoomTypeDto> findAllToReplicate();
 }
