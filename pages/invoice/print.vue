@@ -190,7 +190,7 @@ async function getPrintList() {
         //  invoiceDate: new Date(iterator?.invoiceDate),
         agencyCd: iterator?.agency?.code,
         hasAttachments: iterator.hasAttachments,
-        aging: 0,
+        aging: iterator?.aging || 0,
         dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
         invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
