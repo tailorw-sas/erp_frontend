@@ -50,7 +50,7 @@ public class UpdateManageRatePlanCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(test.getId(), test.getHotel().getId(), test.getCode(), test.getName(), test.getStatus().name()));
+            this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(test.getId(), test.getCode(), test.getName(), test.getStatus().name()));
         }
 
     }
