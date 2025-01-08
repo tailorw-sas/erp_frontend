@@ -5,9 +5,11 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -62,7 +64,7 @@ public class ManageInvoiceSearchResponse {
         this.originalAmount = projection.getOriginalAmount() != null ? projection.getOriginalAmount() : null;
         this.importType = projection.getImportType();
         this.cloneParent = projection.getCloneParent();
-        this.aging = projection.getAging();
+        this.aging = InvoiceUtils.calculateInvoiceAging(projection.getDueDate(), LocalDate.now());
     }
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {
