@@ -202,7 +202,7 @@ const invoiceAllContextMenuItems = ref([
       height: '24px',
       iconSvg:'',
       command: () => {
-        changeAgencyDialogOpen.value = true
+        openDialogChangeAgency()
       },
       default: true,
       showItem: false,
@@ -2043,7 +2043,7 @@ async function applyUndo() {
       openDialog.value = false
       if (response.errors.length === 0) {
         toast.add({
-          severity: 'success',
+          severity: 'info',
           summary: 'Success',
           detail: `Undo successfully applied to ${response.satisfactoryQuantity} records.`,
           life: 6000
@@ -2071,6 +2071,29 @@ function handleClose() {
   entryCode.value = ''
   randomCode.value = generateRandomCode()
 }
+
+async function openDialogChangeAgency() {
+  // Vamos a inyectarle la informacion del cliente de la agencia
+  // Porque se quito la informacion del cliente de la agencia y el componente Change Agency lo necesita
+  try {
+    const response = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, selectedInvoiceObj.value?.agency?.id)
+    if (response && response.client) {
+      const objClient = {
+        id: response.client.id,
+        code: response.client.code,
+        name: response.client.name,
+        description: response.client.description,
+        isNightType: response.client.isNightType,
+        status: response.client.status
+      }
+      selectedInvoiceObj.value.agency.client = {...objClient}
+      changeAgencyDialogOpen.value = true
+    }
+  } catch (error) {    
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Error getting client', life: 10000 })
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
