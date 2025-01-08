@@ -270,7 +270,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_RATE_PLAN -> {
                     for (ManageRatePlanDto ratePlanDto : this.ratePlanService.findAllToReplicate()) {
-                        this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(ratePlanDto.getId(), ratePlanDto.getCode(), ratePlanDto.getName(), ratePlanDto.getStatus().name(), Objects.nonNull(ratePlanDto.getHotel()) ? ratePlanDto.getHotel().getId() : null));
+                        this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(ratePlanDto.getId(), ratePlanDto.getHotel().getId(), ratePlanDto.getCode(), ratePlanDto.getName(), ratePlanDto.getStatus().name()));
                     }
                 }
                 case MANAGE_ACCOUNT_TYPE -> {

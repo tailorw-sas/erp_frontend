@@ -17,6 +17,7 @@ public class CreateManageRatePlanCommand implements ICommand {
     private String code;
     private String name;
     private String status;
+    private UUID hotelId;
 
     @Override
     public ICommandMessage getMessage() {

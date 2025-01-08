@@ -27,7 +27,8 @@ public class ConsumerReplicateManageRatePlanService {
                     objKafka.getId(), 
                     objKafka.getCode(),
                     objKafka.getName(),
-                    objKafka.getStatus()
+                    objKafka.getStatus(),
+                    objKafka.getHotelId()
             );
             mediator.send(command);
         } catch (Exception ex) {
