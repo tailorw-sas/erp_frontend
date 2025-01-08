@@ -5,7 +5,6 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
@@ -70,5 +69,22 @@ public class InvoiceUtils {
             return manageInvoiceDto;
         }
         return manageInvoiceDto;
+    }
+
+    public static int calculateInvoiceAging(LocalDate dueDate, LocalDate serverDate) {
+        if (Objects.isNull(dueDate) || serverDate.isEqual(dueDate) || dueDate.isAfter(serverDate)) {
+            return 0;
+        } else {
+            long dayBetween = ChronoUnit.DAYS.between(dueDate, serverDate);
+
+            if (dayBetween <= 30) {
+                return 30;
+            } else if (dayBetween > 31 && dayBetween <= 60) {
+                return 60;
+            } else if (dayBetween > 61 && dayBetween <= 90) {
+                return 90;
+            }
+        }
+        return 120;
     }
 }
