@@ -18,14 +18,14 @@ public class ConsumerReplicateManageRoomTypesService {
         this.mediator = mediator;
     }
 
-    //@KafkaListener(topics = "finamer-replicate-manage-room-type", groupId = "innsist-entity-replica")
+    @KafkaListener(topics = "finamer-replicate-manage-room-type", groupId = "innsist-entity-replica")
     public void listen(ReplicateManageRoomTypeKafka entity){
         try{
             CreateRoomTypeCommand command = new CreateRoomTypeCommand(
                 entity.getId(),
                     entity.getCode(),
                     entity.getName(),
-                    null
+                    entity.getHotelId()
             );
             mediator.send(command);
         }catch (Exception ex){

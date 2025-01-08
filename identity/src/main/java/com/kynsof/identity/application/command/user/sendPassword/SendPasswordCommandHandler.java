@@ -26,7 +26,7 @@ public class SendPasswordCommandHandler implements ICommandHandler<SendPasswordC
     @Override
     public void handle(SendPasswordCommand command) {
         UserSystemDto userSystemDto = userSystemService.findById(command.getId());
-        Boolean result = authService.changePassword(command.getId().toString(), command.getNewPassword());
+        Boolean result = authService.changePassword(command.getId().toString(), command.getNewPassword(), true);
         command.setResul(result);
         this.producerUserWelcomEventService.create(new UserWelcomKafka(userSystemDto.getEmail(),
                 command.getNewPassword(),

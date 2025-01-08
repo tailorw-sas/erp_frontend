@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -35,6 +36,7 @@ public class ManageInvoiceSearchProjection {
     private final Boolean cloneParent;
     private final Integer aging;
     private boolean isCloseOperation;
+    private LocalDate dueDate;
 
     public ManageInvoiceSearchProjection(
             UUID id,
@@ -59,7 +61,8 @@ public class ManageInvoiceSearchProjection {
             ImportType importType,
             Boolean cloneParent,
             Integer aging,
-            Boolean isCloseOperation
+            Boolean isCloseOperation,
+            LocalDate dueDate
     ) {
         this.id = id;
         this.invoiceId = invoiceId;
@@ -84,6 +87,7 @@ public class ManageInvoiceSearchProjection {
         this.cloneParent = cloneParent;
         this.aging = aging;
         this.isCloseOperation = isCloseOperation;
+        this.dueDate = dueDate;
     }
 
 
