@@ -159,13 +159,13 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public Boolean changePassword(String userId, String newPassword) {
+    public Boolean changePassword(String userId, String newPassword, boolean temporary) {
         UserRepresentation user = keycloakProvider.getRealmResource().users().get(userId).toRepresentation();
         if (user != null) {
             CredentialRepresentation credential = new CredentialRepresentation();
             credential.setType(CredentialRepresentation.PASSWORD);
             credential.setValue(newPassword);
-            credential.setTemporary(true); // True si quieres que sea una contraseña temporal
+            credential.setTemporary(temporary); // True si quieres que sea una contraseña temporal
 
             keycloakProvider.getRealmResource().users().get(userId).resetPassword(credential);
             return true;
@@ -179,7 +179,7 @@ public class AuthService implements IAuthService {
             LoginRequest loginDTO = new LoginRequest(email, oldPassword);
             authenticate(loginDTO);
         } catch (UserChangePasswordException exception) {
-            changePassword(userId, newPassword);
+            changePassword(userId, newPassword,false);
             return true;
         }
         return false;
