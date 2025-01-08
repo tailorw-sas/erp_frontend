@@ -2038,7 +2038,7 @@ async function applyUndo() {
       openDialog.value = false
       if (response.errors.length === 0) {
         toast.add({
-          severity: 'success',
+          severity: 'info',
           summary: 'Success',
           detail: `Undo successfully applied to ${response.satisfactoryQuantity} records.`,
           life: 6000
