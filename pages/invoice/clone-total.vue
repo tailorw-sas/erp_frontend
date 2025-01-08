@@ -878,7 +878,6 @@ async function createClonation(item: { [key: string]: any }) {
     employeeId: userData?.value?.user?.userId,
     })) */
   if (LocalAttachmentList.value.length > 0) {
-    console.log(LocalAttachmentList.value)
     payload.attachments = LocalAttachmentList.value.map(att => ({
       attachmentId: att.attachmentId,
       filename: att.filename,
