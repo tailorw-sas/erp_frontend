@@ -62,7 +62,7 @@ public class Invoice {
 
     private LocalDate reSendDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Invoice parent;
 
     @ManyToOne(fetch = FetchType.EAGER)
