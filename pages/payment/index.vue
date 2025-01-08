@@ -2625,7 +2625,7 @@ function onRowContextMenu(event: any) {
 
   // if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
 
-  if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+  if (event && event.data && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -4075,13 +4075,13 @@ onMounted(async () => {
     >
       <template #column-icon="{ data: objData, column }">
         <div class="flex align-items-center justify-content-center p-0 m-0">
-          <!-- <pre>{{ objData }}</pre> -->
+          <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
           <Button
             v-if="showInconAttachment(objData)"
             :icon="column.icon"
             class="p-button-rounded p-button-text w-2rem h-2rem"
             aria-label="Submit"
-            :disabled="objData?.attachmentStatus?.nonNone"
+            :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
             :style="{ color: objData.color }"
           />
         </div>
