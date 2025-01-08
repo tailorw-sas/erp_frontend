@@ -49,10 +49,10 @@ public class ManageInvoiceSearchResponse {
         this.invoiceDate = projection.getInvoiceDate();
         this.hotel = new ManageInvoiceHotelResponse(projection.getHotel());
         this.agency = new ManageInvoiceAgencyResponse(projection.getAgency());
-        this.invoiceStatus = projection.getInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getInvoiceStatus()) : null;
+        this.invoiceStatus = projection.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getManageInvoiceStatus()) : null;
         this.hasAttachments = projection.getHasAttachments() != null ? projection.getHasAttachments() : null;
-        this.status = EInvoiceStatus.fromName(projection.getStatus());
-        this.isInCloseOperation = projection.getIsCloseOperation();
+        this.status =projection.getInvoiceStatus() != null ? projection.getInvoiceStatus() : null;
+        this.isInCloseOperation = projection.isCloseOperation();
         this.invoiceType = projection.getInvoiceType();
         this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
         this.manageInvoiceType = projection.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(projection.getManageInvoiceType()) : null;
