@@ -14,35 +14,36 @@ pipeline {
         GITHUB_REPO = 'erp_backend'
         GIT_TOKEN = "${env.GITHUB_TOKEN}"
         ORIGIN_BRANCH_NAME = "${env.GIT_BRANCH}"
-        DOCKER_IMAGE_NAME = 'tailorw/erp-insis:version'
+        DOCKER_IMAGE_NAME = 'tailorw/erp-innsist:version'
         SRC = 'insis'
         SRC_SHARE = 'share'
         GIT_PACKAGE_TOKEN = credentials("GithubPackageToken")
         DOCKER_CREDENTIALS = 'Tailorw-DockerCredentials'
-        NAMESPACE = 'finamer'
+        NAMESPACE_DEV_QA = 'finamer'
+        NAMESPACE_PROD = 'erp'
         K3S_CREDENTIALS = 'KubernetesCredential-env'
-        YAML = 'insis.yaml'
-        DEPLOYMENT_NAME = 'insis'
-        URL_DEV = credentials("URL-K3S-dev")
-        URL_QA = credentials("URL-K3S-qa")
+        YAML = 'innsist.yaml'
+        DEPLOYMENT_NAME = 'innsist'
+        URL_DEV = "${URL_K3S_DEV}"
+        URL_QA = "${URL_K3S_QA}"
+        URL_PROD = "${URL_K3S}"
         EMAIL_FROM = "${env.CORREO_ORIGEN}"
-        PR_ID = "${env.CHANGE_ID}"
         ESTADO_OK = 'OK'
         ESTADO_ERROR = 'ERROR'
-	DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+        DEFAULT_EMAIL = "${env.DEFAULT_MAIL}"
+        SEND_MAIL = "${SEND_MAIL_STATUS}"
     }
     
     triggers {
         githubPush()
     }
-    
+
     stages {
 
         stage ('Check for changes') {
             steps {
-                echo '* * * * STAGE: Checking for changes in a specific project * * * *'
+                echo '* * * * * *STAGE: Checking for changes in a specific project * * * * * *'
                 script {
-                    echo "**El ID del Pull Request es: ${PR_ID}"
                     if (!params.FORCE_BUILD){
                         def folderPaths = [env.SRC, env.SRC_SHARE]
                         def changes = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
@@ -86,10 +87,20 @@ pipeline {
                     if(env.BRANCH_NAME == 'dev'){
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
+                        env.NAMESPACE = env.NAMESPACE_DEV_QA
+                        env.POM_NAME = "pom-${env.BRANCH_NAME}.xml"
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
+                        env.NAMESPACE = env.NAMESPACE_DEV_QA
+                        env.POM_NAME = "pom-${env.BRANCH_NAME}.xml"
+                    }
+                    if(env.BRANCH_NAME == 'main'){
+                        env.SERVER_K3S_URL = env.URL_PROD
+                        env.EMAIL_LIST = env.EMAIL_LIST_PROD
+                        env.NAMESPACE = env.NAMESPACE_PROD
+                        env.POM_NAME = "pom.xml"
                     }
                 }
             }
@@ -99,7 +110,7 @@ pipeline {
             steps {
                 echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
-                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=pom-$BRANCH_NAME.xml .'
+                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=$POM_NAME .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
                         sh 'docker push $DOCKER_IMAGE'
                     }
@@ -121,15 +132,19 @@ pipeline {
     post {
         success {
             script {
+                if(env.SEND_MAIL == 'SI'){
                 def notificator = new NotificadorEmail(this)
                 notificator.sendEmail(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_OK, env.PR_TITLE, env.PR_AUTHOR)
             }
         }
+        }
         failure {
             script {
+                if(env.SEND_MAIL == 'SI'){
                 def notificator = new NotificadorEmail(this)
                 notificator.sendEmailWithLog(env.EMAIL_AUTHOR, env.EMAIL_LIST, env.EMAIL_FROM, env.SRC, env.SISTEMA, env.BRANCH_NAME, env.ESTADO_ERROR, env.PR_TITLE, env.PR_AUTHOR, env.JOB_NAME, env.BUILD_NUMBER, env.WORKSPACE)
             }
         }
+    }
     }
 }

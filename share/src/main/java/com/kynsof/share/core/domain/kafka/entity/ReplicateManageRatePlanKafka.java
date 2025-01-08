@@ -19,5 +19,6 @@ public class ReplicateManageRatePlanKafka implements Serializable {
     @JsonProperty("name")
     private String name;
     private String status;
+    private UUID manageHotel;
 
 }

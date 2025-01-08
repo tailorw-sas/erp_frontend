@@ -358,7 +358,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getCity(),
                                 agencyDto.getCreditDay(),
                                 agencyDto.getAutoReconcile(),
-                                agencyDto.getValidateCheckout()
+                                agencyDto.getValidateCheckout(),
+                                agencyDto.getAgencyAlias()
                         ));
                     }
                 }
@@ -532,7 +533,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                     for (ManageTradingCompaniesDto manageTradingCompaniesDto : this.tradingCompaniesService.findAll()) {
                         producerReplicateManageTradingCompanyService.create(new ReplicateManageTradingCompanyKafka(manageTradingCompaniesDto.getId(),
                                 manageTradingCompaniesDto.getCode(), manageTradingCompaniesDto.getIsApplyInvoice(),
-                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany(), manageTradingCompaniesDto.getStatus().name()));
+                                manageTradingCompaniesDto.getCif(), manageTradingCompaniesDto.getAddress(), manageTradingCompaniesDto.getCompany(), manageTradingCompaniesDto.getInnsistCode(), manageTradingCompaniesDto.getStatus().name()));
                     }
                 }
                 case MANAGE_CURRENCY -> {

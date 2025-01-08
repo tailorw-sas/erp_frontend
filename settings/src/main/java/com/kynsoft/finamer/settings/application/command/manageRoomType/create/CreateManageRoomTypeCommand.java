@@ -17,9 +17,9 @@ public class CreateManageRoomTypeCommand implements ICommand {
     private final String name;
     private final UUID manageHotel;
 
-    public CreateManageRoomTypeCommand(String code, String description, Status status,
+    public CreateManageRoomTypeCommand(UUID id, String code, String description, Status status,
                                        String name, UUID manageHotel) {
-        this.id = UUID.randomUUID();
+        this.id = id;
         this.code = code;
         this.description = description;
         this.status = status;
@@ -28,7 +28,7 @@ public class CreateManageRoomTypeCommand implements ICommand {
     }
 
     public static CreateManageRoomTypeCommand fromRequest(CreateManageRoomTypeRequest request){
-        return new CreateManageRoomTypeCommand(
+        return new CreateManageRoomTypeCommand(UUID.randomUUID(),
                 request.getCode(), request.getDescription(), request.getStatus(),
                 request.getName(), request.getManageHotel()
         );
