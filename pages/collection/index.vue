@@ -935,7 +935,6 @@ async function getListInvoice() {
       const days0 = listItemsInvoice.value.filter(item => item.aging === 0)
       count.days0Count = days0.length
     }
-    console.log(count)
     subTotalsInvoice.value = { ...count }
   }
 }
