@@ -23,7 +23,9 @@ public class ImportBookingRatePlanValidator extends ExcelRuleValidator<BookingRo
             return false;
         }
         try {
-            this.ratePlanService.findManageRatePlanByCodeAndHotelCode(obj.getRatePlan(), obj.getManageHotelCode());
+            if (Objects.nonNull(obj.getRatePlan())) {
+                this.ratePlanService.findManageRatePlanByCodeAndHotelCode(obj.getRatePlan(), obj.getManageHotelCode());
+            }
         } catch (Exception e) {
             errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan not exist."));
             return false;

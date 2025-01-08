@@ -38,5 +38,11 @@ public class ManageInvoiceStatusResponse {
         this.id = invoiceStatus.getId();
         this.code = invoiceStatus.getCode();
         this.name = invoiceStatus.getName();
+        this.showClone = invoiceStatus.getShowClone();
+        this.enabledToApply = invoiceStatus.getEnabledToApply();
+        this.sentStatus = invoiceStatus.getSentStatus();
+        this.reconciledStatus = invoiceStatus.getReconciledStatus();
+        this.canceledStatus = invoiceStatus.getCanceledStatus();
+        this.processStatus = invoiceStatus.getProcessStatus();
     }
 }
