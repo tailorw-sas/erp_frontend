@@ -146,7 +146,7 @@ async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
     }
 
     await GenericService.update('invoicing', 'manage-invoice', props.selectedInvoice.id || '', payloadChangeAgency)
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'The agency has been changed successfully', life: 3000 })
+    toast.add({ severity: 'info', summary: 'Successful', detail: 'The agency has been changed successfully', life: 3000 })
     onClose(false)
   }
   catch (error) {
