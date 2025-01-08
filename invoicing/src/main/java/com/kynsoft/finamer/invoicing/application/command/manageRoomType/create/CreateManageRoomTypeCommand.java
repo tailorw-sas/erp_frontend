@@ -15,6 +15,7 @@ public class CreateManageRoomTypeCommand implements ICommand {
     private final String code;
     private final String name;
     private final String status;
+    private final UUID hotelId;
 
     @Override
     public ICommandMessage getMessage() {

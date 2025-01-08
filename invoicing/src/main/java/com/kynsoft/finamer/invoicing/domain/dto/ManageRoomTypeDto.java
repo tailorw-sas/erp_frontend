@@ -17,4 +17,5 @@ public class ManageRoomTypeDto {
     private String code;
     private String name;
     private String status;
+    private ManageHotelDto hotel;
 }

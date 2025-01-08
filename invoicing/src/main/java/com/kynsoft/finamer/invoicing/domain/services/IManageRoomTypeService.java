@@ -27,4 +27,6 @@ public interface IManageRoomTypeService {
     Long countByCodeAndManageHotelIdAndNotId(String code, UUID manageHotelId, UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManageRoomTypeDto findManageRoomTypenByCodeAndHotelCode(String code, String hotelCode);
 }
