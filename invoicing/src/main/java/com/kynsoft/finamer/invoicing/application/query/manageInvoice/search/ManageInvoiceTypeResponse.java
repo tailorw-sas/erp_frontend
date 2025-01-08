@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceTypeProjection;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,5 +19,11 @@ public class ManageInvoiceTypeResponse {
         this.id = invoiceType.getId();
         this.code = invoiceType.getCode();
         this.name = invoiceType.getName();
+    }
+
+    public ManageInvoiceTypeResponse(ManageInvoiceTypeProjection manageInvoiceType) {
+        this.id = manageInvoiceType.getId();
+        this.code = manageInvoiceType.getCode();
+        this.name = manageInvoiceType.getName();
     }
 }
