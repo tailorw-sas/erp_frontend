@@ -85,7 +85,8 @@ public class ManageInvoiceCustomRepositoryImpl implements ManageInvoiceCustomRep
                                 cb.greaterThanOrEqualTo(root.get("invoiceDate"), hotelJoin.get("closeOperation").get("beginDate")),
                                 cb.lessThanOrEqualTo(root.get("invoiceDate"), hotelJoin.get("closeOperation").get("endDate"))
                         ), true)
-                        .otherwise(false)
+                        .otherwise(false),
+                root.get("dueDate")
         ));
 
         // Aplicar especificaciones
