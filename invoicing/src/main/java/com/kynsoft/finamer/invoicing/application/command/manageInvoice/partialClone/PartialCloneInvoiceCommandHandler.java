@@ -46,6 +46,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IInvoiceCloseOperationService closeOperationService;
     private final IManageEmployeeService employeeService;
+    private final IManageResourceTypeService resourceTypeService;
 
     public PartialCloneInvoiceCommandHandler(
             IManageInvoiceService service,
@@ -58,7 +59,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             IManageInvoiceTransactionTypeService transactionTypeService,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
             IInvoiceCloseOperationService closeOperationService,
-            IManageEmployeeService employeeService) {
+            IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService) {
 
         this.service = service;
 
@@ -74,6 +75,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.closeOperationService = closeOperationService;
         this.employeeService = employeeService;
+        this.resourceTypeService = resourceTypeService;
     }
 
     @Override
@@ -165,6 +167,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             ));
             ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
                     command.getAttachmentCommands().get(i).getType());
+            ResourceTypeDto resourceTypeDto = this.resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
             if (attachmentType.isAttachInvDefault()) {
                 cont++;
             }
@@ -178,7 +181,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                     null, command.getAttachmentCommands().get(i).getEmployee(),
                     command.getAttachmentCommands().get(i).getEmployeeId(),
                     null,
-                    null,
+                    resourceTypeDto,
                     false
             );
 

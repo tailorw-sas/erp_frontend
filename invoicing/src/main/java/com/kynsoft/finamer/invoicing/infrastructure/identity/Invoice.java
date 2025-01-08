@@ -103,9 +103,6 @@ public class Invoice {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
     private List<ManageAttachment> attachments;
 
-//    @Enumerated(EnumType.STRING)
-//    private Status status;
-
     private Double credits;
 
     private String sendStatusError;

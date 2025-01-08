@@ -49,20 +49,23 @@ public class CommonImportValidators {
         return true;
     }
 
-    public void validateHotel(String hotelCode, List<ErrorField> errorFieldList) {
+    public boolean validateHotel(String hotelCode, List<ErrorField> errorFieldList) {
         if (Objects.isNull(hotelCode)){
             errorFieldList.add(new ErrorField("Hotel", "Hotel can't be empty"));
-            return;
+            return false;
         }
         boolean existHotel = hotelService.existByCode(hotelCode);
         if (existHotel) {
             ManageHotelDto manageHotelDto = hotelService.findByCode(hotelCode);
             if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())) {
                 errorFieldList.add(new ErrorField("Hotel", "The hotel is inactive"));
+                return false;
             }
         } else {
             errorFieldList.add(new ErrorField("Hotel", "The hotel not exist"));
+            return false;
         }
+        return true;
     }
 
     public boolean validateTransactionDate(String transactionDate, String dateFormat, List<ErrorField> errorFieldList) {
@@ -83,19 +86,20 @@ public class CommonImportValidators {
         return true;
     }
 
-    public void validateRemarks(String remarks, List<ErrorField> errorFieldList) {
+    public boolean validateRemarks(String remarks, List<ErrorField> errorFieldList) {
         if (Objects.isNull(remarks)){
             errorFieldList.add(new ErrorField("Remarks", "Remarks can't be empty"));
-            return;
+            return false;
         }
         boolean valid = remarks.length() < 8000;
         if (!valid) {
             errorFieldList.add(new ErrorField("Remarks", "Field length is to long"));
+            return false;
         }
-
+        return true;
     }
 
-    public void validateCloseOperation(String transactionDateArg, String hotelCode, String dateFormat, List<ErrorField> errorFieldList,boolean isValidTransactionDate) {
+    public boolean validateCloseOperation(String transactionDateArg, String hotelCode, String dateFormat, List<ErrorField> errorFieldList,boolean isValidTransactionDate) {
         if (hotelService.existByCode(hotelCode) &&
               isValidTransactionDate ) {
             ManageHotelDto manageHotelDto = hotelService.findByCode(hotelCode);
@@ -107,9 +111,11 @@ public class CommonImportValidators {
                 boolean result = transactionDate.isBefore(beginDate) || transactionDate.isAfter(endDate);
                 if (result) {
                     errorFieldList.add(new ErrorField("Transaction Date", "Transaction Date is out of close operation"));
+                    return false;
                 }
             }
         }
+        return true;
     }
 
 }

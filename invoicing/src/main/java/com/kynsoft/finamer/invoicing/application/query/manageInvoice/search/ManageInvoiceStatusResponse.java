@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceStatusProjection;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,5 +32,17 @@ public class ManageInvoiceStatusResponse {
         this.reconciledStatus = projection.isReconciledStatus();
         this.canceledStatus = projection.isCanceledStatus();
         this.processStatus = projection.getProcessStatus();
+    }
+
+    public ManageInvoiceStatusResponse(ManageInvoiceStatusProjection invoiceStatus) {
+        this.id = invoiceStatus.getId();
+        this.code = invoiceStatus.getCode();
+        this.name = invoiceStatus.getName();
+        this.showClone = invoiceStatus.getShowClone();
+        this.enabledToApply = invoiceStatus.getEnabledToApply();
+        this.sentStatus = invoiceStatus.isSentStatus();
+        this.reconciledStatus = invoiceStatus.isReconciledStatus();
+         this.canceledStatus = invoiceStatus.isCanceledStatus();
+        this.processStatus = invoiceStatus.getProcessStatus();
     }
 }

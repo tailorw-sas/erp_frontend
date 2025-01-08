@@ -117,7 +117,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
         Page<PaymentImportCache> cacheList;
         do {
             cacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);

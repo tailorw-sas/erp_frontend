@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.query.manageInvoice.search;
 
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceHotelProjection;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,5 +20,12 @@ public class ManageInvoiceHotelResponse {
         this.code = projection.getCode();
         this.name = projection.getName();
         this.virtual = projection.isVirtual();
+    }
+
+    public ManageInvoiceHotelResponse(ManageInvoiceHotelProjection projection) {
+        this.id = projection.getId();
+        this.code = projection.getCode();
+        this.name = projection.getName();
+        this.virtual = projection.getIsVirtual();
     }
 }

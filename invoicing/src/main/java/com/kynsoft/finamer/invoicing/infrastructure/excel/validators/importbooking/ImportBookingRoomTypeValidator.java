@@ -4,7 +4,6 @@ import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +19,15 @@ public class ImportBookingRoomTypeValidator extends ExcelRuleValidator<BookingRo
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if (Objects.nonNull(obj.getRoomType()) && !roomTypeService.existByCode(obj.getRoomType())) {
-            errorFieldList.add(new ErrorField("Room Type", "Room Type not exist"));
+            errorFieldList.add(new ErrorField("Room Type", "Room Type not exist."));
+            return false;
+        }
+        try {
+            if (Objects.nonNull(obj.getRoomType())) {
+                this.roomTypeService.findManageRoomTypenByCodeAndHotelCode(obj.getRoomType(), obj.getManageHotelCode());
+            }
+        } catch (Exception e) {
+            errorFieldList.add(new ErrorField("Room Type", "Room Type not exist."));
             return false;
         }
         return true;

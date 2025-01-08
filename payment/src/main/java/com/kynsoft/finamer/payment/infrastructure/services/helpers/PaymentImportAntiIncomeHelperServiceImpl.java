@@ -123,7 +123,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
         Page<PaymentImportCache> cacheList;
         if (!paymentImportErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
             do {
@@ -135,7 +135,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                             UUID.fromString(request.getEmployeeId()),
                             getDefaultApplyDepositTransactionTypeId(),
                             UUID.fromString(request.getInvoiceTransactionTypeId()),
-                            paymentImportCache.getRemarks()
+                            paymentImportCache.getRemarks(), request.getAttachment()
                     );
 
                 });
@@ -169,7 +169,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     }
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
-            UUID transactionTypeIdForAdjustment, String remarks) {
+            UUID transactionTypeIdForAdjustment, String remarks, byte[] attachment) {
         CreatePaymentDetailApplyDepositFromFileCommand createPaymentDetailApplyDepositCommand
                 = new CreatePaymentDetailApplyDepositFromFileCommand(Status.ACTIVE,
                         paymentDetail,
@@ -178,6 +178,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                         remarks,
                         employee,
                         transactionTypeIdForAdjustment);
+        createPaymentDetailApplyDepositCommand.setAttachment(attachment);
         ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand, true);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 

@@ -171,7 +171,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);
         manageInvoiceDto.setIsManual(false);
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
-        manageInvoiceDto.setBookings(createBooking(bookingRowList));
+        manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel));
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
@@ -209,12 +209,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         return invoiceNumber;
     }
 
-    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList) {
+    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
         return bookingRowList.stream().map(bookingRow -> {
-            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ?
-                    ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
-            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ?
-                    roomTypeService.findByCode(bookingRow.getRoomType()) : null;
+            //ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
+            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRow.getRatePlan(), hotel.getCode()) : null;
+            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRow.getRoomType(), hotel.getCode()) : null;
             ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightType()) ?
                     nightTypeService.findByCode(bookingRow.getNightType()) : null;
             ManageBookingDto bookingDto = bookingRow.toAggregate();
