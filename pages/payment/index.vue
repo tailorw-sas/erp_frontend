@@ -2625,7 +2625,7 @@ function onRowContextMenu(event: any) {
 
   // if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
 
-  if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+  if (event && event.data && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -2647,7 +2647,7 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
     else if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
@@ -2659,19 +2659,19 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
     }
     else if (event && event.data && event.data?.attachmentStatus?.supported === true) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
   }
@@ -2899,7 +2899,7 @@ async function saveApplyPayment() {
     }
   }
   catch (error) {
-    objItemSelectedForRightClickApplyPayment.value = {}
+    // objItemSelectedForRightClickApplyPayment.value = {}
     idInvoicesSelectedToApplyPayment.value = []
     paymentDetailsTypeDepositSelected.value = []
     loadingSaveApplyPayment.value = false
@@ -4075,13 +4075,13 @@ onMounted(async () => {
     >
       <template #column-icon="{ data: objData, column }">
         <div class="flex align-items-center justify-content-center p-0 m-0">
-          <!-- <pre>{{ objData }}</pre> -->
+          <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
           <Button
             v-if="showInconAttachment(objData)"
             :icon="column.icon"
             class="p-button-rounded p-button-text w-2rem h-2rem"
             aria-label="Submit"
-            :disabled="objData?.attachmentStatus?.nonNone"
+            :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
             :style="{ color: objData.color }"
           />
         </div>
