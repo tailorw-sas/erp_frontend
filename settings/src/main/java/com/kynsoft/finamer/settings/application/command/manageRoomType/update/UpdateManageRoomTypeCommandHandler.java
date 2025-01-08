@@ -52,7 +52,7 @@ public class UpdateManageRoomTypeCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name()));
+            this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name(), dto.getManageHotel().getId()));
         }
     }
 

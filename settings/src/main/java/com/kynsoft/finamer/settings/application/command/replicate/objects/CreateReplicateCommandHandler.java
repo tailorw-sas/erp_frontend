@@ -34,6 +34,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRatePlan.ProducerReplicateManageRatePlanService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRegion.ProducerReplicateManageRegionService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomCategory.ProducerReplicateManageRoomCategoryService;
+import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomType.ProducerReplicateManageRoomTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTimeZone.ProducerReplicateManageTimeZoneService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTradigCompany.ProducerReplicateManageTradingCompanyService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageTransactionStatus.ProducerReplicateManageTransactionStatusService;
@@ -134,7 +135,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     private final IManagerBankService managerBankService;
     private final ProducerReplicateBankService producerReplicateBankService;
 
-    public CreateReplicateCommandHandler(IManagerAccountTypeService accountTypeService, ProducerReplicateAccountTypeService producerReplicateAccountTypeService, IManageRoomCategoryService roomCategoryService,
+    private final ProducerReplicateManageRoomTypeService producerReplicateManageRoomTypeService;
+    private final IManageRoomTypeService roomTypeService;
+
+    public CreateReplicateCommandHandler(IManageRoomTypeService roomTypeService, ProducerReplicateManageRoomTypeService producerReplicateManageRoomTypeService,            
+            IManagerAccountTypeService accountTypeService, ProducerReplicateAccountTypeService producerReplicateAccountTypeService, IManageRoomCategoryService roomCategoryService,
                                          ProducerReplicateManageRoomCategoryService producerReplicateManageRoomCategoryService,
                                          IManageRatePlanService ratePlanService,
                                          ProducerReplicateManageRatePlanService producerReplicateManageRatePlanService,
@@ -191,6 +196,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                          ProducerReplicateManageNightTypeService producerReplicateManageNightTypeService,
                                          IManagerBankService managerBankService,
                                          ProducerReplicateBankService producerReplicateBankService) {
+        this.roomTypeService = roomTypeService;
+        this.producerReplicateManageRoomTypeService = producerReplicateManageRoomTypeService;
         this.managerBankService = managerBankService;
         this.producerReplicateBankService = producerReplicateBankService;
         this.accountTypeService = accountTypeService;
@@ -263,6 +270,11 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
     public void handle(CreateReplicateCommand command) {
         for (ObjectEnum object : command.getObjects()) {
             switch (object) {
+                case MANAGE_ROOM_TYPE -> {
+                    for (ManageRoomTypeDto manageRoomTypeDto : this.roomTypeService.findAllToReplicate()) {
+                        this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(manageRoomTypeDto.getId(), manageRoomTypeDto.getCode(), manageRoomTypeDto.getName(), manageRoomTypeDto.getStatus().name(), manageRoomTypeDto.getManageHotel().getId()));
+                    }
+                }
                 case MANAGE_BANK -> {
                     for (ManagerBankDto managerBankDto : this.managerBankService.findAllToReplicate()) {
                         this.producerReplicateBankService.replicate(new ManageBankKafka(managerBankDto.getId(), managerBankDto.getCode(), managerBankDto.getName(), managerBankDto.getDescription(), managerBankDto.getStatus().name()));

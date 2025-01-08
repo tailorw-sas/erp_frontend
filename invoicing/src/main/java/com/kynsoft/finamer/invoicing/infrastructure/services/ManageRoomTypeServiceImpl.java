@@ -121,4 +121,15 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+    @Override
+    public ManageRoomTypeDto findManageRoomTypenByCodeAndHotelCode(String code, String hotelCode) {
+        Optional<ManageRoomType> optionalEntity = repositoryQuery.findManageRatePlanByCodeAndHotelCode(code, hotelCode);
+
+        if(optionalEntity.isPresent()){
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Room type not found.")));
+    }
+
 }
