@@ -23,7 +23,7 @@ public class ConsumerUpdateManageAgencyService {
             UpdateAgencyCommand command = new UpdateAgencyCommand(
                     objKafka.getId(),
                     objKafka.getName(),
-                    objKafka.getAgencyAlias(),
+                    objKafka.getName(),
                     objKafka.getStatus()
             );
 

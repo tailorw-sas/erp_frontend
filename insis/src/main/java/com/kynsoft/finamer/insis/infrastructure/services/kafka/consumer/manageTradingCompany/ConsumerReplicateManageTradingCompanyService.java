@@ -24,7 +24,7 @@ public class ConsumerReplicateManageTradingCompanyService {
                     entity.getId(),
                     entity.getCode(),
                     entity.getCompany(),
-                    entity.getInnsistCode(),
+                    entity.getCode(),
                     entity.getStatus()
             );
             mediator.send(command);

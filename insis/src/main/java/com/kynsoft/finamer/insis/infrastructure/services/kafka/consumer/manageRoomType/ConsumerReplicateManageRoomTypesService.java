@@ -25,7 +25,7 @@ public class ConsumerReplicateManageRoomTypesService {
                 entity.getId(),
                     entity.getCode(),
                     entity.getName(),
-                    entity.getManageHotel()
+                    null
             );
             mediator.send(command);
         }catch (Exception ex){

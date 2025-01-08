@@ -48,8 +48,7 @@ public class CreateManyManageRoomTypeCommandHandler implements ICommandHandler<C
                     newRoomTypeDto.getId(),
                     newRoomTypeDto.getCode(),
                     newRoomTypeDto.getName(),
-                    "ACTIVE",
-                    hotelDto.getId()
+                    "ACTIVE"
             );
             producerReplicateManageRoomTypeService.create(replicate);
         }

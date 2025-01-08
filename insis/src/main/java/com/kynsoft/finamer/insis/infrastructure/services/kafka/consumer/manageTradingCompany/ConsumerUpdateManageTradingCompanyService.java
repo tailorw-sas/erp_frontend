@@ -22,8 +22,7 @@ public class ConsumerUpdateManageTradingCompanyService {
         try{
             UpdateTradingCompanyCommand command = new UpdateTradingCompanyCommand(
                     entity.getId(),
-                    entity.getCompany(),
-                    entity.getInnsistCode()
+                    entity.getCompany()
             );
             mediator.send(command);
         }catch (Exception ex){

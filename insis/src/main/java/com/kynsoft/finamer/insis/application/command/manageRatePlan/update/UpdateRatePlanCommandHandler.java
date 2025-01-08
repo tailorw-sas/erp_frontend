@@ -26,13 +26,11 @@ public class UpdateRatePlanCommandHandler implements ICommandHandler<UpdateRateP
     @Override
     public void handle(UpdateRatePlanCommand command) {
         ManageRatePlanDto dto = service.findById(command.getId());
-        ManageHotelDto hotelDto = hotelService.findById(command.getHotelId());
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         dto.setUpdatedAt(command.getUpdatedAt());
-        updateHotel(dto::setManageHotel, command.getHotelId(), hotelDto.getId(), update::setUpdate);
 
         service.update(dto);
     }

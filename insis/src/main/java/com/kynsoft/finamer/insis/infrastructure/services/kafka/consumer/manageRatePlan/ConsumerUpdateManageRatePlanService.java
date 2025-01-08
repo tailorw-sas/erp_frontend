@@ -23,8 +23,7 @@ public class ConsumerUpdateManageRatePlanService {
             UpdateRatePlanCommand command = new UpdateRatePlanCommand(
                     entity.getId(),
                     entity.getName(),
-                    entity.getStatus(),
-                    entity.getMangeHotel()
+                    entity.getStatus()
             );
             mediator.send(command);
         }catch (Exception ex){

@@ -24,7 +24,7 @@ public class ConsumerUpdateManageRoomTypeService {
                     entity.getId(),
                     entity.getName(),
                     entity.getStatus(),
-                    entity.getManageHotel()
+                    null
             );
             mediator.send(command);
         }catch (Exception ex){
