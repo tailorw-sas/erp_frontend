@@ -15,7 +15,6 @@ import com.kynsoft.finamer.settings.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRoomType.ProducerReplicateManageRoomTypeService;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -53,7 +52,7 @@ public class UpdateManageRoomTypeCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
-            this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name(), Objects.nonNull(dto.getManageHotel()) ? dto.getManageHotel().getId() : null));
+            this.producerReplicateManageRoomTypeService.create(new ReplicateManageRoomTypeKafka(dto.getId(), dto.getCode(), dto.getName(), dto.getStatus().name()));
         }
     }
 

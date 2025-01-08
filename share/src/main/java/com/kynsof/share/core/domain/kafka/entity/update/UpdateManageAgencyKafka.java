@@ -43,5 +43,4 @@ public class UpdateManageAgencyKafka implements Serializable {
     private Boolean autoReconcile;
     private Boolean validateCheckout;
     private String generationType;
-    private String agencyAlias;
 }

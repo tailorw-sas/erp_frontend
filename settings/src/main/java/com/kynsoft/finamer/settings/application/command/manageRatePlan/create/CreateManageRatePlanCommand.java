@@ -19,9 +19,9 @@ public class CreateManageRatePlanCommand implements ICommand {
     private String description;
     private Status status;
 
-    public CreateManageRatePlanCommand(UUID id, String code, String description, String name,
+    public CreateManageRatePlanCommand(String code, String description, String name,
                                        UUID hotel, Status status) {
-        this.id = id;
+        this.id = UUID.randomUUID();
         this.code = code;
         this.description = description;
         this.name = name;
@@ -31,7 +31,6 @@ public class CreateManageRatePlanCommand implements ICommand {
 
     public static CreateManageRatePlanCommand fromRequest(CreateManageRatePlanRequest request) {
         return new CreateManageRatePlanCommand(
-                UUID.randomUUID(),
                 request.getCode(),
                 request.getDescription(),
                 request.getName(),

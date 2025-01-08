@@ -13,7 +13,6 @@ import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manageRatePlan.ProducerReplicateManageRatePlanService;
 
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
