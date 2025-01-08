@@ -44,6 +44,6 @@ public class CreateManageRatePlanCommandHandler implements ICommandHandler<Creat
                 command.getDescription(),
                 command.getStatus()
         ));
-        this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(command.getId(), command.getCode(), command.getName(), command.getStatus().name()));
+        this.producerReplicateManageRatePlanService.create(new ReplicateManageRatePlanKafka(ratePlanDto.getId(), ratePlanDto.getHotel().getId(), ratePlanDto.getCode(), ratePlanDto.getName(), ratePlanDto.getStatus().name()));
     }
 }
