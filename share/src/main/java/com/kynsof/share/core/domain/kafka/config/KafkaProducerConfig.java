@@ -22,7 +22,7 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-    @Value("${KAFKA_MAX_REQUEST_VALUE}")
+    @Value("${KAFKA_MAX_REQUEST_VALUE:104857600}")
     private String maxRequestSize;
 
 //    @Bean
