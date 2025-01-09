@@ -99,6 +99,13 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
+const objLoading = ref({
+  loadingAgency: false,
+  loadingClient: false,
+  loadingHotel: false,
+  loadingStatus: false
+})
 // -------------------------------------------------------------------------------------------------------
 const fileNames = computed(() => {
   return importModel.value.attachFile.map(file => file.name).join(', ')
@@ -219,7 +226,7 @@ async function importExpenseBooking() {
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.BOOKING)
     // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
-    formData.append('hotelId', importModel.value.hotel)
+    formData.append('hotelId', typeof importModel.value.hotel === 'object' ? importModel.value.hotel.id : importModel.value.hotel)
     formData.append('employeeId', userData?.value?.user?.userId || '')
     for (const fileInput of pdfFiles) {
       formData.append('attachments', fileInput)
@@ -335,6 +342,48 @@ async function getHotelList(query: string = '') {
   }
 }
 
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+}
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
+  }
+}
+
+async function getHotelListForSelectField(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  try {
+    objLoading.value.loadingHotel = true
+    let hotelTemp: any[] = []
+    hotelList.value = []
+    hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    hotelList.value = [...hotelList.value, ...hotelTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingHotel = false
+  }
+  finally {
+    objLoading.value.loadingHotel = false
+  }
+}
+
 async function activeImport() {
   if (importModel.value.hotel !== '' && importModel.value.importFile !== '' && importModel.value.attachFile !== null) {
     uploadComplete.value = false
@@ -376,12 +425,39 @@ onMounted(async () => {
             <div class="grid p-0 m-0" style="margin: 0 auto;">
               <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-4rem pt-3">Hotel: <span class="p-error">*</span></label>
+                  <label class="w-4rem">Hotel: <span class="p-error">*</span></label>
                   <div class="w-full">
-                    <Dropdown
+                    <!-- <Dropdown
                       v-model="importModel.hotel"
                       class="w-full" :options="hotelList" option-label="name"
                       option-value="id" placeholder="Select Hotel" @change="activeImport()"
+                    /> -->
+                    <DebouncedAutoCompleteComponent
+                      id="autocomplete"
+                      class="w-full h-2rem align-items-center"
+                      field="name"
+                      item-value="id"
+                      :model="importModel.hotel"
+                      :loading="objLoading.loadingHotel"
+                      :suggestions="[...hotelList]"
+                      @change="($event) => {
+                        importModel.hotel = $event
+                      }"
+                      @load="async($event) => {
+                        const filter: FilterCriteria[] = [
+                          {
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          },
+                        ]
+                        const objQueryToSearch = {
+                          query: $event,
+                          keys: ['name', 'code'],
+                        }
+                        await getHotelListForSelectField(confHotelApi.moduleApi, confHotelApi.uriApi, objQueryToSearch, filter)
+                      }"
                     />
                   </div>
                 </div>
