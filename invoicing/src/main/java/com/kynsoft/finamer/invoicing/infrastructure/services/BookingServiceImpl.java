@@ -64,6 +64,12 @@ public class BookingServiceImpl implements ImportBookingService {
     @Async
     public void importBookingFromFile(ImportBookingFromFileRequest importBookingFromFileRequest) {
 
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("Antes de entrar l bloqueo");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
         try {
             this.redisLock.lock();
             ImportBookingRequest request = importBookingFromFileRequest.getRequest();
@@ -74,6 +80,12 @@ public class BookingServiceImpl implements ImportBookingService {
                 readerConfiguration.setInputStream(inputStream);
                 readerConfiguration.setReadLastActiveSheet(true);
                 ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
+                        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("Lee el excel");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
                 ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
                 validatorFactory.createValidators(request.getImportType().name());
                 BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
@@ -81,6 +93,12 @@ public class BookingServiceImpl implements ImportBookingService {
                         .total(0)
                         .build();
                 applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
+                        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("Comenzando a escribir en redis");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
                 for (BookingRow bookingRow : excelBean) {
                     bookingRow.setImportProcessId(request.getImportProcessId());
                     if (validatorFactory.validate(bookingRow)) {
