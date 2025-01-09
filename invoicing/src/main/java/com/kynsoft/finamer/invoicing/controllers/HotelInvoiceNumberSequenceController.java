@@ -5,14 +5,13 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.hotelInvoiceNumberSequence.run.CreateHotelInvoiceNumberSequenceRunCommand;
-import com.kynsoft.finamer.invoicing.application.command.hotelInvoiceNumberSequence.run.CreateHotelInvoiceNumberSequenceRunMessage;
 import com.kynsoft.finamer.invoicing.application.command.hotelInvoiceNumberSequence.updateByCode.UpdateCodeAndValueCommand;
-import com.kynsoft.finamer.invoicing.application.command.hotelInvoiceNumberSequence.updateByCode.UpdateCodeAndValueMessage;
 import com.kynsoft.finamer.invoicing.application.command.hotelInvoiceNumberSequence.updateByCode.UpdateCodeAndValuerRequest;
 import com.kynsoft.finamer.invoicing.application.command.hotelInvoinceNumberSequence.create.CreateHotelInvoiceNumberSequenceCommand;
 import com.kynsoft.finamer.invoicing.application.command.hotelInvoinceNumberSequence.create.CreateHotelInvoiceNumberSequenceMessage;
 import com.kynsoft.finamer.invoicing.application.command.hotelInvoinceNumberSequence.create.CreateHotelInvoiceNumberSequenceRequest;
 import com.kynsoft.finamer.invoicing.application.query.hotelInvoiceNumberSequence.getByCodeHotel.FindHotelInvoiceNumberSequenceByIdQuery;
+import com.kynsoft.finamer.invoicing.application.query.hotelInvoiceNumberSequence.getByTradingCode.FindHotelInvoiceNumberSequenceByTradingCodeQuery;
 import com.kynsoft.finamer.invoicing.application.query.hotelInvoiceNumberSequence.search.GetSearchHotelInvoiceNumberSequenceQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.HotelInvoiceNumberSequenceResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -69,7 +68,7 @@ public class HotelInvoiceNumberSequenceController {
     @GetMapping(path = "/trading/{code}/invoice-type/{invoiceType}")
     public ResponseEntity<?> getByTradingCode(@PathVariable String code, @PathVariable EInvoiceType invoiceType) {
 
-        FindHotelInvoiceNumberSequenceByIdQuery query = new FindHotelInvoiceNumberSequenceByIdQuery(code, invoiceType);
+        FindHotelInvoiceNumberSequenceByTradingCodeQuery query = new FindHotelInvoiceNumberSequenceByTradingCodeQuery(code, invoiceType);
         HotelInvoiceNumberSequenceResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
