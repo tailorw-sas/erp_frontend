@@ -1253,9 +1253,11 @@ function onSortField(event: any) {
 
 async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
+  console.log(parseFilter)
+
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  getAgencyByClient()
+  await getAgencyByClient()
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -1412,30 +1414,32 @@ async function getAgencyByClient() {
     optionsOfTableChangeAgency.value.loading = true
     listAgencyByClient.value = []
     const newListItems = []
-    payloadChangeAgency.value.filter = []
 
-    const filter: FilterCriteria[] = [
-      {
+    const objFilterById = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'id')
+    if (objFilterById) {
+      objFilterById.value = currentAgencyForChangeAgency.value?.id
+    }
+    else {
+      payloadChangeAgency.value.filter.push({
         key: 'id',
-        logicalOperation: 'AND',
         operator: 'NOT_EQUALS',
         value: currentAgencyForChangeAgency.value?.id,
-      },
-      // {
-      //   key: 'client.id',
-      //   logicalOperation: 'AND',
-      //   operator: 'EQUALS',
-      //   value: objClientFormChangeAgency.value?.id,
-      // },
-      {
-        key: 'status',
         logicalOperation: 'AND',
+      })
+    }
+
+    const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
+    if (objFilterByStatus) {
+      objFilterByStatus.value = 'ACTIVE'
+    }
+    else {
+      payloadChangeAgency.value.filter.push({
+        key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
-      },
-    ]
-
-    payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...filter]
+        logicalOperation: 'AND',
+      })
+    }
 
     const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi, optionsOfTableChangeAgency.value.uriApi, payloadChangeAgency.value)
 
