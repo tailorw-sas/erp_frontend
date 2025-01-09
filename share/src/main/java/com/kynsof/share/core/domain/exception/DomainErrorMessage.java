@@ -406,7 +406,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INVOICE_ATTACHMENT_NOT_FOUND(1183, Series.DOMAIN_ERROR, "The attachment not found."),
     MANAGE_ATTACHMENT_TYPE_NOT_FOUND_(1184, Series.DOMAIN_ERROR, "The attachment type not found."),
     MANAGE_RESOURCE_TYPE_DEFAULT(1185, Series.DOMAIN_ERROR,"Another item already exists with default."),
-    MANAGE_RESOURCE_TYPE_DEFAULT_NOT_FOUND(1186, Series.DOMAIN_ERROR,"There is no resource type by default.");
+    MANAGE_RESOURCE_TYPE_DEFAULT_NOT_FOUND(1186, Series.DOMAIN_ERROR,"There is no resource type by default."),
+    HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND(1187, Series.DOMAIN_ERROR,"The hotel invoice number sequence not found.");
 
     private static final DomainErrorMessage[] VALUES;
 

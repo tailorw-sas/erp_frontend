@@ -13,6 +13,7 @@ import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.HotelInvoiceNumberSequenceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
@@ -49,6 +50,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus.*;
+import com.kynsoft.finamer.invoicing.domain.services.IHotelInvoiceNumberSequenceService;
+import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.UpdateSequenceEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -62,11 +66,19 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Autowired
     private final IInvoiceCloseOperationService closeOperationService;
 
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService;
+
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery, IInvoiceCloseOperationService closeOperationService) {
+            ManageInvoiceReadDataJPARepository repositoryQuery,
+            IInvoiceCloseOperationService closeOperationService,
+            ApplicationEventPublisher applicationEventPublisher,
+            IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
+        this.applicationEventPublisher = applicationEventPublisher;
+        this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
     }
 
     public Long getInvoiceNumberSequence(String invoiceNumber) {
@@ -109,10 +121,28 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumberPrefix(invoicePrefix);
         } else {
-            Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
-            String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
-            entity.setInvoiceNumber(invoiceNumber);
+            String invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType());
+            Long lastInvoiceNo = 0L;
+
+            if (dto.getHotel().getManageTradingCompanies() != null && dto.getHotel().getManageTradingCompanies().getIsApplyInvoice()) {
+                EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
+                HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByTradingCompanyCodeAndInvoiceType(dto.getHotel().getManageTradingCompanies().getCode(), invoiceType);
+                lastInvoiceNo = sequence.getInvoiceNo() + 1;
+                this.applicationEventPublisher.publishEvent(new UpdateSequenceEvent(this, sequence));
+                invoiceNumber += "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
+            } else {
+                EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
+                HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByHotelCodeAndInvoiceType(dto.getHotel().getCode(), invoiceType);
+                lastInvoiceNo = sequence.getInvoiceNo() + 1;
+                this.applicationEventPublisher.publishEvent(new UpdateSequenceEvent(this, sequence));
+                invoiceNumber += "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
+            }
             entity.setInvoiceNo(lastInvoiceNo);
+            entity.setInvoiceNumber(invoiceNumber);
+//            Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
+//            String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
+//            entity.setInvoiceNumber(invoiceNumber);
+//            entity.setInvoiceNo(lastInvoiceNo);
             dto.setInvoiceNo(lastInvoiceNo);
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
             entity.setInvoiceNumberPrefix(invoicePrefix);
@@ -134,7 +164,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
             }
         }
-
 
         Page<ManageInvoiceSearchProjection> data1 = repositoryQuery.findAllProjected(specifications, pageable);
         //   Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
@@ -497,7 +526,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryQuery.findByInvoiceId(id)
                 .map(Invoice::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
-                        new ErrorField("invoiceId", "The invoice not found."))));
+                new ErrorField("invoiceId", "The invoice not found."))));
     }
 
     @Override

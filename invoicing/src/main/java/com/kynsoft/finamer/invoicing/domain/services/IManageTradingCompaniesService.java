@@ -25,4 +25,8 @@ public interface IManageTradingCompaniesService {
     List<ManageTradingCompaniesDto> findAll();
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    ManageTradingCompaniesDto findManageTradingCompaniesByCode(String code);
+
+    List<ManageTradingCompaniesDto> findAllToReplicate();
 }
