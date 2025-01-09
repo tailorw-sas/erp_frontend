@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateManageCityStateKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCityStateKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageCityStateDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerCountryDto;
@@ -52,7 +53,7 @@ public class UpdateManageCityStateCommandHandler implements ICommandHandler<Upda
         this.updateManageTimeZone(test::setTimeZone, command.getTimeZone(), test.getTimeZone().getId(), update::setUpdate);
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateFields.updateString(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
 
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
 

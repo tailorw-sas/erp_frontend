@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ManageAccountTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerAccountTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -46,7 +47,7 @@ public class UpdateManagerAccountTypeCommandHandler implements ICommandHandler<U
     }
 
     private void updateFields(ManagerAccountTypeDto accountTypeDto, UpdateManagerAccountTypeCommand command, ConsumerUpdate update) {
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(accountTypeDto::setDescription, command.getDescription(), accountTypeDto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(accountTypeDto::setDescription, command.getDescription(), accountTypeDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(accountTypeDto::setName, command.getName(), accountTypeDto.getName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(accountTypeDto::setModuleVcc, command.isModuleVcc(), accountTypeDto.isModuleVcc(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(accountTypeDto::setModulePayment, command.isModulePayment(), accountTypeDto.isModulePayment(), update::setUpdate);

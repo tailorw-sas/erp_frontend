@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageAlertsDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -36,7 +37,7 @@ public class UpdateAlertCommandHandler implements ICommandHandler<UpdateAlertCom
             RulesChecker.checkRule(new AlertNameMustBeUniqueRule(this.service, command.getName()));
         }
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(alertsDTO::setDescription, command.getDescription(), alertsDTO.getDescription(), update::setUpdate);
+        UpdateFields.updateString(alertsDTO::setDescription, command.getDescription(), alertsDTO.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(alertsDTO::setPopup, command.getPopup(), command.getPopup(), update::setUpdate);
 
         UpdateIfNotNull.updateBoolean(alertsDTO::setPopup, command.getPopup(), alertsDTO.getPopup(), update::setUpdate);

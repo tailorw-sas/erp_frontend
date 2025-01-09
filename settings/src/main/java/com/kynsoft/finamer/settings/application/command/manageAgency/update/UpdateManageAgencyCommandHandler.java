@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageAgencyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.rules.manageAgency.ManageAgencyDefaultMustBeUniqueRule;
@@ -116,21 +117,21 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCif, command.getCif(), dto.getCif(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setAgencyAlias, command.getAgencyAlias(), dto.getAgencyAlias(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAudit, command.getAudit(), dto.getAudit(), update::setUpdate);
-        updateString(dto::setZipCode, command.getZipCode(), dto.getZipCode(), update::setUpdate);
-        updateString(dto::setAddress, command.getAddress(), dto.getAddress(), update::setUpdate);
-        updateString(dto::setMailingAddress, command.getMailingAddress(), dto.getMailingAddress(), update::setUpdate);
-        updateString(dto::setPhone, command.getPhone(), dto.getPhone(), update::setUpdate);
-        updateString(dto::setAlternativePhone, command.getAlternativePhone(), dto.getAlternativePhone(), update::setUpdate);
+        UpdateFields.updateString(dto::setZipCode, command.getZipCode(), dto.getZipCode(), update::setUpdate);
+        UpdateFields.updateString(dto::setAddress, command.getAddress(), dto.getAddress(), update::setUpdate);
+        UpdateFields.updateString(dto::setMailingAddress, command.getMailingAddress(), dto.getMailingAddress(), update::setUpdate);
+        UpdateFields.updateString(dto::setPhone, command.getPhone(), dto.getPhone(), update::setUpdate);
+        UpdateFields.updateString(dto::setAlternativePhone, command.getAlternativePhone(), dto.getAlternativePhone(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setEmail, command.getEmail(), dto.getEmail(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setAlternativeEmail, command.getAlternativeEmail(), dto.getAlternativeEmail(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setContactName, command.getContactName(), dto.getContactName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setAutoReconcile, command.getAutoReconcile(), dto.getAutoReconcile(), update::setUpdate);
         UpdateIfNotNull.updateInteger(dto::setCreditDay, command.getCreditDay(), dto.getCreditDay(), update::setUpdate);
-        updateString(dto::setRfc, command.getRfc(), dto.getRfc(), update::setUpdate);
+        UpdateFields.updateString(dto::setRfc, command.getRfc(), dto.getRfc(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setValidateCheckout, command.getValidateCheckout(), dto.getValidateCheckout(), update::setUpdate);
 //        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
-        updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
-        updateString(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
     }
 
@@ -164,18 +165,5 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     private interface EntityFinder<T> {
 
         T findById(UUID id);
-    }
-
-    private boolean updateString(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
-        if (newValue == null || newValue.isEmpty()) {
-            setter.accept("");
-            update.accept(1);
-            return true;
-        }else if (!newValue.equals(oldValue)) {
-            setter.accept(newValue);
-            update.accept(1);
-            return true;
-        }
-        return false;
     }
 }
