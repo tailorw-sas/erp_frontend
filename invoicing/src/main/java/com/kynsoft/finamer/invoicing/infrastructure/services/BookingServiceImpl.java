@@ -64,7 +64,8 @@ public class BookingServiceImpl implements ImportBookingService {
     @Async
     public void importBookingFromFile(ImportBookingFromFileRequest importBookingFromFileRequest) {
 
-        System.err.println("##################################################");
+        try {
+            System.err.println("##################################################");
         System.err.println("##################################################");
         System.err.println("Antes de entrar l bloqueo");
         System.err.println("##################################################");
@@ -126,6 +127,16 @@ public class BookingServiceImpl implements ImportBookingService {
             }
         } finally {
             this.redisLock.unlock();
+        }
+        } catch (Exception e) {
+            System.err.println("##############################################");
+            System.err.println("##############################################");
+            System.err.println("Errror ocurrido: " + e.getMessage());
+            System.err.println("Errror ocurrido: " + e.getCause().getLocalizedMessage());
+            System.err.println("##############################################");
+            System.err.println("##############################################");
+            System.err.println("##############################################");
+            System.err.println("##############################################");
         }
     }
 
