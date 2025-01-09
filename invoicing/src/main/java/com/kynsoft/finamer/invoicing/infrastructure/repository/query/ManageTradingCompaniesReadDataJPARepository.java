@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageTradingCompanies;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,4 +21,6 @@ public interface ManageTradingCompaniesReadDataJPARepository extends JpaReposito
 
     @Query("SELECT COUNT(b) FROM ManageTradingCompanies b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    Optional<ManageTradingCompanies> findManageTradingCompaniesByCode(String code);
 }
