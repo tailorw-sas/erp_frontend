@@ -76,10 +76,8 @@ public class HotelInvoiceNumberSequenceController {
 
     @GetMapping(path = "/run")
     public ResponseEntity<?> getByRun() {
-
         CreateHotelInvoiceNumberSequenceRunCommand query = new CreateHotelInvoiceNumberSequenceRunCommand();
         mediator.send(query);
-
         return ResponseEntity.ok("OK");
     }
 
