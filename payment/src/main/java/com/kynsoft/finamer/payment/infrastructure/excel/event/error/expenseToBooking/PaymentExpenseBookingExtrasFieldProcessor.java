@@ -28,10 +28,16 @@ public class PaymentExpenseBookingExtrasFieldProcessor implements IPaymentImport
     public PaymentExpenseBookingRowError addExtrasField(PaymentExpenseBookingRowError rowError) {
         String bookingId =rowError.getRow().getBookingId();
         if (Objects.nonNull(bookingId) && !bookingId.isEmpty()) {
+            PaymentExpenseBookingRow expenseBookingRow = rowError.getRow();
+            try {
+                ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(expenseBookingRow.getTransactionType());
+                expenseBookingRow.setTransactionType(transactionTypeDto.getCode() + "-" + transactionTypeDto.getName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             try {
                 ManageBookingDto bookingDto = bookingService.findByGenId(Long.parseLong(bookingId));
-                PaymentExpenseBookingRow expenseBookingRow = rowError.getRow();
-                ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(expenseBookingRow.getTransactionType());
+
                 expenseBookingRow.setInvoiceNo(bookingDto.getInvoice().getInvoiceNumber());
                 expenseBookingRow.setFullName(bookingDto.getFullName());
                 expenseBookingRow.setReservationNumber(bookingDto.getReservationNumber());
@@ -40,11 +46,12 @@ public class PaymentExpenseBookingExtrasFieldProcessor implements IPaymentImport
                 expenseBookingRow.setCheckOut(bookingDto.getCheckOut().toString());
                 expenseBookingRow.setAdults(bookingDto.getAdults());
                 expenseBookingRow.setChildren(bookingDto.getChildren());
-                expenseBookingRow.setTransactionType(transactionTypeDto.getCode() + "-" + transactionTypeDto.getName());
+
                 rowError.setRow(expenseBookingRow);
                 return errorRepository.save(rowError);
             } catch (Exception e) {
                 // TODO: handle exception
+                e.printStackTrace();
             }
         }
         return rowError;
