@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageInvoice.undoImpor
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.services.IInvoiceStatusHistoryService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceStatusService;
 import java.util.ArrayList;
@@ -18,11 +19,13 @@ public class UndoImportInvoiceCommandHandler implements ICommandHandler<UndoImpo
 
     private final IManageInvoiceService service;
     private final IManageInvoiceStatusService invoiceStatusService;
+    private final IInvoiceStatusHistoryService statusHistoryService;
 
     public UndoImportInvoiceCommandHandler(IManageInvoiceService service,
-            IManageInvoiceStatusService invoiceStatusService) {
+                                           IManageInvoiceStatusService invoiceStatusService, IInvoiceStatusHistoryService statusHistoryService) {
         this.service = service;
         this.invoiceStatusService = invoiceStatusService;
+        this.statusHistoryService = statusHistoryService;
     }
 
     @Override
@@ -42,6 +45,7 @@ public class UndoImportInvoiceCommandHandler implements ICommandHandler<UndoImpo
                 delete.setManageInvoiceStatus(invoiceStatusDto);
                 delete.setStatus(EInvoiceStatus.CANCELED);
                 this.service.deleteInvoice(delete);
+                this.statusHistoryService.create(delete, command.getEmployee());
                 satisfactoryQuantity ++;
             } else {
                 errors.add(new UndoImportErrors(id, delete.getInvoiceNo(), delete.getManageInvoiceStatus().getCode() + "-" + delete.getManageInvoiceStatus().getName()));
