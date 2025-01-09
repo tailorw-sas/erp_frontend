@@ -123,7 +123,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             String invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType());
             Long lastInvoiceNo = 0L;
 
-            if (dto.getHotel().getManageTradingCompanies() != null && dto.getHotel().getManageTradingCompanies().getIsApplyInvoice()) {
+            if (dto.getHotel().getManageTradingCompanies() != null && dto.getHotel().getApplyByTradingCompany()) {
                 EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
                 HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByTradingCompanyCodeAndInvoiceType(dto.getHotel().getManageTradingCompanies().getCode(), invoiceType);
                 lastInvoiceNo = sequence.getInvoiceNo() + 1;
