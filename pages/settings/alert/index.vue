@@ -55,6 +55,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'check',
     class: 'field col-12 mt-3',
     headerClass: 'mb-1',
+    hidden: true
   },
   {
     field: 'description',
