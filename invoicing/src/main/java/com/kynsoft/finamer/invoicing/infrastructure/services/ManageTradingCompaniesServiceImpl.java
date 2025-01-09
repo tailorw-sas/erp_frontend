@@ -108,4 +108,20 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+    @Override
+    public ManageTradingCompaniesDto findManageTradingCompaniesByCode(String code) {
+        Optional<ManageTradingCompanies> optionalEntity = repositoryQuery.findManageTradingCompaniesByCode(code);
+
+        return optionalEntity.map(ManageTradingCompanies::toAggregate).orElse(null);
+    }
+
+    @Override
+    public List<ManageTradingCompaniesDto> findAllToReplicate() {
+        List<ManageTradingCompanies> objects = this.repositoryQuery.findAll();
+        List<ManageTradingCompaniesDto> objectDtos = new ArrayList<>();
+        for (ManageTradingCompanies object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+        return objectDtos;
+    }
 }
