@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageCreditCardTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -36,7 +37,7 @@ public class UpdateManageCreditCardTypeCommandHandler implements ICommandHandler
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateFields.updateString(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
         if (UpdateIfNotNull.updateInteger(test::setFirstDigit, command.getFirstDigit(), test.getFirstDigit(), update::setUpdate)) {
             RulesChecker.checkRule(new ManageCreditCardTypeFirstDigitMustBeUniqueRule(this.service, command.getFirstDigit(), command.getId()));

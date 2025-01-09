@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageHotelKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -61,7 +62,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBabelCode, command.getBabelCode(), dto.getBabelCode(), update::setUpdate);
@@ -80,7 +81,7 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
         }
 
         UpdateIfNotNull.updateBoolean(dto::setApplyByTradingCompany, command.getApplyByTradingCompany(), dto.getApplyByTradingCompany(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPrefixToInvoice, command.getPrefixToInvoice(), dto.getPrefixToInvoice(), update::setUpdate);
+        UpdateFields.updateString(dto::setPrefixToInvoice, command.getPrefixToInvoice(), dto.getPrefixToInvoice(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsVirtual, command.getIsVirtual(), dto.getIsVirtual(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setRequiresFlatRate, command.getRequiresFlatRate(), dto.getRequiresFlatRate(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsApplyByVCC, command.getIsApplyByVCC(), dto.getIsApplyByVCC(), update::setUpdate);

@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageEmployeeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -84,7 +85,7 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setFirstName, command.getFirstName(), test.getFirstName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setLastName, command.getLastName(), test.getLastName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setInnsistCode, command.getInnsistCode(), test.getInnsistCode(), update::setUpdate);
+        UpdateFields.updateString(test::setInnsistCode, command.getInnsistCode(), test.getInnsistCode(), update::setUpdate);
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setPhoneExtension, command.getPhoneExtension(), test.getPhoneExtension(), update::setUpdate);
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
