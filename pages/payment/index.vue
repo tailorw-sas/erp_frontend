@@ -2900,8 +2900,8 @@ async function saveApplyPayment() {
   }
   catch (error: any) {
     // objItemSelectedForRightClickApplyPayment.value = {}
-    idInvoicesSelectedToApplyPayment.value = []
-    paymentDetailsTypeDepositSelected.value = []
+    // idInvoicesSelectedToApplyPayment.value = []
+    // paymentDetailsTypeDepositSelected.value = []
     loadingSaveApplyPayment.value = false
     if (error.data.data.error.status === 1179) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'The invoice not found, please try again in a few minutes o refresh the page', life: 6000 })
