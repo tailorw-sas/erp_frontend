@@ -2036,7 +2036,8 @@ async function applyUndo() {
     loadingSaveAll.value = true
     if (selectedInvoiceObj.value && selectedInvoiceObj.value.id) {
       const payload = {
-        ids: [selectedInvoiceObj.value.id]
+        ids: [selectedInvoiceObj.value.id],
+        employee: userData?.value?.user?.userId ?? ''
       }
       const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload) as UndoImportInvoiceResponse
       loadingSaveAll.value = false
