@@ -403,7 +403,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   // getErrorList()
   uploadComplete.value = true
-  await getHotelList('')
+  // await getHotelList('')
 })
 </script>
 
