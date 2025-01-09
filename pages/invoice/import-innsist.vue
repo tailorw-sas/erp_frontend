@@ -27,8 +27,8 @@ const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
   allFromAndTo: false,
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
+  agency: [],
+  hotel: null,
   from: dayjs(new Date()).startOf('month').toDate(),
   to: dayjs(new Date()).endOf('month').toDate(),
 })
@@ -73,19 +73,19 @@ const confImportProcessApi = reactive({
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi, width: '12%' },
-  { field: 'agencyCode', header: 'Agency', type: 'text', width: '10%' },
-  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', width: '12%' },
-  { field: 'firstName', header: 'First Name', type: 'text', width: '12%' },
-  { field: 'lastName', header: 'Last Name', type: 'text', width: '12%' },
-  { field: 'reservationCode', header: 'Reserv No', type: 'text', width: '13%' },
-  { field: 'roomType', header: 'Room Type', type: 'select', objApi: confroomtypeListApi, width: '13%' },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '12%' },
-  { field: 'checkInDate', header: 'Check In', type: 'date', width: '12%' },
-  { field: 'checkOutDate', header: 'Check Out', type: 'date', width: '13%' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', width: '10%' },
-  { field: 'amount', header: 'Invoice Amount', type: 'text', width: '10%' },
-  { field: 'message', header: 'Error', type: 'slot-text' }
+  { field: 'hotel', header: 'Hotel', type: 'text', maxWidth: '50px' },
+  { field: 'agencyCode', header: 'Agency', type: 'text', maxWidth: '10px' },
+  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', maxWidth: '15px' },
+  { field: 'firstName', header: 'First Name', type: 'text', maxWidth: '12px' },
+  { field: 'lastName', header: 'Last Name', type: 'text', maxWidth: '12px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', maxWidth: '10px' },
+  { field: 'roomType', header: 'Room Type', type: 'text', maxWidth: '10px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', maxWidth: '20px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', maxWidth: '10px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', maxWidth: '10px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'text', maxWidth: '10px' },
+  { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '10px' }
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -120,13 +120,13 @@ const options = ref({
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
   selectFirstItemByDefault: false,
-  scrollHeight: '620px'
+  scrollHeight: '500px'
 })
 
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100,
+  pageSize: 500,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -135,7 +135,7 @@ const payload = ref<IQueryRequest>({
 const errorListPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100,
+  pageSize: 500,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -144,7 +144,7 @@ const errorListPayload = ref<IQueryRequest>({
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 10000,
+  limit: 500,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -274,24 +274,21 @@ async function getList() {
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
 
-    // const existingIds = new Set(listItems.value.map(item => item.id))
-
     for (const iterator of dataList) {
       newListItems.push({
         ...iterator,
         loadingEdit: false,
         loadingDelete: false,
         agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
-        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+        hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
+        roomType: `${iterator?.roomType?.code || ''}`,
         rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
         selected: isRowSelectable(iterator)
-
       })
-      // existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-      // }
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+
     return listItems
   }
 
@@ -405,11 +402,6 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
-      /*   if (parseFilter[i]?.key === 'status') {
-        parseFilter[i].key = 'invoiceStatus'
-      }
-*/
-
       if (parseFilter[i]?.key === 'invoiceNumber') {
         parseFilter[i].key = 'invoiceNumberPrefix'
       }
@@ -432,7 +424,7 @@ async function searchAndFilter() {
   const newPayload: IQueryRequest = {
     filter: [],
     query: '',
-    pageSize: 100,
+    pageSize: 500,
     page: 0,
     sortBy: '',
     sortType: ENUM_SHORT_TYPE.ASC
@@ -454,21 +446,15 @@ async function searchAndFilter() {
   })
 
   // Filtros de hoteles
-  if (filterToSearch.value.hotel?.length > 0) {
-    const selectedHotelIds = filterToSearch.value.hotel
-      .filter((item: any) => item?.id !== 'All')
-      .map((item: any) => item?.id)
-
-    if (selectedHotelIds.length > 0) {
-      selectedHotelIds.forEach((element: any) => {
+  if (filterToSearch.value.hotel) {
+    if (filterToSearch.value.hotel?.id !== 'All') {
         newPayload.filter.push({
           key: 'hotel.id',
           operator: 'EQUALS',
-          value: element,
-          logicalOperation: 'OR',
+        value: filterToSearch.value.hotel?.id,
+        logicalOperation: 'AND',
           type: 'filterSearch'
         })
-      })
     }
   }
 
@@ -542,12 +528,11 @@ function clearFilterToSearch() {
 
   // Reiniciar los valores de búsqueda a sus estados iniciales
   filterToSearch.value = {
-    criterial: ENUM_FILTER[0], // Mantener el primer elemento del enum como valor predeterminado
-    search: '', // Dejar el campo de búsqueda en blanco
-    agency: [allDefaultItem], // Restablecer a valor predeterminado
-    hotel: [allDefaultItem], // Restablecer a valor predeterminado
-    from: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'from'
-    // to: dayjs(new Date()).startOf('month').toDate(), // Limpiar el campo de fecha 'to'
+    criterial: ENUM_FILTER[0],
+    search: '',
+    agency: [],
+    hotel: [],
+    from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
   }
   listItems.value = []
@@ -616,6 +601,7 @@ async function getRoomRateList(bookingId: string = '') {
         amountPaymentApplied: formatNumber(iterator?.amountPaymentApplied) || 0,
       }]
     }
+
     return listRoomRateTemp
   }
   catch (error) {
@@ -685,8 +671,6 @@ async function checkProcessStatus(id: any) {
 }
 
 watch(payloadOnChangePage, (newValue) => {
-  // selectedElements.value = []
-  toast.add({ severity: 'info', summary: 'payloadOnChangePage', detail: 'Se ejecuta: payloadOnChangePage', life: 2000 })
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
@@ -747,21 +731,10 @@ onMounted(async () => {
                     <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                     <div class="w-full">
                       <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
+                        v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
-                        :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                        :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
+                      />
                     </div>
                   </div>
                 </div>
@@ -831,15 +804,6 @@ onMounted(async () => {
               <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
             </div>
           </template>
-          <!-- <template #datatable-footer>
-            <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
-              <Row>
-                <Column footer="Total:" :colspan="8" footer-style="text-align:right; font-weight: 700" />
-                <Column :footer="`${pagination.totalElements}`" :colspan="7" />
-                <Column :colspan="1" />
-              </Row>
-            </ColumnGroup>
-          </template> -->
           <template #expansion="{ data: item }">
             <div class="p-0 m-0">
               <DataTable :value="item.roomRates" striped-rows>
@@ -865,7 +829,7 @@ onMounted(async () => {
         </DynamicTable>
       </div>
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-check" :disabled="disabledImport" @click="importBookings" />
+        <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-save" :disabled="disabledImport" @click="importBookings" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
