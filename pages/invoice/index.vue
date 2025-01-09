@@ -1528,13 +1528,15 @@ async function getClientList(moduleApi: string, uriApi: string, queryObj: { quer
   let clientTemp: any[] = []
   clientList.value = []
   clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  clientList.value = [...clientList.value, ...clientTemp]
+  clientTemp = [...new Set(clientTemp)];
+  clientList.value = [...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyList.value = []
   agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  agencyList.value = [...agencyList.value, ...agencyTemp]
+  agencyTemp = [...new Set(agencyTemp)];
+  agencyList.value = [...agencyTemp]
 }
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
@@ -1543,7 +1545,8 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
   let hotelTemp: any[] = []
   hotelList.value = []
   hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  hotelList.value = [...hotelList.value, ...hotelTemp]
+  hotelTemp = [...new Set(hotelTemp)];
+  hotelList.value = [...hotelTemp]
 }
 async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
@@ -1552,7 +1555,8 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   let statusTemp: any[] = []
   statusList.value = []
   statusTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  statusList.value = [...statusList.value, ...statusTemp]
+  statusTemp = [...new Set(statusTemp)];
+  statusList.value = [...statusTemp]
 }
 
 // async function getStatusListLoadValuesByDefaults(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -1645,8 +1649,9 @@ async function getStatusListTemp() {
 async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let invoiceTypeListTemp: any[] = []
   invoiceTypeList.value = []
-  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForType, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })    
-  invoiceTypeList.value = [...invoiceTypeList.value, ...invoiceTypeListTemp]
+  invoiceTypeListTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunctionForType, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })  
+  invoiceTypeListTemp = [...new Set(invoiceTypeListTemp)];  
+  invoiceTypeList.value = [...invoiceTypeListTemp]
 }
 
 // async function getInvoiceTypeList(query = '') {
@@ -2036,7 +2041,8 @@ async function applyUndo() {
     loadingSaveAll.value = true
     if (selectedInvoiceObj.value && selectedInvoiceObj.value.id) {
       const payload = {
-        ids: [selectedInvoiceObj.value.id]
+        ids: [selectedInvoiceObj.value.id],
+        employee: userData?.value?.user?.userId ?? ''
       }
       const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload) as UndoImportInvoiceResponse
       loadingSaveAll.value = false
@@ -2368,37 +2374,37 @@ const legend = ref(
                     <div class="w-full" style=" z-index:5">
                       <div class="flex gap-2 w-full">
                         <DebouncedAutoCompleteComponent
-                        id="autocomplete"
-                        class="w-full"
-                        field="name"
-                        item-value="id"
-                        :multiple="true"
-                        :model="filterToSearch.hotel"
-                        :suggestions="[...hotelList]"
-                        @change="($event) => {
-                          if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                        @load="async($event) => {
-                          const filter: FilterCriteria[] = [
-                            {
-                              key: 'status',
-                              logicalOperation: 'AND',
-                              operator: 'EQUALS',
-                              value: 'ACTIVE',
-                            },
-                          ]
-                          const objQueryToSearch = {
-                            query: $event,
-                            keys: ['name', 'code'],
-                          }
-                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
-                        }"
-                      />
+                          id="autocomplete"
+                          class="w-full"
+                          field="name"
+                          item-value="id"
+                          :multiple="true"
+                          :model="filterToSearch.hotel"
+                          :suggestions="[...hotelList]"
+                          @change="($event) => {
+                            if (!filterToSearch.hotel.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                              filterToSearch.hotel = $event.filter((element: any) => element?.id === 'All')
+                            }
+                            else {
+                              filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                            }
+                          }"
+                          @load="async($event) => {
+                            const filter: FilterCriteria[] = [
+                              {
+                                key: 'status',
+                                logicalOperation: 'AND',
+                                operator: 'EQUALS',
+                                value: 'ACTIVE',
+                              },
+                            ]
+                            const objQueryToSearch = {
+                              query: $event,
+                              keys: ['name', 'code'],
+                            }
+                            await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                          }"
+                        />
                         <div v-if="hotelError" class="flex align-items-center text-sm">
                           <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel"
                             field as required</span>
