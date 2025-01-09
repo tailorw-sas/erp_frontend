@@ -129,7 +129,7 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setRfc, command.getRfc(), dto.getRfc(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setValidateCheckout, command.getValidateCheckout(), dto.getValidateCheckout(), update::setUpdate);
 //        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setBookingCouponFormat, command.getBookingCouponFormat(), dto.getBookingCouponFormat(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        updateDescription(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsDefault, command.getIsDefault(), dto.getIsDefault(), update::setUpdate);
     }
@@ -164,5 +164,18 @@ public class UpdateManageAgencyCommandHandler implements ICommandHandler<UpdateM
     private interface EntityFinder<T> {
 
         T findById(UUID id);
+    }
+
+    private boolean updateDescription(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
+        if (newValue == null || newValue.isEmpty()) {
+            setter.accept("");
+            update.accept(1);
+            return true;
+        }else if (!newValue.equals(oldValue)) {
+            setter.accept(newValue);
+            update.accept(1);
+            return true;
+        }
+        return false;
     }
 }
