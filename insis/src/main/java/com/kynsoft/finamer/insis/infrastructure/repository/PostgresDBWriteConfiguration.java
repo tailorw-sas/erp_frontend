@@ -41,7 +41,7 @@ public class PostgresDBWriteConfiguration {
     public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean(EntityManagerFactoryBuilder builder,
             @Qualifier("writeDataSource") DataSource dataSource) {
         return builder.dataSource(dataSource)
-                .packages("com.kynsoft.finamer.insis.infrastructure.identity")
+                .packages("com.kynsoft.finamer.insis.infrastructure.model")
                 .persistenceUnit("WriteDB").build();
     }
 
