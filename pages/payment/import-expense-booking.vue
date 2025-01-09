@@ -182,6 +182,25 @@ async function onChangeAttachFile(event: any) {
     const pdfFiles = files.filter(file => file.type === 'application/pdf')
 
     if (pdfFiles.length > 0) {
+      importModel.value.attachFile = [...importModel.value.attachFile, ...pdfFiles] // Almacena objetos File
+    }
+    else {
+      importModel.value.attachFile = [] // Limpia si no hay PDFs
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Please select only PDF files.', life: 10000 })
+    }
+
+    event.target.value = '' // Limpia el input
+    await activeImport()
+  }
+}
+
+async function onChangeAttachFile2(event: any) {
+  listItems.value = []
+  if (event.target.files && event.target.files.length > 0) {
+    const files: File[] = Array.from(event.target.files)
+    const pdfFiles = files.filter(file => file.type === 'application/pdf')
+
+    if (pdfFiles.length > 0) {
       importModel.value.attachFile = pdfFiles // Almacena objetos File
     }
     else {
@@ -509,8 +528,9 @@ onMounted(async () => {
                       </span>
                     </div>
                     <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
+                    <!-- webkitdirectory -->
                     <input
-                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf" webkitdirectory multiple
+                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf" multiple
                       @change="onChangeAttachFile($event)"
                     >
                   </div>
