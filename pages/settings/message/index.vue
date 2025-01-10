@@ -55,7 +55,8 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Type',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The type field is required').max(50, 'Maximum 50 characters')
+    hidden: true,
+    // validation: z.string().trim().min(1, 'The type field is required').max(50, 'Maximum 50 characters')
   },
   {
     field: 'language',
