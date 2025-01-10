@@ -622,7 +622,8 @@ async function importBookings() {
     await GenericService.import(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
 
     await checkProcessStatus(uuid)
-
+    options.value.loading = false
+    
     await searchErrorList(uuid, elementsToImportNumber)
 
     selectedElements.value = []
