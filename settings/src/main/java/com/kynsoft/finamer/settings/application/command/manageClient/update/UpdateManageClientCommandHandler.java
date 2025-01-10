@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageClientKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageClientDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -34,7 +35,7 @@ public class UpdateManageClientCommandHandler implements ICommandHandler<UpdateM
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateFields.updateString(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(test::setIsNightType, command.getIsNightType(), test.getIsNightType(), update::setUpdate);

@@ -8,7 +8,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

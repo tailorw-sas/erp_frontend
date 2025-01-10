@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerCurrencyDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantCurrencyDto;
@@ -45,7 +46,7 @@ public class UpdateManagerMerchantCurrencyCommandHandler implements ICommandHand
         ConsumerUpdate update = new ConsumerUpdate();
         this.updateManagerCurrency(test::setManagerCurrency, command.getManagerCurrency(), test.getManagerCurrency().getId(), update::setUpdate);
         this.updateManagerMerchant(test::setManagerMerchant, command.getManagerMerchant(), test.getManagerMerchant().getId(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateFields.updateString(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setValue, command.getValue(), test.getValue(), update::setUpdate);
 
         RulesChecker.checkRule(new ManagerMerchantCurrencyMustBeUniqueByIdRule(this.serviceMerchantCurrency, command.getManagerMerchant(), command.getManagerCurrency(), command.getId()));

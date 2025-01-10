@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateB2BPartnerKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageB2BPartnerTypeDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerB2BPartnerDto;
@@ -44,12 +45,12 @@ public class UpdateManagerB2BPartnerCommandHandler implements ICommandHandler<Up
         ConsumerUpdate update = new ConsumerUpdate();
         
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setName, command.getName(), managerB2BPartnerDto.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setDescription, command.getDescription(), managerB2BPartnerDto.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setUrl, command.getUrl(), managerB2BPartnerDto.getUrl(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setIp, command.getIp(), managerB2BPartnerDto.getIp(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setUserName, command.getUserName(), managerB2BPartnerDto.getUserName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setPassword, command.getPassword(), managerB2BPartnerDto.getPassword(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(managerB2BPartnerDto::setToken, command.getToken(), managerB2BPartnerDto.getToken(), update::setUpdate);
+        UpdateFields.updateString(managerB2BPartnerDto::setDescription, command.getDescription(), managerB2BPartnerDto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(managerB2BPartnerDto::setUrl, command.getUrl(), managerB2BPartnerDto.getUrl(), update::setUpdate);
+        UpdateFields.updateString(managerB2BPartnerDto::setIp, command.getIp(), managerB2BPartnerDto.getIp(), update::setUpdate);
+        UpdateFields.updateString(managerB2BPartnerDto::setUserName, command.getUserName(), managerB2BPartnerDto.getUserName(), update::setUpdate);
+        UpdateFields.updateString(managerB2BPartnerDto::setPassword, command.getPassword(), managerB2BPartnerDto.getPassword(), update::setUpdate);
+        UpdateFields.updateString(managerB2BPartnerDto::setToken, command.getToken(), managerB2BPartnerDto.getToken(), update::setUpdate);
 
         this.updateStatus(managerB2BPartnerDto::setStatus, command.getStatus(), managerB2BPartnerDto.getStatus(), update::setUpdate);
         this.updateManageB2BPartnerType(managerB2BPartnerDto::setB2BPartnerTypeDto, command.getB2BPartnerType(), managerB2BPartnerDto.getB2BPartnerTypeDto().getId(), update::setUpdate);

@@ -28,7 +28,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.LocalTime;
 import java.util.Comparator;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +50,9 @@ public class BookingServiceImpl implements ImportBookingService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private final Lock redisLock = new ReentrantLock();
+    private final Semaphore semaphore;
+
     public BookingServiceImpl(ValidatorFactory<BookingRow> validatorFactory,
             BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
             BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
@@ -54,52 +63,88 @@ public class BookingServiceImpl implements ImportBookingService {
         this.bookingImportRowErrorRedisRepository = bookingImportRowErrorRedisRepository;
         this.bookingImportHelperService = bookingImportHelperService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.semaphore = new Semaphore(1);
     }
 
     @Override
     @Async
     public void importBookingFromFile(ImportBookingFromFileRequest importBookingFromFileRequest) {
-        ImportBookingRequest request = importBookingFromFileRequest.getRequest();
         try {
-            ReaderConfiguration readerConfiguration = new ReaderConfiguration();
-            readerConfiguration.setIgnoreHeaders(true);
-            InputStream inputStream = new ByteArrayInputStream(request.getFile());
-            readerConfiguration.setInputStream(inputStream);
-            readerConfiguration.setReadLastActiveSheet(true);
-            ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
-            ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
-            validatorFactory.createValidators(request.getImportType().name());
-            BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
-                    .status(EProcessStatus.RUNNING)
-                    .total(0)
-                    .build();
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
-            for (BookingRow bookingRow : excelBean) {
-                bookingRow.setImportProcessId(request.getImportProcessId());
-                if (validatorFactory.validate(bookingRow)) {
-                    bookingImportHelperService.groupAndCachingImportBooking(bookingRow,
-                            importBookingFromFileRequest.getRequest().getImportType());
+            try {
+                semaphore.acquire();
+                System.err.println("##########################################");
+                System.err.println("##########################################");
+                System.err.println("##########################################");
+                System.err.println("Paso el semaforo: "  + LocalTime.now());
+                System.err.println("##########################################");
+                System.err.println("##########################################");
+                System.err.println("##########################################");
+                try {
+                    
+                    ImportBookingRequest request = importBookingFromFileRequest.getRequest();
+                    try {
+                        ReaderConfiguration readerConfiguration = new ReaderConfiguration();
+                        readerConfiguration.setIgnoreHeaders(true);
+                        InputStream inputStream = new ByteArrayInputStream(request.getFile());
+                        readerConfiguration.setInputStream(inputStream);
+                        readerConfiguration.setReadLastActiveSheet(true);
+                        ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
+                        ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
+                        validatorFactory.createValidators(request.getImportType().name());
+                        BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                                .status(EProcessStatus.RUNNING)
+                                .total(0)
+                                .build();
+                        applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
+                        for (BookingRow bookingRow : excelBean) {
+                            bookingRow.setImportProcessId(request.getImportProcessId());
+                            if (validatorFactory.validate(bookingRow)) {
+                                bookingImportHelperService.groupAndCachingImportBooking(bookingRow,
+                                        importBookingFromFileRequest.getRequest().getImportType());
+                            }
+                        }
+                        validatorFactory.removeValidators();
+                        bookingImportHelperService.createInvoiceFromGroupedBooking(request);
+                        BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                                .status(EProcessStatus.FINISHED)
+                                .total(reader.totalRows())
+                                .build();
+                        applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
+                        bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                                .hasError(true)
+                                .exceptionMessage(e.getMessage())
+                                .status(EProcessStatus.FINISHED)
+                                .total(0)
+                                .build();
+                        applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
+                    }
+                } catch (Exception e) {
+                    System.err.println("##############################################");
+                    System.err.println("##############################################");
+                    System.err.println("Errror ocurrido: " + e.getMessage());
+                    System.err.println("Errror ocurrido: " + e.getCause().getLocalizedMessage());
+                    System.err.println("##############################################");
+                    System.err.println("##############################################");
+                    System.err.println("##############################################");
+                    System.err.println("##############################################");
                 }
+            } finally {
+                semaphore.release();
+                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                System.err.println("Se libera el semaforo: " + LocalTime.now());
+                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
             }
-            validatorFactory.removeValidators();
-            bookingImportHelperService.createInvoiceFromGroupedBooking(request);
-            BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
-                    .status(EProcessStatus.FINISHED)
-                    .total(reader.totalRows())
-                    .build();
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
-            bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
-        } catch (Exception e) {
-            e.printStackTrace();
-            BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
-                    .hasError(true)
-                    .exceptionMessage(e.getMessage())
-                    .status(EProcessStatus.FINISHED)
-                    .total(0)
-                    .build();
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
-        }
 
+        } catch (InterruptedException ex) {
+            Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override

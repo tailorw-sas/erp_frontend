@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerLanguageDto;
 import com.kynsoft.finamer.settings.domain.dto.ManagerMessageDto;
@@ -35,7 +36,7 @@ public class UpdateManagerMessageCommandHandler implements ICommandHandler<Updat
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(messageDto::setDescription, command.getDescription(), messageDto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(messageDto::setDescription, command.getDescription(), messageDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(messageDto::setName, command.getName(), messageDto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(messageDto::setType, command.getType(), messageDto.getType(), update::setUpdate);
 

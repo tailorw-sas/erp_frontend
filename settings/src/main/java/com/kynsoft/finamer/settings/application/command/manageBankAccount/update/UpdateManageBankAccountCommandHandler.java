@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageBankAccountKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageBankAccountDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
@@ -58,7 +59,7 @@ public class UpdateManageBankAccountCommandHandler implements ICommandHandler<Up
         updateBank(dto::setManageBank, command.getManageBank(), dto.getManageBank().getId(), update::setUpdate);
         updateHotel(dto::setManageHotel, command.getManageHotel(), dto.getManageHotel().getId(), update::setUpdate);
         updateAccountType(dto::setManageAccountType, command.getManageAccountType(), dto.getManageAccountType().getId(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);

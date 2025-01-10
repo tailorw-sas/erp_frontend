@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentAttachmentStatusKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.settings.domain.dto.ModuleDto;
@@ -61,8 +62,8 @@ public class UpdateManagePaymentAttachmentStatusCommandHandler implements IComma
         if (command.isPwaWithOutAttachment()) {
             RulesChecker.checkRule(new ManagePaymentAttachmentStatusWhitOutAttachmentMustBeUniqueRule(service, command.getId()));
         }
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setPermissionCode, command.getPermissionCode(), dto.getPermissionCode(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setPermissionCode, command.getPermissionCode(), dto.getPermissionCode(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setShow, command.getShow(), dto.getShow(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.getDefaults(), dto.getDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setNonNone, command.isNonNone(), dto.isNonNone(), update::setUpdate);

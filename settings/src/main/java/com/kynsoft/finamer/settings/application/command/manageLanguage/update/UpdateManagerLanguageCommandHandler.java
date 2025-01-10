@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageLanguageKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagerLanguageDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -40,7 +41,7 @@ public class UpdateManagerLanguageCommandHandler implements ICommandHandler<Upda
         ManagerLanguageDto dto = service.findById(command.getId());
 
         ConsumerUpdate update = new ConsumerUpdate();
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsEnabled, command.getIsEnabled(), dto.getIsEnabled(), update::setUpdate);
         this.updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);

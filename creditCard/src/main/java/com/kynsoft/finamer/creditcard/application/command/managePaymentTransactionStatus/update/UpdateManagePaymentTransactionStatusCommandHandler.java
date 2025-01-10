@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagePaymentTransactionStatusDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
@@ -48,7 +49,7 @@ public class UpdateManagePaymentTransactionStatusCommandHandler implements IComm
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setInProgress, command.isInProgress(), dto.isInProgress(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCompleted, command.isCompleted(), dto.isCompleted(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCancelled, command.isCancelled(), dto.isCancelled(), update::setUpdate);
