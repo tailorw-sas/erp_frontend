@@ -21,6 +21,7 @@ import com.kynsoft.finamer.payment.infrastructure.services.http.helper.InvoiceIm
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentCommand> {
@@ -33,10 +34,10 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private final InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl;
 
     public ApplyPaymentCommandHandler(IPaymentService paymentService,
-                                      IManageInvoiceService manageInvoiceService,
-                                      IPaymentDetailService paymentDetailService,
-                                      InvoiceHttpUUIDService invoiceHttpUUIDService,
-                                      InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl) {
+            IManageInvoiceService manageInvoiceService,
+            IPaymentDetailService paymentDetailService,
+            InvoiceHttpUUIDService invoiceHttpUUIDService,
+            InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl) {
         this.invoiceHttpUUIDService = invoiceHttpUUIDService;
         this.invoiceImportAutomaticeHelperServiceImpl = invoiceImportAutomaticeHelperServiceImpl;
         this.paymentService = paymentService;
@@ -147,13 +148,28 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             try {
                 queue.add(this.manageInvoiceService.findById(invoice));
             } catch (Exception e) {
-                /***
-                 * TODO: Aqui se define un flujo alternativo por HTTP si en algun momento kafka falla y las invoice no se replicaron, para
-                 * evitar que el flujo de aplicacion de pago falle.
+                /**
+                 * *
+                 * TODO: Aqui se define un flujo alternativo por HTTP si en
+                 * algun momento kafka falla y las invoice no se replicaron,
+                 * para evitar que el flujo de aplicacion de pago falle.
                  */
                 InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
                 this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
-                queue.add(this.manageInvoiceService.findById(invoice));
+                //FLUJO PARA ESPERAR MIENTAS LAS BD SE SINCRONIZAN.
+                int maxAttempts = 3;
+                while (maxAttempts > 0) {
+                    try {
+                        queue.add(this.manageInvoiceService.findById(invoice));
+                        break;
+                    } catch (Exception ex) {
+                    }
+                    maxAttempts--;
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException ex) {
+                    }
+                }
             }
         }
 
