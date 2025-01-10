@@ -465,15 +465,13 @@ async function searchAndFilter() {
       .map((item: any) => item?.id)
 
     if (selectedAgencyIds.length > 0) {
-      selectedAgencyIds.forEach((element: any) => {
         newPayload.filter.push({
           key: 'agency.id',
-          operator: 'EQUALS',
-          value: element,
-          logicalOperation: 'OR',
+        operator: 'IN',
+        value: selectedAgencyIds,
+        logicalOperation: 'AND',
           type: 'filterSearch'
         })
-      })
     }
   }
 
@@ -734,7 +732,11 @@ onMounted(async () => {
                         v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
                         :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
-                      />
+                      >
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
                 </div>
