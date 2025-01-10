@@ -517,13 +517,13 @@ const loadingSaveApplyPayment = ref(false)
 const invoiceSelectedListForApplyPayment = ref<any[]>([])
 const applyPaymentListOfInvoice = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: true },
+  { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: false, showFilter: true },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
-  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: true },
+  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: false, showFilter: true },
+  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: false, showFilter: true },
   { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: false, showFilter: false },
 ])
 
@@ -694,15 +694,15 @@ const fieldRemark = ref('')
 const allInvoiceCheckIsChecked = ref(false)
 
 const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
-  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', width: '90px', maxWidth: '120px', sortable: false, showFilter: false },
-  { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: false, showFilter: false },
-  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: false, showFilter: false, editable: true },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: false, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: true },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: true },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', width: '90px', maxWidth: '120px', sortable: false, showFilter: true },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: false, showFilter: true },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: false, showFilter: true },
+  { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: false, showFilter: true },
+  { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: false, showFilter: true, editable: true },
 ])
 
 const applyPaymentOptionsOtherDeduction = ref({
@@ -1253,8 +1253,6 @@ function onSortField(event: any) {
 
 async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
-  console.log(parseFilter)
-
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
   await getAgencyByClient()
@@ -1588,7 +1586,7 @@ async function applyPaymentGetList() {
                   })
                 }
 
-                const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+                const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
                 if (objFilterDueAmount) {
                   objFilterDueAmount.value = '0.00'
@@ -1668,7 +1666,7 @@ async function applyPaymentGetList() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -1779,7 +1777,7 @@ async function applyPaymentGetList() {
                 }
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2146,7 +2144,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     logicalOperation: 'AND'
                   })
                 }
-                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount')
+                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
                 if (objFilterDueAmount) {
                   objFilterDueAmount.value = '0.00'
@@ -2258,7 +2256,7 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2401,7 +2399,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   logicalOperation: 'AND'
                 })
               }
-              const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -3450,6 +3448,50 @@ function showInconAttachment(objData: any) {
   return false
 }
 
+async function parseDataTableFilterForApplyPayment(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, applyPaymentColumns.value)
+  const objFilter = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
+  if (objFilter) {
+    objFilter.key = 'invoiceNumberPrefix'
+  }
+  const objFilterCoupon = parseFilter?.find((item: IFilter) => item?.key === 'couponNumbers')
+  if (objFilterCoupon) {
+    objFilterCoupon.key = 'bookings.couponNumber'
+  }
+  const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
+  if (objFilterDueAmount) {
+    objFilterDueAmount.key = 'dueAmount'
+  }
+  const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'invoiceAmountTemp')
+  if (objFilterInvoiceAmount) {
+    objFilterInvoiceAmount.key = 'invoiceAmount'
+  }
+
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter, ...parseFilter || []]
+  await applyPaymentGetList()
+}
+
+async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, applyPaymentColumnsOtherDeduction.value)
+  const objFilter = parseFilter?.find((item: IFilter) => item?.key === 'invoiceId')
+  if (objFilter) {
+    objFilter.key = 'invoice.invoiceId'
+  }
+  const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
+  if (objFilterDueAmount) {
+    objFilterDueAmount.key = 'dueAmount'
+  }
+  const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmountTemp')
+  if (objFilterInvoiceAmount) {
+    objFilterInvoiceAmount.key = 'invoiceAmount'
+  }
+
+  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter, ...parseFilter || []]
+  await applyPaymentGetListForOtherDeductions()
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -4294,6 +4336,7 @@ onMounted(async () => {
               :options="applyPaymentOptions"
               :pagination="applyPaymentPagination"
               @on-change-pagination="applyPaymentOnChangePage = $event"
+              @on-change-filter="parseDataTableFilterForApplyPayment"
               @on-expand-row="onExpandRowApplyPayment($event)"
               @update:clicked-item="addAmmountsToApplyPayment($event)"
             >
@@ -4508,6 +4551,7 @@ onMounted(async () => {
             :options="applyPaymentOptionsOtherDeduction"
             :pagination="applyPaymentPaginationOtherDeduction"
             @on-change-pagination="applyPaymentOnChangePageOtherDeduction = $event"
+            @on-change-filter="parseDataTableFilterForApplyPaymentOtherDeduction($event)"
             @update:clicked-item="selectRowsOfInvoiceOfOtherDeduction($event)"
             @on-table-cell-edit-complete="onCellEditCompleteApplyPaymentOtherDeduction($event)"
           >
