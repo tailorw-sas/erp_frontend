@@ -6,6 +6,8 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHotelBookingNumberValidationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRatePlanRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRoomTypeRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
@@ -76,8 +78,14 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
 
         this.updateEntity(dto::setRatePlan, command.getRatePlan(), dto.getRatePlan() != null ? dto.getRatePlan().getId() : null, update::setUpdate, this.ratePlanService::findById);
+        if (dto.getRatePlan() != null)
+            RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(dto.getInvoice().getHotel(), dto.getRatePlan()));
+
         this.updateEntity(dto::setNightType, command.getNightType(), dto.getNightType() != null ? dto.getNightType().getId() : null, update::setUpdate, this.nightTypeService::findById);
         this.updateEntity(dto::setRoomType, command.getRoomType(), dto.getRoomType() != null ? dto.getRoomType().getId() : null, update::setUpdate, this.roomTypeService::findById);
+        if (dto.getRoomType() != null)
+            RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(dto.getInvoice().getHotel(), dto.getRoomType()));
+
         this.updateEntity(dto::setRoomCategory, command.getRoomCategory(), dto.getRoomCategory() != null ? dto.getRoomCategory().getId() : null, update::setUpdate, this.roomCategoryService::findById);
 
         if (update.getUpdate() > 0) {

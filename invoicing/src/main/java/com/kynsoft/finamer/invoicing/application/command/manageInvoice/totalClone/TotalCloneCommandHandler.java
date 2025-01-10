@@ -17,6 +17,8 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRatePlanRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRoomTypeRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -170,15 +172,22 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             ManageNightTypeDto nightTypeDto = bookingRequest.getNightType() != null
                     ? this.nightTypeService.findById(bookingRequest.getNightType())
                     : null;
+
             ManageRoomTypeDto roomTypeDto = bookingRequest.getRoomType() != null
                     ? this.roomTypeService.findById(bookingRequest.getRoomType())
                     : null;
+            if (roomTypeDto != null)
+                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto));
+
             ManageRoomCategoryDto roomCategoryDto = bookingRequest.getRoomCategory() != null
                     ? this.roomCategoryService.findById(bookingRequest.getRoomCategory())
                     : null;
+
             ManageRatePlanDto ratePlanDto = bookingRequest.getRatePlan() != null
                     ? this.ratePlanService.findById(bookingRequest.getRatePlan())
                     : null;
+            if (ratePlanDto != null)
+                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto));
 
             //creando el nuevo booking con los valores que vienen, el amount se agarra directo del padre
             ManageBookingDto newBooking = new ManageBookingDto(
