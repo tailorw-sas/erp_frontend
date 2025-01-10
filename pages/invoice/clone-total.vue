@@ -1152,8 +1152,18 @@ async function getBookingList(clearFilter: boolean = false) {
         agency: iterator?.invoice?.agency,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
         nightType: iterator.nightType ? iterator.nightType : null,
-        ratePlan: iterator.ratePlan ? iterator.ratePlan : null,
-        roomType: iterator.roomType ? iterator.roomType : null,
+        ratePlan: iterator.ratePlan
+          ? {
+              ...iterator.ratePlan,
+              name: iterator.ratePlan?.code ? `${iterator.ratePlan?.code || ''}-${iterator.ratePlan?.name || ''}` : ''
+            }
+          : null,
+        roomType: iterator.roomType
+          ? {
+              ...iterator.roomType,
+              name: iterator.roomType?.code ? `${iterator.roomType?.code || ''}-${iterator.roomType?.name || ''}` : ''
+            }
+          : null,
         roomCategory: iterator.roomCategory ? iterator.roomCategory : null,
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
