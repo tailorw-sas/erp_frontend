@@ -651,7 +651,7 @@ async function checkProcessStatus(id: any) {
         }
         else if (attempts >= maxAttempts) {
             clearInterval(interval)
-          reject(new Error('Tiempo de espera agotado'))
+          reject(new Error('There was a problem with the import process. Please try again later.'))
         }
       }
       catch (error) {
