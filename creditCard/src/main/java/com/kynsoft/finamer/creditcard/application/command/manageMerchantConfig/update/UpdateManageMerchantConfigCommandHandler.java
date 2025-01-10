@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantConfigKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
@@ -43,9 +44,9 @@ public class UpdateManageMerchantConfigCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDeclinedUrl, command.getDeclinedUrl(), test.getDeclinedUrl(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setMerchantType, command.getMerchantType(), test.getMerchantType(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setName, command.getName(), test.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setInstitutionCode, command.getInstitutionCode(), test.getInstitutionCode(), update::setUpdate);
+        UpdateFields.updateString(test::setInstitutionCode, command.getInstitutionCode(), test.getInstitutionCode(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setMerchantNumber, command.getMerchantNumber(), test.getMerchantNumber(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setMerchantTerminal, command.getMerchantTerminal(), test.getMerchantTerminal(), update::setUpdate);
+        UpdateFields.updateString(test::setMerchantTerminal, command.getMerchantTerminal(), test.getMerchantTerminal(), update::setUpdate);
 
         this.updateStatus(test::setMethod, command.getMethod(), test.getMethod(), update::setUpdate);
         this.updateManagerMerchant(test::setManageMerchantDto, command.getManageMerchant(), test.getManageMerchantDto().getId(), update::setUpdate);
