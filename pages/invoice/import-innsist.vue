@@ -641,7 +641,7 @@ async function importBookings() {
 async function checkProcessStatus(id: any) {
   return new Promise((resolve, reject) => {
     let attempts = 0
-    const maxAttempts = 30
+    const maxAttempts = 15
     const interval = setInterval(async () => {
       try {
         const response = await GenericService.getById(confImportProcessApi.moduleApi, confImportProcessApi.uriApi, id)
