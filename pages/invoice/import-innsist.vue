@@ -51,11 +51,6 @@ const confagencyListApi = reactive({
   uriApi: 'manage-agency',
 })
 
-const confroomtypeListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-room-type',
-})
-
 const confRoomRateApi = reactive({
   moduleApi: 'innsist',
   uriApi: 'room-rate',
@@ -183,9 +178,7 @@ async function searchErrorList(processId: any, elementsToImportNumber: number) {
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.ASC
   }
-
   errorListPayload.value = newPayload
-  // options.value.selectAllItemByDefault = true
 
   const dataList = await getErrorList()
 
@@ -212,7 +205,6 @@ async function searchErrorList(processId: any, elementsToImportNumber: number) {
 async function getErrorList() {
   try {
     idItemToLoadFirstTime.value = ''
-    options.value.loading = true
     listItems.value = []
     const newListItems = []
 
@@ -255,16 +247,14 @@ async function getErrorList() {
 }
 
 async function getList() {
+  listItems.value = []
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
     idItemToLoadFirstTime.value = ''
-    options.value.loading = true
-    listItems.value = []
     const newListItems = []
-    // console.log(payload.value)
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -288,16 +278,15 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
-
-    return listItems
   }
-
   catch (error) {
     console.error(error)
   }
   finally {
     options.value.loading = false
   }
+
+  return listItems
 }
 
 function isRowSelectable(rowData: any) {
@@ -619,6 +608,7 @@ async function importBookings() {
   }
   options.value.loading = true
   importProcess.value = false
+
   try {
     const uuid = uuidv4()
     const elementsToImportNumber = selectedElements.value.length
@@ -638,15 +628,20 @@ async function importBookings() {
     selectedElements.value = []
   }
   catch (error: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.message || 'There was a problem with the import process. Please try again later.',
+      life: 3000
+    })
     options.value.loading = false
   }
-  options.value.loading = false
 }
 
 async function checkProcessStatus(id: any) {
   return new Promise((resolve, reject) => {
-    // let attempts = 0
-    // const maxAttempts = 30
+    let attempts = 0
+    const maxAttempts = 30
     const interval = setInterval(async () => {
       try {
         const response = await GenericService.getById(confImportProcessApi.moduleApi, confImportProcessApi.uriApi, id)
@@ -654,16 +649,16 @@ async function checkProcessStatus(id: any) {
           clearInterval(interval)
           resolve(response.status)
         }
-        /* else if (attempts >= maxAttempts) {
+        else if (attempts >= maxAttempts) {
             clearInterval(interval)
-            reject('Tiempo de espera agotado')
-          } */
+          reject(new Error('Tiempo de espera agotado'))
+        }
       }
       catch (error) {
         clearInterval(interval)
         reject(error)
       }
-      // attempts++
+      attempts++
     }, 2000)
   })
 }
