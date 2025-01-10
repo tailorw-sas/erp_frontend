@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageVCCTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageVCCTransactionTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
@@ -52,8 +53,8 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
-        updateIfStringNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
-        updateIfStringNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
         updateIfIntegerNotEquals(dto::setMinNumberOfCharacter, command.getMinNumberOfCharacter(), dto.getMinNumberOfCharacter(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsActive, command.getIsActive(), dto.getIsActive(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setNegative, command.getNegative(), dto.getNegative(), update::setUpdate);
@@ -81,15 +82,6 @@ public class UpdateManageVCCTransactionTypeCommandHandler implements ICommandHan
             setter.accept(newValue);
             update.accept(1);
 
-            return true;
-        }
-        return false;
-    }
-
-    private boolean updateIfStringNotEquals(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
-        if (!newValue.equals(oldValue)) {
-            setter.accept(newValue);
-            update.accept(1);
             return true;
         }
         return false;

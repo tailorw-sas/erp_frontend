@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantHotelEnrolleDto;
@@ -55,7 +56,7 @@ public class UpdateManagerMerchantHotelEnrolleCommandHandler implements ICommand
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setEnrrolle, command.getEnrolle(), test.getEnrrolle(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setKey, command.getKey(), test.getKey(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateFields.updateString(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
 
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
         RulesChecker.checkRule(new ManagerMerchantHotelEnrolleMustBeUniqueByIdRule(this.service, command.getManagerMerchant(), command.getManagerCurrency(), command.getManagerHotel(), command.getEnrolle(), command.getId()));
