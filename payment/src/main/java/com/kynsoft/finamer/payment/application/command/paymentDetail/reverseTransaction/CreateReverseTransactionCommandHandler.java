@@ -57,7 +57,8 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
         RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplayPayment()));
         //Comprobar que la fecha sea anterior al dia actual
-        //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash
+        //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash, pero puede ser de other deductions
+        //Lo que no puede suceder es que si es other deductions cambie el estado del payment.
         PaymentDetailDto reverseFrom = new PaymentDetailDto(
                 UUID.randomUUID(),
                 paymentDetailDto.getStatus(),
@@ -105,7 +106,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
             this.paymentDetailService.update(reverseFrom);
             this.calculateReverseOtherDeductions(reverseFrom.getPayment(), reverseFrom.getAmount());
 
-            this.changeStatus(paymentDetailDto, command.getEmployee());
+            //this.changeStatus(paymentDetailDto, command.getEmployee());
         }
 
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
