@@ -259,7 +259,7 @@ async function getCategoryList(query: string, isDefault: boolean = false) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-vcc-transaction-type', payload)
+    const response = await GenericService.search('creditcard', 'manage-vcc-transaction-type', payload)
     const { data: dataList } = response
     CategoryList.value = []
 
@@ -331,7 +331,7 @@ async function getSubCategoryList(query: string, isDefault: boolean = false) {
       pageSize: 20,
       page: 0,
     }
-    const response = await GenericService.search('settings', 'manage-vcc-transaction-type', payload)
+    const response = await GenericService.search('creditcard', 'manage-vcc-transaction-type', payload)
     const { data: dataList } = response
     SubCategoryList.value = []
 
