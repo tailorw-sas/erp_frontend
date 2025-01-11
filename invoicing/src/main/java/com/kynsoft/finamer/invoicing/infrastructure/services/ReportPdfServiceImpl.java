@@ -54,7 +54,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         styleHeader.setFontSize(10);
         Style styleCell = new Style();
         styleCell.setFontSize(8);
-        String currencyData = invoiceDto.getHotel().getManageCurrency().getCode();
+        String currencyData = invoiceDto.getHotel().getManageCurrency() != null ? invoiceDto.getHotel().getManageCurrency().getCode() : "USD";
 
         List<ManageBookingDto> bookings = invoiceDto.getBookings();
 
@@ -74,7 +74,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.setBorder(Border.NO_BORDER);
 
         // Add header row
-        Paragraph hotelHead = new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName() : "").addStyle(styleHeader);
+        Paragraph hotelHead = new Paragraph(invoiceDto.getHotel() != null ? "Hotel: " + invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName() : "Hotel: ").addStyle(styleHeader);
         hotelHead.setBold();
         table.addHeaderCell(new Cell().add(hotelHead));
         table.addHeaderCell(new Cell());
@@ -275,7 +275,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                 table.addCell(new Cell().add(new Paragraph(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph("$ " + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0)).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph((currencyData != null ? currencyData : "$")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((currencyData)).addStyle(styleCell)));
             }
         }
         // Add data row file 10
