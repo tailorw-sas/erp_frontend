@@ -1253,9 +1253,11 @@ function onSortField(event: any) {
 
 async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
+  console.log(parseFilter)
+
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  getAgencyByClient()
+  await getAgencyByClient()
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -1412,30 +1414,32 @@ async function getAgencyByClient() {
     optionsOfTableChangeAgency.value.loading = true
     listAgencyByClient.value = []
     const newListItems = []
-    payloadChangeAgency.value.filter = []
 
-    const filter: FilterCriteria[] = [
-      {
+    const objFilterById = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'id')
+    if (objFilterById) {
+      objFilterById.value = currentAgencyForChangeAgency.value?.id
+    }
+    else {
+      payloadChangeAgency.value.filter.push({
         key: 'id',
-        logicalOperation: 'AND',
         operator: 'NOT_EQUALS',
         value: currentAgencyForChangeAgency.value?.id,
-      },
-      // {
-      //   key: 'client.id',
-      //   logicalOperation: 'AND',
-      //   operator: 'EQUALS',
-      //   value: objClientFormChangeAgency.value?.id,
-      // },
-      {
-        key: 'status',
         logicalOperation: 'AND',
+      })
+    }
+
+    const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
+    if (objFilterByStatus) {
+      objFilterByStatus.value = 'ACTIVE'
+    }
+    else {
+      payloadChangeAgency.value.filter.push({
+        key: 'status',
         operator: 'EQUALS',
         value: 'ACTIVE',
-      },
-    ]
-
-    payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...filter]
+        logicalOperation: 'AND',
+      })
+    }
 
     const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi, optionsOfTableChangeAgency.value.uriApi, payloadChangeAgency.value)
 
@@ -2533,6 +2537,7 @@ async function openModalApplyPayment() {
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   applyPaymentOnChangePage.value = undefined
+  checkApplyPayment.value = true
   applyPaymentGetList()
   getListPaymentDetailTypeDeposit()
 }
@@ -2624,7 +2629,7 @@ function onRowContextMenu(event: any) {
 
   // if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
 
-  if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+  if (event && event.data && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -2646,7 +2651,7 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
     else if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
@@ -2658,19 +2663,19 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
     }
     else if (event && event.data && event.data?.attachmentStatus?.supported === true) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
   }
@@ -2897,11 +2902,14 @@ async function saveApplyPayment() {
       getList()
     }
   }
-  catch (error) {
-    objItemSelectedForRightClickApplyPayment.value = {}
-    idInvoicesSelectedToApplyPayment.value = []
-    paymentDetailsTypeDepositSelected.value = []
+  catch (error: any) {
+    // objItemSelectedForRightClickApplyPayment.value = {}
+    // idInvoicesSelectedToApplyPayment.value = []
+    // paymentDetailsTypeDepositSelected.value = []
     loadingSaveApplyPayment.value = false
+    if (error.data.data.error.status === 1179) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The invoice not found, please try again in a few minutes o refresh the page', life: 6000 })
+    }
   }
 }
 
@@ -4074,13 +4082,13 @@ onMounted(async () => {
     >
       <template #column-icon="{ data: objData, column }">
         <div class="flex align-items-center justify-content-center p-0 m-0">
-          <!-- <pre>{{ objData }}</pre> -->
+          <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
           <Button
             v-if="showInconAttachment(objData)"
             :icon="column.icon"
             class="p-button-rounded p-button-text w-2rem h-2rem"
             aria-label="Submit"
-            :disabled="objData?.attachmentStatus?.nonNone"
+            :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
             :style="{ color: objData.color }"
           />
         </div>

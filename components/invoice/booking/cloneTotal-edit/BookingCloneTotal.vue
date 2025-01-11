@@ -498,10 +498,10 @@ const columnsRoomRate: IColumn[] = [
   // { field: 'roomType', header: 'Room Type', type: 'select', objApi: confAgencyApi, sortable: !props.isDetailView && !props.isCreationDialog },
   { field: 'nights', header: 'Nights', type: 'text', sortable: false, editable: false },
   // { field: 'ratePlan', header: 'Rate Plan', type: 'select', objApi: confratePlanApi, sortable: !props.isDetailView && !props.isCreationDialog },
-  { field: 'rateAdult', header: 'Rate Adult', type: 'text', sortable: false, editable: false },
-  { field: 'rateChildren', header: 'Rate Children', type: 'text', sortable: false, editable: false },
-  { field: 'hotelAmount', header: 'Hotel Amount', type: 'text', sortable: false, editable: true },
-  { field: 'invoiceAmount', header: 'Rate Amount', type: 'text', sortable: false, editable: true },
+  { field: 'rateAdult', header: 'Rate Adult', type: 'number', sortable: false, editable: false },
+  { field: 'rateChildren', header: 'Rate Children', type: 'number', sortable: false, editable: false },
+  { field: 'hotelAmount', header: 'Hotel Amount', type: 'number', sortable: false, editable: true },
+  { field: 'invoiceAmount', header: 'Rate Amount', type: 'number', sortable: false, editable: true },
 ]
 const columnsAdjustment: IColumn[] = [
   { field: 'adjustmentId', header: 'Id', type: 'text', sortable: false },
@@ -781,6 +781,10 @@ async function onCellEditRoomRate(event: any) {
   }
 
   if (field === 'adults') {
+    if (!Number.isInteger(+newValue)) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Adults must be an integer', life: 3000 })
+      return
+    }
     if (+newValue <= 0 && newData.children === 0) {
       // Mensaje de error: Almenos uno de los dos debe ser mayo que 0
       toast.add({ severity: 'error', summary: 'Error', detail: 'At least one of the fields Adults or Children must be greater than 0.', life: 3000 })
@@ -789,8 +793,34 @@ async function onCellEditRoomRate(event: any) {
   }
 
   if (field === 'children') {
+    if (!Number.isInteger(+newValue)) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Children must be an integer', life: 3000 })
+      return
+    }
     if (+newValue <= 0 && newData.adults === 0) {
       toast.add({ severity: 'error', summary: 'Error', detail: 'At least one of the fields Adults or Children must be greater than 0.', life: 3000 })
+      return
+    }
+  }
+
+  if (field === 'checkIn') {
+    if (!newData.checkOut) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Check Out is required', life: 3000 })
+      return
+    }
+    if (dayjs(newData.checkIn).isAfter(dayjs(newData.checkOut))) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The check-in date must be earlier than the check-out date.', life: 3000 })
+      return
+    }
+  }
+
+  if (field === 'checkOut') {
+    if (!newData.checkIn) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Check In is required', life: 3000 })
+      return
+    }
+    if (dayjs(newData.checkIn).isAfter(dayjs(newData.checkOut))) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The check-out date must be later than the check-in date.', life: 3000 })
       return
     }
   }
@@ -1543,6 +1573,30 @@ onMounted(async () => {
 
                         }"
                       >
+                        <template #column-editable-hotelAmount="{ item: { data, field, onCellEditComplete } }">
+                          <div>
+                            <InputNumber
+                              v-model="data[field]"
+                              show-clear
+                              :min-fraction-digits="2"
+                              :max-fraction-digits="2"
+                              @update:model-value="onCellEditComplete($event, data)"
+                            />
+                          </div>
+                        </template>
+
+                        <template #column-editable-invoiceAmount="{ item: { data, field, onCellEditComplete } }">
+                          <div>
+                            <InputNumber
+                              v-model="data[field]"
+                              show-clear
+                              :min-fraction-digits="2"
+                              :max-fraction-digits="2"
+                              @update:model-value="onCellEditComplete($event, data)"
+                            />
+                          </div>
+                        </template>
+
                         <template #datatable-footer>
                           <ColumnGroup type="footer" class="flex align-items-center">
                             <Row>

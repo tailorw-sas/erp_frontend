@@ -198,6 +198,7 @@ async function getList() {
     listItems.value = []
     options.value.loading = true
     idItemToLoadFirstTime.value = ''
+    options.value.loading = true
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 

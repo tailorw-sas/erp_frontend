@@ -250,7 +250,26 @@ interface SubTotals {
   appliedPorcentage: number
   depositBalancePorcentage: number
 }
+
+interface InvoiceSubTotals {
+  invoiceTotalAmount: number
+  invoiceDueTotalAmount: number
+  days0Count: number
+  days30Count: number
+  days30Balance: number
+  days30Percentage: number
+  days60Count: number
+  days60Balance: number
+  days60Percentage: number
+  days90Count: number
+  days90Balance: number
+  days90Percentage: number
+  days120Count: number
+  days120Balance: number
+  days120Percentage: number
+}
 const subTotals = ref<SubTotals>({ paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0, noAppliedPorcentage: 0, appliedPorcentage: 0, depositBalancePorcentage: 0 })
+const subTotalsInvoice = ref<InvoiceSubTotals>({ invoiceTotalAmount: 0, invoiceDueTotalAmount: 0, days0Count: 0, days30Count: 0, days30Balance: 0, days30Percentage: 0, days60Count: 0, days60Balance: 0, days60Percentage: 0, days90Count: 0, days90Balance: 0, days90Percentage: 0, days120Count: 0, days120Balance: 0, days120Percentage: 0 })
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
@@ -373,9 +392,9 @@ const columnsInvoice: IColumn[] = [
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'invoiceNumber', header: 'Inv.No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen.Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
   { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
 
@@ -747,6 +766,7 @@ async function getList() {
 }
 
 async function getListInvoice() {
+  const count: InvoiceSubTotals = { invoiceTotalAmount: 0, invoiceDueTotalAmount: 0, days0Count: 0, days30Count: 0, days30Balance: 0, days30Percentage: 0, days60Count: 0, days60Balance: 0, days60Percentage: 0, days90Count: 0, days90Balance: 0, days90Percentage: 0, days120Count: 0, days120Balance: 0, days120Percentage: 0 }
   if (optionsInv.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -825,7 +845,7 @@ async function getListInvoice() {
     // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
     const objFilterByDueAmount = payloadInv.value.filter.find((item: IFilter) => item.key === 'dueAmount')
     if (objFilterByDueAmount) {
-      objFilterByDueAmount.value = 0
+      objFilterByDueAmount.value = "0"
     }
     else {
       payloadInv.value.filter.push({
@@ -858,6 +878,12 @@ async function getListInvoice() {
         else {
           invoiceNumber = iterator?.invoiceNumber
         }
+        if (Object.prototype.hasOwnProperty.call(iterator, 'invoiceAmount')) {
+          count.invoiceTotalAmount = count.invoiceTotalAmount + iterator.invoiceAmount
+        }
+        if (Object.prototype.hasOwnProperty.call(iterator, 'dueAmount')) {
+          count.invoiceDueTotalAmount = count.invoiceDueTotalAmount + iterator.dueAmount
+        }
         newListItems.push({
           ...iterator,
           loadingEdit: false,
@@ -885,6 +911,31 @@ async function getListInvoice() {
   }
   finally {
     optionsInv.value.loading = false
+    if (paginationInvoice.value.totalElements !== 0) {
+      const days30 = listItemsInvoice.value.filter(item => item.aging === 30)
+      count.days30Count = days30.length
+      count.days30Balance = days30.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days30Percentage = (count.days30Balance * 100) / count.invoiceTotalAmount
+
+      const days60 = listItemsInvoice.value.filter(item => item.aging === 60)
+      count.days60Count = days60.length
+      count.days60Balance = days60.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days60Percentage = (count.days60Balance * 100) / count.invoiceTotalAmount
+
+      const days90 = listItemsInvoice.value.filter(item => item.aging === 90)
+      count.days90Count = days90.length
+      count.days90Balance = days90.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days90Percentage = (count.days90Balance * 100) / count.invoiceTotalAmount
+
+      const days120 = listItemsInvoice.value.filter(item => item.aging === 120)
+      count.days120Count = days120.length
+      count.days120Balance = days120.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days120Percentage = (count.days120Balance * 100) / count.invoiceTotalAmount
+
+      const days0 = listItemsInvoice.value.filter(item => item.aging === 0)
+      count.days0Count = days0.length
+    }
+    subTotalsInvoice.value = { ...count }
   }
 }
 interface InvoiceStatus {
@@ -2206,73 +2257,73 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
               <Column
-                footer="Total #:" :colspan="2"
+                :footer="`Total #: ${listItemsInvoice.length}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
-                footer="Total $:" :colspan="2"
+                :footer="`Total $: ${formatNumber(subTotalsInvoice.invoiceTotalAmount)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="Total Pending #:" :colspan="2"
+                :footer="`Total Pending #: ${subTotalsInvoice.days0Count}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="Total Invoice B #:" :colspan="3"
+                :footer="`Total Invoice B #: ${formatNumber(subTotalsInvoice.invoiceDueTotalAmount)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
             </Row>
             <Row>
               <Column
-                footer="Total 30 Days #:" :colspan="2"
+                :footer="`Total 30 Days #: ${subTotalsInvoice.days30Count}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;"
               />
               <Column
-                footer="Total 60 Days #:" :colspan="2"
+                :footer="`Total 60 Days #: ${subTotalsInvoice.days60Count}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
-                footer="Total 90 Days #:" :colspan="2"
+                :footer="`Total 90 Days #: ${subTotalsInvoice.days90Count}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
-                footer="Total 120 Days #:" :colspan="3"
+                :footer="`Total 120 Days #: ${subTotalsInvoice.days120Count}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
             </Row>
             <Row>
               <Column
-                footer="Total 30 Days $:" :colspan="2"
+                :footer="`Total 30 Days $: ${formatNumber(subTotalsInvoice.days30Balance)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
-                footer="Total 60 Days $:" :colspan="2"
+                :footer="`Total 60 Days $: ${formatNumber(subTotalsInvoice.days60Balance)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="Total 90 Days $:" :colspan="2"
+                :footer="`Total 90 Days $: ${formatNumber(subTotalsInvoice.days90Balance)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
               <Column
-                footer="Total 120 Days $:" :colspan="3"
+                :footer="`Total 120 Days $: ${formatNumber(subTotalsInvoice.days120Balance)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#0F8BFD; color:#ffffff;"
               />
             </Row>
             <Row>
               <Column
-                footer="Total 30 Days %:" :colspan="2"
+                :footer="`Total 30 Days %: ${formatNumber(subTotalsInvoice.days30Percentage, 2, 2)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#000000; background-color:#ffffff;"
               />
               <Column
-                footer="Total 60 Days %:" :colspan="2"
+                :footer="`Total 60 Days %: ${formatNumber(subTotalsInvoice.days60Percentage, 2, 2)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
-                footer="Total 90 Days %:" :colspan="2"
+                :footer="`Total 90 Days %: ${formatNumber(subTotalsInvoice.days90Percentage, 2, 2)}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
               <Column
-                footer="Total 120 Days %:" :colspan="3"
+                :footer="`Total 120 Days %: ${formatNumber(subTotalsInvoice.days120Percentage, 2, 2)}`" :colspan="3"
                 footer-style="text-align:left; font-weight: bold; background-color:#ffffff; color:#000000;"
               />
             </Row>

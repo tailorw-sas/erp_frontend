@@ -26,6 +26,10 @@ const loadingSaveAll = ref(false)
 const haveErrorImportStatus = ref(false)
 const totalImportedRows = ref(0)
 
+const objLoading = ref({
+  loadingTransactionType: false
+})
+
 const confApi = reactive({
   moduleApi: 'payment',
   uriApi: 'payment-detail/import',
@@ -195,7 +199,7 @@ async function importAntiIncome() {
     formData.append('importProcessId', uuid)
     formData.append('importType', ENUM_PAYMENT_IMPORT_TYPE.ANTI)
     // formData.append('totalAmount', importModel.value.totalAmount.toFixed(0).toString())
-    formData.append('transactionType', importModel.value.transactionType)
+    formData.append('transactionType', typeof importModel.value.transactionType === 'object' ? importModel.value.transactionType.id : importModel.value.transactionType)
     formData.append('employee', userData?.value?.user?.userId || '')
     formData.append('attachment', file1)
 
@@ -302,11 +306,59 @@ async function getTransactionStatusList() {
     const { data: dataList } = response
     transactionStatusList.value = []
     for (const iterator of dataList) {
-      transactionStatusList.value = [...transactionStatusList.value, { id: iterator.id, code: iterator.code, name: `${iterator.code}- ${iterator.name}`, status: iterator.status }]
+      transactionStatusList.value = [
+        ...transactionStatusList.value,
+        {
+          id: iterator.id,
+          code: iterator.code,
+          name: `${iterator.code}- ${iterator.name}`,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
     console.error('Error loading city state list:', error)
+  }
+}
+
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+}
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    code: data.code,
+  }
+}
+
+async function getTransactionStatusListForSelectField(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  try {
+    objLoading.value.loadingTransactionType = true
+    let listTemp: any[] = []
+    transactionStatusList.value = []
+    listTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    listTemp = [...new Set(listTemp)]
+    transactionStatusList.value = [...transactionStatusList.value, ...listTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingTransactionType = false
+  }
+  finally {
+    objLoading.value.loadingTransactionType = false
   }
 }
 
@@ -329,7 +381,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   // getErrorList()
   uploadComplete.value = true
-  await getTransactionStatusList()
+  // await getTransactionStatusList()
 })
 </script>
 
@@ -353,10 +405,43 @@ onMounted(async () => {
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Document: <span class="p-error">*</span></label>
                   <div class="w-full">
-                    <Dropdown
+                    <!-- <Dropdown
                       v-model="importModel.transactionType"
                       class="w-full" :options="transactionStatusList" option-label="name"
                       option-value="id" placeholder="Select Document" @change="activeImport()"
+                    /> -->
+                    <DebouncedAutoCompleteComponent
+                      id="autocomplete"
+                      class="w-full h-2rem align-items-center"
+                      field="name"
+                      item-value="id"
+                      :model="importModel.transactionType"
+                      :loading="objLoading.loadingTransactionType"
+                      :suggestions="[...transactionStatusList]"
+                      @change="($event) => {
+                        importModel.transactionType = $event
+                      }"
+                      @load="async($event) => {
+                        const filter: FilterCriteria[] = [
+                          {
+                            key: 'antiToIncome',
+                            operator: 'EQUALS',
+                            value: true,
+                            logicalOperation: 'AND',
+                          },
+                          {
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          },
+                        ]
+                        const objQueryToSearch = {
+                          query: $event,
+                          keys: ['name', 'code'],
+                        }
+                        await getTransactionStatusListForSelectField(confTransactionStatusApi.moduleApi, confTransactionStatusApi.uriApi, objQueryToSearch, filter)
+                      }"
                     />
                   </div>
                 </div>

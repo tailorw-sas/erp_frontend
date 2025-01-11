@@ -138,7 +138,8 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field mb-3 col-12 md: required',
     headerClass: 'mb-1',
-    disabled: true
+    disabled: true,
+    validation: validateEntityStatus('Resource Type'),
   },
 
   {
@@ -466,6 +467,7 @@ async function createItem(item: { [key: string]: any }) {
     if (props.isCreationDialog) {
       payload.id = v4()
       payload.type = item.type
+      payload.resourceType = resourceTypeSelected.value
       emit('update:listItems', payload)
     }
     else {
@@ -526,6 +528,7 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
+  console.log(resourceTypeSelected.value)
   if (!item?.type?.id) {
     return typeError.value = true
   }
@@ -535,6 +538,7 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       if (props.isCreationDialog) {
+        item.resourceType = resourceTypeSelected.value
         await props.updateItem(item)
         clearForm()
         return loadingSaveAll.value = false
@@ -781,6 +785,7 @@ onMounted(async () => {
     }
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+      item.value.resourceType = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
   }
