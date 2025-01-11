@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantBankAccountDto;
@@ -58,7 +59,7 @@ public class UpdateManageMerchantBankAccountCommandHandler implements ICommandHa
         this.updateManageBank(test::setManageBank, command.getManagerBank(), test.getManageBank().getId(), update::setUpdate);
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setAccountNumber, command.getAccountNumber(), test.getAccountNumber(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
+        UpdateFields.updateString(test::setDescription, command.getDescription(), test.getDescription(), update::setUpdate);
         this.updateStatus(test::setStatus, command.getStatus(), test.getStatus(), update::setUpdate);
 
         Set<ManageCreditCardTypeDto> merchantCreditCardTypeDtos = new HashSet<>();

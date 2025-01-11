@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageReportParamTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -33,9 +34,9 @@ public class UpdateManageReportParamTypeCommandHandler implements ICommandHandle
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setLabel, command.getLabel(), dto.getLabel(), update::setUpdate);
-        updateSource(dto::setSource, command.getSource(), dto.getSource(), update::setUpdate);
+        UpdateFields.updateString(dto::setSource, command.getSource(), dto.getSource(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setHotel, command.getHotel(), dto.getHotel(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
 
@@ -49,15 +50,6 @@ public class UpdateManageReportParamTypeCommandHandler implements ICommandHandle
             setter.accept(newValue);
             update.accept(1);
 
-            return true;
-        }
-        return false;
-    }
-
-    private boolean updateSource(Consumer<String> setter, String newValue, String oldValue, Consumer<Integer> update) {
-        if (!newValue.equals(oldValue)) {
-            setter.accept(newValue);
-            update.accept(1);
             return true;
         }
         return false;

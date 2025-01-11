@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManagePaymentSourceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManagePaymentSourceDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -35,7 +36,7 @@ public class UpdateManagePaymentSourceCommandHandler implements ICommandHandler<
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsBank, command.getIsBank(), dto.getIsBank(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setExpense, command.getExpense(), dto.getExpense(), update::setUpdate);

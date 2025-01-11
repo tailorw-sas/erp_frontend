@@ -5,9 +5,11 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -49,10 +51,10 @@ public class ManageInvoiceSearchResponse {
         this.invoiceDate = projection.getInvoiceDate();
         this.hotel = new ManageInvoiceHotelResponse(projection.getHotel());
         this.agency = new ManageInvoiceAgencyResponse(projection.getAgency());
-        this.invoiceStatus = projection.getInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getInvoiceStatus()) : null;
+        this.invoiceStatus = projection.getManageInvoiceStatus() != null ? new ManageInvoiceStatusResponse(projection.getManageInvoiceStatus()) : null;
         this.hasAttachments = projection.getHasAttachments() != null ? projection.getHasAttachments() : null;
-        this.status = EInvoiceStatus.fromName(projection.getStatus());
-        this.isInCloseOperation = projection.getIsCloseOperation();
+        this.status =projection.getInvoiceStatus() != null ? projection.getInvoiceStatus() : null;
+        this.isInCloseOperation = projection.isCloseOperation();
         this.invoiceType = projection.getInvoiceType();
         this.invoiceNumber = deleteHotelInfo(projection.getInvoiceNumber());
         this.manageInvoiceType = projection.getManageInvoiceType() != null ? new ManageInvoiceTypeResponse(projection.getManageInvoiceType()) : null;
@@ -62,7 +64,7 @@ public class ManageInvoiceSearchResponse {
         this.originalAmount = projection.getOriginalAmount() != null ? projection.getOriginalAmount() : null;
         this.importType = projection.getImportType();
         this.cloneParent = projection.getCloneParent();
-        this.aging = projection.getAging();
+        this.aging = InvoiceUtils.calculateInvoiceAging(projection.getDueDate(), LocalDate.now());
     }
 
     public ManageInvoiceSearchResponse(ManageInvoiceDto projection, Boolean isHasAttachments, Boolean isInCloseOperation) {

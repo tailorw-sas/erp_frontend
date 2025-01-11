@@ -106,7 +106,7 @@ public class Invoice {
 
     private String sendStatusError;
     @Column(columnDefinition = "boolean DEFAULT FALSE")
-    private Boolean hasAttachments;
+    private Boolean hasAttachments = false;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean deleteInvoice;
@@ -164,6 +164,7 @@ public class Invoice {
         this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
         this.deleteInvoice = dto.isDeleteInvoice();
         this.cloneParent = dto.isCloneParent();
+        this.hasAttachments = attachments != null && !attachments.isEmpty();
     }
 
     public ManageInvoiceDto toAggregateSample() {

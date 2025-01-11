@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageActionLogDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -36,7 +37,7 @@ public class UpdateManageActionLogCommandHandler implements ICommandHandler<Upda
     }
 
     private void updateFields(ManageActionLogDto actionLogDto, UpdateManageActionLogCommand command, ConsumerUpdate update) {
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(actionLogDto::setDescription, command.getDescription(), actionLogDto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(actionLogDto::setDescription, command.getDescription(), actionLogDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(actionLogDto::setName, command.getName(), actionLogDto.getName(), update::setUpdate);
         updateStatus(actionLogDto::setStatus, command.getStatus(), actionLogDto.getStatus(), update::setUpdate);
     }

@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantCommissionKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageCreditCardTypeDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantCommissionDto;
@@ -61,7 +62,7 @@ public class UpdateManageMerchantCommissionCommandHandler implements ICommandHan
     }
 
     private void updateFields(ManageMerchantCommissionDto existingCommission, UpdateManageMerchantCommissionCommand command, ConsumerUpdate update) {
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(existingCommission::setDescription, command.getDescription(), existingCommission.getDescription(), update::setUpdate);
+        UpdateFields.updateString(existingCommission::setDescription, command.getDescription(), existingCommission.getDescription(), update::setUpdate);
         updateManageCreditCartType(existingCommission::setManageCreditCartType, command.getManageCreditCartType(), existingCommission.getManageCreditCartType().getId(), update::setUpdate);
         updateManagerMerchant(existingCommission::setManageMerchant, command.getManagerMerchant(), existingCommission.getManageMerchant().getId(), update::setUpdate);
         updateCalculationType(existingCommission::setCalculationType, command.getCalculationType(), existingCommission.getCalculationType(), update::setUpdate);

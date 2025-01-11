@@ -37,6 +37,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -154,7 +155,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 
-        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Specification<Invoice> specifications = new GenericSpecificationsBuilder<Invoice>(filterCriteria).build();
         if (pageable.getSort().isSorted()) {
             boolean hasCreatedAt = pageable.getSort().stream()
                     .anyMatch(order -> order.getProperty().equals("createdAt"));
