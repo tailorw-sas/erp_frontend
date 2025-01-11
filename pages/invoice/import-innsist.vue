@@ -565,11 +565,11 @@ async function importBookings() {
 
     await GenericService.import(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
 
-    const result = await checkProcessStatus(uuid)
+    const result = await checkProcessStatus(processId.value)
 
     options.value.loading = false
     if (result?.failedRecords > 0) {
-      await getErrorList(uuid)
+      await getErrorList(processId.value)
       showErrorsDataTable.value = true
       showDataTable.value = false
       toast.add({
