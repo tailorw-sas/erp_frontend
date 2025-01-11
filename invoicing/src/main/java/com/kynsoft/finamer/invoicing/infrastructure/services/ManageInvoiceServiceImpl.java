@@ -202,6 +202,15 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return getPaginatedSendListResponse(data);
     }
 
+    private PaginatedResponse searchToExporter(Pageable pageable, List<FilterCriteria> filterCriteria) {
+        filterCriteria(filterCriteria);
+
+        GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
+
+        return getPaginatedResponse(data);
+    }
+
     @Override
     public PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
@@ -221,7 +230,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream) {
-        List<ManageInvoiceSearchResponse> data = this.search(pageable, filterCriteria).getData();
+        List<ManageInvoiceSearchResponse> data = this.searchToExporter(pageable, filterCriteria).getData();
 
         List<ExportInvoiceRow> rows = new ArrayList<>();
         List<String> sheets = new ArrayList<>();
