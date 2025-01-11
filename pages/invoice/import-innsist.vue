@@ -14,14 +14,17 @@ const { data: userData } = useAuth()
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
 const listItems = ref<any[]>([])
+const listItemsErrors = ref<any[]>([])
 const selectedElements = ref<string[]>([])
 const loadingSearch = ref(false)
 const loadingSaveAll = ref(false)
 const importProcess = ref(false)
 const marcadosTodos = ref(true)
 const resultTable = ref(null)
-
+const showDataTable = ref(true)
+const showErrorsDataTable = ref(false)
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+const processId = ref('')
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -118,6 +121,21 @@ const options = ref({
   scrollHeight: '500px'
 })
 
+const optionsListErrors = ref({
+  tableName: 'List Errors Import From Innsist',
+  moduleApi: 'innsist',
+  uriApi: 'booking',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  selectAllItemByDefault: false,
+  expandableRows: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?',
+  selectFirstItemByDefault: false,
+  scrollHeight: '500px'
+})
+
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
@@ -145,6 +163,8 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
+const payloadOnChangePageErrorList = ref<PageState>()
+
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
   if (data.length > 0) {
@@ -169,90 +189,14 @@ async function onMultipleSelect(data: any) {
 }
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
-async function searchErrorList(processId: any, elementsToImportNumber: number) {
-  const newPayload: IQueryRequest = {
-    filter: [],
-    query: processId,
-    pageSize: 100,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.ASC
-  }
-  errorListPayload.value = newPayload
-
-  const dataList = await getErrorList()
-
-  // Verificar si no hay resultados
-  if (!dataList || dataList.value.length === 0) {
-    await getList()
-    toast.add({
-      severity: 'info',
-      summary: 'Confirmed',
-      detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
-      life: 5000
-    })
-  }
-  else {
-    toast.add({
-      severity: 'warn',
-      summary: 'Confirmed',
-      detail: `Import process unsuccessful. ${dataList.value.length} bookings have errors`,
-      life: 5000
-    })
-  }
-}
-
-async function getErrorList() {
-  try {
-    idItemToLoadFirstTime.value = ''
-    listItems.value = []
-    const newListItems = []
-
-    const response = await GenericService.search(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, errorListPayload.value)
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
-
-    // const existingIds = new Set(listItems.value.map(item => item.id))
-
-    for (const iterator of dataList) {
-      // Verificar si el ID ya existe en la lista
-      // if (!existingIds.has(iterator.id)) {
-      newListItems.push({
-        ...iterator,
-        loadingEdit: false,
-        loadingDelete: false,
-        agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
-        agencyCd: iterator?.agency?.code,
-        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-        rowClass: 'p-disabled p-text-disabled'
-      })
-      // existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-      // }
-    }
-
-    listItems.value = [...listItems.value, ...newListItems]
-    return listItems
-  }
-
-  catch (error) {
-    console.error(error)
-  }
-  finally {
-    options.value.loading = false
-  }
-}
-
 async function getList() {
-  listItems.value = []
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
+    listItems.value = []
+    options.value.loading = true
     idItemToLoadFirstTime.value = ''
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
@@ -278,6 +222,20 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+
+    // Seleccionar automáticamente todos los elementos retornados
+    if (listItems.value && listItems.value.length > 0) {
+      selectedElements.value = listItems.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '')// .map(item => item.id)
+    }
+    else {
+      selectedElements.value = [] // Asegurarse de que esté vacío si no hay resultados
+      toast.add({
+        severity: 'info',
+        summary: 'Confirmed',
+        detail: `No bookings available. `,
+        life: 5000 // Duración del toast en milisegundos
+      })
+    }
   }
   catch (error) {
     console.error(error)
@@ -285,8 +243,6 @@ async function getList() {
   finally {
     options.value.loading = false
   }
-
-  return listItems
 }
 
 function isRowSelectable(rowData: any) {
@@ -410,6 +366,8 @@ function onSortField(event: any) {
 }
 
 async function searchAndFilter() {
+  showErrorsDataTable.value = false
+  showDataTable.value = true
   const newPayload: IQueryRequest = {
     filter: [],
     query: '',
@@ -437,13 +395,13 @@ async function searchAndFilter() {
   // Filtros de hoteles
   if (filterToSearch.value.hotel) {
     if (filterToSearch.value.hotel?.id !== 'All') {
-        newPayload.filter.push({
-          key: 'hotel.id',
-          operator: 'EQUALS',
+      newPayload.filter.push({
+        key: 'hotel.id',
+        operator: 'EQUALS',
         value: filterToSearch.value.hotel?.id,
         logicalOperation: 'AND',
-          type: 'filterSearch'
-        })
+        type: 'filterSearch'
+      })
     }
   }
 
@@ -454,13 +412,13 @@ async function searchAndFilter() {
       .map((item: any) => item?.id)
 
     if (selectedAgencyIds.length > 0) {
-        newPayload.filter.push({
-          key: 'agency.id',
+      newPayload.filter.push({
+        key: 'agency.id',
         operator: 'IN',
         value: selectedAgencyIds,
         logicalOperation: 'AND',
-          type: 'filterSearch'
-        })
+        type: 'filterSearch'
+      })
     }
   }
 
@@ -486,25 +444,7 @@ async function searchAndFilter() {
 
   payload.value = newPayload
 
-  const dataList = await getList()
-
-  // Seleccionar automáticamente todos los elementos retornados
-  if (dataList && dataList.value.length > 0) {
-    selectedElements.value = dataList.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '')// .map(item => item.id)
-  }
-  else {
-    selectedElements.value = [] // Asegurarse de que esté vacío si no hay resultados
-  }
-
-  // Verificar si no hay resultados
-  if (!dataList || dataList.value.length === 0) {
-    toast.add({
-      severity: 'info',
-      summary: 'Confirmed',
-      detail: `No bookings available. `,
-      life: 5000 // Duración del toast en milisegundos
-    })
-  }
+  await getList()
 
   importProcess.value = true
 }
@@ -596,6 +536,10 @@ async function getRoomRateList(bookingId: string = '') {
   }
 }
 
+function generateProcessId() {
+  processId.value = uuidv4()
+}
+
 async function importBookings() {
   if (selectedElements.value.length === 0) {
     toast.add({
@@ -610,22 +554,42 @@ async function importBookings() {
   importProcess.value = false
 
   try {
-    const uuid = uuidv4()
+    generateProcessId()
     const elementsToImportNumber = selectedElements.value.length
 
     const payload = {
-      id: uuid,
+      id: processId.value,
       userId: userData?.value?.user?.userId,
       bookings: selectedElements.value.map(item => item.id)
     }
 
     await GenericService.import(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
 
-    await checkProcessStatus(uuid)
+    const result = await checkProcessStatus(uuid)
 
-    await searchErrorList(uuid, elementsToImportNumber)
-
-    selectedElements.value = []
+    options.value.loading = false
+    if (result?.failedRecords > 0) {
+      await getErrorList(uuid)
+      showErrorsDataTable.value = true
+      showDataTable.value = false
+      toast.add({
+        severity: 'warn',
+        summary: 'Confirmed',
+        detail: `Import process unsuccessful. ${result?.failedRecords} bookings have errors`,
+        life: 5000
+      })
+    }
+    else {
+      await getList()
+      showErrorsDataTable.value = false
+      showDataTable.value = true
+      toast.add({
+        severity: 'info',
+        summary: 'Confirmed',
+        detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
+        life: 5000
+      })
+    }
   }
   catch (error: any) {
     toast.add({
@@ -641,33 +605,116 @@ async function importBookings() {
 async function checkProcessStatus(id: any) {
   return new Promise((resolve, reject) => {
     let attempts = 0
-    const maxAttempts = 15
+    const maxAttempts = 30
     const interval = setInterval(async () => {
       try {
         const response = await GenericService.getById(confImportProcessApi.moduleApi, confImportProcessApi.uriApi, id)
         if (response.status === 'COMPLETED') {
           clearInterval(interval)
-          resolve(response.status)
+          resolve({ status: response.status, successfulRecords: response.totalSuccessful, failedRecords: response.totalFailed, })
+          return
         }
-        else if (attempts >= maxAttempts) {
-            clearInterval(interval)
+
+        if (attempts >= maxAttempts) {
+          clearInterval(interval)
           reject(new Error('There was a problem with the import process. Please try again later.'))
+          return
         }
+        attempts++
       }
       catch (error) {
         clearInterval(interval)
         reject(error)
       }
-      attempts++
     }, 2000)
   })
 }
 
+async function getErrorList(processId: any) {
+  try {
+    optionsListErrors.value.loading = true
+    const newListItems = []
+    const newPayload: IQueryRequest = {
+      filter: [],
+      query: processId,
+      pageSize: 100,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+    errorListPayload.value = newPayload
+
+    const response = await GenericService.search(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, errorListPayload.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      newListItems.push({
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
+        agencyCd: iterator?.agency?.code,
+        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+        rowClass: 'p-disabled p-text-disabled'
+      })
+    }
+
+    if (!newListItems || newListItems.length > 0) {
+      listItemsErrors.value = [...listItemsErrors.value, ...newListItems]
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    optionsListErrors.value.loading = false
+  }
+}
+
+async function parseDataTableFilterErrorList(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+    }
+  }
+
+  payload.value.filter = [...parseFilter || []]
+  getErrorList(processId.value)
+}
+
+async function resetErrorListItems() {
+  errorListPayload.value.page = 0
+  getErrorList(processId.value)
+}
+
+function onSortFieldErrorList(event: any) {
+  if (event) {
+    errorListPayload.value.sortBy = event.sortField
+    errorListPayload.value.sortType = event.sortOrder
+    getErrorList(processId.value)
+  }
+}
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 500
 
   getList()
+})
+
+watch(payloadOnChangePageErrorList, (newValue) => {
+  errorListPayload.value.page = newValue?.page ? newValue?.page : 0
+  errorListPayload.value.pageSize = newValue?.rows ? newValue.rows : 500
+
+  getErrorList(processId.value)
 })
 
 onMounted(async () => {
@@ -780,7 +827,7 @@ onMounted(async () => {
           </AccordionTab>
         </Accordion>
       </div>
-      <div class="p-0">
+      <div v-if="showDataTable" class="p-0">
         <DynamicTable
           ref="resultTable"
           :data="listItems"
@@ -788,7 +835,6 @@ onMounted(async () => {
           :options="options"
           :pagination="pagination"
           :selected-items="selectedElements"
-          @on-confirm-create="clearForm"
           @on-change-pagination="payloadOnChangePage = $event"
           @on-change-filter="parseDataTableFilter"
           @on-list-item="resetListItems"
@@ -808,6 +854,47 @@ onMounted(async () => {
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                     <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                      <div class="row">
+                        <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                      </div>
+                      <div class="row">
+                        <p>{{ messageForEmptyTable }}</p>
+                      </div>
+                    </span>
+                    <span v-else class="flex flex-column align-items-center justify-content-center">
+                      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                    </span>
+                  </div>
+                </template>
+              </DataTable>
+            </div>
+          </template>
+        </DynamicTable>
+      </div>
+      <div v-if="showErrorsDataTable" class="p-0">
+        <DynamicTable
+          :data="listItemsErrors"
+          :columns="columns"
+          :options="optionsListErrors"
+          :pagination="pagination"
+          @on-change-pagination="payloadOnChangePageErrorList = $event"
+          @on-change-filter="parseDataTableFilterErrorList"
+          @on-list-item="resetErrorListItems"
+          @on-sort-field="onSortFieldErrorList"
+          @on-expand-row="getRoomRateByBooking($event)"
+        >
+          <template #column-message="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            </div>
+          </template>
+          <template #expansion="{ data: item }">
+            <div class="p-0 m-0">
+              <DataTable :value="item.roomRates" striped-rows>
+                <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <template #empty>
+                  <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                    <span v-if="!optionsListErrors?.loading" class="flex flex-column align-items-center justify-content-center">
                       <div class="row">
                         <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
                       </div>
