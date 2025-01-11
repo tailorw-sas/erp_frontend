@@ -842,6 +842,13 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
+
+  getList()
+})
+
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
