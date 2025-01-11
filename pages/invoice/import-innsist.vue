@@ -81,8 +81,8 @@ const columns: IColumn[] = [
   { field: 'couponNumber', header: 'Coupon No', type: 'text', maxWidth: '20px' },
   { field: 'checkInDate', header: 'Check In', type: 'date', maxWidth: '10px' },
   { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', maxWidth: '10px' },
-  { field: 'amount', header: 'Invoice Amount', type: 'text', maxWidth: '10px' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'number', maxWidth: '10px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'number', maxWidth: '10px' },
   { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '10px' }
 ]
 
