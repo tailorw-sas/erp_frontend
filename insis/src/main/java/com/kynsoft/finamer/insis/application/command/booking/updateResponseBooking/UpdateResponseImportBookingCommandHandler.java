@@ -37,7 +37,9 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     public void handle(UpdateResponseImportBookingCommand command) {
         ImportProcessDto importProcess = getImportProcess(command.getImportProcessId());
         saveBookingsResponse(importProcess.getId(), command.getErrorResponses());
-        updateImportProcessStatus(importProcess, ImportProcessStatus.COMPLETED);
+        int totalSuccessful = getTotalSuccessful(command.getImportProcessId());
+        int totalFailed = getTotalFailed(command.getImportProcessId());
+        updateImportProcessStatus(importProcess, ImportProcessStatus.COMPLETED, totalSuccessful, totalFailed);
     }
 
     private ImportProcessDto getImportProcess(UUID id){
@@ -73,17 +75,6 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
                 .toList();
 
         updateBookingsStatus(bookingsWithErrors, BookingStatus.FAILED);
-
-        /*
-        Map<Boolean, List<UUID>> partitionedBookings = errorResponses.stream()
-                .collect(Collectors.partitioningBy(
-                        error -> Objects.isNull(error.getErrorMessage()) || error.getErrorMessage().isEmpty(),
-                        Collectors.mapping(ErrorResponse::getBookingId, Collectors.toList())
-                ));
-
-        updateBookingsStatus(partitionedBookings.get(true), BookingStatus.PROCESSED);
-        updateBookingsStatus(partitionedBookings.get(false), BookingStatus.FAILED);
-         */
     }
 
     private void updateBookingsStatus(List<UUID> idBookings, BookingStatus status){
@@ -96,9 +87,27 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
         bookingService.updateMany(bookings);
     }
 
-    private void updateImportProcessStatus(ImportProcessDto importProcess, ImportProcessStatus status){
+    private void updateImportProcessStatus(ImportProcessDto importProcess, ImportProcessStatus status, int totalSuccessful, int totalFailed){
         importProcess.setStatus(status);
         importProcess.setCompletedAt(LocalDateTime.now());
+        importProcess.setTotalSuccessful(totalSuccessful);
+        importProcess.setTotalFailed(totalFailed);
         importProcessService.update(importProcess);
+    }
+
+    private int getTotalSuccessful(UUID processId){
+        List<ImportBookingDto> bookings = importBookingService.findByImportProcessId(processId);
+        List<ImportBookingDto> successfulBookings =  bookings.stream()
+                .filter(importBookingDto -> (Objects.isNull(importBookingDto.getErrorMessage()) || importBookingDto.getErrorMessage().isEmpty()))
+                .toList();
+
+        return successfulBookings.size();
+    }
+
+    private int getTotalFailed(UUID processId){
+        List<ImportBookingDto> bookings = importBookingService.findByImportProcessId(processId);
+        return bookings.stream()
+                .filter(importBookingDto -> Objects.nonNull(importBookingDto.getErrorMessage()))
+                .toList().size();
     }
 }

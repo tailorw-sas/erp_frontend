@@ -21,4 +21,6 @@ public class ImportProcessResponse implements IResponse {
     private LocalDateTime completedAt;
     private int totalBooking;
     private UUID userId;
+    private int totalSuccessful;
+    private int totalFailed;
 }

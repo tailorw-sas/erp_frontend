@@ -23,7 +23,9 @@ public class GetImportProcessByIdQueryHandler implements IQueryHandler<GetImport
                 dto.getImportDate(),
                 dto.getCompletedAt(),
                 dto.getTotalBookings(),
-                dto.getUserId()
+                dto.getUserId(),
+                dto.getTotalSuccessful(),
+                dto.getTotalFailed()
         );
     }
 }

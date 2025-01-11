@@ -44,7 +44,7 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         ManageEmployeeDto employee = getEmployee(command.getUserId());
         List<BookingDto> bookings = getBookings(command.getBookings());
 
-        ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId());
+        ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId(), 0, 0);
         saveImportBookings(importProcess, bookings);
 
         sendBookingToProcess(importProcess, employee, bookings);
@@ -56,14 +56,16 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         return employeeService.findById(id);
     }
 
-    private ImportProcessDto createImportProcess(UUID processId, int bookingsSize, UUID employeeId){
+    private ImportProcessDto createImportProcess(UUID processId, int bookingsSize, UUID employeeId, int totalSucessful, int totalFailed){
         ImportProcessDto dto = new ImportProcessDto(
                 processId,
                 ImportProcessStatus.CREATED,
                 LocalDate.now(),
                 null,
                 bookingsSize,
-                employeeId
+                employeeId,
+                totalSucessful,
+                totalFailed
         );
 
         return service.create(dto);
