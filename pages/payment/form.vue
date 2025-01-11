@@ -179,7 +179,7 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: true },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -2460,7 +2460,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     return
   }
   try {
-    applyPaymentPayload.value.filter = []
+    // applyPaymentPayload.value.filter = []
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
     const newListItems = []
@@ -2829,6 +2829,7 @@ async function openModalApplyPayment($event: any) {
     amount = detailItemForApplyPayment.value?.amount
   }
   openDialogApplyPayment.value = true
+  amountOfDetailItem.value = amount
   await applyPaymentGetList(amount)
 }
 
@@ -2840,16 +2841,11 @@ async function openDialogImportExcel(idItem: string) {
 
 async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, applyPaymentColumns.value)
-  // if (parseFilter && parseFilter?.length > 0) {
-  //   for (let i = 0; i < parseFilter?.length; i++) {
-  //     if (parseFilter[i]?.key === 'paymentStatus') {
-  //       parseFilter[i].key = 'status'
-  //     }
-  //     if (parseFilter[i]?.key === 'employee') {
-  //       parseFilter[i].key = 'employee.id'
-  //     }
-  //   }
-  // }
+  const objFilterForInvoiceId = parseFilter?.find((item: IFilter) => item?.key === 'invoiceId')
+  if (objFilterForInvoiceId) {
+    objFilterForInvoiceId.key = 'invoice.invoiceId'
+  }
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   applyPaymentPayload.value.filter = [...parseFilter || []]
   applyPaymentGetList(amountOfDetailItem.value)
 }
