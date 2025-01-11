@@ -22,4 +22,6 @@ public class ImportProcessDto {
     private LocalDateTime completedAt;
     private int totalBookings;
     private UUID userId;
+    private int totalSuccessful;
+    private int totalFailed;
 }
