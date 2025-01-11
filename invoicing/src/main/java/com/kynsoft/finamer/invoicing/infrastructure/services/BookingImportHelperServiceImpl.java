@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,6 +119,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private void createInvoiceGroupingForVirtualHotel(String importProcessId, String employee) {
         Map<GroupByVirtualHotel, List<BookingRow>> grouped;
         List<BookingImportCache> importList = repository.findAllByImportProcessId(importProcessId);
+        Collections.sort(importList, Comparator.comparingInt(BookingImportCache::getRowNumber));
+
         grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
                 booking -> new GroupByVirtualHotel(
                         booking.getManageAgencyCode(),
@@ -137,6 +141,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private void createInvoiceGroupingByCoupon(String importProcessId, String employee) {
         Map<GroupBy, List<BookingRow>> grouped;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
+        Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
+
         grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow ->
                         new GroupBy(bookingRow.getManageAgencyCode(), bookingRow.getManageHotelCode(), bookingRow.getCoupon()))
