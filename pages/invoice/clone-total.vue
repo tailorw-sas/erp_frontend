@@ -574,7 +574,7 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -655,7 +655,7 @@ async function getAdjustmentList() {
         }
       ],
       query: '',
-      pageSize: 10,
+      pageSize: 1000,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.ASC
@@ -736,7 +736,8 @@ async function getParentAttachmentList(invoiceId: string) {
           type: {
             ...iterator?.type,
             fullName: `${iterator?.type?.code}-${iterator?.type?.name}`
-          }
+          },
+          resourceType: iterator?.paymenResourceType
         }
       ]
     }
@@ -846,6 +847,29 @@ async function assignRoomRatesToBookings(bookings: any[], roomRates: any[]) {
   }))
 }
 
+async function getDefaultResourceType() {
+  const payloadOfResourceType = {
+    filter: [
+      {
+        key: 'defaults',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }
+    ],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
+  const objResourceType = await GenericService.search('invoicing', 'manage-resource-type', payloadOfResourceType)
+  if (objResourceType) {
+    const { data: dataList } = objResourceType
+    return dataList
+  }
+}
+
 async function createClonation(item: { [key: string]: any }) {
   // Crear el payload inicial
   const payload: { [key: string]: any } = { ...item }
@@ -877,6 +901,8 @@ async function createClonation(item: { [key: string]: any }) {
     employeeId: userData?.value?.user?.userId,
     })) */
   if (LocalAttachmentList.value.length > 0) {
+    const objDefaultResourceType = await getDefaultResourceType()
+
     payload.attachments = LocalAttachmentList.value.map(att => ({
       attachmentId: att.attachmentId,
       filename: att.filename,
@@ -884,6 +910,7 @@ async function createClonation(item: { [key: string]: any }) {
       remark: att.remark,
       type: att.type.id,
       resourceType: 'INV-Invoice',
+      paymentResourceType: objDefaultResourceType && objDefaultResourceType.length > 0 ? objDefaultResourceType[0].id : null,
       employeeName: userData?.value?.user?.name,
       employeeId: userData?.value?.user?.userId,
     }))
@@ -1801,7 +1828,7 @@ onMounted(async () => {
             @on-change-page="onChangePage"
           />
           <div>
-            <div class="flex justify-content-end">
+            <div class="flex justify-content-end mt-2">
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
@@ -1830,9 +1857,15 @@ onMounted(async () => {
             :close-dialog="() => {
               attachmentDialogOpen = false;
               //getItemById(idItem)
-            }" :is-creation-dialog="idItemCreated === ''" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
-            :selected-invoice="globalSelectedInvoicing" :selected-invoice-obj="item" :list-items="LocalAttachmentList"
-            :is-save-in-total-clone="isSaveInTotalClone" @update:list-items="($event) => LocalAttachmentList = [...LocalAttachmentList, $event]"
+            }"
+            :is-creation-dialog="idItemCreated === ''"
+            header="Manage Invoice Attachment"
+            :open-dialog="attachmentDialogOpen"
+            :selected-invoice="globalSelectedInvoicing"
+            :selected-invoice-obj="item"
+            :list-items="LocalAttachmentList"
+            :is-save-in-total-clone="isSaveInTotalClone"
+            @update:list-items="($event) => LocalAttachmentList = [...LocalAttachmentList, $event]"
             @delete-list-items="($id) => LocalAttachmentList = LocalAttachmentList.filter(item => item.id !== $id)"
           />
         </div>

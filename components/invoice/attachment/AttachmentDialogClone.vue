@@ -134,7 +134,8 @@ const Fields: Array<FieldDefinitionType> = [
     dataType: 'select',
     class: 'field mb-3 col-12 md: required',
     headerClass: 'mb-1',
-    disabled: true
+    disabled: true,
+    validation: validateEntityStatus('Resource Type'),
   },
 
   {
@@ -426,7 +427,15 @@ async function getResourceTypeList(query = '') {
     const response = await GenericService.search(confResourceTypeApi.moduleApi, confResourceTypeApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      resourceTypeList.value = [...resourceTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
+      resourceTypeList.value = [
+        ...resourceTypeList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -558,6 +567,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
+      item.resourceType = resourceTypeSelected.value
       if (props.isCreationDialog) {
         item.id = v4()
         await props.addItem(item)
@@ -833,6 +843,7 @@ onMounted(async () => {
 
     if (!route.query.type || (route.query.type && route.query.type !== OBJ_ENUM_INVOICE.INCOME)) {
       resourceTypeSelected.value = resourceTypeList.value.find((type: any) => type.code === 'INV')
+      item.value.resourceType = resourceTypeList.value.find((type: any) => type.code === 'INV')
     }
     // item.value.resourceType = `${OBJ_ENUM_INVOICE_TYPE_CODE[route.query.type]}-${OBJ_ENUM_INVOICE[route.query.type]}`
   }
