@@ -1,6 +1,7 @@
 package com.tailorw.tcaInnsist.infrastructure.model;
 
 import com.tailorw.tcaInnsist.domain.dto.ManageHotelDto;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -22,7 +23,11 @@ public class ManageHotel {
     private UUID id;
     private String code;
     private String name;
+
+    @Column(name = "room_type")
     private String roomType;
+
+    @Column(name = "trading_company_id")
     private UUID tradingCompanyId;
 
     public ManageHotelDto toAggregate(){
