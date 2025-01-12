@@ -1,6 +1,7 @@
 package com.tailorw.tcaInnsist.infrastructure.model;
 
 import com.tailorw.tcaInnsist.domain.dto.ManageConnectionDto;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -21,7 +22,11 @@ public class ManageConnection {
     private UUID id;
     private String server;
     private String port;
+
+    @Column(name = "database_name")
     private String dbName;
+
+    @Column(name = "user_name")
     private String userName;
     private String password;
 

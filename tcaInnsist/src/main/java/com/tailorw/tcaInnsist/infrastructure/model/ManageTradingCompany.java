@@ -1,6 +1,7 @@
 package com.tailorw.tcaInnsist.infrastructure.model;
 
 import com.tailorw.tcaInnsist.domain.dto.ManageTradingCompanyDto;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -24,6 +25,8 @@ public class ManageTradingCompany {
     private UUID id;
     private String code;
     private String name;
+
+    @Column(name = "connection_id")
     private UUID connectionId;
 
     public ManageTradingCompany(ManageTradingCompanyDto dto){
