@@ -1,7 +1,9 @@
-package com.tailorw.tcaInnsist.infrastructure.model.redis;
+package com.tailorw.tcaInnsist.infrastructure.model;
 
 import com.tailorw.tcaInnsist.domain.dto.ManageTradingCompanyDto;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +16,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@RedisHash("tca_tradingCompany")
+@Entity
+@Table(name = "manage_trading_company", schema = "public")
 public class ManageTradingCompany {
 
     @Id

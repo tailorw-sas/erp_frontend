@@ -1,8 +1,8 @@
-package com.tailorw.tcaInnsist.infrastructure.repository.query;
+package com.tailorw.tcaInnsist.infrastructure.repository.sqlServer;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.tailorw.tcaInnsist.infrastructure.model.Rate;
-import com.tailorw.tcaInnsist.infrastructure.model.redis.ManageConnection;
+import com.tailorw.tcaInnsist.infrastructure.model.ManageConnection;
 import com.tailorw.tcaInnsist.infrastructure.repository.SQLServerDBConfiguration;
 import com.tailorw.tcaInnsist.infrastructure.repository.interfaces.IRateRepository;
 import com.tailorw.tcaInnsist.infrastructure.utils.search.SearchUtil;
