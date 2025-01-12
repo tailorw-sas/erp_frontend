@@ -1,7 +1,9 @@
-package com.tailorw.tcaInnsist.infrastructure.model.redis;
+package com.tailorw.tcaInnsist.infrastructure.model;
 
 import com.tailorw.tcaInnsist.domain.dto.ManageConnectionDto;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.*;
 import org.springframework.data.redis.core.RedisHash;
 
@@ -11,7 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@RedisHash("tca_connection")
+@Entity
+@Table(name = "manage_connection", schema = "public")
 public class ManageConnection {
 
     @Id

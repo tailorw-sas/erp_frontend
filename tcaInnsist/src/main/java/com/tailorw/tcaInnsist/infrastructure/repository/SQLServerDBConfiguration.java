@@ -1,6 +1,6 @@
 package com.tailorw.tcaInnsist.infrastructure.repository;
 
-import com.tailorw.tcaInnsist.infrastructure.model.redis.ManageConnection;
+import com.tailorw.tcaInnsist.infrastructure.model.ManageConnection;
 import com.tailorw.tcaInnsist.infrastructure.repository.config.DBConfigurationProperties;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
