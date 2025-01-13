@@ -113,7 +113,6 @@ const fields: Array<FieldDefinitionType> = [
   {
     field: 'menuPosition',
     header: 'Menu Position',
-    hidden: false,
     dataType: 'number',
     class: 'field col-12',
   },
@@ -350,13 +349,28 @@ async function updateItem(item: { [key: string]: any }) {
   let payload: { [key: string]: any } = { ...item }
   payload.status = statusToString(payload.status)
   payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
+  payload.moduleSystems = typeof payload.moduleSystems === 'object' ? payload.moduleSystems.id : payload.moduleSystems
   payload.dbConection = typeof payload.dbConection === 'object' ? payload.dbConection.id : payload.dbConection
   if (!payload.file) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'File is required', life: 3000 })
   }
   else {
     payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
-    payload = { ...payload, parentIndex: 0.0, menuPosition: 0.0, lanPath: 'lanPath', web: false, subMenu: false, sendEmail: false, internal: false, highRisk: false, visible: false, cancel: false, rootIndex: 'rootIndex', language: 'language', }
+    payload = {
+      ...payload,
+      parentIndex: 0.0,
+      // menuPosition: 0.0,
+      lanPath: 'lanPath',
+      web: false,
+      subMenu: false,
+      sendEmail: false,
+      internal: false,
+      highRisk: false,
+      visible: false,
+      cancel: false,
+      rootIndex: 'rootIndex',
+      language: 'language',
+    }
     return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
   }
 }

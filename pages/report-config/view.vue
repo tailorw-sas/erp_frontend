@@ -584,13 +584,10 @@ async function getMenuItems() {
 }
 
 function onNodeSelect(node) {
-  console.log(node)
   loadParamsFieldByReportTemplate(node.data.id, node.data.code)
 }
 
 function onNodeUnselect(node) {
-  console.log(node)
-
   toast.add({ severity: 'warn', summary: 'Node Unselected', detail: node.label, life: 3000 })
 }
 
