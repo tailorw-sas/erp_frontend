@@ -1,32 +1,22 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
+
 import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
+import java.util.List;
 
-@XmlRootElement(name = "Product")
+@XmlType(propOrder = {"supplierSKU", "customerSKU", "item", "qty", "mu", "up", "total", "comment", "taxes", "servicesData"})
 public class Product {
-
-    private String supplierSKU; // Código del localizador del proveedor
-    private String customerSKU; // Número de referencia o reserva proporcionado por el cliente
-    private String item; // Descripción del producto o servicio
-    private Double qty; // Cantidad del producto o servicio
-    private String MU; // Unidad de medida (por ejemplo, "Unidades")
-    private Double UP; // Precio unitario bruto (sin descuentos)
-    private Double total; // Importe bruto total (cantidad x precio unitario)
-    private Double netAmount; // Importe neto (bruto - descuentos)
-    private Double discount; // Descuento aplicado
-    private Double charge; // Cargos adicionales, si aplica
-    private Double taxAmount; // Importe de impuestos aplicados a esta línea
-    private String serviceStartDate; // Fecha de inicio del servicio (opcional)
-    private String serviceEndDate; // Fecha de fin del servicio (opcional)
-    private String comment; // Comentarios adicionales sobre el producto
-    private Integer adultsNumber; // Número de adultos
-    private Integer childrenNumber; // Número de niños
-    private String roomType; // Tipo de habitación (opcional)
-    private String ratePlan; // Plan de tarifa asociado (opcional)
-    private String roomCategory; // Categoría de la habitación (opcional)
-
-    // Getters y Setters
+    private String supplierSKU;
+    private String customerSKU;
+    private String item;
+    private double qty;
+    private String mu;
+    private double up;
+    private double total;
+    private String comment;
+    private List<Tax> taxes;
+    private List<ServiceData> servicesData;
 
     @XmlElement(name = "SupplierSKU")
     public String getSupplierSKU() {
@@ -56,93 +46,39 @@ public class Product {
     }
 
     @XmlElement(name = "Qty")
-    public Double getQty() {
+    public double getQty() {
         return qty;
     }
 
-    public void setQty(Double qty) {
+    public void setQty(double qty) {
         this.qty = qty;
     }
 
     @XmlElement(name = "MU")
     public String getMU() {
-        return MU;
+        return mu;
     }
 
-    public void setMU(String MU) {
-        this.MU = MU;
+    public void setMU(String mu) {
+        this.mu = mu;
     }
 
     @XmlElement(name = "UP")
-    public Double getUP() {
-        return UP;
+    public double getUP() {
+        return up;
     }
 
-    public void setUP(Double UP) {
-        this.UP = UP;
+    public void setUP(double up) {
+        this.up = up;
     }
 
     @XmlElement(name = "Total")
-    public Double getTotal() {
+    public double getTotal() {
         return total;
     }
 
-    public void setTotal(Double total) {
+    public void setTotal(double total) {
         this.total = total;
-    }
-
-    @XmlElement(name = "NetAmount")
-    public Double getNetAmount() {
-        return netAmount;
-    }
-
-    public void setNetAmount(Double netAmount) {
-        this.netAmount = netAmount;
-    }
-
-    @XmlElement(name = "Discount")
-    public Double getDiscount() {
-        return discount;
-    }
-
-    public void setDiscount(Double discount) {
-        this.discount = discount;
-    }
-
-    @XmlElement(name = "Charge")
-    public Double getCharge() {
-        return charge;
-    }
-
-    public void setCharge(Double charge) {
-        this.charge = charge;
-    }
-
-    @XmlElement(name = "TaxAmount")
-    public Double getTaxAmount() {
-        return taxAmount;
-    }
-
-    public void setTaxAmount(Double taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-
-    @XmlElement(name = "ServiceStartDate")
-    public String getServiceStartDate() {
-        return serviceStartDate;
-    }
-
-    public void setServiceStartDate(String serviceStartDate) {
-        this.serviceStartDate = serviceStartDate;
-    }
-
-    @XmlElement(name = "ServiceEndDate")
-    public String getServiceEndDate() {
-        return serviceEndDate;
-    }
-
-    public void setServiceEndDate(String serviceEndDate) {
-        this.serviceEndDate = serviceEndDate;
     }
 
     @XmlElement(name = "Comment")
@@ -154,48 +90,21 @@ public class Product {
         this.comment = comment;
     }
 
-    @XmlElement(name = "AdultsNumber")
-    public Integer getAdultsNumber() {
-        return adultsNumber;
+    @XmlElement(name = "Taxes")
+    public List<Tax> getTaxes() {
+        return taxes;
     }
 
-    public void setAdultsNumber(Integer adultsNumber) {
-        this.adultsNumber = adultsNumber;
+    public void setTaxes(List<com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml.Tax> taxes) {
+        this.taxes = taxes;
     }
 
-    @XmlElement(name = "ChildrenNumber")
-    public Integer getChildrenNumber() {
-        return childrenNumber;
+    @XmlElement(name = "ServicesData")
+    public List<ServiceData> getServicesData() {
+        return servicesData;
     }
 
-    public void setChildrenNumber(Integer childrenNumber) {
-        this.childrenNumber = childrenNumber;
-    }
-
-    @XmlElement(name = "RoomType")
-    public String getRoomType() {
-        return roomType;
-    }
-
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
-    }
-
-    @XmlElement(name = "RatePlan")
-    public String getRatePlan() {
-        return ratePlan;
-    }
-
-    public void setRatePlan(String ratePlan) {
-        this.ratePlan = ratePlan;
-    }
-
-    @XmlElement(name = "RoomCategory")
-    public String getRoomCategory() {
-        return roomCategory;
-    }
-
-    public void setRoomCategory(String roomCategory) {
-        this.roomCategory = roomCategory;
+    public void setServicesData(List<ServiceData> servicesData) {
+        this.servicesData = servicesData;
     }
 }

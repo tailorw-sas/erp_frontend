@@ -122,7 +122,7 @@ public class Booking {
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();
-        this.children = dto.getChildren();
+        this.children = dto.getChildren() != null ? dto.getChildren() : 0;
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.rateAdult = dto.getRateAdult() != null ? ScaleAmount.scaleAmount(dto.getRateAdult()) : null;
@@ -158,7 +158,7 @@ public class Booking {
                 invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
                 dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : 0.0, 
                 roomNumber, couponNumber, adults,
-                children,
+                children != null ? children : 0,
                 rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
                 rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
                 hotelInvoiceNumber, folioNumber, 
