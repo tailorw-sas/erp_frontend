@@ -62,7 +62,6 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Defaults',
     dataType: 'check',
     disabled: false,
-    hidden: true,
     class: 'field col-12 required mb-2',
   },
   {
@@ -78,6 +77,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'VCC Default',
     dataType: 'check',
     disabled: false,
+    hidden: true,
     class: 'field col-12 required mb-2',
   },
   {
