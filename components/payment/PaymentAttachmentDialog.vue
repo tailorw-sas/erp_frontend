@@ -80,7 +80,14 @@ const externalProps = defineProps({
   }
 })
 
-const emits = defineEmits(['update:listItems', 'update:closeDialog', 'update:openDialog', 'update:isCreationDialog', 'update:isCreateOrEditPayment'])
+const emits = defineEmits([
+  'update:listItems',
+  'update:closeDialog',
+  'update:openDialog',
+  'update:isCreationDialog',
+  'update:isCreateOrEditPayment',
+  'afterSave'
+])
 
 const attachmentTypeList = ref<any[]>([])
 const resourceTypeList = ref<any[]>([])
@@ -806,6 +813,7 @@ async function createItem(item: { [key: string]: any }) {
     delete payload.event
     delete payload.paymentId
     await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+    emits('afterSave', true)
   }
 }
 
@@ -834,6 +842,7 @@ async function updateItem(item: { [key: string]: any }) {
   }
   delete payload.event
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
+  emits('afterSave', true)
 }
 
 async function deleteItem(id: string) {
@@ -863,6 +872,7 @@ async function saveItem(item: { [key: string]: any }) {
         item.id = idItem.value
         await updateItemLocal(item)
         loadingSaveAll.value = false
+        emits('afterSave', true)
       }
       else {
         await updateItem(item)
