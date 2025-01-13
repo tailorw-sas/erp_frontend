@@ -14,7 +14,7 @@ public class InvoiceReconcileAutomaticProvider extends AbstractReportContentProv
     }
 
     @Override
-    public Optional<byte[]> getContent(Map<String, Object> parameters) {
-        return Optional.ofNullable(reportGenerator.generateReport(parameters, "rec"));
+    public Optional<byte[]> getContent(Map<String, Object> parameters, String reportCode) {
+        return Optional.ofNullable(reportGenerator.generateReport(parameters, reportCode));
     }
 }

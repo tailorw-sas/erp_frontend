@@ -4,6 +4,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceContentProvider;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.ReportContentProviderFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,7 +16,8 @@ import java.util.Optional;
 public class InvoiceReportReconcileAutomaticService implements IInvoiceReport {
     public static final String BEAN_ID = "RECONCILE_AUTO";
     private final ReportContentProviderFactory reportContentProviderFactory;
-
+    @Value("${report.code.invoice.reconcile:rec}") // Usa "inv" como valor predeterminado
+    private String reportCode;
     public InvoiceReportReconcileAutomaticService(ReportContentProviderFactory reportContentProviderFactory) {
         this.reportContentProviderFactory = reportContentProviderFactory;
     }
@@ -38,7 +40,7 @@ public class InvoiceReportReconcileAutomaticService implements IInvoiceReport {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);
         AbstractReportContentProvider abstractReportContentProvider = reportContentProviderFactory.getReportContentProvider(EInvoiceContentProvider.RECONCILE_AUTO);
-        return abstractReportContentProvider.getContent(parameters);
+        return abstractReportContentProvider.getContent(parameters, reportCode);
     }
 
 
