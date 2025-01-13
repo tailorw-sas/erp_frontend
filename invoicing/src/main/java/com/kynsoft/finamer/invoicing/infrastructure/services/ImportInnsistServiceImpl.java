@@ -301,9 +301,11 @@ public class ImportInnsistServiceImpl {
     }
 
     private LocalDateTime getInvoiceDate(ImportInnsistBookingKafka bookingRow) {
-        LocalDateTime excelDate = bookingRow.getBookingDate();
+        LocalDateTime excelDate = bookingRow.getInvoiceDate();
+        //LocalDateTime excelDate = bookingRow.getBookingDate();
         LocalDateTime transactionDate = LocalDateTime.now();
-        if (Objects.nonNull(bookingRow.getBookingDate())
+        if (Objects.nonNull(bookingRow.getInvoiceDate())
+        //if (Objects.nonNull(bookingRow.getBookingDate())
                 && Objects.nonNull(excelDate)
                 && !LocalDate.now().isEqual(excelDate.toLocalDate())) {
             transactionDate = bookingRow.getBookingDate();
