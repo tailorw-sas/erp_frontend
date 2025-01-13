@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -72,15 +73,7 @@ public class BookingServiceImpl implements ImportBookingService {
         try {
             try {
                 semaphore.acquire();
-                System.err.println("##########################################");
-                System.err.println("##########################################");
-                System.err.println("##########################################");
-                System.err.println("Paso el semaforo: "  + LocalTime.now());
-                System.err.println("##########################################");
-                System.err.println("##########################################");
-                System.err.println("##########################################");
-                try {
-                    
+                try {                    
                     ImportBookingRequest request = importBookingFromFileRequest.getRequest();
                     try {
                         ReaderConfiguration readerConfiguration = new ReaderConfiguration();
@@ -122,24 +115,14 @@ public class BookingServiceImpl implements ImportBookingService {
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
                     }
                 } catch (Exception e) {
-                    System.err.println("##############################################");
-                    System.err.println("##############################################");
                     System.err.println("Errror ocurrido: " + e.getMessage());
                     System.err.println("Errror ocurrido: " + e.getCause().getLocalizedMessage());
-                    System.err.println("##############################################");
-                    System.err.println("##############################################");
-                    System.err.println("##############################################");
-                    System.err.println("##############################################");
                 }
             } finally {
                 semaphore.release();
-                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                System.err.println("Voy a esperar: " + LocalTime.now());
+                TimeUnit.SECONDS.sleep(5);
                 System.err.println("Se libera el semaforo: " + LocalTime.now());
-                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-                System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
             }
 
         } catch (InterruptedException ex) {
