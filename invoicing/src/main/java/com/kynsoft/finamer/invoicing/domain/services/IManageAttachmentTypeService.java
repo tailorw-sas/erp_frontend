@@ -24,4 +24,6 @@ public interface IManageAttachmentTypeService {
     Optional<ManageAttachmentTypeDto> findDefault();
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filter);
+
+    Optional<ManageAttachmentTypeDto> findAttachInvDefault();
 }
