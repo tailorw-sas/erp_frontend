@@ -77,6 +77,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 dbConectionDto,
                 command.getQuery()
         );
+
+        reportTemplateDto.setModuleSystems(command.getModuleSystems());
         UUID id = this.service.create(reportTemplateDto);
 
         addParameters(command.getFile(), reportTemplateDto);
