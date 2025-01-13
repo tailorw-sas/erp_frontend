@@ -29,6 +29,7 @@ public class JasperReportParameterResponse implements IResponse {
     private JasperReportTemplateResponse jasperReportTemplate;
     private String reportClass;
     private String reportValidation;
+    private int parameterPosition;
 
     public JasperReportParameterResponse(JasperReportParameterDto dto){
         this.id = dto.getId();
@@ -41,5 +42,6 @@ public class JasperReportParameterResponse implements IResponse {
          jasperReportTemplate = new JasperReportTemplateResponse(dto.getJasperReportTemplate());
          reportClass = dto.getReportClass();
          reportValidation = dto.getReportValidation();
+         parameterPosition = dto.getParameterPosition();
     }
 }
