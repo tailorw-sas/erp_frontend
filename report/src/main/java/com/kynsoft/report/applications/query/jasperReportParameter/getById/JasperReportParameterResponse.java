@@ -30,7 +30,6 @@ public class JasperReportParameterResponse implements IResponse {
     private String reportClass;
     private String reportValidation;
     private int parameterPosition;
-
     public JasperReportParameterResponse(JasperReportParameterDto dto){
         this.id = dto.getId();
          paramName = dto.getParamName();
