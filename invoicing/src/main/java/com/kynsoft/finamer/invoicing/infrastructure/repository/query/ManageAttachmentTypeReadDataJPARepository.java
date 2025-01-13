@@ -25,4 +25,6 @@ public interface ManageAttachmentTypeReadDataJPARepository extends JpaRepository
     Optional<ManageAttachmentType> findManageAttachmentTypeByDefaults(boolean defaultValue);
 
     Optional<ManageAttachmentType> findManageAttachmentTypeByCode(String code);
+
+    Optional<ManageAttachmentType> findManageAttachmentTypeByAttachInvDefault(boolean defaultValue);
 }

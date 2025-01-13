@@ -175,7 +175,7 @@ public class ConsumerCreateIncomeTransactionService {
         } catch (Exception e) {
             return null;
         }
-        ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findDefault().orElse(null);
+        ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findAttachInvDefault().orElse(null);
         ResourceTypeDto resourceTypeDto = this.resourceTypeService.findByDefaults();
 
         List<CreateIncomeAttachmentRequest> attachments = new ArrayList<>();
