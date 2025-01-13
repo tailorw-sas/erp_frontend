@@ -15,7 +15,7 @@ public abstract class AbstractReportContentProvider {
         this.reportGenerator = reportGenerator;
     }
 
-    public abstract Optional<byte[]> getContent(Map<String,Object> parameters);
+    public abstract Optional<byte[]> getContent(Map<String,Object> parameters, String reportCode);
 
 
     protected Optional<byte[]> getRemoteContent(String fileRemotePath){

@@ -3,6 +3,7 @@ package com.kynsoft.report.applications.command.jasperReportTemplate.create;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,13 +37,16 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private UUID dbConection;
     private String query;
 
+    private final ModuleSystems moduleSystems;
+
     public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
                                              String file,
-                                             Double parentIndex, Double menuPosition, 
-                                             String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
-                                             Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
+                                             Double parentIndex, Double menuPosition,
+                                             String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail,
+                                             Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel,
                                              String rootIndex, String language, Status status, UUID dbConection,
-                                             String query) {
+                                             String query, ModuleSystems moduleSystems) {
+        this.moduleSystems = moduleSystems;
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -89,7 +93,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getLanguage(),
                 request.getStatus(),
                 request.getDbConection(),
-                request.getQuery()
+                request.getQuery(),
+                request.getModuleSystems()
         );
     }
 

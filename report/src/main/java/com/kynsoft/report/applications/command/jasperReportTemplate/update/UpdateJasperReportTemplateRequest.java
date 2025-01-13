@@ -1,6 +1,7 @@
 package com.kynsoft.report.applications.command.jasperReportTemplate.update;
 
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,4 +36,5 @@ public class UpdateJasperReportTemplateRequest {
     private Status status;
     private UUID dbConection;
     private String query;
+    private ModuleSystems moduleSystems;
 }

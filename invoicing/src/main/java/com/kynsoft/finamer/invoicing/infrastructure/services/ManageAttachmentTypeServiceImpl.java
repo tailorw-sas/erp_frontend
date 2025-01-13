@@ -9,12 +9,10 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 
 import com.kynsoft.finamer.invoicing.application.query.manageAttachmentType.search.GetSearchManageAttachmentTypeResponse;
-import com.kynsoft.finamer.invoicing.application.query.resourceType.search.GetSearchResourceTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAttachmentType;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageResourceType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageAttachmentTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageAttachmentTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -132,4 +129,12 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
         }
     }
 
+    @Override
+    public Optional<ManageAttachmentTypeDto> findAttachInvDefault() {
+        Optional<ManageAttachmentType> defaultType=repositoryQuery.findManageAttachmentTypeByAttachInvDefault(true);
+        if(defaultType.isPresent()){
+            return defaultType.map(ManageAttachmentType::toAggregate);
+        }
+        return Optional.empty();
+    }
 }

@@ -4,19 +4,20 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceContentProvider;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.ReportContentProviderFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service(InvoiceReportInvoiceAndBookingService.BEAN_ID)
 public class InvoiceReportInvoiceAndBookingService implements IInvoiceReport {
     public static final String BEAN_ID = "INVOICE_AND_BOOKING";
     private final ReportContentProviderFactory reportContentProviderFactory;
-
+    @Value("${report.code.invoice.booking:inv}") // Usa "inv" como valor predeterminado
+    private String reportCode;
     public InvoiceReportInvoiceAndBookingService(ReportContentProviderFactory reportContentProviderFactory) {
         this.reportContentProviderFactory = reportContentProviderFactory;
     }
@@ -39,7 +40,7 @@ public class InvoiceReportInvoiceAndBookingService implements IInvoiceReport {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);
         AbstractReportContentProvider abstractReportContentProvider = reportContentProviderFactory.getReportContentProvider(EInvoiceContentProvider.INVOICE_AND_BOOKING_CONTENT);
-        return abstractReportContentProvider.getContent(parameters);
+        return abstractReportContentProvider.getContent(parameters, reportCode);
     }
 
 

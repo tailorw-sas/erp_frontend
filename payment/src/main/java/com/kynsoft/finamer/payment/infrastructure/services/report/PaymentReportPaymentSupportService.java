@@ -7,6 +7,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -18,7 +19,8 @@ public class PaymentReportPaymentSupportService implements IPaymentReport {
     public static final String BEAN_ID = "PAYMENT_SUPPORT";
     private final IPaymentService paymentService;
     private final ReportContentProviderFactory reportContentProviderFactory;
-
+    @Value("${report.code.payment.details:aaa}")
+    private String reportCode;
     public PaymentReportPaymentSupportService(IPaymentService paymentService,
                                               ReportContentProviderFactory reportContentProviderFactory) {
         this.paymentService = paymentService;
@@ -49,7 +51,7 @@ public class PaymentReportPaymentSupportService implements IPaymentReport {
         parameters.put("paymentId", paymentId);
         AbstractReportContentProvider contentProvider = reportContentProviderFactory
                 .getReportContentProvider(EPaymentContentProvider.PAYMENT_SUPPORT_CONTENT);
-        return contentProvider.getContent(parameters);
+        return contentProvider.getContent(parameters,reportCode);
     }
 
 

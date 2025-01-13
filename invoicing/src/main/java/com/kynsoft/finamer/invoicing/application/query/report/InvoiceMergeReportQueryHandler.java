@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.query.report;
 
 import com.itextpdf.text.DocumentException;
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
+import com.kynsof.share.core.domain.service.IReportGenerator;
 import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
