@@ -160,6 +160,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private void createInvoiceGroupingByBooking(String importProcessId, String employee) {
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
+        Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
+
         bookingImportCacheStream.forEach(bookingImportCache -> {
             ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
             ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
