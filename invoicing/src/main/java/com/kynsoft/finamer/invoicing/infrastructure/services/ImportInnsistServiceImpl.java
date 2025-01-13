@@ -274,7 +274,7 @@ public class ImportInnsistServiceImpl {
             double bookingAmount = calculateBookingAmount(rates);
             bookingDto.setInvoiceAmount(bookingAmount);
             bookingDto.setDueAmount(bookingAmount);
-            bookingDto.setHotelAmount(bookingAmount);
+            bookingDto.setHotelAmount(this.calculateHotelAmount(rates));
             return bookingDto;
         }).toList();
     }
@@ -294,6 +294,10 @@ public class ImportInnsistServiceImpl {
 
     private double calculateBookingAmount(List<ManageRoomRateDto> createRateDtos) {
         return createRateDtos.stream().mapToDouble(ManageRoomRateDto::getInvoiceAmount).sum();
+    }
+
+    private double calculateHotelAmount(List<ManageRoomRateDto> createRateDtos) {
+        return createRateDtos.stream().mapToDouble(ManageRoomRateDto::getHotelAmount).sum();
     }
 
     private LocalDateTime getInvoiceDate(ImportInnsistBookingKafka bookingRow) {
