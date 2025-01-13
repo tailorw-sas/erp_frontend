@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositRequest;
+import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import lombok.Getter;
@@ -30,7 +31,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommand implements ICommand 
 
     private PaymentDto paymentResponse;
     private final IMediator mediator;
-    private byte[] attachment;
+    private MasterPaymentAttachmentDto attachment;
 
     public CreatePaymentDetailApplyDepositFromFileCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee, UUID transactionTypeForAdjustment, UUID booking, Boolean applyPayment, final IMediator mediator) {
         this.id = UUID.randomUUID();

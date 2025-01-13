@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.request.FilterCriteria;
@@ -10,6 +11,7 @@ import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.applyDeposit.CreatePaymentDetailApplyDepositFromFileCommand;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
+import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
@@ -26,8 +28,11 @@ import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentA
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportAntiErrorRepository;
+import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
 import io.jsonwebtoken.lang.Assert;
-import java.util.Comparator;
+
+import java.util.*;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,10 +41,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,15 +53,16 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final PaymentImportAntiErrorRepository antiErrorRepository;
     private final PaymentImportErrorRepository paymentImportErrorRepository;
+    private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
 
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
-            PaymentAntiValidatorFactory paymentAntiValidatorFactory,
-            RedisTemplate<String, String> redisTemplate,
-            IPaymentDetailService paymentDetailService,
-            ApplicationEventPublisher applicationEventPublisher,
-            IManagePaymentTransactionTypeService transactionTypeService,
-            PaymentImportAntiErrorRepository antiErrorRepository,
-            PaymentImportErrorRepository paymentImportErrorRepository) {
+                                                    PaymentAntiValidatorFactory paymentAntiValidatorFactory,
+                                                    RedisTemplate<String, String> redisTemplate,
+                                                    IPaymentDetailService paymentDetailService,
+                                                    ApplicationEventPublisher applicationEventPublisher,
+                                                    IManagePaymentTransactionTypeService transactionTypeService,
+                                                    PaymentImportAntiErrorRepository antiErrorRepository,
+                                                    PaymentImportErrorRepository paymentImportErrorRepository, PaymentUploadAttachmentUtil paymentUploadAttachmentUtil) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentAntiValidatorFactory = paymentAntiValidatorFactory;
@@ -69,6 +71,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         this.transactionTypeService = transactionTypeService;
         this.antiErrorRepository = antiErrorRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
+        this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
     }
 
     @Override
@@ -126,8 +129,30 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
         Page<PaymentImportCache> cacheList;
         if (!paymentImportErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
+            /*todo: subir el attachment y enviar esa misma info para los income a crear,
+             * sustituir el envío del byte[] por esa info
+             */
+            MasterPaymentAttachmentDto attachmentDto = null;
+            try {
+                LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent("detail.pdf", request.getAttachment());
+                attachmentDto = new MasterPaymentAttachmentDto(
+                        UUID.randomUUID(),
+                        Status.ACTIVE,
+                        null,
+                        null,
+                        null,
+                        "detail.pdf",
+                        "",
+                        response.get("url"),
+                        "From payment",
+                        null
+                );
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
             do {
                 cacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
+                MasterPaymentAttachmentDto finalAttachmentDto = attachmentDto;
                 cacheList.forEach(paymentImportCache -> {
                     PaymentDetailDto parentPaymentDetail = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getTransactionId()));
                     this.sendToCreateApplyDeposit(parentPaymentDetail.getId(),
@@ -135,7 +160,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                             UUID.fromString(request.getEmployeeId()),
                             getDefaultApplyDepositTransactionTypeId(),
                             UUID.fromString(request.getInvoiceTransactionTypeId()),
-                            paymentImportCache.getRemarks(), request.getAttachment()
+                            paymentImportCache.getRemarks(), finalAttachmentDto
                     );
 
                 });
@@ -169,7 +194,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     }
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
-            UUID transactionTypeIdForAdjustment, String remarks, byte[] attachment) {
+            UUID transactionTypeIdForAdjustment, String remarks, MasterPaymentAttachmentDto attachmentDto) {
         CreatePaymentDetailApplyDepositFromFileCommand createPaymentDetailApplyDepositCommand
                 = new CreatePaymentDetailApplyDepositFromFileCommand(Status.ACTIVE,
                         paymentDetail,
@@ -178,7 +203,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                         remarks,
                         employee,
                         transactionTypeIdForAdjustment);
-        createPaymentDetailApplyDepositCommand.setAttachment(attachment);
+        createPaymentDetailApplyDepositCommand.setAttachment(attachmentDto);
         ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand, true);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
