@@ -21,9 +21,10 @@ public class CreateJasperReportParameterCommand implements ICommand {
     private final String componentType;
     private final String reportClass;
     private final String reportValidation;
+    private final int parameterPosition;
 
     public CreateJasperReportParameterCommand(String paramName, String type, String module, String service, String label,
-                                              UUID reportId, String componentType, String reportClass, String reportValidation) {
+                                              UUID reportId, String componentType, String reportClass, String reportValidation, int parameterPosition) {
         this.paramName = paramName;
         this.type = type;
         this.module = module;
@@ -33,6 +34,7 @@ public class CreateJasperReportParameterCommand implements ICommand {
         this.componentType = componentType;
         this.reportClass = reportClass;
         this.reportValidation = reportValidation;
+        this.parameterPosition = parameterPosition;
 
         this.id = UUID.randomUUID();
     }
@@ -41,7 +43,7 @@ public class CreateJasperReportParameterCommand implements ICommand {
         return new CreateJasperReportParameterCommand(
                 request.getParamName(), request.getType(), request.getModule(),
                 request.getService(), request.getLabel(), request.getReportId(), request.getComponentType(),
-                request.getReportClass(), request.getReportValidation() );
+                request.getReportClass(), request.getReportValidation(), request.getParameterPosition());
     }
 
     @Override

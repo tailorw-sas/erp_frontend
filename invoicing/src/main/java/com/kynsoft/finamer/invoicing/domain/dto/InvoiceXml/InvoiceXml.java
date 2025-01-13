@@ -13,7 +13,7 @@ public class InvoiceXml {
     private Supplier supplier;
     private Client client;
     private List<Product> productList;
-    private TaxSummary taxSummary;
+    private Tax taxSummary;
     private TotalSummary totalSummary;
 
     // Getters y Setters
@@ -54,11 +54,11 @@ public class InvoiceXml {
     }
 
     @XmlElement(name = "TaxSummary")
-    public TaxSummary getTaxSummary() {
+    public Tax getTaxSummary() {
         return taxSummary;
     }
 
-    public void setTaxSummary(TaxSummary taxSummary) {
+    public void setTaxSummary(Tax taxSummary) {
         this.taxSummary = taxSummary;
     }
 
