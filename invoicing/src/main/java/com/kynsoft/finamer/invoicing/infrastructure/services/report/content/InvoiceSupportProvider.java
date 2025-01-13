@@ -25,7 +25,7 @@ public class InvoiceSupportProvider extends AbstractReportContentProvider {
     }
 
     @Override
-    public Optional<byte[]> getContent(Map<String, Object> parameters) {
+    public Optional<byte[]> getContent(Map<String, Object> parameters, String reportCode) {
         return getInvoiceReport(parameters);
     }
 
