@@ -1,10 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.income;
 
-import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionFailedKafka;
-import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionKafka;
-import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionSuccessKafka;
-import com.kynsof.share.core.domain.kafka.entity.ManageBookingKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
+import com.kynsof.share.core.domain.kafka.entity.*;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeAttachmentRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
@@ -166,12 +162,11 @@ public class ConsumerCreateIncomeTransactionService {
         )).collect(Collectors.toList());
     }
 
-    private List<CreateIncomeAttachmentRequest> attachments(byte[] attachment){
+    private List<CreateIncomeAttachmentRequest> attachments(AttachmentKafka attachment){
         String filename = "detail.pdf";
         String file = "";
         try {
-            LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent(filename, attachment);
-            file = response.get("url");
+            file = attachment.getPath();
         } catch (Exception e) {
             return null;
         }
