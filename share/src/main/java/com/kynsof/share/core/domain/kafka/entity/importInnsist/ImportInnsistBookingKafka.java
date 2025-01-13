@@ -14,6 +14,7 @@ public class ImportInnsistBookingKafka implements Serializable {
     private UUID id;
     //private Long reservationNumber; //Auto incremental
     private LocalDateTime hotelCreationDate;//
+    private LocalDateTime invoiceDate;//
     private LocalDateTime bookingDate;//
     private LocalDateTime checkIn;//
     private LocalDateTime checkOut;//
