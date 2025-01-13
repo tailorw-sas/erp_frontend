@@ -27,7 +27,7 @@ public class ImportBookingRatePlanValidator extends ExcelRuleValidator<BookingRo
                 this.ratePlanService.findManageRatePlanByCodeAndHotelCode(obj.getRatePlan(), obj.getManageHotelCode());
             }
         } catch (Exception e) {
-            errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan not exist."));
+            errorFieldList.add(new ErrorField("Rate Plan", "The selected rate plan does not belong to the hotel."));
             return false;
         }
         return true;

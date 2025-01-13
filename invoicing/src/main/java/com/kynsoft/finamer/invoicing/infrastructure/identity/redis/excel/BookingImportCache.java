@@ -5,13 +5,13 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
-import redis.clients.jedis.params.ZParams;
 
 import java.util.Objects;
 
 @Data
 @RedisHash(value = "importcache", timeToLive = 18000L)
 public class BookingImportCache {
+
     @Id
     private String id;
     @Indexed
@@ -65,10 +65,14 @@ public class BookingImportCache {
 
     private String nightType;
 
+    @Indexed
+    private int rowNumber;
+
     public BookingImportCache() {
     }
 
     public BookingImportCache(BookingRow bookingRow) {
+        this.rowNumber = bookingRow.getRowNumber();
         this.transactionDate = bookingRow.getTransactionDate();
         this.manageHotelCode = bookingRow.getManageHotelCode();
         this.manageAgencyCode = bookingRow.getManageAgencyCode();
@@ -76,10 +80,10 @@ public class BookingImportCache {
         this.lastName = bookingRow.getLastName();
         this.checkIn = bookingRow.getCheckIn();
         this.checkOut = bookingRow.getCheckOut();
-        this.nights = Objects.nonNull(bookingRow.getNights())?bookingRow.getNights():0;
-        this.adults = Objects.nonNull(bookingRow.getAdults())?bookingRow.getAdults():0;
-        this.children = Objects.nonNull(bookingRow.getChildren())?bookingRow.getChildren():0;
-        this.invoiceAmount = Objects.nonNull(bookingRow.getInvoiceAmount())?bookingRow.getInvoiceAmount():0;
+        this.nights = Objects.nonNull(bookingRow.getNights()) ? bookingRow.getNights() : 0;
+        this.adults = Objects.nonNull(bookingRow.getAdults()) ? bookingRow.getAdults() : 0;
+        this.children = Objects.nonNull(bookingRow.getChildren()) ? bookingRow.getChildren() : 0;
+        this.invoiceAmount = Objects.nonNull(bookingRow.getInvoiceAmount()) ? bookingRow.getInvoiceAmount() : 0;
         this.coupon = bookingRow.getCoupon();
         this.hotelBookingNumber = bookingRow.getHotelBookingNumber();
         this.roomType = bookingRow.getRoomType();
@@ -88,14 +92,15 @@ public class BookingImportCache {
         this.remarks = bookingRow.getRemarks();
         this.amountPAX = bookingRow.getAmountPAX();
         this.roomNumber = bookingRow.getRoomNumber();
-        this.hotelInvoiceAmount =Objects.nonNull( bookingRow.getHotelInvoiceAmount())?bookingRow.getHotelInvoiceAmount():0;
+        this.hotelInvoiceAmount = Objects.nonNull(bookingRow.getHotelInvoiceAmount()) ? bookingRow.getHotelInvoiceAmount() : 0;
         this.bookingDate = bookingRow.getBookingDate();
         this.hotelType = bookingRow.getHotelType();
-        this.nightType=bookingRow.getNightType();
+        this.nightType = bookingRow.getNightType();
     }
 
     public BookingRow toAggregate() {
         BookingRow bookingRow = new BookingRow();
+        bookingRow.setRowNumber(this.rowNumber);
         bookingRow.setTransactionDate(this.transactionDate);
         bookingRow.setManageHotelCode(this.manageHotelCode);
         bookingRow.setManageAgencyCode(this.manageAgencyCode);
@@ -119,6 +124,6 @@ public class BookingImportCache {
         bookingRow.setBookingDate(this.bookingDate);
         bookingRow.setHotelType(this.hotelType);
         bookingRow.setNightType(this.nightType);
-        return  bookingRow;
+        return bookingRow;
     }
 }
