@@ -752,11 +752,13 @@ onMounted(async () => {
                     class="text-red"
                   >*</span></label>
                   <div class="w-full">
-                    <DebouncedMultiSelectComponent
+                    <DebouncedAutoCompleteComponent
                       v-if="!loadingSaveAll"
                       id="autocomplete"
+                      class="w-full"
                       field="name"
                       item-value="id"
+                      :multiple="true"
                       :model="filterToSearch.hotel"
                       :suggestions="hotelList"
                       :loading="multiSelectLoading.hotel"

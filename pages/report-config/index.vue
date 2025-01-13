@@ -52,6 +52,8 @@ const item = ref<GenericObject>({
   status: true,
   type: '',
   query: '',
+  rootIndex: '',
+  menuPosition: 0.0,
   description: '',
   reportParams: '',
 })
@@ -62,6 +64,8 @@ const itemTemp = ref<GenericObject>({
   name: '',
   type: '',
   query: '',
+  rootIndex: '',
+  menuPosition: 0.0,
   description: '',
   reportParams: '',
   status: true,
@@ -83,8 +87,8 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
-    field: 'type',
-    header: 'Type',
+    field: 'moduleSystems',
+    header: 'Module',
     dataType: 'select',
     class: 'field col-12 required',
     validation: z.object({
@@ -107,11 +111,19 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12',
   },
   {
+    field: 'menuPosition',
+    header: 'Menu Position',
+    hidden: false,
+    dataType: 'number',
+    class: 'field col-12',
+  },
+  {
     field: 'query',
     header: 'Query',
     dataType: 'textarea',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The query field is required').max(250, 'Maximum 250 characters')
+    class: 'field col-12',
+    hidden: true,
+    validation: z.string().trim().min(0, 'The query field is required').max(250, 'Maximum 250 characters')
   },
   {
     field: 'description',
@@ -274,6 +286,9 @@ async function getItemById(id: string) {
         item.value.code = response.code
         item.value.name = response.name
         item.value.type = ENUM_REPORT_TYPE.find(x => x.id === response.type)
+        item.value.moduleSystems = ENUM_MODULES_SYSTEM.find(x => x.id === response.moduleSystems)
+        item.value.rootIndex = response.rootIndex
+        item.value.menuPosition = response.menuPosition
         item.value.description = response.description
         item.value.status = statusToBoolean(response.status)
         if (response.dbConection) {
@@ -308,8 +323,23 @@ async function createItem(item: { [key: string]: any }) {
     payload.status = statusToString(payload.status)
     payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
     payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
+    payload.moduleSystems = typeof payload.moduleSystems === 'object' ? payload.moduleSystems.id : payload.moduleSystems
     payload.dbConection = typeof payload.dbConection === 'object' ? payload.dbConection.id : payload.dbConection
-    payload = { ...payload, parentIndex: 0.0, menuPosition: 0.0, lanPath: 'lanPath', web: false, subMenu: false, sendEmail: false, internal: false, highRisk: false, visible: false, cancel: false, rootIndex: 'rootIndex', language: 'language', }
+    payload = {
+      ...payload,
+      parentIndex: 0.0,
+      // menuPosition: 0.0,
+      lanPath: 'lanPath',
+      web: false,
+      subMenu: false,
+      sendEmail: false,
+      internal: false,
+      highRisk: false,
+      visible: false,
+      cancel: false,
+      rootIndex: 'rootIndex',
+      language: 'language'
+      , }
 
     return await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
@@ -618,6 +648,15 @@ onMounted(() => {
                 v-if="!loadingSaveAll" v-model="data.type" :options="[...ENUM_REPORT_TYPE]" option-label="name"
                 return-object="false" @update:model-value="($event) => {
                   onUpdate('type', $event)
+                }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-moduleSystems="{ item: data, onUpdate }">
+              <Dropdown
+                v-if="!loadingSaveAll" v-model="data.moduleSystems" :options="[...ENUM_MODULES_SYSTEM]" option-label="name"
+                return-object="false" @update:model-value="($event) => {
+                  onUpdate('moduleSystems', $event)
                 }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
