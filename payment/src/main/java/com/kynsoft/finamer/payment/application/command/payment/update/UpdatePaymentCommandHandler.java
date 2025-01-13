@@ -77,7 +77,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         this.updateManageAgency(paymentDto::setAgency, command.getAgency(), paymentDto.getAgency().getId(), update::setUpdate);
         this.updateManageHotel(paymentDto::setHotel, command.getHotel(), paymentDto.getHotel().getId(), update::setUpdate);
 //        this.updateManageBankAccount(paymentDto::setBankAccount, command.getBankAccount(), paymentDto.getBankAccount().getId(), update::setUpdate);
-        this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
+//        this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
 
         //if (update.getUpdate() > 0) {
         if (!paymentDto.getPaymentSource().getExpense())//Se agrega esto con el objetivo de ignorar este check cuando se importa

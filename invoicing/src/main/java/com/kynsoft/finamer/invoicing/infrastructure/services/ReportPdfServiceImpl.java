@@ -275,7 +275,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                 table.addCell(new Cell().add(new Paragraph(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph("$ " + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0)).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph((currencyData)).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph(("USD")).addStyle(styleCell)));
             }
         }
         // Add data row file 10
