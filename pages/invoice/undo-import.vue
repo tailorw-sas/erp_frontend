@@ -264,11 +264,11 @@ async function getList() {
           ...iterator,
           hotel: {
             ...iterator?.hotel,
-            name: `${iterator?.hotel?.code} - ${iterator?.hotel?.name}`
+            name: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`
           },
           agency: {
             ...iterator?.agency,
-            name: `${iterator?.agency?.code} - ${iterator?.agency?.name}`
+            name: `${iterator?.agency?.code}-${iterator?.agency?.name}`
           },
           roomRates: [],
           loadingEdit: false,
@@ -432,7 +432,14 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [
+        ...hotelList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code}-${iterator.name}`,
+          code: iterator.code
+        }
+      ]
     }
   }
   catch (error) {
