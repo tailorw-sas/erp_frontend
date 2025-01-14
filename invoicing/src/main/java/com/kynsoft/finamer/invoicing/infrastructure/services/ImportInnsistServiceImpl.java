@@ -160,6 +160,7 @@ public class ImportInnsistServiceImpl {
 
         grouped = process.stream().collect(Collectors.groupingBy(
                 booking -> new GroupBy(
+                        booking.getInvoiceDate().toString(),
                         booking.getManageAgencyCode(),
                         booking.getManageHotelCode(),
                         booking.getCouponNumber()

@@ -155,8 +155,12 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
         grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
-                        -> new GroupBy(bookingRow.getManageAgencyCode(), bookingRow.getManageHotelCode(), bookingRow.getCoupon()))
-                );
+                        -> new GroupBy(
+                                bookingRow.getTransactionDate(), 
+                                bookingRow.getManageAgencyCode(), 
+                                bookingRow.getManageHotelCode(), 
+                                bookingRow.getCoupon())
+                ));
 
         //Si no funciona quitar estas lineas.
         List<Map.Entry<GroupBy, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
