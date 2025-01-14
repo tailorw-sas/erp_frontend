@@ -24,11 +24,8 @@ const props = defineProps({
 const toast = useToast()
 const confirm = useConfirm()
 const listItems = ref<any[]>([])
-const loadingSearch = ref(false)
-const regionList = ref<any[]>([])
-const regionSelected = ref('')
 const reportList = ref<any[]>([])
-const hotelList = ref<any[]>([])
+const dependentFieldList = ref<any[]>([])
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
@@ -115,6 +112,23 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim()
   },
   {
+    field: 'dependentField',
+    header: 'Dependen Field',
+    dataType: 'select',
+    class: 'field col-12',
+    validation: z.object({
+      id: z.string().min(1, 'The type field is required'),
+      name: z.string().min(1, 'The type field is required'),
+    })
+  },
+  {
+    field: 'filterKeyValue',
+    header: 'Filter Key Value',
+    dataType: 'text',
+    class: 'field col-12',
+    validation: z.string().trim()
+  },
+  {
     field: 'parameterPosition',
     header: 'Position',
     dataType: 'number',
@@ -147,6 +161,8 @@ const item = ref<GenericObject>(
     label: '',
     reportId: '',
     reportClass: '',
+    dependentField: null,
+    filterKeyValue: '',
     parameterPosition: 0,
     reportValidation: '',
   }
@@ -162,6 +178,8 @@ const itemTemp = ref<GenericObject>(
     label: '',
     reportId: props.reportConfig,
     reportClass: '',
+    dependentField: null,
+    filterKeyValue: '',
     parameterPosition: 0,
     reportValidation: '',
   }
@@ -346,6 +364,55 @@ async function getReportList(query: string) {
   }
 }
 
+async function getDependedFieldList(query: string, id: string) {
+  try {
+    const payload
+        = {
+          filter: [
+            {
+              key: 'id',
+              operator: 'NOT_EQUALS',
+              value: id,
+              logicalOperation: 'AND'
+            },
+            {
+              key: 'jasperReportTemplate.id',
+              operator: 'EQUALS',
+              value: props.reportConfig?.id || '',
+              logicalOperation: 'AND'
+            },
+            {
+              key: 'paramName',
+              operator: 'LIKE',
+              value: query,
+              logicalOperation: 'AND'
+            },
+          ],
+          query: '',
+          pageSize: 20,
+          page: 0,
+          sortBy: 'paramName',
+          sortType: ENUM_SHORT_TYPE.DESC
+        }
+
+    const response = await GenericService.search('report', 'jasper-report-template-parameter', payload)
+    const { data: dataList } = response
+    dependentFieldList.value = []
+    for (const iterator of dataList) {
+      dependentFieldList.value = [
+        ...dependentFieldList.value,
+        {
+          id: iterator.id,
+          name: iterator.paramName,
+        }
+      ]
+    }
+  }
+  catch (error) {
+    console.error('Error on loading hotels list:', error)
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -364,7 +431,8 @@ async function getItemById(id: string) {
         item.value.parameterPosition = response.parameterPosition
         item.value.reportClass = response.reportClass || ''
         item.value.reportValidation = response.reportValidation || ''
-
+        item.value.dependentField = response.dependentField ? JSON.parse(response.dependentField) : ''
+        item.value.filterKeyValue = response.filterKeyValue || ''
         item.value.reportId = response.jasperReportTemplate
           ? {
               id: response.jasperReportTemplate.id,
@@ -394,6 +462,7 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.reportId = typeof payload.reportId === 'object' ? payload.reportId.id : payload.reportId
     payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
+    payload.dependentField = payload.dependentField ? JSON.stringify(payload.dependentField) : ''
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -403,6 +472,7 @@ async function updateItem(item: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...item }
   payload.reportId = typeof payload.reportId === 'object' ? payload.reportId.id : payload.reportId
   payload.componentType = typeof payload.componentType === 'object' ? payload.componentType.id : payload.componentType
+  payload.dependentField = payload.dependentField ? JSON.stringify(payload.dependentField) : ''
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -619,21 +689,48 @@ onMounted(async () => {
                   if ($event && $event?.id === 'select') {
                     updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
                     updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
+                    updateFieldProperty(fields, 'module', 'disabled', false)
 
                     updateFieldProperty(fields, 'service', 'class', 'field col-12 required')
                     updateFieldProperty(fields, 'service', 'validation', z.string().trim().min(1, 'The service field is required').max(50, 'Maximum 50 characters'))
+                    updateFieldProperty(fields, 'service', 'disabled', false)
 
+                    updateFieldProperty(fields, 'dependentField', 'disabled', false)
                   }
                   else {
                     updateFieldProperty(fields, 'module', 'class', 'field col-12')
                     updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'module', 'disabled', true)
+                    onUpdate('module', '')
                     delete errorsListParent.module
 
                     updateFieldProperty(fields, 'service', 'class', 'field col-12')
                     updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'service', 'disabled', true)
+                    onUpdate('service', '')
                     delete errorsListParent.service
+
+                    updateFieldProperty(fields, 'dependentField', 'disabled', true)
+                    onUpdate('dependentField', null)
+                    delete errorsListParent.dependentField
                   }
                 }"
+              />
+              <Skeleton v-else height="2rem" class="mb-2" />
+            </template>
+            <template #field-dependentField="{ item: data, onUpdate }">
+              <DebouncedAutoCompleteComponent
+                v-if="!loadingSaveAll"
+                id="autocomplete"
+                field="name"
+                item-value="id"
+                :model="data.dependentField"
+                :disabled="fields.find((f) => f.field === 'dependentField')?.disabled"
+                :suggestions="dependentFieldList"
+                @change="($event) => {
+                  onUpdate('dependentField', $event)
+                }"
+                @load="($event) => getDependedFieldList($event, idItem)"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>

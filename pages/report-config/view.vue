@@ -414,6 +414,8 @@ interface DataList {
   type: string
   reportClass: string
   reportValidation: any
+  dependentField: any
+  parameterPosition: number
 }
 
 interface ListItem {
@@ -426,6 +428,8 @@ interface ListItem {
   service: string
   reportClass: string
   reportValidation: any
+  dependentField: any
+  parameterPosition: number
 }
 
 function mapFunction(data: DataList): ListItem {
@@ -438,7 +442,9 @@ function mapFunction(data: DataList): ListItem {
     module: data.module,
     service: data.service,
     reportClass: data.reportClass,
-    reportValidation: data.reportValidation
+    reportValidation: data.reportValidation,
+    dependentField: data.dependentField,
+    parameterPosition: data.parameterPosition
   }
 }
 async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
@@ -477,17 +483,22 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
               objApi: {
                 moduleApi: element.module,
                 uriApi: element.service
+              },
+              kwArgs: {
+                ...element
               }
             }]
           }
           else {
             fields.value = [...fields.value, {
-
               field: element.paramName,
               header: element.label,
               dataType: element.componentType,
               class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
               // validation: element.reportValidation ? element.reportValidation : z.string().trim()
+              kwArgs: {
+                ...element
+              }
             }]
           }
         }
@@ -511,39 +522,21 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
 
 const suggestionsData = ref<any[]>([])
 
-async function getDinamicData(query: string, moduleApi: string, uriApi: string) {
+async function getDinamicData(query: string, moduleApi: string, uriApi: string, filter?: IFilter[]) {
   try {
     const payload
         = {
-          filter: [
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
+          filter: filter || [],
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'name',
+          sortBy: 'createdAt',
           sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(moduleApi, uriApi, payload)
     const { data: dataList } = response
+    suggestionsData.value = []
     for (const iterator of dataList) {
       suggestionsData.value = [...suggestionsData.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
@@ -669,7 +662,7 @@ onMounted(async () => {
     getList()
   }
 
-  listItemMenuTree.value = await getMenuItems()
+  // listItemMenuTree.value = await getMenuItems()
   await loadReport()
 })
 // -------------------------------------------------------------------------------------------------------
@@ -764,7 +757,10 @@ onMounted(async () => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-            <template v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')" :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }">
+            <template
+              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')"
+              :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }"
+            >
               <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
@@ -775,7 +771,63 @@ onMounted(async () => {
                 @change="($event) => {
                   onUpdate(field.field, $event)
                 }"
-                @load="($event) => getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi)"
+                @load="async ($event) => {
+                  let keyValue = ''
+                  let filter = []
+                  // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
+                  if (field.kwArgs && field.kwArgs.dependentField) {
+                    keyValue = JSON.parse(field.kwArgs.dependentField).name
+                    filter = [
+                      {
+                        key: 'client.id',
+                        operator: 'EQUALS',
+                        value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
+                        logicalOperation: 'AND',
+                      },
+                      {
+                        key: 'code',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'name',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'status',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                        logicalOperation: 'AND',
+                      },
+                    ]
+                  }
+                  else {
+                    filter = [
+                      {
+                        key: 'code',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'name',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'status',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                        logicalOperation: 'AND',
+                      },
+                    ]
+                  }
+                  await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
+                }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
