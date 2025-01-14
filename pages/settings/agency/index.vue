@@ -1180,6 +1180,7 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
       />
+      <!-- <pre>{{ item }}</pre> -->
     </div>
     <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
       <div>
@@ -1196,6 +1197,7 @@ onMounted(() => {
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
+            @reactive-update-field="item = $event"
           >
             <template #field-agencyType="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
