@@ -121,7 +121,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
 
     }
 
-    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,UUID employeeId, String employeeName, UUID transactionType,UUID status, MasterPaymentAttachmentDto attachment) {
+    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,UUID employeeId, String employeeName, UUID transactionType,UUID status, String attachment) {
         PaymentDto paymentDto = paymentDetailDto.getPayment();
         CreateIncomeTransactionKafka createIncomeTransactionSuccessKafka = new CreateIncomeTransactionKafka();
         UUID incomeId = UUID.randomUUID();
@@ -140,15 +140,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         createIncomeTransactionSuccessKafka.setStatusAdjustment(Status.ACTIVE.name());
         createIncomeTransactionSuccessKafka.setEmployeeId(employeeId);
         createIncomeTransactionSuccessKafka.setPaymentKafka(new ReplicatePaymentKafka(paymentDto.getId(), paymentDto.getPaymentId(), new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getParentId())));
-        createIncomeTransactionSuccessKafka.setAttachment(attachment != null ? new AttachmentKafka(
-                attachment.getId(),
-                null,
-                attachment.getFileName(),
-                attachment.getFileWeight(),
-                attachment.getPath(),
-                attachment.getRemark(),
-                false
-        ): null);
+        createIncomeTransactionSuccessKafka.setAttachment(attachment);
         producerCreateIncomeService.create(createIncomeTransactionSuccessKafka);
     }
 

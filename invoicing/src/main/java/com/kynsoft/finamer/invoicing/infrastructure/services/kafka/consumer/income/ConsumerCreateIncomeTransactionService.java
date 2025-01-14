@@ -65,7 +65,8 @@ public class ConsumerCreateIncomeTransactionService {
 //            this.applyPayment(invoiceDto, bookingDto);
 
 //            this.createPaymentAndDetail(objKafka.getPaymentKafka(), bookingDto);
-
+            //todo: el proceso en ocasiones no envia bien la info recien creada,
+            // valorar retrasar este proceso para dar tiempo a sincronizar la bd
             producerCreateIncomeTransactionSuccess.create(this.createIncomeTransactionSuccessKafka(objKafka.getId(), objKafka.getEmployeeId(), objKafka.getRelatedPaymentDetail()));
         } catch (Exception e) {
             e.printStackTrace();
@@ -162,12 +163,9 @@ public class ConsumerCreateIncomeTransactionService {
         )).collect(Collectors.toList());
     }
 
-    private List<CreateIncomeAttachmentRequest> attachments(AttachmentKafka attachment){
+    private List<CreateIncomeAttachmentRequest> attachments(String attachment){
         String filename = "detail.pdf";
-        String file = "";
-        try {
-            file = attachment.getPath();
-        } catch (Exception e) {
+        if (attachment == null || attachment.isEmpty()) {
             return null;
         }
         ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findAttachInvDefault().orElse(null);
@@ -176,7 +174,7 @@ public class ConsumerCreateIncomeTransactionService {
         List<CreateIncomeAttachmentRequest> attachments = new ArrayList<>();
         attachments.add(new CreateIncomeAttachmentRequest(
                 filename,
-                file,
+                attachment,
                 "From payment.",
                 attachmentTypeDto != null ? attachmentTypeDto.getId() : null,
                 null,
