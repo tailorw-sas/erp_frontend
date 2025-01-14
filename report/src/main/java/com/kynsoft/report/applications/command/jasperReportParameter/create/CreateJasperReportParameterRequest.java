@@ -22,4 +22,5 @@ public class CreateJasperReportParameterRequest {
     private String reportClass;
     private String reportValidation;
     private UUID reportId;
+    private int parameterPosition;
 }
