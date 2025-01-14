@@ -416,6 +416,7 @@ interface DataList {
   reportValidation: any
   dependentField: any
   parameterPosition: number
+  filterKeyValue: string
 }
 
 interface ListItem {
@@ -430,6 +431,7 @@ interface ListItem {
   reportValidation: any
   dependentField: any
   parameterPosition: number
+  filterKeyValue: string
 }
 
 function mapFunction(data: DataList): ListItem {
@@ -444,7 +446,8 @@ function mapFunction(data: DataList): ListItem {
     reportClass: data.reportClass,
     reportValidation: data.reportValidation,
     dependentField: data.dependentField,
-    parameterPosition: data.parameterPosition
+    parameterPosition: data.parameterPosition,
+    filterKeyValue: data.filterKeyValue,
   }
 }
 async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
@@ -779,7 +782,7 @@ onMounted(async () => {
                     keyValue = JSON.parse(field.kwArgs.dependentField).name
                     filter = [
                       {
-                        key: 'client.id',
+                        key: field.kwArgs.filterKeyValue,
                         operator: 'EQUALS',
                         value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
                         logicalOperation: 'AND',
