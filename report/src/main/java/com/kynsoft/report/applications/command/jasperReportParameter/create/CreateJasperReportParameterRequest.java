@@ -24,4 +24,5 @@ public class CreateJasperReportParameterRequest {
     private UUID reportId;
     private int parameterPosition;
     private String dependentField;
+    private String filterKeyValue;
 }

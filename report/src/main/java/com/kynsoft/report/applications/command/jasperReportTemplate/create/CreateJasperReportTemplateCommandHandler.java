@@ -99,7 +99,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
             if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que son promptables
                 this.reportParameterService.create(new JasperReportParameterDto(
                         UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
-                        "", "","", reportTemplateDto,"","",0, ""
+                        "", "","", reportTemplateDto,"",
+                        "",0, "", ""
                 ));
             }
         }
