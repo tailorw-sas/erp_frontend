@@ -35,14 +35,17 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
     private final PaymentTransactionTypeHttpService paymentTransactionTypeHttpService;
+    private final IManagePaymentStatusService statusService;
 
     public CreatePaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService, PaymentTransactionTypeHttpService paymentTransactionTypeHttpService) {
+            IPaymentService paymentService, PaymentTransactionTypeHttpService paymentTransactionTypeHttpService,
+            IManagePaymentStatusService statusService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
         this.paymentTransactionTypeHttpService = paymentTransactionTypeHttpService;
+        this.statusService = statusService;
     }
 
     @Override
@@ -142,6 +145,9 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         }
 
         if (updatePayment.getUpdate() > 0) {
+            if (paymentDto.getPaymentBalance() == 0 && paymentDto.getDepositBalance() == 0) {
+                paymentDto.setPaymentStatus(this.statusService.findByApplied());
+            }
             this.paymentService.update(paymentDto);
 //            createPaymentAttachmentStatusHistory(employeeDto, paymentDto, paymentDetail, msg);
         }

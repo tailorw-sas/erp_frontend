@@ -28,13 +28,16 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
     private final IPaymentDetailService paymentDetailService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
+    private final IManagePaymentStatusService statusService;
 
     public CreatePaymentDetailApplyDepositCommandHandler(IPaymentDetailService paymentDetailService,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService) {
+            IPaymentService paymentService,
+            IManagePaymentStatusService statusService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
+        this.statusService = statusService;
     }
 
     @Override
@@ -94,6 +97,9 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         paymentDetailDto.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - command.getAmount());
         paymentDetailService.update(paymentDetailDto);
 
+        if (paymentUpdate.getPaymentBalance() == 0 && paymentUpdate.getDepositBalance() == 0) {
+            paymentUpdate.setPaymentStatus(this.statusService.findByApplied());
+        }
         this.paymentService.update(paymentUpdate);
 
         if (Objects.nonNull(command.getApplyPayment()) && command.getApplyPayment()) {
