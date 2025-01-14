@@ -133,9 +133,10 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                 List<PaymentDto> paymentDtoList = cacheList.map(cache -> {
                     PaymentDto paymentDto;
                     paymentDto = paymentBankRowMapper.toObject(cache).toAggregate();
-                    Optional<ManageBankAccountDto> manageBankAccountDtoOptional = Optional.ofNullable(
-                            bankAccountService.findByAccountNumber(cache.getBankAccount()));
-                    manageBankAccountDtoOptional.ifPresent(paymentDto::setBankAccount);
+                    //Optional<ManageBankAccountDto> manageBankAccountDtoOptional = Optional.ofNullable(bankAccountService.findByAccountNumber(cache.getBankAccount()));
+                    ManageBankAccountDto manageBankAccountDtoOptional = bankAccountService.findManageBankAccountByCodeAndHotelCode(cache.getBankAccount(), cache.getHotel());
+                    //manageBankAccountDtoOptional.ifPresent(paymentDto::setBankAccount);
+                    paymentDto.setBankAccount(manageBankAccountDtoOptional);
                     Optional<ManagePaymentSourceDto> paymentSourceOptional = Optional.ofNullable(
                             paymentSourceService.findByCodeActive(PAYMENT_SOURCE_BANK_CODE));
                     paymentSourceOptional.ifPresent(paymentDto::setPaymentSource);
