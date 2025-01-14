@@ -23,4 +23,5 @@ public class UpdateJasperReportParameterRequest {
     private String reportClass;
     private String reportValidation;
     private int parameterPosition;
+    private String dependentField;
 }
