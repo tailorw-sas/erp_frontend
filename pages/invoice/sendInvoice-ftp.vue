@@ -373,7 +373,7 @@ function onSortField(event: any) {
   }
 }
 
-function searchAndFilter() {
+async function searchAndFilter() {
   payload.value = {
     filter: [],
     query: '',
@@ -560,7 +560,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
-  await getList()
+  await searchAndFilter()
 })
 </script>
 

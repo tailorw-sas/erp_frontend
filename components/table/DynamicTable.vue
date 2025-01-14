@@ -686,6 +686,7 @@ defineExpose({ clearSelectedItems })
             <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="data" :column="column" />
             <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :data="data" :column="column" />
+            <slot v-if="column.type === 'slot-bagde'" :name="`column-${column.field}`" :data="data" :column="column" />
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
             </span>

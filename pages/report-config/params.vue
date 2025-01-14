@@ -115,6 +115,12 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim()
   },
   {
+    field: 'parameterPosition',
+    header: 'Position',
+    dataType: 'number',
+    class: 'field col-12',
+  },
+  {
     field: 'reportClass',
     header: 'Class',
     dataType: 'text',
@@ -141,6 +147,7 @@ const item = ref<GenericObject>(
     label: '',
     reportId: '',
     reportClass: '',
+    parameterPosition: 0,
     reportValidation: '',
   }
 )
@@ -155,6 +162,7 @@ const itemTemp = ref<GenericObject>(
     label: '',
     reportId: props.reportConfig,
     reportClass: '',
+    parameterPosition: 0,
     reportValidation: '',
   }
 )
@@ -353,6 +361,7 @@ async function getItemById(id: string) {
         item.value.module = response.module || ''
         item.value.service = response.service || ''
         item.value.label = response.label || ''
+        item.value.parameterPosition = response.parameterPosition
         item.value.reportClass = response.reportClass || ''
         item.value.reportValidation = response.reportValidation || ''
 
