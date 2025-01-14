@@ -61,6 +61,7 @@ public class CreateIncomeTransactionKafka {
         this.relatedPaymentDetail = relatedPaymentDetail;
         this.paymentKafka = paymentKafka;
     }
+
 }
 
 
