@@ -26,4 +26,8 @@ public interface ManageBankAccountReadDataJPARepository extends JpaRepository<Ma
 
     @Query("Select pd from ManageBankAccount pd where pd.manageHotel.id=:hotelId")
     Optional<List<ManageBankAccount>> findAllByHotel(@Param("hotelId") UUID hotelId);
+
+    @Query("SELECT b FROM ManageBankAccount b WHERE b.accountNumber = :accountNumber AND b.manageHotel.code = :hotelCode")
+    Optional<ManageBankAccount> findManageBankAccountByCodeAndHotelCode(@Param("accountNumber") String accountNumber, @Param("hotelCode") String hotelCode);
+
 }

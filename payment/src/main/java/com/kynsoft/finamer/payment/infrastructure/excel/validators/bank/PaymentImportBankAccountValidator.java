@@ -19,8 +19,8 @@ public class PaymentImportBankAccountValidator extends ExcelRuleValidator<Paymen
     private final IManageHotelService manageHotelService;
 
     protected PaymentImportBankAccountValidator(ApplicationEventPublisher applicationEventPublisher,
-                                                IManageBankAccountService bankAccountService,
-                                                IManageHotelService manageHotelService) {
+            IManageBankAccountService bankAccountService,
+            IManageHotelService manageHotelService) {
         super(applicationEventPublisher);
         this.bankAccountService = bankAccountService;
         this.manageHotelService = manageHotelService;
@@ -29,29 +29,27 @@ public class PaymentImportBankAccountValidator extends ExcelRuleValidator<Paymen
     @Override
     public boolean validate(PaymentBankRow obj, List<ErrorField> errorFieldList) {
         if (Objects.isNull(obj.getBankAccount())) {
-            errorFieldList.add(new ErrorField("Bank Account", "Bank Account can't be empty"));
+            errorFieldList.add(new ErrorField("Bank Account", "Bank Account can't be empty."));
             return false;
         }
         boolean result = bankAccountService.existByAccountNumber(obj.getBankAccount());
         if (!result) {
-            errorFieldList.add(new ErrorField("Bank Account", "The bank account not exist "));
+            errorFieldList.add(new ErrorField("Bank Account", "The bank account not exist."));
             return false;
-        }else{
-            ManageBankAccountDto manageBankAccountDto =bankAccountService.findByAccountNumber(obj.getBankAccount());
-            if(Status.INACTIVE.name().equals(manageBankAccountDto.getStatus())){
-                errorFieldList.add(new ErrorField("Bank Account", "The bank account is not active "));
+        } else {
+            try {
+                ManageBankAccountDto manageBankAccountDto = bankAccountService.findManageBankAccountByCodeAndHotelCode(obj.getBankAccount(), obj.getManageHotelCode());
+                //ManageBankAccountDto manageBankAccountDto = bankAccountService.findByAccountNumber(obj.getBankAccount());
+                if (Status.INACTIVE.name().equals(manageBankAccountDto.getStatus())) {
+                    errorFieldList.add(new ErrorField("Bank Account", "The bank account is not active."));
+                    return false;
+                }
+            } catch (Exception e) {
+                errorFieldList.add(new ErrorField("Bank Account", "The bank account doesn't belong to the hotel."));
                 return false;
             }
         }
-        if (manageHotelService.existByCode(obj.getManageHotelCode())) {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
-            ManageBankAccountDto manageBankAccountDto = bankAccountService.findByAccountNumber(obj.getBankAccount());
-
-            if (Objects.isNull(manageBankAccountDto.getManageHotelDto()) || !manageBankAccountDto.getManageHotelDto().getId().equals(manageHotelDto.getId())) {
-                errorFieldList.add(new ErrorField("Bank Account", "The bank account doesn't belong to the hotel "));
-            }
-        }
-        return result;
+        return true;
     }
 
 }

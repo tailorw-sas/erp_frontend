@@ -409,7 +409,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_RESOURCE_TYPE_DEFAULT_NOT_FOUND(1186, Series.DOMAIN_ERROR,"There is no resource type by default."),
     HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND(1187, Series.DOMAIN_ERROR,"The hotel invoice number sequence not found."),
     HOTEL_RATE_PLAN_NOT_FOUND(1188, Series.DOMAIN_ERROR,"The selected rate plan does not belong to the hotel."),
-    HOTEL_ROOM_TYPE_NOT_FOUND(1189, Series.DOMAIN_ERROR,"The selected room type does not belong to the hotel.");
+    HOTEL_ROOM_TYPE_NOT_FOUND(1189, Series.DOMAIN_ERROR,"The selected room type does not belong to the hotel."),
+    HOTEL_BANK_ACCOUNT_NOT_FOUND(1190, Series.DOMAIN_ERROR,"The bank account doesn't belong to the hotel.");
 
     private static final DomainErrorMessage[] VALUES;
 
