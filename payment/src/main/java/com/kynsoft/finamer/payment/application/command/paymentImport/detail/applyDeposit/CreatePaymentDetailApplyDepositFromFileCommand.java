@@ -31,7 +31,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommand implements ICommand 
 
     private PaymentDto paymentResponse;
     private final IMediator mediator;
-    private MasterPaymentAttachmentDto attachment;
+    private String attachment;
 
     public CreatePaymentDetailApplyDepositFromFileCommand(Status status, UUID paymentDetail, UUID transactionType, Double amount, String remark, UUID employee, UUID transactionTypeForAdjustment, UUID booking, Boolean applyPayment, final IMediator mediator) {
         this.id = UUID.randomUUID();

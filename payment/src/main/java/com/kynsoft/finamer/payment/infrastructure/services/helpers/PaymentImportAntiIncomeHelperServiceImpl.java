@@ -132,27 +132,16 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             /*todo: subir el attachment y enviar esa misma info para los income a crear,
              * sustituir el envío del byte[] por esa info
              */
-            MasterPaymentAttachmentDto attachmentDto = null;
+            String attachment = "";
             try {
                 LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent("detail.pdf", request.getAttachment());
-                attachmentDto = new MasterPaymentAttachmentDto(
-                        UUID.randomUUID(),
-                        Status.ACTIVE,
-                        null,
-                        null,
-                        null,
-                        "detail.pdf",
-                        "",
-                        response.get("url"),
-                        "From payment",
-                        null
-                );
+                attachment = response.get("url");
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
             do {
                 cacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
-                MasterPaymentAttachmentDto finalAttachmentDto = attachmentDto;
+                String finalAttachment = attachment;
                 cacheList.forEach(paymentImportCache -> {
                     PaymentDetailDto parentPaymentDetail = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getTransactionId()));
                     this.sendToCreateApplyDeposit(parentPaymentDetail.getId(),
@@ -160,7 +149,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                             UUID.fromString(request.getEmployeeId()),
                             getDefaultApplyDepositTransactionTypeId(),
                             UUID.fromString(request.getInvoiceTransactionTypeId()),
-                            paymentImportCache.getRemarks(), finalAttachmentDto
+                            paymentImportCache.getRemarks(), finalAttachment
                     );
 
                 });
@@ -194,7 +183,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     }
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
-            UUID transactionTypeIdForAdjustment, String remarks, MasterPaymentAttachmentDto attachmentDto) {
+            UUID transactionTypeIdForAdjustment, String remarks, String attachment) {
         CreatePaymentDetailApplyDepositFromFileCommand createPaymentDetailApplyDepositCommand
                 = new CreatePaymentDetailApplyDepositFromFileCommand(Status.ACTIVE,
                         paymentDetail,
@@ -203,7 +192,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                         remarks,
                         employee,
                         transactionTypeIdForAdjustment);
-        createPaymentDetailApplyDepositCommand.setAttachment(attachmentDto);
+        createPaymentDetailApplyDepositCommand.setAttachment(attachment);
         ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand, true);
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
