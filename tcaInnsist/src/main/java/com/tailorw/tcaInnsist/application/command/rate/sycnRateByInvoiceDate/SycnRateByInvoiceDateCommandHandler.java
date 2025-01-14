@@ -81,7 +81,7 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
         }
 
         if(Objects.isNull(tradingCompany.getConnectionId()) ){
-            throw new IllegalArgumentException(String.format("The trading company %s does not have a valid connection.", hotelDto.getTradingCompanyId()));
+            throw new IllegalArgumentException(String.format("The trading company %s does not have a valid connection.", tradingCompany.getCode()));
         }
 
         return tradingCompany;
