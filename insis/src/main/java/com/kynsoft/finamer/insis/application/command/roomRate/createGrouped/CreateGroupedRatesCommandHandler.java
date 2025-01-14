@@ -155,8 +155,8 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
                 BookingStatus.PENDING,
                 hotelDto,
                 null,
-                rateCommands.get(0).getAgency(),
-                manageAgencyService.findByCode(rateCommands.get(0).getAgency()),
+                rateCommands.get(0).getAgency().trim(),
+                manageAgencyService.findByCode(rateCommands.get(0).getAgency().trim()),
                 rateCommands.stream()
                         .map(CreateRoomRateCommand::getCheckInDate)
                         .max(Comparator.naturalOrder()).orElse(rateCommands.get(0).getCheckInDate()),
