@@ -107,4 +107,11 @@ public class ManageBankAccountServiceImpl implements IManageBankAccountService {
         return result.map(paymentDetails -> paymentDetails.stream().map(ManageBankAccount::toAggregate).toList()).orElse(Collections.EMPTY_LIST);
     }
 
+    @Override
+    public ManageBankAccountDto findManageBankAccountByCodeAndHotelCode(String code, String hotelCode) {
+        return repositoryQuery.findManageBankAccountByCodeAndHotelCode(code, hotelCode)
+                .map(ManageBankAccount::toAggregate)
+                .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("accountNumber", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase()))));
+    }
+
 }
