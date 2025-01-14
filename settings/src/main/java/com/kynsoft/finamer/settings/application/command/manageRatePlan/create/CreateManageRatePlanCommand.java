@@ -29,6 +29,16 @@ public class CreateManageRatePlanCommand implements ICommand {
         this.status = status;
     }
 
+    public CreateManageRatePlanCommand(UUID id, String code, String description, String name,
+                                       UUID hotel, Status status) {
+        this.id = id;
+        this.code = code;
+        this.description = description;
+        this.name = name;
+        this.hotel = hotel;
+        this.status = status;
+    }
+
     public static CreateManageRatePlanCommand fromRequest(CreateManageRatePlanRequest request) {
         return new CreateManageRatePlanCommand(
                 request.getCode(),

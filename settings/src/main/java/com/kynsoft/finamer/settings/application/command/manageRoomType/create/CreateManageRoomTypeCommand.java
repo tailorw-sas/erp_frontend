@@ -27,6 +27,16 @@ public class CreateManageRoomTypeCommand implements ICommand {
         this.manageHotel = manageHotel;
     }
 
+    public CreateManageRoomTypeCommand(UUID id, String code, String description, Status status,
+                                       String name, UUID manageHotel) {
+        this.id = id;
+        this.code = code;
+        this.description = description;
+        this.status = status;
+        this.name = name;
+        this.manageHotel = manageHotel;
+    }
+
     public static CreateManageRoomTypeCommand fromRequest(CreateManageRoomTypeRequest request){
         return new CreateManageRoomTypeCommand(
                 request.getCode(), request.getDescription(), request.getStatus(),

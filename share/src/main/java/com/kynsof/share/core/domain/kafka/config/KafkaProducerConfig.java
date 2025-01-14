@@ -22,6 +22,9 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
+    @Value("${KAFKA_MAX_REQUEST_VALUE:104857600}")
+    private String maxRequestSize;
+
 //    @Bean
 //    @Profile("dev")
 //    public ProducerFactory<String, Object> devProducerFactory() {
@@ -42,6 +45,7 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, maxRequestSize);
         return configProps;
     }
 
