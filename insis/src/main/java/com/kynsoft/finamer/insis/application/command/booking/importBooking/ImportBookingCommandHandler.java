@@ -108,9 +108,9 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
     private ImportInnsistBookingKafka bookingToKafkaBooking(BookingDto booking, List<RoomRateDto> roomRates){
         return new ImportInnsistBookingKafka(
                 booking.getId(),
+                booking.getInvoicingDate().atStartOfDay(),
                 booking.getHotelCreationDate().atStartOfDay(),
-                booking.getInvoicingDate(),
-                booking.getInvoicingDate(),
+                booking.getInvoicingDate().atStartOfDay(),
                 booking.getCheckInDate().atStartOfDay(),
                 booking.getCheckOutDate().atStartOfDay(),
                 booking.getReservationCode(), //booking.getHotelInvoiceNumber(),
