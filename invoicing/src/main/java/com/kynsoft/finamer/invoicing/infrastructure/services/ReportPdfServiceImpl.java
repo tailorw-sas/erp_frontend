@@ -91,16 +91,16 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
 
-        for (ManageBookingDto booking : bookings) {
+//        for (ManageBookingDto booking : bookings) {
             // Add data row file 1
             table.addCell(new Cell());
             table.addCell(new Cell());
             table.addCell(new Cell());
-            table.addCell(new Cell().add(new Paragraph((booking.getHotelCreationDate()!=null ? booking.getHotelCreationDate().format(formatter) : "Not date")).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph((booking.getBookingDate()!=null ? booking.getBookingDate().format(formatter) : "Not date")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((bookings.get(0).getHotelCreationDate()!=null ? bookings.get(0).getHotelCreationDate().format(formatter) : "Not date")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((bookings.get(0).getBookingDate()!=null ? bookings.get(0).getBookingDate().format(formatter) : "Not date")).addStyle(styleCell)));
             table.addCell(new Cell());
             table.addCell(new Cell());
-        }
+//        }
         //2 empty columns
         for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
