@@ -1,18 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { useRouter } from 'vue-router'
 import AppMenu from './AppMenu.vue'
-import { menuItemsMegaMenu } from './data/MenuItemsList'
+import { type MenuItem, menuItemsMegaMenu } from './data/MenuItemsList'
+import { GenericService } from '~/services/generic-services'
 
 const { layoutState, layoutConfig } = useLayout()
 const router = useRouter()
 
-let timeout = null
+const timeout = ref(null)
 
 function onMouseEnter() {
   if (!layoutState.anchored.value) {
-    if (timeout) {
-      clearTimeout(timeout)
-      timeout = null
+    if (timeout.value) {
+      clearTimeout(timeout.value)
+      timeout.value = null
     }
     layoutState.sidebarActive.value = true
   }
@@ -20,8 +21,8 @@ function onMouseEnter() {
 
 function onMouseLeave() {
   if (!layoutState.anchored.value) {
-    if (!timeout) {
-      timeout = setTimeout(() => (layoutState.sidebarActive.value = false), 300)
+    if (!timeout.value) {
+      timeout.value = setTimeout(() => (layoutState.sidebarActive.value = false), 300)
     }
   }
 }
@@ -32,6 +33,45 @@ function anchor() {
 function navigateToHome() {
   router.push('/')
 }
+
+function transformToTreeNode(data: Record<string, any[]>): MenuItem {
+  return {
+    label: 'Reports',
+    icon: 'pi pi-folder',
+    items: Object.keys(data).map(moduleKey => [
+      {
+        label: moduleKey,
+        icon: 'pi pi-fw pi-file',
+        items: data[moduleKey].map(report => ({
+          label: report.name,
+          icon: 'pi pi-fw pi-file',
+          command: () => navigateTo(`/report-config/view?reportId=${report.id}&reportCode=${report.code}`),
+          items: [],
+        })),
+      },
+    ]),
+  }
+}
+
+async function getMenuItems() {
+  try {
+    const response = await GenericService.get('report', 'report-menu/grouped')
+    if (response) {
+      const treeNodes: MenuItem = transformToTreeNode(response)
+      return treeNodes
+    }
+    return []
+  }
+  catch (error) {
+    console.error('Error loading menu items:', error)
+    return []
+  }
+}
+
+onMounted(async () => {
+  const listItemMenuTree: MenuItem = await getMenuItems()
+  menuItemsMegaMenu.value = [...menuItemsMegaMenu.value, { ...listItemMenuTree }]
+})
 </script>
 
 <template>

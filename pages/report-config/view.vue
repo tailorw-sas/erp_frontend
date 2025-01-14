@@ -36,6 +36,7 @@ interface MenuCategory {
   items: MenuItem[]
 }
 
+const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
 const listItemsMenu = ref<MenuCategory[]>([
@@ -569,7 +570,7 @@ function transformToTreeNode(data: Record<string, any[]>): TreeNode[] {
   }))
 }
 
-async function getMenuItems() {
+async function getMenuItems(): Promise<TreeNode[]> {
   try {
     const response = await GenericService.get('report', 'report-menu/grouped')
     if (response) {
@@ -579,7 +580,8 @@ async function getMenuItems() {
     return []
   }
   catch (error) {
-
+    console.error('Error loading menu items:', error)
+    return []
   }
 }
 
@@ -630,12 +632,31 @@ function loadPDF(base64Report: string) {
   }
 }
 
+async function loadReport() {
+  try {
+    const reportId = route.query.reportId ? route.query.reportId.toString() : ''
+    const reportCode = route.query.reportCode ? route.query.reportCode.toString() : ''
+    if (reportId && reportCode) {
+      await loadParamsFieldByReportTemplate(reportId, reportCode)
+    }
+  }
+  catch (error) {
+    console.error('Error loading report:', error)
+  }
+}
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
   }
   else {
     await getItemById(newValue)
+  }
+})
+
+watch(() => route.query, async (newValue) => {
+  if (newValue) {
+    loadReport()
   }
 })
 // -------------------------------------------------------------------------------------------------------
@@ -649,11 +670,7 @@ onMounted(async () => {
   }
 
   listItemMenuTree.value = await getMenuItems()
-  // const objQueryToSearch = {
-  //   query: '',
-  //   keys: ['name', 'username', 'url'],
-  // }
-  // const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, [])
+  await loadReport()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -665,7 +682,7 @@ onMounted(async () => {
     </h3>
   </div> -->
   <div class="grid">
-    <div class="col-12 md:col-6 xl:col-2">
+    <div v-if="false" class="col-12 md:col-6 xl:col-2">
       <div>
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Report List
@@ -694,7 +711,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <div class="col-12 md:col-6 xl:col-10">
+    <div class="col-12">
       <div v-if="fields.length > 0">
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Params
