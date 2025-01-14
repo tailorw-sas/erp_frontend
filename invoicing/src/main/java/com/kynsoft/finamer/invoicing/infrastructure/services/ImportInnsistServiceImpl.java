@@ -226,12 +226,14 @@ public class ImportInnsistServiceImpl {
 
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
         if (hotel.isVirtual()) {
-            manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
+            manageInvoiceDto.setImportType(ImportType.INSIST);
+            //manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
 
             invoiceNumber = setInvoiceNumber(hotel, invoiceNumber);
             manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber());
         } else {
-            manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
+            manageInvoiceDto.setImportType(ImportType.INSIST);
+            //manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
 
             invoiceNumber = setInvoiceNumber(hotel, invoiceNumber);
         }

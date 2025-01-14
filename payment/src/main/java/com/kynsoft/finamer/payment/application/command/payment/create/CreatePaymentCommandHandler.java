@@ -11,6 +11,7 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIsWithInRangeCloseOperationRule;
+import com.kynsoft.finamer.payment.domain.rules.payment.PaymentValidateBankAccountAndHotelRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentAmountGreaterThanZeroRule;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -123,6 +124,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         ManageBankAccountDto bankAccountDto = null;
         if (!command.isIgnoreBankAccount() || !paymentSourceDto.getExpense()) {
             bankAccountDto = this.bankAccountService.findById(command.getBankAccount());
+            RulesChecker.checkRule(new PaymentValidateBankAccountAndHotelRule(hotelDto, bankAccountDto));
         }
         //ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findById(command.getAttachmentStatus());
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByNonNone();

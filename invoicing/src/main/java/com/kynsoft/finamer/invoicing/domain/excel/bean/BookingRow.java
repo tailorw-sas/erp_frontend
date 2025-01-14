@@ -76,7 +76,7 @@ public class BookingRow {
         manageBookingDto.setCheckIn(DateUtil.parseDateToDateTime(this.checkIn));
         manageBookingDto.setCheckOut(DateUtil.parseDateToDateTime(this.checkOut));
         manageBookingDto.setCouponNumber(Objects.nonNull(this.coupon) ? this.coupon : "");
-        manageBookingDto.setHotelAmount(ScaleAmount.scaleAmount(this.hotelInvoiceAmount));
+        manageBookingDto.setHotelAmount(Objects.nonNull(this.hotelInvoiceAmount) ? ScaleAmount.scaleAmount(this.hotelInvoiceAmount) : 0.0);
         manageBookingDto.setFirstName(Objects.nonNull(this.firstName) ? this.firstName : "");
         manageBookingDto.setLastName(Objects.nonNull(this.lastName) ? this.lastName : "");
         manageBookingDto.setFullName(buildFullName());
