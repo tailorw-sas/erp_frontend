@@ -1,24 +1,18 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
 
 import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
-
-@XmlRootElement(name = "Supplier")
+@XmlType(propOrder = {"supplierID", "cif", "company", "address", "city", "pc", "province", "country"})
 public class Supplier {
-
-    private String supplierID; // Código del proveedor (interno del proveedor, opcional)
-    private String customerSupplierID; // Código del proveedor (interno del cliente, opcional)
-    private String CIF; // CIF o NIF del proveedor
-    private String company; // Razón social del proveedor
-    private String address; // Domicilio del proveedor
-    private String city; // Población del proveedor
-    private String postalCode; // Código postal del proveedor
-    private String province; // Provincia del proveedor
-    private String country; // País del proveedor (ej. ESP para España)
-    private String email; // Email del proveedor (obligatorio solo para proveedores italianos)
-
-    // Getters y Setters
+    private String supplierID;
+    private String cif;
+    private String company;
+    private String address;
+    private String city;
+    private String pc; // Código postal
+    private String province;
+    private String country;
 
     @XmlElement(name = "SupplierID")
     public String getSupplierID() {
@@ -29,22 +23,13 @@ public class Supplier {
         this.supplierID = supplierID;
     }
 
-    @XmlElement(name = "CustomerSupplierID")
-    public String getCustomerSupplierID() {
-        return customerSupplierID;
-    }
-
-    public void setCustomerSupplierID(String customerSupplierID) {
-        this.customerSupplierID = customerSupplierID;
-    }
-
     @XmlElement(name = "CIF")
     public String getCIF() {
-        return CIF;
+        return cif;
     }
 
-    public void setCIF(String CIF) {
-        this.CIF = CIF;
+    public void setCIF(String cif) {
+        this.cif = cif;
     }
 
     @XmlElement(name = "Company")
@@ -75,12 +60,12 @@ public class Supplier {
     }
 
     @XmlElement(name = "PC")
-    public String getPostalCode() {
-        return postalCode;
+    public String getPc() {
+        return pc;
     }
 
-    public void setPostalCode(String postalCode) {
-        this.postalCode = postalCode;
+    public void setPc(String pc) {
+        this.pc = pc;
     }
 
     @XmlElement(name = "Province")
@@ -99,14 +84,5 @@ public class Supplier {
 
     public void setCountry(String country) {
         this.country = country;
-    }
-
-    @XmlElement(name = "Email")
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 }

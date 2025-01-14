@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<PaymentDetailRow> {
@@ -66,6 +67,19 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
                 this.bookingImportAutomaticeHelperServiceImpl.createInvoice(bookingHttp);
                 return this.bookingService.findByGenId(bookingId);
             } catch (Exception ex) {
+                //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
+                int maxAttempts = 3;
+                while (maxAttempts > 0) {
+                    try {
+                        return this.bookingService.findByGenId(bookingId);
+                    } catch (Exception exc) {
+                    }
+                    maxAttempts--;
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException excp) {
+                    }
+                }
                 throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
             }
         }

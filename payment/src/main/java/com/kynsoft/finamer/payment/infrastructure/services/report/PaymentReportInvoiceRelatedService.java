@@ -11,6 +11,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -21,6 +22,8 @@ import java.util.*;
 public class PaymentReportInvoiceRelatedService implements IPaymentReport {
     public static final String BEAN_ID = "INVOICE_RELATED";
     private final IPaymentService paymentService;
+    @Value("${report.code.invoice.booking:inv}")
+    private String reportCode;
 
     private final IPaymentDetailService paymentDetailService;
     private final ReportContentProviderFactory reportContentProviderFactory;
@@ -56,7 +59,7 @@ public class PaymentReportInvoiceRelatedService implements IPaymentReport {
                 .getReportContentProvider(EPaymentContentProvider.INVOICE_REPORT_CONTENT);
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);
-        return contentProvider.getContent(parameters);
+        return contentProvider.getContent(parameters,reportCode);
     }
 
     private List<UUID> getInvoiceRelate(PaymentDto paymentDto) {

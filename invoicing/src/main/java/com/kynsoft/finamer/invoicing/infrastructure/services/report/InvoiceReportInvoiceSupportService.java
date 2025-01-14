@@ -5,7 +5,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceContentProvider;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceReport;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.content.ReportContentProviderFactory;
-import com.kynsoft.finamer.invoicing.infrastructure.services.report.util.ReportUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -20,7 +20,8 @@ import java.util.Optional;
 public class InvoiceReportInvoiceSupportService implements IInvoiceReport {
     public static final String BEAN_ID = "INVOICE_SUPPORT";
     private final ReportContentProviderFactory reportContentProviderFactory;
-
+    @Value("${report.code.invoice.booking:inv}") // Usa "inv" como valor predeterminado
+    private String reportCode;
     public InvoiceReportInvoiceSupportService(ReportContentProviderFactory reportContentProviderFactory) {
         this.reportContentProviderFactory = reportContentProviderFactory;
     }
@@ -28,8 +29,9 @@ public class InvoiceReportInvoiceSupportService implements IInvoiceReport {
     @Override
     public Optional<byte[]> generateReport(String invoiceId) {
         try {
+
             List<InputStream> contentToMerge = new LinkedList<>();
-            Optional<byte[]> invoiceSupport = getInvoiceSupport(invoiceId);
+            Optional<byte[]> invoiceSupport = getInvoiceSupport(invoiceId,reportCode);
             invoiceSupport.ifPresent(content -> contentToMerge.add(new ByteArrayInputStream(content)));
             if (!contentToMerge.isEmpty()) {
                 return Optional.of(PDFUtils.mergePDFtoByte(contentToMerge));
@@ -45,12 +47,12 @@ public class InvoiceReportInvoiceSupportService implements IInvoiceReport {
         return new byte[0];
     }
 
-    private Optional<byte[]> getInvoiceSupport(String invoiceId) {
+    private Optional<byte[]> getInvoiceSupport(String invoiceId, String reportCode) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId);
         AbstractReportContentProvider abstractReportContentProvider = reportContentProviderFactory.
                 getReportContentProvider(EInvoiceContentProvider.INVOICE_SUPPORT_CONTENT);
-        return abstractReportContentProvider.getContent(parameters);
+        return abstractReportContentProvider.getContent(parameters, reportCode);
     }
 
 }

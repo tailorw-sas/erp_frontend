@@ -17,7 +17,6 @@ import com.kynsoft.finamer.invoicing.domain.dto.HotelInvoiceNumberSequenceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
@@ -50,8 +49,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus.*;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.services.IHotelInvoiceNumberSequenceService;
 import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.UpdateSequenceEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
 
 @Service
@@ -68,17 +69,20 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService;
+    private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
             IInvoiceCloseOperationService closeOperationService,
             ApplicationEventPublisher applicationEventPublisher,
-            IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService) {
+            IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
+            ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
         this.applicationEventPublisher = applicationEventPublisher;
         this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
+        this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
     }
 
     public Long getInvoiceNumberSequence(String invoiceNumber) {
@@ -469,6 +473,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         entity.setUpdatedAt(LocalDateTime.now());
 
         repositoryCommand.save(entity);
+        if (entity.getImportType().equals(ImportType.INSIST)) {
+            this.producerResponseUndoImportInnsistService.create(entity.getId());
+        }
     }
 
     @Override

@@ -36,6 +36,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPaymentDetailCommand> {
@@ -155,6 +156,19 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
                 this.bookingImportAutomaticeHelperServiceImpl.createInvoice(bookingHttp);
                 return this.manageBookingService.findById(bookingId);
             } catch (Exception ex) {
+                //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
+                int maxAttempts = 3;
+                while (maxAttempts > 0) {
+                    try {
+                        return this.manageBookingService.findById(bookingId);
+                    } catch (Exception exc) {
+                    }
+                    maxAttempts--;
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException excp) {
+                    }
+                }
                 throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
             }
         }

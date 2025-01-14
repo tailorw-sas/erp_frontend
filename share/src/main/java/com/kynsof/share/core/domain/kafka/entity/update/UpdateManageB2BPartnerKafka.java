@@ -1,7 +1,5 @@
 package com.kynsof.share.core.domain.kafka.entity.update;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kynsof.share.core.application.payment.domain.placeToPlay.response.Status;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

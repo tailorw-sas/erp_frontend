@@ -23,7 +23,7 @@ public class InvoiceAttachmentContentProvider extends AbstractReportContentProvi
     }
 
     @Override
-    public Optional<byte[]> getContent(Map<String, Object> parameters) {
+    public Optional<byte[]> getContent(Map<String, Object> parameters, String reportCode) {
         String invoiceId = (String) parameters.getOrDefault("invoiceId", "");
         Assert.notNull(invoiceId, "El id del invoice es obligatorio");
         try {

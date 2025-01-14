@@ -9,19 +9,19 @@ import java.util.Optional;
 
 public class InvoiceReportContentProvider extends AbstractReportContentProvider {
 
-    @Value("${report.code.invoice.booking:inv}") // Usa "inv" como valor predeterminado
-    private String reportCode;
+//    @Value("${report.code.invoice.booking:inv}") // Usa "inv" como valor predeterminado
+//    private String reportCode;
     public InvoiceReportContentProvider(RestTemplate restTemplate,
                                         IReportGenerator reportGenerator) {
         super(restTemplate,reportGenerator);
     }
 
     @Override
-    public Optional<byte[]> getContent(Map<String, Object> parameters) {
-        return getInvoiceReport(parameters);
+    public Optional<byte[]> getContent(Map<String, Object> parameters, String reportCode) {
+        return getInvoiceReport(parameters, reportCode);
     }
 
-    private Optional<byte[]> getInvoiceReport(Map<String, Object> parameters) {
+    private Optional<byte[]> getInvoiceReport(Map<String, Object> parameters, String reportCode) {
         return Optional.ofNullable(reportGenerator.generateReport(parameters, reportCode));
     }
 

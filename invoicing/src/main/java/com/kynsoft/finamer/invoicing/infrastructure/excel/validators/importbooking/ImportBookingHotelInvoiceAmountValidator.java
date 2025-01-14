@@ -19,12 +19,16 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+        ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
+        if (manageHotelDto.isVirtual() && !manageHotelDto.isRequiresFlatRate()) {
+            return true;
+        }
         if (Objects.isNull(obj.getHotelInvoiceAmount())){
             errorFieldList.add(new ErrorField("Hotel Invoice Amount"," Hotel Invoice Amount can't be empty"));
             return false;
         }
         if (errorFieldList.stream().noneMatch(errorField -> "Hotel".equals(errorField.getField()))) {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
+            //ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
             if (manageHotelDto.isRequiresFlatRate()&& obj.getHotelInvoiceAmount() <=0 ) {
                 errorFieldList.add(new ErrorField("Hotel Invoice Amount", "Hotel Invoice Amount must be greater than 0"));
                 return false;
