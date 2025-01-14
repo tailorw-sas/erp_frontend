@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -14,21 +15,15 @@ import java.util.UUID;
 public class SycnRateByInvoiceDateCommand implements ICommand {
 
     private UUID processId;
-    private String hotel;
+    private List<String> hotelList;
     private LocalDate invoiceDate;
-    private boolean isFirstGroup;
-    private boolean isLastGroup;
 
     public SycnRateByInvoiceDateCommand(UUID processId,
-                                        String hotel,
-                                        LocalDate invoiceDate,
-                                        boolean isFirstGroup,
-                                        boolean isLastGroup){
+                                        List<String> hotelList,
+                                        LocalDate invoiceDate){
         this.processId = processId;
-        this.hotel = hotel;
+        this.hotelList = hotelList;
         this.invoiceDate = invoiceDate;
-        this.isFirstGroup = isFirstGroup;
-        this.isLastGroup = isLastGroup;
     }
 
     @Override
