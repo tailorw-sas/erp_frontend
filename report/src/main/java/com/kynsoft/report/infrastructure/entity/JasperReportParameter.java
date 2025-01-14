@@ -54,6 +54,7 @@ public class JasperReportParameter extends BaseEntity {
         reportClass = jasperReportParameterDto.getReportClass();
         reportValidation = jasperReportParameterDto.getReportValidation();
         parameterPosition = jasperReportParameterDto.getParameterPosition();
+        dependentField = jasperReportParameterDto.getDependentField();
     }
 
     public JasperReportParameterDto toAggregate() {
