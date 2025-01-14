@@ -17,8 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,16 +53,16 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private final IManageEmployeeService employeeService;
 
     public BookingImportHelperServiceImpl(IManageAgencyService agencyService,
-                                          IManageHotelService manageHotelService,
-                                          IManageInvoiceService invoiceService,
-                                          IManageRatePlanService ratePlanService,
-                                          IManageRoomTypeService roomTypeService, IManageNightTypeService nightTypeService,
-                                          BookingImportCacheRedisRepository repository,
-                                          BookingImportRowErrorRedisRepository errorRedisRepository,
-                                          ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-                                          IManageInvoiceStatusService manageInvoiceStatusService,
-                                          IManageInvoiceTypeService iManageInvoiceTypeService,
-                                          IInvoiceStatusHistoryService invoiceStatusHistoryService, IManageEmployeeService employeeService) {
+            IManageHotelService manageHotelService,
+            IManageInvoiceService invoiceService,
+            IManageRatePlanService ratePlanService,
+            IManageRoomTypeService roomTypeService, IManageNightTypeService nightTypeService,
+            BookingImportCacheRedisRepository repository,
+            BookingImportRowErrorRedisRepository errorRedisRepository,
+            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+            IManageInvoiceStatusService manageInvoiceStatusService,
+            IManageInvoiceTypeService iManageInvoiceTypeService,
+            IInvoiceStatusHistoryService invoiceStatusHistoryService, IManageEmployeeService employeeService) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.invoiceService = invoiceService;
@@ -119,7 +121,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private void createInvoiceGroupingForVirtualHotel(String importProcessId, String employee) {
         Map<GroupByVirtualHotel, List<BookingRow>> grouped;
         List<BookingImportCache> importList = repository.findAllByImportProcessId(importProcessId);
-        Collections.sort(importList, Comparator.comparingInt(BookingImportCache::getRowNumber));
+        //Collections.sort(importList, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
         grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
                 booking -> new GroupByVirtualHotel(
@@ -128,12 +130,20 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         Long.valueOf(booking.getHotelInvoiceNumber())
                 )
         ));
-        if (!grouped.isEmpty()) {
-            grouped.forEach((key, value) -> {
+
+        List<Map.Entry<GroupByVirtualHotel, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
+        Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
+
+        Map<GroupByVirtualHotel, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
+        for (Map.Entry<GroupByVirtualHotel, List<BookingRow>> entry : list) {
+            orderedGrouped.put(entry.getKey(), entry.getValue());
+        }
+
+        if (!orderedGrouped.isEmpty()) {
+            orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
                 this.createInvoiceWithBooking(agency, hotel, value, employee);
-
             });
         }
     }
@@ -144,12 +154,21 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
         grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
-                .collect(Collectors.groupingBy(bookingRow ->
-                        new GroupBy(bookingRow.getManageAgencyCode(), bookingRow.getManageHotelCode(), bookingRow.getCoupon()))
+                .collect(Collectors.groupingBy(bookingRow
+                        -> new GroupBy(bookingRow.getManageAgencyCode(), bookingRow.getManageHotelCode(), bookingRow.getCoupon()))
                 );
 
-        if (!grouped.isEmpty()) {
-            grouped.forEach((key, value) -> {
+        //Si no funciona quitar estas lineas.
+        List<Map.Entry<GroupBy, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
+        Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
+
+        Map<GroupBy, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
+        for (Map.Entry<GroupBy, List<BookingRow>> entry : list) {
+            orderedGrouped.put(entry.getKey(), entry.getValue());
+        }
+
+        if (!orderedGrouped.isEmpty()) {
+            orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
                 this.createInvoiceWithBooking(agency, hotel, value, employee);
@@ -218,12 +237,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
+        Collections.sort(bookingRowList, Comparator.comparingInt(BookingRow::getRowNumber));
         return bookingRowList.stream().map(bookingRow -> {
             //ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
             ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRow.getRatePlan(), hotel.getCode()) : null;
             ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRow.getRoomType(), hotel.getCode()) : null;
-            ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightType()) ?
-                    nightTypeService.findByCode(bookingRow.getNightType()) : null;
+            ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightType())
+                    ? nightTypeService.findByCode(bookingRow.getNightType()) : null;
             ManageBookingDto bookingDto = bookingRow.toAggregate();
             bookingDto.setRatePlan(ratePlanDto);
             bookingDto.setRoomType(roomTypeDto);
@@ -257,9 +277,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private LocalDateTime getInvoiceDate(BookingRow bookingRow) {
         LocalDateTime excelDate = DateUtil.parseDateToDateTime(bookingRow.getTransactionDate());
         LocalDateTime transactionDate = LocalDateTime.now();
-        if (Objects.nonNull(bookingRow.getTransactionDate()) &&
-                Objects.nonNull(excelDate) &&
-                !LocalDate.now().isEqual(excelDate.toLocalDate())) {
+        if (Objects.nonNull(bookingRow.getTransactionDate())
+                && Objects.nonNull(excelDate)
+                && !LocalDate.now().isEqual(excelDate.toLocalDate())) {
             transactionDate = excelDate;
         }
         return transactionDate;
@@ -285,6 +305,5 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 )
         );
     }
-
 
 }
