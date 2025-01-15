@@ -480,7 +480,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 hotelDto.getAddress(),
                                 hotelDto.getManageCityState().getId(),
                                 hotelDto.getManageCountry().getId(),
-                                hotelDto.getManageCurrency().getId()
+                                hotelDto.getManageCurrency().getId(),
+                                hotelDto.getPrefixToInvoice()
                         ));
                     }
                 }
