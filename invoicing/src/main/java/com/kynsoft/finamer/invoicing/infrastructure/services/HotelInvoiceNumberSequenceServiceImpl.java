@@ -21,16 +21,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 @Service
 public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumberSequenceService {
-    
+
     private final HotelInvoiceNumberSequenceWriteDataJPARepository repositoryCommand;
-    
+
     private final ManageHotelInvoiceNumberSequenceReadDataJPARepository repositoryQuery;
-    
+
     public HotelInvoiceNumberSequenceServiceImpl(HotelInvoiceNumberSequenceWriteDataJPARepository repositoryCommand, ManageHotelInvoiceNumberSequenceReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
@@ -44,28 +45,34 @@ public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumbe
 
     @Override
     public void update(HotelInvoiceNumberSequenceDto dto) {
-        HotelInvoiceNumberSequence entity = new HotelInvoiceNumberSequence(dto);
-        repositoryCommand.save(entity);
+        Optional<HotelInvoiceNumberSequence> optionalEntity = repositoryQuery.findById(dto.getId());
+
+        if (optionalEntity.isPresent()) {
+            HotelInvoiceNumberSequence entity = optionalEntity.get();
+            entity.setInvoiceNo(dto.getInvoiceNo());
+            repositoryCommand.save(entity);
+        }
+
     }
 
     @Override
     public HotelInvoiceNumberSequenceDto findById(UUID id) {
         Optional<HotelInvoiceNumberSequence> optionalEntity = repositoryQuery.findById(id);
-        
+
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
-        
+
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
-        
+
     }
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        
+
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<HotelInvoiceNumberSequence> data = this.repositoryQuery.findAll(specifications, pageable);
-        
+
         return getPaginatedResponse(data);
     }
 
@@ -81,23 +88,23 @@ public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumbe
     @Override
     public HotelInvoiceNumberSequenceDto getByHotelCodeAndInvoiceType(String code, EInvoiceType invoiceType) {
         Optional<HotelInvoiceNumberSequence> optionalEntity = repositoryQuery.getByHotelCodeAndInvoiceType(code, invoiceType);
-        
+
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
-        
+
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
     public HotelInvoiceNumberSequenceDto getByTradingCompanyCodeAndInvoiceType(String code, EInvoiceType invoiceType) {
         Optional<HotelInvoiceNumberSequence> optionalEntity = repositoryQuery.getByTradingCompanyCodeAndInvoiceType(code, invoiceType);
-        
+
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
     }
-    
+
 }
