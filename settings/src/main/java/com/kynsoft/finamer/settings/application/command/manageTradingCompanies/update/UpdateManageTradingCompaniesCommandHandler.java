@@ -65,7 +65,9 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
             this.service.update(dto);
             this.producerReplicateManageTradingCompanyService
                     .create(new ReplicateManageTradingCompanyKafka(dto.getId(), dto.getCode(),
-                            command.getIsApplyInvoice(), dto.getCif(), dto.getAddress(), dto.getCompany(), dto.getStatus().name()));
+                            command.getIsApplyInvoice(), dto.getCif(), dto.getAddress(), dto.getCompany(), dto.getStatus().name(),
+                            dto.getDescription(), dto.getCountry() != null ? dto.getCountry().getId() : null, dto.getCityState() != null ? dto.getCityState().getId() : null,
+                            dto.getCity(), dto.getZipCode(), dto.getInnsistCode()));
         }
     }
 
