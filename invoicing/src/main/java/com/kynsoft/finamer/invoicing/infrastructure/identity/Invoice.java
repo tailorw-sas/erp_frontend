@@ -96,10 +96,10 @@ public class Invoice {
     @Enumerated(EnumType.STRING)
     private ImportType importType;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "invoice", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<Booking> bookings;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "invoice", cascade = CascadeType.MERGE)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
     private List<ManageAttachment> attachments;
 
     private Double credits;
@@ -191,7 +191,7 @@ public class Invoice {
                 dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec,
-                null,
+                bookings != null ? bookings.stream().map(Booking::toAggregate).collect(Collectors.toList()) : null,
                 attachments != null ? attachments.stream().map(ManageAttachment::toAggregateSample).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,
