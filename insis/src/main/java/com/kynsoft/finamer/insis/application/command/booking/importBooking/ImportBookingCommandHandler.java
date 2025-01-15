@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafk
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistRoomRateKafka;
 import com.kynsoft.finamer.insis.domain.dto.*;
 import com.kynsoft.finamer.insis.domain.services.*;
+import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
 import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.booking.ProducerImportInnsistBookingService;
 import org.springframework.stereotype.Component;
@@ -47,6 +48,7 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId(), 0, 0);
         saveImportBookings(importProcess, bookings);
 
+        setBookingsInProcess(bookings);
         sendBookingToProcess(importProcess, employee, bookings);
 
         updateImportProcessStatus(importProcess, ImportProcessStatus.IN_PROCESS);
@@ -90,6 +92,14 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
                     );
                 }).toList();
         importBookingService.createMany(importBookingDtoList);
+    }
+
+    private void setBookingsInProcess(List<BookingDto> bookingsToImport){
+        bookingsToImport.forEach(booking -> {
+            booking.setStatus(BookingStatus.IN_PROCESS);
+            booking.setUpdatedAt(LocalDateTime.now());
+        });
+        bookingService.updateMany(bookingsToImport);
     }
 
     private void sendBookingToProcess(ImportProcessDto importProcess, ManageEmployeeDto employee, List<BookingDto> bookings){
