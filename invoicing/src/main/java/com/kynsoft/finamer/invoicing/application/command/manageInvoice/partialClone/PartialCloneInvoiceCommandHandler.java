@@ -98,18 +98,14 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
             ManageBookingDto newBooking = new ManageBookingDto(invoiceToClone.getBookings().get(i));
 
-            List<ManageRoomRate> roomRates = this.rateService.findByBooking(new Booking(invoiceToClone.getBookings().get(i)));
+            List<ManageRoomRateDto> roomRates = this.rateService.findByBooking(invoiceToClone.getBookings().get(i).getId());
 
-            for (ManageRoomRate roomRate : roomRates) {
-
-                ManageRoomRateDto newRoomRate = roomRate.toAggregate();
-
-                newRoomRate.setBooking(newBooking);
-                newRoomRate.setAdjustments(new LinkedList<>());
-                newRoomRate.setHotelAmount(0.00);
-                newRoomRate.setInvoiceAmount(0.00);
-                roomRateDtos.add(newRoomRate);
-
+            for (ManageRoomRateDto roomRate : roomRates) {
+                roomRate.setBooking(newBooking);
+                roomRate.setAdjustments(new LinkedList<>());
+                roomRate.setHotelAmount(0.00);
+                roomRate.setInvoiceAmount(0.00);
+                roomRateDtos.add(roomRate);
             }
 
             bookingDtos.add(newBooking);
