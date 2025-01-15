@@ -3,21 +3,40 @@ package com.kynsoft.finamer.payment.application.command.payment.applyPayment;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.http.entity.InvoiceHttp;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeApplyDeposit.CreatePaymentDetailTypeApplyDepositMessage;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashCommand;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashMessage;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.services.http.InvoiceHttpUUIDService;
 import com.kynsoft.finamer.payment.infrastructure.services.http.helper.InvoiceImportAutomaticeHelperServiceImpl;
+import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -33,16 +52,40 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private final InvoiceHttpUUIDService invoiceHttpUUIDService;
     private final InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl;
 
+    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+
+    private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final IManageBookingService manageBookingService;
+
+    private final ProducerUpdateBookingService producerUpdateBookingService;
+    private final IManagePaymentStatusService statusService;
+    private final IManageEmployeeService manageEmployeeService;
+
     public ApplyPaymentCommandHandler(IPaymentService paymentService,
             IManageInvoiceService manageInvoiceService,
             IPaymentDetailService paymentDetailService,
             InvoiceHttpUUIDService invoiceHttpUUIDService,
-            InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl) {
+            InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IPaymentCloseOperationService paymentCloseOperationService,
+            IManageBookingService manageBookingService,
+            ProducerUpdateBookingService producerUpdateBookingService,
+            IManagePaymentStatusService statusService,
+            IManageEmployeeService manageEmployeeService) {
         this.invoiceHttpUUIDService = invoiceHttpUUIDService;
         this.invoiceImportAutomaticeHelperServiceImpl = invoiceImportAutomaticeHelperServiceImpl;
         this.paymentService = paymentService;
         this.manageInvoiceService = manageInvoiceService;
         this.paymentDetailService = paymentDetailService;
+        this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
+        this.manageBookingService = manageBookingService;
+        this.producerUpdateBookingService = producerUpdateBookingService;
+        this.statusService = statusService;
+        this.manageEmployeeService = manageEmployeeService;
     }
 
     @Override
@@ -63,8 +106,11 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 double amountBalance = bookingDto.getAmountBalance();
                 if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance() && amountBalance > 0) {
                     double amountToApply = Math.min(notApplied, amountBalance);
-                    CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate(), false));
-                    command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId(), command.getEmployee()));
+                    //CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate(), false));
+                    PaymentDetailDto message = createDetailsTypeCash(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate(), false));
+                    //command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId(), command.getEmployee()));
+                    this.applyPayment(command.getEmployee(), bookingDto, message);
+                    //command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId(), command.getEmployee()));
                     notApplied = notApplied - amountToApply;
                     paymentBalance = paymentBalance - amountToApply;
                     amountBalance = amountBalance - amountToApply;
@@ -156,7 +202,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                  */
                 InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
                 this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
-                //FLUJO PARA ESPERAR MIENTAS LAS BD SE SINCRONIZAN.
+                //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
                 int maxAttempts = 3;
                 while (maxAttempts > 0) {
                     try {
@@ -175,5 +221,101 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
         Collections.sort(queue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));
         return queue;
+    }
+
+    private void calculate(PaymentDto paymentDto, double amount) {
+        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
+        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
+
+        paymentDto.setApplied(paymentDto.getApplied() + amount);
+        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
+        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
+
+        this.paymentService.update(paymentDto);
+    }
+
+    private PaymentDetailDto createDetailsTypeCash(CreatePaymentDetailTypeCashCommand command) {
+        PaymentDetailDto newDetailDto = new PaymentDetailDto(
+                command.getId(),
+                Status.ACTIVE,
+                command.getPaymentCash(),
+                this.paymentTransactionTypeService.findByPaymentInvoice(),
+                command.getInvoiceAmount(),
+                command.getPaymentCash().getRemark(),
+                null,
+                null,
+                null,
+                //OffsetDateTime.now(ZoneId.of("UTC")),
+                //transactionDate(command.getPaymentCash().getHotel().getId()),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false
+        );
+        newDetailDto.setCreateByCredit(command.isCreateByCredit());
+        this.paymentDetailService.create(newDetailDto);
+        if (command.isApplyPayment()) {
+            this.calculate(command.getPaymentCash(), command.getInvoiceAmount());
+        }
+        return newDetailDto;
+    }
+
+    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Update Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+    }
+
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
+
+    public void applyPayment(UUID empoyee, ManageBookingDto bookingDto, PaymentDetailDto paymentDetailDto) {
+        //ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
+        //ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
+//        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
+
+        bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
+        paymentDetailDto.setManageBooking(bookingDto);
+        paymentDetailDto.setApplayPayment(Boolean.TRUE);
+        //paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
+        paymentDetailDto.setTransactionDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
+        this.manageBookingService.update(bookingDto);
+        this.paymentDetailService.update(paymentDetailDto);
+
+        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+        try {
+            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                    paymentDto.getId(),
+                    paymentDto.getPaymentId(),
+                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                    ));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
+        } catch (Exception e) {
+        }
+
+        if (paymentDto.getNotApplied() == 0 && paymentDto.getDepositBalance() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+            paymentDto.setPaymentStatus(this.statusService.findByApplied());
+            ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
+            this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+        }
+        paymentDto.setApplyPayment(true);
+        this.paymentService.update(paymentDto);
     }
 }
