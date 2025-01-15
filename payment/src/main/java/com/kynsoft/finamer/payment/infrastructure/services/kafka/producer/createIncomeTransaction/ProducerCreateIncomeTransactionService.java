@@ -16,7 +16,7 @@ public class ProducerCreateIncomeTransactionService {
         this.producer = producer;
     }
 
-    @Async
+//    @Async
     public void create(CreateIncomeTransactionKafka entity) {
         try {
              this.producer.send("finamer-create-income-transaction", entity);
