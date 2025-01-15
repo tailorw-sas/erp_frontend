@@ -14,6 +14,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageBookingReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageRoomRateReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,9 +36,12 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     @Autowired
     private final ManageRoomRateReadDataJPARepository repositoryQuery;
 
-    public ManageRoomRateServiceImpl(ManageRoomRateWriteDataJPARepository repositoryCommand, ManageRoomRateReadDataJPARepository repositoryQuery) {
+    private final ManageBookingReadDataJPARepository manageBookingReadDataJPARepository;
+
+    public ManageRoomRateServiceImpl(ManageRoomRateWriteDataJPARepository repositoryCommand, ManageRoomRateReadDataJPARepository repositoryQuery, ManageBookingReadDataJPARepository manageBookingReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.manageBookingReadDataJPARepository = manageBookingReadDataJPARepository;
     }
 
     @Override
@@ -103,8 +107,11 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     }
 
     @Override
-    public List<ManageRoomRate> findByBooking(Booking booking) {
-        return this.repositoryQuery.findByBooking(booking);
+    public List<ManageRoomRateDto> findByBooking(UUID bookingId) {
+        Booking booking = this.manageBookingReadDataJPARepository.findById(bookingId).orElse(null);
+        return this.repositoryQuery.findByBooking(booking).stream().map(manageRoomRate -> {
+            return new ManageRoomRateDto(manageRoomRate.toAggregate());
+        }).toList();
     }
 
     @Override

@@ -237,7 +237,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     new LinkedList<>(),
                     //                    nights
                     null,
-                    false
+                    false,
+                    null
             );
 
             if (command.getRoomRateCommands().get(i).getBooking() != null) {

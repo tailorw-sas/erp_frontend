@@ -47,7 +47,7 @@ public class ManageRoomRateResponse implements IResponse {
         this.rateChild = dto.getRateChild() != null ? dto.getRateChild() : null;
         this.hotelAmount = dto.getHotelAmount() != null ? dto.getHotelAmount() : null;
         this.remark = dto.getRemark();
-        this.booking = dto.getBooking();
+        this.booking = dto.getBooking() != null ? dto.getBooking() : null;
         this.nights = dto.getNights();
     }
 }

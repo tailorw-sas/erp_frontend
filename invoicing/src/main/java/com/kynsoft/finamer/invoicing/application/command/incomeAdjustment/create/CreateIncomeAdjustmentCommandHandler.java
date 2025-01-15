@@ -75,7 +75,8 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 null,
                 null,
                 null,
-                false
+                false,
+                null
         );
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
