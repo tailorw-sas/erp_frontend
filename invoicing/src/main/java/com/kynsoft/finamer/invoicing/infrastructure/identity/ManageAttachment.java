@@ -33,6 +33,7 @@ public class ManageAttachment {
     @Generated(event = EventType.INSERT)
     private Long attachmentId;
 
+    @Column(columnDefinition = "TEXT")
     private String filename;
 
     private String employee;
