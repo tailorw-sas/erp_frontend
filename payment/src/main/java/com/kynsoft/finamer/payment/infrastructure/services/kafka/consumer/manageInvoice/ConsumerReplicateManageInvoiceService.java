@@ -141,6 +141,6 @@ public class ConsumerReplicateManageInvoiceService {
         this.addAttachment(objKafka, attachmentKafkas);
 
         //this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, true, mediator));
-        this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, autoApplyCredit, mediator));
+        this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, autoApplyCredit, mediator, objKafka.getEmployee()));
     }
 }
