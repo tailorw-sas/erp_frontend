@@ -68,6 +68,7 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
             this.producerReplicateManageBookingService.create(updateBookingDto);
             this.producerUpdateManageInvoiceService.update(updInvoiceDto);
         } catch (Exception e) {
+            System.out.println("Error producerReplicateManageBookingService: " + e.getMessage());
         }
     }
 }
