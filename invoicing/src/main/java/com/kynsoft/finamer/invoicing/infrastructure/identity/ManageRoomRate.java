@@ -58,7 +58,7 @@ public class ManageRoomRate {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean deleteInvoice;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "roomRate", orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "roomRate", orphanRemoval = true)
     private List<ManageAdjustment> adjustments;
 
     @CreationTimestamp
@@ -100,28 +100,34 @@ public class ManageRoomRate {
     }
 
     public ManageRoomRateDto toAggregate() {
-        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, 
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut,
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null,
                 roomNumber, adults, children,
-                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null, 
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
                 rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
-                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
-                remark, booking != null ? booking.toAggregate() : null,
-                adjustments != null ? adjustments.stream().map(b -> {
-                            return b.toAggregateSample();
-                        }).collect(Collectors.toList()) : null, nights, deleteInvoice);
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null,
+                remark,
+                null,
+            //    booking != null ? booking.toAggregate() : null,
+//                adjustments != null ? adjustments.stream().map(b -> {
+//                            return b.toAggregateSample();
+//                        }).collect(Collectors.toList()) : null,
+                null,
+                nights, deleteInvoice);
     }
 
     public ManageRoomRateDto toAggregateSample() {
-        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut, 
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut,
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null,
                 roomNumber, adults, children,
-                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null, 
-                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null, 
-                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null,
                 remark, null,
-                adjustments != null ? adjustments.stream().map(b -> {
-                            return b.toAggregateSample();
-                        }).collect(Collectors.toList()) : null, nights, deleteInvoice);
+//                adjustments != null ? adjustments.stream().map(b -> {
+//                            return b.toAggregateSample();
+//                        }).collect(Collectors.toList()) : null,
+                null,
+                nights, deleteInvoice);
     }
 }

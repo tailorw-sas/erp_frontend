@@ -45,7 +45,7 @@ public class ManageRoomRateDto {
         this.rateChild = dto.getRateChild();
         this.hotelAmount = dto.getHotelAmount();
         this.remark = dto.getRemark();
-        this.booking = dto.getBooking();
+        this.booking = dto.getBooking() != null ? new ManageBookingDto(dto.getBooking()) : null;
         this.adjustments = new ArrayList<>();
         this.nights = dto.getNights();
     }
