@@ -4,8 +4,6 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 
 import org.springframework.data.domain.Pageable;
 
@@ -18,7 +16,7 @@ public interface IManageRoomRateService {
 
     void update(ManageRoomRateDto dto);
 
-    List<ManageRoomRate> findByBooking(Booking booking);
+    List<ManageRoomRateDto> findByBooking(UUID bookingId);
 
     void calculateInvoiceAmount(ManageRoomRateDto dto, Double adjustmentOldAmount, Double adjustmentNewAmount);
 

@@ -22,6 +22,8 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.mana
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -76,7 +78,10 @@ public class CreateRoomRateOtherCommandHandler implements ICommandHandler<Create
 
         ManageBookingDto updateBookingDto = this.bookingService.findById(bookingDto.getId());
 
-        command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(updateBookingDto));
+        List<ManageRoomRateDto> manageRoomRateDtos = this.roomRateService.findByBooking(bookingDto.getId());
+        updateBookingDto.setRoomRates(manageRoomRateDtos);
+
+        UpdateBookingCalculateCheckIntAndCheckOutCommand(updateBookingDto);
 
         command.getMediator().send(new UpdateBookingCalculateDueAmountCommand(updateBookingDto, command.getInvoiceAmount()));
 
@@ -115,6 +120,20 @@ public class CreateRoomRateOtherCommandHandler implements ICommandHandler<Create
 
     private Long calculateNights(LocalDateTime checkIn, LocalDateTime checkOut) {
         return ChronoUnit.DAYS.between(checkIn.toLocalDate(), checkOut.toLocalDate());
+    }
+
+    private void UpdateBookingCalculateCheckIntAndCheckOutCommand(ManageBookingDto command){
+        LocalDateTime checkIn = command.getRoomRates().stream()
+                .map(ManageRoomRateDto::getCheckIn)
+                .min(LocalDateTime::compareTo)
+                .orElseThrow(() -> new IllegalStateException("No se encontró una fecha de entrada válida"));
+
+        LocalDateTime checkOut = command.getRoomRates().stream()
+                .map(ManageRoomRateDto::getCheckOut)
+                .max(LocalDateTime::compareTo)
+                .orElseThrow(() -> new IllegalStateException("No se encontró una fecha de salida válida"));
+        command.setCheckIn(checkIn);
+        command.setCheckOut(checkOut);
     }
 
 }
