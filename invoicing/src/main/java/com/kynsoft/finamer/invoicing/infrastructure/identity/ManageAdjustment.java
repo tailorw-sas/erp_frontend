@@ -46,7 +46,7 @@ public class ManageAdjustment {
     @JoinColumn(name = "manage_payment_type", nullable = true)
     private ManagePaymentTransactionType paymentTransactionType;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manage_room_rate", nullable = true)
     private ManageRoomRate roomRate;
 

@@ -48,7 +48,7 @@ public class ManageRoomRate {
     private Double hotelAmount;
     private String remark;
     private Long nights;
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking")
     private Booking booking;
 
