@@ -191,7 +191,7 @@ public class Invoice {
                 dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec,
-                bookings != null ? bookings.stream().map(Booking::toAggregate).collect(Collectors.toList()) : null,
+                null,
                 attachments != null ? attachments.stream().map(ManageAttachment::toAggregateSample).collect(Collectors.toList()) : null,
                 reSend,
                 reSendDate,
