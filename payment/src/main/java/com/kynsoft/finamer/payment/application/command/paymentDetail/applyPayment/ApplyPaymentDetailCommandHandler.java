@@ -87,6 +87,15 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
 
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("Se ejecuto: " + paymentDetailDto.getId());
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
         paymentDetailDto.setManageBooking(bookingDto);
         paymentDetailDto.setApplayPayment(Boolean.TRUE);
@@ -110,6 +119,13 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         } catch (Exception e) {
         }
 
+        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
+        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
+        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
+        System.err.println("APLICO PAGO");
+        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
+        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
+        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
         if (paymentDto.getNotApplied() == 0 && paymentDto.getDepositBalance() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
             paymentDto.setPaymentStatus(this.statusService.findByApplied());
             ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
