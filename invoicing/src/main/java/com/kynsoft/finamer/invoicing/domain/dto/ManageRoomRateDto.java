@@ -31,6 +31,7 @@ public class ManageRoomRateDto {
     private List<ManageAdjustmentDto> adjustments;
     private Long nights;
     private boolean deleteInvoice;
+    private UUID  bookingId;
 
     public ManageRoomRateDto(ManageRoomRateDto dto) {
         this.id = UUID.randomUUID();

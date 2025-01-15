@@ -113,7 +113,8 @@ public class ManageRoomRate {
 //                            return b.toAggregateSample();
 //                        }).collect(Collectors.toList()) : null,
                 null,
-                nights, deleteInvoice);
+                nights, deleteInvoice,
+                null);
     }
 
     public ManageRoomRateDto toAggregateSample() {
@@ -128,6 +129,7 @@ public class ManageRoomRate {
 //                            return b.toAggregateSample();
 //                        }).collect(Collectors.toList()) : null,
                 null,
-                nights, deleteInvoice);
+                nights, deleteInvoice,
+                null);
     }
 }

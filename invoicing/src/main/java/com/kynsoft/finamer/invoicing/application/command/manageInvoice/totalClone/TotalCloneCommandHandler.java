@@ -163,7 +163,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         null,
                         new ArrayList<>(),
                         nights,
-                        false
+                        false,
+                        null
                 );
                 roomRateDtoList.add(roomRateDto);
             }

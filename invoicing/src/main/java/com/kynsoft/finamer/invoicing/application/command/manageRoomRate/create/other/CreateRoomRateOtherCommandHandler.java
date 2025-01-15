@@ -70,7 +70,8 @@ public class CreateRoomRateOtherCommandHandler implements ICommandHandler<Create
                 bookingDto,
                 null,
                 nights,
-                false
+                false,
+                null
         ));
 
         ManageBookingDto updateBookingDto = this.bookingService.findById(bookingDto.getId());
