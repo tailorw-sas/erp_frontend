@@ -37,6 +37,22 @@ public class ManageTradingCompanies implements Serializable {
     @Generated(event = EventType.INSERT)
     private Long autogen_code;
 
+    private String description;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "country_id")
+    private ManageCountry country;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "city_state_id")
+    private ManageCityState cityState;
+
+    private String city;
+
+    private String zipCode;
+
+    private String innsistCode;
+
     public ManageTradingCompanies(ManageTradingCompaniesDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -45,10 +61,20 @@ public class ManageTradingCompanies implements Serializable {
         this.address = dto.getAddress();
         this.company = dto.getCompany();
         this.status = dto.getStatus();
+        this.city = dto.getCity();
+        this.zipCode = dto.getZipCode();
+        this.innsistCode = dto.getInnsistCode();
+        this.country = dto.getCountry() != null ? new ManageCountry(dto.getCountry()) : null;
+        this.cityState = dto.getCityState() != null ? new ManageCityState(dto.getCityState()) : null;
+        this.zipCode = dto.getZipCode();
     }
 
     public ManageTradingCompaniesDto toAggregate() {
         return new ManageTradingCompaniesDto(
-                id, code, isApplyInvoice, autogen_code, this.cif, this.address, this.company, status);
+                id, code, isApplyInvoice, autogen_code, this.cif, this.address, this.company, status,
+                description,
+                country != null ? country.toAggregate() : null,
+                cityState != null ? cityState.toAggregate() : null,
+                city, zipCode, innsistCode);
     }
 }

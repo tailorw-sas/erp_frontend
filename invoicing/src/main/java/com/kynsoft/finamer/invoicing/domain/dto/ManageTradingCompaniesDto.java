@@ -22,4 +22,10 @@ public class ManageTradingCompaniesDto {
     private String company;
     private String status;
 
+    private String description;
+    private ManagerCountryDto country;
+    private ManageCityStateDto cityState;
+    private String city;
+    private String zipCode;
+    private String innsistCode;
 }
