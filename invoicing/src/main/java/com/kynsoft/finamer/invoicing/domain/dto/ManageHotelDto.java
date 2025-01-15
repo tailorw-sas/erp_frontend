@@ -29,4 +29,5 @@ public class ManageHotelDto {
     private String city;
     private ManageCurrencyDto manageCurrency;
     private Boolean applyByTradingCompany;
+    private String prefixToInvoice;
 }
