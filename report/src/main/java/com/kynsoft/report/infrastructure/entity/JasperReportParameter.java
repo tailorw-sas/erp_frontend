@@ -29,6 +29,8 @@ public class JasperReportParameter extends BaseEntity {
     private String reportClass;
     private String reportValidation;
     private int parameterPosition;
+    private String dependentField;
+    private String filterKeyValue;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "jasper_report_template_id", nullable = false)
@@ -53,6 +55,8 @@ public class JasperReportParameter extends BaseEntity {
         reportClass = jasperReportParameterDto.getReportClass();
         reportValidation = jasperReportParameterDto.getReportValidation();
         parameterPosition = jasperReportParameterDto.getParameterPosition();
+        dependentField = jasperReportParameterDto.getDependentField();
+        filterKeyValue = jasperReportParameterDto.getFilterKeyValue();
     }
 
     public JasperReportParameterDto toAggregate() {
@@ -67,7 +71,9 @@ public class JasperReportParameter extends BaseEntity {
                 jasperReportTemplate.toAggregate(),
                 reportClass,
                 reportValidation,
-                parameterPosition
+                parameterPosition,
+                dependentField,
+                filterKeyValue
         );
     }
 }

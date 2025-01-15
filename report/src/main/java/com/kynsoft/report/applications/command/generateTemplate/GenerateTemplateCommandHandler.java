@@ -103,7 +103,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         JasperReport jasperReport = getJasperReport(reportPath);
         logger.info("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
 
-        JRFileVirtualizer virtualizer = new JRFileVirtualizer(200, "temp/");
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2048, "temp/");
         parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
