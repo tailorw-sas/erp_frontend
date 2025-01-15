@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.creat
 
 import com.kynsof.share.core.domain.kafka.entity.CreateIncomeTransactionKafka;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.logging.Level;
@@ -15,6 +16,7 @@ public class ProducerCreateIncomeTransactionService {
         this.producer = producer;
     }
 
+    @Async
     public void create(CreateIncomeTransactionKafka entity) {
         try {
              this.producer.send("finamer-create-income-transaction", entity);
