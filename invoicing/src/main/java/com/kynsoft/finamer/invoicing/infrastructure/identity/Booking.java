@@ -63,7 +63,7 @@ public class Booking {
     private Double hotelAmount;
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice", nullable = true)
     private Invoice invoice;
 
@@ -83,7 +83,7 @@ public class Booking {
     @JoinColumn(name = "manage_room_category", nullable = true)
     private ManageRoomCategory roomCategory;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "booking")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "booking")
     private List<ManageRoomRate> roomRates;
 
     @Column(nullable = true)
