@@ -26,8 +26,9 @@ public class CreateManageHotelCommand implements ICommand {
     private String city;
     private UUID manageCurrency;
     private Boolean applyByTradingCompany;
+    private String prefixToInvoice;
 
-    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany, boolean isVirtual, String status, boolean requiresFlatRate, Boolean autoApplyCredit, UUID cityState, UUID country, String babelCode, String address, String city, UUID manageCurrency, Boolean applyByTradingCompany) {
+    public CreateManageHotelCommand(UUID id, String code, String name, UUID manageTradingCompany, boolean isVirtual, String status, boolean requiresFlatRate, Boolean autoApplyCredit, UUID cityState, UUID country, String babelCode, String address, String city, UUID manageCurrency, Boolean applyByTradingCompany, String prefixToInvoice) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -43,6 +44,7 @@ public class CreateManageHotelCommand implements ICommand {
         this.city = city;
         this.manageCurrency = manageCurrency;
         this.applyByTradingCompany = applyByTradingCompany;
+        this.prefixToInvoice = prefixToInvoice;
     }
 
     @Override

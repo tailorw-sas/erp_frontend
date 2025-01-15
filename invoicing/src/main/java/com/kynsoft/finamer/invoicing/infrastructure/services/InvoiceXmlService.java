@@ -2,11 +2,20 @@ package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml.*;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml.Tax;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageTradingCompaniesDto;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import org.springframework.stereotype.Service;
 
+import java.io.StringWriter;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,12 +29,11 @@ public class InvoiceXmlService {
 
     private InvoiceXml mapToInvoiceXml(ManageInvoiceDto dto) {
         InvoiceXml invoiceXml = new InvoiceXml();
-
+        ManageTradingCompaniesDto manageTradingCompaniesDto = dto.getHotel().getManageTradingCompanies();
         // General Data
         GeneralData generalData = new GeneralData();
-        generalData.setRef(dto.getInvoiceNumber());
-        generalData.setType(dto.getInvoiceType().name());
-        generalData.setDate(dto.getInvoiceDate().toLocalDate().format(DateTimeFormatter.ISO_DATE));
+        generalData.setRef(dto.getHotel().getPrefixToInvoice() + dto.getInvoiceNumber());
+        generalData.setDate(LocalDate.now());
         generalData.setCurrency("USD");
         generalData.setTaxIncluded(true);
         generalData.setStatus(""); // Default status
@@ -33,33 +41,35 @@ public class InvoiceXmlService {
 
         // Supplier
         Supplier supplier = new Supplier();
-        supplier.setSupplierID("SCR");
-        supplier.setCIF(dto.getHotel().getBabelCode());
-        supplier.setCompany(dto.getHotel().getName());
-        supplier.setAddress(dto.getHotel().getAddress());
-        supplier.setCity(dto.getHotel().getManageCityState().getName());
-        supplier.setPc("N/A");
-        supplier.setProvince(dto.getHotel().getManageCityState().getName());
-        supplier.setCountry(dto.getHotel().getManageCountry().getCode());
+        supplier.setCode(dto.getHotel().getBabelCode() != null ? dto.getHotel().getBabelCode() : "");
+
+        supplier.setCif(dto.getHotel().getBabelCode() != null ? dto.getHotel().getBabelCode() : "");
+        supplier.setCompany(manageTradingCompaniesDto.getCompany() != null ? manageTradingCompaniesDto.getCompany() : "");
+        supplier.setAddress(manageTradingCompaniesDto.getAddress() != null ? manageTradingCompaniesDto.getAddress() : "");
+        supplier.setCity(manageTradingCompaniesDto.getCity() != null ? manageTradingCompaniesDto.getCity() : "");
+        supplier.setZipCode("N/A");
+        supplier.setCityState(manageTradingCompaniesDto.getCityState() != null ? manageTradingCompaniesDto.getCityState().getName() : "");//TODO
+        supplier.setCountry(manageTradingCompaniesDto.getCountry()!= null ? manageTradingCompaniesDto.getCountry().getName() : "");
         invoiceXml.setSupplier(supplier);
 
         // Client
         Client client = new Client();
-        client.setSupplierClientID(dto.getAgency().getCode());
-        client.setCIF(dto.getAgency().getCif());
-        client.setCompany(dto.getAgency().getName());
-        client.setAddress(dto.getAgency().getAddress());
-        client.setCity(dto.getAgency().getCityState().getName());
-        client.setPostalCode(dto.getAgency().getZipCode());
-        client.setProvince(dto.getAgency().getCityState().getName());
+        client.setCode(dto.getAgency().getCode() != null ? dto.getAgency().getCode() : "");
+        client.setCif(dto.getAgency().getCif() != null ? dto.getAgency().getCif() : "");
+        client.setCompany(dto.getAgency().getName() != null ? dto.getAgency().getName() : "");
+        client.setAddress(dto.getAgency().getAddress() != null ? dto.getAgency().getAddress() : "");
+        client.setCity(dto.getAgency().getCityState().getName() != null ? dto.getAgency().getCityState().getName() : "");
+        client.setZipCode(dto.getAgency().getZipCode() != null ? dto.getAgency().getZipCode() : "");
+        client.setCityState(dto.getAgency().getCityState().getName());
         client.setCountry(dto.getAgency().getCountry().getCode());
-        client.setEmail(dto.getAgency().getMailingAddress());
+        client.setEmail(dto.getAgency().getMailingAddress() != null ? dto.getAgency().getMailingAddress() : "");
         invoiceXml.setClient(client);
 
         // Products
         List<Product> products = dto.getBookings().stream()
-                .map(this::mapBookingToProduct)
+                .map(booking -> mapBookingToProduct(booking, dto.getHotel())) // Pasar el hotel aquí
                 .collect(Collectors.toList());
+
         invoiceXml.setProductList(products);
 
         // Total Summary
@@ -67,150 +77,64 @@ public class InvoiceXmlService {
         totalSummary.setGrossAmount(dto.getInvoiceAmount());
         totalSummary.setDiscounts(0.0);
         totalSummary.setSubTotal(dto.getInvoiceAmount());
+        totalSummary.setTax(0.0);
         totalSummary.setTotal(dto.getInvoiceAmount());
         invoiceXml.setTotalSummary(totalSummary);
 
         return invoiceXml;
     }
 
-    private Product mapBookingToProduct(ManageBookingDto bookingDto) {
+    private Product mapBookingToProduct(ManageBookingDto bookingDto, ManageHotelDto hotelDto) {
         Product product = new Product();
-        product.setSupplierSKU(bookingDto.getHotelBookingNumber());
-        product.setCustomerSKU(String.valueOf(bookingDto.getReservationNumber()));
+        product.setSupplierSku(bookingDto.getHotelBookingNumber() != null ? bookingDto.getHotelBookingNumber() : "");
+        product.setCustomerSku(bookingDto.getReservationNumber() != null ? bookingDto.getReservationNumber().toString() : "");
         product.setItem(bookingDto.getDescription() != null ? bookingDto.getDescription() : "Servicio de alojamiento");
-        product.setQty(1.0);
-        product.setMU("Unidades");
-        product.setUP(bookingDto.getInvoiceAmount());
+
+        int days = (int) ChronoUnit.DAYS.between(bookingDto.getCheckIn(), bookingDto.getCheckOut());
+        double unitPrice = days > 0 ? bookingDto.getInvoiceAmount() / days : bookingDto.getInvoiceAmount();
+        product.setQty(days);
+        product.setMu("Unidades");
+        product.setUp(Math.round(unitPrice * 100.0) / 100.0);
         product.setTotal(bookingDto.getInvoiceAmount());
         product.setComment("Reserva desde " + bookingDto.getCheckIn().format(DateTimeFormatter.ISO_DATE) +
                 " hasta " + bookingDto.getCheckOut().format(DateTimeFormatter.ISO_DATE));
 
         // Taxes
-        Tax tax = new Tax("EXENTO", 0, 0, "");
-        product.setTaxes(List.of(tax));
+        Tax tax = new Tax();
+        tax.setType("EXENTO");
+        tax.setRate(0);
+        tax.setAmount(0);
+        tax.setDescription("");
+        product.setTaxes(Collections.singletonList(tax));
 
         // Services Data
         ServiceData serviceData = new ServiceData();
-        serviceData.setSupplierClientID("I " + bookingDto.getHotelBookingNumber());
-        serviceData.setSupplierID("SCR");
-        serviceData.setSupplierName("Sunscape Curacao Resort, Spa & Casino");
-        serviceData.setPax(bookingDto.getFullName());
-        serviceData.setBeginDate(bookingDto.getCheckIn().format(DateTimeFormatter.ISO_DATE));
-        serviceData.setEndDate(bookingDto.getCheckOut().format(DateTimeFormatter.ISO_DATE));
+        serviceData.setSupplierClientId(hotelDto.getBabelCode() != null ? hotelDto.getBabelCode() : "");
+        serviceData.setSupplierId("SCR");
+        serviceData.setSupplierName(hotelDto.getName());
+        serviceData.setPax(bookingDto.getLastName()+","+bookingDto.getFirstName());
+        serviceData.setBeginDate(bookingDto.getCheckIn().toLocalDate());
+        serviceData.setEndDate(bookingDto.getCheckOut().toLocalDate());
         serviceData.setPaxNumber(bookingDto.getAdults() + bookingDto.getChildren());
         serviceData.setAdultsNumber(bookingDto.getAdults());
         serviceData.setKidsNumber(bookingDto.getChildren());
         serviceData.setRoomNumber(bookingDto.getRoomNumber());
         serviceData.setRoomCategory(bookingDto.getRoomCategory() != null ? bookingDto.getRoomCategory().getName() : "");
-        product.setServicesData(List.of(serviceData));
+        product.setServiceDatas(Collections.singletonList(serviceData));
 
         return product;
     }
 
     private String buildXmlString(InvoiceXml invoiceXml) {
-        StringBuilder xmlBuilder = new StringBuilder();
-        // Agregar cabecera XML
-        xmlBuilder.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        xmlBuilder.append("<Transaction xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ");
-        xmlBuilder.append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">");
-
-        // General Data
-        GeneralData generalData = invoiceXml.getGeneralData();
-        xmlBuilder.append("<GeneralData ");
-        xmlBuilder.append("Ref=\"").append(generalData.getRef()).append("\" ");
-        xmlBuilder.append("Type=\"").append(generalData.getType()).append("\" ");
-        xmlBuilder.append("Date=\"").append(generalData.getDate()).append("\" ");
-        xmlBuilder.append("Currency=\"").append(generalData.getCurrency()).append("\" ");
-        xmlBuilder.append("TaxIncluded=\"").append(generalData.isTaxIncluded()).append("\" ");
-        xmlBuilder.append("Status=\"").append(generalData.getStatus()).append("\" ");
-        xmlBuilder.append("/>");
-
-        // Supplier
-        Supplier supplier = invoiceXml.getSupplier();
-        xmlBuilder.append("<Supplier ");
-        xmlBuilder.append("SupplierID=\"").append(supplier.getSupplierID()).append("\" ");
-        xmlBuilder.append("CIF=\"").append(supplier.getCIF()).append("\" ");
-        xmlBuilder.append("Company=\"").append(supplier.getCompany()).append("\" ");
-        xmlBuilder.append("Address=\"").append(supplier.getAddress()).append("\" ");
-        xmlBuilder.append("City=\"").append(supplier.getCity()).append("\" ");
-        xmlBuilder.append("PC=\"").append(supplier.getPc()).append("\" ");
-        xmlBuilder.append("Province=\"").append(supplier.getProvince()).append("\" ");
-        xmlBuilder.append("Country=\"").append(supplier.getCountry()).append("\" ");
-        xmlBuilder.append("/>");
-
-        // Client
-        Client client = invoiceXml.getClient();
-        xmlBuilder.append("<Client ");
-        xmlBuilder.append("SupplierClientID=\"").append(client.getSupplierClientID()).append("\" ");
-        xmlBuilder.append("CIF=\"").append(client.getCIF()).append("\" ");
-        xmlBuilder.append("Company=\"").append(client.getCompany()).append("\" ");
-        xmlBuilder.append("Address=\"").append(client.getAddress()).append("\" ");
-        xmlBuilder.append("City=\"").append(client.getCity()).append("\" ");
-        xmlBuilder.append("PostalCode=\"").append(client.getPostalCode()).append("\" ");
-        xmlBuilder.append("Province=\"").append(client.getProvince()).append("\" ");
-        xmlBuilder.append("Country=\"").append(client.getCountry()).append("\" ");
-        xmlBuilder.append("Email=\"").append(client.getEmail()).append("\" ");
-        xmlBuilder.append("/>");
-
-        // Product List
-        xmlBuilder.append("<ProductList>");
-        for (Product product : invoiceXml.getProductList()) {
-            xmlBuilder.append("<Product ");
-            xmlBuilder.append("SupplierSKU=\"").append(product.getSupplierSKU()).append("\" ");
-            xmlBuilder.append("CustomerSKU=\"").append(product.getCustomerSKU()).append("\" ");
-            xmlBuilder.append("Item=\"").append(product.getItem()).append("\" ");
-            xmlBuilder.append("Qty=\"").append(product.getQty()).append("\" ");
-            xmlBuilder.append("MU=\"").append(product.getMU()).append("\" ");
-            xmlBuilder.append("UP=\"").append(product.getUP()).append("\" ");
-            xmlBuilder.append("Total=\"").append(product.getTotal()).append("\" ");
-            xmlBuilder.append("Comment=\"").append(product.getComment()).append("\" >");
-
-            // Taxes
-            xmlBuilder.append("<Taxes>");
-            for (Tax tax : product.getTaxes()) {
-                xmlBuilder.append("<Tax ");
-                xmlBuilder.append("Type=\"").append(tax.getType()).append("\" ");
-                xmlBuilder.append("Rate=\"").append(tax.getRate()).append("\" ");
-                xmlBuilder.append("Amount=\"").append(tax.getAmount()).append("\" ");
-                xmlBuilder.append("Description=\"").append(tax.getDescription()).append("\" ");
-                xmlBuilder.append("/>");
-            }
-            xmlBuilder.append("</Taxes>");
-
-            // Services Data
-            xmlBuilder.append("<ServicesData>");
-            for (ServiceData service : product.getServicesData()) {
-                xmlBuilder.append("<ServiceData ");
-                xmlBuilder.append("SupplierClientID=\"").append(service.getSupplierClientID()).append("\" ");
-                xmlBuilder.append("SupplierID=\"").append(service.getSupplierID()).append("\" ");
-                xmlBuilder.append("SupplierName=\"").append(service.getSupplierName()).append("\" ");
-                xmlBuilder.append("Pax=\"").append(service.getPax()).append("\" ");
-                xmlBuilder.append("BeginDate=\"").append(service.getBeginDate()).append("\" ");
-                xmlBuilder.append("EndDate=\"").append(service.getEndDate()).append("\" ");
-                xmlBuilder.append("PaxNumber=\"").append(service.getPaxNumber()).append("\" ");
-                xmlBuilder.append("AdultsNumber=\"").append(service.getAdultsNumber()).append("\" ");
-                xmlBuilder.append("KidsNumber=\"").append(service.getKidsNumber()).append("\" ");
-                xmlBuilder.append("RoomNumber=\"").append(service.getRoomNumber()).append("\" ");
-                xmlBuilder.append("RoomCategory=\"").append(service.getRoomCategory()).append("\" ");
-                xmlBuilder.append("/>");
-            }
-            xmlBuilder.append("</ServicesData>");
-
-            xmlBuilder.append("</Product>");
+        try {
+            JAXBContext context = JAXBContext.newInstance(InvoiceXml.class);
+            StringWriter writer = new StringWriter();
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            marshaller.marshal(invoiceXml, writer);
+            return writer.toString();
+        } catch (JAXBException e) {
+            throw new RuntimeException("Error generating XML", e);
         }
-        xmlBuilder.append("</ProductList>");
-
-        // Total Summary
-        TotalSummary totalSummary = invoiceXml.getTotalSummary();
-        xmlBuilder.append("<TotalSummary ");
-        xmlBuilder.append("GrossAmount=\"").append(totalSummary.getGrossAmount()).append("\" ");
-        xmlBuilder.append("Discounts=\"").append(totalSummary.getDiscounts()).append("\" ");
-        xmlBuilder.append("SubTotal=\"").append(totalSummary.getSubTotal()).append("\" ");
-        xmlBuilder.append("Tax=\"0\" ");
-        xmlBuilder.append("Total=\"").append(totalSummary.getTotal()).append("\" ");
-        xmlBuilder.append("/>");
-
-        xmlBuilder.append("</Transaction>");
-        return xmlBuilder.toString();
     }
 }

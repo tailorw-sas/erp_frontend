@@ -101,7 +101,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
         if (paymentImportStatusDto.isHasError()) {
             throw new ExcelException(paymentImportStatusDto.getExceptionMessage());
         }
-        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus(), paymentImportHelperService.getTotalProcessRow());
+        return new PaymentImportDetailStatusResponse(paymentImportStatusDto.getStatus(), paymentImportHelperService != null ? paymentImportHelperService.getTotalProcessRow() : 0);
     }
 
 
