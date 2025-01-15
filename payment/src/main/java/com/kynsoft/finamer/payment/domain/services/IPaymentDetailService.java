@@ -17,6 +17,8 @@ public interface IPaymentDetailService {
 
     PaymentDetailDto findById(UUID id);
 
+    PaymentDetailDto findByIdInWrite(UUID id);
+
     PaymentDetailDto findByGenId(int id);
 
     boolean existByGenId(int id);

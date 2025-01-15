@@ -20,11 +20,12 @@ public class CreatePaymentToCreditCommand implements ICommand {
     private UUID client;
     private UUID agency;
     private UUID hotel;
+    private UUID employee;
     private List<CreateAttachmentRequest> attachments;
     private boolean autoApplyCredit;
     private final IMediator mediator;
 
-    public CreatePaymentToCreditCommand(UUID client, UUID agency, UUID hotel, ManageInvoiceDto invoiceDto, List<CreateAttachmentRequest> attachments, boolean autoApplyCredit, final IMediator mediator) {
+    public CreatePaymentToCreditCommand(UUID client, UUID agency, UUID hotel, ManageInvoiceDto invoiceDto, List<CreateAttachmentRequest> attachments, boolean autoApplyCredit, final IMediator mediator, UUID employee) {
         this.id = UUID.randomUUID();
         this.client = client;
         this.agency = agency;
@@ -33,6 +34,7 @@ public class CreatePaymentToCreditCommand implements ICommand {
         this.attachments = attachments;
         this.autoApplyCredit = autoApplyCredit;
         this.mediator = mediator;
+        this.employee = employee;
     }
 
     @Override

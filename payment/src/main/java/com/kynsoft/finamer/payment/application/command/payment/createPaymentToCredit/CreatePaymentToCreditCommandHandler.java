@@ -84,10 +84,16 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findByApplied();
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
+        
+        ManageEmployeeDto employee = null;
+        try {
+            employee = this.manageEmployeeService.findById(command.getEmployee());
+        } catch (Exception e) {
+        }
 
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findBySupported();//El credit en su process debe de tener al menos attachemt de tipo support
-        this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
-        this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command);
+        this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command, employee);
+        this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command, employee);
     }
 
     //Payment creado con el deposit y apply deposit
@@ -97,7 +103,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             ManageClientDto clientDto,
             ManageAgencyDto agencyDto,
             ManagePaymentAttachmentStatusDto attachmentStatusDto,
-            CreatePaymentToCreditCommand command) {
+            CreatePaymentToCreditCommand command,
+            ManageEmployeeDto employee) {
 
         if (!command.isAutoApplyCredit()) {
             paymentStatusDto = this.statusService.findByConfirmed();
@@ -174,17 +181,19 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             this.paymentService.update(paymentSave);
         }
 
-        ManageEmployeeDto employeeDto = null;
+//        ManageEmployeeDto employeeDto = null;
         if (command.getAttachments() != null) {
-            try {
-                employeeDto = this.manageEmployeeService.findById(command.getAttachments().get(0).getEmployee());
-            } catch (Exception e) {
-            }
+//            try {
+//                employeeDto = this.manageEmployeeService.findById(command.getAttachments().get(0).getEmployee());
+//            } catch (Exception e) {
+//            }
             paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto, command));
-            this.createAttachmentStatusHistory(employeeDto, paymentDto, command);
+            //this.createAttachmentStatusHistory(employeeDto, paymentDto, command);
+            this.createAttachmentStatusHistory(employee, paymentDto, command);
         }
 
-        this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
+        //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
+        this.createPaymentAttachmentStatusHistory(employee, paymentDto, command);
 
         this.paymentDetailService.update(parentDetailDto);
 
@@ -197,7 +206,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             ManageClientDto clientDto,
             ManageAgencyDto agencyDto,
             ManagePaymentAttachmentStatusDto attachmentStatusDto,
-            CreatePaymentToCreditCommand command) {
+            CreatePaymentToCreditCommand command,
+            ManageEmployeeDto employee) {
 
         Double paymentAmount = command.getInvoiceDto().getInvoiceAmount();
         PaymentDto paymentDto = new PaymentDto(
@@ -244,17 +254,27 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
             }
         }
 
-        ManageEmployeeDto employeeDto = null;
+//        ManageEmployeeDto employeeDto = null;
         if (command.getAttachments() != null) {
-            try {
-                employeeDto = this.manageEmployeeService.findById(command.getAttachments().get(0).getEmployee());
-            } catch (Exception e) {
-            }
+//            try {
+//                employeeDto = this.manageEmployeeService.findById(command.getAttachments().get(0).getEmployee());
+//            } catch (Exception e) {
+//            }
             paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto, command));
-            this.createAttachmentStatusHistory(employeeDto, paymentDto, command);
+            //this.createAttachmentStatusHistory(employeeDto, paymentDto, command);
+            this.createAttachmentStatusHistory(employee, paymentDto, command);
         }
 
-        this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("Employeee: " + employee.getFirstName() + employee.getLastName());
+        System.err.println("Employeee: " + employee.getId());
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        System.err.println("##################################################");
+        //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
+        this.createPaymentAttachmentStatusHistory(employee, paymentDto, command);
 
     }
 

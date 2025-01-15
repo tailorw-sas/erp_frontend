@@ -81,7 +81,8 @@ public class ProducerUpdateManageInvoiceService {
                     attachmentKafkas,
                     entity.getAttachments() != null && !entity.getAttachments().isEmpty(),
                     entity.getInvoiceDate(),
-                    entity.getAutoRec()
+                    entity.getAutoRec(),
+                    null
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerUpdateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

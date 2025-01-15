@@ -10,7 +10,6 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceVal
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRoomTypeRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
-import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerUpdateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -90,7 +89,7 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
 
         if (update.getUpdate() > 0) {
             this.bookingService.update(dto);
-            this.producerUpdateManageInvoiceService.create(this.invoiceService.findById(dto.getInvoice().getId()), null);
+            this.producerUpdateManageInvoiceService.create(this.invoiceService.findById(dto.getInvoice().getId()), null, null);
         }
     }
 

@@ -258,7 +258,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.service.update(created);
 
         try {
-            this.producerReplicateManageInvoiceService.create(created, null);
+            this.producerReplicateManageInvoiceService.create(created, null, null);
         } catch (Exception e) {
         }
 
