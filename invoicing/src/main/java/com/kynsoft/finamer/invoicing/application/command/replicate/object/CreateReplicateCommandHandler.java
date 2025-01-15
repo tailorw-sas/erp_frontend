@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageBooking.ProducerReplicateManageBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -35,7 +36,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 case MANAGE_INVOICE -> {
                     List<ManageInvoiceDto> list = this.manageInvoiceService.findAllToReplicate();
                     for (ManageInvoiceDto invoice : list) {
-                        this.producerReplicateManageInvoiceService.create(invoice, null);
+                        this.producerReplicateManageInvoiceService.create(invoice, null, UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04"));
                     }
                 }
                 case MANAGE_BOOKING -> {

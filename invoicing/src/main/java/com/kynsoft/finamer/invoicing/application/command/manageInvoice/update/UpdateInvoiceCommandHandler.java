@@ -97,7 +97,7 @@ public class UpdateInvoiceCommandHandler implements ICommandHandler<UpdateInvoic
         this.service.update(dto);
         try {
             //TODO: aqui se envia para actualizar el invoice en payment
-            this.producerUpdateManageInvoiceService.create(this.service.findById(dto.getId()), null);
+            this.producerUpdateManageInvoiceService.create(this.service.findById(dto.getId()), null, null);
         } catch (Exception e) {
         }
     }

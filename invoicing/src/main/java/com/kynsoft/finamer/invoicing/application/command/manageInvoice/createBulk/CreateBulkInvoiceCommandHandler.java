@@ -416,7 +416,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         created.setOriginalAmount(created.getInvoiceAmount());
         this.service.update(created);
         try {
-            this.producerReplicateManageInvoiceService.create(created, attachmentDefault);
+            UUID uuidEmployee = employee != null ? employee.getId() : null;
+            this.producerReplicateManageInvoiceService.create(created, attachmentDefault, uuidEmployee);
         } catch (Exception e) {
         }
 
