@@ -63,7 +63,7 @@ public class Booking {
     private Double hotelAmount;
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manage_invoice", nullable = true)
     private Invoice invoice;
 
@@ -99,10 +99,10 @@ public class Booking {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Booking parent;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "manageBooking")
     private List<PaymentDetail> paymentDetails;
 
     private String contract;
