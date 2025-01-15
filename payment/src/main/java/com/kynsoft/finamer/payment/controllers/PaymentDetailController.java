@@ -32,6 +32,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit
 import com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposit.create.CreatePaymentDetailSplitDepositRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetailResponse;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.getById.FindPaymentDetailByIdQuery;
+import com.kynsoft.finamer.payment.application.query.paymentDetail.getByIdInWrite.FindPaymentDetailByIdInWriteQuery;
 import com.kynsoft.finamer.payment.application.query.paymentDetail.search.GetSearchPaymentDetailQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -127,6 +128,15 @@ public class PaymentDetailController {
     public ResponseEntity<?> getById(@PathVariable UUID id) {
 
         FindPaymentDetailByIdQuery query = new FindPaymentDetailByIdQuery(id);
+        PaymentDetailResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/in-write/{id}")
+    public ResponseEntity<?> getByIdInWrite(@PathVariable UUID id) {
+
+        FindPaymentDetailByIdInWriteQuery query = new FindPaymentDetailByIdInWriteQuery(id);
         PaymentDetailResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);

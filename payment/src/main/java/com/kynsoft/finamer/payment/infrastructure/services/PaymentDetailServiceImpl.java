@@ -145,4 +145,13 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         return this.repositoryQuery.countByApplyPaymentAndPaymentId(id);
     }
 
+    @Override
+    public PaymentDetailDto findByIdInWrite(UUID id) {
+        Optional<PaymentDetail> userSystem = this.repositoryCommand.findById(id);
+        if (userSystem.isPresent()) {
+            return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND.getReasonPhrase())));
+    }
+
 }
