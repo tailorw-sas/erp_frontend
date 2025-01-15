@@ -83,7 +83,7 @@ public class Booking {
     @JoinColumn(name = "manage_room_category", nullable = true)
     private ManageRoomCategory roomCategory;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "booking")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "booking")
     private List<ManageRoomRate> roomRates;
 
     @Column(nullable = true)
@@ -99,10 +99,10 @@ public class Booking {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Booking parent;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "manageBooking")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
     private List<PaymentDetail> paymentDetails;
 
     private String contract;
