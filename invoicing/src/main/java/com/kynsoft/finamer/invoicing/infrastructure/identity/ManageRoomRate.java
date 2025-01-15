@@ -107,8 +107,8 @@ public class ManageRoomRate {
                 rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
                 hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null,
                 remark,
-                null,
-            //    booking != null ? booking.toAggregate() : null,
+               // null,
+             booking != null ? booking.toAggregate() : null,
 //                adjustments != null ? adjustments.stream().map(b -> {
 //                            return b.toAggregateSample();
 //                        }).collect(Collectors.toList()) : null,
