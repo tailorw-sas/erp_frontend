@@ -26,7 +26,7 @@ const props = defineProps({
   payload: Object as any
 
 })
-
+const toast = useToast()
 const exportSummary = ref(true)
 
 const loading = ref(false)
@@ -53,7 +53,12 @@ async function handleDownload() {
   loading.value = true
 
   try {
-    const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, { ...props.payload, pageSize: props.total || 50 })
+    if (props.total > 1000) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The number of records to export is greater than 1000', life: 6000 })
+      props.closeDialog()
+      return
+    }
+    const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, { ...props.payload, pageSize: props.total || 1000 })
 
     const url = window.URL.createObjectURL(response)
 
