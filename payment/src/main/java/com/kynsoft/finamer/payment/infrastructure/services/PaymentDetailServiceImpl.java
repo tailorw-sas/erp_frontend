@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetailResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
@@ -143,6 +144,11 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     @Override
     public Long countByApplyPaymentAndPaymentId(UUID id) {
         return this.repositoryQuery.countByApplyPaymentAndPaymentId(id);
+    }
+
+    @Override
+    public PaymentDetailSimpleDto findSimpleDetailByGenId(int id) {
+        return this.repositoryQuery.findSimpleDetailByGenId(id).orElse(null);
     }
 
     @Override
