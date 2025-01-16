@@ -46,7 +46,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public void calculateInvoiceAmount(ManageBookingDto dto) {
-        Optional<Booking> optionalBooking = this.repositoryQuery.findById(dto.getId());
+        Optional<Booking> optionalBooking = this.repositoryCommand.findById(dto.getId());
 
         if (optionalBooking.isEmpty()) {
             throw new IllegalArgumentException("Booking not found for ID: " + dto.getId());
