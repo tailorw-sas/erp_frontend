@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "booking")
-@EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+//@EntityListeners(AuditEntityListener.class)
+//@RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Booking {
     @Id
     @Column(name = "id")

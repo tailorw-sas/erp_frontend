@@ -53,6 +53,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IManageEmployeeService employeeService;
     private final IManageResourceTypeService resourceTypeService;
+    private final IManageRoomRateService roomRateService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
                                     IManageAgencyService agencyService,
@@ -68,7 +69,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                                     IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
                                     IInvoiceCloseOperationService closeOperationService,
                                     IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService) {
+                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService, IManageRoomRateService roomRateService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -87,6 +88,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.employeeService = employeeService;
         this.resourceTypeService = resourceTypeService;
+        this.roomRateService = roomRateService;
     }
 
     @Override
@@ -350,7 +352,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private void setInvoiceToCloneAmounts(ManageInvoiceDto invoiceDto, String employee) {
 
         for (ManageBookingDto bookingDto : invoiceDto.getBookings()) {
-            for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()) {
+            List<ManageRoomRateDto> roomRateDtoList = this.roomRateService.findByBooking(bookingDto.getId());
+            for (ManageRoomRateDto roomRateDto : roomRateDtoList) {
                 List<ManageAdjustmentDto> adjustmentDtoList = new ArrayList<>();
                 ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                         UUID.randomUUID(),
@@ -368,6 +371,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 roomRateDto.setAdjustments(adjustmentDtoList);
                 roomRateDto.setInvoiceAmount(0.00);
             }
+            bookingDto.setRoomRates(roomRateDtoList);
             this.bookingService.calculateInvoiceAmount(bookingDto);
         }
         invoiceDto.setCloneParent(true);

@@ -14,10 +14,8 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
-import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageBookingReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageRoomRateReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,26 +44,44 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public void calculateInvoiceAmount(ManageBookingDto dto) {
-        Optional<Booking> optionalBooking = this.repositoryQuery.findById(dto.getId());
+        if (dto.getRoomRates() != null) {
+            this.calculateInvoiceAmountWithRoomRates(dto);
+        } else {
+            Optional<Booking> optionalBooking = this.repositoryCommand.findById(dto.getId());
 
-        if (optionalBooking.isEmpty()) {
-            throw new IllegalArgumentException("Booking not found for ID: " + dto.getId());
+            if (optionalBooking.isEmpty()) {
+                throw new IllegalArgumentException("Booking not found for ID: " + dto.getId());
+            }
+
+            Booking booking = optionalBooking.get();
+            double invoiceAmount = 0.00;
+
+            List<ManageRoomRate> roomRates = this.manageRoomRateReadDataJPARepository.findByBooking(booking);
+
+            if (!roomRates.isEmpty()) {
+                invoiceAmount = roomRates.stream()
+                        .mapToDouble(ManageRoomRate::getInvoiceAmount)
+                        .sum();
+            }
+
+            booking.setInvoiceAmount(invoiceAmount);
+            booking.setDueAmount(invoiceAmount);
+            this.repositoryCommand.save(booking);
         }
+    }
 
-        Booking booking = optionalBooking.get();
-        double invoiceAmount = 0.00;
+    private void calculateInvoiceAmountWithRoomRates(ManageBookingDto dto) {
+        Double InvoiceAmount = 0.00;
 
-        List<ManageRoomRate> roomRates = this.manageRoomRateReadDataJPARepository.findByBooking(booking);
+        if (dto.getRoomRates() != null) {
+            for (int i = 0; i < dto.getRoomRates().size(); i++) {
+                InvoiceAmount += dto.getRoomRates().get(i).getInvoiceAmount();
+            }
+            dto.setInvoiceAmount(InvoiceAmount);
+            dto.setDueAmount(InvoiceAmount);
 
-        if (!roomRates.isEmpty()) {
-            invoiceAmount = roomRates.stream()
-                    .mapToDouble(ManageRoomRate::getInvoiceAmount)
-                    .sum();
+            this.update(dto);
         }
-
-        booking.setInvoiceAmount(invoiceAmount);
-        booking.setDueAmount(invoiceAmount);
-        this.repositoryCommand.save(booking);
     }
 
     @Override
