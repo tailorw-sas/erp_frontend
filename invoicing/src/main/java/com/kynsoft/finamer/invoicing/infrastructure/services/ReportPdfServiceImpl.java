@@ -17,6 +17,7 @@ import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualP
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import com.kynsoft.finamer.invoicing.domain.services.IReportPdfService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,12 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
     private final Logger log = LoggerFactory.getLogger(ReportPdfServiceImpl.class);
     private final ManageInvoiceServiceImpl invoiceService;
+    private final IManageRoomRateService roomRateService;
 
-    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService) {
+    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService, IManageRoomRateService roomRateService) {
 
         this.invoiceService = invoiceService;
+        this.roomRateService = roomRateService;
     }
 
     private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException { // Changed to IOException
@@ -264,7 +267,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         // Add data row file 9
         for (ManageBookingDto booking : bookings) {
-            List<ManageRoomRateDto> roomRates = booking.getRoomRates();
+            List<ManageRoomRateDto> roomRates = this.roomRateService.findByBooking(booking.getId());
             for (ManageRoomRateDto roomRate : roomRates) {
                 total = total + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0);
                 moneyType = roomRate.getRemark() != null ? roomRate.getRemark() : "";
