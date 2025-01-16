@@ -25,18 +25,23 @@ public class PaymentTransactionIdValidator extends ExcelRuleValidator<AntiToInco
             errorFieldList.add(new ErrorField("Transaction id", "Transaction id can't be empty."));
             return false;
         }
-      if(!paymentDetailService.existByGenId(obj.getTransactionId().intValue())){
-          errorFieldList.add(new ErrorField("Transaction id","There isn't payment detail with this transaction id"));
-          return false;
+        if (!paymentDetailService.existByGenId(obj.getTransactionId().intValue())) {
+            errorFieldList.add(new ErrorField("Transaction id", "There isn't payment detail with this transaction id"));
+            return false;
         }
 
-       PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(obj.getTransactionId().intValue());
+        try {
+            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(obj.getTransactionId().intValue());
 
-      if (!paymentDetailDto.getTransactionType().getDeposit()){
-          errorFieldList.add(new ErrorField("Transaction id","Transaction isn't deposit type"));
-          return false;
-      }
+            if (!paymentDetailDto.getTransactionType().getDeposit()) {
+                errorFieldList.add(new ErrorField("Transaction id", "Transaction isn't deposit type"));
+                return false;
+            }
+        } catch (Exception e) {
+            errorFieldList.add(new ErrorField("Transaction id", "Payment Details not found: " + obj.getTransactionId().intValue()));
+            return false;
+        }
 
-      return true;
+        return true;
     }
 }
