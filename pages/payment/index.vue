@@ -3664,13 +3664,13 @@ onMounted(async () => {
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> Client:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete"
                         field="name"
                         class="w-full h-2rem align-items-center"
                         item-value="id"
-                        :multiple="true"
+                        :max-selected-labels="3"
                         :model="filterToSearch.client"
                         :suggestions="[...clientItemsList]"
                         :loading="objLoading.loadingClient"
@@ -3839,12 +3839,12 @@ onMounted(async () => {
                   <div class="flex align-items-center mb-2">
                     <label for="" class="mr-2 font-bold"> Hotels:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
                         id="autocomplete"
                         class="w-full h-2rem align-items-center"
                         field="name"
                         item-value="id"
-                        :multiple="true"
+                        :max-selected-labels="3"
                         :model="filterToSearch.hotel"
                         :suggestions="[...hotelItemsList]"
                         :loading="objLoading.loadingHotel"

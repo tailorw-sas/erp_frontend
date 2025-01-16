@@ -2273,13 +2273,13 @@ const legend = ref(
 
                 <div class="flex flex-column gap-2 ">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
+                    <div class="w-full" style=" z-index:5 ">
+                      <DebouncedMultiSelectComponent
                         id="autocomplete"
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :multiple="true"
+                        :max-selected-labels="3"
                         :model="filterToSearch.client"
                         :suggestions="[...clientList]"
                         @change="async ($event) => {
@@ -2311,12 +2311,12 @@ const legend = ref(
                   </div>
                   <div class="flex align-items-center gap-2">
                     <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
                         id="autocomplete"
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :multiple="true"
+                        :max-selected-labels="3"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyList]"
                         @change="($event) => {
@@ -2368,12 +2368,12 @@ const legend = ref(
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full" style=" z-index:5">
                       <div class="flex gap-2 w-full">
-                        <DebouncedAutoCompleteComponent
+                        <DebouncedMultiSelectComponent
                           id="autocomplete"
                           class="w-full"
                           field="name"
                           item-value="id"
-                          :multiple="true"
+                          :max-selected-labels="3"
                           :model="filterToSearch.hotel"
                           :suggestions="[...hotelList]"
                           @change="($event) => {
