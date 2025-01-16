@@ -84,6 +84,8 @@ public class ManageHotel implements Serializable {
     @Column(columnDefinition = "boolean default false")
     private Boolean applyByTradingCompany;
 
+    private String prefixToInvoice;
+
     public ManageHotel(ManageHotelDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -103,6 +105,7 @@ public class ManageHotel implements Serializable {
         this.city = dto.getCity();
         this.manageCurrency = dto.getManageCurrency() != null ? new ManageCurrency(dto.getManageCurrency()) : null;
         this.applyByTradingCompany = dto.getApplyByTradingCompany();
+        this.prefixToInvoice = dto.getPrefixToInvoice();
     }
 
     public ManageHotelDto toAggregate() {
@@ -115,7 +118,7 @@ public class ManageHotel implements Serializable {
                 manageCityState != null ? manageCityState.toAggregateSimple() : null,
                 city,
                 manageCurrency != null ? manageCurrency.toAggregate() : null,
-                applyByTradingCompany
+                applyByTradingCompany, prefixToInvoice
         );
     }
 }

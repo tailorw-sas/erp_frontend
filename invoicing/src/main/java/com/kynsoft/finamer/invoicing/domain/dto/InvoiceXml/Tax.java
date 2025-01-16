@@ -1,60 +1,27 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
 
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@XmlType(propOrder = {"type", "rate", "amount", "description"})
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@XmlRootElement(name = "Tax")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Tax {
-    private String type;        // Tipo de impuesto (e.g., EXENTO, IVA, etc.)
-    private double rate;        // Tasa del impuesto
-    private double amount;      // Monto del impuesto
-    private String description; // Descripción del impuesto
+    @XmlAttribute(name = "Type")
+    private String type;
 
-    // Constructor vacío
-    public Tax() {
-    }
+    @XmlAttribute(name = "Rate")
+    private double rate;
 
-    // Constructor con parámetros
-    public Tax(String type, double rate, double amount, String description) {
-        this.type = type;
-        this.rate = rate;
-        this.amount = amount;
-        this.description = description;
-    }
+    @XmlAttribute(name = "Amount")
+    private double amount;
 
-    @XmlElement(name = "Type")
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @XmlElement(name = "Rate")
-    public double getRate() {
-        return rate;
-    }
-
-    public void setRate(double rate) {
-        this.rate = rate;
-    }
-
-    @XmlElement(name = "Amount")
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    @XmlElement(name = "Description")
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    @XmlAttribute(name = "Description")
+    private String description;
 }

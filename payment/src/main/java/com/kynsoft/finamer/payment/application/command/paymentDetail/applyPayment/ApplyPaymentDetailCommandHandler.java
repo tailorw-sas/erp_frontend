@@ -85,7 +85,7 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         //ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
         ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
 
-        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findByIdInWrite(command.getPaymentDetail());
+        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
         paymentDetailDto.setManageBooking(bookingDto);

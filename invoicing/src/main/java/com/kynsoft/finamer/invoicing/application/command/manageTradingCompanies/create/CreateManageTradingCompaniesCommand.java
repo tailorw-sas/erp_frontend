@@ -23,6 +23,13 @@ public class CreateManageTradingCompaniesCommand implements ICommand {
     private String company;
     private String status;
 
+    private String description;
+    private UUID country;
+    private UUID cityState;
+    private String city;
+    private String zipCode;
+    private String innsistCode;
+
     @Override
     public ICommandMessage getMessage() {
         return new CreateManageTradingCompaniesMessage(id);

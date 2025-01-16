@@ -50,10 +50,11 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
                 command.getRateChild(),
                 command.getHotelAmount(),
                 command.getRemark(),
-                bookingDto,
+                null,
                 null, 
                 null,
-                false
+                false,
+                command.getBooking()
         ));
 
         ManageBookingDto updateBookingDto = this.bookingService.findById(bookingDto.getId());
@@ -67,6 +68,7 @@ public class CreateRoomRateCommandHandler implements ICommandHandler<CreateRoomR
             this.producerReplicateManageBookingService.create(updateBookingDto);
             this.producerUpdateManageInvoiceService.update(updInvoiceDto);
         } catch (Exception e) {
+            System.out.println("Error producerReplicateManageBookingService: " + e.getMessage());
         }
     }
 }

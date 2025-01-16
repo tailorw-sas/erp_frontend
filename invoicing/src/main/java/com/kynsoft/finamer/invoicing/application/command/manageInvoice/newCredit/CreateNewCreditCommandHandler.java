@@ -131,7 +131,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         newBooking,
                         new LinkedList<>(),
                         newBooking.getNights(),
-                        false
+                        false,
+                        null
                 );
                 List<ManageRoomRateDto> rates = new LinkedList<>();
                 rates.add(roomRateDto);

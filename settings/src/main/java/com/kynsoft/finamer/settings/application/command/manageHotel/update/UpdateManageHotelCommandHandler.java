@@ -105,7 +105,8 @@ public class UpdateManageHotelCommandHandler implements ICommandHandler<UpdateMa
                 dto.getAddress(),
                 dto.getManageCityState().getId(),
                 dto.getManageCountry().getId(),
-                dto.getManageCurrency().getId()
+                dto.getManageCurrency().getId(),
+                dto.getPrefixToInvoice()
         ));
         }
     }

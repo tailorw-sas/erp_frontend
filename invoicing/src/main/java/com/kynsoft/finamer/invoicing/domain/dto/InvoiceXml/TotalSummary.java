@@ -1,61 +1,30 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
 
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @XmlRootElement(name = "TotalSummary")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class TotalSummary {
+    @XmlAttribute(name = "GrossAmount")
+    private double grossAmount;
 
-    private Double grossAmount; // Suma de los importes brutos por línea de la factura (sin descuentos ni impuestos)
-    private Double discounts; // Sumatorio de los descuentos aplicados (opcional)
-    private Double subTotal; // Base imponible: importe neto de la factura incluyendo descuentos aplicados
-    private Double tax; // Sumatorio de todos los impuestos aplicados
-    private Double total; // Importe total a pagar: base imponible + impuestos
+    @XmlAttribute(name = "Discounts")
+    private double discounts;
 
-    // Getters y Setters
+    @XmlAttribute(name = "SubTotal")
+    private double subTotal;
 
-    @XmlElement(name = "GrossAmount")
-    public Double getGrossAmount() {
-        return grossAmount;
-    }
+    @XmlAttribute(name = "Tax")
+    private double tax;
 
-    public void setGrossAmount(Double grossAmount) {
-        this.grossAmount = grossAmount;
-    }
-
-    @XmlElement(name = "Discounts")
-    public Double getDiscounts() {
-        return discounts;
-    }
-
-    public void setDiscounts(Double discounts) {
-        this.discounts = discounts;
-    }
-
-    @XmlElement(name = "SubTotal")
-    public Double getSubTotal() {
-        return subTotal;
-    }
-
-    public void setSubTotal(Double subTotal) {
-        this.subTotal = subTotal;
-    }
-
-    @XmlElement(name = "Tax")
-    public Double getTax() {
-        return tax;
-    }
-
-    public void setTax(Double tax) {
-        this.tax = tax;
-    }
-
-    @XmlElement(name = "Total")
-    public Double getTotal() {
-        return total;
-    }
-
-    public void setTotal(Double total) {
-        this.total = total;
-    }
+    @XmlAttribute(name = "Total")
+    private double total;
 }
