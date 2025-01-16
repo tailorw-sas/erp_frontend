@@ -371,6 +371,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 roomRateDto.setAdjustments(adjustmentDtoList);
                 roomRateDto.setInvoiceAmount(0.00);
             }
+            bookingDto.setRoomRates(roomRateDtoList);
             this.bookingService.calculateInvoiceAmount(bookingDto);
         }
         invoiceDto.setCloneParent(true);
