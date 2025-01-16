@@ -34,7 +34,7 @@ public class ManageRoomRateDto {
     private UUID  bookingId;
 
     public ManageRoomRateDto(ManageRoomRateDto dto) {
-        this.id = UUID.randomUUID();
+        this.id = dto.getId();
         this.roomRateId = dto.getRoomRateId();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
