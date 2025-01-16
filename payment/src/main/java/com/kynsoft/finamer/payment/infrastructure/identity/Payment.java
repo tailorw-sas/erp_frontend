@@ -29,8 +29,8 @@ import org.hibernate.annotations.Type;
 @Setter
 @Entity
 @Table(name = "payment")
-//@EntityListeners(AuditEntityListener.class)
-//@RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Payment implements Serializable {
 
     @Id
