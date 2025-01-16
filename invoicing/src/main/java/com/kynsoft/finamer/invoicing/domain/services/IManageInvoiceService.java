@@ -17,7 +17,7 @@ public interface IManageInvoiceService {
 
     void calculateInvoiceAmount(ManageInvoiceDto dto);
 
-    public void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream);
+    void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream);
 
     ManageInvoiceDto update(ManageInvoiceDto dto);
 
