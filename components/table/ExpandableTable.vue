@@ -480,11 +480,28 @@ getOptionsList()
   <BlockUI :blocked="options?.loading">
     <div class="card p-0">
       <DataTable
-        v-model:filters="filters1" v-model:expandedRows="expandedRows" v-model:selection="clickedItem" :filter-display="modeFilterDisplay"
-        :meta-key-selection="metaKey" selection-mode="single" sort-mode="single"
-        :value="data" data-key="id" show-gridlines striped-rows removable-sort lazy
-        scrollable scroll-height="75vh" @row-dblclick="onDoubleClickItem" @row-expand="onRowExpand" @row-collapse="onRowCollapse"
-        @sort="onSortField" @update:selection="onSelectItem" @update:filters="onChangeFilters" @row-contextmenu="onRowRightClick"
+        v-model:filters="filters1"
+        v-model:expandedRows="expandedRows"
+        v-model:selection="clickedItem"
+        :filter-display="modeFilterDisplay"
+        :meta-key-selection="metaKey"
+        selection-mode="single"
+        sort-mode="single"
+        :value="data"
+        data-key="id"
+        show-gridlines
+        striped-rows
+        removable-sort
+        lazy
+        scrollable
+        scroll-height="75vh"
+        @row-dblclick="onDoubleClickItem"
+        @row-expand="onRowExpand"
+        @row-collapse="onRowCollapse"
+        @sort="onSortField"
+        @update:selection="onSelectItem"
+        @update:filters="onChangeFilters"
+        @row-contextmenu="onRowRightClick"
       >
         <template #empty>
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
@@ -504,10 +521,7 @@ getOptionsList()
         <!-- :show-filter-match-modes="column.type !== 'bool' " -->
         <Column expander style="width: 1rem">
           <template #rowtogglericon="props">
-            <i
-              :class="`${props.rowExpanded ? 'pi pi-minus' : 'pi pi-plus'}`"
-              style=" color: black; border: 1px solid black; border-radius: 4px; padding: 0px;" </i
-            />
+            <i :class="`${props.rowExpanded ? 'pi pi-minus' : 'pi pi-plus'}`" style=" color: black; border: 1px solid black; border-radius: 4px; padding: 0px;" </i />
           </template>
         </Column>
         <Column selection-mode="single" header-style="width: 3rem">

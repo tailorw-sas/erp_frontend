@@ -179,7 +179,7 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: true },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -2850,6 +2850,17 @@ async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   applyPaymentGetList(amountOfDetailItem.value)
 }
 
+function onSortFieldApplyPayment(event: any) {
+  if (event) {
+    if (event.sortField === 'invoiceId') {
+      event.sortField = 'invoice.invoiceId'
+    }
+    applyPaymentPayload.value.sortBy = event.sortField ? event.sortField : 'dueAmount'
+    applyPaymentPayload.value.sortType = event.sortOrder
+    applyPaymentParseDataTableFilter(event.filter)
+  }
+}
+
 async function historyParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns.value)
   if (parseFilter && parseFilter?.length > 0) {
@@ -3993,7 +4004,7 @@ onMounted(async () => {
             :pagination="applyPaymentPagination"
             @on-change-pagination="applyPaymentOnChangePage = $event"
             @on-change-filter="applyPaymentParseDataTableFilter"
-            @on-sort-field="historyOnSortField"
+            @on-sort-field="onSortFieldApplyPayment"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
           />
         </div>
