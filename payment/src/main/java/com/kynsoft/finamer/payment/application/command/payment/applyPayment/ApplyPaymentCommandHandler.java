@@ -128,7 +128,8 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                             while (depositAmount > 0) {
                                 double amountToApply = Math.min(depositAmount, amountBalance);// Debe de compararse con el amountBalance, porque puede venir de haber sido rebajado en el flujo anterior.
                                 CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(paymentDto, amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate(), false));// quite *-1
-                                command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId(), command.getEmployee()));
+                                this.applyPayment(command.getEmployee(), bookingDto, message.getNewDetailDto());
+                                //command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId(), command.getEmployee()));
                                 depositAmount = depositAmount - amountToApply;
                                 amountBalance = amountBalance - amountToApply;
                                 depositBalance = depositBalance - amountToApply;
@@ -288,8 +289,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
     public void applyPayment(UUID empoyee, ManageBookingDto bookingDto, PaymentDetailDto paymentDetailDto) {
         ManageBookingDto booking = this.manageBookingService.findById(bookingDto.getId());
-        //ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
-//        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
         paymentDetailDto.setManageBooking(bookingDto);
@@ -310,7 +309,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         } catch (Exception e) {
         }
 
-        if (paymentDto.getNotApplied() == 0 && paymentDto.getDepositBalance() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+        if (paymentDto.getPaymentBalance() == 0 && paymentDto.getDepositBalance() == 0) {
             paymentDto.setPaymentStatus(this.statusService.findByApplied());
             ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
             this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
