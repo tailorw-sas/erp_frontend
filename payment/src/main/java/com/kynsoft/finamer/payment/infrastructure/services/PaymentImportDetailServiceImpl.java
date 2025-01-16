@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.services;
 
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.domain.exception.BusinessRuleValidationException;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.request.PageableUtil;
@@ -78,7 +79,16 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
                 ((PaymentImportAntiIncomeHelperServiceImpl) paymentImportHelperService).createAttachment(request);
             }
             paymentImportHelperService.readPaymentCacheAndSave(request);
-        } catch (Exception e) {
+        } catch (BusinessRuleValidationException e) {
+            e.printStackTrace();
+            paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
+            paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
+                    new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
+                            request.getImportProcessId(), true, e.getMessage())));
+            log.error(e.getMessage());
+            return;
+        }
+        catch (Exception e) {
             e.printStackTrace();
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
