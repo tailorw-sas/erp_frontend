@@ -95,7 +95,6 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     }
 
     @Override
-    @Transactional
     public void handle(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
 

@@ -152,7 +152,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             entity.setInvoiceNumberPrefix(invoicePrefix);
         }
 
-        return this.repositoryCommand.saveAndFlush(entity).toAggregate();
+        Invoice invoice = this.repositoryCommand.save(entity);
+        return invoice.toAggregate();
     }
 
     @Override
