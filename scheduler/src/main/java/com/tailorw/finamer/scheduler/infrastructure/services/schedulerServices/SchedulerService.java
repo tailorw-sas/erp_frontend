@@ -180,6 +180,10 @@ public abstract class SchedulerService {
     }
 
     private boolean mustBeExecuteNow(BusinessProcessSchedulerDto scheduler){
+        if (scheduler.isInProcess()) {
+            return false;
+        }
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime lastExecution = scheduler.getLastExecutionDatetime();
         boolean isNewDay = now.toLocalDate().isAfter(lastExecution.toLocalDate());
@@ -193,16 +197,16 @@ public abstract class SchedulerService {
             case MINUTE -> {
                 // Si es un nuevo día o ha pasado el intervalo en minutos
                 LocalDateTime nextExecutionTime = lastExecution.plusMinutes(scheduler.getInterval());
-                yield isNewDay || (now.isAfter(nextExecutionTime) && !scheduler.isInProcess());
+                yield isNewDay || now.isAfter(nextExecutionTime);
             }
             case HOUR -> {
                 // Si es un nuevo día o ha pasado el intervalo en horas
                 LocalDateTime nextExecutionTime = lastExecution.plusHours(scheduler.getInterval());
-                yield isNewDay || (now.isAfter(nextExecutionTime) && !scheduler.isInProcess());
+                yield isNewDay || now.isAfter(nextExecutionTime);
             }
             case ONE_TIME ->
                 // Ejecutar solo una vez en el día y a partir de la hora especificada
-                    !scheduler.isInProcess() && isNewDay && now.toLocalTime().isAfter(scheduler.getExecutionTime());
+                    isNewDay && now.toLocalTime().isAfter(scheduler.getExecutionTime());
             default -> false;
         };
     }
