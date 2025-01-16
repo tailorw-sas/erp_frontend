@@ -89,7 +89,7 @@ const optionsOfTableChangeAgency = ref({
 const payloadChangeAgency = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'name',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -606,7 +606,7 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -632,7 +632,7 @@ const applyPaymentOnChangePage = ref<PageState>()
 const applyPaymentBookingPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -722,7 +722,7 @@ const applyPaymentOptionsOtherDeduction = ref({
 const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
