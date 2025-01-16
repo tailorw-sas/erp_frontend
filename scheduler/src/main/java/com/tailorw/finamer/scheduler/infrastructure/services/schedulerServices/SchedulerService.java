@@ -202,7 +202,7 @@ public abstract class SchedulerService {
             }
             case ONE_TIME ->
                 // Ejecutar solo una vez en el día y a partir de la hora especificada
-                    isNewDay && now.toLocalTime().isAfter(scheduler.getExecutionTime());
+                    !scheduler.isInProcess() && isNewDay && now.toLocalTime().isAfter(scheduler.getExecutionTime());
             default -> false;
         };
     }
