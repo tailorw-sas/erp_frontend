@@ -25,8 +25,8 @@ import org.hibernate.generator.EventType;
 @Setter
 @Entity
 @Table(name = "room_rate")
-@EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+//@EntityListeners(AuditEntityListener.class)
+//@RemoteAudit(name = "room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageRoomRate {
 
     @Id
