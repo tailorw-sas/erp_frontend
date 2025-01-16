@@ -65,7 +65,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
 
     @Override
     public void createValidators() {
-        paymentImportDetailAmountValidator = new PaymentImportDetailAmountValidator(applicationEventPublisher);
+        paymentImportDetailAmountValidator = new PaymentImportDetailAmountValidator(applicationEventPublisher, paymentService);
         paymentDetailExistPaymentValidator=new PaymentDetailExistPaymentValidator(applicationEventPublisher,paymentService);
         paymentDetailsNoApplyDepositValidator= new PaymentDetailsNoApplyDepositValidator(applicationEventPublisher,managePaymentTransactionTypeService);
         paymentDetailBelongToSamePayment = new PaymentDetailBelongToSamePayment(applicationEventPublisher,paymentService);

@@ -23,6 +23,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.applyDeposit.ApplyDepositEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.createPayment.CreatePaymentDetailEvent;
+import com.kynsoft.finamer.payment.infrastructure.excel.event.deposit.DepositEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
@@ -125,7 +126,9 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = transactionTypeService.findByCode(paymentImportCache.getTransactionId());
                 Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
                 PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
-                ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.valueOf(paymentImportCache.getBookId())) : null;
+                double paymentBalance = paymentDto.getPaymentBalance();
+                double depositBalance = paymentDto.getDepositBalance();
+                ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     boolean applyPayment = true;
                     if (bookingDto == null) {
@@ -147,13 +150,30 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     if (bookingDto == null) {
                         applyPayment = false;
                     }
-                    this.sendCreatePaymentDetail(paymentDto.getId(),
-                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                            UUID.fromString(request.getEmployeeId()),
-                            managePaymentTransactionTypeDto.getId(),
-                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                            bookingDto != null ? bookingDto.getId() : null,
-                            applyPayment);
+
+                    if (paymentBalance > 0 && bookingDto.getAmountBalance() > 0) {
+                        double amount = Math.min(bookingDto.getAmountBalance(), Math.min(Double.parseDouble(paymentImportCache.getPaymentAmount()), paymentBalance));
+                        this.sendCreatePaymentDetail(paymentDto.getId(),
+                                amount,
+                                //Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                UUID.fromString(request.getEmployeeId()),
+                                managePaymentTransactionTypeDto.getId(),
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                bookingDto != null ? bookingDto.getId() : null,
+                                applyPayment);
+
+                        //Crear el deposit.
+                        paymentBalance = paymentBalance - amount;
+                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
+                        double amountDeposit = Math.min(restAmount, paymentBalance);
+                        if (amountDeposit > 0) {
+                            DepositEvent depositEvent = new DepositEvent(this);
+                            depositEvent.setAmount(amountDeposit);
+                            depositEvent.setPaymentDto(paymentDto);
+                            depositEvent.setRemark("Create deposit in import details.");
+                            this.applicationEventPublisher.publishEvent(depositEvent);
+                        }
+                    }
                 }
             });
             pageable = pageable.next();
