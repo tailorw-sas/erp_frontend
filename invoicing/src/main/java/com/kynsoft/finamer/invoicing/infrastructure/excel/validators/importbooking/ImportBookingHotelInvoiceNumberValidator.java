@@ -23,6 +23,11 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
+            System.err.println("##############################################");
+            System.err.println("##############################################");
+            System.err.println("Hotel code: " + obj.getManageHotelCode());
+            System.err.println("##############################################");
+            System.err.println("##############################################");
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
             if (manageHotelDto.isVirtual() && Objects.isNull(obj.getHotelInvoiceNumber())) {
                 errorFieldList.add(new ErrorField("HotelInvoiceNumber", " Hotel Invoice Number can't be empty"));
