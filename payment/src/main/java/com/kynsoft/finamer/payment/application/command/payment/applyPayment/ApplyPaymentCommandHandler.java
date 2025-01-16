@@ -287,7 +287,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     public void applyPayment(UUID empoyee, ManageBookingDto bookingDto, PaymentDetailDto paymentDetailDto) {
-        //ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
+        ManageBookingDto booking = this.manageBookingService.findById(bookingDto.getId());
         //ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
 //        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
@@ -296,7 +296,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         paymentDetailDto.setApplayPayment(Boolean.TRUE);
         //paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         paymentDetailDto.setTransactionDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
-        this.manageBookingService.update(bookingDto);
+        this.manageBookingService.update(booking);
         this.paymentDetailService.update(paymentDetailDto);
 
         PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
