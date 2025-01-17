@@ -676,27 +676,27 @@ async function createItem(item: { [key: string]: any }) {
       roomRates = roomRateList.value
     }
 
-    // for (let i = 0; i < attachmentList.value.length; i++) {
-    //   if (attachmentList.value[i]?.file?.files.length > 0) {
-    //     const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
-    //     attachments.push({
-    //       ...attachmentList.value[i],
-    //       type: attachmentList.value[i]?.type?.id,
-    //       file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
-    //       paymentResourceType: attachmentList.value[i]?.resourceType.id || ''
-    //     })
-    //   }
-    // }
-    // const response = await GenericService.createBulk('invoicing', 'manage-invoice', {
-    //   bookings,
-    //   invoice: payload,
-    //   roomRates,
-    //   adjustments,
-    //   attachments,
-    //   employee: userData?.value?.user?.userId
-    // })
-    // return response
-    return true
+    for (let i = 0; i < attachmentList.value.length; i++) {
+      if (attachmentList.value[i]?.file?.files.length > 0) {
+        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+        attachments.push({
+          ...attachmentList.value[i],
+          type: attachmentList.value[i]?.type?.id,
+          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+          paymentResourceType: attachmentList.value[i]?.resourceType.id || ''
+        })
+      }
+    }
+    const response = await GenericService.createBulk('invoicing', 'manage-invoice', {
+      bookings,
+      invoice: payload,
+      roomRates,
+      adjustments,
+      attachments,
+      employee: userData?.value?.user?.userId
+    })
+    return response
+    // return true
   }
 }
 
