@@ -2,7 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
@@ -56,10 +56,9 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
                 pageable = pageable.next();
             } while (pageCache.hasNext());
             try {
-                PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(obj.getTransactionId().intValue());
+                PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(obj.getTransactionId().intValue());
                 if (Objects.isNull(paymentDetailDto.getApplyDepositValue()) || obj.getAmount() + amountTotal > paymentDetailDto.getApplyDepositValue()) {
                     errorFieldList.add(new ErrorField("Payment Amount", "Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
-                    return false;
                 }
             } catch (Exception e) {
                 errorFieldList.add(new ErrorField("Payment Details", "Payment Details not found."));
@@ -67,7 +66,5 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
             }
         }
         return true;
-
     }
-
 }

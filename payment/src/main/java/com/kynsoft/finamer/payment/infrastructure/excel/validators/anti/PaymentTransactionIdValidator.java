@@ -2,7 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,9 +31,8 @@ public class PaymentTransactionIdValidator extends ExcelRuleValidator<AntiToInco
         }
 
         try {
-            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(obj.getTransactionId().intValue());
-
-            if (!paymentDetailDto.getTransactionType().getDeposit()) {
+            PaymentDetailSimpleDto paymentDetailDto = this.paymentDetailService.findSimpleDetailByGenId(obj.getTransactionId().intValue());
+            if (!paymentDetailDto.isDeposit()) {
                 errorFieldList.add(new ErrorField("Transaction id", "Transaction isn't deposit type"));
                 return false;
             }

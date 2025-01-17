@@ -13,6 +13,7 @@ import com.kynsoft.finamer.payment.application.command.paymentImport.detail.appl
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -136,7 +137,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             try {
                 LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent("detail.pdf", request.getAttachment());
                 attachment = response.get("url");
-            } catch (JsonProcessingException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             do {
@@ -176,8 +177,10 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         Page<PaymentImportCache> cacheList = paymentImportCacheRepository.findAllByImportProcessId(importProcessId, pageable);
         Optional<PaymentImportCache> paymentImportCache = cacheList.stream().findFirst();
         return paymentImportCache.map(importCache -> {
-            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(importCache.getTransactionId()));
-            return paymentDetailDto.getPayment().getId();
+//            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(importCache.getTransactionId()));
+//            return paymentDetailDto.getPayment().getId();
+            PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(Integer.parseInt(importCache.getTransactionId()));
+            return paymentDetailDto.getPaymentId();
         }).orElse(null);
 
     }
