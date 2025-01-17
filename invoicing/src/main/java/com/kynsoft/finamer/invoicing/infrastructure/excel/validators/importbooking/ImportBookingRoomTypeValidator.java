@@ -27,7 +27,7 @@ public class ImportBookingRoomTypeValidator extends ExcelRuleValidator<BookingRo
                 this.roomTypeService.findManageRoomTypenByCodeAndHotelCode(obj.getRoomType(), obj.getManageHotelCode());
             }
         } catch (Exception e) {
-            errorFieldList.add(new ErrorField("Room Type", "Room Type not exist."));
+            errorFieldList.add(new ErrorField("Room Type", "The selected room type does not belong to the hotel."));
             return false;
         }
         return true;

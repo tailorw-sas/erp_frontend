@@ -24,7 +24,8 @@ public class CreateJasperReportParameterCommandHandler implements ICommandHandle
         this.service.create(new JasperReportParameterDto(
                 command.getId(), command.getParamName(), command.getType(), command.getModule(),
                 command.getService(), command.getLabel(), command.getComponentType(), jasperReportTemplateDto,
-                command.getReportClass(), command.getReportValidation()
+                command.getReportClass(), command.getReportValidation(), command.getParameterPosition(),
+                command.getDependentField(),command.getFilterKeyValue()
         ));
     }
 }

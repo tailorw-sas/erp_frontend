@@ -75,7 +75,8 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 null,
                 null,
                 null,
-                false
+                false,
+                null
         );
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
@@ -157,7 +158,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         // this.manageAdjustmentService.create(adjustmentDtos);
         ManageInvoiceDto updated = this.service.update(incomeDto);
         try {
-            this.producerReplicateManageInvoiceService.create(updated, null);
+            this.producerReplicateManageInvoiceService.create(updated, null, null);
         } catch (Exception e) {
         }
         // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());

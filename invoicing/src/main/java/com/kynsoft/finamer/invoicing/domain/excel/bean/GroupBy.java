@@ -11,6 +11,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class GroupBy {
 
+    private String transactionDate;
     private String agency;
     private String hotel;
     private String couponCode;

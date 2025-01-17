@@ -61,7 +61,7 @@ public class ManageCountry implements Serializable {
     private LocalDateTime deleteAt;
 
 
-    @OneToMany(mappedBy = "country", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
     private List<ManageAgency> agencies;
 
     public ManageCountry(ManagerCountryDto dto) {

@@ -17,6 +17,8 @@ import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRatePlanRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRoomTypeRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -51,6 +53,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IManageEmployeeService employeeService;
     private final IManageResourceTypeService resourceTypeService;
+    private final IManageRoomRateService roomRateService;
 
     public TotalCloneCommandHandler(IManageInvoiceService invoiceService,
                                     IManageAgencyService agencyService,
@@ -66,7 +69,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                                     IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
                                     IInvoiceCloseOperationService closeOperationService,
                                     IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService) {
+                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService, IManageRoomRateService roomRateService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -85,6 +88,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.employeeService = employeeService;
         this.resourceTypeService = resourceTypeService;
+        this.roomRateService = roomRateService;
     }
 
     @Override
@@ -161,7 +165,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         null,
                         new ArrayList<>(),
                         nights,
-                        false
+                        false,
+                        null
                 );
                 roomRateDtoList.add(roomRateDto);
             }
@@ -170,15 +175,22 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             ManageNightTypeDto nightTypeDto = bookingRequest.getNightType() != null
                     ? this.nightTypeService.findById(bookingRequest.getNightType())
                     : null;
+
             ManageRoomTypeDto roomTypeDto = bookingRequest.getRoomType() != null
                     ? this.roomTypeService.findById(bookingRequest.getRoomType())
                     : null;
+            if (roomTypeDto != null)
+                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto));
+
             ManageRoomCategoryDto roomCategoryDto = bookingRequest.getRoomCategory() != null
                     ? this.roomCategoryService.findById(bookingRequest.getRoomCategory())
                     : null;
+
             ManageRatePlanDto ratePlanDto = bookingRequest.getRatePlan() != null
                     ? this.ratePlanService.findById(bookingRequest.getRatePlan())
                     : null;
+            if (ratePlanDto != null)
+                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto));
 
             //creando el nuevo booking con los valores que vienen, el amount se agarra directo del padre
             ManageBookingDto newBooking = new ManageBookingDto(
@@ -292,7 +304,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         command.setClonedInvoiceNo(this.deleteHotelInfo(created.getInvoiceNumber()));
 
         try {
-            this.producerReplicateManageInvoiceService.create(created, null);
+            this.producerReplicateManageInvoiceService.create(created, null, null);
         } catch (Exception e) {
         }
 
@@ -340,7 +352,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private void setInvoiceToCloneAmounts(ManageInvoiceDto invoiceDto, String employee) {
 
         for (ManageBookingDto bookingDto : invoiceDto.getBookings()) {
-            for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()) {
+            List<ManageRoomRateDto> roomRateDtoList = this.roomRateService.findByBooking(bookingDto.getId());
+            for (ManageRoomRateDto roomRateDto : roomRateDtoList) {
                 List<ManageAdjustmentDto> adjustmentDtoList = new ArrayList<>();
                 ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
                         UUID.randomUUID(),
@@ -358,6 +371,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 roomRateDto.setAdjustments(adjustmentDtoList);
                 roomRateDto.setInvoiceAmount(0.00);
             }
+            bookingDto.setRoomRates(roomRateDtoList);
             this.bookingService.calculateInvoiceAmount(bookingDto);
         }
         invoiceDto.setCloneParent(true);

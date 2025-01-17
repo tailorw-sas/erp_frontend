@@ -24,6 +24,13 @@ public class ManageTraidingCompaniesResponse implements IResponse {
     private String company;
     private String status;
 
+    private String description;
+    private ManagerCountryResponse country;
+    private ManageCityStateResponse cityState;
+    private String city;
+    private String zipCode;
+    private String innsistCode;
+
     public ManageTraidingCompaniesResponse(ManageTradingCompaniesDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -33,6 +40,12 @@ public class ManageTraidingCompaniesResponse implements IResponse {
         this.address = dto.getAddress();
         this.company = dto.getCompany();
         this.status = dto.getStatus();
+        this.description = dto.getDescription();
+        this.country = dto.getCountry() != null ? new ManagerCountryResponse(dto.getCountry()) : null;
+        this.cityState = dto.getCityState() != null ? new ManageCityStateResponse(dto.getCityState()) : null;
+        this.city = dto.getCity();
+        this.zipCode = dto.getZipCode();
+        this.innsistCode = dto.getInnsistCode();
     }
 
     

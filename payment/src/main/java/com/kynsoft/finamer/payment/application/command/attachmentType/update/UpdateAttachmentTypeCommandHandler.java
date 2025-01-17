@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -38,7 +39,7 @@ public class UpdateAttachmentTypeCommandHandler implements ICommandHandler<Updat
 
 
         ConsumerUpdate update = new ConsumerUpdate();
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(attachmentTypeDto::setDescription, command.getDescription(), attachmentTypeDto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(attachmentTypeDto::setDescription, command.getDescription(), attachmentTypeDto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(attachmentTypeDto::setName, command.getName(), attachmentTypeDto.getName(), update::setUpdate);
         this.updateStatus(attachmentTypeDto::setStatus, command.getStatus(), attachmentTypeDto.getStatus(), update::setUpdate);
         this.updateDefault(attachmentTypeDto::setDefaults, command.getDefaults(), attachmentTypeDto.getDefaults(), update::setUpdate);

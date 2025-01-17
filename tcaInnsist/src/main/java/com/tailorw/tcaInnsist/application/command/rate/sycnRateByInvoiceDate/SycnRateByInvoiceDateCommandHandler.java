@@ -17,6 +17,7 @@ import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerUpda
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -41,43 +42,79 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
 
     @Override
     public void handle(SycnRateByInvoiceDateCommand command) {
-        ManageHotelDto hotel = hotelService.getByCode(command.getHotel());
+        StringBuilder additionDetails = new StringBuilder();
+
+        for(String hotelCode : command.getHotelList()){
+            try{
+                ManageHotelDto hotelDto = validateHotel(hotelCode);
+                ManageTradingCompanyDto tradingCompanyDto = validateTradingCompany(hotelDto);
+                ManageConnectionDto connection = validateConnection(tradingCompanyDto);
+
+                Map<String, List<RateDto>> groupedRates = getGroupedRoomRates(hotelDto, connection, command.getInvoiceDate());
+                syncRoomRates(command.getProcessId(), command.getInvoiceDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")), hotelCode, groupedRates);
+            }catch (IllegalArgumentException ex) {
+                logWarningAndAppend(additionDetails, ex.getMessage());
+            }
+        }
+
+        setLogProcessAsCompleted(command.getProcessId(), additionDetails.toString());
+    }
+
+    private ManageHotelDto validateHotel(String hotelCode){
+        ManageHotelDto hotel = hotelService.getByCode(hotelCode);
+
         if(Objects.isNull(hotel)){
-            Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, String.format("The hotel %s does not exist in Innsist the database", command.getHotel()));
-            return;
+            throw new IllegalArgumentException(String.format("The hotel %s does not exist in the TcaInnsist database.", hotelCode));
         }
-        ManageTradingCompanyDto tradingCompany = tradingCompanyService.getById(hotel.getTradingCompanyId());
-        if(Objects.isNull(tradingCompany) || Objects.isNull(tradingCompany.getConnectionId()) ){
-            Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, String.format("The trading company %s does not exist in Innsist the database", hotel.getTradingCompanyId()));
-            return;
+        if(Objects.isNull(hotel.getTradingCompanyId())){
+            throw new IllegalArgumentException(String.format("The hotel %s does not have a trading company associated.", hotel.getCode()));
         }
 
-        ManageConnectionDto configuration = configurationService.getById(tradingCompany.getConnectionId());
-        if(Objects.isNull(configuration)){
-            Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, String.format("The Innsist Connection ID %s does not exist in the Innsist database", tradingCompany.getConnectionId()));
-            return;
+        return  hotel;
+    }
+
+    private ManageTradingCompanyDto validateTradingCompany(ManageHotelDto hotelDto){
+        ManageTradingCompanyDto tradingCompany = tradingCompanyService.getById(hotelDto.getTradingCompanyId());
+
+        if(Objects.isNull(tradingCompany)){
+            throw new IllegalArgumentException(String.format("The trading company %s does not exist in the TcaInnsist database.", hotelDto.getTradingCompanyId()));
         }
 
-        UUID idLog = UUID.randomUUID();
+        if(Objects.isNull(tradingCompany.getConnectionId()) ){
+            throw new IllegalArgumentException(String.format("The trading company %s does not have a valid connection.", tradingCompany.getCode()));
+        }
 
-        List<RateDto> rateDtos = service.findByInvoiceDate(hotel, configuration, command.getInvoiceDate());
+        return tradingCompany;
+    }
 
-        Map<String, List<RateDto>> groupedRates = rateDtos
-                .stream()
+    private ManageConnectionDto validateConnection(ManageTradingCompanyDto tradingCompanyDto){
+        ManageConnectionDto connection = configurationService.getById(tradingCompanyDto.getConnectionId());
+        if(Objects.isNull(connection)){
+            throw new IllegalArgumentException(String.format("The Connection ID %s does not exist in the TcaInnsist database.", tradingCompanyDto.getConnectionId()));
+        }
+        return connection;
+    }
+
+    private Map<String, List<RateDto>> getGroupedRoomRates(ManageHotelDto hotel, ManageConnectionDto configuration, LocalDate invoiceDate){
+        List<RateDto> rateDtos = service.findByInvoiceDate(hotel, configuration, invoiceDate);
+
+        if(rateDtos.isEmpty()){
+            throw new IllegalArgumentException(String.format("The hotel %s does not containts room rates for %s invoice date", hotel.getCode(), invoiceDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))));
+        }
+
+        return rateDtos.stream()
                 .collect(Collectors.groupingBy(r -> r.getReservationCode() + "|" + r.getCouponNumber()));
+    }
 
-        if(groupedRates.isEmpty()){
-            Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, String.format("The hotel %s does not containts room rates for %s invoice date", command.getHotel(), command.getInvoiceDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))));
-            return;
-        }
-
+    private void syncRoomRates(UUID processId, String invoiceDate, String hotelCode, Map<String, List<RateDto>> groupedRates){
+        UUID idLog = UUID.randomUUID();
         int count = 1;
         for(Map.Entry<String, List<RateDto>> entry : groupedRates.entrySet()){
             GroupedRatesKafka groupedRatesKafka = new GroupedRatesKafka(
                     idLog,
-                    command.getProcessId(),
-                    command.getInvoiceDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-                    command.getHotel(),
+                    processId,
+                    invoiceDate,
+                    hotelCode,
                     entry.getKey().split("\\|")[0],
                     entry.getKey().split("\\|")[1],
                     entry.getValue().stream()
@@ -89,13 +126,18 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
             producerReplicateGroupedRatesService.create(groupedRatesKafka);
             count++;
         }
+    }
 
-        if(command.isLastGroup()){
-            producerUpdateSchedulerLogService.update(new UpdateSchedulerProcessKafka(
-                    command.getProcessId(),
-                    LocalDateTime.now(),
-                    ""
-            ));
-        }
+    private void setLogProcessAsCompleted(UUID processId, String message){
+        producerUpdateSchedulerLogService.update(new UpdateSchedulerProcessKafka(
+                processId,
+                LocalDateTime.now(),
+                message
+        ));
+    }
+
+    private void logWarningAndAppend(StringBuilder details, String message) {
+        Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, message);
+        details.append(message).append("\n");
     }
 }

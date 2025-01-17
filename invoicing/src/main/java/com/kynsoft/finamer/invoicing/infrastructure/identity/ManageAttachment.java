@@ -21,8 +21,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "invoice_attachment")
-@EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "invoice_attachment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+//@EntityListeners(AuditEntityListener.class)
+//@RemoteAudit(name = "invoice_attachment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAttachment {
 
     @Id
@@ -33,6 +33,7 @@ public class ManageAttachment {
     @Generated(event = EventType.INSERT)
     private Long attachmentId;
 
+    @Column(columnDefinition = "TEXT")
     private String filename;
 
     private String employee;

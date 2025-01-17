@@ -78,6 +78,11 @@ public class CreateMasterPaymentAttachmentCommandHandler implements ICommandHand
             resource.setAttachmentStatus(attachmentStatusSupport);
             statusHistory = attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName();
             this.paymentService.update(resource);
+        } else {
+            ManagePaymentAttachmentStatusDto attachmentOtherSupport = this.attachmentStatusService.findByOtherSupported();
+            resource.setAttachmentStatus(attachmentOtherSupport);
+            statusHistory = attachmentOtherSupport.getCode() + "-" + attachmentOtherSupport.getName();
+            this.paymentService.update(resource);
         }
         this.updateAttachmentStatusHistory(employeeDto, resource, command.getFileName(), attachmentId, statusHistory);
 //        this.createPaymentAttachmentStatusHistory(employeeDto, resource, command.getFileName());

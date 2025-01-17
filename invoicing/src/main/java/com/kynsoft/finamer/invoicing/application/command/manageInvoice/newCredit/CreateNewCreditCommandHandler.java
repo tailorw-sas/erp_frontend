@@ -131,7 +131,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         newBooking,
                         new LinkedList<>(),
                         newBooking.getNights(),
-                        false
+                        false,
+                        null
                 );
                 List<ManageRoomRateDto> rates = new LinkedList<>();
                 rates.add(roomRateDto);
@@ -243,7 +244,8 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         );
         invoiceDto.setOriginalAmount(invoiceAmount);
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
-        this.producerReplicateManageInvoiceService.create(created, attachmentDefault);
+        UUID uuidEmployee = employee != null ? employee.getId() : null;
+        this.producerReplicateManageInvoiceService.create(created, attachmentDefault, uuidEmployee);
 
         command.setCredit(created.getId());
         command.setInvoiceId(created.getInvoiceId());

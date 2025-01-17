@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageInvoiceTransactionTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageInvoiceTransactionTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
@@ -38,7 +39,7 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsAgencyRateAmount, command.getIsAgencyRateAmount(), dto.getIsAgencyRateAmount(), update::setUpdate);
@@ -46,7 +47,7 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
         UpdateIfNotNull.updateBoolean(dto::setIsPolicyCredit, command.getIsPolicyCredit(), dto.getIsPolicyCredit(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsRemarkRequired, command.getIsRemarkRequired(), dto.getIsRemarkRequired(), update::setUpdate);
         UpdateIfNotNull.updateInteger(dto::setMinNumberOfCharacters, command.getMinNumberOfCharacters(), dto.getMinNumberOfCharacters(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
+        UpdateFields.updateString(dto::setDefaultRemark, command.getDefaultRemark(), dto.getDefaultRemark(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setDefaults, command.isDefaults(), dto.isDefaults(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setCloneAdjustmentDefault, command.isCloneAdjustmentDefault(), dto.isCloneAdjustmentDefault(), update::setUpdate);
 

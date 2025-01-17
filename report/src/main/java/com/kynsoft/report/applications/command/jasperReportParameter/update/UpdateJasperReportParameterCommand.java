@@ -23,12 +23,17 @@ public class UpdateJasperReportParameterCommand implements ICommand {
     private final String componentType;
     private final String reportClass;
     private final String reportValidation;
+    private int parameterPosition;
+    private String dependentField;
+    private final String filterKeyValue;
 
     public static UpdateJasperReportParameterCommand fromRequest(UpdateJasperReportParameterRequest request, UUID id) {
         return new UpdateJasperReportParameterCommand(
                 id, request.getParamName(), request.getType(), request.getModule(),
                 request.getService(), request.getLabel(), request.getReportId(), request.getComponentType(),
-                request.getReportClass(), request.getReportValidation()
+                request.getReportClass(), request.getReportValidation(),
+                request.getParameterPosition(), request.getDependentField(),
+                request.getFilterKeyValue()
         );
     }
 

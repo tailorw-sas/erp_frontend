@@ -134,4 +134,14 @@ public class ManageHotelServiceImpl implements IManageHotelService {
         }
     }
 
+    @Override
+    public List<ManageHotelDto> findAll() {
+        List<ManageHotel> objects = this.repositoryQuery.findAll();
+        List<ManageHotelDto> objectDtos = new ArrayList<>();
+        for (ManageHotel object : objects) {
+            objectDtos.add(object.toAggregate());
+        }
+        return objectDtos;
+    }
+
 }

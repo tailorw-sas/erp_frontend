@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageTradingCompanyKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
+import com.kynsof.share.utils.UpdateFields;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.settings.domain.dto.ManageCityStateDto;
 import com.kynsoft.finamer.settings.domain.dto.ManageTradingCompaniesDto;
@@ -48,7 +49,7 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
 
         ConsumerUpdate update = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
+        UpdateFields.updateString(dto::setDescription, command.getDescription(), dto.getDescription(), update::setUpdate);
         updateStatus(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCompany, command.getCompany(), dto.getCompany(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCif, command.getCif(), dto.getCif(), update::setUpdate);
@@ -57,14 +58,16 @@ public class UpdateManageTradingCompaniesCommandHandler implements ICommandHandl
         updateCityState(dto::setCityState, command.getCityState(), dto.getCityState().getId(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setCity, command.getCity(), dto.getCity(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setZipCode, command.getZipCode(), dto.getZipCode(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setInnsistCode, command.getInnsistCode(), dto.getInnsistCode(), update::setUpdate);
+        UpdateFields.updateString(dto::setInnsistCode, command.getInnsistCode(), dto.getInnsistCode(), update::setUpdate);
         UpdateIfNotNull.updateBoolean(dto::setIsApplyInvoice, command.getIsApplyInvoice(), dto.getIsApplyInvoice(), update::setUpdate);
 
         if (update.getUpdate() > 0) {
             this.service.update(dto);
             this.producerReplicateManageTradingCompanyService
                     .create(new ReplicateManageTradingCompanyKafka(dto.getId(), dto.getCode(),
-                            command.getIsApplyInvoice(), dto.getCif(), dto.getAddress(), dto.getCompany(), dto.getStatus().name()));
+                            command.getIsApplyInvoice(), dto.getCif(), dto.getAddress(), dto.getCompany(), dto.getStatus().name(),
+                            dto.getDescription(), dto.getCountry() != null ? dto.getCountry().getId() : null, dto.getCityState() != null ? dto.getCityState().getId() : null,
+                            dto.getCity(), dto.getZipCode(), dto.getInnsistCode()));
         }
     }
 

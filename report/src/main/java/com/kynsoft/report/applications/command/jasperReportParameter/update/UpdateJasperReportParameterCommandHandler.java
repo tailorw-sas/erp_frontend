@@ -24,6 +24,9 @@ public class UpdateJasperReportParameterCommandHandler implements ICommandHandle
         reportParameterDto.setComponentType(command.getComponentType());
         reportParameterDto.setReportClass(command.getReportClass());
         reportParameterDto.setReportValidation(command.getReportValidation());
+        reportParameterDto.setParameterPosition(command.getParameterPosition());
+        reportParameterDto.setDependentField(command.getDependentField());
+        reportParameterDto.setFilterKeyValue(command.getFilterKeyValue());
         this.service.update(reportParameterDto);
 
     }

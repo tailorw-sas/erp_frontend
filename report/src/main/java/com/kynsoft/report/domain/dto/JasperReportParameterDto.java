@@ -23,5 +23,8 @@ public class JasperReportParameterDto {
     private JasperReportTemplateDto jasperReportTemplate;
     private String reportClass;
     private String reportValidation;
+    private int parameterPosition;
+    private String dependentField;
+    private String filterKeyValue;
 
 }

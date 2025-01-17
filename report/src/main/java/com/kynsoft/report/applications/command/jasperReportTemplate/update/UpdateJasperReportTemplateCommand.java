@@ -3,6 +3,7 @@ package com.kynsoft.report.applications.command.jasperReportTemplate.update;
 import com.kynsoft.report.domain.dto.JasperReportTemplateType;
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.dto.status.Status;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,14 +36,15 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
     private Status status;
     private UUID dbConection;
     private String query;
+    private final ModuleSystems moduleSystems;
 
     public UpdateJasperReportTemplateCommand(UUID id, String name, String description,
                                              JasperReportTemplateType type, String file, String parameters,
-                                             Double parentIndex, Double menuPosition, 
-                                             String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail, 
-                                             Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel, 
+                                             Double parentIndex, Double menuPosition,
+                                             String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail,
+                                             Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel,
                                              String rootIndex, String language, Status status, UUID dbConection,
-                                             String query) {
+                                             String query, ModuleSystems moduleSystems) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -64,6 +66,7 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
         this.status = status;
         this.dbConection = dbConection;
         this.query = query;
+        this.moduleSystems = moduleSystems;
     }
 
     public static UpdateJasperReportTemplateCommand fromRequest(UpdateJasperReportTemplateRequest request, UUID id) {
@@ -88,7 +91,8 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
                 request.getLanguage(),
                 request.getStatus(),
                 request.getDbConection(),
-                request.getQuery()
+                request.getQuery(),
+                request.getModuleSystems()
         );
     }
 

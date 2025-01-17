@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public interface BookingReadDataJPARepository extends JpaRepository<Booking, UUID>, JpaSpecificationExecutor<Booking> {
 
-    Optional<Booking> findByHotelAndInvoicingDateAndReservationCodeAndCouponNumber(
+    Optional<Booking> findFirstByHotelAndInvoicingDateAndReservationCodeAndCouponNumberOrderByCreatedAtDesc(
             ManageHotel hotel,
             LocalDate invoicingDate,
             String reservationCode,

@@ -160,6 +160,7 @@ public class ImportInnsistServiceImpl {
 
         grouped = process.stream().collect(Collectors.groupingBy(
                 booking -> new GroupBy(
+                        booking.getInvoiceDate().toString(),
                         booking.getManageAgencyCode(),
                         booking.getManageHotelCode(),
                         booking.getCouponNumber()
@@ -226,12 +227,14 @@ public class ImportInnsistServiceImpl {
 
         String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
         if (hotel.isVirtual()) {
-            manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
+            manageInvoiceDto.setImportType(ImportType.INSIST);
+            //manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
 
             invoiceNumber = setInvoiceNumber(hotel, invoiceNumber);
             manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber());
         } else {
-            manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
+            manageInvoiceDto.setImportType(ImportType.INSIST);
+            //manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
 
             invoiceNumber = setInvoiceNumber(hotel, invoiceNumber);
         }
@@ -242,7 +245,7 @@ public class ImportInnsistServiceImpl {
 
         //TODO: aqui se envia a crear el invoice con sun booking en payment
         try {
-            this.producerReplicateManageInvoiceService.create(manageInvoiceDto, null);
+            this.producerReplicateManageInvoiceService.create(manageInvoiceDto, null, null);
         } catch (Exception e) {
         }
     }
@@ -258,8 +261,8 @@ public class ImportInnsistServiceImpl {
 
     private List<ManageBookingDto> createBooking(List<ImportInnsistBookingKafka> bookingRowList) {
         return bookingRowList.stream().map(bookingRow -> {
-            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlanCode()) ? ratePlanService.findByCode(bookingRow.getRatePlanCode()) : null;
-            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomTypeCode()) ? roomTypeService.findByCode(bookingRow.getRoomTypeCode()) : null;
+            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlanCode()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRow.getRatePlanCode(), bookingRow.getManageHotelCode()) : null;
+            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomTypeCode()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRow.getRoomTypeCode(), bookingRow.getManageHotelCode()) : null;
             ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightTypeCode()) ? nightTypeService.findByCode(bookingRow.getNightTypeCode()) : null;
 
             ManageBookingDto bookingDto = toAggregate(bookingRow);
@@ -274,7 +277,7 @@ public class ImportInnsistServiceImpl {
             double bookingAmount = calculateBookingAmount(rates);
             bookingDto.setInvoiceAmount(bookingAmount);
             bookingDto.setDueAmount(bookingAmount);
-            bookingDto.setHotelAmount(bookingAmount);
+            bookingDto.setHotelAmount(this.calculateHotelAmount(rates));
             return bookingDto;
         }).toList();
     }
@@ -296,10 +299,16 @@ public class ImportInnsistServiceImpl {
         return createRateDtos.stream().mapToDouble(ManageRoomRateDto::getInvoiceAmount).sum();
     }
 
+    private double calculateHotelAmount(List<ManageRoomRateDto> createRateDtos) {
+        return createRateDtos.stream().mapToDouble(ManageRoomRateDto::getHotelAmount).sum();
+    }
+
     private LocalDateTime getInvoiceDate(ImportInnsistBookingKafka bookingRow) {
-        LocalDateTime excelDate = bookingRow.getBookingDate();
+        LocalDateTime excelDate = bookingRow.getInvoiceDate();
+        //LocalDateTime excelDate = bookingRow.getBookingDate();
         LocalDateTime transactionDate = LocalDateTime.now();
-        if (Objects.nonNull(bookingRow.getBookingDate())
+        if (Objects.nonNull(bookingRow.getInvoiceDate())
+        //if (Objects.nonNull(bookingRow.getBookingDate())
                 && Objects.nonNull(excelDate)
                 && !LocalDate.now().isEqual(excelDate.toLocalDate())) {
             transactionDate = bookingRow.getBookingDate();

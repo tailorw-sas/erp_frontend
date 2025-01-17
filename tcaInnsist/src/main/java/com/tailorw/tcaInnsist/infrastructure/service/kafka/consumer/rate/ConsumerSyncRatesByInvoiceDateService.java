@@ -35,6 +35,14 @@ public class ConsumerSyncRatesByInvoiceDateService {
             ObjectMapper mapper = new ObjectMapper();
             SyncRatesByInvoiceDateKafka objKafka = mapper.readValue(message, new TypeReference<SyncRatesByInvoiceDateKafka>() {});
 
+            SycnRateByInvoiceDateCommand command = new SycnRateByInvoiceDateCommand(
+                    objKafka.getProcessId(),
+                    objKafka.getHotels(),
+                    LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER)
+            );
+            mediator.send(command);
+
+            /*
             int count = 1;
             for(String hotel : objKafka.getHotels()){
                 logInfo(String.format("Rates By InvoiceDate Sync start. Hotel: %s", hotel));
@@ -48,7 +56,7 @@ public class ConsumerSyncRatesByInvoiceDateService {
                 );
                 mediator.send(command);
                 count++;
-            }
+            }*/
 
         }catch (Exception ex){
             Logger.getLogger(ConsumerSyncRatesByInvoiceDateService.class.getName()).log(Level.SEVERE, null, ex);

@@ -17,6 +17,7 @@ import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualP
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import com.kynsoft.finamer.invoicing.domain.services.IReportPdfService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,12 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
     private final Logger log = LoggerFactory.getLogger(ReportPdfServiceImpl.class);
     private final ManageInvoiceServiceImpl invoiceService;
+    private final IManageRoomRateService roomRateService;
 
-    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService) {
+    public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService, IManageRoomRateService roomRateService) {
 
         this.invoiceService = invoiceService;
+        this.roomRateService = roomRateService;
     }
 
     private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException { // Changed to IOException
@@ -54,7 +57,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         styleHeader.setFontSize(10);
         Style styleCell = new Style();
         styleCell.setFontSize(8);
-        String currencyData = invoiceDto.getHotel().getManageCurrency().getCode();
+        String currencyData = invoiceDto.getHotel().getManageCurrency() != null ? invoiceDto.getHotel().getManageCurrency().getCode() : "USD";
 
         List<ManageBookingDto> bookings = invoiceDto.getBookings();
 
@@ -74,7 +77,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.setBorder(Border.NO_BORDER);
 
         // Add header row
-        Paragraph hotelHead = new Paragraph("Hotel: " + invoiceDto.getHotel() != null ? invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName() : "").addStyle(styleHeader);
+        Paragraph hotelHead = new Paragraph(invoiceDto.getHotel() != null ? "Hotel: " + invoiceDto.getHotel().getCode() + "-" + invoiceDto.getHotel().getName() : "Hotel: ").addStyle(styleHeader);
         hotelHead.setBold();
         table.addHeaderCell(new Cell().add(hotelHead));
         table.addHeaderCell(new Cell());
@@ -91,16 +94,16 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addHeaderCell(new Cell());
         table.addHeaderCell(new Cell());
 
-        for (ManageBookingDto booking : bookings) {
+//        for (ManageBookingDto booking : bookings) {
             // Add data row file 1
             table.addCell(new Cell());
             table.addCell(new Cell());
             table.addCell(new Cell());
-            table.addCell(new Cell().add(new Paragraph((booking.getHotelCreationDate()!=null ? booking.getHotelCreationDate().format(formatter) : "Not date")).addStyle(styleCell)));
-            table.addCell(new Cell().add(new Paragraph((booking.getBookingDate()!=null ? booking.getBookingDate().format(formatter) : "Not date")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((bookings.get(0).getHotelCreationDate()!=null ? bookings.get(0).getHotelCreationDate().format(formatter) : "Not date")).addStyle(styleCell)));
+            table.addCell(new Cell().add(new Paragraph((bookings.get(0).getBookingDate()!=null ? bookings.get(0).getBookingDate().format(formatter) : "Not date")).addStyle(styleCell)));
             table.addCell(new Cell());
             table.addCell(new Cell());
-        }
+//        }
         //2 empty columns
         for (int i = 0; i < 7; i++) {
             table.addCell(new Cell().setMinHeight(10));
@@ -264,7 +267,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         // Add data row file 9
         for (ManageBookingDto booking : bookings) {
-            List<ManageRoomRateDto> roomRates = booking.getRoomRates();
+            List<ManageRoomRateDto> roomRates = this.roomRateService.findByBooking(booking.getId());
             for (ManageRoomRateDto roomRate : roomRates) {
                 total = total + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0);
                 moneyType = roomRate.getRemark() != null ? roomRate.getRemark() : "";
@@ -275,7 +278,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                 table.addCell(new Cell().add(new Paragraph(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "").addStyle(styleCell)));
                 table.addCell(new Cell().add(new Paragraph("$ " + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0)).addStyle(styleCell)));
-                table.addCell(new Cell().add(new Paragraph((currencyData != null ? currencyData : "$")).addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((currencyData)).addStyle(styleCell)));
             }
         }
         // Add data row file 10
@@ -296,7 +299,8 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         table.addCell(new Cell());
         table.addCell(new Cell());
         table.addCell(new Cell().add(new Paragraph("$ " + ScaleAmount.scaleAmount(total)).addStyle(styleCell)));
-        table.addCell(new Cell().add(new Paragraph(!moneyType.isEmpty() ? moneyType : "$" ).addStyle(styleCell)));
+        //table.addCell(new Cell().add(new Paragraph(!moneyType.isEmpty() ? moneyType : "USD" ).addStyle(styleCell)));
+        table.addCell(new Cell().add(new Paragraph(currencyData).addStyle(styleCell)));
 
         document.add(table);
         document.close();

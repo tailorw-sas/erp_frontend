@@ -77,6 +77,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 dbConectionDto,
                 command.getQuery()
         );
+
+        reportTemplateDto.setModuleSystems(command.getModuleSystems());
         UUID id = this.service.create(reportTemplateDto);
 
         addParameters(command.getFile(), reportTemplateDto);
@@ -97,7 +99,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
             if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que son promptables
                 this.reportParameterService.create(new JasperReportParameterDto(
                         UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
-                        "", "","", reportTemplateDto,"",""
+                        "", "","", reportTemplateDto,"",
+                        "",0, "", ""
                 ));
             }
         }

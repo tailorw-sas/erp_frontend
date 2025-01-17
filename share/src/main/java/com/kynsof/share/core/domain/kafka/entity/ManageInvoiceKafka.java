@@ -30,4 +30,5 @@ public class ManageInvoiceKafka {
     private Boolean hasAttachment;
     private LocalDateTime invoiceDate;
     private Boolean autoRec;
+    private UUID employee;
 }

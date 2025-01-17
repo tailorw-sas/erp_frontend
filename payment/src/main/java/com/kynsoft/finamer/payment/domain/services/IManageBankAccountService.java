@@ -23,4 +23,6 @@ public interface IManageBankAccountService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageBankAccountDto> findAllByHotel(UUID hotelId);
+
+    ManageBankAccountDto findManageBankAccountByCodeAndHotelCode(String code, String hotelCode);
 }

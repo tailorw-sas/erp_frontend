@@ -34,7 +34,7 @@ public class CreateIncomeTransactionKafka {
 
     private UUID relatedPaymentDetail;
     private ReplicatePaymentKafka paymentKafka;
-    private byte[] attachment;
+    private String attachment;
 
     public CreateIncomeTransactionKafka(UUID id, LocalDateTime invoiceDate, Boolean manual, UUID agency, UUID hotel, UUID invoiceType, UUID invoiceStatus, UUID employeeId, Double incomeAmount, String status, Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate, Long invoiceId, String employee, String statusAdjustment, String employeeAdjustment, UUID transactionTypeAdjustment, LocalDate dateAdjustment, String remark, UUID relatedPaymentDetail, ReplicatePaymentKafka paymentKafka) {
         this.id = id;

@@ -23,14 +23,14 @@ public class JasperReportParameter extends BaseEntity {
 
     private String type;
     private String componentType;
-
     private String module;
-
     private String service;
-
     private String label;
     private String reportClass;
     private String reportValidation;
+    private int parameterPosition;
+    private String dependentField;
+    private String filterKeyValue;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "jasper_report_template_id", nullable = false)
@@ -54,6 +54,9 @@ public class JasperReportParameter extends BaseEntity {
         this.jasperReportTemplate = new JasperReportTemplate(jasperReportParameterDto.getJasperReportTemplate());
         reportClass = jasperReportParameterDto.getReportClass();
         reportValidation = jasperReportParameterDto.getReportValidation();
+        parameterPosition = jasperReportParameterDto.getParameterPosition();
+        dependentField = jasperReportParameterDto.getDependentField();
+        filterKeyValue = jasperReportParameterDto.getFilterKeyValue();
     }
 
     public JasperReportParameterDto toAggregate() {
@@ -67,7 +70,10 @@ public class JasperReportParameter extends BaseEntity {
                 componentType,
                 jasperReportTemplate.toAggregate(),
                 reportClass,
-                reportValidation
+                reportValidation,
+                parameterPosition,
+                dependentField,
+                filterKeyValue
         );
     }
 }

@@ -23,7 +23,7 @@ public class  PaymentAllAttachmentContentProvider extends AbstractReportContentP
     }
 
     @Override
-    public Optional<byte[]> getContent(Map<String, Object> parameters) {
+    public Optional<byte[]> getContent(Map<String, Object> parameters,String reportCode) {
         try {
             String paymentId = (String) parameters.getOrDefault("paymentId", "");
             return getMergeAttachmentPdfContent(paymentId);

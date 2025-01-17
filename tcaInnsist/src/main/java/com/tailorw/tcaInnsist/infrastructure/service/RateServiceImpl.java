@@ -10,7 +10,7 @@ import com.tailorw.tcaInnsist.domain.dto.ManageConnectionDto;
 import com.tailorw.tcaInnsist.domain.services.*;
 import com.tailorw.tcaInnsist.domain.services.utils.IEncryptionService;
 import com.tailorw.tcaInnsist.infrastructure.model.Rate;
-import com.tailorw.tcaInnsist.infrastructure.model.redis.ManageConnection;
+import com.tailorw.tcaInnsist.infrastructure.model.ManageConnection;
 import com.tailorw.tcaInnsist.infrastructure.repository.interfaces.IRateRepository;
 import com.tailorw.tcaInnsist.infrastructure.utils.search.SearchUtil;
 import org.springframework.data.domain.Page;

@@ -2,7 +2,7 @@ package com.tailorw.tcaInnsist.infrastructure.repository.interfaces;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.tailorw.tcaInnsist.infrastructure.model.Rate;
-import com.tailorw.tcaInnsist.infrastructure.model.redis.ManageConnection;
+import com.tailorw.tcaInnsist.infrastructure.model.ManageConnection;
 
 import java.time.LocalDate;
 import java.util.List;

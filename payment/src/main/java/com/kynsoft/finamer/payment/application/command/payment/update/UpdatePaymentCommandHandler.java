@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.rules.payment.PaymentValidateBankAccountAndHotelRule;
 import com.kynsoft.finamer.payment.domain.rules.payment.UpdatePaymentValidateChangeStatusRule;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -77,7 +78,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
         this.updateManageAgency(paymentDto::setAgency, command.getAgency(), paymentDto.getAgency().getId(), update::setUpdate);
         this.updateManageHotel(paymentDto::setHotel, command.getHotel(), paymentDto.getHotel().getId(), update::setUpdate);
 //        this.updateManageBankAccount(paymentDto::setBankAccount, command.getBankAccount(), paymentDto.getBankAccount().getId(), update::setUpdate);
-        this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
+//        this.updateManageAttachmentStatus(paymentDto::setAttachmentStatus, command.getAttachmentStatus(), paymentDto.getAttachmentStatus().getId(), update::setUpdate);
 
         //if (update.getUpdate() > 0) {
         if (!paymentDto.getPaymentSource().getExpense())//Se agrega esto con el objetivo de ignorar este check cuando se importa
@@ -87,14 +88,17 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
                 paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
             } else if(!command.getBankAccount().equals(paymentDto.getBankAccount().getId())) {
                 paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+                RulesChecker.checkRule(new PaymentValidateBankAccountAndHotelRule(paymentDto.getHotel(), paymentDto.getBankAccount()));
             }
         } else {
             if (command.getBankAccount() == null) {
                 paymentDto.setBankAccount(null);
             } else if(paymentDto.getBankAccount() == null) {
                 paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+                RulesChecker.checkRule(new PaymentValidateBankAccountAndHotelRule(paymentDto.getHotel(), paymentDto.getBankAccount()));
             } else if(!command.getBankAccount().equals(paymentDto.getBankAccount().getId())) {
                 paymentDto.setBankAccount(this.bankAccountService.findById(command.getBankAccount()));
+                RulesChecker.checkRule(new PaymentValidateBankAccountAndHotelRule(paymentDto.getHotel(), paymentDto.getBankAccount()));
             }
         }
 

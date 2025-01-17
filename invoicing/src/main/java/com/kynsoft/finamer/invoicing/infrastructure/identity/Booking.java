@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "booking")
-@EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+//@EntityListeners(AuditEntityListener.class)
+//@RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Booking {
     @Id
     @Column(name = "id")
@@ -83,7 +83,7 @@ public class Booking {
     @JoinColumn(name = "manage_room_category", nullable = true)
     private ManageRoomCategory roomCategory;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "booking")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "booking")
     private List<ManageRoomRate> roomRates;
 
     @Column(nullable = true)
@@ -99,10 +99,10 @@ public class Booking {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Booking parent;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "manageBooking")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "manageBooking")
     private List<PaymentDetail> paymentDetails;
 
     private String contract;
@@ -122,7 +122,7 @@ public class Booking {
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();
-        this.children = dto.getChildren();
+        this.children = dto.getChildren() != null ? dto.getChildren() : 0;
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.rateAdult = dto.getRateAdult() != null ? ScaleAmount.scaleAmount(dto.getRateAdult()) : null;
@@ -158,7 +158,7 @@ public class Booking {
                 invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
                 dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : 0.0, 
                 roomNumber, couponNumber, adults,
-                children,
+                children != null ? children : 0,
                 rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
                 rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
                 hotelInvoiceNumber, folioNumber, 
@@ -167,9 +167,8 @@ public class Booking {
                 invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
-                roomRates != null ? roomRates.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights,
+                null,  //roomRates != null ? roomRates.stream().map(ManageRoomRate::toAggregateSample).collect(Collectors.toList()) : null,
+                 nights,
                 parent != null ? parent.toAggregateSample() : null, contract, deleteInvoice);
     }
 
@@ -189,9 +188,11 @@ public class Booking {
                 null, ratePlan != null ? ratePlan.toAggregate() : null,
                 nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
                 roomCategory != null ? roomCategory.toAggregate() : null,
-                roomRates != null ? roomRates.stream().map(b -> {
-                    return b.toAggregateSample();
-                }).collect(Collectors.toList()) : null, nights, null, contract, deleteInvoice);
+//                roomRates != null ? roomRates.stream().map(b -> {
+//                    return b.toAggregateSample();
+//                }).collect(Collectors.toList()) : null,
+                null,
+                nights, null, contract, deleteInvoice);
     }
 
     @PostLoad

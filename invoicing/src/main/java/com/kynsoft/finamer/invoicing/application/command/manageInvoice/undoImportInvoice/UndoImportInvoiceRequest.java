@@ -11,4 +11,5 @@ import java.util.UUID;
 public class UndoImportInvoiceRequest {
 
     private List<UUID> ids;
+    private String employee;
 }

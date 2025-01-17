@@ -165,8 +165,11 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             invoice.setAttachments(null);
             attachmentStatusHistoryDto.setInvoice(invoice);
             attachmentStatusHistoryDto.setEmployeeId(attachment.getEmployeeId());
-            attachmentStatusHistoryDto.setAttachmentId(this.attachmentService.findById(attachment.getId()).getAttachmentId());
-
+            try {
+                attachmentStatusHistoryDto.setAttachmentId(this.attachmentService.findById(attachment.getId()).getAttachmentId());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
         }
     }

@@ -64,30 +64,46 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         JasperReport jasperReport = getJasperReport(reportPath);
         logger.info("Generating PDF report with database: {}", reportTemplateDto.getDbConectionDto().getName());
 
-        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "temp/");
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(20, "temp/");
         parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
             String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
             NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+
             query = replaceQueryParameters(query, parameters);
             List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
 
             JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
+
             JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+
+            // Verifica el tamaño del archivo generado
+            if (outputStream.size() > getMaxFileSize()) {
+                throw new RuntimeException("The generated PDF report is too large. Size: " + outputStream.size() + " bytes.");
+            }
+
             return outputStream.toByteArray();
+        } catch (IOException | JRException e) {
+            logger.error("Error generating PDF report: {}", e.getMessage(), e);
+            throw e;
         } finally {
             virtualizer.cleanup();
         }
+    }
+
+    private int getMaxFileSize() {
+        // Define el límite en bytes (por ejemplo, 50 MB)
+        return 50 * 1024 * 1024; // 50 MB
     }
 
     public byte[] generateExcelReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
         JasperReport jasperReport = getJasperReport(reportPath);
         logger.info("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
 
-        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2, "temp/");
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2048, "temp/");
         parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {

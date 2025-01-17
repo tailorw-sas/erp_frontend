@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafk
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistRoomRateKafka;
 import com.kynsoft.finamer.insis.domain.dto.*;
 import com.kynsoft.finamer.insis.domain.services.*;
+import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
 import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.booking.ProducerImportInnsistBookingService;
 import org.springframework.stereotype.Component;
@@ -44,9 +45,10 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         ManageEmployeeDto employee = getEmployee(command.getUserId());
         List<BookingDto> bookings = getBookings(command.getBookings());
 
-        ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId());
+        ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId(), 0, 0);
         saveImportBookings(importProcess, bookings);
 
+        setBookingsInProcess(bookings);
         sendBookingToProcess(importProcess, employee, bookings);
 
         updateImportProcessStatus(importProcess, ImportProcessStatus.IN_PROCESS);
@@ -56,14 +58,16 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         return employeeService.findById(id);
     }
 
-    private ImportProcessDto createImportProcess(UUID processId, int bookingsSize, UUID employeeId){
+    private ImportProcessDto createImportProcess(UUID processId, int bookingsSize, UUID employeeId, int totalSucessful, int totalFailed){
         ImportProcessDto dto = new ImportProcessDto(
                 processId,
                 ImportProcessStatus.CREATED,
                 LocalDate.now(),
                 null,
                 bookingsSize,
-                employeeId
+                employeeId,
+                totalSucessful,
+                totalFailed
         );
 
         return service.create(dto);
@@ -90,6 +94,14 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         importBookingService.createMany(importBookingDtoList);
     }
 
+    private void setBookingsInProcess(List<BookingDto> bookingsToImport){
+        bookingsToImport.forEach(booking -> {
+            booking.setStatus(BookingStatus.IN_PROCESS);
+            booking.setUpdatedAt(LocalDateTime.now());
+        });
+        bookingService.updateMany(bookingsToImport);
+    }
+
     private void sendBookingToProcess(ImportProcessDto importProcess, ManageEmployeeDto employee, List<BookingDto> bookings){
         ImportInnsistKafka importInnsistKafka = new ImportInnsistKafka(
                 importProcess.getId(),
@@ -106,8 +118,9 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
     private ImportInnsistBookingKafka bookingToKafkaBooking(BookingDto booking, List<RoomRateDto> roomRates){
         return new ImportInnsistBookingKafka(
                 booking.getId(),
+                booking.getInvoicingDate().atStartOfDay(),
                 booking.getHotelCreationDate().atStartOfDay(),
-                LocalDateTime.now(),
+                booking.getInvoicingDate().atStartOfDay(),
                 booking.getCheckInDate().atStartOfDay(),
                 booking.getCheckOutDate().atStartOfDay(),
                 booking.getReservationCode(), //booking.getHotelInvoiceNumber(),

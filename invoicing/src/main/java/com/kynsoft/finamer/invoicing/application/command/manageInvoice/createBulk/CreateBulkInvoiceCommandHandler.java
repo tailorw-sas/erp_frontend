@@ -15,6 +15,8 @@ import com.kynsoft.finamer.invoicing.domain.rules.manageBooking.ManageBookingHot
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceManualValidateVirtualHotelRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.InvoiceValidateClienteRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRatePlanRule;
+import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRoomTypeRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
@@ -93,7 +95,6 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
     }
 
     @Override
-    @Transactional
     public void handle(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
 
@@ -138,23 +139,16 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                         command.getInvoiceCommand().getHotel(), command.getBookingCommands().get(i).getHotelBookingNumber()));
             }
 
-            ManageNightTypeDto nightTypeDto = command.getBookingCommands().get(i).getNightType() != null
-                    ? this.nightTypeService
-                            .findById(command.getBookingCommands().get(i).getNightType())
-                    : null;
-            ManageRoomTypeDto roomTypeDto = command.getBookingCommands().get(i).getRoomType() != null
-                    ? this.roomTypeService
-                            .findById(command.getBookingCommands().get(i).getRoomType())
-                    : null;
-            ManageRoomCategoryDto roomCategoryDto = command.getBookingCommands().get(i)
-                    .getRoomCategory() != null
-                            ? this.roomCategoryService.findById(command.getBookingCommands()
-                                    .get(i).getRoomCategory())
-                            : null;
-            ManageRatePlanDto ratePlanDto = command.getBookingCommands().get(i).getRatePlan() != null
-                    ? this.ratePlanService
-                            .findById(command.getBookingCommands().get(i).getRatePlan())
-                    : null;
+            ManageNightTypeDto nightTypeDto = command.getBookingCommands().get(i).getNightType() != null ? this.nightTypeService.findById(command.getBookingCommands().get(i).getNightType()) : null;
+            ManageRoomCategoryDto roomCategoryDto = command.getBookingCommands().get(i).getRoomCategory() != null ? this.roomCategoryService.findById(command.getBookingCommands().get(i).getRoomCategory()) : null;
+
+            ManageRatePlanDto ratePlanDto = command.getBookingCommands().get(i).getRatePlan() != null ? this.ratePlanService.findById(command.getBookingCommands().get(i).getRatePlan()) : null;
+            if (ratePlanDto != null)
+                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto));
+
+            ManageRoomTypeDto roomTypeDto = command.getBookingCommands().get(i).getRoomType() != null ? this.roomTypeService.findById(command.getBookingCommands().get(i).getRoomType()) : null;
+            if (roomTypeDto != null)
+                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto));
 
             Double invoiceAmount = 0.00;
             if (command.getInvoiceCommand().getInvoiceType() != null
@@ -242,7 +236,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     new LinkedList<>(),
                     //                    nights
                     null,
-                    false
+                    false,
+                    null
             );
 
             if (command.getRoomRateCommands().get(i).getBooking() != null) {
@@ -421,7 +416,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
         created.setOriginalAmount(created.getInvoiceAmount());
         this.service.update(created);
         try {
-            this.producerReplicateManageInvoiceService.create(created, attachmentDefault);
+            UUID uuidEmployee = employee != null ? employee.getId() : null;
+            this.producerReplicateManageInvoiceService.create(created, attachmentDefault, uuidEmployee);
         } catch (Exception e) {
         }
 

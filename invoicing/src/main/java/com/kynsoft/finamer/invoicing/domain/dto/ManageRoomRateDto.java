@@ -31,9 +31,10 @@ public class ManageRoomRateDto {
     private List<ManageAdjustmentDto> adjustments;
     private Long nights;
     private boolean deleteInvoice;
+    private UUID  bookingId;
 
     public ManageRoomRateDto(ManageRoomRateDto dto) {
-        this.id = UUID.randomUUID();
+        this.id = dto.getId();
         this.roomRateId = dto.getRoomRateId();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
@@ -45,7 +46,7 @@ public class ManageRoomRateDto {
         this.rateChild = dto.getRateChild();
         this.hotelAmount = dto.getHotelAmount();
         this.remark = dto.getRemark();
-        this.booking = dto.getBooking();
+        this.booking = dto.getBooking() != null ? new ManageBookingDto(dto.getBooking()) : null;
         this.adjustments = new ArrayList<>();
         this.nights = dto.getNights();
     }

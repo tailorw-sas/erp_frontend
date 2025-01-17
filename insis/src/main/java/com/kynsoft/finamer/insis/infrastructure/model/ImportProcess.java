@@ -22,23 +22,29 @@ import java.util.UUID;
 public class ImportProcess {
 
     @Id
-    public UUID id;
+    private UUID id;
 
     @Enumerated(EnumType.STRING)
-    public ImportProcessStatus status;
+    private ImportProcessStatus status;
 
-    public LocalDate importDate;
+    private LocalDate importDate;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = true, updatable = true)
-    public LocalDateTime completedAt;
+    private LocalDateTime completedAt;
 
-    public int totalBooking;
+    private int totalBooking;
 
-    public UUID userId;
+    private UUID userId;
+
+    @Column(nullable = true)
+    private int totalSuccessful;
+
+    @Column(nullable = true)
+    private int  totalFailed;
 
     public ImportProcess(ImportProcessDto dto){
         this.id = dto.getId();
@@ -47,6 +53,8 @@ public class ImportProcess {
         this.completedAt = dto.getCompletedAt();
         this.totalBooking = dto.getTotalBookings();
         this.userId = dto.getUserId();
+        this.totalSuccessful = dto.getTotalSuccessful();
+        this.totalFailed = dto.getTotalFailed();
     }
 
     public ImportProcessDto toAggregate(){
@@ -56,7 +64,9 @@ public class ImportProcess {
                 importDate,
                 completedAt,
                 totalBooking,
-                userId
+                userId,
+                totalSuccessful,
+                totalFailed
         );
     }
 }

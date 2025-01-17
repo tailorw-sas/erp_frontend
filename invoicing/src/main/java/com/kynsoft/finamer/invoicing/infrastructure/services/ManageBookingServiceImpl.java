@@ -12,9 +12,10 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageBookingReadDataJPARepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageRoomRateReadDataJPARepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,30 +29,54 @@ import java.util.UUID;
 @Service
 public class ManageBookingServiceImpl implements IManageBookingService {
 
-    @Autowired
     private final ManageBookingWriteDataJpaRepository repositoryCommand;
-
-    @Autowired
+    private final ManageRoomRateReadDataJPARepository manageRoomRateReadDataJPARepository;
     private final ManageBookingReadDataJPARepository repositoryQuery;
 
-    public ManageBookingServiceImpl(ManageBookingWriteDataJpaRepository repositoryCommand,
+    public ManageBookingServiceImpl(
+            ManageBookingWriteDataJpaRepository repositoryCommand,ManageRoomRateReadDataJPARepository manageRoomRateReadDataJPARepository,
             ManageBookingReadDataJPARepository repositoryQuery) {
         this.repositoryCommand = repositoryCommand;
+        this.manageRoomRateReadDataJPARepository = manageRoomRateReadDataJPARepository;
         this.repositoryQuery = repositoryQuery;
+
     }
 
     @Override
     public void calculateInvoiceAmount(ManageBookingDto dto) {
+        if (dto.getRoomRates() != null) {
+            this.calculateInvoiceAmountWithRoomRates(dto);
+        } else {
+            Optional<Booking> optionalBooking = this.repositoryCommand.findById(dto.getId());
+
+            if (optionalBooking.isEmpty()) {
+                throw new IllegalArgumentException("Booking not found for ID: " + dto.getId());
+            }
+
+            Booking booking = optionalBooking.get();
+            double invoiceAmount = 0.00;
+
+            List<ManageRoomRate> roomRates = this.manageRoomRateReadDataJPARepository.findByBooking(booking);
+
+            if (!roomRates.isEmpty()) {
+                invoiceAmount = roomRates.stream()
+                        .mapToDouble(ManageRoomRate::getInvoiceAmount)
+                        .sum();
+            }
+
+            booking.setInvoiceAmount(invoiceAmount);
+            booking.setDueAmount(invoiceAmount);
+            this.repositoryCommand.save(booking);
+        }
+    }
+
+    private void calculateInvoiceAmountWithRoomRates(ManageBookingDto dto) {
         Double InvoiceAmount = 0.00;
 
         if (dto.getRoomRates() != null) {
-
             for (int i = 0; i < dto.getRoomRates().size(); i++) {
-
                 InvoiceAmount += dto.getRoomRates().get(i).getInvoiceAmount();
-
             }
-
             dto.setInvoiceAmount(InvoiceAmount);
             dto.setDueAmount(InvoiceAmount);
 
@@ -103,9 +128,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public boolean existsByExactLastChars(String lastChars, UUID hotelId) {
-        boolean exists = this.repositoryQuery.existsByExactLastChars(lastChars, hotelId);
-
-        return exists;
+        return this.repositoryQuery.existsByExactLastChars(lastChars, hotelId);
     }
 
     @Override

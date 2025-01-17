@@ -89,7 +89,8 @@ public class CreateManageHotelCommandHandler implements ICommandHandler<CreateMa
                 command.getAddress(),
                 cityStateDto.getId(),
                 countryDto.getId(),
-                currencyDto.getId()
+                currencyDto.getId(),
+                command.getPrefixToInvoice()
         ));
     }
 }

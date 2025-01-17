@@ -35,7 +35,7 @@ public class ProducerReplicateManageInvoiceService {
     }
 
     @Async
-    public void create(ManageInvoiceDto entity, UUID attachmentDefault) {
+    public void create(ManageInvoiceDto entity, UUID attachmentDefault, UUID employee) {
         try {
             if (entity.getInvoiceType().compareTo(EInvoiceType.INCOME) == 0){
                 entity = this.invoiceService.findById(entity.getId());
@@ -100,7 +100,8 @@ public class ProducerReplicateManageInvoiceService {
                     attachmentKafkas,
                     entity.getAttachments() != null && !entity.getAttachments().isEmpty(),
                     entity.getInvoiceDate(),
-                    entity.getAutoRec()
+                    entity.getAutoRec(),
+                    employee
             ));
         } catch (Exception ex) {
             Logger.getLogger(ProducerReplicateManageInvoiceService.class.getName()).log(Level.SEVERE, null, ex);

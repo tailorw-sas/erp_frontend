@@ -93,13 +93,12 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
-    public BookingDto findByTcaId(ManageHotelDto hotelDto, LocalDate invoicingDate, String reservationNumber, String couponNumber, BookingStatus status) {
+    public BookingDto findByTcaId(ManageHotelDto hotelDto, LocalDate invoicingDate, String reservationNumber, String couponNumber) {
         ManageHotel hotel = new ManageHotel(hotelDto);
-        Optional<Booking> booking = readRepository.findByHotelAndInvoicingDateAndReservationCodeAndCouponNumberAndStatus(hotel,
+        Optional<Booking> booking = readRepository.findFirstByHotelAndInvoicingDateAndReservationCodeAndCouponNumberOrderByCreatedAtDesc(hotel,
                 invoicingDate,
                 reservationNumber,
-                couponNumber,
-                status);
+                couponNumber);
         return booking.map(Booking::toAggregate)
                 .orElse(null);
     }
