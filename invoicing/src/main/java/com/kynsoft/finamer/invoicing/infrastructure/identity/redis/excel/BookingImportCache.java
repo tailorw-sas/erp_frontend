@@ -19,6 +19,7 @@ public class BookingImportCache {
     @Indexed
     private String generationType;
 
+    @Indexed
     private String transactionDate;
 
     private String manageHotelCode;
@@ -49,6 +50,7 @@ public class BookingImportCache {
 
     private String ratePlan;
 
+    @Indexed
     private String hotelInvoiceNumber;
 
     private String remarks;

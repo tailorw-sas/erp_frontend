@@ -9,11 +9,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BookingImportCacheRedisRepository extends CrudRepository<BookingImportCache, String> ,
+public interface BookingImportCacheRedisRepository extends CrudRepository<BookingImportCache, String>,
         QueryByExampleExecutor<BookingImportCache> {
+
     List<BookingImportCache> findAllByGenerationTypeAndImportProcessId(String generationType, String importProcessId);
+
     List<BookingImportCache> findAllByImportProcessId(String importProcessId);
 
-    Optional<BookingImportCache> findBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber,String importProcessId);
+    Optional<BookingImportCache> findBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber, String importProcessId);
 
+    List<Optional<BookingImportCache>> findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(String hotelInvoiceNumber, String importProcessId);
 }
