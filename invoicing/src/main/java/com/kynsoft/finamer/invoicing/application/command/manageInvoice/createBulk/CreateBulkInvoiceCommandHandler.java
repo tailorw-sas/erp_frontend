@@ -144,11 +144,11 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
             ManageRatePlanDto ratePlanDto = command.getBookingCommands().get(i).getRatePlan() != null ? this.ratePlanService.findById(command.getBookingCommands().get(i).getRatePlan()) : null;
             if (ratePlanDto != null)
-                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto));
+                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto, command.getBookingCommands().get(i).getHotelBookingNumber()));
 
             ManageRoomTypeDto roomTypeDto = command.getBookingCommands().get(i).getRoomType() != null ? this.roomTypeService.findById(command.getBookingCommands().get(i).getRoomType()) : null;
             if (roomTypeDto != null)
-                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto));
+                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto, command.getBookingCommands().get(i).getHotelBookingNumber()));
 
             Double invoiceAmount = 0.00;
             if (command.getInvoiceCommand().getInvoiceType() != null
