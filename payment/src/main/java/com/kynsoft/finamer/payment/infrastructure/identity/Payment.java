@@ -21,7 +21,9 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Type;
+import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,9 +39,9 @@ public class Payment implements Serializable {
     @Column(name = "id")
     private UUID id;
 
-//    @Column(columnDefinition = "serial", name = "payment_gen_id")
-//    @Generated(event = EventType.INSERT)
-    @Column(name = "payment_gen_id", nullable = false, updatable = false, unique = true)
+    @Column(columnDefinition = "serial", name = "payment_gen_id")
+    @Generated(event = EventType.INSERT)
+    //@Column(name = "payment_gen_id", nullable = false, updatable = false, unique = true)
     private Long paymentId;
 
     @Enumerated(EnumType.STRING)
@@ -137,7 +139,7 @@ public class Payment implements Serializable {
 
     public Payment(PaymentDto dto) {
         this.id = dto.getId();
-        this.paymentId = dto.getPaymentId();
+        //this.paymentId = dto.getPaymentId();
         this.status = dto.getStatus();
         this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSource(dto.getPaymentSource()) : null;
         this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatus(dto.getPaymentStatus()) : null;
