@@ -180,7 +180,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     ? this.roomTypeService.findById(bookingRequest.getRoomType())
                     : null;
             if (roomTypeDto != null)
-                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto));
+                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto, bookingRequest.getHotelBookingNumber()));
 
             ManageRoomCategoryDto roomCategoryDto = bookingRequest.getRoomCategory() != null
                     ? this.roomCategoryService.findById(bookingRequest.getRoomCategory())
@@ -190,7 +190,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     ? this.ratePlanService.findById(bookingRequest.getRatePlan())
                     : null;
             if (ratePlanDto != null)
-                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto));
+                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto, bookingRequest.getHotelBookingNumber()));
 
             //creando el nuevo booking con los valores que vienen, el amount se agarra directo del padre
             ManageBookingDto newBooking = new ManageBookingDto(

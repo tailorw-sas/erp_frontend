@@ -78,12 +78,12 @@ public class UpdateBookingCommandHandler implements ICommandHandler<UpdateBookin
 
         this.updateEntity(dto::setRatePlan, command.getRatePlan(), dto.getRatePlan() != null ? dto.getRatePlan().getId() : null, update::setUpdate, this.ratePlanService::findById);
         if (dto.getRatePlan() != null)
-            RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(dto.getInvoice().getHotel(), dto.getRatePlan()));
+            RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(dto.getInvoice().getHotel(), dto.getRatePlan(), dto.getHotelBookingNumber()));
 
         this.updateEntity(dto::setNightType, command.getNightType(), dto.getNightType() != null ? dto.getNightType().getId() : null, update::setUpdate, this.nightTypeService::findById);
         this.updateEntity(dto::setRoomType, command.getRoomType(), dto.getRoomType() != null ? dto.getRoomType().getId() : null, update::setUpdate, this.roomTypeService::findById);
         if (dto.getRoomType() != null)
-            RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(dto.getInvoice().getHotel(), dto.getRoomType()));
+            RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(dto.getInvoice().getHotel(), dto.getRoomType(), dto.getHotelBookingNumber()));
 
         this.updateEntity(dto::setRoomCategory, command.getRoomCategory(), dto.getRoomCategory() != null ? dto.getRoomCategory().getId() : null, update::setUpdate, this.roomCategoryService::findById);
 
