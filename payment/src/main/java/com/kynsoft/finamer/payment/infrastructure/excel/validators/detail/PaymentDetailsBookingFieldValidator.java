@@ -42,10 +42,10 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
                 //ManageBookingDto bookingDto = bookingService.findByGenId(Long.parseLong(obj.getBookId()));
                 try {
                     ManageBookingDto bookingDto = this.getBookingDto(Long.valueOf(obj.getBookId()));
-//                    if (bookingDto.getAmountBalance() < obj.getBalance()) {
-//                        errorFieldList.add(new ErrorField("bookingId", "The amount to apply is greater than the balance of the booking."));
-//                        return false;
-//                    }
+                    if (bookingDto.getAmountBalance() < obj.getBalance()) {
+                        errorFieldList.add(new ErrorField("bookingId", "The amount to apply is greater than the balance of the booking."));
+                        return false;
+                    }
                 } catch (Exception e) {
                     errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
                     return false;
