@@ -121,6 +121,13 @@ export const ENUM_REPORT_TYPE = [
   { id: 'REPORT', name: 'REPORTE' },
 ]
 
+export const ENUM_MODULES_SYSTEM = [
+  { id: 'TI', name: 'TI' },
+  { id: 'INVOICE', name: 'INVOICE' },
+  { id: 'PAYMENT', name: 'PAYMENT' },
+  { id: 'VCC', name: 'VCC' },
+]
+
 export const ENUM_ROUTEOFADMINISTRATIONS = [
   { id: 'ORAL', name: 'ORAL' },
   { id: 'INTRAVENOUS', name: 'INTRAVENOUS' },

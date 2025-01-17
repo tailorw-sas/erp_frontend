@@ -597,7 +597,16 @@ async function getItemById(id: string) {
         if (response.agencyAlias && response.agencyAlias !== '000-MySelf') {
           await GetAgenciesList(item.value.client.id)
           const codeTemp = response.agencyAlias.split(/\s*-\s*/)[0]
-          item.value.agencyAlias = agencyAliasList.value.find(i => i.code === codeTemp)
+
+          if (codeTemp !== '000' && codeTemp !== response.code) {
+            const itemAlias = agencyAliasList.value.find(i => i.code === codeTemp)
+            if (itemAlias) {
+              item.value.agencyAlias = itemAlias
+            }
+          }
+          else {
+            item.value.agencyAlias = defaultAgencyAlias.value
+          }
         }
         else {
           agencyAliasList.value = []
@@ -1171,6 +1180,7 @@ onMounted(() => {
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
       />
+      <!-- <pre>{{ item }}</pre> -->
     </div>
     <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
       <div>
@@ -1187,6 +1197,7 @@ onMounted(() => {
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
+            @reactive-update-field="item = $event"
           >
             <template #field-agencyType="{ item: data, onUpdate }">
               <DebouncedAutoCompleteComponent
@@ -1284,6 +1295,12 @@ onMounted(() => {
                       logicalOperation: 'AND',
                       operator: 'EQUALS',
                       value: data.client?.id,
+                    },
+                    {
+                      key: 'code',
+                      logicalOperation: 'AND',
+                      operator: 'NOT_EQUALS',
+                      value: data.code,
                     },
                   )
                   await getAgenciesListForSelect(options.moduleApi, options.uriApi, objQueryToSearch, filter)

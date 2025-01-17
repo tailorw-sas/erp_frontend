@@ -1400,7 +1400,7 @@ onMounted(async () => {
         <template #header>
           <div class="flex align-items-center gap-2 p-2" :style="`${activeTab === 2 && 'color: #0F8BFD;'} border-radius: 5px 5px 0 0;  width: auto`">
             <i class="pi pi-sliders-v" style="font-size: 1.5rem" />
-            <span class="font-bold white-space-nowrap"> New Adjustments</span>
+            <span class="font-bold white-space-nowrap"> Adjustments</span>
           </div>
         </template>
         <DynamicTable

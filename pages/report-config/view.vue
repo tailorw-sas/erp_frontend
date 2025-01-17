@@ -17,6 +17,14 @@ import { statusToBoolean, statusToString, updateFieldProperty } from '~/utils/he
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 // VARIABLES -----------------------------------------------------------------------------------------
 
+interface TreeNode {
+  key: string // Identificador único del nodo
+  label: string // Etiqueta del nodo
+  data: string // Información o descripción del nodo
+  icon?: string // Clase de icono opcional (por ejemplo, de PrimeVue)
+  children?: TreeNode[] // Hijos del nodo, de tipo recursivo
+}
+
 interface MenuItem {
   label: string
   icon: string // Opcional, ya que algunos elementos pueden no tener icono
@@ -28,6 +36,7 @@ interface MenuCategory {
   items: MenuItem[]
 }
 
+const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
 const listItemsMenu = ref<MenuCategory[]>([
@@ -36,6 +45,10 @@ const listItemsMenu = ref<MenuCategory[]>([
     items: []
   }
 ])
+
+const selectedKey = ref(undefined)
+
+const listItemMenuTree = ref<TreeNode[]>([])
 const listItems = ref<any[]>([])
 
 const formReload = ref(0)
@@ -293,19 +306,6 @@ async function getItemById(id: string) {
   }
 }
 
-// {{baseUrl}}/report/api/reports/generate-template
-// {
-//   “parameters”: {
-//     “invoiceIds”: [
-//       “123e4567-e89b-12d3-a456-426614174000”,
-//       “987e6543-b21a-34d5-c678-123456789abc”,
-//       “1a2b3c4d-5e6f-7g8h-9i0j-123456789def”
-//     ],
-//     “paymentDate”: “2024-10-26”
-//   },
-//   “reportFormatType”: “PDF”,
-//   “jasperReportCode”: “AAA21”
-// }
 const isDate = value => !Number.isNaN(Date.parse(value))
 
 function formatToDateTimeZero(date) {
@@ -414,6 +414,9 @@ interface DataList {
   type: string
   reportClass: string
   reportValidation: any
+  dependentField: any
+  parameterPosition: number
+  filterKeyValue: string
 }
 
 interface ListItem {
@@ -426,6 +429,9 @@ interface ListItem {
   service: string
   reportClass: string
   reportValidation: any
+  dependentField: any
+  parameterPosition: number
+  filterKeyValue: string
 }
 
 function mapFunction(data: DataList): ListItem {
@@ -438,19 +444,15 @@ function mapFunction(data: DataList): ListItem {
     module: data.module,
     service: data.service,
     reportClass: data.reportClass,
-    reportValidation: data.reportValidation
+    reportValidation: data.reportValidation,
+    dependentField: data.dependentField,
+    parameterPosition: data.parameterPosition,
+    filterKeyValue: data.filterKeyValue,
   }
 }
 async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
   return await getDataList<DataList, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'createdAt', sortType: ENUM_SHORT_TYPE.ASC })
 }
-// {
-//   field: 'code',
-//   header: 'Code',
-//   dataType: 'text',
-//   class: 'field col-12 md:col-1 required',
-//   validation: z.string().trim().min(1, 'The code field is required').max(50, 'Maximum 50 characters')
-// },
 
 const showForm = ref(false)
 async function loadParamsFieldByReportTemplate(id: string, code: string) {
@@ -484,17 +486,22 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
               objApi: {
                 moduleApi: element.module,
                 uriApi: element.service
+              },
+              kwArgs: {
+                ...element
               }
             }]
           }
           else {
             fields.value = [...fields.value, {
-
               field: element.paramName,
               header: element.label,
               dataType: element.componentType,
               class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
               // validation: element.reportValidation ? element.reportValidation : z.string().trim()
+              kwArgs: {
+                ...element
+              }
             }]
           }
         }
@@ -518,39 +525,21 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
 
 const suggestionsData = ref<any[]>([])
 
-async function getDinamicData(query: string, moduleApi: string, uriApi: string) {
+async function getDinamicData(query: string, moduleApi: string, uriApi: string, filter?: IFilter[]) {
   try {
     const payload
         = {
-          filter: [
-            {
-              key: 'code',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'name',
-              operator: 'LIKE',
-              value: query,
-              logicalOperation: 'OR'
-            },
-            {
-              key: 'status',
-              operator: 'EQUALS',
-              value: 'ACTIVE',
-              logicalOperation: 'AND'
-            }
-          ],
+          filter: filter || [],
           query: '',
           pageSize: 20,
           page: 0,
-          sortBy: 'name',
+          sortBy: 'createdAt',
           sortType: ENUM_SHORT_TYPE.ASC
         }
 
     const response = await GenericService.search(moduleApi, uriApi, payload)
     const { data: dataList } = response
+    suggestionsData.value = []
     for (const iterator of dataList) {
       suggestionsData.value = [...suggestionsData.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
     }
@@ -560,14 +549,48 @@ async function getDinamicData(query: string, moduleApi: string, uriApi: string) 
   }
 }
 
+function transformToTreeNode(data: Record<string, any[]>): TreeNode[] {
+  return Object.entries(data).map(([moduleName, items]) => ({
+    key: moduleName,
+    label: moduleName,
+    data: `${moduleName} Module`,
+    icon: 'pi pi-folder', // Puedes cambiar el ícono según tus necesidades
+    children: items.map(item => ({
+      key: item.id,
+      label: item.name,
+      data: {
+        ...item,
+      },
+      icon: item.highRisk ? 'pi pi-exclamation-triangle' : 'pi pi-file', // Ícono según si es de alto riesgo
+    })),
+  }))
+}
+
+async function getMenuItems(): Promise<TreeNode[]> {
+  try {
+    const response = await GenericService.get('report', 'report-menu/grouped')
+    if (response) {
+      const treeNodes: TreeNode[] = transformToTreeNode(response)
+      return treeNodes
+    }
+    return []
+  }
+  catch (error) {
+    console.error('Error loading menu items:', error)
+    return []
+  }
+}
+
+function onNodeSelect(node) {
+  loadParamsFieldByReportTemplate(node.data.id, node.data.code)
+}
+
+function onNodeUnselect(node) {
+  toast.add({ severity: 'warn', summary: 'Node Unselected', detail: node.label, life: 3000 })
+}
+
 // -------------------------------------------------------------------------------------------------------
 
-// WATCH FUNCTIONS -------------------------------------------------------------------------------------
-// watch(payloadOnChangePage, (newValue) => {
-//   payload.value.page = newValue?.page ? newValue?.page : 0
-//   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-//   getList()
-// })
 const pdfUrl = ref('')
 function loadPDF(base64Report: string) {
   pdfUrl.value = ''
@@ -605,12 +628,31 @@ function loadPDF(base64Report: string) {
   }
 }
 
+async function loadReport() {
+  try {
+    const reportId = route.query.reportId ? route.query.reportId.toString() : ''
+    const reportCode = route.query.reportCode ? route.query.reportCode.toString() : ''
+    if (reportId && reportCode) {
+      await loadParamsFieldByReportTemplate(reportId, reportCode)
+    }
+  }
+  catch (error) {
+    console.error('Error loading report:', error)
+  }
+}
+
 watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   if (!newValue) {
     clearForm()
   }
   else {
     await getItemById(newValue)
+  }
+})
+
+watch(() => route.query, async (newValue) => {
+  if (newValue) {
+    loadReport()
   }
 })
 // -------------------------------------------------------------------------------------------------------
@@ -622,11 +664,9 @@ onMounted(async () => {
   if (useRuntimeConfig().public.loadTableData) {
     getList()
   }
-  // const objQueryToSearch = {
-  //   query: '',
-  //   keys: ['name', 'username', 'url'],
-  // }
-  // const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, [])
+
+  // listItemMenuTree.value = await getMenuItems()
+  await loadReport()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -638,23 +678,36 @@ onMounted(async () => {
     </h3>
   </div> -->
   <div class="grid">
-    <div class="col-12 md:col-6 xl:col-2">
+    <div v-if="false" class="col-12 md:col-6 xl:col-2">
       <div>
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Report List
         </div>
         <div class="card p-0">
-          <Menu
+          <!-- <Tree :value="listItemMenuTree" class="w-full md:auto" /> -->
+          <Tree
+            v-model:selectionKeys="selectedKey"
+            :value="listItemMenuTree"
+            selection-mode="single"
+            :meta-key-selection="false"
+            :filter="true"
+            class="w-full md:w-auto"
+            @node-select="onNodeSelect"
+            @node-unselect="onNodeUnselect"
+          />
+          <!-- @node-expand="onNodeExpand"
+            @node-collapse="onNodeCollapse" -->
+          <!-- <Menu
             :model="listItemsMenu" :pt="{
               menuitem: {
                 class: 'py-2',
               },
             }"
-          />
+          /> -->
         </div>
       </div>
     </div>
-    <div class="col-12 md:col-6 xl:col-10">
+    <div class="col-12">
       <div v-if="fields.length > 0">
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Params
@@ -707,7 +760,10 @@ onMounted(async () => {
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-            <template v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')" :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }">
+            <template
+              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')"
+              :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }"
+            >
               <DebouncedAutoCompleteComponent
                 v-if="!loadingSaveAll"
                 id="autocomplete"
@@ -718,7 +774,63 @@ onMounted(async () => {
                 @change="($event) => {
                   onUpdate(field.field, $event)
                 }"
-                @load="($event) => getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi)"
+                @load="async ($event) => {
+                  let keyValue = ''
+                  let filter = []
+                  // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
+                  if (field.kwArgs && field.kwArgs.dependentField) {
+                    keyValue = JSON.parse(field.kwArgs.dependentField).name
+                    filter = [
+                      {
+                        key: field.kwArgs.filterKeyValue,
+                        operator: 'EQUALS',
+                        value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
+                        logicalOperation: 'AND',
+                      },
+                      {
+                        key: 'code',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'name',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'status',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                        logicalOperation: 'AND',
+                      },
+                    ]
+                  }
+                  else {
+                    filter = [
+                      {
+                        key: 'code',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'name',
+                        operator: 'LIKE',
+                        value: $event,
+                        logicalOperation: 'OR',
+                      },
+                      {
+                        key: 'status',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                        logicalOperation: 'AND',
+                      },
+                    ]
+                  }
+                  await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
+                }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>

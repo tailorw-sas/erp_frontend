@@ -59,6 +59,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Default',
     dataType: 'check',
     disabled: false,
+    hidden: true,
     class: 'field col-12 required mb-2',
   },
   {
@@ -112,7 +113,7 @@ const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
   { field: 'description', header: 'Description', type: 'text' },
-  { field: 'defaults', header: 'Default', type: 'text', badge: { color: 'green' } },
+  { field: 'attachInvDefault', header: 'Default', type: 'slot-bagde', badge: { color: 'green' } },
   { field: 'status', header: 'Active', type: 'bool' },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -476,7 +477,6 @@ onMounted(() => {
         </Accordion>
       </div>
       <DynamicTable
-
         :data="listItems"
         :columns="columns"
         :options="options"
@@ -488,7 +488,15 @@ onMounted(() => {
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
-      />
+      >
+        <template #column-attachInvDefault="{ data: objItem }">
+          <Badge
+            v-if="objItem.hasOwnProperty('attachInvDefault') && objItem.attachInvDefault"
+            v-tooltip.top="objItem.attachInvDefault.toString()" :value="objItem.attachInvDefault.toString().charAt(0).toUpperCase() + objItem.attachInvDefault.toString().slice(1)"
+            :severity="objItem.attachInvDefault ? 'success' : 'danger'"
+          />
+        </template>
+      </DynamicTable>
     </div>
     <div class="col-12 md:order-0 md:col-6 xl:col-3">
       <div>

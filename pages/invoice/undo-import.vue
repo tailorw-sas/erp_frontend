@@ -264,11 +264,11 @@ async function getList() {
           ...iterator,
           hotel: {
             ...iterator?.hotel,
-            name: `${iterator?.hotel?.code} - ${iterator?.hotel?.name}`
+            name: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`
           },
           agency: {
             ...iterator?.agency,
-            name: `${iterator?.agency?.code} - ${iterator?.agency?.name}`
+            name: `${iterator?.agency?.code}-${iterator?.agency?.name}`
           },
           roomRates: [],
           loadingEdit: false,
@@ -432,7 +432,14 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [
+        ...hotelList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code}-${iterator.name}`,
+          code: iterator.code
+        }
+      ]
     }
   }
   catch (error) {
@@ -603,6 +610,7 @@ async function applyUndo() {
     if (selectedElements.value.length > 0) {
       const payload = {
         ids: selectedElements.value,
+        employee: userData?.value?.user?.userId ?? ''
       }
       const response = await GenericService.create(confApiApplyUndo.moduleApi, confApiApplyUndo.uriApi, payload) as UndoImportInvoiceResponse
       loadingSaveAll.value = false
@@ -751,11 +759,13 @@ onMounted(async () => {
                     class="text-red"
                   >*</span></label>
                   <div class="w-full">
-                    <DebouncedMultiSelectComponent
+                    <DebouncedAutoCompleteComponent
                       v-if="!loadingSaveAll"
                       id="autocomplete"
+                      class="w-full"
                       field="name"
                       item-value="id"
+                      :multiple="true"
                       :model="filterToSearch.hotel"
                       :suggestions="hotelList"
                       :loading="multiSelectLoading.hotel"

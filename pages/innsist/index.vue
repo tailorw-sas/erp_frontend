@@ -18,7 +18,6 @@ const loadingSaveAll = ref(false)
 const formReload = ref(0)
 const listItems = ref<any[]>([])
 const listItemsRoomType = ref<any[]>([])
-const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
 const toast = useToast()
 const listTradingCompanyItems = ref<any[]>([])
 const idItemToLoadFirstTime = ref('')
@@ -42,20 +41,19 @@ const filterHotels = ref<IFilter[]>([{
 
 const filterToSearch = ref<GenericObject>({
   criterial: null,
-  hotel: [allDefaultItem],
-  tradingCompany: [allDefaultItem]
+  hotel: [],
+  tradingCompany: []
 })
 const filterToSearchTemp = ref<GenericObject>({
   criterial: null,
-  hotel: [allDefaultItem],
-  tradingCompany: [allDefaultItem]
+  hotel: [],
+  tradingCompany: []
 })
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Manage Innsist Parameters',
   moduleApi: 'innsist',
-  // uriApi: 'innsist-trading-company-hotel',
   uriApi: 'manage-trading-company',
   loading: false,
   actionsAsMenu: false,
@@ -69,7 +67,6 @@ const options = ref({
 const optionsRoomTypes = ref({
   tableName: 'Manage Innsist Parameters',
   moduleApi: 'innsist',
-  // uriApi: 'innsist-trading-company-hotel',
   uriApi: 'manage-trading-company',
   loading: false,
   actionsAsMenu: false,
@@ -82,16 +79,14 @@ const optionsRoomTypes = ref({
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'company', header: 'Trading Company', type: 'text' },
-  { field: 'innsistCode', header: 'Innsist Code', type: 'text' },
-  // { field: 'status', header: 'Active', type: 'bool' },
-  { field: 'hasConnection', header: 'Connection?', type: 'bool' },
-  { field: 'innsistConnectionParam', header: 'B2B Partner Connection', type: 'select', objApi: { moduleApi: 'innsist', uriApi: 'innsist-connection-params', keyValue: 'dataBaseName' }, sortable: true }
+  { field: 'company', header: 'Trading Company', type: 'text', maxWidth: '400px' },
+  { field: 'hasConnection', header: 'Connection Status', type: 'bool', width: '100px' },
+  { field: 'innsistConnectionParam', header: 'B2B Partner Connection', type: 'select', width: '150px', objApi: { moduleApi: 'innsist', uriApi: 'innsist-connection-params', keyValue: 'dataBaseName' }, sortable: true }
 ]
 const columnsRoomType: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
-  { field: 'roomTypePrefix', header: 'Room Type Prefix', type: 'text' },
-  { field: 'status', header: 'Active', type: 'bool' }
+  { field: 'roomTypePrefix', header: 'Room Type Prefix', type: 'text', width: '150px' },
+  { field: 'status', header: 'Active', type: 'bool', width: '50px' }
 ]
 
 const pagination = ref<IPagination>({
@@ -845,6 +840,13 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   else {
     await getItemById(newValue)
   }
+})
+
+watch(payloadOnChangePage, (newValue) => {
+  payload.value.page = newValue?.page ? newValue?.page : 0
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
+
+  getList()
 })
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------

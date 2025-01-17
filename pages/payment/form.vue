@@ -2460,7 +2460,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     return
   }
   try {
-    applyPaymentPayload.value.filter = []
+    // applyPaymentPayload.value.filter = []
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
     const newListItems = []
@@ -2829,6 +2829,7 @@ async function openModalApplyPayment($event: any) {
     amount = detailItemForApplyPayment.value?.amount
   }
   openDialogApplyPayment.value = true
+  amountOfDetailItem.value = amount
   await applyPaymentGetList(amount)
 }
 
@@ -2840,18 +2841,24 @@ async function openDialogImportExcel(idItem: string) {
 
 async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, applyPaymentColumns.value)
-  // if (parseFilter && parseFilter?.length > 0) {
-  //   for (let i = 0; i < parseFilter?.length; i++) {
-  //     if (parseFilter[i]?.key === 'paymentStatus') {
-  //       parseFilter[i].key = 'status'
-  //     }
-  //     if (parseFilter[i]?.key === 'employee') {
-  //       parseFilter[i].key = 'employee.id'
-  //     }
-  //   }
-  // }
+  const objFilterForInvoiceId = parseFilter?.find((item: IFilter) => item?.key === 'invoiceId')
+  if (objFilterForInvoiceId) {
+    objFilterForInvoiceId.key = 'invoice.invoiceId'
+  }
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   applyPaymentPayload.value.filter = [...parseFilter || []]
   applyPaymentGetList(amountOfDetailItem.value)
+}
+
+function onSortFieldApplyPayment(event: any) {
+  if (event) {
+    if (event.sortField === 'invoiceId') {
+      event.sortField = 'invoice.invoiceId'
+    }
+    applyPaymentPayload.value.sortBy = event.sortField ? event.sortField : 'dueAmount'
+    applyPaymentPayload.value.sortType = event.sortOrder
+    applyPaymentParseDataTableFilter(event.filter)
+  }
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -3886,6 +3893,11 @@ onMounted(async () => {
         :update-item="updateAttachment"
         :selected-payment="item"
         @update:list-items="attachmentList = $event"
+        @after-save="async () => {
+          console.log('after save');
+
+          await getItemById(route?.query?.id ? route?.query?.id.toString() : idItem)
+        }"
       />
     </div>
     <DialogPaymentDetailSummary
@@ -3992,7 +4004,7 @@ onMounted(async () => {
             :pagination="applyPaymentPagination"
             @on-change-pagination="applyPaymentOnChangePage = $event"
             @on-change-filter="applyPaymentParseDataTableFilter"
-            @on-sort-field="historyOnSortField"
+            @on-sort-field="onSortFieldApplyPayment"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
           />
         </div>

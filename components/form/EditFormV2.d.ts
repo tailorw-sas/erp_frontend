@@ -34,6 +34,7 @@ interface FieldDefinition {
     uriApi: string
     keyValue?: string
   }
+  kwArgs?: any
   onUpdate?: (value: any) => void
 }
 

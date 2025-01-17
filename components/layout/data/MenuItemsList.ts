@@ -21,7 +21,7 @@ interface MenuItemGroup {
   items: MenuItemSubGroup[]
 }
 
-interface MenuItem {
+export interface MenuItem {
   label: string
   icon?: string
   items: MenuItemGroup[][]
@@ -42,16 +42,6 @@ export const model = ref([
         icon: 'pi pi-fw pi-folder',
         to: '/permissions'
       },
-      // {
-      //   label: 'Company',
-      //   icon: 'pi pi-fw pi-folder',
-      //   to: '/business'
-      // },
-      // {
-      //   label: 'User',
-      //   icon: 'pi pi-fw pi-folder',
-      //   to: '/user'
-      // },
       {
         label: 'Email',
         icon: 'pi pi-fw pi-envelope',
@@ -548,24 +538,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
           label: 'Administration',
           icon: 'pi pi-fw pi-folder',
           items: [
-            // {
-            //   label: 'Module',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/modules'),
-            //   disabled: false,
-            // },
-            // {
-            //   label: 'Permission',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/permissions'),
-            //   items: []
-            // },
-            // {
-            //   label: 'User',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/user'),
-            //   items: []
-            // },
             {
               label: 'Mailjet Configuration',
               icon: 'pi pi-fw pi-file',
@@ -622,30 +594,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               command: () => navigateTo('/close-operation/payment'),
               items: []
             },
-            // {
-            //   label: 'Payment Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-status'),
-            //   items: []
-            // },
-            // {
-            //   label: 'Payment Transaction Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-transaction-status'),
-            //   items: []
-            // },
-            // {
-            //   label: 'Payment Transaction Type',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-transaction-type'),
-            //   items: []
-            // },
-            // {
-            //   label: 'Payment Source',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/payment-source'),
-            //   items: []
-            // },
           ],
         },
       ],
@@ -907,12 +855,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
         {
           label: 'Virtual Credit Card',
           items: [
-            // {
-            //   label: 'Collection Status',
-            //   icon: 'pi pi-fw pi-file',
-            //   command: () => navigateTo('/settings/collection-status'),
-            //   items: []
-            // },
             {
               label: 'Credit Card Type',
               icon: 'pi pi-fw pi-file',
@@ -1098,6 +1040,68 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
       ],
     ]
   },
+  // {
+  //   label: 'Reports',
+  //   icon: 'pi pi-folder',
+  //   items: [
+  //     [
+  //       {
+  //         label: 'TI',
+  //         icon: 'pi pi-fw pi-file',
+  //         items: [
+  //           {
+  //             label: 'TI Report',
+  //             icon: 'pi pi-fw pi-file',
+  //             command: () => navigateTo('/report/ti-report'),
+  //             items: []
+  //           }
+  //         ]
+  //       }
+  //     ],
+  //     [
+  //       {
+  //         label: 'VCC',
+  //         icon: 'pi pi-fw pi-file',
+  //         items: [
+  //           {
+  //             label: 'VCC Report',
+  //             icon: 'pi pi-fw pi-file',
+  //             command: () => navigateTo('/report/vcc-report'),
+  //             items: []
+  //           }
+  //         ]
+  //       }
+  //     ],
+  //     [
+  //       {
+  //         label: 'Invoice',
+  //         icon: 'pi pi-fw pi-file',
+  //         items: [
+  //           {
+  //             label: 'Invoice Report',
+  //             icon: 'pi pi-fw pi-file',
+  //             command: () => navigateTo('/report/invoice-report'),
+  //             items: []
+  //           }
+  //         ]
+  //       }
+  //     ],
+  //     [
+  //       {
+  //         label: 'Payment',
+  //         icon: 'pi pi-fw pi-file',
+  //         items: [
+  //           {
+  //             label: 'Payment Report',
+  //             icon: 'pi pi-fw pi-file',
+  //             command: () => navigateTo('/report/payment-report'),
+  //             items: []
+  //           }
+  //         ]
+  //       }
+  //     ]
+  //   ]
+  // }
   // Payments
 
 ])
