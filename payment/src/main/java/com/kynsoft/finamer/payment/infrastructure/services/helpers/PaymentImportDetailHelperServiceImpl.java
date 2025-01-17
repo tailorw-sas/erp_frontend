@@ -126,8 +126,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = transactionTypeService.findByCode(paymentImportCache.getTransactionId());
                 Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
                 PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
-                double paymentBalance = paymentDto.getPaymentBalance();
-                double depositBalance = paymentDto.getDepositBalance();
                 ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     boolean applyPayment = true;
@@ -151,50 +149,13 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         applyPayment = false;
                     }
 
-                    if (paymentBalance > 0 && bookingDto.getAmountBalance() > 0 && managePaymentTransactionTypeDto.getCash()) {
-                        /**
-                         * Obtener el valor min entre el paymentBalance, el balance del excel y el balance que queda al booking.
-                         * 1- No podemos sobre girar el payment balance.
-                         * 2- No podemos sobre girar el amount balance del booking.
-                         */
-                        double amount = Math.min(bookingDto.getAmountBalance(), Math.min(Double.parseDouble(paymentImportCache.getPaymentAmount()), paymentBalance));
-                        this.sendCreatePaymentDetail(paymentDto.getId(),
-                                amount,
-                                //Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                UUID.fromString(request.getEmployeeId()),
-                                managePaymentTransactionTypeDto.getId(),
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto != null ? bookingDto.getId() : null,
-                                applyPayment);
-
-                        //Crear el deposit.
-                        //Con el minimo obtenido anteriormente, el menor valor que puede tomar el paymentBalance al deducir el amount definido sera cero.
-                        paymentBalance = paymentBalance - amount;
-                        //La diferencia entre el balance del excel y el amount del details creado anteriormente seria el valor del deposito a crear.
-                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
-                        //Pero el crear un deposito afecta la cabecera del payment y el paymentBalance, por lo cual tengo que comprobar que el valor
-                        //a deducir no sea mayor que el payment balance que queda. Por eso me quedo con el minimo.
-                        double amountDeposit = Math.min(restAmount, paymentBalance);
-                        //Pero el Payment Balance puede haber quedado en cero cuando se creo el cash.
-                        if (amountDeposit > 0) {
-                            DepositEvent depositEvent = new DepositEvent(this);
-                            depositEvent.setAmount(amountDeposit);
-                            depositEvent.setPaymentDto(paymentDto);
-                            depositEvent.setRemark("Create deposit in import details.");
-                            this.applicationEventPublisher.publishEvent(depositEvent);
-                        }
-                    } else if (bookingDto.getAmountBalance() > 0 && !managePaymentTransactionTypeDto.getCash()
-                            && !managePaymentTransactionTypeDto.getDeposit() && !managePaymentTransactionTypeDto.getApplyDeposit()) {
-                        //Necesito tomar el minimo entre el balance del excel y el amount balance restante del booking.
-                        double amountDeposit = Math.min(Double.parseDouble(paymentImportCache.getPaymentAmount()), bookingDto.getAmountBalance());
-                        this.sendCreatePaymentDetail(paymentDto.getId(),
-                                amountDeposit,
-                                UUID.fromString(request.getEmployeeId()),
-                                managePaymentTransactionTypeDto.getId(),
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto != null ? bookingDto.getId() : null,
-                                applyPayment);
-                    }
+                    this.sendCreatePaymentDetail(paymentDto.getId(),
+                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                            UUID.fromString(request.getEmployeeId()),
+                            managePaymentTransactionTypeDto.getId(),
+                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                            bookingDto != null ? bookingDto.getId() : null,
+                            applyPayment);
                 }
             });
             pageable = pageable.next();
