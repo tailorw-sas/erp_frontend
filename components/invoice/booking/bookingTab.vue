@@ -1067,8 +1067,21 @@ async function getratePlanList(query = '') {
     const response = await GenericService.search(confratePlanApi.moduleApi, confratePlanApi.uriApi, payload)
     const { data: dataList } = response
     ratePlanList.value = []
-    for (const iterator of dataList) {
-      ratePlanList.value = [...ratePlanList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    for (const iterator of dataList) {      
+      ratePlanList.value = [...ratePlanList.value, 
+      { 
+        id: iterator.id, 
+        name: iterator.name, 
+        code: iterator.code, 
+        status: iterator.status,
+        hotel: {
+          id: iterator.hotel.id,
+          name: iterator.hotel.name,
+          code: iterator.hotel.code,
+          status: iterator.hotel.status
+        }  
+      }
+    ]
     }
   }
   catch (error) {
@@ -1110,8 +1123,22 @@ async function getRoomTypeList(query = '') {
     const response = await GenericService.search(confroomTypeApi.moduleApi, confroomTypeApi.uriApi, payload)
     const { data: dataList } = response
     roomTypeList.value = []
-    for (const iterator of dataList) {
-      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    for (const iterator of dataList) {      
+      roomTypeList.value = [
+        ...roomTypeList.value, 
+        { 
+          id: iterator.id, 
+          name: iterator.name, 
+          code: iterator.code, 
+          status: iterator.status,
+          manageHotel: {
+            id: iterator.manageHotel.id,
+            name: iterator.manageHotel.name,
+            code: iterator.manageHotel.code,
+            status: iterator.manageHotel.status
+          } 
+        }
+      ]
     }
   }
   catch (error) {
