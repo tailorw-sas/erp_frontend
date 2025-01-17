@@ -43,6 +43,7 @@ const toast = useToast()
 const fields: Array<FieldDefinitionType> = [
   {
     field: 'guestName',
+    tabIndex: 0,
     header: 'Guest Name',
     dataType: 'text',
     class: 'field col-12 required',
@@ -50,6 +51,7 @@ const fields: Array<FieldDefinitionType> = [
   },
   {
     field: 'email',
+    tabIndex: 0,
     header: 'Email',
     dataType: 'text',
     class: 'field col-12 required',
