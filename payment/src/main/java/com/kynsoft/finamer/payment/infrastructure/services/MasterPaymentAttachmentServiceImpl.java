@@ -134,4 +134,9 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
         return this.repositoryQuery.findMaxId() + 1;
     }
 
+    @Override
+    public Long countByAttachmentResource(UUID resource) {
+        return this.repositoryQuery.countByAttachmentResource(resource);
+    }
+
 }

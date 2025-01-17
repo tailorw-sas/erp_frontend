@@ -5,10 +5,12 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.services.IAttachmentStatusHistoryService;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
+import com.kynsoft.finamer.payment.domain.services.IManagePaymentAttachmentStatusService;
 import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
@@ -28,16 +30,20 @@ public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHand
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final IPaymentService paymentService;
 
+    private final IManagePaymentAttachmentStatusService attachmentStatusService;
+
     public DeleteMasterPaymentAttachmentCommandHandler(IMasterPaymentAttachmentService masterPaymentAttachmentService,
             IManageEmployeeService manageEmployeeService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-            IPaymentService paymentService) {
+            IPaymentService paymentService,
+            IManagePaymentAttachmentStatusService attachmentStatusService) {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.manageEmployeeService = manageEmployeeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.paymentService = paymentService;
+        this.attachmentStatusService = attachmentStatusService;
     }
 
     @Override
@@ -47,13 +53,25 @@ public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHand
         ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
 
         MasterPaymentAttachmentDto delete = this.masterPaymentAttachmentService.findById(command.getId());
+        long attachmentSize = this.masterPaymentAttachmentService.countByAttachmentResource(delete.getResource().getId());
 
         masterPaymentAttachmentService.delete(delete);
         if (this.masterPaymentAttachmentService.countByResourceAndAttachmentTypeIsDefault(delete.getResource().getId()) == 0) {
             PaymentDto paymentDto = delete.getResource();
             paymentDto.setPaymentSupport(false);
+            if (attachmentSize == 1) {
+                ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByNonNone();
+                paymentDto.setAttachmentStatus(attachmentStatusDto);
+            }
+
+            this.paymentService.update(paymentDto);
+        } else if (attachmentSize == 1) {
+            PaymentDto paymentDto = delete.getResource();
+            ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByNonNone();
+            paymentDto.setAttachmentStatus(attachmentStatusDto);
             this.paymentService.update(paymentDto);
         }
+
         deleteAttachmentStatusHistory(employeeDto, delete.getResource(), delete.getFileName(), delete.getAttachmentId());
 //        createPaymentAttachmentStatusHistory(employeeDto, delete);
     }
