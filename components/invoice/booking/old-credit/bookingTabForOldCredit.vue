@@ -918,7 +918,7 @@ async function getratePlanList(query = '') {
       ratePlanList.value = [...ratePlanList.value, 
       { 
         id: iterator.id, 
-        name: iterator.name, 
+        name: `${iterator.code} - ${iterator.name}`, 
         code: iterator.code, 
         status: iterator.status,
         hotel: {
@@ -974,7 +974,7 @@ async function getRoomTypeList(query = '') {
       roomTypeList.value = [...roomTypeList.value, 
       { 
         id: iterator.id, 
-        name: iterator.name, 
+        name: `${iterator.code} - ${iterator.name}`, 
         code: iterator.code, 
         status: iterator.status,
         manageHotel: {
@@ -1027,7 +1027,14 @@ async function getNightTypeList(query = '') {
     const { data: dataList } = response
     nightTypeList.value = []
     for (const iterator of dataList) {
-      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      nightTypeList.value = [...nightTypeList.value, 
+      { 
+        id: iterator.id, 
+        name: `${iterator.code} - ${iterator.name}`, 
+        code: iterator.code, 
+        status: iterator.status 
+      }
+    ]
     }
   }
   catch (error) {
@@ -1070,7 +1077,14 @@ async function getRoomCategoryList(query = '') {
     const { data: dataList } = response
     roomCategoryList.value = []
     for (const iterator of dataList) {
-      roomCategoryList.value = [...roomCategoryList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      roomCategoryList.value = [...roomCategoryList.value, 
+      { 
+        id: iterator.id, 
+        name: `${iterator.code} - ${iterator.name}`, 
+        code: iterator.code, 
+        status: iterator.status 
+      }
+    ]
     }
   }
   catch (error) {
