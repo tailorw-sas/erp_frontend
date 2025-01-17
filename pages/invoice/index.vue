@@ -951,7 +951,8 @@ async function getList() {
           // dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
           // invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
-          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` }
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
+          agency: { ...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}` }
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }

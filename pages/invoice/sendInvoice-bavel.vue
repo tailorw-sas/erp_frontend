@@ -202,7 +202,7 @@ async function getList() {
           manageHotelCode: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`,
           manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
           manageAgencyCode: iterator?.agency?.code,
-          manageAgencyName: iterator?.agency?.name,
+          manageAgencyName: `${iterator?.agency?.code}-${iterator?.agency?.name}`,
           dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
           invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber.replace('OLD', 'CRE'),
@@ -258,7 +258,7 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code}- ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -312,7 +312,7 @@ async function getAgencyList(query: string = '') {
     const { data: dataList } = response
     agencyList.value = []
     for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -581,11 +581,7 @@ onMounted(async () => {
                         @change="($event) => {
                           filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                         }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                      />
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -598,11 +594,7 @@ onMounted(async () => {
                         @load="($event) => getHotelList($event)" @change="($event) => {
                           filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                         }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
+                      />
                     </div>
                   </div>
                 </div>
