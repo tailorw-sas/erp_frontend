@@ -555,6 +555,8 @@ async function createItem(item: { [key: string]: any }) {
     let countBookingWithoutNightType = 0
     const listOfBookingsWithoutNightType: string[] = []
     const listBookingForFlateRate: string[] = []
+    const listBookingForRoomType: string[] = []
+    const listBookingForRatePlan: string[] = []
 
     bookingList.value?.forEach((booking) => {
       if (nightTypeRequired.value && !booking.nightType?.id) {
@@ -565,6 +567,14 @@ async function createItem(item: { [key: string]: any }) {
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
         listBookingForFlateRate.push(booking.hotelBookingNumber)
+      }
+
+      if (booking?.roomType && booking?.roomType?.id && item.hotel && item.hotel?.id && booking?.roomType?.manageHotel?.id !== item.hotel?.id) {
+        listBookingForRoomType.push(booking.hotelBookingNumber)
+      }
+
+      if (booking?.ratePlan && booking?.ratePlan?.id && item.hotel && item.hotel?.id && booking?.ratePlan?.hotel?.id !== item.hotel?.id) {
+        listBookingForRatePlan.push(booking.hotelBookingNumber)
       }
 
       if (booking?.invoiceAmount !== 0) {
@@ -586,6 +596,14 @@ async function createItem(item: { [key: string]: any }) {
 
     if (listBookingForFlateRate.length > 0) {
       throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
+    }
+
+    if (listBookingForRoomType.length > 0) {
+      throw new Error(`The Room Type field must be the same for this Hotel Booking No: ${listBookingForRoomType.toString()}`)
+    }
+
+    if (listBookingForRatePlan.length > 0) {
+      throw new Error(`The Rate Plan field must be the same for this Hotel Booking No: ${listBookingForRatePlan.toString()}`)
     }
 
     for (let i = 0; i < roomRateList.value.length; i++) {

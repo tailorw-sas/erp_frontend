@@ -575,6 +575,8 @@ async function createItem(item: { [key: string]: any }) {
     let countBookingWithoutNightType = 0
     const listOfBookingsWithoutNightType: string[] = []
     const listBookingForFlateRate: string[] = []
+    const listBookingForRoomType: string[] = []
+    const listBookingForRatePlan: string[] = []
 
     bookingList.value?.forEach((booking) => {
       // Es aqui donde hay que hacer la validacion de recorrer la lista de booking y verificar si alguno necesita un nightType
@@ -586,6 +588,14 @@ async function createItem(item: { [key: string]: any }) {
 
       if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
         listBookingForFlateRate.push(booking.hotelBookingNumber)
+      }
+
+      if (booking?.roomType && booking?.roomType?.id && item.hotel && item.hotel?.id && booking?.roomType?.manageHotel?.id !== item.hotel?.id) {
+        listBookingForRoomType.push(booking.hotelBookingNumber)
+      }
+
+      if (booking?.ratePlan && booking?.ratePlan?.id && item.hotel && item.hotel?.id && booking?.ratePlan?.hotel?.id !== item.hotel?.id) {
+        listBookingForRatePlan.push(booking.hotelBookingNumber)
       }
 
       // if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
@@ -636,6 +646,14 @@ async function createItem(item: { [key: string]: any }) {
       throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
     }
 
+    if (listBookingForRoomType.length > 0) {
+      throw new Error(`The Room Type field must be the same for this Hotel Booking No: ${listBookingForRoomType.toString()}`)
+    }
+
+    if (listBookingForRatePlan.length > 0) {
+      throw new Error(`The Rate Plan field must be the same for this Hotel Booking No: ${listBookingForRatePlan.toString()}`)
+    }
+
     for (let i = 0; i < roomRateList.value.length; i++) {
       if (requiresFlatRate.value && +roomRateList.value[i].hotelAmount <= 0) {
         throw new Error('The Hotel amount field must be greater than 0 for this hotel')
@@ -658,26 +676,27 @@ async function createItem(item: { [key: string]: any }) {
       roomRates = roomRateList.value
     }
 
-    for (let i = 0; i < attachmentList.value.length; i++) {
-      if (attachmentList.value[i]?.file?.files.length > 0) {
-        const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
-        attachments.push({
-          ...attachmentList.value[i],
-          type: attachmentList.value[i]?.type?.id,
-          file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
-          paymentResourceType: attachmentList.value[i]?.resourceType.id || ''
-        })
-      }
-    }
-    const response = await GenericService.createBulk('invoicing', 'manage-invoice', {
-      bookings,
-      invoice: payload,
-      roomRates,
-      adjustments,
-      attachments,
-      employee: userData?.value?.user?.userId
-    })
-    return response
+    // for (let i = 0; i < attachmentList.value.length; i++) {
+    //   if (attachmentList.value[i]?.file?.files.length > 0) {
+    //     const fileurl: any = await getUrlOrIdByFile(attachmentList.value[i]?.file?.files[0])
+    //     attachments.push({
+    //       ...attachmentList.value[i],
+    //       type: attachmentList.value[i]?.type?.id,
+    //       file: fileurl && typeof fileurl === 'object' ? fileurl.url : fileurl.id,
+    //       paymentResourceType: attachmentList.value[i]?.resourceType.id || ''
+    //     })
+    //   }
+    // }
+    // const response = await GenericService.createBulk('invoicing', 'manage-invoice', {
+    //   bookings,
+    //   invoice: payload,
+    //   roomRates,
+    //   adjustments,
+    //   attachments,
+    //   employee: userData?.value?.user?.userId
+    // })
+    // return response
+    return true
   }
 }
 
