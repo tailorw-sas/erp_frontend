@@ -269,7 +269,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         for (ManageBookingDto booking : bookings) {
             List<ManageRoomRateDto> roomRates = this.roomRateService.findByBooking(booking.getId());
             for (ManageRoomRateDto roomRate : roomRates) {
-                total = total + (roomRate.getHotelAmount() != null ? roomRate.getHotelAmount() : 0);
+                total = total + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0);
                 moneyType = roomRate.getRemark() != null ? roomRate.getRemark() : "";
 
                 table.addCell(new Cell().add(new Paragraph((roomRate.getCheckIn() != null ? roomRate.getCheckIn().format(formatter) : "Not date")).addStyle(styleCell)));
