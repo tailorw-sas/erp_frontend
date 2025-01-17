@@ -11,6 +11,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class GroupByVirtualHotel {
 
+    private String transactionDate;
     private String agency;
     private String hotel;
     private Long hotelInvoiceNumber;

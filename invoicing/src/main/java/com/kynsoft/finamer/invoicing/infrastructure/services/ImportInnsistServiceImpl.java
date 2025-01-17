@@ -115,6 +115,7 @@ public class ImportInnsistServiceImpl {
 
         grouped = importList.stream().collect(Collectors.groupingBy(
                 booking -> new GroupByVirtualHotel(
+                        booking.getInvoiceDate().toString(),
                         booking.getManageAgencyCode(),
                         booking.getManageHotelCode(),
                         booking.getHotelInvoiceNumber()

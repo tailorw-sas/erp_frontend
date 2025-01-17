@@ -125,6 +125,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
         grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
                 booking -> new GroupByVirtualHotel(
+                        booking.getTransactionDate(),
                         booking.getManageAgencyCode(),
                         booking.getManageHotelCode(),
                         Long.valueOf(booking.getHotelInvoiceNumber())
