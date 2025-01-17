@@ -174,21 +174,30 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         // Add data row file 5
         for (ManageBookingDto booking : bookings) {
-            if (booking.getRoomType() != null) {
+            if (booking.getRoomType() != null || booking.getRatePlan() != null || booking.getRoomNumber() != null){
                 table.addCell(new Cell().add(new Paragraph((booking.getRoomType() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
-            } else {
-                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
-            }
-            if (booking.getRoomType() != null) {
                 table.addCell(new Cell().add(new Paragraph((booking.getRatePlan() != null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
-            } else {
-                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+                table.addCell(new Cell().add(new Paragraph((booking.getRoomNumber() != null ? booking.getRoomNumber() : "")).addStyle(styleCell)));
+                table.addCell(new Cell());
+                table.addCell(new Cell());
+                table.addCell(new Cell());
+                table.addCell(new Cell());
             }
-            table.addCell(new Cell().add(new Paragraph((booking.getRoomNumber() != null ? booking.getRoomNumber() : "")).addStyle(styleCell)));
-            table.addCell(new Cell());
-            table.addCell(new Cell());
-            table.addCell(new Cell());
-            table.addCell(new Cell());
+//            if (booking.getRoomType() != null) {
+//                table.addCell(new Cell().add(new Paragraph((booking.getRoomType() != null ? booking.getRoomType().getName() : "")).addStyle(styleCell)));
+//            } else {
+//                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+//            }
+//            if (booking.getRoomType() != null) {
+//                table.addCell(new Cell().add(new Paragraph((booking.getRatePlan() != null ? booking.getRatePlan().getName() : "")).addStyle(styleCell)));
+//            } else {
+//                table.addCell(new Cell().add(new Paragraph("").addStyle(styleCell)));
+//            }
+//            table.addCell(new Cell().add(new Paragraph((booking.getRoomNumber() != null ? booking.getRoomNumber() : "")).addStyle(styleCell)));
+//            table.addCell(new Cell());
+//            table.addCell(new Cell());
+//            table.addCell(new Cell());
+//            table.addCell(new Cell());
         }
 
         //2 empty columns
