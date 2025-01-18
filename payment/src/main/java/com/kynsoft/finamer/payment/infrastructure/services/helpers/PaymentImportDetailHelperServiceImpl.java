@@ -167,7 +167,13 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             DepositEvent depositEvent = new DepositEvent(this);
                             depositEvent.setAmount(restAmount);
                             depositEvent.setPaymentDto(paymentDto);
-                            depositEvent.setRemark("Create deposit in import details.");
+                            //depositEvent.setRemark("Create deposit in import details.");
+                            depositEvent.setRemark(
+                                    "" + paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : ""
+                                       + " " + paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : ""
+                                       + " " + paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : ""
+                                       + " " + paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : ""
+                            );
                             this.applicationEventPublisher.publishEvent(depositEvent);
                         }
                     } else {
