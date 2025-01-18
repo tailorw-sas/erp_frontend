@@ -149,13 +149,37 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         applyPayment = false;
                     }
 
-                    this.sendCreatePaymentDetail(paymentDto.getId(),
-                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                            UUID.fromString(request.getEmployeeId()),
-                            managePaymentTransactionTypeDto.getId(),
-                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                            bookingDto != null ? bookingDto.getId() : null,
-                            applyPayment);
+                    //cash
+                    if (managePaymentTransactionTypeDto.getCash()) {
+                        this.sendCreatePaymentDetail(
+                                paymentDto.getId(),
+                                bookingDto.getAmountBalance(),
+                                //Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                UUID.fromString(request.getEmployeeId()),
+                                managePaymentTransactionTypeDto.getId(),
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                bookingDto != null ? bookingDto.getId() : null,
+                                applyPayment);
+
+                        //Crear el deposit.
+                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - bookingDto.getAmountBalance();
+                        if (restAmount > 0) {
+                            DepositEvent depositEvent = new DepositEvent(this);
+                            depositEvent.setAmount(restAmount);
+                            depositEvent.setPaymentDto(paymentDto);
+                            depositEvent.setRemark("Create deposit in import details.");
+                            this.applicationEventPublisher.publishEvent(depositEvent);
+                        }
+                    } else {
+                        ///Other deductions
+                        this.sendCreatePaymentDetail(paymentDto.getId(),
+                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                UUID.fromString(request.getEmployeeId()),
+                                managePaymentTransactionTypeDto.getId(),
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                bookingDto != null ? bookingDto.getId() : null,
+                                applyPayment);
+                    }
                 }
             });
             pageable = pageable.next();
