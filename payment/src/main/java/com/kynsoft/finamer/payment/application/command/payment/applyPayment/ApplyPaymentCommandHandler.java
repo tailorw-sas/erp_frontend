@@ -14,6 +14,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.createPayme
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -234,18 +235,17 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     private PaymentDetailDto createDetailsTypeCash(CreatePaymentDetailTypeCashCommand command) {
+        ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByPaymentInvoice();
         PaymentDetailDto newDetailDto = new PaymentDetailDto(
                 command.getId(),
                 Status.ACTIVE,
                 command.getPaymentCash(),
-                this.paymentTransactionTypeService.findByPaymentInvoice(),
+                transactionTypeDto,
                 command.getInvoiceAmount(),
-                command.getPaymentCash().getRemark(),
+                transactionTypeDto.getDefaultRemark(),
                 null,
                 null,
                 null,
-                //OffsetDateTime.now(ZoneId.of("UTC")),
-                //transactionDate(command.getPaymentCash().getHotel().getId()),
                 null,
                 null,
                 null,
