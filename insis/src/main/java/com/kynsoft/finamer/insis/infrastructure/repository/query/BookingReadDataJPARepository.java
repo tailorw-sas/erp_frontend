@@ -36,4 +36,7 @@ public interface BookingReadDataJPARepository extends JpaRepository<Booking, UUI
     Page<Booking> findAll(Specification specification, Pageable pageable);
 
     List<Booking> findByIdIn(List<UUID> ids);
+
+    @Query("SELECT b FROM Booking b WHERE b.id IN :ids AND b.status IN :statuses")
+    List<Booking> findBookingsByIdsAndStatuses(@Param("ids") List<UUID> ids, @Param("statuses") List<BookingStatus> statuses);
 }
