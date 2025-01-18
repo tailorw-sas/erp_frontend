@@ -5,6 +5,7 @@ import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
+import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentSourceDto;
@@ -52,6 +53,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
     private final IPaymentStatusHistoryService paymentStatusHistoryService;
 
     private final IManageEmployeeService employeeService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     @Value("${payment.source.expense.code}")
     private String PAYMENT_SOURCE_EXP_CODE;
@@ -72,7 +74,8 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
             IManagePaymentAttachmentStatusService attachmentStatusService,
             PaymentRowMapper paymentRowMapper,
             IPaymentStatusHistoryService paymentStatusHistoryService,
-            IManageEmployeeService employeeService) {
+            IManageEmployeeService employeeService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.expenseErrorRepository = expenseErrorRepository;
@@ -86,6 +89,7 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
         this.paymentRowMapper = paymentRowMapper;
         this.paymentStatusHistoryService = paymentStatusHistoryService;
         this.employeeService = employeeService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
@@ -146,10 +150,27 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
                     return paymentDto;
                 }).toList();
                 List<PaymentDto> createdPayment = paymentService.createBulk(paymentDtoList);
-                createdPayment.forEach(paymentDto -> createPaymentAttachmentStatusHistory(employeeService.findById(request.getEmployeeId()), paymentDto));
+                ManageEmployeeDto employeeDto = employeeService.findById(request.getEmployeeId());
+                createdPayment.forEach(paymentDto -> {
+                    createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+                    createAttachmentStatusHistoryWithoutAttachmet(employeeDto, paymentDto);
+                });
                 pageable = pageable.next();
             } while (cacheList.hasNext());
         }
+    }
+
+    //Este metodo es para agregar el history del Attachemnt. Aqui el estado es el del nomenclador Manage Payment Attachment Status
+    private void createAttachmentStatusHistoryWithoutAttachmet(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Creating payment without attachment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus("NON-NONE");
+
+        this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
     private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {

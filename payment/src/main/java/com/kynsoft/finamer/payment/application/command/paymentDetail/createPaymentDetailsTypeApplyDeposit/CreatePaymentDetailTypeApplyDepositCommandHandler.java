@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.createPaym
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -27,10 +28,10 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
     private final IPaymentService paymentService;
     private final IPaymentCloseOperationService paymentCloseOperationService;
 
-    public CreatePaymentDetailTypeApplyDepositCommandHandler(IPaymentDetailService paymentDetailService, 
-                                                             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                                             IPaymentService paymentService,
-                                                             IPaymentCloseOperationService paymentCloseOperationService) {
+    public CreatePaymentDetailTypeApplyDepositCommandHandler(IPaymentDetailService paymentDetailService,
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+            IPaymentService paymentService,
+            IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
@@ -39,13 +40,15 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
 
     @Override
     public void handle(CreatePaymentDetailTypeApplyDepositCommand command) {
+        ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findByApplyDeposit();
         PaymentDetailDto newDetailDto = new PaymentDetailDto(
                 command.getId(),
                 Status.ACTIVE,
                 command.getPayment(),
-                this.paymentTransactionTypeService.findByApplyDeposit(),
+                paymentTransactionTypeDto,
                 command.getAmount(),
-                command.getPayment().getRemark(),
+                paymentTransactionTypeDto.getDefaultRemark(),
+                //command.getPayment().getRemark(),
                 null,
                 null,
                 null,

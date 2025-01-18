@@ -49,6 +49,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     private final IPaymentStatusHistoryService paymentStatusHistoryService;
 
     private final IManageEmployeeService employeeService;
+    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
 
     @Value("${payment.source.bank.code}")
     private String PAYMENT_SOURCE_BANK_CODE;
@@ -70,7 +71,8 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
             PaymentBankRowMapper paymentBankRowMapper,
             IManagePaymentAttachmentStatusService attachmentStatusService,
             IPaymentStatusHistoryService paymentStatusHistoryService,
-            IManageEmployeeService employeeService) {
+            IManageEmployeeService employeeService,
+            IAttachmentStatusHistoryService attachmentStatusHistoryService) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
@@ -86,6 +88,7 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         this.attachmentStatusService = attachmentStatusService;
         this.paymentStatusHistoryService = paymentStatusHistoryService;
         this.employeeService = employeeService;
+        this.attachmentStatusHistoryService = attachmentStatusHistoryService;
     }
 
     @Override
@@ -153,7 +156,11 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                     return paymentDto;
                 }).toList();
                 List<PaymentDto> createdPayment = paymentService.createBulk(paymentDtoList);
-                createdPayment.forEach(paymentDto -> createPaymentAttachmentStatusHistory(employeeService.findById(request.getEmployeeId()), paymentDto));
+                ManageEmployeeDto employeeDto = employeeService.findById(request.getEmployeeId());
+                createdPayment.forEach(paymentDto -> {
+                    createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+                    createAttachmentStatusHistoryWithoutAttachmet(employeeDto, paymentDto);
+                });
                 pageable = pageable.next();
             } while (cacheList.hasNext());
         }
@@ -183,4 +190,18 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
                 page.getNumber()
         );
     }
+
+    //Este metodo es para agregar el history del Attachemnt. Aqui el estado es el del nomenclador Manage Payment Attachment Status
+    private void createAttachmentStatusHistoryWithoutAttachmet(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Creating payment without attachment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus("NON-NONE");
+
+        this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+    }
+
 }
