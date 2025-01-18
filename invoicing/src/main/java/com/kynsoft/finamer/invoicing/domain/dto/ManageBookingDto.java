@@ -58,7 +58,7 @@ public class ManageBookingDto {
 
     public ManageBookingDto(ManageBookingDto dto) {
         this.id = UUID.randomUUID();
-        this.bookingId = dto.getBookingId();
+        //this.bookingId = dto.getBookingId();
         this.reservationNumber = dto.getReservationNumber();
         this.hotelCreationDate = dto.getHotelCreationDate();
         this.bookingDate = dto.getBookingDate();
