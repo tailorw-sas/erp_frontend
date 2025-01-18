@@ -1153,12 +1153,21 @@ function disabledOrEnabledShowHistory() {
   if (externalProps.isCreateOrEditPayment === 'create') {
     return true
   }
-  else if (idItem.value) {
+  // else if (idItem.value) {
+  //   return false
+  // }
+  else {
     return false
   }
-  else {
-    return true
-  }
+  // if (externalProps.isCreateOrEditPayment === 'create') {
+  //   return true
+  // }
+  // else if (idItem.value) {
+  //   return false
+  // }
+  // else {
+  //   return true
+  // }
 }
 
 function disabledOrEnabledResourceType() {

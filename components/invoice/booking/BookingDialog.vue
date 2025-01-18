@@ -228,9 +228,9 @@ onMounted(() => {
               onUpdate('ratePlan', $event)
             }" @load="($event) => getratePlanList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
         </template>
         <template #field-roomCategory="{ item: data, onUpdate }">
@@ -240,9 +240,9 @@ onMounted(() => {
               onUpdate('roomCategory', $event)
             }" @load="($event) => getRoomCategoryList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
         </template>
         <template #field-bookingDate="{ item: data, onUpdate }">
@@ -263,9 +263,9 @@ onMounted(() => {
               onUpdate('roomType', $event)
             }" @load="($event) => getRoomTypeList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
         </template>
         <template #header-nightType="{ field }">
@@ -286,9 +286,9 @@ onMounted(() => {
               onUpdate('nightType', $event)
             }" @load="($event) => getNightTypeList($event)"
           >
-            <template #option="props">
+            <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
+            </template> -->
           </DebouncedAutoCompleteComponent>
         </template>
 
@@ -300,163 +300,6 @@ onMounted(() => {
           <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
         </template>
       </EditFormV2>
-
-      <EditFormV2WithContainer
-        v-if="false"
-        :key="formReload"
-        :fields-with-containers="fields"
-        :item="item"
-        :show-actions="true"
-        :loading-save="loadingSaveAll"
-        :container-class="containerClass"
-        class="w-full h-fit m-4"
-        @cancel="clearForm"
-        @delete="requireConfirmationToDelete($event)"
-        @submit="requireConfirmationToSave($event)"
-      >
-        <template #field-couponNumber="{ item: data, errors, onUpdate }">
-          <InputText
-            v-model="data.couponNumber"
-            show-clear
-            @update:model-value="($event) => {
-
-              // if (couponValidation && $event) {
-              //   const regex = new RegExp(couponValidation)
-
-              //   console.log('REGEX', regex)
-
-              //   couponValid = regex.test($event)
-
-              //   console.log('couponValid', couponValid)
-
-              // }
-
-              onUpdate('couponNumber', $event)
-            }"
-          />
-        </template>
-        <template #field-invoiceAmount="{ onUpdate, item: data }">
-          <InputText
-            v-model="data.invoiceAmount"
-            show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('invoiceAmount', $event)"
-          />
-        </template>
-        <template #field-hotelAmount="{ onUpdate, item: data }">
-          <InputText
-            v-model="data.hotelAmount"
-            show-clear :disabled="!!item?.id"
-            @update:model-value="onUpdate('hotelAmount', $event)"
-          />
-        </template>
-        <template #field-checkIn="{ item: data, onUpdate }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.checkIn"
-            date-format="yy-mm-dd"
-            :max-date="data.checkOut ? new Date(data.checkOut) : undefined"
-            @update:model-value="($event) => {
-
-              onUpdate('checkIn', dayjs($event).startOf('day').toDate())
-            }"
-          />
-        </template>
-        <template #field-checkOut="{ item: data, onUpdate }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.checkOut"
-            date-format="yy-mm-dd"
-            :min-date="data?.checkIn ? new Date(data?.checkIn) : new Date()"
-            @update:model-value="($event) => {
-
-              onUpdate('checkOut', dayjs($event).startOf('day').toDate())
-            }"
-          />
-        </template>
-        <template #field-bookingDate="{ item: data, onUpdate }">
-          <Calendar
-            v-if="!loadingSaveAll"
-            v-model="data.bookingDate"
-            date-format="yy-mm-dd"
-            :max-date="new Date()"
-            @update:model-value="($event) => {
-              onUpdate('bookingDate', $event)
-            }"
-          />
-        </template>
-        <template #field-ratePlan="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.ratePlan" :suggestions="ratePlanList" @change="($event) => {
-              onUpdate('ratePlan', $event)
-            }" @load="($event) => getratePlanList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
-          </DebouncedAutoCompleteComponent>
-        </template>
-
-        <template #field-roomCategory="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.roomCategory" :suggestions="roomCategoryList" @change="($event) => {
-              onUpdate('roomCategory', $event)
-            }" @load="($event) => getRoomCategoryList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
-          </DebouncedAutoCompleteComponent>
-        </template>
-
-        <template #field-roomType="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.roomType" :suggestions="roomTypeList" @change="($event) => {
-              onUpdate('roomType', $event)
-            }" @load="($event) => getRoomTypeList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
-          </DebouncedAutoCompleteComponent>
-        </template>
-
-        <template #header-nightType="{ field }">
-          <strong>
-            {{ typeof field.header === 'function' ? field.header() : field.header }}
-          </strong>
-          <span v-if="isNightTypeRequired" class="p-error">*</span>
-        </template>
-
-        <template #field-nightType="{ item: data, onUpdate }">
-          <DebouncedAutoCompleteComponent
-            v-if="!loadingSaveAll" id="autocomplete" field="name" item-value="id"
-            :model="data.nightType" :suggestions="nightTypeList" @change="($event) => {
-              onUpdate('nightType', $event)
-            }" @load="($event) => getNightTypeList($event)"
-          >
-            <template #option="props">
-              <span>{{ props.item.code }} - {{ props.item.name }}</span>
-            </template>
-          </DebouncedAutoCompleteComponent>
-        </template>
-
-        <template #form-footer="props">
-          <Button
-            v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
-            @click="props.item.submitForm($event)"
-          />
-          <Button
-            v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
-
-              clearForm()
-              closeDialog()
-            }"
-          />
-        </template>
-      </EditFormV2WithContainer>
     </div>
   </Dialog>
   <!-- <span v-if="dialogVisible">
