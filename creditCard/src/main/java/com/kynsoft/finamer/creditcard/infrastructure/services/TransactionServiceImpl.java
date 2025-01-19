@@ -287,8 +287,7 @@ public class TransactionServiceImpl implements ITransactionService {
                 new MailJetVar("transaction_id", transactionDto.getId().toString()),
                 new MailJetVar("transaction_date", transactionDto.getTransactionDate().format(formatter)),
                 new MailJetVar("hotel", transactionDto.getHotel().getName()),
-                //todo: agregar hotel address al dto de ManageHotelDto
-                new MailJetVar("hotel_address", transactionDto.getHotel().getName()),
+                new MailJetVar("hotel_address", transactionDto.getHotel().getAddress()),
                 //todo: agregar hotel contact al dto de ManageHotelDto
                 new MailJetVar("hotel_contact", transactionDto.getHotel().getName()),
                 new MailJetVar("invoice_amount", transactionDto.getAmount().toString()),
