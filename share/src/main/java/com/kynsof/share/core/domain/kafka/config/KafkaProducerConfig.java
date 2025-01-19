@@ -25,17 +25,23 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_MAX_REQUEST_VALUE:104857600}")
     private String maxRequestSize;
 
-//    @Bean
-//    @Profile("dev")
-//    public ProducerFactory<String, Object> devProducerFactory() {
-//        Map<String, Object> configProps = createBaseProps();
-//        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
-//        return new DefaultKafkaProducerFactory<>(configProps);
-//    }
+    @Value("${KAFKA_SASL_USERNAME}")
+    private String saslUsername;
+
+    @Value("${KAFKA_SASL_PASSWORD}")
+    private String saslPassword;
 
     @Bean
-    //@Profile("!dev")
+    @Profile("development | qa | production")
     public ProducerFactory<String, Object> defaultProducerFactory() {
+        Map<String, Object> configProps = createBaseProps();
+        addSaslConfig(configProps, saslUsername, saslPassword);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    @Profile("!development & !qa & !production")
+    public ProducerFactory<String, Object> devProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -51,9 +57,11 @@ public class KafkaProducerConfig {
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        //props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256");
         props.put(SaslConfigs.SASL_JAAS_CONFIG,
-                String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+                //String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+                String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password));
     }
 
     @Bean
