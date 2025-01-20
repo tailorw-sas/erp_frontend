@@ -288,8 +288,8 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     public void applyPayment(UUID empoyee, ManageBookingDto bookingDto, PaymentDetailDto paymentDetailDto) {
         ManageBookingDto booking = this.manageBookingService.findById(bookingDto.getId());
 
-        bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
-        paymentDetailDto.setManageBooking(bookingDto);
+        booking.setAmountBalance(booking.getAmountBalance() - paymentDetailDto.getAmount());
+        paymentDetailDto.setManageBooking(booking);
         paymentDetailDto.setApplayPayment(Boolean.TRUE);
         //paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         paymentDetailDto.setTransactionDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
@@ -303,7 +303,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
         } catch (Exception e) {
         }
 
