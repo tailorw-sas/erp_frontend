@@ -8,7 +8,6 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -51,7 +50,7 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
         if (!hotelService.existByCode(bookingRow.getManageHotelCode())){
             return false;
         }
-        ManageHotelDto manageHotelDto = hotelService.findByCode(bookingRow.getManageHotelCode());
+        ManageHotelDto manageHotelDto = hotelService.findByCode(this.upperCaseAndTrim(bookingRow.getManageHotelCode()));
         InvoiceCloseOperationDto invoiceCloseOperationDto = closeOperationService.findActiveByHotelId(manageHotelDto.getId());
         LocalDate beginDate= invoiceCloseOperationDto.getBeginDate();
         LocalDate endDate = invoiceCloseOperationDto.getEndDate();
@@ -62,4 +61,10 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
         }
         return !result;
     }
+
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
+    }
+
 }
