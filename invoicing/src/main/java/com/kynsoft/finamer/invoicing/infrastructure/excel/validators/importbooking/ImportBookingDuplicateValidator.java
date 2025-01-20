@@ -6,9 +6,16 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingRow> {
 
@@ -18,8 +25,8 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
     private final IManageHotelService manageHotelService;
 
     public ImportBookingDuplicateValidator(IManageBookingService service,
-                                           BookingImportCacheRedisRepository cacheRedisRepository,
-                                           IManageHotelService manageHotelService) {
+            BookingImportCacheRedisRepository cacheRedisRepository,
+            IManageHotelService manageHotelService) {
         this.service = service;
         this.cacheRedisRepository = cacheRedisRepository;
         this.manageHotelService = manageHotelService;
@@ -36,12 +43,50 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
 //                        .split("\\s+").length - 1];
         ManageHotelDto hotel = manageHotelService.findByCode(obj.getManageHotelCode());
         //if (service.existByBookingHotelNumber(obj.getHotelBookingNumber()) ||
-        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId()) ||
-                cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
-            errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported"));
+//        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId()) ||
+//                cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
+        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId())) {
+            errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported."));
             return false;
         }
+//        List<Optional<BookingImportCache>> list = this.cacheRedisRepository.findAllBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(), obj.getImportProcessId());
+//        if (this.checkDuplicateHotelBookingNumbers(list)) {
+//            errorFieldList.add(new ErrorField("HotelBookingNumber", "The Hotel Booking Number exists for another date within this import."));
+//            return false;
+//        }
         return true;
+    }
+
+    private boolean checkDuplicateHotelBookingNumbers(List<Optional<BookingImportCache>> list) {
+        Map<String, List<BookingImportCache>> groupedByHotelBookingNumber = new HashMap<>();
+
+        // Agrupar elementos por hotelInvoiceNumber
+        for (Optional<BookingImportCache> optional : list) {
+            if (optional.isPresent()) {
+                BookingImportCache booking = optional.get();
+                String hotelBookingNumber = booking.getHotelBookingNumber();
+
+                if (!groupedByHotelBookingNumber.containsKey(hotelBookingNumber)) {
+                    groupedByHotelBookingNumber.put(hotelBookingNumber, new ArrayList<>());
+                }
+                groupedByHotelBookingNumber.get(hotelBookingNumber).add(booking);
+            }
+        }
+
+        // Verificar fechas dentro de cada grupo
+        for (List<BookingImportCache> bookings : groupedByHotelBookingNumber.values()) {
+            Set<String> transactionDates = new HashSet<>();
+
+            for (BookingImportCache booking : bookings) {
+                transactionDates.add(booking.getTransactionDate());
+            }
+
+            if (transactionDates.size() != bookings.size()) {
+                return true; // Se encontró al menos un caso con fecha diferente
+            }
+        }
+
+        return false; // No se encontraron discrepancias
     }
 
     private String removeBlankSpaces(String text) {

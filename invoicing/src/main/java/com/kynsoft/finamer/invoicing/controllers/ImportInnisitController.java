@@ -16,7 +16,7 @@ public class ImportInnisitController {
 
     @PostMapping("")
     public ResponseEntity<?> search(@RequestBody ImportInnsistKafka request) {
-        
-        return ResponseEntity.ok(this.service.createInvoiceFromGroupedBooking(request));
+        this.service.createInvoiceFromGroupedBooking(request);
+        return ResponseEntity.ok("okok");
     }
 }

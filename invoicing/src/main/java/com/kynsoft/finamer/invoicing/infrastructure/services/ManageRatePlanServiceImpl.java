@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -70,6 +71,7 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
     }
 
     @Override
+    @Cacheable(cacheNames = "manageRatePlan", key = "#code", unless = "#result == null")
     public ManageRatePlanDto findByCode(String code) {
         Optional<ManageRatePlan> userSystem = this.repositoryQuery.findManageRatePlanByCode(code);
         if (userSystem.isPresent()) {

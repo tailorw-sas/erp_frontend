@@ -1,8 +1,5 @@
-package com.kynsoft.finamer.invoicing.domain.dto;
+package com.kynsoft.finamer.creditcard.domain.dto;
 
-
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,11 +11,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageB2BPartnerTypeDto implements Serializable {
+public class ManageContactDto {
 
     private UUID id;
     private String code;
-    private String name;
     private String description;
-    private Status status;
+    private String name;
+    private ManageHotelDto manageHotel;
+    private String email;
+    private String phone;
+    private Integer position;
 }

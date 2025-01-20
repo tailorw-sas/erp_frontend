@@ -150,11 +150,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     }
 
                     //cash
+                    double amount = Math.min(bookingDto.getAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
                     if (managePaymentTransactionTypeDto.getCash()) {
                         this.sendCreatePaymentDetail(
                                 paymentDto.getId(),
-                                bookingDto.getAmountBalance(),
-                                //Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                amount,
                                 UUID.fromString(request.getEmployeeId()),
                                 managePaymentTransactionTypeDto.getId(),
                                 getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
@@ -162,7 +162,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                 applyPayment);
 
                         //Crear el deposit.
-                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - bookingDto.getAmountBalance();
+                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
                         if (restAmount > 0) {
                             DepositEvent depositEvent = new DepositEvent(this);
                             depositEvent.setAmount(restAmount);

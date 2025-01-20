@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
+import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByHotelBookingNumber;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByVirtualHotel;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.*;
@@ -85,6 +86,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
+    public void saveCachingImportBooking(BookingRow bookingRow) {
+        this.createCacheInsist(bookingRow);
+    }
+
+    @Override
     public void createInvoiceFromGroupedBooking(ImportBookingRequest request) {
         if (!errorRedisRepository.existsByImportProcessId(request.getImportProcessId())) {
             if (EImportType.VIRTUAL.equals(request.getImportType())) {
@@ -119,56 +125,103 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private void createInvoiceGroupingForVirtualHotel(String importProcessId, String employee) {
-        Map<GroupByVirtualHotel, List<BookingRow>> grouped;
-        List<BookingImportCache> importList = repository.findAllByImportProcessId(importProcessId);
-        //Collections.sort(importList, Comparator.comparingInt(BookingImportCache::getRowNumber));
+        Map<GroupByHotelBookingNumber, List<BookingRow>> groupedByHotelBookingNumber;
+        List<BookingImportCache> bookingImportCacheStream = repository.findAllByImportProcessId(importProcessId);
+        Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
-        grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
-                booking -> new GroupByVirtualHotel(
-                        booking.getTransactionDate(),
-                        booking.getManageAgencyCode(),
-                        booking.getManageHotelCode(),
-                        Long.valueOf(booking.getHotelInvoiceNumber())
-                )
-        ));
+        groupedByHotelBookingNumber = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
+                .collect(Collectors.groupingBy(bookingRow
+                        -> new GroupByHotelBookingNumber(
+                        bookingRow.getHotelBookingNumber(),
+                        bookingRow.getManageAgencyCode(),
+                        bookingRow.getManageHotelCode()
+                )));
 
-        List<Map.Entry<GroupByVirtualHotel, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
-        Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
-
-        Map<GroupByVirtualHotel, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
-        for (Map.Entry<GroupByVirtualHotel, List<BookingRow>> entry : list) {
-            orderedGrouped.put(entry.getKey(), entry.getValue());
-        }
-
-        if (!orderedGrouped.isEmpty()) {
-            orderedGrouped.forEach((key, value) -> {
+        if (!groupedByHotelBookingNumber.isEmpty()) {
+            groupedByHotelBookingNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee);
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber");
+            });
+        }
+//        Map<GroupByVirtualHotel, List<BookingRow>> grouped;
+//        List<BookingImportCache> importList = repository.findAllByImportProcessId(importProcessId);
+//        //Collections.sort(importList, Comparator.comparingInt(BookingImportCache::getRowNumber));
+//
+//        grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
+//                booking -> new GroupByVirtualHotel(
+//                        booking.getTransactionDate(),
+//                        booking.getManageAgencyCode(),
+//                        booking.getManageHotelCode(),
+//                        Long.valueOf(booking.getHotelInvoiceNumber())
+//                )
+//        ));
+//
+//        List<Map.Entry<GroupByVirtualHotel, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
+//        Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
+//
+//        Map<GroupByVirtualHotel, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
+//        for (Map.Entry<GroupByVirtualHotel, List<BookingRow>> entry : list) {
+//            orderedGrouped.put(entry.getKey(), entry.getValue());
+//        }
+//
+//        if (!orderedGrouped.isEmpty()) {
+//            orderedGrouped.forEach((key, value) -> {
+//                ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
+//                ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
+//                this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber");
+//            });
+//        }
+    }
+
+    @Override
+    public void createInvoiceGroupingByCoupon(String importProcessId, String employee) {
+        Map<GroupByHotelBookingNumber, List<BookingRow>> groupedByHotelBookingNumber;
+        List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
+        Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
+
+        groupedByHotelBookingNumber = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
+                .collect(Collectors.groupingBy(bookingRow
+                        -> new GroupByHotelBookingNumber(
+                        bookingRow.getHotelBookingNumber(),
+                        bookingRow.getManageAgencyCode(),
+                        bookingRow.getManageHotelCode()
+                )));
+
+        if (!groupedByHotelBookingNumber.isEmpty()) {
+            groupedByHotelBookingNumber.forEach((key, value) -> {
+                ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
+                ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon");
             });
         }
     }
 
-    private void createInvoiceGroupingByCoupon(String importProcessId, String employee) {
-        Map<GroupBy, List<BookingRow>> grouped;
-        List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
+    @Override
+    public void createInvoiceGroupingByBooking(String importProcessId, String employee) {
+        /**
+         * *
+         * Para el caso de la agrupacion por Booking, al tener en una agrupacion
+         * varios rates con el mismo Hotel Booking Number se crearian varios
+         * Rates en un solo booking y ese booking seria una sola factura.
+         */
+        Map<GroupByHotelBookingNumber, List<BookingRow>> grouped;
+        List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
         grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
-                        -> new GroupBy(
-                                bookingRow.getTransactionDate(), 
-                                bookingRow.getManageAgencyCode(), 
-                                bookingRow.getManageHotelCode(), 
-                                bookingRow.getCoupon())
-                ));
+                        -> new GroupByHotelBookingNumber(
+                        bookingRow.getHotelBookingNumber(),
+                        bookingRow.getManageAgencyCode(),
+                        bookingRow.getManageHotelCode()
+                )));
 
-        //Si no funciona quitar estas lineas.
-        List<Map.Entry<GroupBy, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
+        List<Map.Entry<GroupByHotelBookingNumber, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
         Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
 
-        Map<GroupBy, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
-        for (Map.Entry<GroupBy, List<BookingRow>> entry : list) {
+        Map<GroupByHotelBookingNumber, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
+        for (Map.Entry<GroupByHotelBookingNumber, List<BookingRow>> entry : list) {
             orderedGrouped.put(entry.getKey(), entry.getValue());
         }
 
@@ -176,24 +229,18 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee);
-
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking");
             });
         }
+//
+//        bookingImportCacheStream.forEach(bookingImportCache -> {
+//            ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
+//            ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
+//            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()), employee);
+//        });
     }
 
-    private void createInvoiceGroupingByBooking(String importProcessId, String employee) {
-        List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
-        Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
-
-        bookingImportCacheStream.forEach(bookingImportCache -> {
-            ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
-            ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
-            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()), employee);
-        });
-    }
-
-    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee) {
+    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType) {
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
@@ -203,7 +250,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);
         manageInvoiceDto.setIsManual(false);
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
-        manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel));
+        manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel, groupType));
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
@@ -241,23 +288,97 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         return invoiceNumber;
     }
 
-    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
-        Collections.sort(bookingRowList, Comparator.comparingInt(BookingRow::getRowNumber));
-        return bookingRowList.stream().map(bookingRow -> {
-            //ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findByCode(bookingRow.getRatePlan()) : null;
-            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRow.getRatePlan(), hotel.getCode()) : null;
-            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRow.getRoomType(), hotel.getCode()) : null;
-            ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightType())
-                    ? nightTypeService.findByCode(bookingRow.getNightType()) : null;
-            ManageBookingDto bookingDto = bookingRow.toAggregate();
-            bookingDto.setRatePlan(ratePlanDto);
-            bookingDto.setRoomType(roomTypeDto);
-            bookingDto.setId(UUID.randomUUID());
-            bookingDto.setHotelCreationDate(DateUtil.parseDateToDateTime(bookingRow.getTransactionDate()));
-            bookingDto.setRoomRates(List.of(createRoomRateDto(bookingRow)));
-            bookingDto.setNightType(nightTypeDto);
-            return bookingDto;
-        }).toList();
+    private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
+        ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode()) : null;
+        ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRowList.get(0).getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRowList.get(0).getRoomType(), hotel.getCode()) : null;
+        ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRowList.get(0).getNightType()) ? nightTypeService.findByCode(bookingRowList.get(0).getNightType()) : null;
+        ManageBookingDto bookingDto = bookingRowList.get(0).toAggregate();
+        bookingDto.setRatePlan(ratePlanDto);
+        bookingDto.setRoomType(roomTypeDto);
+        bookingDto.setId(UUID.randomUUID());
+        List<ManageRoomRateDto> rates = new ArrayList<>();
+        double bookingAmount = 0;
+        double bookingHotelAmount = 0;
+        for (BookingRow bookingRow : bookingRowList) {
+            rates.add(this.createRoomRateDto(bookingRow));
+            bookingAmount = bookingAmount + bookingRow.getInvoiceAmount();
+            bookingHotelAmount = bookingHotelAmount + bookingRow.getHotelInvoiceAmount();
+        }
+        bookingDto.setInvoiceAmount(bookingAmount);
+        bookingDto.setDueAmount(bookingAmount);
+        bookingDto.setHotelAmount(bookingHotelAmount);
+        bookingDto.setRoomRates(rates);
+        bookingDto.setHotelCreationDate(DateUtil.parseDateToDateTime(bookingRowList.get(0).getTransactionDate()));
+        bookingDto.setNightType(nightTypeDto);
+        return bookingDto;
+    }
+
+    private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel, String groupType) {
+        try {
+            Collections.sort(bookingRowList, Comparator.comparingInt(BookingRow::getRowNumber));
+        } catch (Exception e) {
+        }
+
+        if (groupType.equals("ByBooking")) {
+            return List.of(this.createOneBooking(bookingRowList, hotel));
+        }
+        if (groupType.equals("ByCoupon")) {
+
+            Map<GroupBy, List<BookingRow>> grouped;
+            grouped = bookingRowList.stream().collect(Collectors.groupingBy(bookingRow
+                    -> new GroupBy(
+                            bookingRow.getTransactionDate(),
+                            bookingRow.getManageAgencyCode(),
+                            bookingRow.getManageHotelCode(),
+                            bookingRow.getCoupon()
+                    )
+            ));
+
+            List<Map.Entry<GroupBy, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
+            try {
+                Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
+            } catch (Exception e) {
+            }
+
+            Map<GroupBy, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
+            for (Map.Entry<GroupBy, List<BookingRow>> entry : list) {
+                orderedGrouped.put(entry.getKey(), entry.getValue());
+            }
+
+            List<ManageBookingDto> bookingDtos = new ArrayList<>();
+            orderedGrouped.forEach((key, value) -> {
+                bookingDtos.add(this.createOneBooking(value, hotel));
+            });
+            return bookingDtos;
+        }
+        if (groupType.equals("HotelInvoiceNumber")) {
+            Map<GroupByVirtualHotel, List<BookingRow>> grouped;
+            grouped = bookingRowList.stream().collect(Collectors.groupingBy(bookingRow
+                    -> new GroupByVirtualHotel(
+                            bookingRow.getTransactionDate(),
+                            bookingRow.getManageAgencyCode(),
+                            bookingRow.getManageHotelCode(),
+                            Long.valueOf(bookingRow.getHotelInvoiceNumber())
+                    )
+            ));
+
+            List<Map.Entry<GroupByVirtualHotel, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
+            try {
+                Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
+            } catch (Exception e) {
+            }
+
+            Map<GroupByVirtualHotel, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
+            for (Map.Entry<GroupByVirtualHotel, List<BookingRow>> entry : list) {
+                orderedGrouped.put(entry.getKey(), entry.getValue());
+            }
+            List<ManageBookingDto> bookingDtos = new ArrayList<>();
+            orderedGrouped.forEach((key, value) -> {
+                bookingDtos.add(this.createOneBooking(value, hotel));
+            });
+            return bookingDtos;
+        }
+        return List.of();
     }
 
     private ManageRoomRateDto createRoomRateDto(BookingRow bookingRow) {
@@ -293,6 +414,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     private void createCache(BookingRow bookingRow, String generationType) {
         BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);
         bookingImportCache.setGenerationType(generationType);
+        bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
+        repository.save(bookingImportCache);
+    }
+
+    private void createCacheInsist(BookingRow bookingRow) {
+        BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);
+        bookingImportCache.setInsistImportProcessId(bookingRow.getInsistImportProcessId());
         bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
         repository.save(bookingImportCache);
     }

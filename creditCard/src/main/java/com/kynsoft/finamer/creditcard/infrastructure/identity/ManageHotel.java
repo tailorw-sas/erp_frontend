@@ -36,6 +36,8 @@ public class ManageHotel implements Serializable {
 
     private String status;
 
+    private String address;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -49,6 +51,7 @@ public class ManageHotel implements Serializable {
         this.name = dto.getName();
         this.isApplyByVcc = dto.getIsApplyByVCC();
         this.status = dto.getStatus();
+        this.address = dto.getAddress();
     }
 
     public ManageHotelDto toAggregate(){
@@ -57,7 +60,8 @@ public class ManageHotel implements Serializable {
                 code,
                 name,
                 isApplyByVcc,
-                status
+                status,
+                address
         );
     }
 }

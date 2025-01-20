@@ -63,6 +63,7 @@ public class BookingRow {
     private String nightType;
 
     private String trendingCompany;
+    private String insistImportProcessId;
 
     public BookingRow() {
         this.firstName = "";

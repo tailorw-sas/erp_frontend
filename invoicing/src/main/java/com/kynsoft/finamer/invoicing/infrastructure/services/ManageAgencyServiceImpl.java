@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -76,6 +77,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
+    @Cacheable(cacheNames = "manageAgency", key = "#code", unless = "#result == null")
     public ManageAgencyDto findByCode(String code) {
         return repositoryQuery.findManageAgenciesByCode(code).map(ManageAgency::toAggregate)
                 .orElseThrow(()->  new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("code", "The source not found."))));

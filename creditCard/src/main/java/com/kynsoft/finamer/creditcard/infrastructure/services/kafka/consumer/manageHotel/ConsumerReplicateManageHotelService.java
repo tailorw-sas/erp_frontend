@@ -25,7 +25,7 @@ public class ConsumerReplicateManageHotelService {
     @KafkaListener(topics = "finamer-replicate-manage-hotel", groupId = "vcc-entity-replica")
     public void listen(ReplicateManageHotelKafka entity) {
         try {
-            CreateManageHotelCommand command = new CreateManageHotelCommand(entity.getId(), entity.getCode(), entity.getName(), entity.getIsApplyByVCC(), entity.getStatus());
+            CreateManageHotelCommand command = new CreateManageHotelCommand(entity.getId(), entity.getCode(), entity.getName(), entity.getIsApplyByVCC(), entity.getStatus(), entity.getAddress());
             mediator.send(command);
 
             try{

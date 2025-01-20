@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.command.manageHotel.create;
+package com.kynsoft.finamer.creditcard.application.command.manageContact.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
@@ -11,17 +11,19 @@ import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
-public class CreateManageHotelCommand implements ICommand {
+public class CreateManageContactCommand implements ICommand {
 
     private UUID id;
     private String code;
+    private String description;
     private String name;
-    private Boolean isApplyByVCC;
-    private String status;
-    private String address;
+    private UUID manageHotel;
+    private String email;
+    private String phone;
+    private Integer position;
 
     @Override
     public ICommandMessage getMessage() {
-        return new CreateManageHotelMessage(id);
+        return new CreateManageContactMessage(id);
     }
 }
