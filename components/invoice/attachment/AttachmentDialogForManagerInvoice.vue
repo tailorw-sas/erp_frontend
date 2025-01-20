@@ -138,7 +138,7 @@ const Fields: Array<FieldDefinitionType> = [
   {
     field: 'resource',
     header: 'Resource',
-    dataType: 'number',
+    dataType: 'text',
     class: 'field mb-3 col-12 md: required',
     headerClass: 'mb-1',
     disabled: true
@@ -943,6 +943,10 @@ onMounted(async () => {
               {{ idItem ? "Edit" : "Add" }}
             </div>
             <div class="card">
+              \
+              <pre>
+                {{ item }}
+              </pre>
               <EditFormV2
                 :key="formReload"
                 :fields="Fields"
