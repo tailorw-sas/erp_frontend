@@ -278,10 +278,19 @@ public class TransactionServiceImpl implements ITransactionService {
         TemplateDto templateDto = templateEntityService.findByLanguageCodeAndType(transactionDto.getLanguage().getCode(), EMailjetType.PAYMENT_LINK);
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
         request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode())); // Cambiar en configuración
+        //todo: validar que el formato de la fecha se en dependencia del campo transactionDto.getLanguage()
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.US);
 
         // Variables para el template de email
         List<MailJetVar> vars = Arrays.asList(
                 new MailJetVar("payment_link", paymentLink),
+                new MailJetVar("transaction_id", transactionDto.getId().toString()),
+                new MailJetVar("transaction_date", transactionDto.getTransactionDate().format(formatter)),
+                new MailJetVar("hotel", transactionDto.getHotel().getName()),
+                //todo: agregar hotel address al dto de ManageHotelDto
+                new MailJetVar("hotel_address", transactionDto.getHotel().getName()),
+                //todo: agregar hotel contact al dto de ManageHotelDto
+                new MailJetVar("hotel_contact", transactionDto.getHotel().getName()),
                 new MailJetVar("invoice_amount", transactionDto.getAmount().toString()),
                 new MailJetVar("reference_number", transactionDto.getReferenceNumber())
         );

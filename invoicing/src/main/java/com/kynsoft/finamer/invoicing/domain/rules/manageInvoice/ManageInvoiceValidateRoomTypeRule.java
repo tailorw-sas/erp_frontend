@@ -10,14 +10,17 @@ public class ManageInvoiceValidateRoomTypeRule extends BusinessRule {
 
     private final ManageHotelDto hotelDto;
     private final ManageRoomTypeDto manageRoomTypeDto;
+    private final String hotelBookingNumber;
 
-    public ManageInvoiceValidateRoomTypeRule(ManageHotelDto hotelDto, ManageRoomTypeDto manageRoomTypeDto) {
+    public ManageInvoiceValidateRoomTypeRule(ManageHotelDto hotelDto, ManageRoomTypeDto manageRoomTypeDto, String hotelBookingNumber) {
         super(
                 DomainErrorMessage.HOTEL_ROOM_TYPE_NOT_FOUND, 
-                new ErrorField("roomType", DomainErrorMessage.HOTEL_ROOM_TYPE_NOT_FOUND.getReasonPhrase())
+                new ErrorField("roomType", DomainErrorMessage.HOTEL_ROOM_TYPE_NOT_FOUND.getReasonPhrase() +
+                        " Hotel Booking Number: "+hotelBookingNumber)
         );
         this.hotelDto = hotelDto;
         this.manageRoomTypeDto = manageRoomTypeDto;
+        this.hotelBookingNumber = hotelBookingNumber;
     }
 
     @Override

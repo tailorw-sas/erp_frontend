@@ -1,10 +1,12 @@
 package com.kynsof.share.core.domain.kafka.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -25,14 +27,25 @@ public class KafkaConsumerConfig {
     @Value("${KAFKA_GROUP_ID:group-id}")
     private String groupId;
 
-    @Value("${KAFKA_SASL_USERNAME:}")
+    @Value("${KAFKA_SASL_USERNAME}")
     private String saslUsername;
 
-    @Value("${KAFKA_SASL_PASSWORD:}")
+    @Value("${KAFKA_SASL_PASSWORD}")
     private String saslPassword;
 
     @Bean
+    //@Profile("development | qa | production")
+    @Profile("qa")
     public ConsumerFactory<String, Object> consumerFactory() {
+        Map<String, Object> configProps = createBaseProps();
+        addSaslConfig(configProps, saslUsername, saslPassword);
+        return new DefaultKafkaConsumerFactory<>(configProps);
+    }
+
+    @Bean
+    //@Profile("!development & !qa & !production")
+    @Profile("!qa")
+    public ConsumerFactory<String, Object> defaultConsumerFactory() {
         Map<String, Object> configProps = createBaseProps();
         // Verificar si SASL es requerido
 //        if (saslUsername != null && !saslUsername.isEmpty() && saslPassword != null && !saslPassword.isEmpty()) {
@@ -63,9 +76,11 @@ public class KafkaConsumerConfig {
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
         props.put("security.protocol", "SASL_PLAINTEXT");
-        props.put("sasl.mechanism", "PLAIN");
+        //props.put("sasl.mechanism", "PLAIN");
+        props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256");
         props.put("sasl.jaas.config",
-                String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+                //String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+                String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password));
     }
 
     @Bean

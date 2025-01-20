@@ -10,14 +10,17 @@ public class ManageInvoiceValidateRatePlanRule extends BusinessRule {
 
     private final ManageHotelDto hotelDto;
     private final ManageRatePlanDto manageRatePlanDto;
+    private final String hotelBookingNumber;
 
-    public ManageInvoiceValidateRatePlanRule(ManageHotelDto hotelDto, ManageRatePlanDto manageRatePlanDto) {
+    public ManageInvoiceValidateRatePlanRule(ManageHotelDto hotelDto, ManageRatePlanDto manageRatePlanDto, String hotelBookingNumber) {
         super(
                 DomainErrorMessage.HOTEL_RATE_PLAN_NOT_FOUND, 
-                new ErrorField("ratePlan", DomainErrorMessage.HOTEL_RATE_PLAN_NOT_FOUND.getReasonPhrase())
+                new ErrorField("ratePlan", DomainErrorMessage.HOTEL_RATE_PLAN_NOT_FOUND.getReasonPhrase() +
+                        " Hotel Booking Number: "+hotelBookingNumber)
         );
         this.hotelDto = hotelDto;
         this.manageRatePlanDto = manageRatePlanDto;
+        this.hotelBookingNumber = hotelBookingNumber;
     }
 
     @Override

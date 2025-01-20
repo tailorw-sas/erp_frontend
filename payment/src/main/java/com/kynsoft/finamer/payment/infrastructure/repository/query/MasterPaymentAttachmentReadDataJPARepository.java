@@ -21,7 +21,10 @@ public interface MasterPaymentAttachmentReadDataJPARepository extends JpaReposit
 
     @Query("SELECT COUNT(mpa) FROM MasterPaymentAttachment mpa WHERE mpa.resource.id = :resource AND mpa.attachmentType.defaults = true")
     Long countByResourceAndAttachmentTypeIsDefault(@Param("resource") UUID resource);
-        
+
+    @Query("SELECT COUNT(mpa) FROM MasterPaymentAttachment mpa WHERE mpa.resource.id = :resource")
+    Long countByAttachmentResource(@Param("resource") UUID resource);
+
     @Query("SELECT b FROM MasterPaymentAttachment b WHERE b.resource.id = :resource")
     List<MasterPaymentAttachment> findAllByPayment(@Param("resource") UUID resource);
 

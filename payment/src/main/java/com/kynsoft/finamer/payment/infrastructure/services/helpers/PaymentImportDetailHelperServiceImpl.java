@@ -23,6 +23,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.applyDeposit.ApplyDepositEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.createPayment.CreatePaymentDetailEvent;
+import com.kynsoft.finamer.payment.infrastructure.excel.event.deposit.DepositEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
@@ -125,7 +126,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = transactionTypeService.findByCode(paymentImportCache.getTransactionId());
                 Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
                 PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
-                ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.valueOf(paymentImportCache.getBookId())) : null;
+                ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     boolean applyPayment = true;
                     if (bookingDto == null) {
@@ -147,13 +148,44 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     if (bookingDto == null) {
                         applyPayment = false;
                     }
-                    this.sendCreatePaymentDetail(paymentDto.getId(),
-                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                            UUID.fromString(request.getEmployeeId()),
-                            managePaymentTransactionTypeDto.getId(),
-                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                            bookingDto != null ? bookingDto.getId() : null,
-                            applyPayment);
+
+                    //cash
+                    if (managePaymentTransactionTypeDto.getCash()) {
+                        this.sendCreatePaymentDetail(
+                                paymentDto.getId(),
+                                bookingDto.getAmountBalance(),
+                                //Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                UUID.fromString(request.getEmployeeId()),
+                                managePaymentTransactionTypeDto.getId(),
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                bookingDto != null ? bookingDto.getId() : null,
+                                applyPayment);
+
+                        //Crear el deposit.
+                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - bookingDto.getAmountBalance();
+                        if (restAmount > 0) {
+                            DepositEvent depositEvent = new DepositEvent(this);
+                            depositEvent.setAmount(restAmount);
+                            depositEvent.setPaymentDto(paymentDto);
+                            //depositEvent.setRemark("Create deposit in import details.");
+                            depositEvent.setRemark(
+                                    "" + paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : ""
+                                       + " " + paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : ""
+                                       + " " + paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : ""
+                                       + " " + paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : ""
+                            );
+                            this.applicationEventPublisher.publishEvent(depositEvent);
+                        }
+                    } else {
+                        ///Other deductions
+                        this.sendCreatePaymentDetail(paymentDto.getId(),
+                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                UUID.fromString(request.getEmployeeId()),
+                                managePaymentTransactionTypeDto.getId(),
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                bookingDto != null ? bookingDto.getId() : null,
+                                applyPayment);
+                    }
                 }
             });
             pageable = pageable.next();

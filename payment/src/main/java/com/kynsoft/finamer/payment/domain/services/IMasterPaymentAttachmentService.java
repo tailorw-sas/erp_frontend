@@ -26,4 +26,6 @@ public interface IMasterPaymentAttachmentService {
     List<MasterPaymentAttachmentDto> findAllByPayment(UUID payment);
 
     Long findMaxId();
+
+    Long countByAttachmentResource(UUID resource);
 }

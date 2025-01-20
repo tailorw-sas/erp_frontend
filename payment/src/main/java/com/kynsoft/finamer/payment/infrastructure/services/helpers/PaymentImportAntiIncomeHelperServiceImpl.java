@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.request.FilterCriteria;
@@ -11,8 +10,8 @@ import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.applyDeposit.CreatePaymentDetailApplyDepositFromFileCommand;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
-import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -136,7 +135,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             try {
                 LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent("detail.pdf", request.getAttachment());
                 attachment = response.get("url");
-            } catch (JsonProcessingException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             do {
@@ -176,14 +175,19 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         Page<PaymentImportCache> cacheList = paymentImportCacheRepository.findAllByImportProcessId(importProcessId, pageable);
         Optional<PaymentImportCache> paymentImportCache = cacheList.stream().findFirst();
         return paymentImportCache.map(importCache -> {
-            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(importCache.getTransactionId()));
-            return paymentDetailDto.getPayment().getId();
+//            PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(importCache.getTransactionId()));
+//            return paymentDetailDto.getPayment().getId();
+            PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(Integer.parseInt(importCache.getTransactionId()));
+            return paymentDetailDto.getPaymentId();
         }).orElse(null);
 
     }
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
             UUID transactionTypeIdForAdjustment, String remarks, String attachment) {
+        if (remarks == null || remarks.isEmpty()) {
+            remarks = this.transactionTypeService.findByApplyDeposit().getDefaultRemark();
+        }
         CreatePaymentDetailApplyDepositFromFileCommand createPaymentDetailApplyDepositCommand
                 = new CreatePaymentDetailApplyDepositFromFileCommand(Status.ACTIVE,
                         paymentDetail,

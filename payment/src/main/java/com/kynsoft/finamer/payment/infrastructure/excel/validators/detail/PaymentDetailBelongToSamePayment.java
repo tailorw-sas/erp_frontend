@@ -26,11 +26,17 @@ public class PaymentDetailBelongToSamePayment extends ExcelRuleValidator<Payment
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
         if (Objects.nonNull(paymentId)) {
-            PaymentDto paymentDto = paymentService.findById(paymentId);
-           if (paymentDto.getPaymentId() != Long.parseLong(obj.getPaymentId())){
-               errorFieldList.add(new ErrorField("Payment Id","The paymentId of the file doesn't match with the select payment"));
-               return false;
-           }
+            try {
+                PaymentDto paymentDto = paymentService.findById(paymentId);
+                if (paymentDto.getPaymentId() != Long.parseLong(obj.getPaymentId())) {
+                    errorFieldList.add(new ErrorField("Payment Id", "The paymentId of the file doesn't match with the select payment"));
+                    return false;
+                }
+            } catch (Exception e) {
+                errorFieldList.add(new ErrorField("Payment Id", "The paymentId not found."));
+                return false;
+            }
+
         }
         return true;
     }

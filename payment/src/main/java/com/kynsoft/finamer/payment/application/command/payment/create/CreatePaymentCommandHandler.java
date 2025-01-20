@@ -167,6 +167,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             this.createAttachmentStatusHistory(employeeDto, save, list);
             //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
+        if (command.getAttachments() == null || command.getAttachments().isEmpty()) {
+            this.createAttachmentStatusHistoryWithoutAttachmet(employeeDto, save);
+        }
 
         command.setPayment(save);
         this.createPaymentAttachmentStatusHistory(employeeDto, save);
@@ -250,6 +253,22 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
 
         }
+    }
+
+    //Este metodo es para agregar el history del Attachemnt. Aqui el estado es el del nomenclador Manage Payment Attachment Status
+    private void createAttachmentStatusHistoryWithoutAttachmet(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Creating payment without attachment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus("NON-NONE");
+        //attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
+        //attachmentStatusHistoryDto.setAttachmentId(attachment.getAttachmentId());
+
+        this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+
     }
 
 }

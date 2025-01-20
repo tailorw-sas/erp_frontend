@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
 public class PaymentApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(PaymentApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(PaymentApplication.class, args);
+    }
 
 }
