@@ -34,8 +34,7 @@ public class KafkaConsumerConfig {
     private String saslPassword;
 
     @Bean
-    //@Profile("development | qa | production")
-    @Profile("qa")
+    @Profile("development | qa | production")
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = createBaseProps();
         addSaslConfig(configProps, saslUsername, saslPassword);
@@ -43,8 +42,7 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    //@Profile("!development & !qa & !production")
-    @Profile("!qa")
+    @Profile("!development & !qa & !production")
     public ConsumerFactory<String, Object> defaultConsumerFactory() {
         Map<String, Object> configProps = createBaseProps();
         // Verificar si SASL es requerido
