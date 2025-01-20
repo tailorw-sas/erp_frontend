@@ -923,8 +923,6 @@ onMounted(async () => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
-
-          <pre>{{ fields }}</pre>
         </div>
       </div>
 
