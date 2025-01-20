@@ -602,7 +602,6 @@ async function getList() {
         operator: 'IN',
         value: ['EXP', 'BK'],
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -616,7 +615,6 @@ async function getList() {
         operator: 'GREATER_THAN',
         value: 0,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -630,7 +628,6 @@ async function getList() {
         operator: 'EQUALS',
         value: false,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -644,7 +641,6 @@ async function getList() {
         operator: 'EQUALS',
         value: false,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -971,6 +967,13 @@ function searchAndFilter() {
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
+        key: 'agency.client.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
     }
   }
   // Agency
@@ -979,6 +982,13 @@ function searchAndFilter() {
     if (filteredItems.length > 0) {
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
+        key: 'agency.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
         key: 'agency.id',
         operator: 'IN',
         value: itemIds,
@@ -999,10 +1009,18 @@ function searchAndFilter() {
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
+        key: 'hotel.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
     }
   }
   options.value.selectAllItemByDefault = false
   getList()
+  getListInvoice()
 }
 
 function clearFilterToSearch() {
