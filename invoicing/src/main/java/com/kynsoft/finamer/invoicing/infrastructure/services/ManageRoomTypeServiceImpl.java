@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -78,6 +79,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     }
 
     @Override
+    @Cacheable(cacheNames = "manageRoomType", key = "#code", unless = "#result == null")
     public ManageRoomTypeDto findByCode(String code) {
         Optional<ManageRoomType> optionalEntity = repositoryQuery.findManageRoomTypeByCode(code);
 
@@ -122,6 +124,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     }
 
     @Override
+    @Cacheable(cacheNames = "manageHotel", key = "#code", unless = "#result == null")
     public ManageRoomTypeDto findManageRoomTypenByCodeAndHotelCode(String code, String hotelCode) {
         Optional<ManageRoomType> optionalEntity = repositoryQuery.findManageRatePlanByCodeAndHotelCode(code, hotelCode);
 
