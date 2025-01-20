@@ -375,6 +375,7 @@ export enum CALENDAR_MODE {
 
 export const FORM_FIELD_TYPE = [
   { id: 'select', name: 'Select' },
+  { id: 'multiselect', name: 'Select Multiple' },
   { id: 'text', name: 'Text', show: false },
   { id: 'number', name: 'Number' },
   { id: 'email', name: 'Email' },
