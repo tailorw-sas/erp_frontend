@@ -476,7 +476,7 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
       if (result && result.length > 0) {
         for (const element of result) {
           item.value[element.paramName] = ''
-          if (element.componentType === 'select') {
+          if (element.componentType === 'select' || element.componentType === 'multiselect') {
             fields.value = [...fields.value, {
               field: element.paramName,
               header: element.label,
@@ -761,78 +761,153 @@ onMounted(async () => {
             @submit="requireConfirmationToSave($event)"
           >
             <template
-              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && field.dataType === 'select')"
+              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && (field.dataType === 'select' || field.dataType === 'multiselect'))"
               :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }"
             >
-              <DebouncedAutoCompleteComponent
-                v-if="!loadingSaveAll"
-                id="autocomplete"
-                field="name"
-                item-value="id"
-                :model="data[field.field]"
-                :suggestions="[...suggestionsData]"
-                @change="($event) => {
-                  onUpdate(field.field, $event)
-                }"
-                @load="async ($event) => {
-                  let keyValue = ''
-                  let filter = []
-                  // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
-                  if (field.kwArgs && field.kwArgs.dependentField) {
-                    keyValue = JSON.parse(field.kwArgs.dependentField).name
-                    filter = [
-                      {
-                        key: field.kwArgs.filterKeyValue,
-                        operator: 'EQUALS',
-                        value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
-                        logicalOperation: 'AND',
-                      },
-                      {
-                        key: 'code',
-                        operator: 'LIKE',
-                        value: $event,
-                        logicalOperation: 'OR',
-                      },
-                      {
-                        key: 'name',
-                        operator: 'LIKE',
-                        value: $event,
-                        logicalOperation: 'OR',
-                      },
-                      {
-                        key: 'status',
-                        operator: 'EQUALS',
-                        value: 'ACTIVE',
-                        logicalOperation: 'AND',
-                      },
-                    ]
-                  }
-                  else {
-                    filter = [
-                      {
-                        key: 'code',
-                        operator: 'LIKE',
-                        value: $event,
-                        logicalOperation: 'OR',
-                      },
-                      {
-                        key: 'name',
-                        operator: 'LIKE',
-                        value: $event,
-                        logicalOperation: 'OR',
-                      },
-                      {
-                        key: 'status',
-                        operator: 'EQUALS',
-                        value: 'ACTIVE',
-                        logicalOperation: 'AND',
-                      },
-                    ]
-                  }
-                  await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
-                }"
-              />
-              <Skeleton v-else height="2rem" class="mb-2" />
+              <span v-if="field.dataType === 'select'">
+                <DebouncedAutoCompleteComponent
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="name"
+                  item-value="id"
+                  :model="data[field.field]"
+                  :suggestions="[...suggestionsData]"
+                  @change="($event) => {
+                    onUpdate(field.field, $event)
+                  }"
+                  @load="async ($event) => {
+                    let keyValue = ''
+                    let filter = []
+                    // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
+                    if (field.kwArgs && field.kwArgs.dependentField) {
+                      keyValue = JSON.parse(field.kwArgs.dependentField).name
+                      filter = [
+                        {
+                          key: field.kwArgs.filterKeyValue,
+                          operator: 'EQUALS',
+                          value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
+                          logicalOperation: 'AND',
+                        },
+                        {
+                          key: 'code',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'name',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'status',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                          logicalOperation: 'AND',
+                        },
+                      ]
+                    }
+                    else {
+                      filter = [
+                        {
+                          key: 'code',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'name',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'status',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                          logicalOperation: 'AND',
+                        },
+                      ]
+                    }
+                    await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
+                  }"
+                />
+                <Skeleton v-else height="2rem" class="mb-2" />
+              </span>
+              <span v-if="field.dataType === 'multiselect'">
+                <DebouncedMultiSelectComponent
+                  v-if="!loadingSaveAll"
+                  id="autocomplete"
+                  field="name"
+                  item-value="id"
+                  :max-selected-labels="3"
+                  class="w-full h-2rem align-items-center"
+                  :model="data[field.field]"
+                  :suggestions="[...suggestionsData]"
+                  @change="($event) => {
+                    onUpdate(field.field, $event)
+                  }"
+                  @load="async ($event) => {
+                    let keyValue = ''
+                    let filter = []
+                    // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
+                    if (field.kwArgs && field.kwArgs.dependentField) {
+                      keyValue = JSON.parse(field.kwArgs.dependentField).name
+                      filter = [
+                        {
+                          key: field.kwArgs.filterKeyValue,
+                          operator: 'EQUALS',
+                          value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
+                          logicalOperation: 'AND',
+                        },
+                        {
+                          key: 'code',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'name',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'status',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                          logicalOperation: 'AND',
+                        },
+                      ]
+                    }
+                    else {
+                      filter = [
+                        {
+                          key: 'code',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'name',
+                          operator: 'LIKE',
+                          value: $event,
+                          logicalOperation: 'OR',
+                        },
+                        {
+                          key: 'status',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                          logicalOperation: 'AND',
+                        },
+                      ]
+                    }
+                    await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
+                  }"
+                />
+                <Skeleton v-else height="2rem" class="mb-2" />
+              </span>
             </template>
 
             <template #field-reportFormatType="{ item: data, onUpdate }">
@@ -848,6 +923,8 @@ onMounted(async () => {
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
           </EditFormV2>
+
+          <pre>{{ fields }}</pre>
         </div>
       </div>
 
