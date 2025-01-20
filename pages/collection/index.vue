@@ -377,7 +377,7 @@ const ENUM_FILTER = [
 const columns: IColumn[] = [
   { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
   { field: 'paymentId', header: 'Id', type: 'text' },
-  { field: 'transactionDate', header: 'Trans. Date', type: 'text' },
+  { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
   { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'paymentAmount', header: 'P.Amount', type: 'number' },
@@ -845,7 +845,7 @@ async function getListInvoice() {
     // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
     const objFilterByDueAmount = payloadInv.value.filter.find((item: IFilter) => item.key === 'dueAmount')
     if (objFilterByDueAmount) {
-      objFilterByDueAmount.value = "0"
+      objFilterByDueAmount.value = '0'
     }
     else {
       payloadInv.value.filter.push({
