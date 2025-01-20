@@ -16,10 +16,7 @@ import com.kynsoft.finamer.creditcard.application.query.transaction.search.Trans
 import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.ETransactionStatus;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
-import com.kynsoft.finamer.creditcard.domain.services.IManageTransactionStatusService;
-import com.kynsoft.finamer.creditcard.domain.services.IParameterizationService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
-import com.kynsoft.finamer.creditcard.domain.services.ITransactionStatusHistoryService;
+import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionWriteDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
@@ -288,8 +285,7 @@ public class TransactionServiceImpl implements ITransactionService {
                 new MailJetVar("transaction_date", transactionDto.getTransactionDate().format(formatter)),
                 new MailJetVar("hotel", transactionDto.getHotel().getName()),
                 new MailJetVar("hotel_address", transactionDto.getHotel().getAddress()),
-                //todo: agregar hotel contact al dto de ManageHotelDto
-                new MailJetVar("hotel_contact", transactionDto.getHotel().getName()),
+                new MailJetVar("hotel_contact", transactionDto.getHotelContactEmail()),
                 new MailJetVar("invoice_amount", transactionDto.getAmount().toString()),
                 new MailJetVar("reference_number", transactionDto.getReferenceNumber())
         );
@@ -305,5 +301,4 @@ public class TransactionServiceImpl implements ITransactionService {
         request.setRecipientEmail(recipients);
         mailService.sendMail(request);
     }
-
 }
