@@ -422,6 +422,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);
         bookingImportCache.setInsistImportProcessId(bookingRow.getInsistImportProcessId());
         bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
+        bookingImportCache.setInsistImportProcessBookingId(bookingRow.getInsistImportProcessBookingId());
         repository.save(bookingImportCache);
     }
 

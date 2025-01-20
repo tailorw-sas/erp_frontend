@@ -64,6 +64,7 @@ public class BookingRow {
 
     private String trendingCompany;
     private String insistImportProcessId;
+    private String insistImportProcessBookingId;
 
     public BookingRow() {
         this.firstName = "";

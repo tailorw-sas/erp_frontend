@@ -72,6 +72,7 @@ public class BookingImportCache {
     
     @Indexed
     private String insistImportProcessId;
+    private String insistImportProcessBookingId;
 
     public BookingImportCache() {
     }
@@ -159,6 +160,7 @@ public class BookingImportCache {
         bookingRow.setNightType(this.nightType);
         bookingRow.setInsistImportProcessId(insistImportProcessId);
         bookingRow.setImportProcessId(importProcessId);
+        bookingRow.setInsistImportProcessBookingId(insistImportProcessBookingId);
         return bookingRow;
     }
 }
