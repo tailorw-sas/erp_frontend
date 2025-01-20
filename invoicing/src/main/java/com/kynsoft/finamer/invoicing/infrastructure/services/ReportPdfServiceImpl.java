@@ -37,13 +37,17 @@ public class ReportPdfServiceImpl implements IReportPdfService {
     private final ManageInvoiceServiceImpl invoiceService;
     private final IManageRoomRateService roomRateService;
 
+    private static final float[] COLUMN_WIDTHS = {190F, 140F, 130F, 100F, 110F, 60F, 60F};
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+
     public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService, IManageRoomRateService roomRateService) {
 
         this.invoiceService = invoiceService;
         this.roomRateService = roomRateService;
     }
 
-    private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException { // Changed to IOException
+    /*private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException { // Changed to IOException
 
         // Variables that are used in the creation of the pdf
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -54,9 +58,13 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         // Create a style with the desired font size
         Style styleHeader = new Style();
+        styleHeader.setBorder(Border.NO_BORDER);
         styleHeader.setFontSize(10);
+
         Style styleCell = new Style();
+        styleCell.setBorder(Border.NO_BORDER);
         styleCell.setFontSize(8);
+
         styleCell.setKeepTogether(false);
         String currencyData = invoiceDto.getHotel().getManageCurrency() != null ? invoiceDto.getHotel().getManageCurrency().getCode() : "USD";
 
@@ -316,7 +324,145 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         document.close();
 
         return baos.toByteArray();
+    }*/
+
+    private byte[] generatePdf(ManageInvoiceDto invoiceDto) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfDocument pdfDoc = new PdfDocument(new PdfWriter(baos));
+        Document document = new Document(pdfDoc);
+
+        addTitle(document, "Invoice Data");
+        Table table = createTable();
+
+        addMainHeader(invoiceDto, table);
+        addInternalHeadersAndRows(invoiceDto,  table);
+
+        document.add(table);
+        document.close();
+
+        return baos.toByteArray();
     }
+
+    private void addTitle(Document document, String titleText) {
+        Paragraph title = new Paragraph(titleText)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER);
+        document.add(title);
+    }
+
+    private Table createTable() {
+        Table table = new Table(COLUMN_WIDTHS);
+        table.setBorder(Border.NO_BORDER); // Sin bordes para toda la tabla
+        return table;
+    }
+
+    private void addMainHeader(ManageInvoiceDto invoiceDto, Table table) {
+        Style headerStyle = new Style().setFontSize(10).setBold();
+        Style cellStyle = new Style().setFontSize(8);
+
+        // Primera fila: Encabezado con la palabra "Hotel" y fechas
+        table.addHeaderCell(new Cell()
+                .add(new Paragraph("Hotel").addStyle(headerStyle))
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)); // Solo "Hotel" como encabezado
+        table.addHeaderCell(new Cell(1, 2).setBorder(Border.NO_BORDER)); // Espacio vacío
+        table.addHeaderCell(new Cell().add(new Paragraph("Create Date").addStyle(headerStyle))
+                .setBorder(Border.NO_BORDER));
+        table.addHeaderCell(new Cell().add(new Paragraph("Booking Date").addStyle(headerStyle))
+                .setBorder(Border.NO_BORDER));
+
+        // Segunda fila: Nombre del hotel en una celda combinada de tres columnas
+        String hotelName = (invoiceDto.getHotel() != null
+                ? invoiceDto.getHotel().getCode() + " - " + invoiceDto.getHotel().getName()
+                : "N/A");
+        table.addCell(new Cell(1, 3)
+                .add(new Paragraph(hotelName).addStyle(cellStyle))
+                .setTextAlignment(TextAlignment.LEFT)
+                .setBorder(Border.NO_BORDER)); // Sin borde
+        table.addCell(new Cell().setBorder(Border.NO_BORDER)); // Celda vacía
+        table.addCell(new Cell().add(new Paragraph(invoiceDto.getBookings().get(0).getHotelCreationDate() != null
+                        ? invoiceDto.getBookings().get(0).getHotelCreationDate().format(FORMATTER)
+                        : "Not date").addStyle(cellStyle))
+                .setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().add(new Paragraph(invoiceDto.getBookings().get(0).getBookingDate() != null
+                        ? invoiceDto.getBookings().get(0).getBookingDate().format(FORMATTER)
+                        : "Not date").addStyle(cellStyle))
+                .setBorder(Border.NO_BORDER));
+    }
+
+    private void addInternalHeadersAndRows(ManageInvoiceDto invoiceDto, Table table) {
+        List<ManageBookingDto> bookings = invoiceDto.getBookings();
+        Style headerStyle = new Style().setFontSize(10).setBold();
+        Style cellStyle = new Style().setFontSize(8);
+
+        // Add "Voucher" header
+        addInternalHeader(table, headerStyle, "Voucher", "Hotel Reservation", "Contract", "Night Type", "", "", "");
+
+        for (ManageBookingDto booking : bookings) {
+            table.addCell(createCell(booking.getCouponNumber(), cellStyle));
+            table.addCell(createCell(booking.getHotelBookingNumber(), cellStyle));
+            table.addCell(createCell(booking.getContract(), cellStyle));
+            table.addCell(createCell(booking.getNightType() != null ? booking.getNightType().getName() : "", cellStyle));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+        }
+
+        // Add "Room Type" header
+        addInternalHeader(table, headerStyle, "Room Type", "Rate Plan", "Room Number", "", "", "", "");
+
+        for (ManageBookingDto booking : bookings) {
+            table.addCell(createCell(booking.getRoomType() != null ? booking.getRoomType().getName() : "", cellStyle));
+            table.addCell(createCell(booking.getRatePlan() != null ? booking.getRatePlan().getName() : "", cellStyle));
+            table.addCell(createCell(booking.getRoomNumber(), cellStyle));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+        }
+
+        // Add "Full Name" header
+        addInternalHeader(table, headerStyle, "Full Name", "", "Remark", "", "", "", "");
+
+        for (ManageBookingDto booking : bookings) {
+            table.addCell(new Cell(1, 2) // "Full Name" ocupa 2 celdas
+                    .add(new Paragraph(booking.getFullName() != null ? booking.getFullName() : "").addStyle(cellStyle))
+                    .setBorder(Border.NO_BORDER));
+            table.addCell(new Cell(1, 5) // "Remark" ocupa las 5 celdas restantes
+                    .add(new Paragraph(booking.getHotelInvoiceNumber() != null ? booking.getHotelInvoiceNumber() : "").addStyle(cellStyle))
+                    .setBorder(Border.NO_BORDER));
+        }
+
+        // Add "Check In" header
+        addInternalHeader(table, headerStyle, "Check In", "Check Out", "Nights", "Adults", "Children", "Rate", "Currency");
+
+        for (ManageBookingDto booking : bookings) {
+            List<ManageRoomRateDto> roomRates = this.roomRateService.findByBooking(booking.getId());
+            for (ManageRoomRateDto roomRate : roomRates) {
+                table.addCell(createCell(roomRate.getCheckIn() != null ? roomRate.getCheckIn().format(FORMATTER) : "Not date", cellStyle));
+                table.addCell(createCell(roomRate.getCheckOut() != null ? roomRate.getCheckOut().format(FORMATTER) : "Not date", cellStyle));
+                table.addCell(createCell(roomRate.getNights() != null ? roomRate.getNights().toString() : "", cellStyle));
+                table.addCell(createCell(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "", cellStyle));
+                table.addCell(createCell(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "", cellStyle));
+                table.addCell(createCell("$ " + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0), cellStyle));
+                table.addCell(createCell(invoiceDto.getHotel().getManageCurrency() != null
+                        ? invoiceDto.getHotel().getManageCurrency().getCode()
+                        : "USD", cellStyle));
+            }
+        }
+    }
+
+    private void addInternalHeader(Table table, Style style, String... headers) {
+        for (String header : headers) {
+            table.addCell(new Cell().add(new Paragraph(header).addStyle(style)).setBorder(Border.NO_BORDER));
+        }
+    }
+
+    private Cell createCell(String content, Style style) {
+        return new Cell().add(new Paragraph(content != null ? content : "").addStyle(style)).setBorder(Border.NO_BORDER);
+    }
+
+
 
     // Método para combinar PDFs generados desde una lista de IDs
     @Override
