@@ -943,10 +943,6 @@ onMounted(async () => {
               {{ idItem ? "Edit" : "Add" }}
             </div>
             <div class="card">
-              \
-              <pre>
-                {{ item }}
-              </pre>
               <EditFormV2
                 :key="formReload"
                 :fields="Fields"
