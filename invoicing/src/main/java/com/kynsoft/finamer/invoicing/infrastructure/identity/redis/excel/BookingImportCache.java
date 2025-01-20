@@ -79,13 +79,6 @@ public class BookingImportCache {
 
     private String upperCaseAndTrim(String code){
         String value = code.trim();
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        System.err.println("Value upper: " + value.toUpperCase());
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        System.err.println("##################################################");
         return value.toUpperCase();
     }
 
