@@ -57,6 +57,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         styleHeader.setFontSize(10);
         Style styleCell = new Style();
         styleCell.setFontSize(8);
+        styleCell.setKeepTogether(false);
         String currencyData = invoiceDto.getHotel().getManageCurrency() != null ? invoiceDto.getHotel().getManageCurrency().getCode() : "USD";
 
         List<ManageBookingDto> bookings = invoiceDto.getBookings();
