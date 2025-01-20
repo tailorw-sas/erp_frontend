@@ -142,7 +142,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(merchantDto.getId());
                 String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
                 String paymentLink = baseUrl + "payment?token=" + token;
-                transactionService.sendTransactionPaymentLinkEmail(newTransaction, paymentLink);
+                transactionService.sendTransactionPaymentLinkEmail(transactionDto, paymentLink);
             }
         }
         this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());
