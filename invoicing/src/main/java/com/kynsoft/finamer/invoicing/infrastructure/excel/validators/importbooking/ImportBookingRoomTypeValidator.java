@@ -18,13 +18,13 @@ public class ImportBookingRoomTypeValidator extends ExcelRuleValidator<BookingRo
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.nonNull(obj.getRoomType()) && !roomTypeService.existByCode(obj.getRoomType())) {
+        if (Objects.nonNull(obj.getRoomType()) && !roomTypeService.existByCode(upperCaseAndTrim(obj.getRoomType()))) {
             errorFieldList.add(new ErrorField("Room Type", "Room Type not exist."));
             return false;
         }
         try {
             if (Objects.nonNull(obj.getRoomType())) {
-                this.roomTypeService.findManageRoomTypenByCodeAndHotelCode(obj.getRoomType(), obj.getManageHotelCode());
+                this.roomTypeService.findManageRoomTypenByCodeAndHotelCode(upperCaseAndTrim(obj.getRoomType()), upperCaseAndTrim(obj.getManageHotelCode()));
             }
         } catch (Exception e) {
             errorFieldList.add(new ErrorField("Room Type", "The selected room type does not belong to the hotel."));
@@ -33,5 +33,9 @@ public class ImportBookingRoomTypeValidator extends ExcelRuleValidator<BookingRo
         return true;
     }
 
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
+    }
 
 }

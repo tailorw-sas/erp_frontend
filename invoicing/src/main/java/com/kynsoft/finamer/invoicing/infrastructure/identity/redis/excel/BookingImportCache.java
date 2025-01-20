@@ -72,15 +72,21 @@ public class BookingImportCache {
     
     @Indexed
     private String insistImportProcessId;
+    private String insistImportProcessBookingId;
 
     public BookingImportCache() {
+    }
+
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
     }
 
     public BookingImportCache(BookingRow bookingRow) {
         this.rowNumber = bookingRow.getRowNumber();
         this.transactionDate = bookingRow.getTransactionDate();
-        this.manageHotelCode = bookingRow.getManageHotelCode();
-        this.manageAgencyCode = bookingRow.getManageAgencyCode();
+        this.manageHotelCode = this.upperCaseAndTrim(bookingRow.getManageHotelCode());
+        this.manageAgencyCode = this.upperCaseAndTrim(bookingRow.getManageAgencyCode());
         this.firstName = bookingRow.getFirstName();
         this.lastName = bookingRow.getLastName();
         this.checkIn = bookingRow.getCheckIn();
@@ -91,8 +97,8 @@ public class BookingImportCache {
         this.invoiceAmount = Objects.nonNull(bookingRow.getInvoiceAmount()) ? bookingRow.getInvoiceAmount() : 0;
         this.coupon = bookingRow.getCoupon();
         this.hotelBookingNumber = bookingRow.getHotelBookingNumber();
-        this.roomType = bookingRow.getRoomType();
-        this.ratePlan = bookingRow.getRatePlan();
+        this.roomType = this.upperCaseAndTrim(bookingRow.getRoomType());
+        this.ratePlan = this.upperCaseAndTrim(bookingRow.getRatePlan());
         this.hotelInvoiceNumber = bookingRow.getHotelInvoiceNumber();
         this.remarks = bookingRow.getRemarks();
         this.amountPAX = bookingRow.getAmountPAX();
@@ -100,7 +106,7 @@ public class BookingImportCache {
         this.hotelInvoiceAmount = Objects.nonNull(bookingRow.getHotelInvoiceAmount()) ? bookingRow.getHotelInvoiceAmount() : 0;
         this.bookingDate = bookingRow.getBookingDate();
         this.hotelType = bookingRow.getHotelType();
-        this.nightType = bookingRow.getNightType();
+        this.nightType = this.upperCaseAndTrim(bookingRow.getNightType());
     }
 
     public BookingRow toAggregate() {
@@ -159,6 +165,7 @@ public class BookingImportCache {
         bookingRow.setNightType(this.nightType);
         bookingRow.setInsistImportProcessId(insistImportProcessId);
         bookingRow.setImportProcessId(importProcessId);
+        bookingRow.setInsistImportProcessBookingId(insistImportProcessBookingId);
         return bookingRow;
     }
 }

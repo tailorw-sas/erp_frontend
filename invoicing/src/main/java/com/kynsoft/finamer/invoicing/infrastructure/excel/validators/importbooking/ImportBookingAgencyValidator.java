@@ -26,12 +26,12 @@ public class ImportBookingAgencyValidator extends ExcelRuleValidator<BookingRow>
             errorFieldList.add(new ErrorField("Agency", "Agency can't be empty"));
             return false;
         }
-        if (!manageAgencyService.existByCode(obj.getManageAgencyCode())) {
+        if (!manageAgencyService.existByCode(this.upperCaseAndTrim(obj.getManageAgencyCode()))) {
             errorFieldList.add(new ErrorField("Agency", "Agency not exist"));
             return false;
         } else {
             try {
-                ManageAgencyDto manageAgencyDto = manageAgencyService.findByCode(obj.getManageAgencyCode());
+                ManageAgencyDto manageAgencyDto = manageAgencyService.findByCode(this.upperCaseAndTrim(obj.getManageAgencyCode()));
                 if (Status.INACTIVE.name().equals(manageAgencyDto.getStatus())) {
                     errorFieldList.add(new ErrorField("Agency", "Agency is inactive"));
                     return false;
@@ -43,5 +43,10 @@ public class ImportBookingAgencyValidator extends ExcelRuleValidator<BookingRow>
         }
 
         return true;
+    }
+
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
     }
 }

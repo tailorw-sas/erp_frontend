@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.domain.dto;
 
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageInvoiceStatusDto {
+public class ManageInvoiceStatusDto implements Serializable {
 
     private UUID id;
     private String code;

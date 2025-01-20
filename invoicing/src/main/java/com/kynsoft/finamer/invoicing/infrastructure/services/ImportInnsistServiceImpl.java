@@ -152,6 +152,7 @@ public class ImportInnsistServiceImpl {
                 BookingRow bookingRow = new BookingRow();
                 //bookingRow.setImportProcessId(importInnsitProcessId.toString());
                 bookingRow.setImportProcessId(insistImportProcessId.toString());// este es para escribir en redis.
+                bookingRow.setInsistImportProcessBookingId(importInnsistBookingKafka.getId().toString());
                 //bookingRow.setInsistImportProcessId(insistImportProcessId.toString());
                 bookingRow.setInsistImportProcessId(importInnsitProcessId.toString());//Este es el que le tengo que dar al flujo de validacion. que viene en la request.
                 bookingRow.setTransactionDate(importInnsistBookingKafka.getInvoiceDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));

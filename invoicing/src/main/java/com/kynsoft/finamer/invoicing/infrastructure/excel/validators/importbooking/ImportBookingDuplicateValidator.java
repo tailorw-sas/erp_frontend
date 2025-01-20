@@ -41,7 +41,7 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
 //        String validate = obj.getHotelBookingNumber()
 //                        .split("\\s+")[obj.getHotelBookingNumber()
 //                        .split("\\s+").length - 1];
-        ManageHotelDto hotel = manageHotelService.findByCode(obj.getManageHotelCode());
+        ManageHotelDto hotel = manageHotelService.findByCode(this.upperCaseAndTrim(obj.getManageHotelCode()));
         //if (service.existByBookingHotelNumber(obj.getHotelBookingNumber()) ||
 //        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId()) ||
 //                cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
@@ -55,6 +55,11 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
 //            return false;
 //        }
         return true;
+    }
+
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
     }
 
     private boolean checkDuplicateHotelBookingNumbers(List<Optional<BookingImportCache>> list) {
