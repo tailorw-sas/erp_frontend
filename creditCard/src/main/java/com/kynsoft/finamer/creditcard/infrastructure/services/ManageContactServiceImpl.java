@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageContactServiceImpl implements IManageContactService {
@@ -78,6 +79,11 @@ public class ManageContactServiceImpl implements IManageContactService {
         Page<ManageContact> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public List<ManageContactDto> findByHotelId(UUID hotelId) {
+        return this.repositoryQuery.findAllByManageHotelId(hotelId).stream().map(ManageContact::toAggregate).collect(Collectors.toList());
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageContact> data) {

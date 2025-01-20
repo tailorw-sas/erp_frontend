@@ -19,4 +19,6 @@ public interface IManageContactService {
     ManageContactDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    List<ManageContactDto> findByHotelId(UUID hotelId);
 }
