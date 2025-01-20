@@ -95,12 +95,6 @@ function clearFile(listField: any, fieldKey: any) {
 
 function validateField(fieldKey: string, value: any) {
   const field = props.fields.find(f => f.field === fieldKey)
-  console.log('---------------Prueba para saber errror en el formulario --------------------')
-  console.log('Field: ', field)
-  console.log('FieldKey: ', fieldKey)
-  console.log('Value: ', value)
-  console.log('-----------------------------------------------------------------------------')
-
   if (field && field.validation) {
     const result = field.validation.safeParse(value)
     if (!result.success) {
@@ -116,7 +110,6 @@ function validateForm() {
   let isValid = true
   props.fields.forEach((field) => {
     if (field.validation) {
-      console.log(`Valdiacion del campo: ${field.field}`, field)
       const result = field.validation.safeParse(fieldValues[field.field])
       if (!result.success) {
         isValid = false

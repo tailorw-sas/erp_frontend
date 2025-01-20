@@ -119,7 +119,7 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.object({
       id: z.string().min(1, 'The type field is required'),
       name: z.string().min(1, 'The type field is required'),
-    })
+    }).nullable()
   },
   {
     field: 'filterKeyValue',
@@ -431,7 +431,7 @@ async function getItemById(id: string) {
         item.value.parameterPosition = response.parameterPosition
         item.value.reportClass = response.reportClass || ''
         item.value.reportValidation = response.reportValidation || ''
-        item.value.dependentField = response.dependentField ? JSON.parse(response.dependentField) : ''
+        item.value.dependentField = response.dependentField ? JSON.parse(response.dependentField) : null
         item.value.filterKeyValue = response.filterKeyValue || ''
         item.value.reportId = response.jasperReportTemplate
           ? {
@@ -686,7 +686,7 @@ onMounted(async () => {
                 :return-object="false"
                 @update:model-value="($event) => {
                   onUpdate('componentType', $event)
-                  if ($event && $event?.id === 'select') {
+                  if ($event && ($event?.id === 'select' || $event?.id === 'multiselect')) {
                     updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
                     updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
                     updateFieldProperty(fields, 'module', 'disabled', false)

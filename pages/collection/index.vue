@@ -45,6 +45,8 @@ const paymentSelectedForShareFiles = ref<GenericObject>({})
 
 const contextMenu = ref()
 const contextMenuInvoice = ref()
+const dynamicTable = ref(0)
+const dynamicTableInv = ref(0)
 
 const allMenuListItems = ref([
   // {
@@ -373,20 +375,18 @@ const ENUM_FILTER = [
   { id: 'code', name: 'Code' },
   { id: 'name', name: 'Name' },
 ]
-
-const columns: IColumn[] = [
+const columns = ref<IColumn[]>([
   { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
   { field: 'paymentId', header: 'Id', type: 'text' },
-  { field: 'transactionDate', header: 'Trans. Date', type: 'text' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
+  { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
+  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', isSingleSelect: true, objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', } },
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'paymentAmount', header: 'P.Amount', type: 'number' },
   { field: 'depositBalance', header: 'D.Balance', type: 'number' },
   { field: 'applied', header: 'Applied', type: 'number' },
   { field: 'notApplied', header: 'Not Applied', type: 'number' },
-
-]
-const columnsInvoice: IColumn[] = [
+])
+const columnsInvoice = ref<IColumn[]>([
   // { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
   { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
@@ -397,8 +397,8 @@ const columnsInvoice: IColumn[] = [
   { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
+])
 
-]
 const columnsAgency: IColumn[] = [
   { field: 'manageAgency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'manageRegion', header: 'Region', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-region' } },
@@ -602,7 +602,6 @@ async function getList() {
         operator: 'IN',
         value: ['EXP', 'BK'],
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -616,7 +615,6 @@ async function getList() {
         operator: 'GREATER_THAN',
         value: 0,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -630,7 +628,6 @@ async function getList() {
         operator: 'EQUALS',
         value: false,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -644,7 +641,6 @@ async function getList() {
         operator: 'EQUALS',
         value: false,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
     }
 
@@ -845,7 +841,7 @@ async function getListInvoice() {
     // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
     const objFilterByDueAmount = payloadInv.value.filter.find((item: IFilter) => item.key === 'dueAmount')
     if (objFilterByDueAmount) {
-      objFilterByDueAmount.value = "0"
+      objFilterByDueAmount.value = '0'
     }
     else {
       payloadInv.value.filter.push({
@@ -971,6 +967,13 @@ function searchAndFilter() {
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
+        key: 'agency.client.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
     }
   }
   // Agency
@@ -985,6 +988,36 @@ function searchAndFilter() {
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
+        key: 'agency.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+
+      const objColumnInvAgency = columnsInvoice.value.find(item => item.field === 'agency')
+      if (objColumnInvAgency && objColumnInvAgency.objApi) {
+        objColumnInvAgency.objApi = { ...objColumnInvAgency.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
+      const objColumnAgency = columns.value.find(item => item.field === 'agency')
+      if (objColumnAgency && objColumnAgency.objApi) {
+        objColumnAgency.objApi = { ...objColumnAgency.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
     }
   }
   // Hotel
@@ -999,16 +1032,73 @@ function searchAndFilter() {
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
+        key: 'hotel.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+      const objColumnInvHotel = columnsInvoice.value.find(item => item.field === 'hotel')
+      if (objColumnInvHotel && objColumnInvHotel.objApi) {
+        objColumnInvHotel.objApi = { ...objColumnInvHotel.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
+
+      const objColumnHotel = columns.value.find(item => item.field === 'hotel')
+      if (objColumnHotel && objColumnHotel.objApi) {
+        objColumnHotel.objApi = { ...objColumnHotel.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
     }
   }
   options.value.selectAllItemByDefault = false
+  dynamicTable.value = dynamicTable.value + 1
+  dynamicTableInv.value = dynamicTableInv.value + 1
+
   getList()
+  getListInvoice()
 }
 
 function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp))
+
+  const objColumnAgency = columns.value.find(item => item.field === 'agency')
+  if (objColumnAgency && objColumnAgency.objApi) {
+    objColumnAgency.objApi = { ...objColumnAgency.objApi, filter: [] }
+  }
+  const objColumnHotel = columns.value.find(item => item.field === 'hotel')
+  if (objColumnHotel && objColumnHotel.objApi) {
+    objColumnHotel.objApi = { ...objColumnHotel.objApi, filter: [] }
+  }
+
+  const objColumnInvAgency = columnsInvoice.value.find(item => item.field === 'agency')
+  if (objColumnInvAgency && objColumnInvAgency.objApi) {
+    objColumnInvAgency.objApi = { ...objColumnInvAgency.objApi, filter: [] }
+  }
+  const objColumnInvHotel = columnsInvoice.value.find(item => item.field === 'hotel')
+  if (objColumnInvHotel && objColumnInvHotel.objApi) {
+    objColumnInvHotel.objApi = { ...objColumnInvHotel.objApi, filter: [] }
+  }
+  dynamicTable.value = dynamicTable.value + 1
+  dynamicTableInv.value = dynamicTableInv.value + 1
+
   getList()
+  getListInvoice()
 }
 
 async function resetListItems() {
@@ -1157,7 +1247,7 @@ function requireConfirmationToDelete(event: any) {
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns.value)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
@@ -1179,7 +1269,7 @@ async function parseDataTableFilterForContactAgency(payloadFilter: any) {
 }
 
 async function parseDataTableFilterInvoice(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsInvoice)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsInvoice.value)
 
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
@@ -2061,6 +2151,7 @@ onMounted(() => {
         </div>
       </div>
       <DynamicTable
+        :key="dynamicTable"
         :data="listItems"
         :columns="columns"
         :options="options"
@@ -2234,6 +2325,7 @@ onMounted(() => {
       </div>
 
       <DynamicTable
+        :key="dynamicTableInv"
         :data="listItemsInvoice"
         :columns="columnsInvoice"
         :options="optionsInv"

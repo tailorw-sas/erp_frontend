@@ -4,7 +4,7 @@ export const ENUM_OPERATOR_DATE = [
   { id: 'GREATER_THAN_OR_EQUAL_TO', label: 'GREATER THAN OR EQUAL TO' },
   { id: 'LESS_THAN_OR_EQUAL_TO', label: 'LESS THAN OR EQUAL TO' },
   { id: 'EQUALS', label: 'EQUALS' },
-  { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
+  // { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
 ]
 
 export const ENUM_OPERATOR_NUMERIC = [
@@ -13,13 +13,13 @@ export const ENUM_OPERATOR_NUMERIC = [
   { id: 'GREATER_THAN_OR_EQUAL_TO', label: 'GREATER THAN OR EQUAL TO' },
   { id: 'LESS_THAN_OR_EQUAL_TO', label: 'LESS THAN OR EQUAL TO' },
   { id: 'EQUALS', label: 'EQUALS' },
-  { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
+  // { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
 ]
 
 export const ENUM_OPERATOR_STRING = [
   { id: 'LIKE', label: 'CONTAINS' },
   { id: 'EQUALS', label: 'EQUALS' },
-  { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
+  // { id: 'NOT_EQUALS', label: 'NOT EQUALS' },
   // { id: 'IS_NULL', label: 'IS NULL' },
   // { id: 'IS_NOT_NULL', label: 'IS NOT NULL' },
 ]
