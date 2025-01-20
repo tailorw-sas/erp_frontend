@@ -46,6 +46,7 @@ const exportAttachmentsDialogOpen = ref<boolean>(false)
 
 const invoiceAgency = ref<any>(null)
 const invoiceHotel = ref<any>(null)
+const invoiceHotelTemp = ref<any>(null)
 
 const attachmentDialogOpen = ref<boolean>(false)
 
@@ -1417,7 +1418,7 @@ async function openEditDialog(item: any) {
   // }
 }
 
-async function getratePlanList(query = '') {
+async function getratePlanList(query = '', hotelId = '') {
   try {
     const payload
       = {
@@ -1433,6 +1434,12 @@ async function getratePlanList(query = '') {
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
+          },
+          {
+            key: 'hotel.id',
+            operator: 'EQUALS',
+            value: hotelId,
+            logicalOperation: 'AND'
           },
           {
             key: 'status',
@@ -1517,7 +1524,7 @@ async function getRoomCategoryList(query = '') {
     console.error('Error loading hotel list:', error)
   }
 }
-async function getRoomTypeList(query = '') {
+async function getRoomTypeList(query = '', hotelId = '') {
   try {
     const payload
       = {
@@ -1533,6 +1540,12 @@ async function getRoomTypeList(query = '') {
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
+          },
+          {
+            key: 'manageHotel.id',
+            operator: 'EQUALS',
+            value: hotelId,
+            logicalOperation: 'AND'
           },
           {
             key: 'status',
@@ -1552,7 +1565,18 @@ async function getRoomTypeList(query = '') {
     const { data: dataList } = response
     roomTypeList.value = []
     for (const iterator of dataList) {
-      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code, status: iterator.status }]
+      roomTypeList.value = [...roomTypeList.value, {
+        id: iterator.id,
+        name: `${iterator.code} - ${iterator.name}`,
+        code: iterator.code,
+        status: iterator.status,
+        manageHotel: {
+          id: iterator.manageHotel.id,
+          name: iterator.manageHotel.name,
+          code: iterator.manageHotel.code,
+          status: iterator.manageHotel.status
+        }
+      }]
     }
   }
   catch (error) {
@@ -1611,6 +1635,7 @@ async function getBookingItemById(id: string) {
         invoiceIdForRedirect.value = response?.invoice?.id
         invoiceNumberTemp.value = response?.invoice?.invoiceId
         bookingNumberTemp.value = response?.bookingId
+        invoiceHotelTemp.value = response?.invoice?.hotel
         if (response.hotelCreationDate) {
           const date = dayjs(response.hotelCreationDate).format('YYYY-MM-DD')
           item2.value.hotelCreationDate = new Date(`${date}T00:00:00`)
@@ -1975,7 +2000,7 @@ onMounted(async () => {
             @change="($event) => {
               onUpdate('ratePlan', $event)
             }"
-            @load="($event) => getratePlanList($event)"
+            @load="($event) => getratePlanList($event, invoiceHotelTemp?.id || '')"
           >
             <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>
@@ -2019,7 +2044,7 @@ onMounted(async () => {
             @change="($event) => {
               onUpdate('roomType', $event)
             }"
-            @load="($event) => getRoomTypeList($event)"
+            @load="($event) => getRoomTypeList($event, invoiceHotelTemp?.id || '')"
           >
             <!-- <template #option="props">
               <span>{{ props.item.code }} - {{ props.item.name }}</span>

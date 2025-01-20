@@ -4,7 +4,6 @@ import { useToast } from 'primevue/usetoast'
 
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
-import { filter } from 'lodash'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
@@ -210,7 +209,7 @@ async function getList() {
           manageHotelCode: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`,
           manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
           manageAgencyCode: iterator?.agency?.code,
-          manageAgencyName: iterator?.agency?.name,
+          manageAgencyName: `${iterator?.agency?.code}-${iterator?.agency?.name}`,
           dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
           invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber.replace('OLD', 'CRE'),
@@ -274,7 +273,7 @@ async function getClientList(query = '') {
     for (const iterator of dataList) {
       if (!existingIds.has(iterator.id)) {
       // clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-        newListItems.push({ id: iterator.id, name: iterator.name, code: iterator.code })
+        newListItems.push({ id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code })
         existingIds.add(iterator.id)
       }
     }
@@ -319,7 +318,7 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -376,7 +375,7 @@ async function getAgencyList(query: string = '') {
       const { data: dataList } = response
       agencyList.value = []
       for (const iterator of dataList) {
-        agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+        agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code }]
       }
     }
   }
@@ -667,9 +666,9 @@ onMounted(async () => {
                           getAgencyList()
                         }"
                       >
-                        <template #option="props">
+                        <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
+                        </template> -->
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -686,9 +685,9 @@ onMounted(async () => {
                           filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
-                        <template #option="props">
+                        <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
+                        </template> -->
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>
@@ -705,9 +704,9 @@ onMounted(async () => {
                           // filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                         }"
                       >
-                        <template #option="props">
+                        <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
+                        </template> -->
                       </DebouncedAutoCompleteComponent>
                     </div>
                   </div>

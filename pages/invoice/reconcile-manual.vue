@@ -220,6 +220,7 @@ async function getList() {
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
 
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+          agency: { ...iterator?.agency, name: `${iterator?.agency?.code || ''}-${iterator?.agency?.name || ''}` }
 
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
@@ -346,7 +347,7 @@ async function getHotelList(query: string = '') {
     const { data: dataList } = response
     hotelList.value = []
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code || ''}-${iterator.name || ''}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -584,7 +585,7 @@ async function getAgencyList(query: string) {
     const { data: dataList } = response
     agencyList.value = []
     for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {

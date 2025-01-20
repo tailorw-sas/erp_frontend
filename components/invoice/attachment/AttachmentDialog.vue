@@ -283,6 +283,7 @@ function OnSortField(event: any) {
 
 async function clearForm() {
   item.value = { ...itemTemp.value }
+  item.value.resourceType = resourceTypeSelected.value
   idItem.value = ''
 
   await getInvoiceSupportAttachment()
@@ -1247,8 +1248,6 @@ onMounted(async () => {
                       v-tooltip.top="'Add'" class="w-3rem mx-2 sticky" icon="pi pi-plus"
                       :disabled="disabledBtnCreate()"
                       @click="() => {
-                        idItem = ''
-                        item = itemTemp
                         clearForm()
                       }"
                     />

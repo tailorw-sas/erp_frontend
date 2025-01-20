@@ -3894,8 +3894,6 @@ onMounted(async () => {
         :selected-payment="item"
         @update:list-items="attachmentList = $event"
         @after-save="async () => {
-          console.log('after save');
-
           await getItemById(route?.query?.id ? route?.query?.id.toString() : idItem)
         }"
       />
