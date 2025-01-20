@@ -18,13 +18,13 @@ public class ImportBookingRatePlanValidator extends ExcelRuleValidator<BookingRo
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-       if (Objects.nonNull(obj.getRatePlan())&&!ratePlanService.existByCode(obj.getRatePlan())) {
+       if (Objects.nonNull(obj.getRatePlan())&&!ratePlanService.existByCode(upperCaseAndTrim(obj.getRatePlan()))) {
             errorFieldList.add(new ErrorField("Rate Plan", "Rate Plan not exist."));
             return false;
         }
         try {
             if (Objects.nonNull(obj.getRatePlan())) {
-                this.ratePlanService.findManageRatePlanByCodeAndHotelCode(obj.getRatePlan(), obj.getManageHotelCode());
+                this.ratePlanService.findManageRatePlanByCodeAndHotelCode(upperCaseAndTrim(obj.getRatePlan()), upperCaseAndTrim(obj.getManageHotelCode()));
             }
         } catch (Exception e) {
             errorFieldList.add(new ErrorField("Rate Plan", "The selected rate plan does not belong to the hotel."));
@@ -33,5 +33,9 @@ public class ImportBookingRatePlanValidator extends ExcelRuleValidator<BookingRo
         return true;
     }
 
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
+    }
 
 }
