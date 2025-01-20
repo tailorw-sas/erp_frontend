@@ -31,9 +31,9 @@ public class CreateManageRoomTypeCommandHandler implements ICommandHandler<Creat
 
     @Override
     public void handle(CreateManageRoomTypeCommand command) {
-        RulesChecker.checkRule(new ManageRoomTypeCodeSizeRule(command.getCode()));
+        //RulesChecker.checkRule(new ManageRoomTypeCodeSizeRule(command.getCode()));
         RulesChecker.checkRule(new ManageRoomTypeNameMustBeNullRule(command.getName()));
-        RulesChecker.checkRule(new ManageRoomTypeCodeMustBeUniqueRule(service, command.getCode(), command.getManageHotel(), command.getId()));
+        //RulesChecker.checkRule(new ManageRoomTypeCodeMustBeUniqueRule(service, command.getCode(), command.getManageHotel(), command.getId()));
 
         ManageHotelDto hotelDto = hotelService.findById(command.getManageHotel());
 

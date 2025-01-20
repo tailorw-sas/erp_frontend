@@ -30,7 +30,7 @@ public class ManageRatePlan implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
-    @Column(unique = true)
+
     private String code;
 
     private String name;
