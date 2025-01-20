@@ -179,16 +179,16 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: false },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: false, showFilter: false },
-  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: false, showFilter: false },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: false, showFilter: false },
-  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: true },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: true },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: true, showFilter: true },
+  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
@@ -2474,7 +2474,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     }
 
     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
-    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.type !== 'filterSearch')
 
     if (objFilter) {
       objFilter.value = Number.parseFloat(validNumber).toFixed(2)
@@ -2845,6 +2845,22 @@ async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   if (objFilterForInvoiceId) {
     objFilterForInvoiceId.key = 'invoice.invoiceId'
   }
+  const objFilterForInvoiceNo = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNo')
+  if (objFilterForInvoiceNo) {
+    objFilterForInvoiceNo.key = 'invoice.invoiceNumberPrefix'
+  }
+
+  const objFilterForBookingAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmount')
+  if (objFilterForBookingAmount) {
+    objFilterForBookingAmount.key = 'invoiceAmount'
+  }
+
+  const objFilterForBookingBalance = parseFilter?.find((item: IFilter) => item?.key === 'bookingBalance')
+  if (objFilterForBookingBalance) {
+    objFilterForBookingBalance.key = 'dueAmount'
+    objFilterForBookingBalance.type = 'filterSearch'
+  }
+
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   applyPaymentPayload.value.filter = [...parseFilter || []]
   applyPaymentGetList(amountOfDetailItem.value)
@@ -2854,6 +2870,15 @@ function onSortFieldApplyPayment(event: any) {
   if (event) {
     if (event.sortField === 'invoiceId') {
       event.sortField = 'invoice.invoiceId'
+    }
+    if (event.sortField === 'invoiceNo') {
+      event.sortField = 'invoice.invoiceNumberPrefix'
+    }
+    if (event.sortField === 'bookingAmount') {
+      event.sortField = 'invoiceAmount'
+    }
+    if (event.sortField === 'bookingBalance') {
+      event.sortField = 'dueAmount'
     }
     applyPaymentPayload.value.sortBy = event.sortField ? event.sortField : 'dueAmount'
     applyPaymentPayload.value.sortType = event.sortOrder
@@ -3966,7 +3991,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '60%' }"
+      :style="{ width: '80%' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
