@@ -20,6 +20,7 @@ public class ManageHotelResponse implements IResponse {
     private String name;
     private Boolean isApplyByVCC;
     private String status;
+    private String address;
 
     public ManageHotelResponse(ManageHotelDto dto) {
         this.id = dto.getId();
@@ -27,5 +28,6 @@ public class ManageHotelResponse implements IResponse {
         this.name = dto.getName();
         this.isApplyByVCC = dto.getIsApplyByVCC();
         this.status = dto.getStatus();
+        this.address = dto.getAddress();
     }
 }
