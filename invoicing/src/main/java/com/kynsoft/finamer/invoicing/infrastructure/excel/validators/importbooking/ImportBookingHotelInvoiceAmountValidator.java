@@ -20,7 +20,7 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(upperCaseAndTrim(obj.getManageHotelCode()));
             if (manageHotelDto.isVirtual() && !manageHotelDto.isRequiresFlatRate()) {
                 return true;
             }
@@ -40,6 +40,11 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
             return false;
         }
         return true;
+    }
+
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
     }
 
 }

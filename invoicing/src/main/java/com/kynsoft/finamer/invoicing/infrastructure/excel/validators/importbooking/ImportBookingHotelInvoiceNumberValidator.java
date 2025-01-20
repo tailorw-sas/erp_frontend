@@ -36,12 +36,12 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(upperCaseAndTrim(obj.getManageHotelCode()));
             if (manageHotelDto.isVirtual() && Objects.isNull(obj.getHotelInvoiceNumber())) {
                 errorFieldList.add(new ErrorField("HotelInvoiceNumber", " Hotel Invoice Number can't be empty"));
                 return false;
             }
-            if (!manageHotelService.existByCode(obj.getManageHotelCode())) {
+            if (!manageHotelService.existByCode(upperCaseAndTrim(obj.getManageHotelCode()))) {
                 return false;
             }
 
@@ -65,6 +65,11 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
         }
 
         return true;
+    }
+
+    private String upperCaseAndTrim(String code){
+        String value = code.trim();
+        return value.toUpperCase();
     }
 
     public boolean checkDuplicateHotelInvoiceNumbers(List<Optional<BookingImportCache>> list) {
