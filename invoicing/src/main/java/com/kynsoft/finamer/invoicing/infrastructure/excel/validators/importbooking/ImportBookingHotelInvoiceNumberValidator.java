@@ -50,11 +50,11 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
                 return false;
             }
 
-            List<Optional<BookingImportCache>> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
-            if (this.checkDuplicateHotelInvoiceNumbers(list)) {
-                errorFieldList.add(new ErrorField("HotelInvoiceNumber", "The Hotel Invoice Number exists for another date within this import."));
-                return false;
-            }
+//            List<Optional<BookingImportCache>> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
+//            if (this.checkDuplicateHotelInvoiceNumbers(list)) {
+//                errorFieldList.add(new ErrorField("HotelInvoiceNumber", "The Hotel Invoice Number exists for another date within this import."));
+//                return false;
+//            }
             if (manageHotelDto.isVirtual() && manageBookingService.existsByHotelInvoiceNumber(obj.getHotelInvoiceNumber(), manageHotelDto.getId())) {
                 errorFieldList.add(new ErrorField("HotelInvoiceNumber", "Hotel Invoice Number already exists"));
                 return false;
