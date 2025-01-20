@@ -7,16 +7,18 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-public class ManageHotelDto {
+public class ManageContactDto {
 
     private UUID id;
     private String code;
+    private String description;
     private String name;
-    private Boolean isApplyByVCC;
-    private String status;
-    private String address;
+    private ManageHotelDto manageHotel;
+    private String email;
+    private String phone;
+    private Integer position;
 }
