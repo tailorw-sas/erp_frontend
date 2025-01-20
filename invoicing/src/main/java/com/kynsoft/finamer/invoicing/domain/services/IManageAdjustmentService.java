@@ -29,4 +29,6 @@ public interface IManageAdjustmentService {
     void deleteByIds(List<UUID> ids);
 
     void deleteInvoice(ManageAdjustmentDto dto);
+
+    List<ManageAdjustmentDto> findByRoomRateId(UUID roomRateId);
 }
