@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
+
     private final IManageHotelService manageHotelService;
     private final IManageRoomTypeService roomTypeService;
 
@@ -28,16 +29,15 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     private final IInvoiceCloseOperationService closeOperationService;
     private final IManageNightTypeService nightTypeService;
 
-
     public BookingValidatorFactoryImp(ApplicationEventPublisher applicationEventPublisher,
-                                      IManageHotelService manageHotelService,
-                                      IManageRoomTypeService roomTypeService,
-                                      IManageRatePlanService ratePlanService,
-                                      IManageAgencyService manageAgencyService,
-                                      IManageBookingService manageBookingService,
-                                      BookingImportCacheRedisRepository cacheRedisRepository,
-                                      IInvoiceCloseOperationService closeOperationService,
-                                      IManageNightTypeService nightTypeService) {
+            IManageHotelService manageHotelService,
+            IManageRoomTypeService roomTypeService,
+            IManageRatePlanService ratePlanService,
+            IManageAgencyService manageAgencyService,
+            IManageBookingService manageBookingService,
+            BookingImportCacheRedisRepository cacheRedisRepository,
+            IInvoiceCloseOperationService closeOperationService,
+            IManageNightTypeService nightTypeService) {
         super(applicationEventPublisher);
         this.manageHotelService = manageHotelService;
         this.roomTypeService = roomTypeService;
@@ -66,12 +66,12 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
             validators.put(ImportBookingRatePlanValidator.class.getName(), new ImportBookingRatePlanValidator(ratePlanService));
             validators.put(ImportBookingHotelBookingNoValidator.class.getName(), new ImportBookingHotelBookingNoValidator());
-            validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService,manageBookingService, cacheRedisRepository));
+            validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService, manageBookingService, cacheRedisRepository));
             validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
             validators.put(ImportBookingHotelInvoiceAmountValidator.class.getName(), new ImportBookingHotelInvoiceAmountValidator(manageHotelService));
             validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator());
             validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType, manageHotelService));
-            validators.put(ImportBookingNightTypeValidator.class.getName(), new ImportBookingNightTypeValidator(nightTypeService,manageAgencyService));
+            validators.put(ImportBookingNightTypeValidator.class.getName(), new ImportBookingNightTypeValidator(nightTypeService, manageAgencyService));
         }
     }
 

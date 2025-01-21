@@ -5,6 +5,7 @@ import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +21,7 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(upperCaseAndTrim(obj.getManageHotelCode()));
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
             if (manageHotelDto.isVirtual() && !manageHotelDto.isRequiresFlatRate()) {
                 return true;
             }
@@ -40,11 +41,6 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
             return false;
         }
         return true;
-    }
-
-    private String upperCaseAndTrim(String code){
-        String value = code.trim();
-        return value.toUpperCase();
     }
 
 }

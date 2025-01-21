@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,22 +24,17 @@ public class ImportBookingHotelValidator extends ExcelRuleValidator<BookingRow> 
             errorFieldList.add(new ErrorField("Hotel"," Hotel can't be empty"));
             return false;
         }
-        if(!manageHotelService.existByCode(this.upperCaseAndTrim(obj.getManageHotelCode()))){
+        if(!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))){
             errorFieldList.add(new ErrorField("Hotel"," Hotel not exists"));
             return false;
         }else{
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
             if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())){
                 errorFieldList.add(new ErrorField("Hotel"," Hotel is inactive"));
                 return false;
             }
         }
         return true;
-    }
-
-    private String upperCaseAndTrim(String code){
-        String value = code.trim();
-        return value.toUpperCase();
     }
 
 }
