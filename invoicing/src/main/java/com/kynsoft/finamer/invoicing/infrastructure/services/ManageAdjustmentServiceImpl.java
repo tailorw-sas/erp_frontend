@@ -118,6 +118,11 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
         repositoryCommand.save(entity);
     }
 
+    @Override
+    public List<ManageAdjustmentDto> findByRoomRateId(UUID roomRateId) {
+        return this.repositoryQuery.findByRoomRateId(roomRateId).stream().map(ManageAdjustment::toAggregate).collect(Collectors.toList());
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

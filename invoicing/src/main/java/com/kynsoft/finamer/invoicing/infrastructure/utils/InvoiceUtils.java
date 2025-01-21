@@ -38,6 +38,13 @@ public class InvoiceUtils {
         return input.replaceAll("-(.*?)-", "-");
     }
 
+    public static String upperCaseAndTrim(String code) {
+        if (code != null) {
+            String value = code.trim();
+            return value.toUpperCase();
+        }
+        return null;
+    }
 
     public static ManageInvoiceDto calculateInvoiceAging(ManageInvoiceDto manageInvoiceDto) {
         LocalDate dueDate = manageInvoiceDto.getDueDate();

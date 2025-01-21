@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,12 +37,12 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(upperCaseAndTrim(obj.getManageHotelCode()));
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
             if (manageHotelDto.isVirtual() && Objects.isNull(obj.getHotelInvoiceNumber())) {
                 errorFieldList.add(new ErrorField("HotelInvoiceNumber", " Hotel Invoice Number can't be empty"));
                 return false;
             }
-            if (!manageHotelService.existByCode(upperCaseAndTrim(obj.getManageHotelCode()))) {
+            if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
                 return false;
             }
 
@@ -65,11 +66,6 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
         }
 
         return true;
-    }
-
-    private String upperCaseAndTrim(String code){
-        String value = code.trim();
-        return value.toUpperCase();
     }
 
     public boolean checkDuplicateHotelInvoiceNumbers(List<Optional<BookingImportCache>> list) {
