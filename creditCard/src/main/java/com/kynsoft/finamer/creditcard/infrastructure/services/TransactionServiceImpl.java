@@ -47,10 +47,12 @@ public class TransactionServiceImpl implements ITransactionService {
 
     private final IParameterizationService parameterizationService;
 
+    private final IMerchantLanguageCodeService merchantLanguageCodeService;
+
     public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
                                   TransactionReadDataJPARepository repositoryQuery,
                                   MailService mailService,
-                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService) {
+                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService, IMerchantLanguageCodeService merchantLanguageCodeService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.mailService = mailService;
@@ -58,6 +60,7 @@ public class TransactionServiceImpl implements ITransactionService {
         this.transactionStatusService = transactionStatusService;
         this.transactionStatusHistoryService = transactionStatusHistoryService;
         this.parameterizationService = parameterizationService;
+        this.merchantLanguageCodeService = merchantLanguageCodeService;
     }
 
     @Override
@@ -276,7 +279,7 @@ public class TransactionServiceImpl implements ITransactionService {
         SendMailJetEMailRequest request = new SendMailJetEMailRequest();
         request.setTemplateId(Integer.parseInt(templateDto.getTemplateCode())); // Cambiar en configuración
         //todo: validar que el formato de la fecha se en dependencia del campo transactionDto.getLanguage()
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.US);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", getLocaleFromLanguageCode(transactionDto));
 
         // Variables para el template de email
         List<MailJetVar> vars = Arrays.asList(
@@ -300,5 +303,13 @@ public class TransactionServiceImpl implements ITransactionService {
         }
         request.setRecipientEmail(recipients);
         mailService.sendMail(request);
+    }
+
+    private Locale getLocaleFromLanguageCode(TransactionDto transactionDto){
+        if (transactionDto.getMerchant() != null && transactionDto.getLanguage() != null) {
+            String languageCode = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(transactionDto.getMerchant().getId(), transactionDto.getLanguage().getId());
+            return (languageCode.equalsIgnoreCase("es") || languageCode.equalsIgnoreCase("esp")) ? new Locale("es", "ES") : Locale.US;
+        }
+        return Locale.US;
     }
 }
