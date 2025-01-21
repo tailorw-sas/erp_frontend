@@ -15,6 +15,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
@@ -50,6 +51,7 @@ public class BookingServiceImpl implements ImportBookingService {
     private final IBookingImportHelperService bookingImportHelperService;
 
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final IManageHotelService hotelService;
 
     private final Lock redisLock = new ReentrantLock();
     private final Semaphore semaphore;
@@ -57,7 +59,8 @@ public class BookingServiceImpl implements ImportBookingService {
     public BookingServiceImpl(ValidatorFactory<BookingRow> validatorFactory,
             BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
             BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
-            ApplicationEventPublisher applicationEventPublisher
+            ApplicationEventPublisher applicationEventPublisher,
+            IManageHotelService hotelService
     ) {
         this.validatorFactory = validatorFactory;
         this.bookingImportProcessRedisRepository = bookingImportProcessRedisRepository;
@@ -65,6 +68,7 @@ public class BookingServiceImpl implements ImportBookingService {
         this.bookingImportHelperService = bookingImportHelperService;
         this.applicationEventPublisher = applicationEventPublisher;
         this.semaphore = new Semaphore(1);
+        this.hotelService = hotelService;
     }
 
     @Override
@@ -104,6 +108,7 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
                         bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
+                        this.hotelService.clearManageHotelCache();
                     } catch (Exception e) {
                         e.printStackTrace();
                         BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
@@ -113,16 +118,16 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .total(0)
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
+                        this.hotelService.clearManageHotelCache();
                     }
                 } catch (Exception e) {
                     System.err.println("Errror ocurrido: " + e.getMessage());
                     System.err.println("Errror ocurrido: " + e.getCause().getLocalizedMessage());
+                    this.hotelService.clearManageHotelCache();
                 }
             } finally {
                 semaphore.release();
-                System.err.println("Voy a esperar: " + LocalTime.now());
                 TimeUnit.SECONDS.sleep(5);
-                System.err.println("Se libera el semaforo: " + LocalTime.now());
             }
 
         } catch (InterruptedException ex) {
