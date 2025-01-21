@@ -1325,6 +1325,8 @@ async function getClientList(query = '') {
 
     clientList.value = []
     const response = await GenericService.search(confClientApi.moduleApi, confClientApi.uriApi, payload)
+    console.log(response)
+
     const { data: dataList } = response
     for (const iterator of dataList) {
       clientList.value = [...clientList.value, {
@@ -1912,9 +1914,9 @@ onMounted(() => {
                           }
                         }"
                       >
-                        <template #option="props">
+                        <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
+                        </template> -->
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
                         </template>
