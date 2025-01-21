@@ -2918,6 +2918,11 @@ async function parseDataTableFilter(payloadFilter: any) {
     objFilterInvoiceNumber.key = 'manageBooking.invoice.invoiceNumber'
   }
 
+  const objFilterReservationNumber = parseFilter?.find((item: IFilter) => item?.key === 'reservationNumber')
+  if (objFilterReservationNumber) {
+    objFilterReservationNumber.key = 'manageBooking.reservationNumber'
+  }
+
   payload.value.filter = [...parseFilter || []]
   getListPaymentDetail()
 }
@@ -2932,6 +2937,9 @@ function onSortField(event: any) {
     }
     if (event.sortField === 'invoiceNumber') {
       event.sortField = 'manageBooking.invoice.invoiceNumber'
+    }
+    if (event.sortField === 'reservationNumber') {
+      event.sortField = 'manageBooking.reservationNumber'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
