@@ -364,7 +364,7 @@ const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '140px', type: 'text' },
   { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '140px', type: 'text' },
-  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
+  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'date' },
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
