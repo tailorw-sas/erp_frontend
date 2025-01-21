@@ -85,6 +85,11 @@ public class ManageMerchantServiceImpl implements IManageMerchantService {
         return repositoryQuery.findAll().stream().map(ManageMerchant::toAggregate).toList();
     }
 
+    @Override
+    public Long countByDefaultAndNotId(UUID id) {
+        return this.repositoryQuery.countByDefaultAndNotId(id);
+    }
+
     private PaginatedResponse getPaginatedResponse(Page<ManageMerchant> data) {
         List<ManageMerchantResponse> responses = new ArrayList<>();
         for (ManageMerchant p : data.getContent()) {

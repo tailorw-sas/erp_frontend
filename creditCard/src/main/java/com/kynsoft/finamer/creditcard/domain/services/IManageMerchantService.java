@@ -23,4 +23,6 @@ public interface IManageMerchantService {
     Long countByCodeAndNotId(String code, UUID id);
 
     List<ManageMerchantDto> findAllToReplicate();
+
+    Long countByDefaultAndNotId(UUID id);
 }
