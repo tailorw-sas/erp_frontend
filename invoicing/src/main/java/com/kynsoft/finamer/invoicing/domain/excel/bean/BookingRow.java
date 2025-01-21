@@ -88,6 +88,7 @@ public class BookingRow {
         manageBookingDto.setRoomNumber(this.roomNumber);
         manageBookingDto.setInvoiceAmount(ScaleAmount.scaleAmount(this.invoiceAmount));
         manageBookingDto.setDueAmount(ScaleAmount.scaleAmount(this.invoiceAmount));
+        manageBookingDto.setNights(this.nights.longValue());
         // manageBookingDto.setAmountPax();
         manageBookingDto.setBookingDate(DateUtil.parseDateToDateTime(this.bookingDate));
         return manageBookingDto;
