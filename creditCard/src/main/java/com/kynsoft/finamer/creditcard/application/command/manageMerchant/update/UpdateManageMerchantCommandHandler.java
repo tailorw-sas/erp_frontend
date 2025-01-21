@@ -2,7 +2,6 @@ package com.kynsoft.finamer.creditcard.application.command.manageMerchant.update
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateManageMerchantKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateFields;
@@ -10,6 +9,7 @@ import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Status;
+import com.kynsoft.finamer.creditcard.domain.rules.manageMerchant.ManageMerchantDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import org.springframework.stereotype.Component;
@@ -33,6 +33,10 @@ public class UpdateManageMerchantCommandHandler implements ICommandHandler<Updat
     public void handle(UpdateManageMerchantCommand command) {
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getId(), "id", "Manage Merchant ID cannot be null."));
+
+        if (command.getDefaultm()){
+            RulesChecker.checkRule(new ManageMerchantDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
 
         ManageMerchantDto test = this.service.findById(command.getId());
 
