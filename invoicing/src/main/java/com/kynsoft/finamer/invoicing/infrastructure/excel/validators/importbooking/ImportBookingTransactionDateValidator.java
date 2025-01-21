@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -50,7 +51,7 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
         if (!hotelService.existByCode(bookingRow.getManageHotelCode())){
             return false;
         }
-        ManageHotelDto manageHotelDto = hotelService.findByCode(this.upperCaseAndTrim(bookingRow.getManageHotelCode()));
+        ManageHotelDto manageHotelDto = hotelService.findByCode(InvoiceUtils.upperCaseAndTrim(bookingRow.getManageHotelCode()));
         InvoiceCloseOperationDto invoiceCloseOperationDto = closeOperationService.findActiveByHotelId(manageHotelDto.getId());
         LocalDate beginDate= invoiceCloseOperationDto.getBeginDate();
         LocalDate endDate = invoiceCloseOperationDto.getEndDate();
@@ -60,11 +61,6 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
             errorFieldList.add(new ErrorField("Transaction Date","Transaction Date is out of close operation"));
         }
         return !result;
-    }
-
-    private String upperCaseAndTrim(String code){
-        String value = code.trim();
-        return value.toUpperCase();
     }
 
 }
