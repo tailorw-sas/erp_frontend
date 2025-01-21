@@ -2,12 +2,12 @@ package com.kynsoft.finamer.creditcard.application.command.manageMerchant.create
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.kafka.entity.vcc.ReplicateManageMerchantKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.creditcard.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.creditcard.domain.dto.ManageMerchantDto;
 import com.kynsoft.finamer.creditcard.domain.rules.manageMerchant.ManageMerchantCodeMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.rules.manageMerchant.ManageMerchantCodeRule;
+import com.kynsoft.finamer.creditcard.domain.rules.manageMerchant.ManageMerchantDefaultMustBeUniqueRule;
 import com.kynsoft.finamer.creditcard.domain.services.IManagerB2BPartnerService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantService;
 import org.springframework.stereotype.Component;
@@ -31,6 +31,10 @@ public class CreateManageMerchantCommandHandler implements ICommandHandler<Creat
 
         RulesChecker.checkRule(new ManageMerchantCodeRule(command.getCode()));
         RulesChecker.checkRule(new ManageMerchantCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
+
+        if (command.getDefaultm()){
+            RulesChecker.checkRule(new ManageMerchantDefaultMustBeUniqueRule(this.service, command.getId()));
+        }
 
         service.create(new ManageMerchantDto(
                 command.getId(),

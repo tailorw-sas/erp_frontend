@@ -37,7 +37,7 @@ public class ManageMerchant implements Serializable {
     @JoinColumn(name = "b2bpartner_id")
     private ManageB2BPartner b2bPartner;
 
-    @Column(nullable = true)
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private Boolean defaultm;
 
     @Enumerated(EnumType.STRING)
