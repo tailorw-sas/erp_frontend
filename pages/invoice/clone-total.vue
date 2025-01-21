@@ -1151,7 +1151,12 @@ async function getBookingList(clearFilter: boolean = false) {
         hotelCreationDate: iterator?.hotelCreationDate ? iterator?.hotelCreationDate : new Date(),
         agency: iterator?.invoice?.agency,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        nightType: iterator.nightType ? iterator.nightType : null,
+        nightType: iterator.nightType
+          ? {
+              ...iterator.nightType,
+              name: iterator.nightType?.code ? `${iterator.nightType?.code || ''}-${iterator.nightType?.name || ''}` : ''
+            }
+          : null,
         ratePlan: iterator.ratePlan
           ? {
               ...iterator.ratePlan,
