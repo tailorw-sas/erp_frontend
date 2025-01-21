@@ -11,7 +11,6 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.text.Font;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.application.command.invoiceReconcileManualPdf.InvoiceReconcileManualPdfRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
@@ -29,6 +28,8 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class ReportPdfServiceImpl implements IReportPdfService {
@@ -365,9 +366,10 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                 .add(new Paragraph("Hotel").addStyle(headerStyle))
                 .setTextAlignment(TextAlignment.LEFT)
                 .setBorder(Border.NO_BORDER)); // Solo "Hotel" como encabezado
-        table.addHeaderCell(new Cell(1, 2).setBorder(Border.NO_BORDER)); // Espacio vacío
+        table.addHeaderCell(new Cell(1, 3).setBorder(Border.NO_BORDER)); // Espacio vacío
         table.addHeaderCell(new Cell().add(new Paragraph("Create Date").addStyle(headerStyle))
                 .setBorder(Border.NO_BORDER));
+        table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)); // Espacio vacío
         table.addHeaderCell(new Cell().add(new Paragraph("Booking Date").addStyle(headerStyle))
                 .setBorder(Border.NO_BORDER));
 
@@ -384,6 +386,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                         ? invoiceDto.getBookings().get(0).getHotelCreationDate().format(FORMATTER)
                         : "Not date").addStyle(cellStyle))
                 .setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().setBorder(Border.NO_BORDER)); // Celda vacía
         table.addCell(new Cell().add(new Paragraph(invoiceDto.getBookings().get(0).getBookingDate() != null
                         ? invoiceDto.getBookings().get(0).getBookingDate().format(FORMATTER)
                         : "Not date").addStyle(cellStyle))
@@ -403,9 +406,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
             table.addCell(createCell(booking.getHotelBookingNumber(), cellStyle));
             table.addCell(createCell(booking.getContract(), cellStyle));
             table.addCell(createCell(booking.getNightType() != null ? booking.getNightType().getName() : "", cellStyle));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell(1,3).setBorder(Border.NO_BORDER));
         }
 
         // Add "Room Type" header
@@ -415,15 +416,11 @@ public class ReportPdfServiceImpl implements IReportPdfService {
             table.addCell(createCell(booking.getRoomType() != null ? booking.getRoomType().getName() : "", cellStyle));
             table.addCell(createCell(booking.getRatePlan() != null ? booking.getRatePlan().getName() : "", cellStyle));
             table.addCell(createCell(booking.getRoomNumber(), cellStyle));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
-            table.addCell(new Cell().setBorder(Border.NO_BORDER));
+            table.addCell(new Cell(1, 4).setBorder(Border.NO_BORDER));
         }
 
         // Add "Full Name" header
         addInternalHeader(table, headerStyle, "Full Name", "", "Remark", "", "", "", "");
-
         for (ManageBookingDto booking : bookings) {
             table.addCell(new Cell(1, 2) // "Full Name" ocupa 2 celdas
                     .add(new Paragraph(booking.getFullName() != null ? booking.getFullName() : "").addStyle(cellStyle))
@@ -433,23 +430,42 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                     .setBorder(Border.NO_BORDER));
         }
 
+        BigDecimal total = new BigDecimal(0);
+        String currency = invoiceDto.getHotel().getManageCurrency() != null
+                ? invoiceDto.getHotel().getManageCurrency().getCode()
+                        : "USD";
         // Add "Check In" header
         addInternalHeader(table, headerStyle, "Check In", "Check Out", "Nights", "Adults", "Children", "Rate", "Currency");
-
         for (ManageBookingDto booking : bookings) {
             List<ManageRoomRateDto> roomRates = this.roomRateService.findByBooking(booking.getId());
             for (ManageRoomRateDto roomRate : roomRates) {
+                BigDecimal invoiceAmount = new BigDecimal(roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0);
+                total = total.add(invoiceAmount).setScale(2, RoundingMode.HALF_EVEN);
+
                 table.addCell(createCell(roomRate.getCheckIn() != null ? roomRate.getCheckIn().format(FORMATTER) : "Not date", cellStyle));
                 table.addCell(createCell(roomRate.getCheckOut() != null ? roomRate.getCheckOut().format(FORMATTER) : "Not date", cellStyle));
                 table.addCell(createCell(roomRate.getNights() != null ? roomRate.getNights().toString() : "", cellStyle));
                 table.addCell(createCell(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "", cellStyle));
                 table.addCell(createCell(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "", cellStyle));
                 table.addCell(createCell("$ " + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0), cellStyle));
-                table.addCell(createCell(invoiceDto.getHotel().getManageCurrency() != null
-                        ? invoiceDto.getHotel().getManageCurrency().getCode()
-                        : "USD", cellStyle));
+                table.addCell(createCell(currency, cellStyle));
             }
         }
+
+        addSummaryRows(total, currency, table);
+    }
+
+    private void addSummaryRows(BigDecimal total, String currency, Table table) {
+        Style headerStyle = new Style().setFontSize(10).setBold();
+        Style cellStyle = new Style().setFontSize(8);
+
+        table.addCell(new Cell().setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().add(new Paragraph("TOTAL").addStyle(headerStyle)).setBorder(Border.NO_BORDER));
+        table.addCell(new Cell().add(new Paragraph("$ " + ScaleAmount.scaleAmount(total.doubleValue())).addStyle(cellStyle)).setBorder(Border.NO_BORDER));
+        table.addCell(createCell(currency, cellStyle));
     }
 
     private void addInternalHeader(Table table, Style style, String... headers) {
@@ -461,8 +477,6 @@ public class ReportPdfServiceImpl implements IReportPdfService {
     private Cell createCell(String content, Style style) {
         return new Cell().add(new Paragraph(content != null ? content : "").addStyle(style)).setBorder(Border.NO_BORDER);
     }
-
-
 
     // Método para combinar PDFs generados desde una lista de IDs
     @Override
