@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,8 +85,14 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Cacheable(cacheNames = "manageHotel", key = "#code", unless = "#result == null")
     public ManageHotelDto findByCode(String code) {
         return repositoryQuery.findManageHotelByCode(code).map(ManageHotel::toAggregate)
-                .orElseThrow( ()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND,
+                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND,
                 new ErrorField("code", "Manage Hotel not found."))));
+    }
+
+    @CacheEvict(allEntries = true, value = "manageHotel")
+    @Override
+    public void clearManageHotelCache() {
+        System.out.println("Clearing manageHotel cache");
     }
 
     @Override
