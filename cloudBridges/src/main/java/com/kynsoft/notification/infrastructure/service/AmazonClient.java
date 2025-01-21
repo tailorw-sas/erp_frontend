@@ -5,6 +5,7 @@ import com.kynsoft.notification.domain.dto.FileInfoDto;
 import com.kynsoft.notification.domain.service.IAmazonClient;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("amazon")
 public class AmazonClient implements IAmazonClient {
 
     private S3Client s3Client;

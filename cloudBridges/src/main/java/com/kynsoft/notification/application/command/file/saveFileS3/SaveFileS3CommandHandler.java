@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.notification.domain.dto.AFileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
 import com.kynsoft.notification.domain.service.IAmazonClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class SaveFileS3CommandHandler implements ICommandHandler<SaveFileS3Comma
     private final IAFileService fileService;
 
 
-    public SaveFileS3CommandHandler(IAmazonClient amazonClient, IAFileService fileService) {
+    public SaveFileS3CommandHandler(@Qualifier("minio") IAmazonClient amazonClient, IAFileService fileService) {
 
         this.amazonClient = amazonClient;
         this.fileService = fileService;

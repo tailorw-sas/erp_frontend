@@ -22,17 +22,26 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-//    @Bean
-//    @Profile("dev")
-//    public ProducerFactory<String, Object> devProducerFactory() {
-//        Map<String, Object> configProps = createBaseProps();
-//        addSaslConfig(configProps, "user1", "AkC7B1ooWO");
-//        return new DefaultKafkaProducerFactory<>(configProps);
-//    }
+    @Value("${KAFKA_MAX_REQUEST_VALUE:104857600}")
+    private String maxRequestSize;
+
+    @Value("${KAFKA_SASL_USERNAME}")
+    private String saslUsername;
+
+    @Value("${KAFKA_SASL_PASSWORD}")
+    private String saslPassword;
 
     @Bean
-    //@Profile("!dev")
+    @Profile("development | qa | production")
     public ProducerFactory<String, Object> defaultProducerFactory() {
+        Map<String, Object> configProps = createBaseProps();
+        addSaslConfig(configProps, saslUsername, saslPassword);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    @Bean
+    @Profile("!development & !qa & !production")
+    public ProducerFactory<String, Object> devProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -42,14 +51,14 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, maxRequestSize);
         return configProps;
     }
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-        props.put(SaslConfigs.SASL_JAAS_CONFIG,
-                String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+        props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG, String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password));
     }
 
     @Bean

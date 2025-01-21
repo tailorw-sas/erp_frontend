@@ -377,8 +377,8 @@ public class ImportInnsistServiceImpl {
 
     private List<ManageBookingDto> createBooking(List<ImportInnsistBookingKafka> bookingRowList) {
         return bookingRowList.stream().map(bookingRow -> {
-            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlanCode()) ? ratePlanService.findByCode(bookingRow.getRatePlanCode()) : null;
-            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomTypeCode()) ? roomTypeService.findByCode(bookingRow.getRoomTypeCode()) : null;
+            ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRow.getRatePlanCode()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRow.getRatePlanCode(), bookingRow.getManageHotelCode()) : null;
+            ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRow.getRoomTypeCode()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRow.getRoomTypeCode(), bookingRow.getManageHotelCode()) : null;
             ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRow.getNightTypeCode()) ? nightTypeService.findByCode(bookingRow.getNightTypeCode()) : null;
 
             ManageBookingDto bookingDto = toAggregate(bookingRow);
