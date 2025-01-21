@@ -2151,7 +2151,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     logicalOperation: 'AND'
                   })
                 }
-                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
 
                 if (objFilterDueAmount) {
                   objFilterDueAmount.value = '0.00'
@@ -2263,7 +2263,7 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2406,7 +2406,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   logicalOperation: 'AND'
                 })
               }
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -3516,10 +3516,13 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
   const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
   if (objFilterDueAmount) {
     objFilterDueAmount.key = 'dueAmount'
+    objFilterDueAmount.value = objFilterDueAmount.value ? Number(objFilterDueAmount.value).toFixed(2).toString() : '0.00'
+    objFilterDueAmount.type = 'filterSearch'
   }
   const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmountTemp')
   if (objFilterInvoiceAmount) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
+    objFilterInvoiceAmount.value = objFilterInvoiceAmount.value ? Number(objFilterInvoiceAmount.value).toFixed(2).toString() : '0.00'
   }
 
   applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
