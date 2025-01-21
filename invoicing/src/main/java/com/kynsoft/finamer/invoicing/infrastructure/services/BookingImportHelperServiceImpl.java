@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -310,7 +313,73 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         bookingDto.setRoomRates(rates);
         bookingDto.setHotelCreationDate(DateUtil.parseDateToDateTime(bookingRowList.get(0).getTransactionDate()));
         bookingDto.setNightType(nightTypeDto);
+
+        //Calculados
+        this.calculateCheckinAndCheckout(bookingDto);
+        //this.calculateAdults(bookingDto);
+        //this.calculateChildren(bookingDto);
+        this.calculateRateAdults(bookingDto);
+        this.calculateRateChild(bookingDto);
+
         return bookingDto;
+    }
+
+    public void calculateRateChild(ManageBookingDto bookingDto) {
+
+        double total = bookingDto.getRoomRates().stream()
+                .mapToDouble(rate -> Optional.ofNullable(rate.getRateChild())
+                .orElse(0.0))
+                .sum();
+        bookingDto.setRateChild(ScaleAmount.scaleAmount(total));
+    }
+
+    public void calculateRateAdults(ManageBookingDto bookingDto) {
+
+        double total = bookingDto.getRoomRates().stream()
+                .mapToDouble(rate -> Optional.ofNullable(rate.getRateAdult())
+                .orElse(0.0))
+                .sum();
+        bookingDto.setRateAdult(ScaleAmount.scaleAmount(total));
+    }
+
+    public void calculateChildren(ManageBookingDto bookingDto) {
+
+        Double total = bookingDto.getRoomRates().stream()
+                .mapToDouble(ManageRoomRateDto::getChildren)
+                .sum();
+        bookingDto.setChildren(total.intValue());
+    }
+
+    public void calculateAdults(ManageBookingDto bookingDto) {
+
+        Double total = bookingDto.getRoomRates().stream()
+                .mapToDouble(ManageRoomRateDto::getAdults)
+                .sum();
+        bookingDto.setAdults(total.intValue());
+    }
+
+    public void calculateCheckinAndCheckout(ManageBookingDto bookingDto) {
+
+        LocalDateTime checkIn = bookingDto.getRoomRates().stream()
+                .map(ManageRoomRateDto::getCheckIn)
+                .min(LocalDateTime::compareTo)
+                .orElseThrow(() -> new IllegalStateException("No se encontró una fecha de entrada válida"));
+
+        LocalDateTime checkOut = bookingDto.getRoomRates().stream()
+                .map(ManageRoomRateDto::getCheckOut)
+                .max(LocalDateTime::compareTo)
+                .orElseThrow(() -> new IllegalStateException("No se encontró una fecha de salida válida"));
+
+        bookingDto.setCheckIn(checkIn);
+        bookingDto.setCheckOut(checkOut);
+    }
+
+    private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
+        return adults == 0 ? 0.0 : rateAmount / (nights * adults);
+    }
+
+    private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
+        return children == 0 ? 0.0 : rateAmount / (nights * children);
     }
 
     private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel, String groupType) {
@@ -393,6 +462,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageRoomRateDto.setNights(bookingDto.getNights());
         manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
         manageRoomRateDto.setInvoiceAmount(ScaleAmount.scaleAmount(bookingDto.getInvoiceAmount()));
+
+        manageRoomRateDto.setRateAdult(this.calculateRateAdult(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getAdults()));
+        manageRoomRateDto.setRateChild(this.calculateRateChild(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getChildren()));
         return manageRoomRateDto;
     }
 
