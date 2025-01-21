@@ -2923,6 +2923,21 @@ async function parseDataTableFilter(payloadFilter: any) {
     objFilterReservationNumber.key = 'manageBooking.reservationNumber'
   }
 
+  const objFilterAdults = parseFilter?.find((item: IFilter) => item?.key === 'adults')
+  if (objFilterAdults) {
+    objFilterAdults.key = 'manageBooking.adults'
+  }
+
+  const objFilterChildren = parseFilter?.find((item: IFilter) => item?.key === 'childrens')
+  if (objFilterChildren) {
+    objFilterChildren.key = 'manageBooking.children'
+  }
+
+  const objFilterCouponNumber = parseFilter?.find((item: IFilter) => item?.key === 'couponNumber')
+  if (objFilterCouponNumber) {
+    objFilterCouponNumber.key = 'manageBooking.couponNumber'
+  }
+
   payload.value.filter = [...parseFilter || []]
   getListPaymentDetail()
 }
@@ -2940,6 +2955,15 @@ function onSortField(event: any) {
     }
     if (event.sortField === 'reservationNumber') {
       event.sortField = 'manageBooking.reservationNumber'
+    }
+    if (event.sortField === 'adults') {
+      event.sortField = 'manageBooking.adults'
+    }
+    if (event.sortField === 'childrens') {
+      event.sortField = 'manageBooking.children'
+    }
+    if (event.sortField === 'couponNumber') {
+      event.sortField = 'manageBooking.couponNumber'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
