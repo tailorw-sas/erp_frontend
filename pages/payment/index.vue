@@ -2151,7 +2151,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     logicalOperation: 'AND'
                   })
                 }
-                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
+                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
 
                 if (objFilterDueAmount) {
                   objFilterDueAmount.value = '0.00'
@@ -2263,7 +2263,8 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
+              console.log('Parte 2')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2407,7 +2408,7 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
               const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
-
+              console.log('Parte 3')
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
               }
@@ -2523,6 +2524,7 @@ function closeModalApplyPayment() {
   idInvoicesSelectedToApplyPayment.value = []
   paymentDetailsTypeDepositSelected.value = []
   invoiceAmmountSelected.value = 0
+  applyPaymentPayload.value.filter = []
 }
 
 function closeModalApplyPaymentOtherDeductions() {
@@ -2533,6 +2535,7 @@ function closeModalApplyPaymentOtherDeductions() {
   loadAllInvoices.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
   applyPaymentOnChangePageOtherDeduction.value = undefined
+  applyPaymentPayloadOtherDeduction.value.filter = []
 }
 
 async function openModalApplyPayment() {
@@ -3479,7 +3482,7 @@ async function parseDataTableFilterForApplyPayment(payloadFilter: any) {
     objFilterInvoiceStatus.key = 'manageInvoiceStatus.id'
   }
 
-  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter, ...parseFilter || []]
   await applyPaymentGetList()
 }
@@ -3525,7 +3528,7 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
     objFilterInvoiceAmount.value = objFilterInvoiceAmount.value ? Number(objFilterInvoiceAmount.value).toFixed(2).toString() : '0.00'
   }
 
-  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter, ...parseFilter || []]
   await applyPaymentGetListForOtherDeductions()
 }
