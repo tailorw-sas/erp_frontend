@@ -1287,7 +1287,8 @@ async function parseDataTableFilterInvoice(payloadFilter: any) {
     }
   }
 
-  payloadInv.value.filter = [...parseFilter || []]
+  payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payloadInv.value.filter = [...payloadInv.value.filter, ...parseFilter || []]
   getListInvoice()
 }
 
