@@ -1752,9 +1752,7 @@ function getSortField(field: any) {
 }
 
 // edit booking clone total
-async function openNewEditBooking(item: any) {  
-  console.log(item);
-       
+async function openNewEditBooking(item: any) {         
   if (item.id) {
     idItem.value = item.id
 
