@@ -524,7 +524,13 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: true },
   { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: false },
+  // { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: true },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status', filter: [{
+    key: 'enabledToApply',
+    operator: 'EQUALS',
+    value: true,
+    logicalOperation: 'AND'
+  }] }, sortable: true },
 ])
 
 // Table
@@ -2145,7 +2151,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     logicalOperation: 'AND'
                   })
                 }
-                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
 
                 if (objFilterDueAmount) {
                   objFilterDueAmount.value = '0.00'
@@ -2257,7 +2263,8 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
+              console.log('Parte 2')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2400,8 +2407,8 @@ async function applyPaymentGetListForOtherDeductions() {
                   logicalOperation: 'AND'
                 })
               }
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
-
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
+              console.log('Parte 3')
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
               }
@@ -2517,6 +2524,7 @@ function closeModalApplyPayment() {
   idInvoicesSelectedToApplyPayment.value = []
   paymentDetailsTypeDepositSelected.value = []
   invoiceAmmountSelected.value = 0
+  applyPaymentPayload.value.filter = []
 }
 
 function closeModalApplyPaymentOtherDeductions() {
@@ -2527,6 +2535,7 @@ function closeModalApplyPaymentOtherDeductions() {
   loadAllInvoices.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
   applyPaymentOnChangePageOtherDeduction.value = undefined
+  applyPaymentPayloadOtherDeduction.value.filter = []
 }
 
 async function openModalApplyPayment() {
@@ -3468,7 +3477,12 @@ async function parseDataTableFilterForApplyPayment(payloadFilter: any) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
   }
 
-  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  const objFilterInvoiceStatus = parseFilter?.find((item: IFilter) => item?.key === 'status.id')
+  if (objFilterInvoiceStatus) {
+    objFilterInvoiceStatus.key = 'manageInvoiceStatus.id'
+  }
+
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter, ...parseFilter || []]
   await applyPaymentGetList()
 }
@@ -3487,6 +3501,9 @@ function applyPaymentOnSortField(event: any) {
     if (event.sortField === 'invoiceAmountTemp') {
       event.sortField = 'invoiceAmount'
     }
+    if (event.sortField === 'status') {
+      event.sortField = 'manageInvoiceStatus.name'
+    }
     applyPaymentPayload.value.sortBy = event.sortField
     applyPaymentPayload.value.sortType = event.sortOrder
     parseDataTableFilterForApplyPayment(event.filter)
@@ -3502,13 +3519,16 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
   const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
   if (objFilterDueAmount) {
     objFilterDueAmount.key = 'dueAmount'
+    objFilterDueAmount.value = objFilterDueAmount.value ? Number(objFilterDueAmount.value).toFixed(2).toString() : '0.00'
+    objFilterDueAmount.type = 'filterSearch'
   }
   const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmountTemp')
   if (objFilterInvoiceAmount) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
+    objFilterInvoiceAmount.value = objFilterInvoiceAmount.value ? Number(objFilterInvoiceAmount.value).toFixed(2).toString() : '0.00'
   }
 
-  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter, ...parseFilter || []]
   await applyPaymentGetListForOtherDeductions()
 }

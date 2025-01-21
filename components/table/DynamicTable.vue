@@ -492,7 +492,7 @@ function haveFilterApplay(filtersValue: any, column: any) {
   if (column.type === 'date' || column.type === 'date-editable') {
     result = filtersValue[column.field].constraints[0].value !== null
   }
-  if (column.type === 'text' || column.type === 'slot-text') {
+  if (column.type === 'text' || column.type === 'slot-text' || column.type === 'number') {
     result = filtersValue[column.field].value
   }
   return result

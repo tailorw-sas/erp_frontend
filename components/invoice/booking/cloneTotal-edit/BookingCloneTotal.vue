@@ -1066,7 +1066,8 @@ async function getratePlanList(query = '') {
     for (const iterator of dataList) {
       ratePlanList.value = [...ratePlanList.value, {
         id: iterator.id,
-        name: iterator.name,
+        name: `${iterator.code} - ${iterator.name}`,
+        nameTemp: iterator.name,
         code: iterator.code,
         status: iterator.status,
         hotel: {
@@ -1122,7 +1123,8 @@ async function getRoomCategoryList(query = '') {
         ...roomCategoryList.value,
         {
           id: iterator.id,
-          name: iterator.name,
+          name: `${iterator.code} - ${iterator.name}`,
+          nameTemp: iterator.name,
           code: iterator.code,
           status: iterator.status
         }
@@ -1170,7 +1172,8 @@ async function getRoomTypeList(query = '') {
     for (const iterator of dataList) {
       roomTypeList.value = [...roomTypeList.value, {
         id: iterator.id,
-        name: iterator.name,
+        name: `${iterator.code} - ${iterator.name}`,
+        nameTemp: iterator.name,
         code: iterator.code,
         status: iterator.status,
         manageHotel: {
@@ -1221,7 +1224,16 @@ async function getNightTypeList(query = '') {
     const { data: dataList } = response
     nightTypeList.value = []
     for (const iterator of dataList) {
-      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      nightTypeList.value = [
+        ...nightTypeList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          nameTemp: iterator.name,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -1489,9 +1501,9 @@ onMounted(async () => {
               }"
               @load="($event) => getratePlanList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1502,9 +1514,9 @@ onMounted(async () => {
                 onUpdate('roomCategory', $event)
               }" @load="($event) => getRoomCategoryList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1527,9 +1539,9 @@ onMounted(async () => {
                 onUpdate('roomType', $event)
               }" @load="($event) => getRoomTypeList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1546,9 +1558,9 @@ onMounted(async () => {
               }"
               @load="($event) => getNightTypeList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>

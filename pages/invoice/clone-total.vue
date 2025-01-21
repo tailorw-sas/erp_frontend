@@ -1181,22 +1181,32 @@ async function getBookingList(clearFilter: boolean = false) {
         nightType: iterator.nightType
           ? {
               ...iterator.nightType,
-              name: iterator.nightType?.code ? `${iterator.nightType?.code || ''}-${iterator.nightType?.name || ''}` : ''
+              name: iterator.nightType?.code ? `${iterator.nightType?.code || ''}-${iterator.nightType?.nameTemp ? iterator.nightType?.nameTemp : iterator.nightType?.name}` : '',
+              nameTemp: iterator.name
             }
           : null,
         ratePlan: iterator.ratePlan
           ? {
               ...iterator.ratePlan,
-              name: iterator.ratePlan?.code ? `${iterator.ratePlan?.code || ''}-${iterator.ratePlan?.name || ''}` : ''
+              name: iterator.ratePlan?.code ? `${iterator.ratePlan?.code || ''}-${iterator.ratePlan?.nameTemp ? iterator.ratePlan?.nameTemp : iterator.ratePlan?.name}` : '',
+              nameTemp: iterator.name
             }
           : null,
         roomType: iterator.roomType
           ? {
               ...iterator.roomType,
-              name: iterator.roomType?.code ? `${iterator.roomType?.code || ''}-${iterator.roomType?.name || ''}` : ''
+              name: iterator.roomType?.code ? `${iterator.roomType?.code || ''}-${iterator.roomType?.nameTemp ? iterator.roomType?.nameTemp : iterator.roomType?.name}` : '',
+              nameTemp: iterator.name
             }
           : null,
-        roomCategory: iterator.roomCategory ? iterator.roomCategory : null,
+        roomCategory: iterator.roomCategory
+          ? {
+              ...iterator.roomCategory,
+              name: iterator.roomCategory?.code ? `${iterator.roomCategory?.code || ''}-${iterator.roomCategory?.nameTemp ? iterator.roomCategory?.nameTemp : iterator.roomCategory?.name}` : '',
+              nameTemp: iterator.name
+            }
+          : null,
+
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
 
@@ -1450,7 +1460,6 @@ function calcInvoiceAmountUpdate() {
 function updateBookingLocal(booking: any) {
   if (booking && booking.id) {
     const bookingToEdit = bookingList.value.find(item => item.id === booking.id)
-
     if (bookingToEdit) {
       bookingToEdit.description = booking.description
       bookingToEdit.contract = booking.contract
@@ -1466,6 +1475,11 @@ function updateBookingLocal(booking: any) {
       bookingToEdit.fullName = `${booking.firstName} ${booking.lastName}`
 
       bookingToEdit.roomType = booking.roomType
+      // ? {
+      //     ...booking.roomType,
+      //     name: `${booking?.roomType?.code || ''}-${booking?.roomType?.nameTemp || ''}`
+      //   }
+      // : null
       bookingToEdit.nightType = booking.nightType
       bookingToEdit.ratePlan = booking.ratePlan
       bookingToEdit.roomCategory = booking.roomCategory

@@ -364,7 +364,7 @@ const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '140px', type: 'text' },
   { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '140px', type: 'text' },
-  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
+  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'date' },
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
@@ -1829,9 +1829,12 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAllForEdit.value = true
     const payload: { [key: string]: any } = { ...item }
-    // payload.payment = idItem.value || ''
-    // payload.amount = Number.parseFloat(payload.amount)
-    // payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+
+    if (payload.transactionType && payload.transactionType.remarkRequired === false) {
+      if (payload.remark === '') {
+        payload.remark = payload?.transactionType?.defaultRemark
+      }
+    }
 
     try {
       await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, {
@@ -2904,6 +2907,37 @@ async function historyParseDataTableFilter(payloadFilter: any) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
+  const objFilterBookingId = parseFilter?.find((item: IFilter) => item?.key === 'bookingId')
+  if (objFilterBookingId) {
+    objFilterBookingId.key = 'manageBooking.bookingId'
+  }
+
+  const objFilterInvoiceNumber = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
+  if (objFilterInvoiceNumber) {
+    objFilterInvoiceNumber.key = 'manageBooking.invoice.invoiceNumber'
+  }
+
+  const objFilterReservationNumber = parseFilter?.find((item: IFilter) => item?.key === 'reservationNumber')
+  if (objFilterReservationNumber) {
+    objFilterReservationNumber.key = 'manageBooking.reservationNumber'
+  }
+
+  const objFilterAdults = parseFilter?.find((item: IFilter) => item?.key === 'adults')
+  if (objFilterAdults) {
+    objFilterAdults.key = 'manageBooking.adults'
+  }
+
+  const objFilterChildren = parseFilter?.find((item: IFilter) => item?.key === 'childrens')
+  if (objFilterChildren) {
+    objFilterChildren.key = 'manageBooking.children'
+  }
+
+  const objFilterCouponNumber = parseFilter?.find((item: IFilter) => item?.key === 'couponNumber')
+  if (objFilterCouponNumber) {
+    objFilterCouponNumber.key = 'manageBooking.couponNumber'
+  }
+
   payload.value.filter = [...parseFilter || []]
   getListPaymentDetail()
 }
@@ -2912,6 +2946,24 @@ function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'transactionType') {
       event.sortField = 'transactionType.name'
+    }
+    if (event.sortField === 'bookingId') {
+      event.sortField = 'manageBooking.bookingId'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'manageBooking.invoice.invoiceNumber'
+    }
+    if (event.sortField === 'reservationNumber') {
+      event.sortField = 'manageBooking.reservationNumber'
+    }
+    if (event.sortField === 'adults') {
+      event.sortField = 'manageBooking.adults'
+    }
+    if (event.sortField === 'childrens') {
+      event.sortField = 'manageBooking.children'
+    }
+    if (event.sortField === 'couponNumber') {
+      event.sortField = 'manageBooking.couponNumber'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
