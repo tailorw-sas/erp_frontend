@@ -1829,9 +1829,12 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAllForEdit.value = true
     const payload: { [key: string]: any } = { ...item }
-    // payload.payment = idItem.value || ''
-    // payload.amount = Number.parseFloat(payload.amount)
-    // payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+
+    if (payload.transactionType && payload.transactionType.remarkRequired === false) {
+      if (payload.remark === '') {
+        payload.remark = payload?.transactionType?.defaultRemark
+      }
+    }
 
     try {
       await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, {
