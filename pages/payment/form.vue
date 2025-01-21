@@ -2907,6 +2907,17 @@ async function historyParseDataTableFilter(payloadFilter: any) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
+  const objFilterBookingId = parseFilter?.find((item: IFilter) => item?.key === 'bookingId')
+  if (objFilterBookingId) {
+    objFilterBookingId.key = 'manageBooking.bookingId'
+  }
+
+  const objFilterInvoiceNumber = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
+  if (objFilterInvoiceNumber) {
+    objFilterInvoiceNumber.key = 'manageBooking.invoice.invoiceNumber'
+  }
+
   payload.value.filter = [...parseFilter || []]
   getListPaymentDetail()
 }
@@ -2915,6 +2926,12 @@ function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'transactionType') {
       event.sortField = 'transactionType.name'
+    }
+    if (event.sortField === 'bookingId') {
+      event.sortField = 'manageBooking.bookingId'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'manageBooking.invoice.invoiceNumber'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
