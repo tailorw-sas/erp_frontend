@@ -291,4 +291,14 @@ export const GenericService = {
     })
   },
 
+  async updateBookings(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/update`
+    return $api(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
 }
