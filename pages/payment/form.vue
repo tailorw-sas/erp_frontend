@@ -1646,8 +1646,8 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
       }
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
-        iterator.adults = iterator.manageBooking?.adults?.toString()
-        iterator.childrens = iterator.manageBooking?.children?.toString()
+        iterator.adults = iterator.manageBooking?.adults?.toString() || 0
+        iterator.childrens = iterator.manageBooking?.children?.toString() || 0
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
