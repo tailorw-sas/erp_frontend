@@ -72,6 +72,8 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator());
             validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType, manageHotelService));
             validators.put(ImportBookingNightTypeValidator.class.getName(), new ImportBookingNightTypeValidator(nightTypeService, manageAgencyService));
+            validators.put(ImportVirtualHotelHotelInvoiceNumberValidator.class.getName(), new ImportVirtualHotelHotelInvoiceNumberValidator(manageHotelService, manageBookingService, cacheRedisRepository));
+            validators.put(ImportHotelBookingNumberValidator.class.getName(), new ImportHotelBookingNumberValidator(manageHotelService, manageBookingService, cacheRedisRepository));
         }
     }
 
