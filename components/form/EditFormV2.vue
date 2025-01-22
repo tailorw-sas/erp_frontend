@@ -109,7 +109,10 @@ function validateField(fieldKey: string, value: any) {
 function validateForm() {
   let isValid = true
   props.fields.forEach((field) => {
-    if (field.validation) {
+    if ('hidden' in field && field.hidden) {
+      isValid = true
+    }
+    else if (field.validation) {
       const result = field.validation.safeParse(fieldValues[field.field])
       if (!result.success) {
         isValid = false
