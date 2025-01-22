@@ -431,6 +431,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     BUSINESS_PROCESS_SCHEDULER_EXECUTION_TIME_FORMAT_IS_NOT_VALID(2016, Series.DOMAIN_ERROR, "Execution Time format is not valid"),
     BUSINESS_PROCESS_SCHEDULER_PROCESSING_DATE_FORMAT_IS_NOT_VALID(2017, Series.DOMAIN_ERROR, "Processing Date format is not valid"),
     BUSINESS_PROCESS_SCHEDULER_RULE_NOT_FOUND(2018, Series.DOMAIN_ERROR, "Business Process Scheduler Rule not found"),
+    INNSIST_IMPORT_BOOKING_SIZE_RULE(2019, Series.DOMAIN_ERROR, "The current size or bookings is diferent from the initial size"),
     ;
 
     private static final DomainErrorMessage[] VALUES;

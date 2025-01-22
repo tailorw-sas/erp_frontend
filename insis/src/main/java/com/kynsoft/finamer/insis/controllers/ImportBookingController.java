@@ -5,7 +5,11 @@ import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.insis.application.command.booking.importBooking.ImportBookingCommand;
+import com.kynsoft.finamer.insis.application.command.booking.importBooking.ImportBookingMessage;
 import com.kynsoft.finamer.insis.application.command.booking.importBooking.ImportBookingRequest;
+import com.kynsoft.finamer.insis.application.command.booking.updateResponseBooking.UpdateResponseImportBookingCommand;
+import com.kynsoft.finamer.insis.application.command.booking.updateResponseBooking.UpdateResponseImportBookingMessage;
+import com.kynsoft.finamer.insis.application.command.booking.updateResponseBooking.UpdateResponseImportBookingRequest;
 import com.kynsoft.finamer.insis.application.query.importProcess.getErrorResults.GetErrorResultsImportProcessQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +33,9 @@ public class ImportBookingController {
     @PostMapping("/import")
     public ResponseEntity<?> importBookings(@RequestBody ImportBookingRequest request){
         ImportBookingCommand command = ImportBookingCommand.fromRequest(request);
-        mediator.send(command);
+        ImportBookingMessage response = mediator.send(command);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/search")
@@ -45,4 +49,13 @@ public class ImportBookingController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateBookinsResponse(@RequestBody UpdateResponseImportBookingRequest request){
+        UpdateResponseImportBookingCommand command = UpdateResponseImportBookingCommand.fromRequest(request);
+        UpdateResponseImportBookingMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

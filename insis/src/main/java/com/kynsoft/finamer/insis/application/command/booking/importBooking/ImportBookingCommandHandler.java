@@ -1,10 +1,12 @@
 package com.kynsoft.finamer.insis.application.command.booking.importBooking;
 
+import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafka;
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistRoomRateKafka;
 import com.kynsoft.finamer.insis.domain.dto.*;
+import com.kynsoft.finamer.insis.domain.rules.booking.ImportBookingSizeRule;
 import com.kynsoft.finamer.insis.domain.services.*;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
@@ -45,6 +47,8 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         ManageEmployeeDto employee = getEmployee(command.getUserId());
         List<BookingDto> bookings = getBookings(command.getBookings());
 
+        RulesChecker.checkRule(new ImportBookingSizeRule(command.bookings.size(), bookings.size()));
+
         ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId(), 0, 0);
         saveImportBookings(importProcess, bookings);
 
@@ -79,7 +83,7 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
     }
 
     private List<BookingDto> getBookings(List<UUID> bookingIds){
-        return bookingService.findAllByIds(bookingIds);
+        return bookingService.findAllByIdsToImport(bookingIds);
     }
 
     private void saveImportBookings(ImportProcessDto importProcess, List<BookingDto> bookings){
@@ -137,7 +141,7 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
                 booking.getHotelInvoiceAmount(),
                 booking.getRemarks(),
                 booking.getRatePlan().getCode(),
-                null,
+                "",
                 booking.getRoomType().getCode(),
                 booking.getRoomCategory().getCode(),
                 booking.getHotel().getCode(),

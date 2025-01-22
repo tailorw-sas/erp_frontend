@@ -25,14 +25,14 @@ public class KafkaProducerConfig {
     @Value("${KAFKA_MAX_REQUEST_VALUE:104857600}")
     private String maxRequestSize;
 
-    @Value("${KAFKA_SASL_USERNAME}")
+    @Value("${KAFKA_SASL_USERNAME:user}")
     private String saslUsername;
 
-    @Value("${KAFKA_SASL_PASSWORD}")
+    @Value("${KAFKA_SASL_PASSWORD:password}")
     private String saslPassword;
 
     @Bean
-    @Profile("development | qa | production")
+    @Profile("qa | production")
     public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         addSaslConfig(configProps, saslUsername, saslPassword);
@@ -40,7 +40,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    @Profile("!development & !qa & !production")
+    @Profile("!qa & !production")
     public ProducerFactory<String, Object> devProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);

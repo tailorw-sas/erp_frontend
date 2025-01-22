@@ -86,6 +86,14 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     public List<BookingDto> findAllByIds(List<UUID> idList) {
+        return readRepository.findByIdIn(idList)
+                .stream()
+                .map(Booking::toAggregate)
+                .toList();
+    }
+
+    @Override
+    public List<BookingDto> findAllByIdsToImport(List<UUID> idList) {
         return readRepository.findBookingsByIdsAndStatuses(idList, List.of(BookingStatus.PENDING, BookingStatus.FAILED))
                 .stream()
                 .map(Booking::toAggregate)
