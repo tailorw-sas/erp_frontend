@@ -1,12 +1,10 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
-import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupBy;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByCoupon;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByCouponHotelBookingNumber;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByHotelBookingNumber;
@@ -22,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -151,34 +148,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber");
             });
         }
-//        Map<GroupByVirtualHotel, List<BookingRow>> grouped;
-//        List<BookingImportCache> importList = repository.findAllByImportProcessId(importProcessId);
-//        //Collections.sort(importList, Comparator.comparingInt(BookingImportCache::getRowNumber));
-//
-//        grouped = importList.stream().map(BookingImportCache::toAggregate).collect(Collectors.groupingBy(
-//                booking -> new GroupByVirtualHotel(
-//                        booking.getTransactionDate(),
-//                        booking.getManageAgencyCode(),
-//                        booking.getManageHotelCode(),
-//                        Long.valueOf(booking.getHotelInvoiceNumber())
-//                )
-//        ));
-//
-//        List<Map.Entry<GroupByVirtualHotel, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
-//        Collections.sort(list, Comparator.comparing(entry -> entry.getValue().get(0).getRowNumber()));
-//
-//        Map<GroupByVirtualHotel, List<BookingRow>> orderedGrouped = new LinkedHashMap<>();
-//        for (Map.Entry<GroupByVirtualHotel, List<BookingRow>> entry : list) {
-//            orderedGrouped.put(entry.getKey(), entry.getValue());
-//        }
-//
-//        if (!orderedGrouped.isEmpty()) {
-//            orderedGrouped.forEach((key, value) -> {
-//                ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
-//                ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-//                this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber");
-//            });
-//        }
     }
 
     @Override
@@ -222,7 +191,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         -> new GroupByHotelBookingNumber(
                         bookingRow.getHotelBookingNumber(),
                         bookingRow.getManageAgencyCode(),
-                        bookingRow.getManageHotelCode()
+                        bookingRow.getManageHotelCode(),
+                        bookingRow.getTransactionDate()
                 )));
 
         List<Map.Entry<GroupByHotelBookingNumber, List<BookingRow>>> list = new ArrayList<>(grouped.entrySet());
@@ -240,12 +210,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking");
             });
         }
-//
-//        bookingImportCacheStream.forEach(bookingImportCache -> {
-//            ManageAgencyDto agency = agencyService.findByCode(bookingImportCache.toAggregate().getManageAgencyCode());
-//            ManageHotelDto hotel = manageHotelService.findByCode(bookingImportCache.toAggregate().getManageHotelCode());
-//            this.createInvoiceWithBooking(agency, hotel, List.of(bookingImportCache.toAggregate()), employee);
-//        });
     }
 
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType) {
@@ -321,8 +285,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
         //Calculados
         this.calculateCheckinAndCheckout(bookingDto);
-        //this.calculateAdults(bookingDto);
-        //this.calculateChildren(bookingDto);
+        this.calculateAdults(bookingDto);
+        this.calculateChildren(bookingDto);
         this.calculateRateAdults(bookingDto);
         this.calculateRateChild(bookingDto);
 
@@ -348,19 +312,21 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     public void calculateChildren(ManageBookingDto bookingDto) {
-
-        Double total = bookingDto.getRoomRates().stream()
+        Double max = bookingDto.getRoomRates().stream()
                 .mapToDouble(ManageRoomRateDto::getChildren)
-                .sum();
-        bookingDto.setChildren(total.intValue());
+                .max()
+                .orElse(0);
+
+        bookingDto.setChildren(max.intValue());
     }
 
     public void calculateAdults(ManageBookingDto bookingDto) {
 
-        Double total = bookingDto.getRoomRates().stream()
+        Double max = bookingDto.getRoomRates().stream()
                 .mapToDouble(ManageRoomRateDto::getAdults)
-                .sum();
-        bookingDto.setAdults(total.intValue());
+                .max()
+                .orElse(0);
+        bookingDto.setAdults(max.intValue());
     }
 
     public void calculateCheckinAndCheckout(ManageBookingDto bookingDto) {
