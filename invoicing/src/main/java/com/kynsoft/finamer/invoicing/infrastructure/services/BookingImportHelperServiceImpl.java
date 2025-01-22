@@ -321,8 +321,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
         //Calculados
         this.calculateCheckinAndCheckout(bookingDto);
-        //this.calculateAdults(bookingDto);
-        //this.calculateChildren(bookingDto);
+        this.calculateAdults(bookingDto);
+        this.calculateChildren(bookingDto);
         this.calculateRateAdults(bookingDto);
         this.calculateRateChild(bookingDto);
 
@@ -348,19 +348,21 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     public void calculateChildren(ManageBookingDto bookingDto) {
-
-        Double total = bookingDto.getRoomRates().stream()
+        Double max = bookingDto.getRoomRates().stream()
                 .mapToDouble(ManageRoomRateDto::getChildren)
-                .sum();
-        bookingDto.setChildren(total.intValue());
+                .max()
+                .orElse(0);
+
+        bookingDto.setChildren(max.intValue());
     }
 
     public void calculateAdults(ManageBookingDto bookingDto) {
 
-        Double total = bookingDto.getRoomRates().stream()
+        Double max = bookingDto.getRoomRates().stream()
                 .mapToDouble(ManageRoomRateDto::getAdults)
-                .sum();
-        bookingDto.setAdults(total.intValue());
+                .max()
+                .orElse(0);
+        bookingDto.setAdults(max.intValue());
     }
 
     public void calculateCheckinAndCheckout(ManageBookingDto bookingDto) {
