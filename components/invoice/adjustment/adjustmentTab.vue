@@ -357,7 +357,9 @@ async function getAdjustmentList() {
       }
 
       iterator.paymentTransactionType = transaction */
-      // iterator.paymentTransactionType = iterator.paymentTransactionType || iterator.transaction
+
+      // En caso de income el transaction viene en null, por lo que en este caso hay que usar paymentTransactionType
+      iterator.transaction = iterator.transaction || iterator.paymentTransactionType
       ListItems.value = [...ListItems.value, {
         ...iterator,
         paymentTransactionType: iterator.transaction ? { ...iterator.transaction, name: `${iterator.transaction?.code || ''}-${iterator.transaction?.name || ''}` } : null,
