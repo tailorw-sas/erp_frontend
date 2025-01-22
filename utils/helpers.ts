@@ -448,3 +448,16 @@ export async function customBase64Uploader(event: any, listFields: any, fieldKey
   const file = event.files[0]
   listFields[fieldKey] = file
 }
+
+export function removeDuplicatesMap(array: any[], keys: string[]): any[] {
+  const seen = new Map()
+
+  return array.filter((item) => {
+    const key = keys.map(k => `${k}-${JSON.stringify(item[k])}`).join('|')
+    if (seen.has(key)) {
+      return false
+    }
+    seen.set(key, true)
+    return true
+  })
+}
