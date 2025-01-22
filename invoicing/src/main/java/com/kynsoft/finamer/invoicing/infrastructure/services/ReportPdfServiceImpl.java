@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -39,6 +40,9 @@ public class ReportPdfServiceImpl implements IReportPdfService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Style headerStyle = new Style().setFontSize(10).setBold();
     private static final Style cellStyle = new Style().setFontSize(8);
+
+    // Define un formato para los números
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0.00");
 
     public ReportPdfServiceImpl(ManageInvoiceServiceImpl invoiceService, IManageRoomRateService roomRateService) {
         this.invoiceService = invoiceService;
@@ -147,7 +151,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
             List<ManageRoomRateDto> roomRates = this.roomRateService.findByBooking(booking.getId());
             for (ManageRoomRateDto roomRate : roomRates) {
                 BigDecimal invoiceAmount = roomRate.getInvoiceAmount() != null
-                        ? BigDecimal.valueOf(roomRate.getInvoiceAmount())
+                        ? BigDecimal.valueOf(roomRate.getInvoiceAmount()).setScale(2, RoundingMode.HALF_EVEN)
                         : BigDecimal.ZERO;
                 total = total.add(invoiceAmount).setScale(2, RoundingMode.HALF_EVEN);
 
@@ -156,7 +160,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
                 table.addCell(createCell(roomRate.getNights() != null ? roomRate.getNights().toString() : "", cellStyle));
                 table.addCell(createCell(roomRate.getAdults() != null ? roomRate.getAdults().toString() : "", cellStyle));
                 table.addCell(createCell(roomRate.getChildren() != null ? roomRate.getChildren().toString() : "", cellStyle));
-                table.addCell(createCell("$ " + (roomRate.getInvoiceAmount() != null ? roomRate.getInvoiceAmount() : 0), cellStyle));
+                table.addCell(createCell("$ " + DECIMAL_FORMAT.format(invoiceAmount), cellStyle).setKeepTogether(false));
                 table.addCell(createCell(currency, cellStyle));
             }
         }
@@ -164,7 +168,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         //added summary
         table.addCell(createEmptyCell(4));
         table.addCell(createCell("TOTAL", headerStyle));
-        table.addCell(createCell("$ " + ScaleAmount.scaleAmount(total.doubleValue()),cellStyle));
+        table.addCell(createCell("$ " + DECIMAL_FORMAT.format(total), cellStyle).setKeepTogether(false));
         table.addCell(createCell(currency, cellStyle));
     }
 
