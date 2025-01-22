@@ -1623,6 +1623,8 @@ async function applyPaymentGetList() {
                   )
                 }
 
+                const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+                applyPaymentPayload.value = filterTemp
                 const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
                 const { data: dataList, page, size, totalElements, totalPages } = response
@@ -1703,7 +1705,8 @@ async function applyPaymentGetList() {
                   }
                 )
               }
-
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+              applyPaymentPayload.value = filterTemp
               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
               const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1815,6 +1818,8 @@ async function applyPaymentGetList() {
                   }
                 )
               }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+              applyPaymentPayload.value = filterTemp
 
               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
@@ -2055,6 +2060,27 @@ async function getListPaymentDetailTypeDeposit() {
   }
 }
 
+function removeDuplicateFilters(request: IQueryRequest): IQueryRequest {
+  const uniqueFilters = request.filter.reduce((acc: IFilter[], current: IFilter) => {
+    const isDuplicate = acc.some(item =>
+      item.key === current.key
+      && item.operator === current.operator
+      && JSON.stringify(item.value) === JSON.stringify(current.value)
+      && item.logicalOperation === current.logicalOperation
+    )
+
+    if (!isDuplicate) {
+      acc.push(current)
+    }
+    return acc
+  }, [])
+
+  return {
+    ...request,
+    filter: uniqueFilters
+  }
+}
+
 async function applyPaymentGetListForOtherDeductions() {
   if (applyPaymentOptionsOtherDeduction.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -2211,6 +2237,9 @@ async function applyPaymentGetListForOtherDeductions() {
                   )
                 }
 
+                const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+                applyPaymentPayloadOtherDeduction.value = filterTemp
+
                 const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
                 const { data: dataList, page, size, totalElements, totalPages } = response
@@ -2323,6 +2352,8 @@ async function applyPaymentGetListForOtherDeductions() {
                   }
                 )
               }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+              applyPaymentPayloadOtherDeduction.value = filterTemp
 
               const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
@@ -2466,6 +2497,8 @@ async function applyPaymentGetListForOtherDeductions() {
                   }
                 )
               }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+              applyPaymentPayloadOtherDeduction.value = filterTemp
 
               const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
@@ -3491,6 +3524,12 @@ async function parseDataTableFilterForApplyPayment(payloadFilter: any) {
     objFilterInvoiceStatus.key = 'manageInvoiceStatus.id'
   }
 
+  if (parseFilter && parseFilter?.length > 0) {
+    parseFilter.forEach((filter) => {
+      filter.type = 'filterSearch'
+    })
+  }
+
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter, ...parseFilter || []]
   await applyPaymentGetList()
@@ -3535,6 +3574,12 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
   if (objFilterInvoiceAmount) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
     objFilterInvoiceAmount.value = objFilterInvoiceAmount.value ? Number(objFilterInvoiceAmount.value).toFixed(2).toString() : '0.00'
+  }
+
+  if (parseFilter && parseFilter?.length > 0) {
+    parseFilter.forEach((filter) => {
+      filter.type = 'filterSearch'
+    })
   }
 
   applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
