@@ -338,22 +338,15 @@ async function resetListItems() {
 }
 
 function searchAndFilter() {
-  const newPayload: IQueryRequest = {
-    filter: [{
-      key: 'adjustment',
-      operator: 'EQUALS',
-      value: false,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    }],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
+  let newFilters: IFilter[] = [{
+    key: 'adjustment',
+    operator: 'EQUALS',
+    value: false,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }]
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [...newPayload.filter, {
+    newFilters = [...newFilters, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -362,7 +355,7 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...newPayload.filter, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    newFilters = [...newFilters, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Filtro para no mostrar transacciones de ajuste
     // newPayload.filter = [...newPayload.filter, {
     //   key: 'adjustment',
@@ -372,7 +365,7 @@ function searchAndFilter() {
     // }]
     // Date
     if (filterToSearch.value.from) {
-      newPayload.filter = [...newPayload.filter, {
+      newFilters = [...newFilters, {
         key: 'checkIn',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
@@ -381,7 +374,7 @@ function searchAndFilter() {
       }]
     }
     if (filterToSearch.value.to) {
-      newPayload.filter = [...newPayload.filter, {
+      newFilters = [...newFilters, {
         key: 'checkIn',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
@@ -393,7 +386,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.merchant.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'merchant.id',
           operator: 'IN',
           value: itemIds,
@@ -406,7 +399,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'hotel.id',
           operator: 'IN',
           value: itemIds,
@@ -419,7 +412,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.ccType.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'creditCardType.id',
           operator: 'IN',
           value: itemIds,
@@ -432,7 +425,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'status.id',
           operator: 'IN',
           value: itemIds,
@@ -442,7 +435,7 @@ function searchAndFilter() {
       }
     }
   }
-  payload.value = newPayload
+  payload.value.filter = newFilters
   getList()
 }
 
