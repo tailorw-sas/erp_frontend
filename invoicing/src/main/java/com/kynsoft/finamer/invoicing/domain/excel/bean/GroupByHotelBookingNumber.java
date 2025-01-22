@@ -14,4 +14,5 @@ public class GroupByHotelBookingNumber {
     private String hotelBookingNumber;
     private String agency;
     private String hotel;
+    private String transactionDate;
 }
