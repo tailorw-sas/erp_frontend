@@ -25,6 +25,8 @@ const showDataTable = ref(true)
 const showErrorsDataTable = ref(false)
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const processId = ref('')
+const totalImportedRows = ref(0)
+const haveErrorsImportProcess = ref(false)
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -69,6 +71,11 @@ const confImportProcessApi = reactive({
   uriApi: 'import-process',
 })
 
+const confInvoiceApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
+})
+
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'text', maxWidth: '50px' },
@@ -98,6 +105,23 @@ const columnsExpandable: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'select' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
   { field: 'amount', header: 'Invoice Amount', type: 'text' },
+]
+
+const columnsErrors: IColumn[] = [
+  { field: 'trendingCompany', header: 'Trading Company', type: 'text' },
+  { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
+  { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
+  { field: 'bookingDate', header: 'Booking Date', type: 'date' },
+  { field: 'fullName', header: 'Full Name', type: 'text' },
+  { field: 'hotelBookingNumber', header: 'Reserv No', type: 'text' },
+  { field: 'coupon', header: 'Coupon No', type: 'text' },
+  { field: 'roomType', header: 'Room Type', type: 'text' },
+  { field: 'checkIn', header: 'Check In', type: 'date' },
+  { field: 'checkOut', header: 'Check Out', type: 'date' },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Amount', type: 'text' },
+  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false, minWidth: '150px' },
 ]
 
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
@@ -198,7 +222,6 @@ async function getList() {
     listItems.value = []
     options.value.loading = true
     idItemToLoadFirstTime.value = ''
-    options.value.loading = true
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
@@ -566,10 +589,9 @@ async function importBookings() {
 
     await GenericService.import(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
 
-    const result = await checkProcessStatus(processId.value)
+    await checkProcessStatus(processId.value)
 
-    options.value.loading = false
-    if (result?.failedRecords > 0) {
+    if (haveErrorsImportProcess.value) {
       await getErrorList(processId.value)
       showErrorsDataTable.value = true
       showDataTable.value = false
@@ -581,6 +603,7 @@ async function importBookings() {
       })
     }
     else {
+      options.value.loading = false
       await getList()
       showErrorsDataTable.value = false
       showDataTable.value = true
@@ -591,6 +614,7 @@ async function importBookings() {
         life: 5000
       })
     }
+    await updateBookingsStatus(processId.value)
   }
   catch (error: any) {
     toast.add({
@@ -601,8 +625,24 @@ async function importBookings() {
     })
     options.value.loading = false
   }
+  finally {
+    options.value.loading = false
+  }
 }
 
+async function updateBookingsStatus(processId: any) {
+  try {
+    const payload = {
+      importProcessId: processId,
+      updateBookings: listItemsErrors.value
+    }
+    await GenericService.updateBookings(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
+  }
+  catch (error: any) {
+  }
+}
+
+/*
 async function checkProcessStatus(id: any) {
   return new Promise((resolve, reject) => {
     let attempts = 0
@@ -630,7 +670,34 @@ async function checkProcessStatus(id: any) {
     }, 2000)
   })
 }
+*/
 
+async function checkProcessStatus(id: any) {
+  return new Promise<void>((resolve) => {
+    let status = 'RUNNING'
+    const interval = setInterval(async () => {
+      try {
+        const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, id, 'import-status')
+        status = response.status
+        totalImportedRows.value = response.totalRows ?? 0
+      }
+      catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 20000 })
+        haveErrorsImportProcess.value = true
+        clearInterval(interval)
+        // options.value.loading = false
+        resolve()
+      }
+
+      if (status === 'FINISHED') {
+        clearInterval(interval)
+        // options.value.loading = false
+        resolve()
+      }
+    }, 5000)
+  })
+}
+/*
 async function getErrorList(processId: any) {
   try {
     optionsListErrors.value.loading = true
@@ -671,6 +738,61 @@ async function getErrorList(processId: any) {
   }
   catch (error) {
     console.error(error)
+  }
+  finally {
+    optionsListErrors.value.loading = false
+  }
+}
+*/
+
+async function getErrorList(processId: any) {
+  try {
+    optionsListErrors.value.loading = true
+    payload.value = { ...payload.value, query: processId }
+    let rowError = ''
+    listItemsErrors.value = []
+    const newListItems = []
+    const response = await GenericService.importSearch(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, payload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
+
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(listItemsErrors.value.map(item => item.id))
+
+    for (const iterator of dataList) {
+      rowError = ''
+      const rowExpandable = []
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        for (const err of iterator.errorFields) {
+          rowError += `- ${err.message?.trim()}\n`
+        }
+        rowExpandable.push({ ...iterator.row })
+        newListItems.push(
+          {
+            ...iterator.row,
+            id: iterator.id,
+            fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
+            impSta: `Warning row ${iterator.rowNumber}: \n${rowError}`,
+            hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
+            invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
+            rowExpandable,
+            loadingEdit: false,
+            loadingDelete: false
+          }
+        )
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    listItemsErrors.value = [...listItemsErrors.value, ...newListItems]
+  }
+  catch (error) {
+    console.error('Error loading file:', error)
   }
   finally {
     optionsListErrors.value.loading = false
@@ -875,7 +997,7 @@ onMounted(async () => {
       <div v-if="showErrorsDataTable" class="p-0">
         <DynamicTable
           :data="listItemsErrors"
-          :columns="columns"
+          :columns="columnsErrors"
           :options="optionsListErrors"
           :pagination="pagination"
           @on-change-pagination="payloadOnChangePageErrorList = $event"
