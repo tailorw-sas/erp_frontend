@@ -146,6 +146,7 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+const selectedItems = ref<any[]>([])
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
   selectedElements.value = data
@@ -228,6 +229,9 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+    selectedItems.value = [...selectedItems.value, ...newListItems]
+    selectedItems.value = [...removeDuplicatesMap(selectedItems.value, ['id'])]
+
     return listItems
   }
 
@@ -771,7 +775,8 @@ async function searchAndFilter() {
 
   payload.value = newPayload
   // Obtener la lista de facturas
-  options.value.selectAllItemByDefault = true
+
+  options.value.selectAllItemByDefault = false
   const dataList = await getList()
 
   // Seleccionar automáticamente todos los elementos retornados
@@ -984,12 +989,12 @@ onMounted(async () => {
           </AccordionTab>
         </Accordion>
       </div>
-
       <DynamicTable
         :data="listItems"
         :columns="columns"
         :options="options"
         :pagination="pagination"
+        :selected-items="selectedItems"
         @on-confirm-create="clearForm"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
