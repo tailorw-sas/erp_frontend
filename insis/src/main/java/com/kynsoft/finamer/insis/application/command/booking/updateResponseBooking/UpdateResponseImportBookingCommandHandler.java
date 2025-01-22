@@ -12,10 +12,7 @@ import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -36,6 +33,11 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     @Override
     public void handle(UpdateResponseImportBookingCommand command) {
         ImportProcessDto importProcess = getImportProcess(command.getImportProcessId());
+        if(command.getImportProcessId() !=null){
+            command.setErrorResponses(new ArrayList<>() {
+            });
+        }
+
         saveBookingsResponse(importProcess.getId(), command.getErrorResponses());
         int totalSuccessful = getTotalSuccessful(command.getImportProcessId());
         int totalFailed = getTotalFailed(command.getImportProcessId());

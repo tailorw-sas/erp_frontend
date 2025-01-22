@@ -20,6 +20,10 @@ public class UpdateResponseImportBookingCommand implements ICommand {
         this.errorResponses = errorResponses;
     }
 
+    public static UpdateResponseImportBookingCommand fromRequest(UpdateResponseImportBookingRequest request){
+        return new UpdateResponseImportBookingCommand(request.getImportProcessId(), request.getErrorResponses());
+    }
+
     @Override
     public ICommandMessage getMessage() {
         return new UpdateResponseImportBookingMessage(importProcessId);

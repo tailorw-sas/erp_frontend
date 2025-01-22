@@ -15,7 +15,10 @@ public class GetErrorResultsImportProcessQueryHandler implements IQueryHandler<G
     private final IImportProcessService importProcessService;
     private final IImportBookingService importBookingService;
 
-    public GetErrorResultsImportProcessQueryHandler(IBookingService bookingService, IImportProcessService importProcessService, IImportBookingService importBookingService){
+
+    public GetErrorResultsImportProcessQueryHandler(IBookingService bookingService,
+                                                    IImportProcessService importProcessService,
+                                                    IImportBookingService importBookingService){
         this.bookingService = bookingService;
         this.importProcessService = importProcessService;
         this.importBookingService = importBookingService;
@@ -27,5 +30,4 @@ public class GetErrorResultsImportProcessQueryHandler implements IQueryHandler<G
         PaginatedResponse response = importBookingService.getBookingErrorsByImportProcessId(importProcess.getId(), query.getPageable());
         return response;
     }
-
 }
