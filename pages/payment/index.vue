@@ -537,7 +537,7 @@ const applyPaymentColumns = ref<IColumn[]>([
 const columnsExpandTable: IColumn[] = [
   { field: 'bookingId', header: 'Id', width: '120px', type: 'text', sortable: false },
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
-  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', maxWidth: '150px', type: 'text', sortable: false },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', width: '120px', maxWidth: '150px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
   { field: 'couponNumber', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
@@ -1635,16 +1635,17 @@ async function applyPaymentGetList() {
                 const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
                 for (const iterator of dataList) {
-                  for (const booking of iterator.bookings) {
-                    booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-                    booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-                  }
+                  // for (const booking of iterator.bookings) {
+                  //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                  //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                  // }
                   // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                   iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
                   iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                   // iterator.paymentStatus = iterator.status
 
                   iterator.bookingsList = []
+                  iterator.bookings = []
 
                   // Verificar si el ID ya existe en la lista
                   if (!existingIds.has(iterator.id)) {
@@ -1714,16 +1715,17 @@ async function applyPaymentGetList() {
               const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
               for (const iterator of dataList) {
-                for (const booking of iterator.bookings) {
-                  booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-                  booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-                }
+                // for (const booking of iterator.bookings) {
+                //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                // }
                 // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
                 iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 iterator.bookingsList = []
+                iterator.bookings = []
 
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
@@ -1826,16 +1828,17 @@ async function applyPaymentGetList() {
               const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
               for (const iterator of dataList) {
-                for (const booking of iterator.bookings) {
-                  booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-                  booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-                }
+                // for (const booking of iterator.bookings) {
+                //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                // }
                 // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
                 iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 iterator.bookingsList = []
+                iterator.bookings = []
 
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
@@ -1879,6 +1882,12 @@ async function applyPaymentBookingGetList(idInvoice: string = '') {
           operator: 'EQUALS',
           value: idInvoice,
           logicalOperation: 'AND'
+        },
+        {
+          key: 'dueAmount',
+          operator: 'GREATER_THAN',
+          value: '0.00',
+          logicalOperation: 'AND'
         }
       ]
 
@@ -1910,7 +1919,7 @@ async function applyPaymentBookingGetList(idInvoice: string = '') {
       }
 
       listBookingsForApplyPayment = [...listBookingsForApplyPayment, ...newListItems]
-      objInvoice.bookingsList = [...listBookingsForApplyPayment]
+      objInvoice.bookings = [...listBookingsForApplyPayment]
     }
     catch (error) {
       objInvoice.loadingBookings = false
@@ -4419,7 +4428,7 @@ onMounted(async () => {
                     </Column>
                     <template #empty>
                       <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                        <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                        <span v-if="!item?.loadingBookings" class="flex flex-column align-items-center justify-content-center">
                           <div class="row">
                             <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
                           </div>
