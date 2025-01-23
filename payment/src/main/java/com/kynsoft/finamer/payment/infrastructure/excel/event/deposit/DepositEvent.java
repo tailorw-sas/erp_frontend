@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.event.deposit;
 
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationEvent;
 @Setter
 public class DepositEvent extends ApplicationEvent {
 
-    private PaymentDto paymentDto;
+    private PaymentProjectionSimple paymentDto;
     private Double amount;
     private String remark;
 

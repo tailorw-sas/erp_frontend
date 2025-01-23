@@ -8,7 +8,6 @@ import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;

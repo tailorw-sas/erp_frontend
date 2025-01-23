@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +40,12 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
             + "FROM Payment p "
             + "WHERE p.paymentId = :paymentId")
     Optional<PaymentProjection> findPaymentId(@Param("paymentId") long paymentId);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple("
+            + "p.id, p.paymentId) "
+            + "FROM Payment p "
+            + "WHERE p.paymentId = :paymentId")
+    Optional<PaymentProjectionSimple> findPaymentIdCacheable(@Param("paymentId") long paymentId);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection("
             + "p.id, p.paymentId, p.paymentAmount, p.paymentBalance, p.depositAmount, p.depositBalance, p.otherDeductions, "
