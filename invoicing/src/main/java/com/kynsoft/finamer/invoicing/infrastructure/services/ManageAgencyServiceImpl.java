@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -72,7 +73,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_, new ErrorField("id", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_.getReasonPhrase())));
 
     }
 
@@ -80,9 +81,14 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     @Cacheable(cacheNames = "manageAgency", key = "#code", unless = "#result == null")
     public ManageAgencyDto findByCode(String code) {
         return repositoryQuery.findManageAgenciesByCode(code).map(ManageAgency::toAggregate)
-                .orElseThrow(()->  new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("code", "The source not found."))));
+                .orElseThrow(()->  new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_, new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_.getReasonPhrase()))));
     }
 
+    @CacheEvict(allEntries = true, value = "manageAgency")
+    @Override
+    public void clearManageHotelCache() {
+        System.out.println("Clearing manageAgency cache");
+    }
 
     @Override
     public Long countByCodeAndNotId(String code, UUID id) {
