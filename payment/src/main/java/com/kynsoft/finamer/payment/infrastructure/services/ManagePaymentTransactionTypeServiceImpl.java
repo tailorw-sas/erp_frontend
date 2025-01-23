@@ -70,12 +70,12 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     @Override
     @Cacheable(cacheNames = "paymentTransactionType", key = "#code", unless = "#result == null")
     public ManagePaymentTransactionTypeDto findByCode(String code) {
-            return repositoryQuery.findByCode(code).map(ManagePaymentTransactionType::toAggregate).orElse(null);
+        return repositoryQuery.findByCode(code).map(ManagePaymentTransactionType::toAggregate).orElse(null);
     }
 
     @CacheEvict(allEntries = true, value = "paymentTransactionType")
     @Override
-    public void clearManageHotelCache() {
+    public void clearCache() {
         System.out.println("Clearing paymentTransactionType cache");
     }
 

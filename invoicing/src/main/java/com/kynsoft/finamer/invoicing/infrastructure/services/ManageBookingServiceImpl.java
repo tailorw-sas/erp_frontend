@@ -178,6 +178,19 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public ManageBookingDto findByIdWithRates(UUID id) {
+        Optional<Booking> optionalEntity = repositoryQuery.findById(id);
+
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregateWithRates();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
+                new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
+
+    }
+
+    @Override
     public List<ManageBookingDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(Booking::toAggregate).toList();
     }
