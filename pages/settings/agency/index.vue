@@ -393,6 +393,7 @@ const agencyAliasList = ref<any[]>([])
 const defaultAgencyAlias = ref<any>({
   id: '000-MySelf',
   name: '000-MySelf',
+  code: '000-MySelf',
   status: 'ACTIVE'
 })
 
@@ -666,7 +667,7 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.agencyType = typeof payload.agencyType === 'object' ? payload.agencyType.id : payload.agencyType
     payload.client = payload.client !== null && typeof payload.client === 'object' ? payload.client.id : payload.client
-    payload.agencyAlias = payload.agencyAlias !== null && typeof payload.agencyAlias === 'object' ? payload.agencyAlias.name : '000-MySelf'
+    payload.agencyAlias = payload.agencyAlias !== null && typeof payload.agencyAlias === 'object' ? payload.agencyAlias.code : '000-MySelf'
     payload.sentB2BPartner = payload.sentB2BPartner !== null && typeof payload.sentB2BPartner === 'object' ? payload.sentB2BPartner.id : payload.sentB2BPartner
     payload.country = typeof payload.country === 'object' ? payload.country.id : payload.country
     payload.generationType = typeof payload.generationType === 'object' ? payload.generationType.id : payload.generationType
@@ -682,7 +683,7 @@ async function updateItem(item: { [key: string]: any }) {
   const payload: { [key: string]: any } = { ...item }
   payload.agencyType = typeof payload.agencyType === 'object' ? payload.agencyType.id : payload.agencyType
   payload.client = payload.client !== null && typeof payload.client === 'object' ? payload.client.id : payload.client
-  payload.agencyAlias = typeof payload.agencyAlias === 'object' ? payload.agencyAlias.name : payload.agencyAlias
+  payload.agencyAlias = typeof payload.agencyAlias === 'object' ? payload.agencyAlias.code : payload.agencyAlias
   payload.sentB2BPartner = payload.sentB2BPartner !== null && typeof payload.sentB2BPartner === 'object' ? payload.sentB2BPartner.id : payload.sentB2BPartner
   payload.country = typeof payload.country === 'object' ? payload.country.id : payload.country
   payload.generationType = typeof payload.generationType === 'object' ? payload.generationType.id : payload.generationType
