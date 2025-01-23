@@ -1422,6 +1422,64 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
   }
 }
 
+async function getAgencyList2(query: string) {
+  try {
+    objLoading.value.loadingAgency = true
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'client.id',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: filterToSearch.value.client?.id ? filterToSearch.value.client?.id : '',
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND',
+        },
+        {
+          key: 'autoReconcile',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND',
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+    const { data: dataList } = response
+    agencyList.value = []
+    for (const iterator of dataList) {
+      agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading agency list:', error)
+  }
+  finally {
+    objLoading.value.loadingAgency = false
+  }
+}
+
 async function getAgencyListForLoadAll(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   try {
     objLoading.value.loadingAgency = true
@@ -1935,41 +1993,25 @@ onMounted(() => {
                       class="text-red"
                     >*</span></label>
                     <div class="w-full ">
-                      <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete-agency"
-                        field="code"
-                        item-value="id"
-                        :max-selected-labels="4"
-                        class="w-full agency-input"
-                        :model="filterToSearch.agency"
-                        :loading="objLoading.loadingAgency"
-                        :suggestions="agencyList"
-                        placeholder=""
-                        @change="($event) => {
-                          filterToSearch.agency = $event;
-                          const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0);
-                          filterToSearch.creditDays = totalCreditDays
-                          filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
-                          filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
-                          filterToSearch.email = $event[0]?.email ? $event[0]?.email : ''
-                          const listIds: string[] = $event.map((item: any) => item.id)
-                          getListContactByAgency(listIds)
-                        }"
-                        @load="async ($event) => {
+<!--                      <DebouncedAutoCompleteComponent
+                          v-if="!loadingSaveAll"
+                          id="autocomplete"
+                          :multiple="false"
+                          field="name"
+                          item-value="id"
+                          class="w-full custom-input"
+                          :model="filterToSearch.client"
+                          :suggestions="clientList"
+                          placeholder=""
+                          @load="($event) => getClientList($event)"
+                          @change="async ($event) => {
+                          filterToSearch.client = $event
+                          filterToSearch.agency = []
+                          filterToSearch.clientName = $event?.onlyName ? $event?.onlyName : ''
+                          filterToSearch.clientStatus = $event?.status ? $event?.status : ''
+                          // filterToSearch.client = $event.filter(element => element?.id !== 'All');
+                          // filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : [];
                           const filter: FilterCriteria[] = [
-                            // {
-                            //   key: 'name',
-                            //   logicalOperation: 'AND',
-                            //   operator: 'LIKE',
-                            //   value: $event,
-                            // },
-                            // {
-                            //   key: 'code',
-                            //   logicalOperation: 'AND',
-                            //   operator: 'LIKE',
-                            //   value: $event,
-                            // },
                             {
                               key: 'client.id',
                               logicalOperation: 'AND',
@@ -1989,20 +2031,47 @@ onMounted(() => {
                               logicalOperation: 'AND',
                             },
                           ]
-                          const objQueryToSearch = {
-                            query: $event,
+                          filterToSearch.agency = await getAgencyListForLoadAll(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                            query: '',
                             keys: ['name', 'code'],
+                          }, filter)
+                          const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0);
+                          filterToSearch.creditDays = totalCreditDays
+                          if (filterToSearch.agency?.length > 0) {
+                            getListContactByAgency(filterToSearch.agency.map((item: any) => item.id))
                           }
-                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, objQueryToSearch, filter)
                         }"
                       >
-                        <template #option="props">
+                        &lt;!&ndash; <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
+                        </template> &ndash;&gt;
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
                         </template>
-                      </DebouncedMultiSelectComponent>
+                      </DebouncedAutoCompleteComponent>-->
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        field="name"
+                        item-value="id"
+                        class="w-full hotel-input"
+                        :max-selected-labels="4"
+                        :model="filterToSearch.agency"
+                        :loading="objLoading.loadingAgency"
+                        :suggestions="agencyList"
+                        placeholder=""
+                        @change="($event) => {
+                          filterToSearch.agency = $event;
+                          const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0);
+                          filterToSearch.creditDays = totalCreditDays
+                          filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
+                          filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
+                          filterToSearch.email = $event[0]?.email ? $event[0]?.email : ''
+                          const listIds: string[] = $event.map((item: any) => item.id)
+                          getListContactByAgency(listIds)
+                        }"
+                        @load="($event) => getAgencyList2($event)"
+                      />
                     </div>
                   </div>
                 </div>
