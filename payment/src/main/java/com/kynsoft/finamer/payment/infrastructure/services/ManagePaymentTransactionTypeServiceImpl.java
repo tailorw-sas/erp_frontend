@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTransactionTypeService {
@@ -66,8 +68,15 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
+    @Cacheable(cacheNames = "paymentTransactionType", key = "#code", unless = "#result == null")
     public ManagePaymentTransactionTypeDto findByCode(String code) {
             return repositoryQuery.findByCode(code).map(ManagePaymentTransactionType::toAggregate).orElse(null);
+    }
+
+    @CacheEvict(allEntries = true, value = "paymentTransactionType")
+    @Override
+    public void clearManageHotelCache() {
+        System.out.println("Clearing paymentTransactionType cache");
     }
 
     @Override

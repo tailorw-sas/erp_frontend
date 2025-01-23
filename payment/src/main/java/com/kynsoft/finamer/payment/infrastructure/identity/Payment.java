@@ -4,6 +4,7 @@ import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.Type;
 import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
