@@ -620,6 +620,8 @@ defineExpose({ clearSelectedItems })
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
         context-menu
+        resizable-columns
+        column-resize-mode="fit"
         :meta-key-selection="metaKey"
         :selection-mode="options?.selectionMode ?? 'single'"
         :filter-display="modeFilterDisplay"
@@ -643,6 +645,9 @@ defineExpose({ clearSelectedItems })
         @cell-edit-complete="onTableCellEditComplete"
         @row-expand="onRowExpand"
         @row-collapse="onRowCollapse"
+        @column-resize-end="($event) => {
+          console.log('column-resize-end', $event);
+        }"
       >
         <!-- @row-select="onRowSelect"
         @row-unselect="onRowUnselect"
@@ -696,10 +701,11 @@ defineExpose({ clearSelectedItems })
           align-frozen="right"
           class="custom-table-head" :class="column.columnClass"
           :style="{
-            width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-            minWidth: column?.minWidth ? column?.minWidth : 'auto',
-            display: column?.hidden ? 'none' : 'table-cell',
-            maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
+            // width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
+            // minWidth: column?.minWidth ? column?.minWidth : 'auto',
+            // display: column?.hidden ? 'none' : 'table-cell',
+            // maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
+            // maxWidth: '20px !important',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
