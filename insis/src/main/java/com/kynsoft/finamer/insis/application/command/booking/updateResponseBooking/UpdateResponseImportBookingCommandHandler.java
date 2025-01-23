@@ -33,7 +33,7 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     @Override
     public void handle(UpdateResponseImportBookingCommand command) {
         ImportProcessDto importProcess = getImportProcess(command.getImportProcessId());
-        if(command.getImportProcessId() !=null){
+        if(command.getErrorResponses() == null || command.getErrorResponses().isEmpty()){
             command.setErrorResponses(new ArrayList<>() {
             });
         }
