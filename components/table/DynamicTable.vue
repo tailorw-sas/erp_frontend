@@ -704,7 +704,7 @@ defineExpose({ clearSelectedItems })
             // width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
             // minWidth: column?.minWidth ? column?.minWidth : 'auto',
             // display: column?.hidden ? 'none' : 'table-cell',
-            // maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
+            maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
             // maxWidth: '20px !important',
           }"
         >
