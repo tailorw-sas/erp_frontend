@@ -28,4 +28,6 @@ public interface IManageAgencyService {
     boolean existByCode(String manageAgencyCode);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    void clearManageHotelCache();
 }
