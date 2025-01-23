@@ -3,6 +3,8 @@ package com.kynsoft.finamer.payment.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -30,6 +32,12 @@ public interface IPaymentService {
     boolean existPayment(long genId);
 
     PaymentDto findByPaymentId(long paymentId);
+
+    PaymentProjection findByPaymentIdProjection(long paymentId);
+
+    PaymentProjectionSimple findPaymentIdCacheable(long paymentId);
+
+    void clearCache();
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 

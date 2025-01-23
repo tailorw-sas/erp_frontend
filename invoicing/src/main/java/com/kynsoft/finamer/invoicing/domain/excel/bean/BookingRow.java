@@ -17,13 +17,13 @@ public class BookingRow {
     private int rowNumber;
     @Cell(position = 0, cellType = CustomCellType.DATAFORMAT, headerName = "Transaction Date")
     private String transactionDate;
-    @Cell(position = 1, headerName = "Hotel")
+    @Cell(position = 1, cellType = CustomCellType.DATAFORMAT, headerName = "Hotel")
     private String manageHotelCode;
-    @Cell(position = 2, headerName = "Agency")
+    @Cell(position = 2, cellType = CustomCellType.DATAFORMAT, headerName = "Agency")
     private String manageAgencyCode;
-    @Cell(position = 3, headerName = "First Name")
+    @Cell(position = 3, cellType = CustomCellType.DATAFORMAT, headerName = "First Name")
     private String firstName;
-    @Cell(position = 4, headerName = "Last Name")
+    @Cell(position = 4, cellType = CustomCellType.DATAFORMAT, headerName = "Last Name")
     private String lastName;
     @Cell(position = 5, cellType = CustomCellType.DATAFORMAT, headerName = "Check In")
     private String checkIn;
@@ -41,13 +41,13 @@ public class BookingRow {
     private String coupon;
     @Cell(position = 12, cellType = CustomCellType.DATAFORMAT, headerName = "Hotel Booking No")
     private String hotelBookingNumber;
-    @Cell(position = 13, headerName = "Room Type")
+    @Cell(position = 13, cellType = CustomCellType.DATAFORMAT, headerName = "Room Type")
     private String roomType;
-    @Cell(position = 14, headerName = "Rate Plan")
+    @Cell(position = 14, cellType = CustomCellType.DATAFORMAT, headerName = "Rate Plan")
     private String ratePlan;
     @Cell(position = 15, cellType = CustomCellType.DATAFORMAT, headerName = "Hotel Invoice Number")
     private String hotelInvoiceNumber;
-    @Cell(position = 16, headerName = "Remark")
+    @Cell(position = 16, cellType = CustomCellType.DATAFORMAT, headerName = "Remark")
     private String remarks;
     @Cell(position = 17, cellType = CustomCellType.FORMULA, headerName = "CANTIDAD DE PAX")
     private Double amountPAX;
@@ -57,9 +57,9 @@ public class BookingRow {
     private Double hotelInvoiceAmount;
     @Cell(position = 20, cellType = CustomCellType.DATAFORMAT, headerName = "Booking Date")
     private String bookingDate;
-    @Cell(position = 21, headerName = "IDENTIFICADOR EN HOTELES DOBLE O TRIPLE")
+    @Cell(position = 21, cellType = CustomCellType.DATAFORMAT, headerName = "IDENTIFICADOR EN HOTELES DOBLE O TRIPLE")
     private String hotelType;
-    @Cell(position = 22, headerName = "Night Type")
+    @Cell(position = 22, cellType = CustomCellType.DATAFORMAT, headerName = "Night Type")
     private String nightType;
 
     private String trendingCompany;

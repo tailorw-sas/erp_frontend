@@ -411,6 +411,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_RATE_PLAN_NOT_FOUND(1188, Series.DOMAIN_ERROR,"The selected rate plan does not belong to the hotel."),
     HOTEL_ROOM_TYPE_NOT_FOUND(1189, Series.DOMAIN_ERROR,"The selected room type does not belong to the hotel."),
     HOTEL_BANK_ACCOUNT_NOT_FOUND(1190, Series.DOMAIN_ERROR,"The bank account doesn't belong to the hotel."),
+    MANAGE_AGENCY_TYPE_NOT_FOUND_(1191, Series.DOMAIN_ERROR, "The agency not found."),
+    MANAGE_MERCHANT_DEFAULT(1192, Series.DOMAIN_ERROR,"Another item already exists with default."),
     MANAGE_MERCHANT_DEFAULT(1191, Series.DOMAIN_ERROR,"Another item already exists with default."),
     INNSIST_CONNECTION_PARAMETER_HOSTNAME_INVALID(2000, Series.DOMAIN_ERROR, "The hostname value is not accepted."),
     INNSIST_CONNECTION_PARAMETER_PORT_NUMBER_INVALID(2001, Series.DOMAIN_ERROR, "The port number must be between 0 and 65535"),

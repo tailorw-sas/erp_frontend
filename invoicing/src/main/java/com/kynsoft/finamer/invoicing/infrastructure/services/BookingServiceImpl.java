@@ -11,11 +11,11 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooki
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +52,7 @@ public class BookingServiceImpl implements ImportBookingService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IManageHotelService hotelService;
+    private final IManageAgencyService agencyService;
 
     private final Lock redisLock = new ReentrantLock();
     private final Semaphore semaphore;
@@ -61,7 +61,8 @@ public class BookingServiceImpl implements ImportBookingService {
             BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
             BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
             ApplicationEventPublisher applicationEventPublisher,
-            IManageHotelService hotelService
+            IManageHotelService hotelService,
+            IManageAgencyService agencyService
     ) {
         this.validatorFactory = validatorFactory;
         this.bookingImportProcessRedisRepository = bookingImportProcessRedisRepository;
@@ -70,6 +71,7 @@ public class BookingServiceImpl implements ImportBookingService {
         this.applicationEventPublisher = applicationEventPublisher;
         this.semaphore = new Semaphore(1);
         this.hotelService = hotelService;
+        this.agencyService = agencyService;
     }
 
     @Override
@@ -109,9 +111,9 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
                         bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
-                        this.hotelService.clearManageHotelCache();
+                        this.clearCache();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.err.println("Error: " + e.getLocalizedMessage());
                         BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                                 .hasError(true)
                                 .exceptionMessage(e.getMessage())
@@ -119,12 +121,12 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .total(0)
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
-                        this.hotelService.clearManageHotelCache();
+                        this.clearCache();
                     }
                 } catch (Exception e) {
                     System.err.println("Errror ocurrido: " + e.getMessage());
                     System.err.println("Errror ocurrido: " + e.getCause().getLocalizedMessage());
-                    this.hotelService.clearManageHotelCache();
+                    this.clearCache();
                 }
             } finally {
                 semaphore.release();
@@ -134,6 +136,11 @@ public class BookingServiceImpl implements ImportBookingService {
         } catch (InterruptedException ex) {
             Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void clearCache() {
+        this.hotelService.clearManageHotelCache();
+        this.agencyService.clearManageHotelCache();
     }
 
     @Override

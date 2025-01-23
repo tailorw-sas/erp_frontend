@@ -34,10 +34,11 @@ public class DepositEventHandler implements ApplicationListener<DepositEvent> {
     }
 
     private void handle(DepositEvent command) {
+        PaymentDto paymentDto = this.paymentService.findById(command.getPaymentDto().getId());
         PaymentDetailDto newDetailDto = new PaymentDetailDto(
                 UUID.randomUUID(),
                 Status.ACTIVE,
-                command.getPaymentDto(),
+                paymentDto,
                 this.paymentTransactionTypeService.findByDeposit(),
                 command.getAmount() * -1,
                 command.getRemark(),
@@ -58,12 +59,11 @@ public class DepositEventHandler implements ApplicationListener<DepositEvent> {
         newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         newDetailDto.setCreateByCredit(false);
 
-        PaymentDetailDto save = this.paymentDetailService.create(newDetailDto);
-        this.calculate(command.getPaymentDto(), command.getAmount());
+        this.paymentDetailService.create(newDetailDto);
+        this.calculate(paymentDto, command.getAmount());
     }
 
-    private void calculate(PaymentDto payment, double amount) {
-        PaymentDto paymentDto = this.paymentService.findById(payment.getId());
+    private void calculate(PaymentDto paymentDto, double amount) {
         paymentDto.setDepositAmount(paymentDto.getDepositAmount() + amount);
         paymentDto.setDepositBalance(paymentDto.getDepositBalance() + amount);
         paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);

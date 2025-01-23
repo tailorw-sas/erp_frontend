@@ -8,8 +8,8 @@ import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -98,6 +98,9 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         }
     }
 
+    private void clearCache() {
+        this.transactionTypeService.clearCache();
+    }
     @Override
     public void cachingPaymentImport(Row paymentRow) {
         PaymentImportCache paymentImportCache = PaymentCacheFactory.getPaymentImportCache(paymentRow);
@@ -125,14 +128,16 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             cacheList.forEach(paymentImportCache -> {
                 ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = transactionTypeService.findByCode(paymentImportCache.getTransactionId());
                 Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
-                PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
+                //PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
+                PaymentProjectionSimple paymentDto = paymentService.findPaymentIdCacheable(Long.parseLong(paymentImportCache.getPaymentId()));
                 ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     boolean applyPayment = true;
                     if (bookingDto == null) {
                         applyPayment = false;
                     }
-                    PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getAnti()));
+                    //PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getAnti()));
+                    PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(Integer.parseInt(paymentImportCache.getAnti()));
                     this.sendToCreateApplyDeposit(paymentDetailDto.getId(),
                             Double.parseDouble(paymentImportCache.getPaymentAmount()),
                             UUID.fromString(request.getEmployeeId()),
@@ -168,12 +173,17 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             depositEvent.setAmount(restAmount);
                             depositEvent.setPaymentDto(paymentDto);
                             //depositEvent.setRemark("Create deposit in import details.");
-                            depositEvent.setRemark(
-                                    "" + paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : ""
-                                       + " " + paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : ""
-                                       + " " + paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : ""
-                                       + " " + paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : ""
-                            );
+                            String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
+                            String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
+                            String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
+                            String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
+
+                            depositEvent.setRemark("" + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
+                            System.err.println("############################################");
+                            System.err.println("############################################");
+                            System.err.println("" + depositEvent.getRemark());
+                            System.err.println("############################################");
+                            System.err.println("############################################");
                             this.applicationEventPublisher.publishEvent(depositEvent);
                         }
                     } else {
@@ -190,6 +200,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             });
             pageable = pageable.next();
         } while (cacheList.hasNext());
+        this.clearCache();
     }
 
     private String getRemarks(PaymentImportCache paymentImportCache, ManagePaymentTransactionTypeDto transactionTypeDto) {

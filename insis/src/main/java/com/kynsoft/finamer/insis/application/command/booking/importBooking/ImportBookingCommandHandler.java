@@ -109,7 +109,8 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
     private void sendBookingToProcess(ImportProcessDto importProcess, ManageEmployeeDto employee, List<BookingDto> bookings){
         ImportInnsistKafka importInnsistKafka = new ImportInnsistKafka(
                 importProcess.getId(),
-                employee.getFirstName() + " " +employee.getLastName(),
+                //employee.getFirstName() + " " +employee.getLastName(),
+                employee.getId().toString(),
                 bookings.stream().map(bookingKafka -> {
                     List<RoomRateDto> roomRateDtos = roomRateService.findByBooking(bookingKafka.getId());
                     return bookingToKafkaBooking(bookingKafka, roomRateDtos);

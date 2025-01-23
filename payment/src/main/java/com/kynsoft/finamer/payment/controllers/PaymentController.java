@@ -18,12 +18,14 @@ import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaym
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentRequest;
+import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentProjectionResponse;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
 import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceQuery;
 import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.GetPaymentExcelExporterQuery;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.SearchExcelExporter;
+import com.kynsoft.finamer.payment.application.query.payment.getByGenCodeProjection.FindPaymentByGenProjectionQuery;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
 import org.springframework.data.domain.Pageable;
@@ -93,6 +95,15 @@ public class PaymentController {
 
         FindPaymentByIdQuery query = new FindPaymentByIdQuery(id);
         PaymentResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/projection/{id}")
+    public ResponseEntity<?> getByGenProjection(@PathVariable long id) {
+
+        FindPaymentByGenProjectionQuery query = new FindPaymentByGenProjectionQuery(id);
+        PaymentProjectionResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }
