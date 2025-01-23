@@ -113,6 +113,7 @@ public class BookingServiceImpl implements ImportBookingService {
                         bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
                         this.clearCache();
                     } catch (Exception e) {
+                        System.err.println("Error: " + e.getLocalizedMessage());
                         BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                                 .hasError(true)
                                 .exceptionMessage(e.getMessage())
