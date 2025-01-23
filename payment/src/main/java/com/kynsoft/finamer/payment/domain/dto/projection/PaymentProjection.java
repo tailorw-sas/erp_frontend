@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.dto.projection;
 
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class PaymentProjection {
+public class PaymentProjection implements Serializable {
 
     private UUID id;
     private long paymentId;

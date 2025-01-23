@@ -10,6 +10,7 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.payment.application.query.objectResponse.search.PaymentSearchResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
@@ -26,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class PaymentServiceImpl implements IPaymentService {
@@ -188,6 +191,22 @@ public class PaymentServiceImpl implements IPaymentService {
             return userSystem.get();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    @Cacheable(cacheNames = "PaymentProjectionSimple", key = "#paymentId", unless = "#result == null")
+    public PaymentProjectionSimple findPaymentIdCacheable(long paymentId) {
+        Optional<PaymentProjectionSimple> userSystem = this.repositoryQuery.findPaymentIdCacheable(paymentId);
+        if (userSystem.isPresent()) {
+            return userSystem.get();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @CacheEvict(allEntries = true, value = "PaymentProjectionSimple")
+    @Override
+    public void clearCache() {
+        System.out.println("Clearing PaymentProjectionSimple cache");
     }
 
 }

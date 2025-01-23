@@ -28,5 +28,5 @@ public interface IManagePaymentTransactionTypeService {
 
     ManagePaymentTransactionTypeDto findByApplyDeposit();
 
-    void clearManageHotelCache();
+    void clearCache();
 }
