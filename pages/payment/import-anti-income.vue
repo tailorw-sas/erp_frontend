@@ -403,7 +403,7 @@ onMounted(async () => {
             <div class="grid p-0 m-0" style="margin: 0 auto;">
               <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Document: <span class="p-error">*</span></label>
+                  <label class="w-7rem">Transaction Category: <span class="p-error">*</span></label>
                   <div class="w-full">
                     <!-- <Dropdown
                       v-model="importModel.transactionType"
