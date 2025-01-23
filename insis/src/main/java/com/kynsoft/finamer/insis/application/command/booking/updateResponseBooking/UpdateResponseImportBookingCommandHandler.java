@@ -33,22 +33,37 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     @Override
     public void handle(UpdateResponseImportBookingCommand command) {
         ImportProcessDto importProcess = getImportProcess(command.getImportProcessId());
-        if(command.getErrorResponses() == null || command.getErrorResponses().isEmpty()){
-            command.setErrorResponses(new ArrayList<>() {
-            });
+        if(command.getErrorResponses().isEmpty()){
+            saveBookingsResponseWhenSuccessfull(importProcess.getId());
+        }else{
+            saveBookingsResponseWhenFailed(importProcess.getId(), command.getErrorResponses());
         }
 
-        saveBookingsResponse(importProcess.getId(), command.getErrorResponses());
-        int totalSuccessful = getTotalSuccessful(command.getImportProcessId());
         int totalFailed = getTotalFailed(command.getImportProcessId());
-        updateImportProcessStatus(importProcess, ImportProcessStatus.COMPLETED, totalSuccessful, totalFailed);
+        updateImportProcessStatus(importProcess, ImportProcessStatus.COMPLETED, totalFailed);
     }
 
     private ImportProcessDto getImportProcess(UUID id){
         return importProcessService.findById(id);
     }
 
-    private void saveBookingsResponse(UUID importProcessId, List<ErrorResponse> errorResponses) {
+    private void saveBookingsResponseWhenSuccessfull(UUID importProcessId){
+        List<ImportBookingDto> importBookings = importBookingService.findByImportProcessId(importProcessId);
+
+        importBookings.forEach(importBookingDto -> {
+            importBookingDto.setUpdatedAt(LocalDateTime.now());
+        });
+
+        importBookingService.updateMany(importBookings);
+
+        List<BookingDto> bookings = importBookings.stream()
+                .map(ImportBookingDto::getBooking)
+                .toList();
+
+        updateBookingsStatus(bookings, BookingStatus.PROCESSED);
+    }
+
+    private void saveBookingsResponseWhenFailed(UUID importProcessId, List<ErrorResponse> errorResponses) {
         List<ImportBookingDto> importBookings = importBookingService.findByImportProcessId(importProcessId);
 
         Map<UUID, String> errorMap = errorResponses.stream()
@@ -64,52 +79,42 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
 
         importBookingService.updateMany(importBookings);
 
-        List<UUID> bookingsImported = importBookings.stream()
-                .filter(importBooking -> !errorMap.containsKey(importBooking.getBooking().getId()))
-                .map(importBooking -> { return importBooking.getBooking().getId();})
+        List<BookingDto> bookingsImported = importBookings.stream()
+                .map(ImportBookingDto::getBooking)
+                .filter(booking -> !errorMap.containsKey(booking.getId()))
                 .toList();
 
-        updateBookingsStatus(bookingsImported, BookingStatus.PROCESSED);
+        updateBookingsStatus(bookingsImported, BookingStatus.PENDING);
 
-        List<UUID> bookingsWithErrors = importBookings.stream()
-                .filter(importBooking -> errorMap.containsKey(importBooking.getBooking().getId()))
-                .map(importBooking -> { return importBooking.getBooking().getId();})
+        List<BookingDto> bookingsWithErrors = importBookings.stream()
+                .map(ImportBookingDto::getBooking)
+                .filter(booking -> errorMap.containsKey(booking.getId()))
                 .toList();
 
         updateBookingsStatus(bookingsWithErrors, BookingStatus.FAILED);
     }
 
-    private void updateBookingsStatus(List<UUID> idBookings, BookingStatus status){
-        List<BookingDto> bookings = bookingService.findAllByIds(idBookings);
+    private void updateBookingsStatus(List<BookingDto> bookings, BookingStatus status){
         bookings.forEach(booking -> {
-                booking.setStatus(status);
-                booking.setUpdatedAt(LocalDateTime.now());
+            booking.setStatus(status);
+            booking.setUpdatedAt(LocalDateTime.now());
         });
 
         bookingService.updateMany(bookings);
     }
 
-    private void updateImportProcessStatus(ImportProcessDto importProcess, ImportProcessStatus status, int totalSuccessful, int totalFailed){
+    private void updateImportProcessStatus(ImportProcessDto importProcess, ImportProcessStatus status, int totalFailed){
         importProcess.setStatus(status);
         importProcess.setCompletedAt(LocalDateTime.now());
-        importProcess.setTotalSuccessful(totalSuccessful);
+        importProcess.setTotalSuccessful(importProcess.getTotalBookings() - totalFailed);
         importProcess.setTotalFailed(totalFailed);
         importProcessService.update(importProcess);
-    }
-
-    private int getTotalSuccessful(UUID processId){
-        List<ImportBookingDto> bookings = importBookingService.findByImportProcessId(processId);
-        List<ImportBookingDto> successfulBookings =  bookings.stream()
-                .filter(importBookingDto -> (Objects.isNull(importBookingDto.getErrorMessage()) || importBookingDto.getErrorMessage().isEmpty()))
-                .toList();
-
-        return successfulBookings.size();
     }
 
     private int getTotalFailed(UUID processId){
         List<ImportBookingDto> bookings = importBookingService.findByImportProcessId(processId);
         return bookings.stream()
-                .filter(importBookingDto -> Objects.nonNull(importBookingDto.getErrorMessage()))
+                .filter(importBookingDto -> (importBookingDto.getErrorMessage().equals(BookingStatus.FAILED.name())))
                 .toList().size();
     }
 }
