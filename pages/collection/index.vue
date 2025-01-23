@@ -1411,6 +1411,7 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
     let agencyTemp: any[] = []
     agencyList.value = []
     agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+
     agencyList.value = [...agencyList.value, ...agencyTemp]
   }
   catch (error) {
@@ -1957,6 +1958,18 @@ onMounted(() => {
                         }"
                         @load="async ($event) => {
                           const filter: FilterCriteria[] = [
+                            // {
+                            //   key: 'name',
+                            //   logicalOperation: 'AND',
+                            //   operator: 'LIKE',
+                            //   value: $event,
+                            // },
+                            // {
+                            //   key: 'code',
+                            //   logicalOperation: 'AND',
+                            //   operator: 'LIKE',
+                            //   value: $event,
+                            // },
                             {
                               key: 'client.id',
                               logicalOperation: 'AND',
@@ -1976,10 +1989,11 @@ onMounted(() => {
                               logicalOperation: 'AND',
                             },
                           ]
-                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                          const objQueryToSearch = {
                             query: $event,
                             keys: ['name', 'code'],
-                          }, filter)
+                          }
+                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, objQueryToSearch, filter)
                         }"
                       >
                         <template #option="props">
