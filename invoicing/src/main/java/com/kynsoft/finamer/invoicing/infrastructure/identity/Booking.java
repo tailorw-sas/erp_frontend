@@ -172,6 +172,27 @@ public class Booking {
                 parent != null ? parent.toAggregateSample() : null, contract, deleteInvoice);
     }
 
+    public ManageBookingDto toAggregateWithRates() {
+        return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
+                checkOut,
+                hotelBookingNumber, fullName, firstName, lastName, 
+                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
+                dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : 0.0, 
+                roomNumber, couponNumber, adults,
+                children != null ? children : 0,
+                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
+                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
+                hotelInvoiceNumber, folioNumber, 
+                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null, 
+                description,
+                invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
+                nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
+                roomCategory != null ? roomCategory.toAggregate() : null,
+                roomRates != null ? roomRates.stream().map(ManageRoomRate::toAggregateSample).collect(Collectors.toList()) : null,
+                nights,
+                parent != null ? parent.toAggregateSample() : null, contract, deleteInvoice);
+    }
+
     public ManageBookingDto toAggregateSample() {
         return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
                 checkOut,

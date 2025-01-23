@@ -22,6 +22,8 @@ public interface IManageBookingService {
 
     ManageBookingDto findById(UUID id);
 
+    ManageBookingDto findByIdWithRates(UUID id);
+
     boolean existsByExactLastChars(String lastChars, UUID hotelId);
 
     Optional<ManageBookingDto> findManageBookingByBookingNumber(String reservationNumber);
