@@ -9,7 +9,6 @@ import com.kynsoft.finamer.payment.application.command.paymentImport.detail.Paym
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
-import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
@@ -174,12 +173,17 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             depositEvent.setAmount(restAmount);
                             depositEvent.setPaymentDto(paymentDto);
                             //depositEvent.setRemark("Create deposit in import details.");
-                            depositEvent.setRemark(
-                                    "" + paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : ""
-                                       + " " + paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : ""
-                                       + " " + paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : ""
-                                       + " " + paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : ""
-                            );
+                            String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
+                            String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
+                            String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
+                            String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
+
+                            depositEvent.setRemark("" + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
+                            System.err.println("############################################");
+                            System.err.println("############################################");
+                            System.err.println("" + depositEvent.getRemark());
+                            System.err.println("############################################");
+                            System.err.println("############################################");
                             this.applicationEventPublisher.publishEvent(depositEvent);
                         }
                     } else {
