@@ -580,6 +580,7 @@ function generateProcessId() {
 }
 
 async function importBookings() {
+  const idItemsToImport = selectedElements.value.map(item => item.id)
   if (selectedElements.value.length === 0) {
     toast.add({
       severity: 'info',
@@ -636,13 +637,15 @@ async function importBookings() {
     await updateBookingsStatus(processId.value)
   }
   catch (error: any) {
-    let messageError = ''
-    if (error?.data?.data?.error?.errorMessage) {
-      messageError = error.data.data.error.errorMessage
-    }
-    else {
-      messageError = 'Unexpected error. Please, try again'
-    }
+    const messageError = error?.data?.data?.error?.errorMessage || 'Unexpected error. Please, try again'
+
+    // invocar al servicio de reverso de bookings
+    listItemsErrors.value = idItemsToImport.map(item => ({
+      id: item,
+      message: messageError,
+    }))
+    await updateBookingsStatus(processId.value)
+
     toast.add({
       severity: 'error',
       summary: 'Error importing bookings',
@@ -709,6 +712,14 @@ async function getErrorList(processId: any) {
 
       for (const iterator of dataList) {
         if (!existingIds.has(iterator.row?.insistImportProcessBookingId)) {
+          let errorMessage = ''
+          const errorFields = iterator.errorFields
+          let errorsCount = 0
+          for (const errorField of errorFields) {
+            errorsCount++
+            errorMessage += `${errorsCount} - ${errorField.message}.\n`
+          }
+          errorMessage = errorMessage.trim()
           newListItems.push({
             id: iterator?.row?.insistImportProcessBookingId,
             trendingCompany: iterator.row?.trendingCompany,
@@ -741,7 +752,8 @@ async function getErrorList(processId: any) {
             invoiceFolioNumber: '',
             quote: '',
             renewalNumber: '',
-            message: `${iterator.errorFields[0]?.field} - ${iterator.errorFields[0]?.message}`
+            // message: `${iterator.errorFields[0]?.field} - ${iterator.errorFields[0]?.message}`
+            message: errorMessage
           })
           existingIds.add(iterator.row?.insistImportProcessBookingId)
         }
