@@ -26,6 +26,14 @@ public class CreateManageRoomCategoryCommand implements ICommand {
         this.name = name;
     }
 
+    public CreateManageRoomCategoryCommand(UUID id, String code, Status status, String name, String description) {
+        this.id = id;
+        this.code = code;
+        this.status = status;
+        this.name = name;
+        this.description = description;
+    }
+
     public static CreateManageRoomCategoryCommand fromRequest(CreateManageRoomCategoryRequest request){
         return new CreateManageRoomCategoryCommand(
                 request.getCode(), request.getStatus(), request.getName(),

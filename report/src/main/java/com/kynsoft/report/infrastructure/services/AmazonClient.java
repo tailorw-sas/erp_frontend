@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@Service
+@Service("amazon")
 public class AmazonClient implements IAmazonClient {
 
     private S3Client s3Client;
