@@ -523,9 +523,30 @@ function clearSelectedItems() {
   clickedItem.value = []
 }
 
+function onRowSelect(event) {
+  console.log('Select', event)
+  console.log('clickedItem', clickedItem.value)
+}
+function onRowUnselect(event) {
+  console.log('Unselect', event)
+}
+
+function onRowSelectAll(event) {
+  console.log('Select All', event)
+  console.log('clickedItem', clickedItem.value)
+}
+
+function onRowUnselectAll(event) {
+  console.log('Unselect All', event)
+
+  console.log('clickedItem', clickedItem.value)
+}
+
 watch(() => props.data, async (newValue) => {
   if (props.options?.selectAllItemByDefault) {
-    clickedItem.value = props.data
+    clickedItem.value = [...clickedItem.value, ...props.data]
+    // Delete item duplicated
+    clickedItem.value = [...removeDuplicatesMap(clickedItem.value, ['id'])]
   }
   else {
     if (newValue.length > 0 && props.options?.selectionMode === 'multiple' && props.selectedItems && props.selectedItems.length > 0) {
@@ -623,6 +644,10 @@ defineExpose({ clearSelectedItems })
         @row-expand="onRowExpand"
         @row-collapse="onRowCollapse"
       >
+        <!-- @row-select="onRowSelect"
+        @row-unselect="onRowUnselect"
+        @row-select-all="onRowSelectAll"
+        @row-unselect-all="onRowUnselectAll" -->
         <template #loading>
           <!-- Loading customers data. Please wait. -->
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
