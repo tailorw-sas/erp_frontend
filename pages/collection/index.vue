@@ -1353,8 +1353,6 @@ async function getClientList(query = '') {
 
     clientList.value = []
     const response = await GenericService.search(confClientApi.moduleApi, confClientApi.uriApi, payload)
-    console.log(response)
-
     const { data: dataList } = response
     for (const iterator of dataList) {
       clientList.value = [...clientList.value, {
@@ -1497,7 +1495,14 @@ async function getAgencyList2(query: string) {
     const { data: dataList } = response
     agencyList.value = []
     for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
+      agencyList.value = [
+        ...agencyList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          code: iterator.code
+        }
+      ]
     }
   }
   catch (error) {
@@ -1531,6 +1536,62 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
   }
   catch (error) {
     objLoading.value.loadingHotel = false
+  }
+  finally {
+    objLoading.value.loadingHotel = false
+  }
+}
+
+async function getHotelList2(query: string) {
+  try {
+    objLoading.value.loadingHotel = true
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND',
+        },
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+    const { data: dataList } = response
+    hotelList.value = []
+    for (const iterator of dataList) {
+      hotelList.value = [
+        ...hotelList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          // name: iterator.name,
+          code: iterator.code,
+          status: iterator.status,
+          description: iterator.description
+        }
+      ]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
   }
   finally {
     objLoading.value.loadingHotel = false
@@ -2116,7 +2177,7 @@ onMounted(() => {
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete-hotel"
-                        field="code"
+                        field="name"
                         item-value="id"
                         class="w-full hotel-input"
                         :max-selected-labels="4"
@@ -2127,7 +2188,9 @@ onMounted(() => {
                         @change="($event) => {
                           filterToSearch.hotel = $event;
                         }"
-                        @load="async($event) => {
+                        @load="($event) => getHotelList2($event)"
+                      >
+                        <!-- @load="async($event) => {
                           const filter: FilterCriteria[] = [
                             {
                               key: 'status',
@@ -2140,15 +2203,15 @@ onMounted(() => {
                             query: $event,
                             keys: ['name', 'code'],
                           }
-                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
-                        }"
-                      >
-                        <template #option="props">
+                          // await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                          await getHotelList2($event)
+                        }" -->
+                        <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
-                        </template>
+                        </template> -->
                       </DebouncedMultiSelectComponent>
                     </div>
                   </div>
