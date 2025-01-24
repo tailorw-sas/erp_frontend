@@ -73,7 +73,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_, new ErrorField("id", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND.getReasonPhrase())));
 
     }
 
@@ -81,7 +81,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     @Cacheable(cacheNames = "manageAgency", key = "#code", unless = "#result == null")
     public ManageAgencyDto findByCode(String code) {
         return repositoryQuery.findManageAgenciesByCode(code).map(ManageAgency::toAggregate)
-                .orElseThrow(()->  new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_, new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND_.getReasonPhrase()))));
+                .orElseThrow(()->  new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND.getReasonPhrase()))));
     }
 
     @CacheEvict(allEntries = true, value = "manageAgency")

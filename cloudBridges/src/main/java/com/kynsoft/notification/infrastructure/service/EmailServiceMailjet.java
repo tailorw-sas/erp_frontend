@@ -11,6 +11,9 @@ import com.mailjet.client.MailjetResponse;
 import com.mailjet.client.resource.Email;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 //@Profile("mailjet")
 @Service
 public class EmailServiceMailjet implements IEmailService {
@@ -100,6 +103,7 @@ public class EmailServiceMailjet implements IEmailService {
            response.getStatus();
        }catch (Exception ex){
            String e= ex.getMessage();
+           Logger.getLogger(EmailServiceMailjet.class.getName()).log(Level.SEVERE, null, ex);
        }
     }
 

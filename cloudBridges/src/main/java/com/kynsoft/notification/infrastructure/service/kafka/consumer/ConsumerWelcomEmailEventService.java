@@ -7,6 +7,7 @@ import com.kynsof.share.core.application.mailjet.MailJetRecipient;
 import com.kynsof.share.core.application.mailjet.MailJetVar;
 import com.kynsoft.notification.domain.dto.MailjetTemplateEnum;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,9 @@ import java.util.logging.Logger;
 @Service
 public class ConsumerWelcomEmailEventService {
 
+    @Value("${mail.template.welcome}")
+    private int welcomeTemplate;
+
     private final IMediator mediator;
 
     public ConsumerWelcomEmailEventService(IMediator mediator) {
@@ -29,22 +33,17 @@ public class ConsumerWelcomEmailEventService {
     @KafkaListener(topics = "finamer-welcom-email", groupId = "notification-welcom")
     public void listen(UserWelcomKafka otpKafka) {
         try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            JsonNode rootNode = objectMapper.readTree(event);
-
-            //TODO yannier capturar el evento con el nombre del usuario, el usuario y la contraseña para enviar por correo
-            //UserWelcomKafka otpKafka = objectMapper.treeToValue(rootNode, UserWelcomKafka.class);
             List<MailJetRecipient> mailJetRecipients = new ArrayList<>();
             mailJetRecipients.add(new MailJetRecipient(otpKafka.getEmail(),otpKafka.getFullName()));
 
-            SendMailJetEMailCommand command = getSendMailJetEMailCommand(otpKafka, mailJetRecipients);
+            SendMailJetEMailCommand command = getSendMailJetEMailCommand(otpKafka, mailJetRecipients, this.welcomeTemplate);
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerWelcomEmailEventService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private static @NotNull SendMailJetEMailCommand getSendMailJetEMailCommand(UserWelcomKafka otpKafka, List<MailJetRecipient> mailJetRecipients) {
+    private static @NotNull SendMailJetEMailCommand getSendMailJetEMailCommand(UserWelcomKafka otpKafka, List<MailJetRecipient> mailJetRecipients, int template) {
         List<MailJetVar> vars = Arrays.asList(
                 new MailJetVar("user_name", otpKafka.getUserName()),
                 new MailJetVar("name", otpKafka.getFullName()),
@@ -52,10 +51,8 @@ public class ConsumerWelcomEmailEventService {
                 new MailJetVar("temp_email", otpKafka.getEmail())
         );
 
-        int  templateId = MailjetTemplateEnum.WELCOM.getTemplateId();
-
         return new SendMailJetEMailCommand(mailJetRecipients, vars, new ArrayList<>(),
-                "Correo de Bienvenida",templateId);
+                "Correo de Bienvenida",template);
     }
 
 }
