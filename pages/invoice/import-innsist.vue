@@ -622,16 +622,16 @@ async function importBookings() {
       importProcess.value = false
     }
     else {
-      options.value.loading = false
-      await getList()
-      showErrorsDataTable.value = false
-      showDataTable.value = true
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
         detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
         life: 5000
       })
+      options.value.loading = false
+      await getList()
+      showErrorsDataTable.value = false
+      showDataTable.value = true
     }
 
     await updateBookingsStatus(processId.value)
