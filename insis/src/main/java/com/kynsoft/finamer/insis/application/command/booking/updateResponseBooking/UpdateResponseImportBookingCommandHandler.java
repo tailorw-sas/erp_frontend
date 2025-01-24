@@ -114,7 +114,7 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     private int getTotalFailed(UUID processId){
         List<ImportBookingDto> bookings = importBookingService.findByImportProcessId(processId);
         return bookings.stream()
-                .filter(importBookingDto -> (importBookingDto.getErrorMessage().equals(BookingStatus.FAILED.name())))
+                .filter(importBookingDto -> Objects.nonNull(importBookingDto.getErrorMessage()))
                 .toList().size();
     }
 }
