@@ -19,6 +19,7 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
@@ -241,17 +242,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return queue;
     }
 
-    private void calculate(PaymentDto paymentDto, double amount) {
-        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
-        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
-
-        paymentDto.setApplied(paymentDto.getApplied() + amount);
-        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
-        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
-
-        this.paymentService.update(paymentDto);
-    }
-
     private PaymentDetailDto createDetailsTypeCash(CreatePaymentDetailTypeCashCommand command) {
         ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByPaymentInvoice();
         PaymentDetailDto newDetailDto = new PaymentDetailDto(
@@ -303,6 +293,17 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
+    private void calculate(PaymentDto paymentDto, double amount) {
+        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
+        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
+
+        paymentDto.setApplied(paymentDto.getApplied() + amount);
+        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
+        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
+
+        this.paymentService.update(paymentDto);
+    }
+
     public void applyPayment(UUID empoyee, ManageBookingDto bookingDto, PaymentDetailDto paymentDetailDto) {
         ManageBookingDto booking = this.manageBookingService.findById(bookingDto.getId());
 
@@ -314,7 +315,14 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         this.manageBookingService.update(booking);
         this.paymentDetailService.update(paymentDetailDto);
 
-        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+        PaymentDto paymentDto = paymentDetailDto.getPayment();
+        PaymentProjection projection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());//Cambiando para solo pedir a BD los valores que pueden haber cambiado.
+        paymentDto.setIdentified(projection.getIdentified());
+        paymentDto.setNotIdentified(projection.getNotIdentified());
+        paymentDto.setApplied(projection.getApplied());
+        paymentDto.setNotApplied(projection.getNotApplied());
+        paymentDto.setPaymentBalance(projection.getPaymentBalance());
+        //PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
         try {
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
                     paymentDto.getId(),
