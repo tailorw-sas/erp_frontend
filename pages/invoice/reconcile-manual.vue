@@ -399,7 +399,7 @@ async function reconcileManual() {
     }
 
     // Enviar el payload a la API
-    response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
+    // response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
   }
   catch (error: any) {
     console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage)
@@ -459,6 +459,15 @@ async function saveItem() {
 async function saveItem() {
   options.value.loading = true
   loadingSaveAll.value = true
+  if (selectedElements.value.length > 50) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'You can only select up to 50 items.',
+      life: 3000
+    })
+    return
+  }
 
   // Llamar a reconcileManual y guardar la respuesta
   let response: any
