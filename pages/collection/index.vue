@@ -644,6 +644,34 @@ async function getList() {
       })
     }
 
+    const filterDepositBalance = payload.value.filter.find((item: IFilter) => item.key === 'depositBalance' && item.type === 'filterTable')
+    if (filterDepositBalance) {
+      filterDepositBalance.value = 0
+    }
+    else {
+      payload.value.filter.push({
+        key: 'depositBalance',
+        operator: 'GREATER_THAN',
+        value: 0,
+        logicalOperation: 'OR',
+        type: 'filterTable'
+      })
+    }
+
+    const filterPaymentBalance = payload.value.filter.find((item: IFilter) => item.key === 'paymentBalance' && item.type === 'filterTable')
+    if (filterPaymentBalance) {
+      filterPaymentBalance.value = 0
+    }
+    else {
+      payload.value.filter.push({
+        key: 'paymentBalance',
+        operator: 'GREATER_THAN',
+        value: 0,
+        logicalOperation: 'OR',
+        type: 'filterTable'
+      })
+    }
+
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
@@ -1993,7 +2021,7 @@ onMounted(() => {
                       class="text-red"
                     >*</span></label>
                     <div class="w-full ">
-<!--                      <DebouncedAutoCompleteComponent
+                      <!--                      <DebouncedAutoCompleteComponent
                           v-if="!loadingSaveAll"
                           id="autocomplete"
                           :multiple="false"
@@ -2048,7 +2076,7 @@ onMounted(() => {
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
                         </template>
-                      </DebouncedAutoCompleteComponent>-->
+                      </DebouncedAutoCompleteComponent> -->
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete"
