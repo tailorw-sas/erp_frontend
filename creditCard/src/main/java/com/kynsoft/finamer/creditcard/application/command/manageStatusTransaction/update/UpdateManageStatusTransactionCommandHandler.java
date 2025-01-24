@@ -68,6 +68,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
         try {
             transactionResponse = futureTransactionResponse.get();  // Obtener de forma bloqueante si es necesario
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BusinessException(DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR, DomainErrorMessage.VCC_TRANSACTION_RESULT_CARDNET_ERROR.getReasonPhrase());
         }
 
