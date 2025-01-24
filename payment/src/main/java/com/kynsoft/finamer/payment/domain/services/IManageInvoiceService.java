@@ -19,4 +19,5 @@ public interface IManageInvoiceService {
     
     void deleteAll();
 
+    List<ManageInvoiceDto> findByIdIn(List<UUID> ids);
 }

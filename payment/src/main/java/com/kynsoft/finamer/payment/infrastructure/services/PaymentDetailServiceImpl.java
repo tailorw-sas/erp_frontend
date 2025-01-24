@@ -160,4 +160,13 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND.getReasonPhrase())));
     }
 
+    @Override
+    public List<PaymentDetailDto> findByIdIn(List<UUID> ids) {
+        List<PaymentDetailDto> list = new ArrayList<>();
+        for (PaymentDetail paymentDetail : this.repositoryQuery.findByIdIn(ids)) {
+            list.add(paymentDetail.toAggregate());
+        }
+        return list;
+    }
+
 }

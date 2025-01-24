@@ -23,6 +23,8 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
 
     boolean existsByPaymentDetailId(int id);
 
+    List<PaymentDetail> findByIdIn(List<UUID> ids);
+
     @Query("Select pd from PaymentDetail pd where pd.payment.id=:paymentId")
     Optional<List<PaymentDetail>> findAllByPayment(@Param("paymentId") UUID paymentId);
 
