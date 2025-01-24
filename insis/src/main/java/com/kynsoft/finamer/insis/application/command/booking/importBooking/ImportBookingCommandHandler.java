@@ -142,7 +142,7 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
                 booking.getHotelInvoiceAmount(),
                 booking.getRemarks(),
                 booking.getRatePlan().getCode(),
-                "",
+                null,
                 booking.getRoomType().getCode(),
                 booking.getRoomCategory().getCode(),
                 booking.getHotel().getCode(),
