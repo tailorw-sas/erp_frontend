@@ -90,6 +90,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     @Override
     public void handle(ApplyPaymentCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPayment(), "id", "Payment ID cannot be null."));
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Inicia: " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
 
         List<ManageInvoiceDto> invoiceQueue = createInvoiceQueue(command);// Ordenar las Invoice
@@ -149,6 +155,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 break;
             }
         }
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Finaliza: " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 
     /**
@@ -158,10 +170,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      * @return
      */
     private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits) {
-        List<PaymentDetailDto> queue = new ArrayList<>();
-        for (UUID d : deposits) {
-            queue.add(this.paymentDetailService.findById(d));
-        }
+
+        List<PaymentDetailDto> queue = this.paymentDetailService.findByIdIn(deposits);
+//        List<PaymentDetailDto> queue = new ArrayList<>();
+//        for (UUID d : deposits) {
+//            queue.add(this.paymentDetailService.findById(d));
+//        }
 
         Collections.sort(queue, Comparator.comparingDouble(m -> m.getApplyDepositValue()));
         return queue;
@@ -190,30 +204,34 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      */
     private List<ManageInvoiceDto> createInvoiceQueue(ApplyPaymentCommand command) {
         List<ManageInvoiceDto> queue = new ArrayList<>();
-        for (UUID invoice : command.getInvoices()) {
-            try {
-                queue.add(this.manageInvoiceService.findById(invoice));
-            } catch (Exception e) {
-                /**
-                 * *
-                 * TODO: Aqui se define un flujo alternativo por HTTP si en
-                 * algun momento kafka falla y las invoice no se replicaron,
-                 * para evitar que el flujo de aplicacion de pago falle.
-                 */
-                InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
-                this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
-                //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
-                int maxAttempts = 3;
-                while (maxAttempts > 0) {
-                    try {
-                        queue.add(this.manageInvoiceService.findById(invoice));
-                        break;
-                    } catch (Exception ex) {
-                    }
-                    maxAttempts--;
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException ex) {
+        try {
+            queue.addAll(this.manageInvoiceService.findByIdIn(command.getInvoices()));
+        } catch (Exception e) {
+            for (UUID invoice : command.getInvoices()) {
+                try {
+                    queue.add(this.manageInvoiceService.findById(invoice));
+                } catch (Exception ex) {
+                    /**
+                     * *
+                     * TODO: Aqui se define un flujo alternativo por HTTP si en
+                     * algun momento kafka falla y las invoice no se replicaron,
+                     * para evitar que el flujo de aplicacion de pago falle.
+                     */
+                    InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
+                    this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
+                    //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
+                    int maxAttempts = 3;
+                    while (maxAttempts > 0) {
+                        try {
+                            queue.add(this.manageInvoiceService.findById(invoice));
+                            break;
+                        } catch (Exception exp) {
+                        }
+                        maxAttempts--;
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException exp) {
+                        }
                     }
                 }
             }
@@ -305,6 +323,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     ));
             this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
         } catch (Exception e) {
+            System.err.println("Error al enviar el evento de integracion: " + e.getMessage());
         }
 
         if (paymentDto.getPaymentBalance() == 0 && paymentDto.getDepositBalance() == 0) {
