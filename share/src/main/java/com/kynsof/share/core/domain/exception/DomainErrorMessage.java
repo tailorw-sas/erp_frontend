@@ -414,7 +414,6 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     MANAGE_AGENCY_TYPE_NOT_FOUND_(1191, Series.DOMAIN_ERROR, "The agency not found."),
     MANAGE_MERCHANT_DEFAULT(1192, Series.DOMAIN_ERROR,"Another item already exists with default."),
     MANAGE_VCC_TRANSACTION_TYPE_SUB_DEFAULT_NOT_FOUND(1193, Series.DOMAIN_ERROR,"There is no transaction sub category by default."),
-    MANAGE_MERCHANT_DEFAULT(1191, Series.DOMAIN_ERROR,"Another item already exists with default."),
     INNSIST_CONNECTION_PARAMETER_HOSTNAME_INVALID(2000, Series.DOMAIN_ERROR, "The hostname value is not accepted."),
     INNSIST_CONNECTION_PARAMETER_PORT_NUMBER_INVALID(2001, Series.DOMAIN_ERROR, "The port number must be between 0 and 65535"),
     INNSIST_TRADING_COMPANY_HOTEL_ROOM_TYPE_PREFIX_CHECK_SIZE(2002, Series.DOMAIN_ERROR, "The size of room type must be 1 character."),
