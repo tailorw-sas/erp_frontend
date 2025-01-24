@@ -572,6 +572,10 @@ watch(() => props.selectedItems, async (newValue) => {
   clickedItem.value = newValue
 })
 
+watch(clickedItem, async (newValue) => {
+  onSelectItem(newValue)
+})
+
 onMounted(() => {
   getDataFromSelectors()
   if (props.options?.selectAllItemByDefault) {
