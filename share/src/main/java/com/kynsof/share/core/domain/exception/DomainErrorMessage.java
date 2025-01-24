@@ -412,7 +412,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_ROOM_TYPE_NOT_FOUND(1189, Series.DOMAIN_ERROR,"The selected room type does not belong to the hotel."),
     HOTEL_BANK_ACCOUNT_NOT_FOUND(1190, Series.DOMAIN_ERROR,"The bank account doesn't belong to the hotel."),
     MANAGE_AGENCY_TYPE_NOT_FOUND_(1191, Series.DOMAIN_ERROR, "The agency not found."),
-    MANAGE_MERCHANT_DEFAULT(1192, Series.DOMAIN_ERROR,"Another item already exists with default.");
+    MANAGE_MERCHANT_DEFAULT(1192, Series.DOMAIN_ERROR,"Another item already exists with default."),
+    MANAGE_VCC_TRANSACTION_TYPE_SUB_DEFAULT_NOT_FOUND(1193, Series.DOMAIN_ERROR,"There is no transaction sub category by default.");
 
     private static final DomainErrorMessage[] VALUES;
 
