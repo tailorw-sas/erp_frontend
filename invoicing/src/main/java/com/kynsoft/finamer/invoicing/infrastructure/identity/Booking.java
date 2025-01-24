@@ -83,7 +83,7 @@ public class Booking {
     @JoinColumn(name = "manage_room_category", nullable = true)
     private ManageRoomCategory roomCategory;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "booking")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "booking")
     private List<ManageRoomRate> roomRates;
 
     @Column(nullable = true)

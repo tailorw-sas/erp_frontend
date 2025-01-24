@@ -69,7 +69,8 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
             this.roomRateService.update(dto);
 
             //Actualizando el booking
-            ManageBookingDto bookingDto = this.bookingService.findByIdWithRates(dto.getBooking().getId());
+            ManageBookingDto bookingDto = this.bookingService.findById(dto.getBooking().getId());
+            bookingDto.setRoomRates(this.roomRateService.findByBooking(bookingDto.getId()));
 
             command.getMediator().send(new UpdateBookingCalculateCheckIntAndCheckOutCommand(bookingDto));
 
