@@ -40,8 +40,8 @@ public class PaymentExpenseBookingValidatorFactory extends IValidatorFactory<Pay
 
     @Override
     public void createValidators() {
-        bookingBalanceValidator = new BookingBalanceValidator(applicationEventPublisher, bookingService);
         bookingFieldValidator = new BookingFieldValidator(applicationEventPublisher, bookingService, bookingHttpGenIdService, bookingImportAutomaticeHelperServiceImpl);
+        bookingBalanceValidator = new BookingBalanceValidator(applicationEventPublisher, bookingService);
         transactionTypeValidation = new PaymentExpenseBookingTransactionTypeValidation(applicationEventPublisher, paymentTransactionTypeService);
         remarksValidator = new RemarksValidator(applicationEventPublisher, paymentTransactionTypeService);
     }
