@@ -122,7 +122,7 @@ const options = ref({
   loading: false,
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
-  selectAllItemByDefault: false,
+  selectAllItemByDefault: true,
   showFilters: true,
   expandableRows: false,
   showSelectedItems: true,
@@ -397,9 +397,8 @@ async function reconcileManual() {
         payload.invoices = invoicesFromState // Asignar directamente
       }
     }
-
     // Enviar el payload a la API
-    response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
+    // response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
   }
   catch (error: any) {
     console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage)
@@ -457,6 +456,15 @@ async function saveItem() {
 }
 */
 async function saveItem() {
+  if (selectedElements.value.length > 50) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'You can only select up to 50 invoices.',
+      life: 6000
+    })
+    return
+  }
   options.value.loading = true
   loadingSaveAll.value = true
 
@@ -479,31 +487,33 @@ async function saveItem() {
     return // Salir de la función si hay un error
   }
 
-  const { errorsResponse, totalInvoicesRec } = response
-  if (errorsResponse && errorsResponse.length === 0) {
-    if (totalInvoicesRec === 0) {
+  if (response) {
+    const { errorsResponse, totalInvoicesRec } = response
+    if (errorsResponse && errorsResponse.length === 0) {
+      if (totalInvoicesRec === 0) {
+        getErrors(errorsResponse)
+      }
+      else {
+        navigateTo('/invoice')
+        toast.add({
+          severity: 'info',
+          summary: 'Confirmed',
+          detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
+          life: 0
+        })
+      }
+    }
+    else if (errorsResponse && errorsResponse.length > 0) {
+      if (totalInvoicesRec > 0) {
+        toast.add({
+          severity: 'info',
+          summary: 'Confirmed',
+          detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
+          life: 0
+        })
+      }
       getErrors(errorsResponse)
     }
-    else {
-      navigateTo('/invoice')
-      toast.add({
-        severity: 'info',
-        summary: 'Confirmed',
-        detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
-        life: 0
-      })
-    }
-  }
-  else if (errorsResponse && errorsResponse.length > 0) {
-    if (totalInvoicesRec > 0) {
-      toast.add({
-        severity: 'info',
-        summary: 'Confirmed',
-        detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
-        life: 0
-      })
-    }
-    getErrors(errorsResponse)
   }
 
   loadingSaveAll.value = false // Detener el loading al final de la función
@@ -776,7 +786,7 @@ async function searchAndFilter() {
   payload.value = newPayload
   // Obtener la lista de facturas
 
-  options.value.selectAllItemByDefault = false
+  // options.value.selectAllItemByDefault = false
   const dataList = await getList()
 
   // Seleccionar automáticamente todos los elementos retornados
@@ -989,12 +999,12 @@ onMounted(async () => {
           </AccordionTab>
         </Accordion>
       </div>
+      <!-- :selected-items="selectedItems" -->
       <DynamicTable
         :data="listItems"
         :columns="columns"
         :options="options"
         :pagination="pagination"
-        :selected-items="selectedItems"
         @on-confirm-create="clearForm"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"

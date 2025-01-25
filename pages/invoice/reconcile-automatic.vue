@@ -293,7 +293,8 @@ async function getErrorList() {
             ...iterator.row,
             id: iterator.id,
             invoiceNo: iterator.invoiceId,
-            errorMessage: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
+            errorMessage: `Warning: \n ${rowError}`,
+            // errorMessage: `Warning row ${iterator.rowNumber}: \n ${rowError}`,
             loadingEdit: false,
             loadingDelete: false
           }

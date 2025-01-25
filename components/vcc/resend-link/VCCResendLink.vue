@@ -55,18 +55,20 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Email',
     dataType: 'text',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The email field is required').email('Invalid email')
+    validation: z.array(
+      z.string().trim().email('Invalid email') // Valida que cada elemento sea un email
+    ).min(1, 'The email field is required')
   },
 ]
 
 const item = ref<GenericObject>({
   guestName: '',
-  email: '',
+  email: [],
 })
 
 const itemTemp = ref<GenericObject>({
   guestName: '',
-  email: '',
+  email: [],
 })
 
 function onClose(isCancel: boolean) {
@@ -99,13 +101,27 @@ async function requireConfirmationToSave(item: any) {
   }
 }
 
+function areStringListsEqual(list1: string[], list2: string[]): boolean {
+  if (list1.length !== list2.length) {
+    return false // Si las longitudes son diferentes, no son iguales
+  }
+
+  // Ordenar ambas listas para garantizar el mismo orden
+  const sortedList1 = [...list1].sort()
+  const sortedList2 = [...list2].sort()
+
+  // Comparar elemento por elemento
+  return sortedList1.every((value, index) => value === sortedList2[index])
+}
+
 async function save(newItem: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...newItem }
   try {
+    payload.email = Array.isArray(newItem.email) ? newItem.email.join(';') : newItem.email
     delete payload.event
     // Actualizar datos de la transaccion si cambian
-    if (item.value.guestName !== payload.guestName || item.value.email !== payload.email) {
+    if (item.value.guestName !== payload.guestName || !areStringListsEqual(item.value.email, newItem.email)) {
       await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     }
     await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: props.transactionId })
@@ -129,7 +145,9 @@ async function getItemById(id: string) {
       if (response) {
         item.value.id = String(response.id)
         item.value.guestName = response.guestName
-        item.value.email = response.email
+        item.value.email = response.email.split(';') // Separa el string por el delimitador `;`
+          .map((email: any) => email.trim()) // Elimina espacios en blanco adicionales
+          .filter((email: any) => email !== '')
       }
       formReload.value += 1
     }
@@ -193,7 +211,21 @@ watch(() => props.openDialog, async (newValue) => {
         :force-save="forceSave"
         @force-save="forceSave = $event"
         @submit="requireConfirmationToSave($event)"
-      />
+      >
+        <template #field-email="{ item: data, onUpdate }">
+          <Chips
+            v-if="!loadingSaveAll"
+            v-model="data.email"
+            separator=";"
+            class="custom-chips"
+            @update:model-value="($event) => {
+              onUpdate('email', $event)
+              // item.email = $event
+            }"
+          />
+          <Skeleton v-else height="2rem" class="" />
+        </template>
+      </EditFormV2>
     </div>
     <template #footer>
       <div class="flex justify-content-end mr-4">

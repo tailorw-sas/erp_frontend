@@ -128,34 +128,38 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The reference number field is required')
   },
   {
-    field: 'hotelContactEmail',
-    header: 'Hotel Email Contact',
-    dataType: 'text',
-    class: 'field col-12 md:col-6',
-    tabIndex: 0,
-    validation: z.string().trim().email('Invalid email').or(z.string().length(0))
-  },
-  {
-    field: 'guestName',
-    header: 'Guest Name',
-    dataType: 'text',
-    class: 'field col-12 md:col-6',
-    tabIndex: 0,
-  },
-  {
-    field: 'email',
-    header: 'Email',
-    dataType: 'text',
-    class: 'field col-12 md:col-6',
-    tabIndex: 0,
-    validation: z.string().trim().email('Invalid email').or(z.string().length(0))
-  },
-  {
     field: 'merchantCurrency',
     header: 'Merchant Currency',
     dataType: 'select',
     class: 'field col-12 md:col-6 required',
     validation: validateEntityStatus('merchant currency'),
+  },
+  {
+    field: 'hotelContactEmail',
+    header: 'Hotel Email Contact',
+    dataType: 'chips',
+    class: 'field col-12',
+    tabIndex: 0,
+    validation: z.array(
+      z.string().trim().email('Invalid email') // Valida que cada elemento sea un email
+    ).optional()
+  },
+  {
+    field: 'guestName',
+    header: 'Guest Name',
+    dataType: 'text',
+    class: 'field col-12',
+    tabIndex: 0,
+  },
+  {
+    field: 'email',
+    header: 'Email',
+    dataType: 'chips',
+    class: 'field col-12',
+    tabIndex: 0,
+    validation: z.array(
+      z.string().trim().email('Invalid email') // Valida que cada elemento sea un email
+    ).optional()
   },
 ]
 
@@ -169,9 +173,9 @@ const item = ref<GenericObject>({
   checkIn: '',
   reservationNumber: '',
   referenceNumber: '',
-  hotelContactEmail: '',
+  hotelContactEmail: [],
   guestName: '',
-  email: '',
+  email: [],
   merchantCurrency: null
 })
 
@@ -185,9 +189,9 @@ const itemTemp = ref<GenericObject>({
   checkIn: new Date(),
   reservationNumber: '',
   referenceNumber: '',
-  hotelContactEmail: '',
+  hotelContactEmail: [],
   guestName: '',
-  email: '',
+  email: [],
   merchantCurrency: null
 })
 
@@ -278,6 +282,8 @@ async function save(item: { [key: string]: any }) {
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     payload.methodType = typeof payload.methodType === 'object' ? payload.methodType.id : payload.methodType
     payload.merchantCurrency = typeof payload.merchantCurrency === 'object' ? payload.merchantCurrency.id : payload.merchantCurrency
+    payload.hotelContactEmail = Array.isArray(item.hotelContactEmail) ? item.hotelContactEmail.join(';') : item.hotelContactEmail
+    payload.email = Array.isArray(item.email) ? item.email.join(';') : item.email
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
     delete payload.event
@@ -588,20 +594,22 @@ function saveSubmit(event: Event) {
 
 function handleMethodTypeChange(value: any) {
   if (value === 'LINK') {
-    updateFieldProperty(fields, 'email', 'validation', z.string().trim()
-      .min(1, 'The email field is required').email('Invalid email'))
+    updateFieldProperty(fields, 'email', 'validation', z.array(
+      z.string().trim().email('Invalid email') // Valida que cada elemento sea un email
+    ).min(1, 'The email field is required'))
     updateFieldProperty(fields, 'guestName', 'validation', z.string().trim()
       .min(1, 'The guest name field is required'))
     // required
-    updateFieldProperty(fields, 'email', 'class', 'field col-12 md:col-6 required')
-    updateFieldProperty(fields, 'guestName', 'class', 'field col-12 md:col-6 required')
+    updateFieldProperty(fields, 'email', 'class', 'field col-12 required')
+    updateFieldProperty(fields, 'guestName', 'class', 'field col-12 required')
   }
   else {
-    updateFieldProperty(fields, 'email', 'validation', z.string().trim()
-      .email('Invalid email').or(z.string().length(0)))
+    updateFieldProperty(fields, 'email', 'validation', z.array(
+      z.string().trim().email('Invalid email') // Valida que cada elemento sea un email
+    ).optional())
     updateFieldProperty(fields, 'guestName', 'validation', z.string())
-    updateFieldProperty(fields, 'email', 'class', 'field col-12 md:col-6')
-    updateFieldProperty(fields, 'guestName', 'class', 'field col-12 md:col-6')
+    updateFieldProperty(fields, 'email', 'class', 'field col-12')
+    updateFieldProperty(fields, 'guestName', 'class', 'field col-12')
   }
 }
 
@@ -798,6 +806,32 @@ watch(() => props.openDialog, async (newValue) => {
           />
           <Skeleton v-else height="2rem" class="" />
         </template>
+        <template #field-hotelContactEmail="{ item: data, onUpdate }">
+          <Chips
+            v-if="!loadingSaveAll"
+            v-model="data.hotelContactEmail"
+            separator=";"
+            class="custom-chips"
+            @update:model-value="($event) => {
+              onUpdate('hotelContactEmail', $event)
+              item.hotelContactEmail = $event
+            }"
+          />
+          <Skeleton v-else height="2rem" class="" />
+        </template>
+        <template #field-email="{ item: data, onUpdate }">
+          <Chips
+            v-if="!loadingSaveAll"
+            v-model="data.email"
+            separator=";"
+            class="custom-chips"
+            @update:model-value="($event) => {
+              onUpdate('email', $event)
+              item.email = $event
+            }"
+          />
+          <Skeleton v-else height="2rem" class="" />
+        </template>
       </EditFormV2>
     </div>
     <template #footer>
@@ -809,5 +843,19 @@ watch(() => props.openDialog, async (newValue) => {
   </Dialog>
 </template>
 
-<style scoped>
+<style>
+.custom-chips .p-chips-multiple-container {
+  display: flex;
+  flex-wrap: wrap; /* Impide que los chips salten a la siguiente línea */
+}
+.custom-chips .p-chips-token {
+  white-space: nowrap; /* Evita que los chips se dividan en múltiples líneas */
+  margin-right: 0.5rem; /* Espaciado entre los chips */
+  max-width: 100%; /* Ajusta esto según el diseño */
+}
+
+.custom-chips input {
+  flex-shrink: 1; /* Permite que el input se ajuste si hay espacio */
+  min-width: 150px; /* Ajusta el tamaño mínimo del input */
+}
 </style>
