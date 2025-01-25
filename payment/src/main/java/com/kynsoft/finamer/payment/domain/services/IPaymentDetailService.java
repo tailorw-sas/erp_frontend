@@ -35,4 +35,6 @@ public interface IPaymentDetailService {
     Long countByApplyPaymentAndPaymentId(UUID id);
 
     PaymentDetailSimpleDto findSimpleDetailByGenId(int id);
+
+    List<PaymentDetailDto> findByIdIn(List<UUID> ids);
 }

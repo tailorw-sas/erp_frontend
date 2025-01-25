@@ -58,7 +58,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
             throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
         }
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
-        String url = merchantConfigDto.getAltUrl() + "/" + cardnetJobDto.getSession() + "?sk=" + cardnetJobDto.getSessionKey();
+        String url = merchantConfigDto.getAltUrl().trim() + "/" + cardnetJobDto.getSession() + "?sk=" + cardnetJobDto.getSessionKey();
 
         //Obtener la informacion del pago
         CompletableFuture<CardNetTransactionDataResponse> futureTransactionResponse = statusTransactionService

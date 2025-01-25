@@ -89,4 +89,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         this.repositoryCommand.deleteAll();
     }
 
+    @Override
+    public List<ManageInvoiceDto> findByIdIn(List<UUID> ids) {
+        List<ManageInvoiceDto> list = new ArrayList<>();
+        for (Invoice invoice : this.repositoryQuery.findByIdIn(ids)) {
+            list.add(invoice.toAggregateApplyPayment());
+        }
+        return list;
+    }
+
 }

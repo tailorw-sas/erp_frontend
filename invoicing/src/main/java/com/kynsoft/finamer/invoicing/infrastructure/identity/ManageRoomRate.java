@@ -58,7 +58,7 @@ public class ManageRoomRate {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean deleteInvoice;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "roomRate")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "roomRate")
     private List<ManageAdjustment> adjustments;
 
     @CreationTimestamp

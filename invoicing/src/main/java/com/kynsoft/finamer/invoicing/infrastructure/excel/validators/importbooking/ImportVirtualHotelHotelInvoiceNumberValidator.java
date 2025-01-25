@@ -43,7 +43,9 @@ public class ImportVirtualHotelHotelInvoiceNumberValidator extends ExcelRuleVali
     public boolean isValidInsertion(List<BookingImportCache> list, BookingRow newElement) {
         if (list != null && !list.isEmpty()) {
             if (!list.get(0).getTransactionDate().equals(newElement.getTransactionDate())) {
+                if (list.get(0).getManageHotelCode().equals(newElement.getManageHotelCode())) {
                     return true;
+                }
             }
         }
 
