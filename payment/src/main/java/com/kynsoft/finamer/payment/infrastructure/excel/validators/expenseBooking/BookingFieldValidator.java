@@ -8,6 +8,7 @@ import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
@@ -49,13 +50,15 @@ public class BookingFieldValidator extends ExcelRuleValidator<PaymentExpenseBook
 //                return false;
 //            }
             //ManageBookingDto manageBooking = bookingService.findByGenId(Long.parseLong(obj.getBookingId()));
-            ManageBookingDto manageBooking = this.getBookingDto(Long.valueOf(obj.getBookingId()));
-            if (!EInvoiceType.INVOICE.equals(manageBooking.getInvoice().getInvoiceType())) {
+            //ManageBookingDto manageBooking = this.getBookingDto(Long.valueOf(obj.getBookingId()));
+            BookingProjectionSimple manageBooking = this.getBookingDto(Long.valueOf(obj.getBookingId()));
+            if (!EInvoiceType.INVOICE.equals(manageBooking.getInvoiceType())) {
                 errorFieldList.add(new ErrorField("bookingId", "The invoice related isn't invoice type"));
                 return false;
             }
-            ManageInvoiceDto manageInvoiceDto = manageBooking.getInvoice();
-            if (!obj.getHotelId().equals(manageInvoiceDto.getHotel().getId().toString())) {
+            //ManageInvoiceDto manageInvoiceDto = manageBooking.getInvoice();
+            //if (!obj.getHotelId().equals(manageInvoiceDto.getHotel().getId().toString())) {
+            if (!obj.getHotelId().equals(manageBooking.getInvoiceHotel().toString())) {
                 errorFieldList.add(new ErrorField("bookingId", "Booking don't belong to the selected hotel"));
                 return false;
             }
@@ -66,20 +69,23 @@ public class BookingFieldValidator extends ExcelRuleValidator<PaymentExpenseBook
         return true;
     }
     
-    private ManageBookingDto getBookingDto(Long bookingId) {
+    private BookingProjectionSimple getBookingDto(Long bookingId) {
         try {
-            return this.bookingService.findByGenId(bookingId);
+            return this.bookingService.findSimpleDetailByGenId(bookingId);
+            //return this.bookingService.findByGenId(bookingId);
         } catch (Exception e) {
             try {
                 BookingHttp bookingHttp = this.bookingHttpGenIdService.sendGetBookingHttpRequest(bookingId);
                 this.bookingImportAutomaticeHelperServiceImpl.createInvoice(bookingHttp);
-                return this.bookingService.findByGenId(bookingId);
+                //return this.bookingService.findByGenId(bookingId);
+                return this.bookingService.findSimpleDetailByGenId(bookingId);
             } catch (Exception ex) {
                 //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
                 int maxAttempts = 3;
                 while (maxAttempts > 0) {
                     try {
-                        return this.bookingService.findByGenId(bookingId);
+                        //return this.bookingService.findByGenId(bookingId);
+                        return this.bookingService.findSimpleDetailByGenId(bookingId);
                     } catch (Exception exc) {
                     }
                     maxAttempts--;
