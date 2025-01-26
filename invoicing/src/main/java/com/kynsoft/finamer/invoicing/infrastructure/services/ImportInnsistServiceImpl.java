@@ -54,6 +54,7 @@ public class ImportInnsistServiceImpl {
 
             //Obtengo de cache
             List<BookingImportCache> list = this.repository.findAllByImportProcessId(insistImportProcessId.toString());
+            boolean validateInsist = validatorFactory.validateInsist(list);
             validatorFactory.createValidators(EImportType.NO_VIRTUAL.name());
 
             BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
@@ -73,8 +74,10 @@ public class ImportInnsistServiceImpl {
             }
             list.clear();
             validatorFactory.removeValidators();
-            this.bookingImportHelperService.createInvoiceGroupingByCoupon(request.getImportInnsitProcessId().toString(), request.getEmployee());
-            this.bookingImportHelperService.createInvoiceGroupingByBooking(request.getImportInnsitProcessId().toString(), request.getEmployee());
+            if (validateInsist) {
+                this.bookingImportHelperService.createInvoiceGroupingByCoupon(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
+                this.bookingImportHelperService.createInvoiceGroupingByBooking(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
+            }
             BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
                     .status(EProcessStatus.FINISHED)
                     .total(list.size())

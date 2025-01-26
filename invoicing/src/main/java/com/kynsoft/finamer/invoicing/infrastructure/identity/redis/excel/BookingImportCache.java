@@ -164,4 +164,35 @@ public class BookingImportCache {
         bookingRow.setInsistImportProcessBookingId(insistImportProcessBookingId);
         return bookingRow;
     }
+
+    public BookingRow toAggregateImportInsistValidate() {
+        BookingRow bookingRow = new BookingRow();
+        bookingRow.setTransactionDate(this.transactionDate);
+        bookingRow.setManageHotelCode(this.manageHotelCode);
+        bookingRow.setManageAgencyCode(this.manageAgencyCode);
+        bookingRow.setFirstName(this.firstName);
+        bookingRow.setLastName(this.lastName);
+        bookingRow.setCheckIn(this.checkIn);
+        bookingRow.setCheckOut(this.checkOut);
+        bookingRow.setNights(this.nights);
+        bookingRow.setAdults(this.adults);
+        bookingRow.setChildren(this.children);
+        bookingRow.setInvoiceAmount(this.invoiceAmount);
+        bookingRow.setCoupon(this.coupon);
+        bookingRow.setHotelBookingNumber(this.hotelBookingNumber);
+        bookingRow.setRoomType(this.roomType);
+        bookingRow.setRatePlan(this.ratePlan);
+        bookingRow.setHotelInvoiceNumber(this.hotelInvoiceNumber);
+        bookingRow.setRemarks(this.remarks);
+        bookingRow.setAmountPAX(this.amountPAX);
+        bookingRow.setRoomNumber(this.roomNumber);
+        bookingRow.setHotelInvoiceAmount(this.hotelInvoiceAmount);
+        bookingRow.setBookingDate(this.bookingDate);
+        bookingRow.setHotelType(this.hotelType);
+        bookingRow.setNightType(this.nightType);
+        bookingRow.setInsistImportProcessId(insistImportProcessId);
+        bookingRow.setImportProcessId(importProcessId);
+        bookingRow.setInsistImportProcessBookingId(insistImportProcessBookingId);
+        return bookingRow;
+    }
 }
