@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -156,7 +157,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         Map<String, List<PaymentExpenseBookingImportCache>> grouped = this.groupCacheByClient(request.getImportProcessId());
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
             //PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
-            //List<ManageBookingDto> bookingDtos = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
+            //List<ManageBookingDto> bookingDtosP = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
             List<Long> ids = entry.getValue().stream().map(cache -> Long.valueOf(cache.getBookingId())).toList();
             List<ManageBookingDto> bookingDtos = bookingService.findByBookingIdIn(ids);//Se puede refactorizar.
             List<PaymentExpenseBookingHelper> data = entry.getValue().stream().map(cache
@@ -171,9 +172,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 //            String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
             UUID paymentId = createPayment(request.getHotelId(), request.getEmployeeId(), manageBooking.getInvoice().getAgency(), paymentAmount);
             createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
-            createPaymentDetails(bookingDtos, request.getEmployeeId(), paymentId, data);
+            createPaymentDetails(ids, bookingDtos, request.getEmployeeId(), paymentId, data);
         }
-
     }
 
     private String getClientName(String bookingId) {
@@ -222,10 +222,12 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         return createPaymentMessage.getPayment().getId();
     }
 
-    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, UUID employeeId, UUID paymentId, List<PaymentExpenseBookingHelper> data) {
-        for (int i = 0; i < manageBookingDtos.size(); i++) {
+    private void createPaymentDetails(List<Long> ids, List<ManageBookingDto> manageBookingDtos, UUID employeeId, UUID paymentId, List<PaymentExpenseBookingHelper> data) {
+        //for (int i = 0; i < manageBookingDtos.size(); i++) {
+        for (int i = 0; i < ids.size(); i++) {
             //Cada vez que tome el booking, neecsito controlar el amountBalance que le queda porque sino lo pone negativo.
-            BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(manageBookingDtos.get(i).getBookingId());
+            //BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(manageBookingDtos.get(i).getBookingId());
+            BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(ids.get(i));
             //for (ManageBookingDto manageBookingDto : manageBookingDtos) {
             if (amountBalance.getBookingAmountBalance() >= data.get(i).getBalance()) {
                 CreatePaymentDetailFromFileCommand createPaymentDetailCommand = new CreatePaymentDetailFromFileCommand(
@@ -237,7 +239,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                         data.get(i).getBalance(),
                         data.get(i).getRemark(),
                         employeeId,
-                        manageBookingDtos.get(i).getId(),
+                        amountBalance.getBookingId(),
                         true,
                         serviceLocator.getBean(IMediator.class)
                 );
