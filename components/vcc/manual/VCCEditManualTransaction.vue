@@ -459,6 +459,20 @@ watch(() => props.openDialog, async (newValue) => {
               onUpdate('hotelContactEmail', $event)
               item.hotelContactEmail = $event
             }"
+            @blur="($event) => {
+              const input = ($event.target as HTMLInputElement)?.value || '';
+              if (input && input.trim() !== '') {
+                // Agregar el valor al modelo de chips
+                const newChip = input.trim();
+                if (!item.hotelContactEmail.includes(newChip)) {
+                  item.hotelContactEmail.push(newChip); // Añade el nuevo chip
+                  onUpdate('hotelContactEmail', item.hotelContactEmail)
+                }
+
+                // Limpiar el input manualmente
+                $event.target.value = '';
+              }
+            }"
           />
           <Skeleton v-else height="2rem" class="" />
         </template>
