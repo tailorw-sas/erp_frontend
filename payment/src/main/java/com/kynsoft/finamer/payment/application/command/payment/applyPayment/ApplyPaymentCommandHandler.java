@@ -93,7 +93,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPayment(), "id", "Payment ID cannot be null."));
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        System.err.println("Inicia: " + LocalTime.now());
+        System.err.println("Inicia proceso: " + LocalTime.now());
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -158,7 +158,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        System.err.println("Finaliza: " + LocalTime.now());
+        System.err.println("Finaliza proceso: " + LocalTime.now());
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -171,6 +171,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      * @return
      */
     private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits) {
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Inicia proceso de obtener los details " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
         List<PaymentDetailDto> queue = this.paymentDetailService.findByIdIn(deposits);
 //        List<PaymentDetailDto> queue = new ArrayList<>();
@@ -179,6 +185,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 //        }
 
         Collections.sort(queue, Comparator.comparingDouble(m -> m.getApplyDepositValue()));
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("finaliza proceso de obtener los details " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         return queue;
     }
 
@@ -206,7 +218,20 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private List<ManageInvoiceDto> createInvoiceQueue(ApplyPaymentCommand command) {
         List<ManageInvoiceDto> queue = new ArrayList<>();
         try {
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("Inicia proceso de obtener las invoice: " + LocalTime.now());
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             queue.addAll(this.manageInvoiceService.findByIdIn(command.getInvoices()));
+
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("Termina proceso de obtener las invoice: " + LocalTime.now());
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         } catch (Exception e) {
             for (UUID invoice : command.getInvoices()) {
                 try {
@@ -239,10 +264,22 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
 
         Collections.sort(queue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Termina de ordenar: " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         return queue;
     }
 
     private PaymentDetailDto createDetailsTypeCash(CreatePaymentDetailTypeCashCommand command) {
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Inicia proceso de crear el details de pago " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByPaymentInvoice();
         PaymentDetailDto newDetailDto = new PaymentDetailDto(
                 command.getId(),
@@ -268,6 +305,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         if (command.isApplyPayment()) {
             this.calculate(command.getPaymentCash(), command.getInvoiceAmount());
         }
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("finaliza proceso de crear el details de pago " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         return newDetailDto;
     }
 
@@ -305,6 +348,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     public void applyPayment(UUID empoyee, ManageBookingDto bookingDto, PaymentDetailDto paymentDetailDto) {
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Inicia proceso de aplicar pago " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         ManageBookingDto booking = this.manageBookingService.findById(bookingDto.getId());
 
         booking.setAmountBalance(booking.getAmountBalance() - paymentDetailDto.getAmount());
@@ -322,6 +371,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         paymentDto.setApplied(projection.getApplied());
         paymentDto.setNotApplied(projection.getNotApplied());
         paymentDto.setPaymentBalance(projection.getPaymentBalance());
+        paymentDto.setDepositBalance(projection.getDepositBalance());
         //PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
         try {
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
@@ -341,5 +391,11 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
         paymentDto.setApplyPayment(true);
         this.paymentService.update(paymentDto);
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("Termina proceso de aplicar pago " + LocalTime.now());
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 }
