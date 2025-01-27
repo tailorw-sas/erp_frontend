@@ -2,15 +2,13 @@
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import dayjs from 'dayjs'
-import { useRoute } from 'vue-router'
 import { z } from 'zod'
 import { formatNumber } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { statusToBoolean, statusToString } from '~/utils/helpers'
-import type { IData } from '~/components/table/interfaces/IModelData'
+import { statusToBoolean } from '~/utils/helpers'
 import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -29,6 +27,7 @@ const agencyItemsList = ref<any[]>([])
 const hotelItemsList = ref<any[]>([])
 const statusItemsList = ref<any[]>([])
 const openDialogApplyPayment = ref(false)
+const openDialogImportTransactionsFromVCC = ref(false)
 const openDialogApplyPaymentOtherDeduction = ref(false)
 const disabledBtnApplyPayment = ref(true)
 const disabledBtnApplyPaymentOtherDeduction = ref(true)
@@ -357,9 +356,9 @@ const allMenuListItems = ref([
     viewBox: '',
     width: '24px',
     height: '24px',
-    command: ($event: any) => {},
-    disabled: true,
-    visible: true,
+    command: ($event: any) => { openDialogImportTransactionsFromVCC.value = true },
+    disabled: false,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
   {
     id: 'paymentWithoutAttachment',
@@ -5025,6 +5024,15 @@ onMounted(async () => {
       :update-item="updateAttachment"
       :selected-payment="paymentSelectedForShareFiles"
       @update:list-items="shareFilesList = $event"
+    />
+  </div>
+
+  <!--  Import Transactions From VCC -->
+  <div v-if="openDialogImportTransactionsFromVCC">
+    <PaymentImportTransactionsFromVCCDialog
+      :open-dialog="openDialogImportTransactionsFromVCC" :close-dialog="() => {
+        openDialogImportTransactionsFromVCC = false
+      }" :selected-payment="paymentSelectedForAttachment"
     />
   </div>
 
