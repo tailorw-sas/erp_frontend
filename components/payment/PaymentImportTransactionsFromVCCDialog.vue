@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
+import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
 const props = defineProps({
   openDialog: {
@@ -21,7 +22,11 @@ const props = defineProps({
 })
 
 const dialogVisible = ref(props.openDialog)
+const disabledConfirmButton = ref(true)
+const loadingImportFromVCC = ref(false)
+const totalAmountSelected = ref(0)
 const listItems = ref<any[]>([])
+const selectedIds = ref<string[]>([])
 
 const pagination = ref<IPagination>({
   page: 0,
@@ -56,6 +61,8 @@ const options = ref({
   loading: false,
   actionsAsMenu: false,
   expandableRows: true,
+  selectionMode: 'multiple',
+  showSelectedItems: true,
   showTitleBar: true,
   messageToDelete: 'Do you want to save the change?',
 })
@@ -94,15 +101,15 @@ const columns: IColumn[] = [
   { field: 'amount', header: 'Amount', type: 'number' },
   { field: 'commission', header: 'Commission', type: 'number' },
   { field: 'netAmount', header: 'Total', type: 'number' },
-  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-payment-transaction-status', filter: activeStatusFilter }, sortable: true },
+  { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, /* objApi: { moduleApi: 'creditcard', uriApi: 'manage-payment-transaction-status', filter: activeStatusFilter }, */ sortable: false, showFilter: false },
 ]
 
 const paymentColumns: IColumn[] = [
-  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: false },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number' },
-  { field: 'paymentStatus', header: 'Status', width: '100px', type: 'slot-select', statusClassMap: sClassMapPayment, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
+  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: false, sortable: false },
+  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', sortable: false },
+  { field: 'agency', header: 'Agency', width: '80px', type: 'select', sortable: false },
+  { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number', sortable: false },
+  { field: 'paymentStatus', header: 'Status', width: '100px', type: 'slot-select', statusClassMap: sClassMapPayment, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: false },
 ]
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -175,6 +182,27 @@ async function getList() {
   }
 }
 
+async function sumAmountsOfSelectedPaymentTransactionItems(event: any) {
+  selectedIds.value = event
+  if (selectedIds.value.length === 0) {
+    disabledConfirmButton.value = true
+    return totalAmountSelected.value = 0
+  }
+  // Filtramos los objetos cuyos IDs coincidan con los del array 'selectedIds'
+  totalAmountSelected.value = listItems.value
+    .filter(item => selectedIds.value.includes(item.id)) // Solo los que tengan un id que coincida
+    .reduce((total, item) => {
+      // Verificamos si invoiceAmount es un número válido
+      if (typeof item.netAmount === 'number' && !Number.isNaN(item.netAmount)) {
+        return total + item.netAmount
+      }
+      else {
+        return total
+      }
+    }, 0) // 0 es el valor inicial
+  disabledConfirmButton.value = false
+}
+
 async function resetListItems() {
   payload.value.page = 0
   payload.value.filter = [{
@@ -191,6 +219,10 @@ async function resetListItems() {
     type: 'filterSearch'
   }]
   getList()
+}
+
+async function importData() {
+
 }
 
 onMounted(() => {
@@ -267,6 +299,7 @@ onMounted(() => {
             @on-change-filter="parseDataTableFilter"
             @on-list-item="resetListItems"
             @on-sort-field="onSortField"
+            @update:clicked-item="sumAmountsOfSelectedPaymentTransactionItems($event)"
           >
             <template #datatable-toolbar>
               <Toolbar style="border-radius: 6px 6px 0 0; background-color: var(--primary-color)" class="mb-0">
@@ -308,6 +341,27 @@ onMounted(() => {
               />
             </template>
           </DynamicTable>
+        </div>
+      </div>
+      <div class="flex justify-content-between">
+        <div class="flex align-items-center">
+          <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
+            Payment Amount: ${{ formatNumber(selectedPayment.paymentAmount) }}
+          </Chip>
+          <Chip class="bg-primary py-1 mx-2 font-bold" label="Invoice Amount Selected: $0.00">
+            Payment Transaction Amount Selected: ${{ formatNumber(totalAmountSelected) }}
+          </Chip>
+        </div>
+        <div>
+          <Button
+            v-tooltip.top="'Import Transactions from VCC'"
+            class="w-3rem mx-1"
+            icon="pi pi-check"
+            :disabled="options.loading || disabledConfirmButton"
+            :loading="loadingImportFromVCC"
+            @click="importData"
+          />
+          <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
         </div>
       </div>
     </template>
