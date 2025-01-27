@@ -21,6 +21,11 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
+            if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+                //errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
+                return false;
+            }
+
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
             if (manageHotelDto.isVirtual() && !manageHotelDto.isRequiresFlatRate()) {
                 return true;
