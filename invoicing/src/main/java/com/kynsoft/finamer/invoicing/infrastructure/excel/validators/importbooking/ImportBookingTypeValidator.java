@@ -33,6 +33,7 @@ public class ImportBookingTypeValidator  extends ExcelRuleValidator<BookingRow> 
                 return false;
             }
         }else{
+            //errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
             return false;
         }
         return true;

@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,12 +42,16 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
 //        String validate = obj.getHotelBookingNumber()
 //                        .split("\\s+")[obj.getHotelBookingNumber()
 //                        .split("\\s+").length - 1];
-        ManageHotelDto hotel = manageHotelService.findByCode(this.upperCaseAndTrim(obj.getManageHotelCode()));
-        //if (service.existByBookingHotelNumber(obj.getHotelBookingNumber()) ||
-//        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId()) ||
-//                cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
-        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId())) {
-            errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported."));
+        try {
+            if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+                ManageHotelDto hotel = manageHotelService.findByCode(this.upperCaseAndTrim(obj.getManageHotelCode()));
+                if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId())) {
+                    errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported."));
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            //errorFieldList.add(new ErrorField("Hotel", "The Hotel not found."));
             return false;
         }
 //        List<Optional<BookingImportCache>> list = this.cacheRedisRepository.findAllBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(), obj.getImportProcessId());
@@ -57,7 +62,7 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
         return true;
     }
 
-    private String upperCaseAndTrim(String code){
+    private String upperCaseAndTrim(String code) {
         String value = code.trim();
         return value.toUpperCase();
     }

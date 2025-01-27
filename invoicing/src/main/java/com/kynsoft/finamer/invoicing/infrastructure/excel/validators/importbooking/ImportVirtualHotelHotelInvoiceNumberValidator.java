@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.util.List;
 
@@ -28,6 +29,11 @@ public class ImportVirtualHotelHotelInvoiceNumberValidator extends ExcelRuleVali
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
+
+        if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+            //errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
+            return false;
+        }
 
         ManageHotelDto hotelDto = this.manageHotelService.findByCode(obj.getManageHotelCode());
         List<BookingImportCache> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
