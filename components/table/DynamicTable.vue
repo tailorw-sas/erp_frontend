@@ -595,20 +595,20 @@ defineExpose({ clearSelectedItems })
 </script>
 
 <template>
-  <Toolbar v-if="props.options?.hasOwnProperty('showTitleBar') ? props.options?.showTitleBar : false" class="mb-4">
-    <template #start>
-      <div class="my-2">
-        <h5 class="m-0">
-          {{ options?.tableName }}
-        </h5>
-      </div>
-    </template>
-
-    <template #end>
-      <FileUpload mode="basic" accept="image/*" :max-file-size="1000000" label="Importar" choose-label="Importar" class="mr-2 inline-block" />
-    </template>
-  </Toolbar>
-
+  <slot v-if="props.options?.hasOwnProperty('showTitleBar') ? props.options?.showTitleBar : false" name="datatable-toolbar">
+    <Toolbar class="mb-4">
+      <template #start>
+        <div class="my-2">
+          <h5 class="m-0">
+            {{ options?.tableName }}
+          </h5>
+        </div>
+      </template>
+      <template #end>
+        <FileUpload mode="basic" accept="image/*" :max-file-size="1000000" label="Importar" choose-label="Importar" class="mr-2 inline-block" />
+      </template>
+    </Toolbar>
+  </slot>
   <BlockUI :blocked="options?.loading || parentComponentLoading" class="block-ui-container">
     <div
       v-if="options?.loading"
@@ -652,6 +652,7 @@ defineExpose({ clearSelectedItems })
         @column-resize-end="($event) => {
           console.log('column-resize-end', $event);
         }"
+        style="border: 0"
       >
         <!-- @row-select="onRowSelect"
         @row-unselect="onRowUnselect"
