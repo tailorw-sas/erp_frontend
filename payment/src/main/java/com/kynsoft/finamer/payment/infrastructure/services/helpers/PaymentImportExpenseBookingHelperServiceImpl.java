@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -228,16 +227,16 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             //Cada vez que tome el booking, neecsito controlar el amountBalance que le queda porque sino lo pone negativo.
             //BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(manageBookingDtos.get(i).getBookingId());
             BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(ids.get(i));
+            ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(data.get(i).getTransactionType());
+            String remark = data.get(i).getRemark() != null ? data.get(i).getRemark() : transactionTypeDto.getDefaultRemark();
             //for (ManageBookingDto manageBookingDto : manageBookingDtos) {
             if (amountBalance.getBookingAmountBalance() >= data.get(i).getBalance()) {
                 CreatePaymentDetailFromFileCommand createPaymentDetailCommand = new CreatePaymentDetailFromFileCommand(
                         Status.ACTIVE,
                         paymentId,
-                        //transactionTypeService.findByCode(transactions.get(i)).getId(),
-                        transactionTypeService.findByCode(data.get(i).getTransactionType()).getId(),
-                        //bookingBalance.get(String.valueOf(manageBookingDtos.get(i).getBookingId())), 
+                        transactionTypeDto.getId(),
                         data.get(i).getBalance(),
-                        data.get(i).getRemark(),
+                        remark,
                         employeeId,
                         amountBalance.getBookingId(),
                         true,

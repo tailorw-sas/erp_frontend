@@ -178,7 +178,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
                             String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
 
-                            depositEvent.setRemark("" + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
+                            depositEvent.setRemark("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
                             this.applicationEventPublisher.publishEvent(depositEvent);
                         }
                     } else {
