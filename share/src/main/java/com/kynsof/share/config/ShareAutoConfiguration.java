@@ -9,4 +9,5 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(IMediator.class)
 @ComponentScan(basePackages = "com.kynsof.share")
 public class ShareAutoConfiguration {
+
 }
