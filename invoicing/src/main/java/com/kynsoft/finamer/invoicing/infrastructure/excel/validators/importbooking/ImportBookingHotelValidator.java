@@ -14,23 +14,29 @@ import java.util.Objects;
 public class ImportBookingHotelValidator extends ExcelRuleValidator<BookingRow> {
 
     private final IManageHotelService manageHotelService;
+
     public ImportBookingHotelValidator(IManageHotelService manageHotelService) {
         this.manageHotelService = manageHotelService;
     }
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.isNull(obj.getManageHotelCode()) || obj.getManageHotelCode().isEmpty()){
-            errorFieldList.add(new ErrorField("Hotel"," Hotel can't be empty"));
+        if (Objects.isNull(obj.getManageHotelCode()) || obj.getManageHotelCode().isEmpty()) {
+            errorFieldList.add(new ErrorField("Hotel", " Hotel can't be empty"));
             return false;
         }
-        if(!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))){
-            errorFieldList.add(new ErrorField("Hotel"," Hotel not exists"));
+        if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+            errorFieldList.add(new ErrorField("Hotel", " Hotel not exists"));
             return false;
-        }else{
+        } else {
+//            if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+//                errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
+//                return false;
+//            }
+
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
-            if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())){
-                errorFieldList.add(new ErrorField("Hotel"," Hotel is inactive"));
+            if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())) {
+                errorFieldList.add(new ErrorField("Hotel", " Hotel is inactive"));
                 return false;
             }
         }
