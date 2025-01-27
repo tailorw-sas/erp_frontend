@@ -101,7 +101,7 @@ async function requireConfirmationToSave(item: any) {
   }
 }
 
-function areStringListsEqual(list1: string[], list2: string[]): boolean {
+/* function areStringListsEqual(list1: string[], list2: string[]): boolean {
   if (list1.length !== list2.length) {
     return false // Si las longitudes son diferentes, no son iguales
   }
@@ -112,7 +112,7 @@ function areStringListsEqual(list1: string[], list2: string[]): boolean {
 
   // Comparar elemento por elemento
   return sortedList1.every((value, index) => value === sortedList2[index])
-}
+} */
 
 async function save(newItem: { [key: string]: any }) {
   loadingSaveAll.value = true
@@ -121,9 +121,10 @@ async function save(newItem: { [key: string]: any }) {
     payload.email = Array.isArray(newItem.email) ? newItem.email.join(';') : newItem.email
     delete payload.event
     // Actualizar datos de la transaccion si cambian
-    if (item.value.guestName !== payload.guestName || !areStringListsEqual(item.value.email, newItem.email)) {
+    /* if (item.value.guestName !== payload.guestName || !areStringListsEqual(item.value.email, newItem.email)) {
       await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
-    }
+    } */
+    await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value, payload)
     await GenericService.create('creditcard', 'transactions/resend-payment-link', { id: props.transactionId })
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
     onClose(false)
@@ -220,7 +221,21 @@ watch(() => props.openDialog, async (newValue) => {
             class="custom-chips"
             @update:model-value="($event) => {
               onUpdate('email', $event)
-              // item.email = $event
+              item.email = $event
+            }"
+            @blur="($event) => {
+              const input = ($event.target as HTMLInputElement)?.value || '';
+              if (input && input.trim() !== '') {
+                // Agregar el valor al modelo de chips
+                const newChip = input.trim();
+                if (!item.email.includes(newChip)) {
+                  item.email.push(newChip); // Añade el nuevo chip
+                  onUpdate('email', item.email)
+                }
+
+                // Limpiar el input manualmente
+                $event.target.value = '';
+              }
             }"
           />
           <Skeleton v-else height="2rem" class="" />
