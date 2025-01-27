@@ -9,6 +9,8 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManageBookingResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
@@ -101,6 +103,35 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public void deleteAll() {
         this.repositoryCommand.deleteAll();
+    }
+
+    @Override
+    public BookingProjectionSimple findSimpleDetailByGenId(long id) {
+        Optional<BookingProjectionSimple> booking = this.repositoryQuery.findSimpleDetailByGenId(id);
+        if (booking.isPresent()) {
+            return booking.get();
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<ManageBookingDto> findByBookingIdIn(List<Long> ids) {
+        List<ManageBookingDto> list = new ArrayList<>();
+        for (Booking booking : this.repositoryQuery.findByBookingIdIn(ids)) {
+            list.add(booking.toAggregate());
+        }
+        return list;
+    }
+
+    @Override
+    public BookingProjectionControlAmountBalance findSimpleBookingByGenId(long id) {
+        Optional<BookingProjectionControlAmountBalance> booking = this.repositoryQuery.findSimpleBookingByGenId(id);
+        if (booking.isPresent()) {
+            return booking.get();
+        }
+
+        return null;
     }
 
 }

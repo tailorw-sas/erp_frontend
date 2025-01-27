@@ -9,7 +9,12 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -60,7 +65,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingCheckInValidator.class.getName(), new ImportBookingCheckInValidator());
             validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());
             validators.put(ImportBookingNightsValidator.class.getName(), new ImportBookingNightsValidator());
-            validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator());
+            //validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator());
             validators.put(ImportBookingInvoiceAmountValidator.class.getName(), new ImportBookingInvoiceAmountValidator());
             validators.put(ImportBookingCouponValidator.class.getName(), new ImportBookingCouponValidator());
             validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
@@ -88,4 +93,42 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
         return result;
     }
 
+    @Override
+    public boolean validateInsist(List<BookingImportCache> list) {
+        ImportInsistAdultsValidator validator = new ImportInsistAdultsValidator();
+        Map<String, List<BookingImportCache>> map = this.groupByInsistImportProcessBookingId(list);
+        List<BookingRow> errors = new ArrayList<>();
+        map.forEach((key, values) -> {
+            BookingRow bookingRow = values.get(0).toAggregateImportInsistValidate();
+            bookingRow.setImportProcessId(bookingRow.getInsistImportProcessId());
+            if (this.sum(values) == 0) {
+                errors.add(bookingRow);
+            }
+        });
+
+        if (!errors.isEmpty()) {
+            for (BookingRow error : errors) {
+                validator.validate(error, errorFieldList);
+                this.sendErrorEvent(error);
+            }
+        }
+        boolean result = errorFieldList.isEmpty();
+        //this.clearErrors();
+        return result;
+    }
+
+    private Map<String, List<BookingImportCache>> groupByInsistImportProcessBookingId(List<BookingImportCache> list) {
+        return list.stream()
+                .collect(Collectors.groupingBy(
+                        BookingImportCache::getInsistImportProcessBookingId,
+                        Collectors.toList()
+                ));
+    }
+
+    private double sum(List<BookingImportCache> values) {
+        double totalAdults = values.stream()
+                .mapToDouble(BookingImportCache::getAdults)
+                .sum();
+        return totalAdults;
+    }
 }

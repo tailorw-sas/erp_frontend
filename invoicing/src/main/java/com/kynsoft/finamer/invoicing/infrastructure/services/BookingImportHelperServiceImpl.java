@@ -99,8 +99,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             if (EImportType.VIRTUAL.equals(request.getImportType())) {
                 createInvoiceGroupingForVirtualHotel(request.getImportProcessId(), request.getEmployee());
             } else {
-                this.createInvoiceGroupingByCoupon(request.getImportProcessId(), request.getEmployee());
-                this.createInvoiceGroupingByBooking(request.getImportProcessId(), request.getEmployee());
+                this.createInvoiceGroupingByCoupon(request.getImportProcessId(), request.getEmployee(), false);
+                this.createInvoiceGroupingByBooking(request.getImportProcessId(), request.getEmployee(), false);
             }
         }
     }
@@ -145,13 +145,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             groupedByHotelBookingNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber");
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber", false);
             });
         }
     }
 
     @Override
-    public void createInvoiceGroupingByCoupon(String importProcessId, String employee) {
+    public void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean insisit) {
         Map<GroupByCoupon, List<BookingRow>> groupedByHotelBookingNumber;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
@@ -169,13 +169,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             groupedByHotelBookingNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon");
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon", insisit);
             });
         }
     }
 
     @Override
-    public void createInvoiceGroupingByBooking(String importProcessId, String employee) {
+    public void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insisit) {
         /**
          * *
          * Para el caso de la agrupacion por Booking, al tener en una agrupacion
@@ -207,12 +207,12 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking");
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insisit);
             });
         }
     }
 
-    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType) {
+    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType, boolean insisit) {
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
@@ -233,6 +233,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
         } else {
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
+        }
+        if (insisit) {
+            manageInvoiceDto.setImportType(ImportType.INSIST);
         }
         manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
         manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber() != null ? Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()) : null);
