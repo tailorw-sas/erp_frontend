@@ -398,7 +398,7 @@ async function reconcileManual() {
       }
     }
     // Enviar el payload a la API
-    // response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
+    response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
   }
   catch (error: any) {
     console.error('Error en reconcileManual:', error?.data?.data?.error?.errorMessage)
