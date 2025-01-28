@@ -156,6 +156,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 break;
             }
         }
+        this.paymentCloseOperationService.clearCache();
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("Finaliza proceso: " + LocalTime.now());
@@ -280,26 +281,15 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByPaymentInvoice();
-        PaymentDetailDto newDetailDto = new PaymentDetailDto(
-                command.getId(),
-                Status.ACTIVE,
-                command.getPaymentCash(),
-                transactionTypeDto,
-                command.getInvoiceAmount(),
-                transactionTypeDto.getDefaultRemark(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false
-        );
+        ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByPaymentInvoiceCacheable();
+        PaymentDetailDto newDetailDto = new PaymentDetailDto();
+        newDetailDto.setId(command.getId());
+        newDetailDto.setStatus(Status.ACTIVE);
+        newDetailDto.setPayment(command.getPaymentCash());
+        newDetailDto.setTransactionType(transactionTypeDto);
+        newDetailDto.setAmount(command.getInvoiceAmount());
+        newDetailDto.setRemark(transactionTypeDto.getDefaultRemark());
+        newDetailDto.setApplayPayment(Boolean.FALSE);
         newDetailDto.setCreateByCredit(command.isCreateByCredit());
         this.paymentDetailService.create(newDetailDto);
         if (command.isApplyPayment()) {
@@ -328,7 +318,8 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     private OffsetDateTime transactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIdsCacheable(hotel);
+        //PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));
@@ -385,7 +376,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
 
         if (paymentDto.getPaymentBalance() == 0 && paymentDto.getDepositBalance() == 0) {
-            paymentDto.setPaymentStatus(this.statusService.findByApplied());
+            paymentDto.setPaymentStatus(this.statusService.findByAppliedCacheable());
             ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
             this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
