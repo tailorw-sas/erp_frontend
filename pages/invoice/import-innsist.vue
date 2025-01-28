@@ -154,7 +154,6 @@ const options = ref({
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
   selectFirstItemByDefault: false,
-  scrollHeight: '500px',
   showLocalPagination: false,
   showSelectedItems: true
 })
@@ -438,6 +437,7 @@ async function getAgencyList(query: string = '') {
 
 async function openErrorsSearch(event: any) {
   showErrorsSearchDataTable.value = event
+  await getListSearchErrors()
 }
 
 async function clearForm() {
@@ -943,7 +943,6 @@ async function getErrorList(processId: any) {
             invoiceFolioNumber: '',
             quote: '',
             renewalNumber: '',
-            // message: `${iterator.errorFields[0]?.field} - ${iterator.errorFields[0]?.message}`
             message: errorMessage
           })
           existingIds.add(iterator.row?.insistImportProcessBookingId)
