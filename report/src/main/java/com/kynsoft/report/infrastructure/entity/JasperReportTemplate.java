@@ -37,6 +37,7 @@ public class JasperReportTemplate extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private ModuleSystems moduleSystems;
+    private String dataValueStatic;
 
     private Double parentIndex;
     private Double menuPosition;

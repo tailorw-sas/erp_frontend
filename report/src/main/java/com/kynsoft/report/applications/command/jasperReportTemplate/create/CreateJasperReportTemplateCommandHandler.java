@@ -79,6 +79,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         );
 
         reportTemplateDto.setModuleSystems(command.getModuleSystems());
+        reportTemplateDto.setDataValueStatic(command.getDataValueStatic());
         UUID id = this.service.create(reportTemplateDto);
 
         addParameters(command.getFile(), reportTemplateDto);
