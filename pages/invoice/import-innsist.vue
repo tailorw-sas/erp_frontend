@@ -207,6 +207,15 @@ const errorListPayload = ref<IQueryRequest>({
   sortType: ENUM_SHORT_TYPE.ASC
 })
 
+const payloadSearchErrors = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 500,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
@@ -251,7 +260,6 @@ async function getList() {
     idItemToLoadFirstTime.value = ''
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
     const { data: dataList, totalPages, totalElements, size, page } = response
 
     pagination.value.page = page
@@ -308,7 +316,7 @@ async function getListSearchErrors() {
     listItemsSearchErrors.value = []
     optionsSearchErrors.value.loading = true
     const newListItems = []
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payloadSearchErrors.value)
     const { data: dataList, totalPages, totalElements, size, page } = response
 
     paginationSearchErrors.value.page = page
@@ -633,7 +641,7 @@ async function searchAndFilterSearchErrors() {
     type: 'filterSearch'
   })
 
-  payload.value = newPayload
+  payloadSearchErrors.value = newPayload
 
   await getListSearchErrors()
 }
@@ -754,7 +762,8 @@ function generateProcessId() {
 }
 
 async function importBookings() {
-  const idItemsToImport = selectedElements.value.map((item: any) => item.id)
+  listItemsSearchErrors.value = []
+  const idItemsToImport = selectedElements.value
   if (selectedElements.value.length === 0) {
     toast.add({
       severity: 'info',
@@ -829,6 +838,7 @@ async function importBookings() {
 
     options.value.loading = false
     await getList()
+    await searchAndFilterSearchErrors()
     showErrorsDataTable.value = false
     showDataTable.value = true
   }
