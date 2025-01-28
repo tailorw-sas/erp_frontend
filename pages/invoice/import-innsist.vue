@@ -651,9 +651,17 @@ function clearFilterToSearch() {
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
   }
+  pagination.value = {
+    page: 0,
+    limit: 500,
+    totalElements: 0,
+    totalPages: 0,
+    search: ''
+  }
+
   listItems.value = []
-  pagination.value.totalElements = 0
   listItemsSearchErrors.value = []
+  listItemsErrors.value = []
 }
 
 const disabledSearch = computed(() => {
@@ -766,7 +774,7 @@ async function importBookings() {
     const payload = {
       id: processId.value,
       userId: userData?.value?.user?.userId,
-      bookings: selectedElements.value.map((item: any) => item.id)
+      bookings: selectedElements.value
     }
 
     selectedElements.value = []
@@ -960,7 +968,7 @@ async function updateBookingsStatus(processId: any) {
     await GenericService.updateBookings(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
   }
   catch (error: any) {
-    toast.add({ severity: 'info', summary: 'Error', detail: error, life: 5000 })
+    toast.add({ severity: 'warn', summary: 'Completed with errors', detail: 'The import process finished with errors, please validate the bookings in Manage Invoice', life: 5000 })
   }
 }
 
@@ -1222,8 +1230,8 @@ onMounted(async () => {
         </DynamicTable>
       </div>
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'View Errors Search'" :outlined="disabledSearchErrors" severity="danger" class="w-3rem mx-2" icon="pi pi-times-circle" :disabled="disabledSearchErrors" @click="openErrorsSearch($event)" />
         <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-save" :disabled="disabledImport" @click="importBookings" />
+        <Button v-tooltip.top="'View Errors Search'" :outlined="disabledSearchErrors" severity="danger" class="w-3rem mx-2" icon="pi pi-times-circle" :disabled="disabledSearchErrors" @click="openErrorsSearch($event)" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
       </div>
     </div>
