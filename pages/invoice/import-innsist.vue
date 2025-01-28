@@ -121,19 +121,19 @@ const columnsErrors: IColumn[] = [
 ]
 
 const columnsSearchErrors: IColumn[] = [
-  { field: 'hotel', header: 'Hotel', type: 'text', maxWidth: '30px' },
-  { field: 'agency', header: 'Agency', type: 'text', maxWidth: '10px' },
-  { field: 'invoicingDate', header: 'Booking Date', type: 'date', maxWidth: '10px' },
-  { field: 'guestName', header: 'Full Name', type: 'text', maxWidth: '20px' },
-  { field: 'reservationCode', header: 'Reserv No', type: 'text', maxWidth: '10px' },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', maxWidth: '10px' },
-  { field: 'roomType', header: 'Room Type', type: 'text', maxWidth: '10px' },
-  { field: 'checkInDate', header: 'Check In', type: 'date', maxWidth: '10px' },
-  { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text', maxWidth: '10px' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', maxWidth: '10px' },
-  { field: 'amount', header: 'Amount', type: 'text', maxWidth: '10px' },
-  { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '70px' }
+  { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '30px', maxWidth: '120px' },
+  { field: 'agency', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'invoicingDate', header: 'Booking Date', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'guestName', header: 'Full Name', type: 'text', minWidth: '20px', maxWidth: '100px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '10px', maxWidth: '70px' },
+  { field: 'roomType', header: 'Room Type', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
+  { field: 'amount', header: 'Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
+  { field: 'message', header: 'Error', type: 'slot-text', minWidth: '50px', maxWidth: '100px' }
 ]
 
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
@@ -340,6 +340,7 @@ async function getListSearchErrors() {
       })
     }
 
+    console.log(listItemsSearchErrors)
     listItemsSearchErrors.value = [...listItemsSearchErrors.value, ...newListItems]
   }
   catch (error) {
@@ -1308,6 +1309,11 @@ onMounted(async () => {
           @on-sort-field="onSortFieldSearchErrors"
           @on-expand-row="getRoomRateByBookingSearchErrors($event)"
         >
+          <template #column-message="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            </div>
+          </template>
           <template #expansion="{ data: item }">
             <div class="p-0 m-0">
               <DataTable :value="item.roomRates" striped-rows>
