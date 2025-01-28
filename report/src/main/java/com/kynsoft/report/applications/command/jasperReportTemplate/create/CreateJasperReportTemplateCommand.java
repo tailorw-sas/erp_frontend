@@ -38,6 +38,7 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private String query;
 
     private final ModuleSystems moduleSystems;
+    private final String dataValueStatic;
 
     public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
                                              String file,
@@ -45,8 +46,9 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                                              String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail,
                                              Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel,
                                              String rootIndex, String language, Status status, UUID dbConection,
-                                             String query, ModuleSystems moduleSystems) {
+                                             String query, ModuleSystems moduleSystems, String dataValueStatic) {
         this.moduleSystems = moduleSystems;
+        this.dataValueStatic = dataValueStatic;
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -94,7 +96,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getStatus(),
                 request.getDbConection(),
                 request.getQuery(),
-                request.getModuleSystems()
+                request.getModuleSystems(),
+                request.getDataValueStatic()
         );
     }
 

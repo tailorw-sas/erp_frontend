@@ -24,5 +24,7 @@ public interface IManagePaymentStatusService {
 
     ManagePaymentStatusDto findByApplied();
 
+    ManagePaymentStatusDto findByAppliedCacheable();
+
     ManagePaymentStatusDto findByConfirmed();
 }

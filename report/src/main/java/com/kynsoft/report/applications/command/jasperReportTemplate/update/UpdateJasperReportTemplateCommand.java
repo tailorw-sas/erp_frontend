@@ -37,6 +37,7 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
     private UUID dbConection;
     private String query;
     private final ModuleSystems moduleSystems;
+    private  final String dataValueStatic;
 
     public UpdateJasperReportTemplateCommand(UUID id, String name, String description,
                                              JasperReportTemplateType type, String file, String parameters,
@@ -44,7 +45,7 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
                                              String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail,
                                              Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel,
                                              String rootIndex, String language, Status status, UUID dbConection,
-                                             String query, ModuleSystems moduleSystems) {
+                                             String query, ModuleSystems moduleSystems, String dataValueStatic) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -67,6 +68,7 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
         this.dbConection = dbConection;
         this.query = query;
         this.moduleSystems = moduleSystems;
+        this.dataValueStatic = dataValueStatic;
     }
 
     public static UpdateJasperReportTemplateCommand fromRequest(UpdateJasperReportTemplateRequest request, UUID id) {
@@ -92,7 +94,8 @@ public class UpdateJasperReportTemplateCommand implements ICommand {
                 request.getStatus(),
                 request.getDbConection(),
                 request.getQuery(),
-                request.getModuleSystems()
+                request.getModuleSystems(),
+                request.getDataValueStatic()
         );
     }
 
