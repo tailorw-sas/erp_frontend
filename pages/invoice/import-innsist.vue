@@ -122,7 +122,7 @@ const columnsErrors: IColumn[] = [
 
 const columnsSearchErrors: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '30px', maxWidth: '120px' },
-  { field: 'agency', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
   { field: 'invoicingDate', header: 'Booking Date', type: 'date', minWidth: '10px', maxWidth: '50px' },
   { field: 'guestName', header: 'Full Name', type: 'text', minWidth: '20px', maxWidth: '100px' },
   { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '50px' },
@@ -130,9 +130,8 @@ const columnsSearchErrors: IColumn[] = [
   { field: 'roomType', header: 'Room Type', type: 'text', minWidth: '10px', maxWidth: '50px' },
   { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
   { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text', minWidth: '10px', maxWidth: '50px' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
-  { field: 'amount', header: 'Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
   { field: 'message', header: 'Error', type: 'slot-text', minWidth: '50px', maxWidth: '100px' }
 ]
 
