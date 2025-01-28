@@ -120,7 +120,8 @@ public class JasperReportTemplate extends BaseEntity {
                 language,
                 conectionDto,
                 query,
-                moduleSystems
+                moduleSystems,
+                dataValueStatic
         );
     }
 
