@@ -55,6 +55,7 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setQuery, command.getQuery(), updateDto.getQuery(), update::setUpdate);
         updateDto.setModuleSystems(command.getModuleSystems());
+        updateDto.setDataValueStatic(command.getDataValueStatic());
 
         this.updateConection(updateDto::setDbConectionDto, command.getDbConection(), updateDto.getDbConectionDto() != null ? updateDto.getDbConectionDto().getId() : null,update::setUpdate);
 

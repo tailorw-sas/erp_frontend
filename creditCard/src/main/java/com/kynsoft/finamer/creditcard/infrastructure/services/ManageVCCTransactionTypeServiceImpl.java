@@ -86,8 +86,8 @@ public class ManageVCCTransactionTypeServiceImpl implements IManageVCCTransactio
     public ManageVCCTransactionTypeDto findByIsDefaultAndIsSubcategory() {
         return this.repositoryQuery.findByIsDefaultAndIsSubCategory().map(ManageVCCTransactionType::toAggregate).orElseThrow(()->
                 new BusinessException(
-                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND,
-                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_DEFAULT_NOT_FOUND.getReasonPhrase()
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_SUB_DEFAULT_NOT_FOUND,
+                        DomainErrorMessage.MANAGE_VCC_TRANSACTION_TYPE_SUB_DEFAULT_NOT_FOUND.getReasonPhrase()
                 )
         );
     }

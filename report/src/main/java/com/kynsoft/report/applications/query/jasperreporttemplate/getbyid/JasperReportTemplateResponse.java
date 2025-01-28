@@ -42,7 +42,8 @@ public class JasperReportTemplateResponse implements IResponse {
     private String language;
     private DBConectionResponse dbConection;
     private String query;
-    private ModuleSystems moduleSystems; // Campo para el módulo del sistema
+    private ModuleSystems moduleSystems;
+    private String dataValueStatic;
 
     public JasperReportTemplateResponse(JasperReportTemplateDto jasperReportTemplateDto) {
         this.id = jasperReportTemplateDto.getId();
@@ -68,6 +69,7 @@ public class JasperReportTemplateResponse implements IResponse {
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.query = jasperReportTemplateDto.getQuery();
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
+        this.dataValueStatic = jasperReportTemplateDto.getDataValueStatic();
     }
 
 }

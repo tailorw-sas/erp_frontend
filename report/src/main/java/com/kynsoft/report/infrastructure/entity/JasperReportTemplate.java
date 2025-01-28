@@ -37,6 +37,7 @@ public class JasperReportTemplate extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private ModuleSystems moduleSystems;
+    private String dataValueStatic;
 
     private Double parentIndex;
     private Double menuPosition;
@@ -119,7 +120,8 @@ public class JasperReportTemplate extends BaseEntity {
                 language,
                 conectionDto,
                 query,
-                moduleSystems
+                moduleSystems,
+                dataValueStatic
         );
     }
 

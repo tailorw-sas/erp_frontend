@@ -250,10 +250,16 @@ public class TransactionServiceImpl implements ITransactionService {
             // All Recipients
             List<MailJetRecipient> recipients = new ArrayList<>();
             if (transactionDto.getEmail() != null && !transactionDto.getEmail().isEmpty()) {
-                recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+                String[] emails = transactionDto.getEmail().split(";");
+                for (String email : emails) {
+                    recipients.add(new MailJetRecipient(email, transactionDto.getGuestName()));
+                }
             }
             if (transactionDto.getHotelContactEmail() != null && !transactionDto.getHotelContactEmail().isEmpty()) {
-                recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+                String[] emails = transactionDto.getHotelContactEmail().split(";");
+                for (String email : emails) {
+                    recipients.add(new MailJetRecipient(email, transactionDto.getGuestName()));
+                }
             }
             request.setRecipientEmail(recipients);
 
@@ -296,10 +302,19 @@ public class TransactionServiceImpl implements ITransactionService {
 
         // Recipients
         List<MailJetRecipient> recipients = new ArrayList<>();
-        recipients.add(new MailJetRecipient(transactionDto.getEmail(), transactionDto.getGuestName()));
+        if (transactionDto.getEmail() != null && !transactionDto.getEmail().isEmpty()) {
+            String[] emails = transactionDto.getEmail().split(";");
+            for (String email : emails) {
+                recipients.add(new MailJetRecipient(email, transactionDto.getGuestName()));
+            }
+        }
+
         // Add hotel contact recipient if exists
         if (transactionDto.getHotelContactEmail() != null && !transactionDto.getHotelContactEmail().isEmpty()) {
-            recipients.add(new MailJetRecipient(transactionDto.getHotelContactEmail(), transactionDto.getGuestName()));
+            String[] emails = transactionDto.getHotelContactEmail().split(";");
+            for (String email : emails) {
+                recipients.add(new MailJetRecipient(email, transactionDto.getGuestName()));
+            }
         }
         request.setRecipientEmail(recipients);
         mailService.sendMail(request);
