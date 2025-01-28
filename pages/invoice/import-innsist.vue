@@ -27,6 +27,8 @@ const showErrorsSearchDataTable = ref(false)
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const processId = ref('')
 const totalImportedRows = ref(0)
+const totalHotelInvoiceAmount = ref(0)
+const totalInvoiceAmount = ref(0)
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -73,19 +75,19 @@ const confInvoiceApi = reactive({
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'hotel', header: 'Hotel', type: 'text', maxWidth: '50px' },
-  { field: 'agencyCode', header: 'Agency', type: 'text', maxWidth: '10px' },
-  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', maxWidth: '15px' },
-  { field: 'firstName', header: 'First Name', type: 'text', maxWidth: '12px' },
-  { field: 'lastName', header: 'Last Name', type: 'text', maxWidth: '12px' },
-  { field: 'reservationCode', header: 'Reserv No', type: 'text', maxWidth: '10px' },
-  { field: 'roomType', header: 'Room Type', type: 'text', maxWidth: '10px' },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', maxWidth: '20px' },
-  { field: 'checkInDate', header: 'Check In', type: 'date', maxWidth: '10px' },
-  { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'number', maxWidth: '10px' },
-  { field: 'amount', header: 'Invoice Amount', type: 'number', maxWidth: '10px' },
-  // { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '10px' }
+  { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '50px', maxWidth: '150px' },
+  { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', minWidth: '15px', maxWidth: '150px' },
+  { field: 'firstName', header: 'First Name', type: 'text', minWidth: '12px', maxWidth: '50px' },
+  { field: 'lastName', header: 'Last Name', type: 'text', minWidth: '12px', maxWidth: '50px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'roomType', header: 'Room Type', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '20px', maxWidth: '50px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
+  { field: 'status', header: 'Status', type: 'slot-text', minWidth: '10px', maxWidth: '50px' }
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -114,7 +116,7 @@ const columnsErrors: IColumn[] = [
   { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'text', maxWidth: '10px' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', maxWidth: '10px' },
-  { field: 'amount', header: 'Amount', type: 'text', maxWidth: '10px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'text', maxWidth: '10px' },
   { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '70px' }
 ]
 
@@ -278,6 +280,9 @@ async function getList() {
         rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
         selected: isRowSelectable(iterator)
       })
+
+      totalHotelInvoiceAmount.value += iterator.hotelInvoiceAmount ? Number(iterator.hotelInvoiceAmount) : 0
+      totalInvoiceAmount.value += iterator.amount
     }
 
     listItems.value = [...listItems.value, ...newListItems]
@@ -469,6 +474,8 @@ function onSortField(event: any) {
 async function searchAndFilter() {
   showErrorsDataTable.value = false
   showDataTable.value = true
+  totalHotelInvoiceAmount.value = 0
+  totalInvoiceAmount.value = 0
   const newPayload: IQueryRequest = {
     filter: [],
     query: '',
@@ -1031,6 +1038,21 @@ function onSortFieldSearchErrors(event: any) {
   }
 }
 
+function getStatusBadgeBackgroundColorByItem(status: string) {
+  if (!status) { return }
+  if (status === 'PENDING') { return '#005FB7' }
+  if (status === 'FAILED') { return '#F74646' }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PENDING': return 'Pending'
+    case 'FAILED': return 'Failed'
+    default:
+      return ''
+  }
+}
+
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 500
@@ -1169,6 +1191,9 @@ onMounted(async () => {
           @update:clicked-item="onMultipleSelect($event)"
           @on-expand-row="getRoomRateByBooking($event)"
         >
+          <template #column-status="{ data }">
+            <Badge :value="getStatusName(data.status)" :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.status)}`" />
+          </template>
           <template #column-message="{ data }">
             <div id="fieldError">
               <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
@@ -1196,7 +1221,32 @@ onMounted(async () => {
               </DataTable>
             </div>
           </template>
+
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center font-bold font-100" style="font-weight: 700">
+              <Row>
+                <Column footer="Totals:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
+                <Column :footer="formatNumber(Math.round((totalHotelInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+                <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+                <Column :colspan="12" />
+              </Row>
+            </ColumnGroup>
+          </template>
         </DynamicTable>
+        <div class="flex align-items-center justify-content-end gap-2 mt-3">
+          <ColumnGroup type="footer" class="flex align-items-center font-bold font-100" style="font-weight: 700">
+            <Row>
+              <Column footer="Booking to import:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((pagination.totalElements + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+              <Column :colspan="12" />
+            </Row>
+            <Row>
+              <Column footer="Booking with errors:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((paginationSearchErrors.totalElements + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+              <Column :colspan="12" />
+            </Row>
+          </ColumnGroup>
+        </div>
       </div>
       <div v-if="showErrorsDataTable" class="p-0">
         <DynamicTable
