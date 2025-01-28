@@ -26,4 +26,8 @@ public interface IPaymentCloseOperationService {
     Long findByHotelId(UUID hotelId);
 
     PaymentCloseOperationDto findByHotelIds(UUID hotel);
+
+    PaymentCloseOperationDto findByHotelIdsCacheable(UUID hotel);
+
+    void clearCache();
 }

@@ -24,6 +24,8 @@ public interface IManagePaymentTransactionTypeService {
 
     ManagePaymentTransactionTypeDto findByPaymentInvoice();
 
+    ManagePaymentTransactionTypeDto findByPaymentInvoiceCacheable();
+
     ManagePaymentTransactionTypeDto findByDeposit();
 
     ManagePaymentTransactionTypeDto findByApplyDeposit();

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationService {
@@ -136,6 +138,22 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
             return object.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    @Cacheable(cacheNames = "closeOperationByHotel", unless = "#result == null")
+    public PaymentCloseOperationDto findByHotelIdsCacheable(UUID hotel) {
+        Optional<PaymentCloseOperation> object = this.repositoryQuery.findByHotelIds(hotel);
+        if (object.isPresent()) {
+            return object.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @CacheEvict(allEntries = true, value = "closeOperationByHotel")
+    @Override
+    public void clearCache() {
+        System.out.println("Clearing closeOperationByHotel cache");
     }
 
 }
