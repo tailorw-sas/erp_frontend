@@ -1080,7 +1080,7 @@ onMounted(async () => {
     </h5>
   </div>
   <div class="grid">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-1">
       <div class=" p-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
