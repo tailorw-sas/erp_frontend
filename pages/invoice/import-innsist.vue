@@ -20,7 +20,7 @@ const selectedElements = ref<string[]>([])
 const loadingSearch = ref(false)
 const loadingSaveAll = ref(false)
 const importProcess = ref(false)
-const resultTable = ref(null)
+const resultTable = ref<InstanceType<typeof DynamicTable> | null>(null)
 const showDataTable = ref(true)
 const showErrorsDataTable = ref(false)
 const showErrorsSearchDataTable = ref(false)
@@ -255,9 +255,12 @@ async function getList() {
     return
   }
   try {
+    selectedElements.value = []
+    resultTable.value?.clearSelectedItems()
     listItems.value = []
     options.value.loading = true
     idItemToLoadFirstTime.value = ''
+
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
     const { data: dataList, totalPages, totalElements, size, page } = response
@@ -286,7 +289,7 @@ async function getList() {
     listItems.value = [...listItems.value, ...newListItems]
 
     if (listItems.value && listItems.value.length > 0) {
-      selectedElements.value = listItems.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '')// .map(item => item.id)
+      selectedElements.value = listItems.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '').map(item => item.id)
     }
     else {
       selectedElements.value = []
@@ -339,7 +342,6 @@ async function getListSearchErrors() {
       })
     }
 
-    console.log(listItemsSearchErrors)
     listItemsSearchErrors.value = [...listItemsSearchErrors.value, ...newListItems]
   }
   catch (error) {
@@ -1078,7 +1080,7 @@ onMounted(async () => {
     </h5>
   </div>
   <div class="grid">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-1">
       <div class=" p-0">
         <Accordion :active-index="0" class="mb-2">
           <AccordionTab>
