@@ -87,6 +87,16 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(1, 'The name field is required').max(50, 'Maximum 50 characters')
   },
   {
+    field: 'type',
+    header: 'Type',
+    dataType: 'select',
+    class: 'field col-12 required',
+    validation: z.object({
+      id: z.string().min(1, 'The generation type field is required'),
+      name: z.string().min(1, 'The generation type field is required'),
+    }).nullable().refine(value => value && value.id && value.name, { message: 'The type field is required' }),
+  },
+  {
     field: 'moduleSystems',
     header: 'Module',
     dataType: 'select',
@@ -232,6 +242,7 @@ async function getList() {
     const newListItems = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -243,10 +254,10 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      iterator.type = ENUM_REPORT_TYPE.find(x => x.id === iterator.type)
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
-      }
+      // iterator.type = iterator.type ? ENUM_REPORT_TYPE.find(x => x.id === iterator.type) : null
+      // if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+      //   iterator.status = statusToBoolean(iterator.status)
+      // }
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {

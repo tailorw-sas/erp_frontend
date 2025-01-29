@@ -449,6 +449,66 @@ async function getDependedFieldList(query: string, id: string) {
   }
 }
 
+function showAndHideFieldInGetItemById(type: string) {
+  switch (type) {
+    case 'local-select':
+      updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
+      updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
+      updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
+      updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
+
+      updateFieldProperty(fields, 'module', 'class', 'field col-12')
+      updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'module', 'disabled', true)
+      updateFieldProperty(fields, 'module', 'hidden', true)
+      delete errorsListParent.module
+
+      updateFieldProperty(fields, 'service', 'class', 'field col-12')
+      updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'service', 'disabled', true)
+      updateFieldProperty(fields, 'service', 'hidden', true)
+      delete errorsListParent.service
+
+      updateFieldProperty(fields, 'dependentField', 'disabled', true)
+      updateFieldProperty(fields, 'dependentField', 'hidden', true)
+      delete errorsListParent.dependentField
+
+      updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+      updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+      delete errorsListParent.filterKeyValue
+      break
+    case 'text':
+      updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+      updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+      updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+      delete errorsListParent.dataValueStatic
+
+      updateFieldProperty(fields, 'module', 'class', 'field col-12')
+      updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'module', 'disabled', true)
+      updateFieldProperty(fields, 'module', 'hidden', true)
+      delete errorsListParent.module
+
+      updateFieldProperty(fields, 'service', 'class', 'field col-12')
+      updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'service', 'disabled', true)
+      updateFieldProperty(fields, 'service', 'hidden', true)
+      delete errorsListParent.service
+
+      updateFieldProperty(fields, 'dependentField', 'disabled', true)
+      updateFieldProperty(fields, 'dependentField', 'hidden', true)
+      delete errorsListParent.dependentField
+
+      updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+      updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+      updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+      delete errorsListParent.filterKeyValue
+      break
+  }
+}
+
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -481,32 +541,9 @@ async function getItemById(id: string) {
       if (response.componentType === 'local-select') {
         localValuesFieldList.value = response.dataValueStatic ? JSON.parse(response.dataValueStatic || []) : []
         item.value.dataValueStatic = response.dataValueStatic ? response.dataValueStatic || [] : []
-        updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
-        updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
-        updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
-        updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
-
-        updateFieldProperty(fields, 'module', 'class', 'field col-12')
-        updateFieldProperty(fields, 'module', 'validation', z.string().trim())
-        updateFieldProperty(fields, 'module', 'disabled', true)
-        updateFieldProperty(fields, 'module', 'hidden', true)
-        delete errorsListParent.module
-
-        updateFieldProperty(fields, 'service', 'class', 'field col-12')
-        updateFieldProperty(fields, 'service', 'validation', z.string().trim())
-        updateFieldProperty(fields, 'service', 'disabled', true)
-        updateFieldProperty(fields, 'service', 'hidden', true)
-        delete errorsListParent.service
-
-        updateFieldProperty(fields, 'dependentField', 'disabled', true)
-        updateFieldProperty(fields, 'dependentField', 'hidden', true)
-        delete errorsListParent.dependentField
-
-        updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
-        updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
-        updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
-        delete errorsListParent.filterKeyValue
       }
+
+      showAndHideFieldInGetItemById(response.componentType)
 
       formReload.value += 1
     }
@@ -712,6 +749,100 @@ function onCellEditComplete(event) {
   }
 }
 
+function showAndHideField(eventValue: any, fields: any, onUpdate: any) {
+  if (eventValue && (eventValue?.id === 'select' || eventValue?.id === 'multiselect')) {
+    updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
+    updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
+    updateFieldProperty(fields, 'module', 'disabled', false)
+    updateFieldProperty(fields, 'module', 'hidden', false)
+
+    updateFieldProperty(fields, 'service', 'class', 'field col-12 required')
+    updateFieldProperty(fields, 'service', 'validation', z.string().trim().min(1, 'The service field is required').max(50, 'Maximum 50 characters'))
+    updateFieldProperty(fields, 'service', 'disabled', false)
+    updateFieldProperty(fields, 'service', 'hidden', false)
+
+    updateFieldProperty(fields, 'dependentField', 'disabled', false)
+    updateFieldProperty(fields, 'dependentField', 'hidden', false)
+
+    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+    updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+    onUpdate('dataValueStatic', '')
+    delete errorsListParent.dataValueStatic
+
+    updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+    updateFieldProperty(fields, 'filterKeyValue', 'hidden', false)
+    onUpdate('filterKeyValue', '')
+    delete errorsListParent.filterKeyValue
+  }
+  else if (eventValue && eventValue?.id === 'local-select') {
+    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
+    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
+    updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
+    updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
+
+    updateFieldProperty(fields, 'module', 'class', 'field col-12')
+    updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'module', 'disabled', true)
+    updateFieldProperty(fields, 'module', 'hidden', true)
+    onUpdate('module', '')
+    delete errorsListParent.module
+
+    updateFieldProperty(fields, 'service', 'class', 'field col-12')
+    updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'service', 'disabled', true)
+    updateFieldProperty(fields, 'service', 'hidden', true)
+    onUpdate('service', '')
+    delete errorsListParent.service
+
+    updateFieldProperty(fields, 'dependentField', 'disabled', true)
+    updateFieldProperty(fields, 'dependentField', 'hidden', true)
+    onUpdate('dependentField', null)
+    delete errorsListParent.dependentField
+
+    updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+    updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+    onUpdate('filterKeyValue', '')
+    delete errorsListParent.filterKeyValue
+  }
+  else {
+    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+    updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+    onUpdate('dataValueStatic', '')
+    delete errorsListParent.dataValueStatic
+
+    updateFieldProperty(fields, 'module', 'class', 'field col-12')
+    updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'module', 'disabled', true)
+    updateFieldProperty(fields, 'module', 'hidden', true)
+    onUpdate('module', '')
+    delete errorsListParent.module
+
+    updateFieldProperty(fields, 'service', 'class', 'field col-12')
+    updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'service', 'disabled', true)
+    updateFieldProperty(fields, 'service', 'hidden', true)
+    onUpdate('service', '')
+    delete errorsListParent.service
+
+    updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+    updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+    updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+    onUpdate('filterKeyValue', '')
+    delete errorsListParent.filterKeyValue
+
+    updateFieldProperty(fields, 'dependentField', 'disabled', true)
+    updateFieldProperty(fields, 'dependentField', 'hidden', true)
+    onUpdate('dependentField', null)
+    delete errorsListParent.dependentField
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -815,79 +946,81 @@ onMounted(async () => {
                   //   localValuesFieldList = []
                   // }
 
-                  if ($event && ($event?.id === 'select' || $event?.id === 'multiselect')) {
-                    updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
-                    updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
-                    updateFieldProperty(fields, 'module', 'disabled', false)
+                  showAndHideField($event, fields, onUpdate)
 
-                    updateFieldProperty(fields, 'service', 'class', 'field col-12 required')
-                    updateFieldProperty(fields, 'service', 'validation', z.string().trim().min(1, 'The service field is required').max(50, 'Maximum 50 characters'))
-                    updateFieldProperty(fields, 'service', 'disabled', false)
+                  // if ($event && ($event?.id === 'select' || $event?.id === 'multiselect')) {
+                  //   updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
+                  //   updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
+                  //   updateFieldProperty(fields, 'module', 'disabled', false)
 
-                    updateFieldProperty(fields, 'dependentField', 'disabled', false)
+                  //   updateFieldProperty(fields, 'service', 'class', 'field col-12 required')
+                  //   updateFieldProperty(fields, 'service', 'validation', z.string().trim().min(1, 'The service field is required').max(50, 'Maximum 50 characters'))
+                  //   updateFieldProperty(fields, 'service', 'disabled', false)
 
-                    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
-                    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
-                    updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
-                    onUpdate('dataValueStatic', '')
-                    delete errorsListParent.dataValueStatic
-                  }
-                  else if ($event && $event?.id === 'local-select') {
-                    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
-                    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
-                    updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
-                    updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
+                  //   updateFieldProperty(fields, 'dependentField', 'disabled', false)
 
-                    updateFieldProperty(fields, 'module', 'class', 'field col-12')
-                    updateFieldProperty(fields, 'module', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'module', 'disabled', true)
-                    updateFieldProperty(fields, 'module', 'hidden', true)
-                    onUpdate('module', '')
-                    delete errorsListParent.module
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+                  //   onUpdate('dataValueStatic', '')
+                  //   delete errorsListParent.dataValueStatic
+                  // }
+                  // else if ($event && $event?.id === 'local-select') {
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
 
-                    updateFieldProperty(fields, 'service', 'class', 'field col-12')
-                    updateFieldProperty(fields, 'service', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'service', 'disabled', true)
-                    updateFieldProperty(fields, 'service', 'hidden', true)
-                    onUpdate('service', '')
-                    delete errorsListParent.service
+                  //   updateFieldProperty(fields, 'module', 'class', 'field col-12')
+                  //   updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'module', 'disabled', true)
+                  //   updateFieldProperty(fields, 'module', 'hidden', true)
+                  //   onUpdate('module', '')
+                  //   delete errorsListParent.module
 
-                    updateFieldProperty(fields, 'dependentField', 'disabled', true)
-                    updateFieldProperty(fields, 'dependentField', 'hidden', true)
-                    onUpdate('dependentField', null)
-                    delete errorsListParent.dependentField
+                  //   updateFieldProperty(fields, 'service', 'class', 'field col-12')
+                  //   updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'service', 'disabled', true)
+                  //   updateFieldProperty(fields, 'service', 'hidden', true)
+                  //   onUpdate('service', '')
+                  //   delete errorsListParent.service
 
-                    updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
-                    updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
-                    onUpdate('filterKeyValue', '')
-                    delete errorsListParent.filterKeyValue
-                  }
-                  else {
-                    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
-                    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
-                    updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
-                    onUpdate('dataValueStatic', '')
-                    delete errorsListParent.dataValueStatic
+                  //   updateFieldProperty(fields, 'dependentField', 'disabled', true)
+                  //   updateFieldProperty(fields, 'dependentField', 'hidden', true)
+                  //   onUpdate('dependentField', null)
+                  //   delete errorsListParent.dependentField
 
-                    updateFieldProperty(fields, 'module', 'class', 'field col-12')
-                    updateFieldProperty(fields, 'module', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'module', 'disabled', true)
-                    onUpdate('module', '')
-                    delete errorsListParent.module
+                  //   updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+                  //   updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+                  //   onUpdate('filterKeyValue', '')
+                  //   delete errorsListParent.filterKeyValue
+                  // }
+                  // else {
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+                  //   updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+                  //   onUpdate('dataValueStatic', '')
+                  //   delete errorsListParent.dataValueStatic
 
-                    updateFieldProperty(fields, 'service', 'class', 'field col-12')
-                    updateFieldProperty(fields, 'service', 'validation', z.string().trim())
-                    updateFieldProperty(fields, 'service', 'disabled', true)
-                    onUpdate('service', '')
-                    delete errorsListParent.service
+                  //   updateFieldProperty(fields, 'module', 'class', 'field col-12')
+                  //   updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'module', 'disabled', true)
+                  //   onUpdate('module', '')
+                  //   delete errorsListParent.module
 
-                    updateFieldProperty(fields, 'dependentField', 'disabled', true)
-                    onUpdate('dependentField', null)
-                    delete errorsListParent.dependentField
-                  }
+                  //   updateFieldProperty(fields, 'service', 'class', 'field col-12')
+                  //   updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+                  //   updateFieldProperty(fields, 'service', 'disabled', true)
+                  //   onUpdate('service', '')
+                  //   delete errorsListParent.service
+
+                  //   updateFieldProperty(fields, 'dependentField', 'disabled', true)
+                  //   onUpdate('dependentField', null)
+                  //   delete errorsListParent.dependentField
+                  // }
                 }"
               />
               <Skeleton v-else height="2rem" class="mb-2" />
