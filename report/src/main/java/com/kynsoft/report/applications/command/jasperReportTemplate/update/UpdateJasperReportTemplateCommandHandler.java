@@ -58,10 +58,10 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         updateDto.setDataValueStatic(command.getDataValueStatic());
 
         this.updateConection(updateDto::setDbConectionDto, command.getDbConection(), updateDto.getDbConectionDto() != null ? updateDto.getDbConectionDto().getId() : null,update::setUpdate);
-
-        if (update.getUpdate() > 0) {
             this.service.update(updateDto);
-        }
+
+//        if (update.getUpdate() > 0) {
+//        }
     }
 
     private void updateStatus(Consumer<Status> setter, Status newValue, Status oldValue, Consumer<Integer> update) {
