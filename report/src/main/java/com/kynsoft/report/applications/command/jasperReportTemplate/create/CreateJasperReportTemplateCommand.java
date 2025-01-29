@@ -41,11 +41,9 @@ public class CreateJasperReportTemplateCommand implements ICommand {
 
     public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
                                              String file,
-                                             Double parentIndex, Double menuPosition,
-                                             String lanPath, Boolean web, Boolean subMenu, Boolean sendEmail,
-                                             Boolean internal, Boolean highRisk, Boolean visible, Boolean cancel,
-                                             String rootIndex, String language, Status status, UUID dbConection,
-                                             String query, ModuleSystems moduleSystems) {
+                                             Double menuPosition,
+                                           UUID dbConection,
+                                              ModuleSystems moduleSystems) {
         this.moduleSystems = moduleSystems;
 
         this.id = UUID.randomUUID();
@@ -54,22 +52,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
         this.description = description;
         this.type = type;
         this.file = file;
-
-        this.parentIndex = parentIndex;
         this.menuPosition = menuPosition;
-        this.lanPath = lanPath;
-        this.web = web;
-        this.subMenu = subMenu;
-        this.sendEmail = sendEmail;
-        this.internal = internal;
-        this.highRisk = highRisk;
-        this.visible = visible;
-        this.cancel = cancel;
-        this.rootIndex = rootIndex;
-        this.language = language;
-        this.status = status;
         this.dbConection = dbConection;
-        this.query = query;
     }
 
     public static CreateJasperReportTemplateCommand fromRequest(CreateJasperReportTemplateRequest request) {
@@ -79,22 +63,8 @@ public class CreateJasperReportTemplateCommand implements ICommand {
                 request.getDescription(), 
                 request.getType(), 
                 request.getFile(),
-
-                request.getParentIndex(),
                 request.getMenuPosition(),
-                request.getLanPath(),
-                request.getWeb(),
-                request.getSubMenu(),
-                request.getSendEmail(),
-                request.getInternal(),
-                request.getHighRisk(),
-                request.getVisible(),
-                request.getCancel(),
-                request.getRootIndex(),
-                request.getLanguage(),
-                request.getStatus(),
                 request.getDbConection(),
-                request.getQuery(),
                 request.getModuleSystems()
         );
     }
