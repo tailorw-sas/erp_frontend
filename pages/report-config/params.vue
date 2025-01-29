@@ -479,6 +479,8 @@ async function getItemById(id: string) {
       }
 
       if (response.componentType === 'local-select') {
+        localValuesFieldList.value = response.dataValueStatic ? JSON.parse(response.dataValueStatic || []) : []
+        item.value.dataValueStatic = response.dataValueStatic ? response.dataValueStatic || [] : []
         updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
         updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
         updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
@@ -655,6 +657,11 @@ function onSortField(event: any) {
 // }
 
 function addItemInLocalValuesList(item: IobjLocalValue) {
+  if (!item.name || item.name.trim().length === 0) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Name in local value is required', life: 6000 })
+    return
+  }
+
   if (localValuesFieldList.value.find((i: any) => i.id === item.id || i.name === item.name)) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Item already exist', life: 6000 })
     return
