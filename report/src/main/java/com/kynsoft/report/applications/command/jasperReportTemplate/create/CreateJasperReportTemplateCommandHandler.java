@@ -69,8 +69,9 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         try {
 
             addParameters(command.getFile(), reportTemplateDto);
-        } catch (Exception ignored) {
-
+        } catch (Exception exception) {
+            System.out.println("ERROR al crear los parametros de reporte");
+            System.out.println(exception.getMessage());
         }
         command.setId(id);
 
