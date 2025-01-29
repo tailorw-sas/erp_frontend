@@ -17,11 +17,15 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -100,18 +104,20 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
     }
 
     public byte[] generateExcelReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
-        JasperReport jasperReport = getJasperReport(reportPath);
-        logger.info("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
-
-        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2048, "temp/");
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(20, "temp/");
         parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+             Connection connection = createConnection(reportTemplateDto)) {
+
+            JasperReport jasperReport = getJasperReport(reportPath);
+            logger.error("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
+
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
             String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
-            NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+            NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbcTemplate);
             query = replaceQueryParameters(query, parameters);
-            List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
+            List<Map<String, Object>> rows = namedJdbc.queryForList(query, parameters);
 
             JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
@@ -127,10 +133,50 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 
             exporter.exportReport();
             return outputStream.toByteArray();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         } finally {
             virtualizer.cleanup();
         }
     }
+    private Connection createConnection(JasperReportTemplateDto reportTemplateDto) throws SQLException {
+        return DriverManager.getConnection(reportTemplateDto.getDbConectionDto().getUrl(),
+                reportTemplateDto.getDbConectionDto().getUsername(),
+                reportTemplateDto.getDbConectionDto().getPassword());
+    }
+
+//    public byte[] generateExcelReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
+//        JasperReport jasperReport = getJasperReport(reportPath);
+//        logger.info("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
+//
+//        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2048, "temp/");
+//        parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
+//
+//        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+//            JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
+//            String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
+//            NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+//            query = replaceQueryParameters(query, parameters);
+//            List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
+//
+//            JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
+//            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
+//
+//            JRXlsxExporter exporter = new JRXlsxExporter();
+//            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+//            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+//
+//            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+//            configuration.setDetectCellType(true);
+//            configuration.setCollapseRowSpan(false);
+//            exporter.setConfiguration(configuration);
+//
+//            exporter.exportReport();
+//            return outputStream.toByteArray();
+//        } finally {
+//            virtualizer.cleanup();
+//        }
+//    }
 
     private JdbcTemplate getJdbcTemplate(JasperReportTemplateDto reportTemplateDto) {
         DataSource dataSource = createDataSource(reportTemplateDto.getDbConectionDto().getUrl(), reportTemplateDto.getDbConectionDto().getUsername(),
