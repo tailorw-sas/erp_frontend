@@ -60,6 +60,8 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
                 response = generateExcelReport(command.getParameters(), reportTemplateDto.getFile(), reportTemplateDto);
             } else {
                 response = generatePdfReport(command.getParameters(), reportTemplateDto.getFile(), reportTemplateDto);
+                System.out.println("Se genero el reporte");
+                System.out.println(response.length);
             }
             command.setResult(response);
         } catch (Exception e) {
@@ -98,9 +100,11 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             // Exportar el reporte a un stream en formato PDF
             JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
 
-            // Convertir el reporte a Base64 si es necesario
-            return Base64.getEncoder().encode(outputStream.toByteArray());
-
+//            // Verifica el tamaño del archivo generado
+            if (outputStream.size() > getMaxFileSize()) {
+                throw new RuntimeException("The generated PDF report is too large. Size: " + outputStream.size() + " bytes.");
+            }
+            return outputStream.toByteArray();
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("PostgreSQL JDBC Driver not found. Ensure it is included in the classpath.", e);
         } catch (SQLException e) {
@@ -202,6 +206,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             virtualizer.cleanup();
         }
     }
+
     private Connection createConnection(JasperReportTemplateDto reportTemplateDto) throws SQLException {
         return DriverManager.getConnection(reportTemplateDto.getDbConectionDto().getUrl(),
                 reportTemplateDto.getDbConectionDto().getUsername(),
