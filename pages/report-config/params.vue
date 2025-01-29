@@ -4,7 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { get } from 'lodash'
+import { v4 as uuidv4 } from 'uuid'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -26,6 +26,29 @@ const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const reportList = ref<any[]>([])
 const dependentFieldList = ref<any[]>([])
+const localValuesFieldList = ref<any[]>([])
+
+interface IobjLocalValue {
+  id: string
+  name: string
+  slug: string
+  defaultValue: boolean
+}
+
+const objLocalValue = ref<IobjLocalValue>({
+  id: '',
+  name: '',
+  slug: '',
+  defaultValue: false
+})
+
+const objLocalValueTemp = {
+  id: '',
+  name: '',
+  slug: '',
+  defaultValue: false
+}
+const editingRows = ref<any[]>([])
 const formReload = ref(0)
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
@@ -79,6 +102,13 @@ const fields: Array<FieldDefinitionType> = [
     disabled: true,
     validation: z.string().trim().min(1, 'The param name field is required').max(50, 'Maximum 100 characters')
   },
+  {
+    field: 'label',
+    header: 'Label',
+    dataType: 'text',
+    class: 'field col-12 required',
+    validation: z.string().trim().min(1, 'The label field is required').max(50, 'Maximum 100 characters')
+  },
 
   {
     field: 'componentType',
@@ -91,17 +121,19 @@ const fields: Array<FieldDefinitionType> = [
     })
   },
   {
-    field: 'label',
-    header: 'Label',
+    field: 'dataValueStatic',
+    header: 'Local Data',
     dataType: 'text',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The label field is required').max(50, 'Maximum 100 characters')
+    class: 'field col-12',
+    hidden: true,
+    validation: z.string().trim()
   },
   {
     field: 'module',
     header: 'Module',
     dataType: 'text',
     class: 'field col-12',
+    hidden: false,
     validation: z.string().trim()
   },
   {
@@ -109,6 +141,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Service',
     dataType: 'text',
     class: 'field col-12',
+    hidden: false,
     validation: z.string().trim()
   },
   {
@@ -126,6 +159,7 @@ const fields: Array<FieldDefinitionType> = [
     header: 'Filter Key Value',
     dataType: 'text',
     class: 'field col-12',
+    hidden: false,
     validation: z.string().trim()
   },
   {
@@ -165,6 +199,7 @@ const item = ref<GenericObject>(
     filterKeyValue: '',
     parameterPosition: 0,
     reportValidation: '',
+    dataValueStatic: ''
   }
 )
 
@@ -182,6 +217,7 @@ const itemTemp = ref<GenericObject>(
     filterKeyValue: '',
     parameterPosition: 0,
     reportValidation: '',
+    dataValueStatic: ''
   }
 )
 
@@ -441,6 +477,35 @@ async function getItemById(id: string) {
             }
           : null
       }
+
+      if (response.componentType === 'local-select') {
+        updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
+        updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
+        updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
+        updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
+
+        updateFieldProperty(fields, 'module', 'class', 'field col-12')
+        updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+        updateFieldProperty(fields, 'module', 'disabled', true)
+        updateFieldProperty(fields, 'module', 'hidden', true)
+        delete errorsListParent.module
+
+        updateFieldProperty(fields, 'service', 'class', 'field col-12')
+        updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+        updateFieldProperty(fields, 'service', 'disabled', true)
+        updateFieldProperty(fields, 'service', 'hidden', true)
+        delete errorsListParent.service
+
+        updateFieldProperty(fields, 'dependentField', 'disabled', true)
+        updateFieldProperty(fields, 'dependentField', 'hidden', true)
+        delete errorsListParent.dependentField
+
+        updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+        updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+        updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+        delete errorsListParent.filterKeyValue
+      }
+
       formReload.value += 1
     }
     catch (error) {
@@ -462,7 +527,9 @@ async function createItem(item: { [key: string]: any }) {
     const payload: { [key: string]: any } = { ...item }
     payload.reportId = typeof payload.reportId === 'object' ? payload.reportId.id : payload.reportId
     payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
+    payload.componentType = typeof payload.componentType === 'object' ? payload.componentType.id : payload.componentType
     payload.dependentField = payload.dependentField ? JSON.stringify(payload.dependentField) : ''
+    payload.dataValueStatic = payload.componentType === FORM_FIELD_TYPE.find(x => x.id === 'local-select')?.id ? JSON.stringify(localValuesFieldList.value) : ''
     await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
   }
 }
@@ -473,6 +540,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.reportId = typeof payload.reportId === 'object' ? payload.reportId.id : payload.reportId
   payload.componentType = typeof payload.componentType === 'object' ? payload.componentType.id : payload.componentType
   payload.dependentField = payload.dependentField ? JSON.stringify(payload.dependentField) : ''
+  payload.dataValueStatic = payload.componentType === FORM_FIELD_TYPE.find(x => x.id === 'local-select')?.id ? JSON.stringify(localValuesFieldList.value) : ''
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -586,6 +654,57 @@ function onSortField(event: any) {
 //   item.value.reportId = props.reportConfig
 // }
 
+function addItemInLocalValuesList(item: IobjLocalValue) {
+  if (localValuesFieldList.value.find((i: any) => i.id === item.id || i.name === item.name)) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Item already exist', life: 6000 })
+    return
+  }
+
+  if (localValuesFieldList.value.some((i: any) => i.defaultValue === true) && item.defaultValue === true) {
+    // Solo se puede establacer un valor por defecto
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Only one default value can be set.', life: 6000 })
+    return
+  }
+
+  const existingSlugs = new Set(localValuesFieldList.value.map(item => item.slug))
+
+  localValuesFieldList.value = [...localValuesFieldList.value, { ...item, id: uuidv4(), slug: generateSlug(item.name, existingSlugs) }]
+
+  objLocalValue.value = JSON.parse(JSON.stringify(objLocalValueTemp))
+}
+
+function deleteItemInLocalValuesList(id: string) {
+  localValuesFieldList.value = localValuesFieldList.value.filter((item: any) => item.id !== id)
+}
+
+function onCellEditComplete(event) {
+  const { data, newValue, field } = event
+  switch (field) {
+    case 'name':
+      if (localValuesFieldList.value.some((i: any) => i.id !== data.id && i.name === newValue)) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Item already exist', life: 6000 })
+        event.preventDefault()
+      }
+      else { data[field] = newValue }
+      break
+
+    case 'defaultValue':
+      if (localValuesFieldList.value.some((i: any) => i.id !== data.id && i.defaultValue === true) && newValue) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Only one default value can be set.', life: 6000 })
+        event.preventDefault()
+      }
+      else { data[field] = newValue }
+      break
+
+    default:
+      if (newValue.trim().length > 0) {
+        data[field] = newValue
+      }
+      else { event.preventDefault() }
+      break
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -627,14 +746,13 @@ onMounted(async () => {
     </IfCan>
   </div>
   <div class="grid">
-    <div class="col-12 md:order-1 md:col-6 xl:col-9">
+    <div class="col-12 md:order-1 md:col-6 xl:col-8">
       <DynamicTable
         :data="listItems"
         :columns="columns"
         :options="options"
         :pagination="pagination"
         @on-confirm-create="clearForm"
-        @open-edit-dialog="getItemById($event)"
         @update:clicked-item="getItemById($event)"
         @on-change-pagination="payloadOnChangePage = $event"
         @on-change-filter="parseDataTableFilter"
@@ -642,7 +760,7 @@ onMounted(async () => {
         @on-sort-field="onSortField"
       />
     </div>
-    <div class="col-12 md:order-0 md:col-6 xl:col-3">
+    <div class="col-12 md:order-0 md:col-6 xl:col-4">
       <div>
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           {{ formTitle }}
@@ -686,6 +804,10 @@ onMounted(async () => {
                 :return-object="false"
                 @update:model-value="($event) => {
                   onUpdate('componentType', $event)
+                  // if ($event && $event?.id !== 'local-select') {
+                  //   localValuesFieldList = []
+                  // }
+
                   if ($event && ($event?.id === 'select' || $event?.id === 'multiselect')) {
                     updateFieldProperty(fields, 'module', 'class', 'field col-12 required')
                     updateFieldProperty(fields, 'module', 'validation', z.string().trim().min(1, 'The module field is required').max(50, 'Maximum 50 characters'))
@@ -696,8 +818,53 @@ onMounted(async () => {
                     updateFieldProperty(fields, 'service', 'disabled', false)
 
                     updateFieldProperty(fields, 'dependentField', 'disabled', false)
+
+                    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+                    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+                    updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+                    onUpdate('dataValueStatic', '')
+                    delete errorsListParent.dataValueStatic
+                  }
+                  else if ($event && $event?.id === 'local-select') {
+                    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12 required')
+                    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim().min(1, 'The local data field is required'))
+                    updateFieldProperty(fields, 'dataValueStatic', 'disabled', false)
+                    updateFieldProperty(fields, 'dataValueStatic', 'hidden', false)
+
+                    updateFieldProperty(fields, 'module', 'class', 'field col-12')
+                    updateFieldProperty(fields, 'module', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'module', 'disabled', true)
+                    updateFieldProperty(fields, 'module', 'hidden', true)
+                    onUpdate('module', '')
+                    delete errorsListParent.module
+
+                    updateFieldProperty(fields, 'service', 'class', 'field col-12')
+                    updateFieldProperty(fields, 'service', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'service', 'disabled', true)
+                    updateFieldProperty(fields, 'service', 'hidden', true)
+                    onUpdate('service', '')
+                    delete errorsListParent.service
+
+                    updateFieldProperty(fields, 'dependentField', 'disabled', true)
+                    updateFieldProperty(fields, 'dependentField', 'hidden', true)
+                    onUpdate('dependentField', null)
+                    delete errorsListParent.dependentField
+
+                    updateFieldProperty(fields, 'filterKeyValue', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'filterKeyValue', 'disabled', true)
+                    updateFieldProperty(fields, 'filterKeyValue', 'hidden', true)
+                    onUpdate('filterKeyValue', '')
+                    delete errorsListParent.filterKeyValue
                   }
                   else {
+                    updateFieldProperty(fields, 'dataValueStatic', 'class', 'field col-12')
+                    updateFieldProperty(fields, 'dataValueStatic', 'validation', z.string().trim())
+                    updateFieldProperty(fields, 'dataValueStatic', 'disabled', true)
+                    updateFieldProperty(fields, 'dataValueStatic', 'hidden', true)
+                    onUpdate('dataValueStatic', '')
+                    delete errorsListParent.dataValueStatic
+
                     updateFieldProperty(fields, 'module', 'class', 'field col-12')
                     updateFieldProperty(fields, 'module', 'validation', z.string().trim())
                     updateFieldProperty(fields, 'module', 'disabled', true)
@@ -734,6 +901,90 @@ onMounted(async () => {
               />
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
+
+            <template #field-dataValueStatic="{ item: data, onUpdate }">
+              <div>
+                <div class="flex justify-content-between align-items-center gap-2 my-1">
+                  <InputText
+                    v-model="objLocalValue.name"
+                    placeholder="Type here the local value"
+                    @keyup.enter="() => {
+                      addItemInLocalValuesList(objLocalValue)
+                      onUpdate('dataValueStatic', JSON.stringify(localValuesFieldList))
+                    }"
+                  />
+                  <div class="flex align-items-center mr-2">
+                    <Checkbox
+                      v-model="objLocalValue.defaultValue"
+                      v-tooltip.top="'Default'"
+                      input-id="defaultValue"
+                      :binary="true"
+                      @keyup.enter="() => {
+                        addItemInLocalValuesList(objLocalValue)
+                        onUpdate('dataValueStatic', JSON.stringify(localValuesFieldList))
+                      }"
+                    />
+                    <!-- <label for="defaultValue" class="ml-2"> Default </label> -->
+                  </div>
+                  <Button
+                    v-tooltip.top="'Save'"
+                    class="w-3rem"
+                    icon="pi pi-plus"
+                    :loading="loadingSaveAll"
+                    @click="() => {
+                      addItemInLocalValuesList(objLocalValue)
+                      onUpdate('dataValueStatic', JSON.stringify(localValuesFieldList))
+                    }"
+                  />
+                </div>
+
+                <DataTable
+                  v-model:editingRows="editingRows"
+                  :value="localValuesFieldList"
+                  show-gridlines
+                  class="mb-3"
+                  scrollable
+                  scroll-height="200px"
+                  edit-mode="cell"
+                  data-key="id"
+                  @cell-edit-complete="onCellEditComplete"
+                >
+                  <template #empty>
+                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-4">
+                      <span class="flex flex-column align-items-center justify-content-center">
+                        <div class="row">
+                          <i class="pi pi-trash mb-3" style="font-size: 1.5rem;" />
+                        </div>
+                        <div class="row">
+                          <p> There are no local values </p>
+                        </div>
+                      </span>
+                    </div>
+                  </template>
+                  <Column field="name" header="Name">
+                    <template #editor="{ data: objData, field }">
+                      <InputText v-model="objData[field]" />
+                    </template>
+                  </Column>
+                  <Column field="defaultValue" header="Default" class="text-center" style="width: 5rem">
+                    <template #body="{ data: objData }">
+                      <i v-if="objData.defaultValue" class="pi" :class="{ 'pi-check-circle text-green-500': objData.defaultValue, 'pi-times-circle text-red-400': !objData.defaultValue }" />
+                    </template>
+                    <template #editor="{ data: objData, field }">
+                      <Checkbox v-model="objData[field]" v-tooltip.top="'Default'" :binary="true" />
+                    </template>
+                  </Column>
+                  <Column :exportable="false" style="width: 3rem; min-width:3rem">
+                    <template #body="slotProps">
+                      <span v-tooltip.top="`Delete ${slotProps.data.name}`" class="flex justify-content-center">
+                        <i class="pi pi-trash text-red-400" style="font-size: 1rem" @click="deleteItemInLocalValuesList(slotProps.data.id)" />
+                      </span>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </template>
+
             <template #form-footer="props">
               <div class="flex justify-content-end">
                 <IfCan :perms="idItem ? ['AGENCY:EDIT'] : ['AGENCY:CREATE']">
