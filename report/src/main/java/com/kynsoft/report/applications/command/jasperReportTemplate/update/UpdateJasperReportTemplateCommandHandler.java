@@ -40,20 +40,9 @@ public class UpdateJasperReportTemplateCommandHandler implements ICommandHandler
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setFile, command.getFile(), updateDto.getFile(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setName, command.getName(), updateDto.getName(), update::setUpdate);
 
-        UpdateIfNotNull.updateDouble(updateDto::setParentIndex, command.getParentIndex(), updateDto.getParentIndex(), update::setUpdate);
         UpdateIfNotNull.updateDouble(updateDto::setMenuPosition, command.getMenuPosition(), updateDto.getMenuPosition(), update::setUpdate);
 
-        UpdateIfNotNull.updateBoolean(updateDto::setWeb, command.getWeb(), updateDto.getWeb(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(updateDto::setSubMenu, command.getSubMenu(), updateDto.getSubMenu(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(updateDto::setSendEmail, command.getSendEmail(), updateDto.getSendEmail(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(updateDto::setInternal, command.getInternal(), updateDto.getInternal(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(updateDto::setHighRisk, command.getHighRisk(), updateDto.getHighRisk(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(updateDto::setVisible, command.getVisible(), updateDto.getVisible(), update::setUpdate);
-        UpdateIfNotNull.updateBoolean(updateDto::setCancel, command.getCancel(), updateDto.getCancel(), update::setUpdate);
 
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setRootIndex, command.getRootIndex(), updateDto.getRootIndex(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setLanguage, command.getLanguage(), updateDto.getLanguage(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(updateDto::setQuery, command.getQuery(), updateDto.getQuery(), update::setUpdate);
         updateDto.setModuleSystems(command.getModuleSystems());
      //   updateDto.setDataValueStatic(command.getDataValueStatic());
 
