@@ -83,7 +83,8 @@ public class JasperReportTemplate extends BaseEntity {
                 createdAt,
                 menuPosition,
                 conectionDto,
-                moduleSystems
+                moduleSystems,
+                query
         );
     }
 

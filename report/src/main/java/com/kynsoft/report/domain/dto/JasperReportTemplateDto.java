@@ -26,12 +26,14 @@ public class JasperReportTemplateDto {
     private Double menuPosition;
     private DBConectionDto dbConectionDto;
     private ModuleSystems moduleSystems; // Campo para el módulo del sistema
+    private String query;
+
 
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
                                    JasperReportTemplateType type,
                                     Double menuPosition,
-                                   Status status, DBConectionDto dbConection
+                                   Status status, DBConectionDto dbConection, String query
                                    ) {
         this.id = id;
         this.code = templateCode;
@@ -42,6 +44,8 @@ public class JasperReportTemplateDto {
         this.menuPosition = menuPosition;
         this.status = status;
         this.dbConectionDto = dbConection;
+        this.query = query;
     }
+
 
 }
