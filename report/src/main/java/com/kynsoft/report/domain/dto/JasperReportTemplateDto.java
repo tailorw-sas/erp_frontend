@@ -41,7 +41,7 @@ public class JasperReportTemplateDto {
 
     private String query;
     private ModuleSystems moduleSystems; // Campo para el módulo del sistema
-    private String dataValueStatic;
+
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
                                    JasperReportTemplateType type,

@@ -37,7 +37,6 @@ public class JasperReportTemplate extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private ModuleSystems moduleSystems;
-    private String dataValueStatic;
 
     private Double parentIndex;
     private Double menuPosition;
@@ -92,7 +91,7 @@ public class JasperReportTemplate extends BaseEntity {
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConection(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.query = jasperReportTemplateDto.getQuery();
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
-        this.dataValueStatic = jasperReportTemplateDto.getDataValueStatic();
+
     }
 
     public JasperReportTemplateDto toAggregate() {
@@ -121,8 +120,7 @@ public class JasperReportTemplate extends BaseEntity {
                 language,
                 conectionDto,
                 query,
-                moduleSystems,
-                dataValueStatic
+                moduleSystems
         );
     }
 
