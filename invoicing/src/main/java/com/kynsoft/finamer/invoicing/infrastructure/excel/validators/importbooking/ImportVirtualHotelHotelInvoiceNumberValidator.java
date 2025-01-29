@@ -36,8 +36,8 @@ public class ImportVirtualHotelHotelInvoiceNumberValidator extends ExcelRuleVali
         }
 
         ManageHotelDto hotelDto = this.manageHotelService.findByCode(obj.getManageHotelCode());
-        List<BookingImportCache> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
         if (hotelDto.isVirtual()) {
+            List<BookingImportCache> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
             if (this.isValidInsertion(list, obj)) {
                 errorFieldList.add(new ErrorField("HotelInvoiceNumber", "The Hotel Invoice Number exists for another date within this import."));
                 return false;

@@ -27,7 +27,8 @@ public class ImportBookingHotelInvoiceAmountValidator extends ExcelRuleValidator
             }
 
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
-            if (manageHotelDto.isVirtual() && !manageHotelDto.isRequiresFlatRate()) {
+            //if (manageHotelDto.isVirtual() && !manageHotelDto.isRequiresFlatRate()) {
+            if (!manageHotelDto.isRequiresFlatRate()) {
                 return true;
             }
             if (Objects.isNull(obj.getHotelInvoiceAmount())) {
