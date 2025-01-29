@@ -92,6 +92,7 @@ public class JasperReportTemplate extends BaseEntity {
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConection(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.query = jasperReportTemplateDto.getQuery();
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
+        this.dataValueStatic = jasperReportTemplateDto.getDataValueStatic();
     }
 
     public JasperReportTemplateDto toAggregate() {
