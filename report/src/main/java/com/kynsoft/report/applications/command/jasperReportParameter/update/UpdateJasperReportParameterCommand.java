@@ -26,6 +26,7 @@ public class UpdateJasperReportParameterCommand implements ICommand {
     private int parameterPosition;
     private String dependentField;
     private final String filterKeyValue;
+    private String dataValueStatic;
 
     public static UpdateJasperReportParameterCommand fromRequest(UpdateJasperReportParameterRequest request, UUID id) {
         return new UpdateJasperReportParameterCommand(
@@ -33,7 +34,8 @@ public class UpdateJasperReportParameterCommand implements ICommand {
                 request.getService(), request.getLabel(), request.getReportId(), request.getComponentType(),
                 request.getReportClass(), request.getReportValidation(),
                 request.getParameterPosition(), request.getDependentField(),
-                request.getFilterKeyValue()
+                request.getFilterKeyValue(),
+                request.getDataValueStatic()
         );
     }
 

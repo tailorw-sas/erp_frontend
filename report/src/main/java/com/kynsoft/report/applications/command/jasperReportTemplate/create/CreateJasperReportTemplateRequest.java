@@ -37,5 +37,4 @@ public class CreateJasperReportTemplateRequest {
     private UUID dbConection;
     private String query;
     private ModuleSystems moduleSystems;
-    private String dataValueStatic;
 }

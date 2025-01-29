@@ -32,6 +32,7 @@ public class JasperReportParameterResponse implements IResponse {
     private int parameterPosition;
     private String dependentField;
     private String filterKeyValue;
+    private String dataValueStatic;
     public JasperReportParameterResponse(JasperReportParameterDto dto){
         this.id = dto.getId();
          paramName = dto.getParamName();
@@ -46,5 +47,6 @@ public class JasperReportParameterResponse implements IResponse {
          parameterPosition = dto.getParameterPosition();
          dependentField = dto.getDependentField();
          filterKeyValue = dto.getFilterKeyValue();
+         dataValueStatic = dto.getDataValueStatic();
     }
 }
