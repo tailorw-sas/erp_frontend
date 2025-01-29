@@ -382,8 +382,8 @@ export const FORM_FIELD_TYPE = [
   { id: 'email', name: 'Email' },
   { id: 'date', name: 'Date' },
   // { id: 'time', name: 'Time' },
-  { id: 'checkbox', name: 'Checkbox' },
-  { id: 'radio', name: 'Radio' },
+  // { id: 'checkbox', name: 'Checkbox' },
+  // { id: 'radio', name: 'Radio' },
   { id: 'textarea', name: 'Textarea' },
   // { id: 'file', name: 'File' },
 ]
