@@ -57,7 +57,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 command.getType(),
                 command.getMenuPosition(),
                 command.getStatus(),
-                dbConectionDto
+                dbConectionDto,
+                ""
         );
 
         reportTemplateDto.setModuleSystems(command.getModuleSystems());
