@@ -27,7 +27,6 @@ public class JasperReportTemplateResponse implements IResponse {
     private JasperReportTemplateType type;
     private Status status;
     private LocalDate createdAt;
-
     private Double parentIndex;
     private Double menuPosition;
     private String lanPath;
@@ -53,21 +52,9 @@ public class JasperReportTemplateResponse implements IResponse {
         this.file = jasperReportTemplateDto.getFile();
         this.type = jasperReportTemplateDto.getType();
         this.createdAt = jasperReportTemplateDto.getCreatedAt().toLocalDate();
-        this.parentIndex = jasperReportTemplateDto.getParentIndex();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
-        this.lanPath = jasperReportTemplateDto.getLanPath();
-        this.web = jasperReportTemplateDto.getWeb();
-        this.subMenu = jasperReportTemplateDto.getSubMenu();
-        this.sendEmail = jasperReportTemplateDto.getSendEmail();
-        this.internal = jasperReportTemplateDto.getInternal();
-        this.highRisk = jasperReportTemplateDto.getHighRisk();
-        this.visible = jasperReportTemplateDto.getVisible();
-        this.cancel = jasperReportTemplateDto.getCancel();
-        this.rootIndex = jasperReportTemplateDto.getRootIndex();
-        this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConectionResponse(jasperReportTemplateDto.getDbConectionDto()) : null;
-        this.query = jasperReportTemplateDto.getQuery();
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
     }
 

@@ -22,18 +22,7 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private Status status;
     private String file;
 
-    private Double parentIndex;
     private Double menuPosition;
-    private String lanPath;
-    private Boolean web;
-    private Boolean subMenu;
-    private Boolean sendEmail;
-    private Boolean internal;
-    private Boolean highRisk;
-    private Boolean visible;
-    private Boolean cancel;
-    private String rootIndex;
-    private String language;
     private UUID dbConection;
     private String query;
 

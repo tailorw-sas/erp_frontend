@@ -31,7 +31,7 @@ public class ReportMenuResponse implements IResponse {
         this.code = jasperReportTemplateDto.getCode();
         this.name = jasperReportTemplateDto.getName();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
-        this.highRisk = jasperReportTemplateDto.getHighRisk();
+        this.highRisk = false;//jasperReportTemplateDto.getHighRisk();
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
     }
 

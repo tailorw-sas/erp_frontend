@@ -73,7 +73,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
-            String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
+            String query =  "";
             NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
 
             query = replaceQueryParameters(query, parameters);
@@ -114,7 +114,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             logger.error("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
 
             JdbcTemplate jdbcTemplate = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
-            String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
+            String query =  "";
             NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbcTemplate);
             query = replaceQueryParameters(query, parameters);
             List<Map<String, Object>> rows = namedJdbc.queryForList(query, parameters);
