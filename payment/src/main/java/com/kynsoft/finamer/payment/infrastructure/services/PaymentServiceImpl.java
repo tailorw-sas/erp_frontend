@@ -14,6 +14,7 @@ import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
+import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.PaymentWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.PaymentReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,7 +114,8 @@ public class PaymentServiceImpl implements IPaymentService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
+      //  Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
+        Page<PaymentSearchProjection> data = this.repositoryQuery.findAllProjected(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -151,14 +153,23 @@ public class PaymentServiceImpl implements IPaymentService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<Payment> data) {
+    private PaginatedResponse getPaginatedResponse(Page<PaymentSearchProjection> data) {
         List<PaymentSearchResponse> responses = new ArrayList<>();
-        for (Payment p : data.getContent()) {
-            responses.add(new PaymentSearchResponse(p.toAggregateWihtDetails()));
+        for (PaymentSearchProjection p : data.getContent()) {
+            responses.add(new PaymentSearchResponse(p));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+//    private PaginatedResponse getPaginatedResponse(Page<Payment> data) {
+//        List<PaymentSearchResponse> responses = new ArrayList<>();
+//        for (Payment p : data.getContent()) {
+//            responses.add(new PaymentSearchResponse(p.toAggregateWihtDetails()));
+//        }
+//        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+//                data.getTotalElements(), data.getSize(), data.getNumber());
+//    }
 
     private PaginatedResponse getPaginatedExcelExporter(Page<Payment> data) {
         List<PaymentDto> responses = new ArrayList<>();

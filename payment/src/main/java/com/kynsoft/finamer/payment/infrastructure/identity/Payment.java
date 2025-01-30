@@ -26,7 +26,6 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
