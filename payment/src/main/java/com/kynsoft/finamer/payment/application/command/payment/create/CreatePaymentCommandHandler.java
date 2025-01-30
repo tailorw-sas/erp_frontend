@@ -159,6 +159,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
                 LocalTime.now()
         );
 
+        if (command.getAttachments() != null)
+            paymentDto.setHasAttachment(true);
         PaymentDto save = this.paymentService.create(paymentDto);
 
         if (command.getAttachments() != null) {

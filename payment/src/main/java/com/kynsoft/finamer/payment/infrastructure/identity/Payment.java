@@ -116,6 +116,12 @@ public class Payment implements Serializable {
     private boolean applyPayment;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean hasAttachment;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private boolean hasDetailTypeDeposit;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean paymentSupport;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
@@ -166,6 +172,8 @@ public class Payment implements Serializable {
         this.createByCredit = dto.isCreateByCredit();
         this.dateTime = dto.getTransactionDateTime() != null ? dto.getTransactionDateTime() : LocalTime.now();
         this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
+        this.hasAttachment = dto.isHasAttachment();
+        this.hasDetailTypeDeposit = dto.isHasDetailTypeDeposit();
     }
 
     public PaymentDto toAggregate() {
@@ -278,7 +286,9 @@ public class Payment implements Serializable {
                 paymentSupport,
                 createByCredit,
                 dateTime,
-                importType
+                importType,
+                hasAttachment,
+                hasDetailTypeDeposit
         );
     }
 
