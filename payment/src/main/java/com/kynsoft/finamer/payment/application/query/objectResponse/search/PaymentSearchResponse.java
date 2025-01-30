@@ -7,6 +7,7 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -98,4 +99,32 @@ public class PaymentSearchResponse implements IResponse {
         }
     }
 
+    public PaymentSearchResponse(PaymentSearchProjection dto) {
+        this.id = dto.getId();
+     //   this.createdAt = dto.getTransactionDate();
+        this.paymentId = dto.getPaymentId();
+        this.reference = dto.getReference();
+        this.transactionDate = dto.getTransactionDate();
+        this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceSearchResponse(dto.getPaymentSource()) : null;
+       this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatusSearchResponse(dto.getPaymentStatus()) : null;
+       this.client = dto.getClient() != null ? new ManageClientSearchResponse(dto.getClient()) : null;
+        this.agency = dto.getAgency() != null ? new ManageAgencySearchResponse(dto.getAgency()) : null;
+        this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
+       this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountSearchResponse(dto.getBankAccount()) : null;
+//       this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getAttachmentStatus()) : null;
+        this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
+        this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
+        this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
+        this.depositBalance = ScaleAmount.scaleAmount(dto.getDepositBalance());
+        this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
+        this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
+        this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
+        this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
+        this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
+        this.remark = dto.getRemark();
+      //  this.eAttachment = dto.getEAttachment();
+        this.applyPayment = dto.getApplyPayment();
+        this.paymentSupport = dto.getPaymentSupport();
+        this.createByCredit = dto.getCreateByCredit();
+    }
 }
