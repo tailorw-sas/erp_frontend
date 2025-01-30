@@ -2508,8 +2508,6 @@ onMounted(() => {
         :options="optionsInv"
         :pagination="paginationInvoice"
         @on-confirm-create="clearForm"
-        @open-edit-dialog="getItemById($event)"
-        @update:clicked-item="getItemById($event)"
         @on-change-pagination="payloadOnChangePageInv = $event"
         @on-change-filter="parseDataTableFilterInvoice"
         @on-list-item="resetListItems"
