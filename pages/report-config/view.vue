@@ -417,6 +417,7 @@ interface DataList {
   dependentField: any
   parameterPosition: number
   filterKeyValue: string
+  dataValueStatic: string
 }
 
 interface ListItem {
@@ -432,6 +433,7 @@ interface ListItem {
   dependentField: any
   parameterPosition: number
   filterKeyValue: string
+  dataValueStatic: string
 }
 
 function mapFunction(data: DataList): ListItem {
@@ -448,6 +450,7 @@ function mapFunction(data: DataList): ListItem {
     dependentField: data.dependentField,
     parameterPosition: data.parameterPosition,
     filterKeyValue: data.filterKeyValue,
+    dataValueStatic: data.dataValueStatic
   }
 }
 async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
@@ -472,6 +475,7 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
         keys: ['name', 'username', 'url'],
       }
       const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, filter)
+
       fields.value = [...fieldsTemp]
       if (result && result.length > 0) {
         for (const element of result) {
@@ -503,6 +507,13 @@ async function loadParamsFieldByReportTemplate(id: string, code: string) {
                 ...element
               }
             }]
+
+            if (element.componentType === 'local-select') {
+              const listValue = element.dataValueStatic ? JSON.parse(element.dataValueStatic) : []
+              if (listValue && listValue.length > 0) {
+                item.value[element.paramName] = listValue.find((x: any) => x.defaultValue)
+              }
+            }
           }
         }
       }
@@ -761,9 +772,18 @@ onMounted(async () => {
             @submit="requireConfirmationToSave($event)"
           >
             <template
-              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && (field.dataType === 'select' || field.dataType === 'multiselect'))"
+              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && (field.dataType === 'select' || field.dataType === 'multiselect' || field.dataType === 'local-select'))"
               :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }"
             >
+              <span v-if="field.dataType === 'local-select'">
+                <Dropdown
+                  v-model="data[field.field]"
+                  :options="field.kwArgs.dataValueStatic ? [...JSON.parse(field.kwArgs.dataValueStatic)] : []"
+                  option-label="name"
+                  placeholder="Select a City"
+                  class="w-full"
+                />
+              </span>
               <span v-if="field.dataType === 'select'">
                 <DebouncedAutoCompleteComponent
                   v-if="!loadingSaveAll"
