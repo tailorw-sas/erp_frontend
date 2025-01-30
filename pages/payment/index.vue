@@ -931,7 +931,6 @@ async function getList() {
     }
     localStorage.setItem('payloadOfPaymentList', JSON.stringify(payloadOfPaymentList))
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -2678,7 +2677,7 @@ function onRowContextMenu(event: any) {
 
   // if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
 
-  if (event && event.data && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
+  if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -3486,14 +3485,14 @@ async function loadDefaultsConfig() {
   await searchAndFilter()
 }
 
-function showInconAttachment(objData: any) {
+function showIconAttachment(objData: any) {
   if (objData.hasAttachment) {
     return true
   }
-  else if (objData.attachmentStatus.pwaWithOutAttachment) {
+  else if (objData.attachmentStatus && objData.attachmentStatus.pwaWithOutAttachment) {
     return true
   }
-  else if (objData.attachmentStatus.patWithAttachment) {
+  else if (objData.attachmentStatus && objData.attachmentStatus.patWithAttachment) {
     return true
   }
   return false
@@ -4236,10 +4235,10 @@ onMounted(async () => {
       @on-row-right-click="onRowContextMenu($event)"
     >
       <template #column-icon="{ data: objData, column }">
-        <div class="flex align-items-center justify-content-center p-0 m-0">
+        <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
           <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
           <Button
-            v-if="showInconAttachment(objData)"
+            v-if="showIconAttachment(objData)"
             :icon="column.icon"
             class="p-button-rounded p-button-text w-2rem h-2rem"
             aria-label="Submit"
