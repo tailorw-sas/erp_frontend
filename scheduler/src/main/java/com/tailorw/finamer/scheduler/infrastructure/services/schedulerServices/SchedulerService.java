@@ -243,9 +243,6 @@ public abstract class SchedulerService {
             case DAY -> now.minusDays(scheduler.getProcessingDateValue());
             case MONTH -> now.minusMonths(scheduler.getProcessingDateValue());
             case YEAR -> now.minusYears(scheduler.getProcessingDateValue());
-            case DAILY ->
-                // Retorna la fecha de hoy para DAILY por defecto
-                    now;
             case CUSTOM -> scheduler.getProcessingDate();
             default ->
                     throw new IllegalArgumentException("Invalid ProcessingDateType: " + scheduler.getProcessingDateType());

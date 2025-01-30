@@ -1,4 +1,4 @@
-package com.tailorw.finamer.scheduler.application.query.businessProcessSchedulerRules.search;
+package com.tailorw.finamer.scheduler.application.query.businessProcessSchedulerRules.executionSearch;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
