@@ -48,7 +48,7 @@ public class PaymentSearchProjection {
             BankAccountProjection bankAccount,
             ClientProjection client,
             HotelProjection hotel,
-          // PaymentAttachmentStatusProjection paymentAttachmentStatus,
+             PaymentAttachmentStatusProjection paymentAttachmentStatus,
             Double paymentAmount,
             Double paymentBalance,
             Double depositAmount,

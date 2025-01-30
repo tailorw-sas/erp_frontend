@@ -43,10 +43,10 @@ public class ManagePaymentAttachmentStatusSearchResponse implements IResponse {
         this.id = attachmentStatus.getId();
         this.code = attachmentStatus.getCode();
         this.name = attachmentStatus.getName();
-        this.nonNone = false;
-        this.patWithAttachment = false;
-        this.pwaWithOutAttachment = false;
-        this.supported = false;
-        this.status = attachmentStatus.getStatus().toString();
+        this.nonNone = attachmentStatus.isNonNone();
+        this.patWithAttachment = attachmentStatus.isPatWithAttachment();
+        this.pwaWithOutAttachment = attachmentStatus.isPwaWithOutAttachment();
+        this.supported = attachmentStatus.isSupported();
+        this.status = attachmentStatus.getStatus();
     }
 }
