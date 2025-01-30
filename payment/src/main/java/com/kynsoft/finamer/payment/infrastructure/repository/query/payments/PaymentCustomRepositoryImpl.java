@@ -1,8 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentStatus;
-import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
+import com.kynsoft.finamer.payment.infrastructure.identity.*;
 import com.kynsoft.finamer.payment.infrastructure.identity.projection.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -15,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Repository;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -32,12 +32,13 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
         Root<Payment> root = query.from(Payment.class);
         Join<Payment, ManagePaymentStatus> statusJoin = root.join("paymentStatus", JoinType.LEFT);
-        Join<Payment, PaymentSourceProjection> sourceJoin = root.join("paymentSource", JoinType.LEFT);
-        Join<Payment, AgencyProjection> agencyJoin = root.join("agency", JoinType.LEFT);
-        Join<Payment, BankAccountProjection> bankAccountJoin = root.join("bankAccount", JoinType.LEFT);
-        Join<Payment, ClientProjection> clientJoin = root.join("client", JoinType.LEFT);
-        Join<Payment, HotelProjection> hotelJoin = root.join("hotel", JoinType.LEFT);
-       // Join<Payment, PaymentAttachmentStatusProjection> attachmentStatusJoin = root.join("paymentAttachmentStatus", JoinType.LEFT);
+        Join<Payment, ManagePaymentSource> sourceJoin = root.join("paymentSource", JoinType.LEFT);
+        Join<Payment, ManageAgency> agencyJoin = root.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> agencyTypeJoin = agencyJoin.join("agencyType", JoinType.LEFT);
+        Join<Payment, ManageBankAccount> bankAccountJoin = root.join("bankAccount", JoinType.LEFT);
+        Join<Payment, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
+        Join<Payment, ManageHotel> hotelJoin = root.join("hotel", JoinType.LEFT);
+     //   Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin = root.join("attachmentStatus", JoinType.LEFT);
 
         List<Selection<?>> selections = new ArrayList<>();
         selections.add(root.get("id"));
@@ -66,6 +67,12 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(agencyJoin.get("code"));
         selections.add(agencyJoin.get("name"));
         selections.add(agencyJoin.get("status"));
+
+        // Agency Type
+        selections.add(agencyTypeJoin.get("id"));
+        selections.add(agencyTypeJoin.get("code"));
+        selections.add(agencyTypeJoin.get("name"));
+        selections.add(agencyTypeJoin.get("status"));
 
         // Bank Account
         selections.add(bankAccountJoin.get("id"));
@@ -128,14 +135,14 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                     tuple.get(2, java.time.LocalDate.class),   // transactionDate
                     tuple.get(3, String.class),   // reference
                     new PaymentStatusProjection(
-                            tuple.get(4, UUID.class),
-                            tuple.get(5, String.class),
-                            tuple.get(6, String.class),
-                            tuple.get(7, Boolean.class),
-                            tuple.get(8, Boolean.class),
-                            tuple.get(9, Boolean.class),
-                            tuple.get(10, Boolean.class),
-                            tuple.get(11, String.class)
+                            tuple.get(4, UUID.class),   // status id
+                            tuple.get(5, String.class), // status code
+                            tuple.get(6, String.class), // status name
+                            tuple.get(7, Boolean.class), // confirmed
+                            tuple.get(8, Boolean.class), // applied
+                            tuple.get(9, Boolean.class), // cancelled
+                            tuple.get(10, Boolean.class), // transit
+                            tuple.get(11, String.class) // status
                     ),
                     new PaymentSourceProjection(
                             tuple.get(12, UUID.class),
@@ -147,46 +154,46 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                             tuple.get(16, UUID.class),
                             tuple.get(17, String.class),
                             tuple.get(18, String.class),
-                            tuple.get(19, String.class)
+                            tuple.get(19, String.class),
+                            new ManageAgencyTypeProjection(
+                                    tuple.get(20, UUID.class),
+                                    tuple.get(21, String.class),
+                                    tuple.get(22, String.class),
+                                    tuple.get(23, String.class)
+                            )
                     ),
                     new BankAccountProjection(
-                            tuple.get(20, UUID.class),
-                            tuple.get(21, String.class),
-                            tuple.get(22, String.class),
-                            tuple.get(23, String.class)
-                    ),
-                    new ClientProjection(
                             tuple.get(24, UUID.class),
                             tuple.get(25, String.class),
                             tuple.get(26, String.class),
                             tuple.get(27, String.class)
                     ),
-                    new HotelProjection(
+                    new ClientProjection(
                             tuple.get(28, UUID.class),
                             tuple.get(29, String.class),
                             tuple.get(30, String.class),
                             tuple.get(31, String.class)
                     ),
-//                    new PaymentAttachmentStatusProjection(
-//                            tuple.get(32, UUID.class),
-//                            tuple.get(33, String.class),
-//                            tuple.get(34, String.class),
-//                            tuple.get(35, String.class)
-//                    ),
-                    tuple.get(32, Double.class),
-                    tuple.get(33, Double.class),
-                    tuple.get(34, Double.class),
-                    tuple.get(35, Double.class),
-                    tuple.get(36, Double.class),
-                    tuple.get(37, Double.class),
-                    tuple.get(38, Double.class),
-                    tuple.get(39, Double.class),
-                    tuple.get(40, Double.class),
-                    tuple.get(41, String.class),
-                    tuple.get(42, EAttachment.class),
-                    tuple.get(43, Boolean.class),
-                    tuple.get(44, Boolean.class),
-                    tuple.get(45, Boolean.class)
+                    new HotelProjection(
+                            tuple.get(32, UUID.class),
+                            tuple.get(33, String.class),
+                            tuple.get(34, String.class),
+                            tuple.get(35, String.class)
+                    ),
+                    tuple.get(36, Double.class), // paymentAmount
+                    tuple.get(37, Double.class), // paymentBalance
+                    tuple.get(38, Double.class), // depositAmount
+                    tuple.get(39, Double.class), // depositBalance
+                    tuple.get(40, Double.class), // otherDeductions
+                    tuple.get(41, Double.class), // identified
+                    tuple.get(42, Double.class), // notIdentified
+                    tuple.get(43, Double.class), // notApplied
+                    tuple.get(44, Double.class), // applied
+                    tuple.get(45, String.class), // remark
+                    tuple.get(46, EAttachment.class), // eAttachment
+                    tuple.get(47, Boolean.class), // applyPayment
+                    tuple.get(48, Boolean.class), // paymentSupport
+                    tuple.get(49, Boolean.class) // createByCredit
             );
         }).collect(Collectors.toList());
 
