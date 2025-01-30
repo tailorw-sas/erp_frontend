@@ -53,7 +53,7 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         try {
             Optional<Map<String, byte[]>> reportContent;
             if (invoiceReportRequest.isGroupByClient()) {
-                reportContent = getReportContentGroupedByClient(services, Arrays.asList(invoiceReportRequest.getInvoiceId()));
+                reportContent = getReportContentGroupedByClientAndId(services, Arrays.asList(invoiceReportRequest.getInvoiceId()));
                 if (reportContent.isPresent()) {
                     return ReportUtil.createCompressResponse(reportContent.get());
                 }
@@ -134,29 +134,15 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
     private Map<EInvoiceReportType, Optional<byte[]>> groupPdfContentByReportType(List<String> invoicesIds, Map<EInvoiceReportType, IInvoiceReport> reportService) throws DocumentException, IOException {
         Map<EInvoiceReportType, Optional<byte[]>> content = new HashMap<>();
 
-        for (String id : invoicesIds){
-            for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
-                if (Objects.nonNull(entry.getValue())) {
-                    List<Optional<byte[]>> reportContent = List.of(entry.getValue().generateReport(id));
-                    content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
-                            .filter(Optional::isPresent)
-                            .map(bytes -> new ByteArrayInputStream(bytes.get()))
-                            .map(InputStream.class::cast).toList())));
-
-                }
+        for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
+            if (Objects.nonNull(entry.getValue())) {
+                List<Optional<byte[]>> reportContent = invoicesIds.stream().map(invoicesId -> entry.getValue().generateReport(invoicesId)).toList();
+                content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
+                        .filter(Optional::isPresent)
+                        .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                        .map(InputStream.class::cast).toList())));
             }
         }
-
-//        for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
-//            if (Objects.nonNull(entry.getValue())) {
-//                List<Optional<byte[]>> reportContent = invoicesIds.stream().map(invoicesId -> entry.getValue().generateReport(invoicesId)).toList();
-//                content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
-//                        .filter(Optional::isPresent)
-//                        .map(bytes -> new ByteArrayInputStream(bytes.get()))
-//                        .map(InputStream.class::cast).toList())));
-//
-//            }
-//        }
         return content;
     }
 
@@ -193,5 +179,55 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
         String hotelCode = manageInvoiceDto.getHotel().getCode();
         String invoiceNumber = manageInvoiceDto.getInvoiceNumber();
         return hotelCode + "-" + InvoiceUtils.getInvoiceNumberPrefix(invoiceNumber);
+    }
+
+    private Map<String, Optional<byte[]>> groupPdfContentById(List<String> invoicesIds, Map<EInvoiceReportType, IInvoiceReport> reportService) throws DocumentException, IOException {
+        Map<String, Optional<byte[]>> content = new HashMap<>();
+
+        for (String id : invoicesIds){
+            List<Optional<byte[]>> reportContent = new ArrayList<>();
+//            for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
+//                if (Objects.nonNull(entry.getValue())) {
+//                    reportContent.add(entry.getValue().generateReport(id));
+//                }
+//            }
+            if (reportService.containsKey(EInvoiceReportType.INVOICE_AND_BOOKING) &&
+                    Objects.nonNull(reportService.get(EInvoiceReportType.INVOICE_AND_BOOKING))) {
+                reportContent.add(reportService.get(EInvoiceReportType.INVOICE_AND_BOOKING).generateReport(id));
+            }
+
+            // Luego procesar INVOICE_SUPPORT si está presente
+            if (reportService.containsKey(EInvoiceReportType.INVOICE_SUPPORT) &&
+                    Objects.nonNull(reportService.get(EInvoiceReportType.INVOICE_SUPPORT))) {
+                reportContent.add(reportService.get(EInvoiceReportType.INVOICE_SUPPORT).generateReport(id));
+            }
+            content.put(id, Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
+                    .filter(Optional::isPresent)
+                    .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                    .map(InputStream.class::cast).toList())));
+        }
+        return content;
+    }
+
+    private Optional<Map<String, byte[]>> getReportContentGroupedByClientAndId(Map<EInvoiceReportType, IInvoiceReport> reportService, List<String> invoicesIds) throws DocumentException, IOException {
+        Map<String, byte[]> result = new HashMap<>();
+        Map<String, List<ManageInvoiceDto>> invoiceGroupedByClient = getInvoiceGroupedByClient(invoicesIds);
+        for (var entry : invoiceGroupedByClient.entrySet()) {
+            List<String> invoiceGroup = entry.getValue()
+                    .stream()
+                    .map(ManageInvoiceDto::getId)
+                    .map(UUID::toString).toList();
+            Map<String, Optional<byte[]>> reportContent = this.groupPdfContentById(invoiceGroup, reportService);
+            String fileName = entry.getValue().get(0).getId().toString();
+            result.put(resolveGroupedFileName(fileName),
+                    PDFUtils.mergePDFtoByte(reportContent.values()
+                            .stream()
+                            .filter(Optional::isPresent)
+                            .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                            .map(InputStream.class::cast).toList()));
+        }
+
+        // Retornar el mapa de resultados si no está vacío
+        return result.isEmpty() ? Optional.empty() : Optional.of(result);
     }
 }
