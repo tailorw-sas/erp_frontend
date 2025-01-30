@@ -413,7 +413,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_BANK_ACCOUNT_NOT_FOUND(1190, Series.DOMAIN_ERROR,"The bank account doesn't belong to the hotel."),
     MANAGE_AGENCY_TYPE_NOT_FOUND_(1191, Series.DOMAIN_ERROR, "The agency not found."),
     MANAGE_MERCHANT_DEFAULT(1192, Series.DOMAIN_ERROR,"Another item already exists with default."),
-    MANAGE_VCC_TRANSACTION_TYPE_SUB_DEFAULT_NOT_FOUND(1193, Series.DOMAIN_ERROR,"There is no transaction sub category by default.");
+    MANAGE_VCC_TRANSACTION_TYPE_SUB_DEFAULT_NOT_FOUND(1193, Series.DOMAIN_ERROR,"There is no transaction sub category by default."),
+    INCOME_CREATE_PROCESS_FAILED(1194, Series.DOMAIN_ERROR, "Create income process failed.");
 
     private static final DomainErrorMessage[] VALUES;
 
