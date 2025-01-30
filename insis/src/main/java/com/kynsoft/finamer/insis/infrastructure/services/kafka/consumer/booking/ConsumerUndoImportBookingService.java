@@ -20,6 +20,7 @@ public class ConsumerUndoImportBookingService {
     @KafkaListener(topics = "finamer-undo-import-innsist-response", groupId = "finamer-innsist-replica")
     public void listen(UUID invoice){
         try{
+            System.out.println("************El ID del booking es: "+invoice);
             UndoImportBookingCommand command = new UndoImportBookingCommand(invoice);
             mediator.send(command);
         }catch (Exception ex){
