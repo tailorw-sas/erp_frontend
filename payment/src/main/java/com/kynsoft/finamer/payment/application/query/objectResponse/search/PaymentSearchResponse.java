@@ -111,7 +111,7 @@ public class PaymentSearchResponse implements IResponse {
         this.agency = dto.getAgency() != null ? new ManageAgencySearchResponse(dto.getAgency()) : null;
         this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
        this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountSearchResponse(dto.getBankAccount()) : null;
-//       this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getAttachmentStatus()) : null;
+        this.attachmentStatus = dto.getPaymentAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getPaymentAttachmentStatus()) : null;
         this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
         this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
         this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
@@ -122,7 +122,7 @@ public class PaymentSearchResponse implements IResponse {
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
-      //  this.eAttachment = dto.getEAttachment();
+        this.eAttachment = dto.getEAttachment();
         this.applyPayment = dto.getApplyPayment();
         this.paymentSupport = dto.getPaymentSupport();
         this.createByCredit = dto.getCreateByCredit();

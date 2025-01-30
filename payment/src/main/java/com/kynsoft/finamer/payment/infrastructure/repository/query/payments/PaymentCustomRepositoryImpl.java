@@ -38,7 +38,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         Join<Payment, ManageBankAccount> bankAccountJoin = root.join("bankAccount", JoinType.LEFT);
         Join<Payment, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
         Join<Payment, ManageHotel> hotelJoin = root.join("hotel", JoinType.LEFT);
-     //   Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin = root.join("attachmentStatus", JoinType.LEFT);
+        Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin = root.join("attachmentStatus", JoinType.LEFT);
 
         List<Selection<?>> selections = new ArrayList<>();
         selections.add(root.get("id"));
@@ -93,10 +93,16 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(hotelJoin.get("status"));
 
         // Payment Attachment Status
-//        selections.add(attachmentStatusJoin.get("id"));
-//        selections.add(attachmentStatusJoin.get("code"));
-//        selections.add(attachmentStatusJoin.get("name"));
-//        selections.add(attachmentStatusJoin.get("status"));
+        selections.add(attachmentStatusJoin.get("id"));
+        selections.add(attachmentStatusJoin.get("code"));
+        selections.add(attachmentStatusJoin.get("name"));
+        selections.add(attachmentStatusJoin.get("status"));
+        selections.add(attachmentStatusJoin.get("defaults"));
+        selections.add(attachmentStatusJoin.get("nonNone"));
+        selections.add(attachmentStatusJoin.get("patWithAttachment"));
+        selections.add(attachmentStatusJoin.get("pwaWithOutAttachment"));
+        selections.add(attachmentStatusJoin.get("supported"));
+        selections.add(attachmentStatusJoin.get("otherSupport"));
 
         // Payment details
         selections.add(root.get("paymentAmount"));
@@ -135,14 +141,14 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                     tuple.get(2, java.time.LocalDate.class),   // transactionDate
                     tuple.get(3, String.class),   // reference
                     new PaymentStatusProjection(
-                            tuple.get(4, UUID.class),   // status id
-                            tuple.get(5, String.class), // status code
-                            tuple.get(6, String.class), // status name
-                            tuple.get(7, Boolean.class), // confirmed
-                            tuple.get(8, Boolean.class), // applied
-                            tuple.get(9, Boolean.class), // cancelled
-                            tuple.get(10, Boolean.class), // transit
-                            tuple.get(11, String.class) // status
+                            tuple.get(4, UUID.class),
+                            tuple.get(5, String.class),
+                            tuple.get(6, String.class),
+                            tuple.get(7, Boolean.class),
+                            tuple.get(8, Boolean.class),
+                            tuple.get(9, Boolean.class),
+                            tuple.get(10, Boolean.class),
+                            tuple.get(11, String.class)
                     ),
                     new PaymentSourceProjection(
                             tuple.get(12, UUID.class),
@@ -180,20 +186,32 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                             tuple.get(34, String.class),
                             tuple.get(35, String.class)
                     ),
-                    tuple.get(36, Double.class), // paymentAmount
-                    tuple.get(37, Double.class), // paymentBalance
-                    tuple.get(38, Double.class), // depositAmount
-                    tuple.get(39, Double.class), // depositBalance
-                    tuple.get(40, Double.class), // otherDeductions
-                    tuple.get(41, Double.class), // identified
-                    tuple.get(42, Double.class), // notIdentified
-                    tuple.get(43, Double.class), // notApplied
-                    tuple.get(44, Double.class), // applied
-                    tuple.get(45, String.class), // remark
-                    tuple.get(46, EAttachment.class), // eAttachment
-                    tuple.get(47, Boolean.class), // applyPayment
-                    tuple.get(48, Boolean.class), // paymentSupport
-                    tuple.get(49, Boolean.class) // createByCredit
+                    new PaymentAttachmentStatusProjection(
+                            tuple.get(36, UUID.class),
+                            tuple.get(37, String.class),
+                            tuple.get(38, String.class),
+                            tuple.get(39, String.class),
+                            tuple.get(40, Boolean.class), // defaults
+                            tuple.get(41, Boolean.class), // nonNone
+                            tuple.get(42, Boolean.class), // patWithAttachment
+                            tuple.get(43, Boolean.class), // pwaWithOutAttachment
+                            tuple.get(44, Boolean.class), // supported
+                            tuple.get(45, Boolean.class)  // otherSupport
+                    ),
+                    tuple.get(46, Double.class), // paymentAmount
+                    tuple.get(47, Double.class), // paymentBalance
+                    tuple.get(48, Double.class), // depositAmount
+                    tuple.get(49, Double.class), // depositBalance
+                    tuple.get(50, Double.class), // otherDeductions
+                    tuple.get(51, Double.class), // identified
+                    tuple.get(52, Double.class), // notIdentified
+                    tuple.get(53, Double.class), // notApplied
+                    tuple.get(54, Double.class), // applied
+                    tuple.get(55, String.class), // remark
+                    tuple.get(56, EAttachment.class), // eAttachment
+                    tuple.get(57, Boolean.class), // applyPayment
+                    tuple.get(58, Boolean.class), // paymentSupport
+                    tuple.get(59, Boolean.class)  // createByCredit
             );
         }).collect(Collectors.toList());
 
