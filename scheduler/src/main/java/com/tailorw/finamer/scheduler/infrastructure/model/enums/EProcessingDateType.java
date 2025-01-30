@@ -23,7 +23,6 @@ public enum EProcessingDateType {
     DAY,
     MONTH,
     YEAR,
-    DAILY,
     CUSTOM;
 
     public static boolean exists(String value) {

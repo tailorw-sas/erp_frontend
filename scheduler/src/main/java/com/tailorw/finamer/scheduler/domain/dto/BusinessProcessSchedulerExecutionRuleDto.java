@@ -12,12 +12,13 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BusinessProcessSchedulerRuleDto {
+public class BusinessProcessSchedulerExecutionRuleDto {
 
     private UUID id;
     private FrequencyDto frequency;
     private IntervalTypeDto intervalType;
     private Boolean enableInterval;
+    private Boolean enableExecutionDateType;
     private ExecutionDateTypeDto executionDateType;
     private Boolean enableExecutionDateValue;
     private Boolean enableExecutionDate;

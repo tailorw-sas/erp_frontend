@@ -1,16 +1,16 @@
-package com.tailorw.finamer.scheduler.application.query.businessProcessSchedulerRules.search;
+package com.tailorw.finamer.scheduler.application.query.businessProcessSchedulerRules.executionSearch;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.tailorw.finamer.scheduler.domain.services.IBusinessProcessSchedulerRuleService;
+import com.tailorw.finamer.scheduler.domain.services.IBusinessProcessSchedulerExecutionRuleService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GetSearchBusinessProcessSchedulerRuleQueryHandler implements IQueryHandler<GetSearchBusinessProcessSchedulerRuleQuery, PaginatedResponse> {
 
-    private final IBusinessProcessSchedulerRuleService businessProcessSchedulerRuleService;
+    private final IBusinessProcessSchedulerExecutionRuleService businessProcessSchedulerRuleService;
 
-    public GetSearchBusinessProcessSchedulerRuleQueryHandler(IBusinessProcessSchedulerRuleService businessProcessSchedulerRuleService){
+    public GetSearchBusinessProcessSchedulerRuleQueryHandler(IBusinessProcessSchedulerExecutionRuleService businessProcessSchedulerRuleService){
         this.businessProcessSchedulerRuleService = businessProcessSchedulerRuleService;
     }
 

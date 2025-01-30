@@ -8,13 +8,13 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
-import com.tailorw.finamer.scheduler.application.query.objectResponse.BusinessProcessSchedulerRuleResponse;
-import com.tailorw.finamer.scheduler.domain.dto.BusinessProcessSchedulerRuleDto;
-import com.tailorw.finamer.scheduler.domain.services.IBusinessProcessSchedulerRuleService;
-import com.tailorw.finamer.scheduler.infrastructure.model.BusinessProcessSchedulerRule;
+import com.tailorw.finamer.scheduler.application.query.objectResponse.BusinessProcessSchedulerExecutionRuleResponse;
+import com.tailorw.finamer.scheduler.domain.dto.BusinessProcessSchedulerExecutionRuleDto;
+import com.tailorw.finamer.scheduler.domain.services.IBusinessProcessSchedulerExecutionRuleService;
+import com.tailorw.finamer.scheduler.infrastructure.model.BusinessProcessSchedulerExecutionRule;
 import com.tailorw.finamer.scheduler.infrastructure.model.enums.Status;
-import com.tailorw.finamer.scheduler.infrastructure.repository.command.BusinessProcessSchedulerRuleWriteDataJPARepository;
-import com.tailorw.finamer.scheduler.infrastructure.repository.query.BusinessProcessSchedulerRuleReadDataJPARepository;
+import com.tailorw.finamer.scheduler.infrastructure.repository.command.BusinessProcessSchedulerExecutionRuleWriteDataJPARepository;
+import com.tailorw.finamer.scheduler.infrastructure.repository.query.BusinessProcessSchedulerExecutionRuleReadDataJPARepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,26 +25,26 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class BusinessProcessSchedulerRuleServiceImpl implements IBusinessProcessSchedulerRuleService {
+public class BusinessProcessSchedulerExecutionRuleServiceImpl implements IBusinessProcessSchedulerExecutionRuleService {
 
-    private final BusinessProcessSchedulerRuleWriteDataJPARepository writeRepository;
-    private final BusinessProcessSchedulerRuleReadDataJPARepository readRepository;
+    private final BusinessProcessSchedulerExecutionRuleWriteDataJPARepository writeRepository;
+    private final BusinessProcessSchedulerExecutionRuleReadDataJPARepository readRepository;
 
-    public BusinessProcessSchedulerRuleServiceImpl(BusinessProcessSchedulerRuleWriteDataJPARepository writeRepository,
-                                                   BusinessProcessSchedulerRuleReadDataJPARepository readRepository){
+    public BusinessProcessSchedulerExecutionRuleServiceImpl(BusinessProcessSchedulerExecutionRuleWriteDataJPARepository writeRepository,
+                                                            BusinessProcessSchedulerExecutionRuleReadDataJPARepository readRepository){
         this.writeRepository = writeRepository;
         this.readRepository = readRepository;
     }
 
     @Override
-    public UUID create(BusinessProcessSchedulerRuleDto dto) {
-        BusinessProcessSchedulerRule businessProcessSchedulerRule = new BusinessProcessSchedulerRule(dto);
+    public UUID create(BusinessProcessSchedulerExecutionRuleDto dto) {
+        BusinessProcessSchedulerExecutionRule businessProcessSchedulerRule = new BusinessProcessSchedulerExecutionRule(dto);
         return writeRepository.save(businessProcessSchedulerRule).getId();
     }
 
     @Override
-    public void update(BusinessProcessSchedulerRuleDto dto) {
-        BusinessProcessSchedulerRule businessProcessSchedulerRule = new BusinessProcessSchedulerRule(dto);
+    public void update(BusinessProcessSchedulerExecutionRuleDto dto) {
+        BusinessProcessSchedulerExecutionRule businessProcessSchedulerRule = new BusinessProcessSchedulerExecutionRule(dto);
         businessProcessSchedulerRule.setUpdatedAt(LocalDateTime.now());
         writeRepository.save(businessProcessSchedulerRule);
     }
@@ -60,22 +60,22 @@ public class BusinessProcessSchedulerRuleServiceImpl implements IBusinessProcess
     }
 
     @Override
-    public BusinessProcessSchedulerRuleDto getById(UUID id) {
-        Optional<BusinessProcessSchedulerRule> rule = readRepository.findById(id);
+    public BusinessProcessSchedulerExecutionRuleDto getById(UUID id) {
+        Optional<BusinessProcessSchedulerExecutionRule> rule = readRepository.findById(id);
         if(rule.isPresent()){
             return rule.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_PROCESS_SCHEDULER_RULE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.BUSINESS_PROCESS_SCHEDULER_RULE_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_PROCESS_SCHEDULER_EXECUTION_RULE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.BUSINESS_PROCESS_SCHEDULER_EXECUTION_RULE_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         addDeletedFilter(filterCriteria);
-        GenericSpecificationsBuilder<BusinessProcessSchedulerRule> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<BusinessProcessSchedulerRule> data = readRepository.findAll(specifications, pageable);
-        List<BusinessProcessSchedulerRuleResponse> responses = data.stream()
+        GenericSpecificationsBuilder<BusinessProcessSchedulerExecutionRule> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
+        Page<BusinessProcessSchedulerExecutionRule> data = readRepository.findAll(specifications, pageable);
+        List<BusinessProcessSchedulerExecutionRuleResponse> responses = data.stream()
                 .map(rule -> {
-                    return new BusinessProcessSchedulerRuleResponse(rule.toAggregate());
+                    return new BusinessProcessSchedulerExecutionRuleResponse(rule.toAggregate());
                 })
                 .toList();
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(), data.getTotalElements(), data.getSize(), data.getNumber());
