@@ -25,4 +25,5 @@ public class UpdateJasperReportParameterRequest {
     private int parameterPosition;
     private String dependentField;
     private String filterKeyValue;
+    private String dataValueStatic;
 }

@@ -37,20 +37,7 @@ public class JasperReportTemplate extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private ModuleSystems moduleSystems;
-    private String dataValueStatic;
-
-    private Double parentIndex;
     private Double menuPosition;
-    private String lanPath;
-    private Boolean web;
-    private Boolean subMenu;
-    private Boolean sendEmail;
-    private Boolean internal;
-    private Boolean highRisk;
-    private Boolean visible;
-    private Boolean cancel;
-    private String rootIndex;
-    private String language;
 
     private String query;
 
@@ -75,23 +62,11 @@ public class JasperReportTemplate extends BaseEntity {
         this.description = jasperReportTemplateDto.getDescription();
         this.file = jasperReportTemplateDto.getFile();
         this.type = jasperReportTemplateDto.getType();
-
-        this.parentIndex = jasperReportTemplateDto.getParentIndex();
         this.menuPosition = jasperReportTemplateDto.getMenuPosition();
-        this.lanPath = jasperReportTemplateDto.getLanPath();
-        this.web = jasperReportTemplateDto.getWeb();
-        this.subMenu = jasperReportTemplateDto.getSubMenu();
-        this.sendEmail = jasperReportTemplateDto.getSendEmail();
-        this.internal = jasperReportTemplateDto.getInternal();
-        this.highRisk = jasperReportTemplateDto.getHighRisk();
-        this.visible = jasperReportTemplateDto.getVisible();
-        this.cancel = jasperReportTemplateDto.getCancel();
-        this.rootIndex = jasperReportTemplateDto.getRootIndex();
-        this.language = jasperReportTemplateDto.getLanguage();
         this.status = jasperReportTemplateDto.getStatus();
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConection(jasperReportTemplateDto.getDbConectionDto()) : null;
-        this.query = jasperReportTemplateDto.getQuery();
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
+
     }
 
     public JasperReportTemplateDto toAggregate() {
@@ -106,22 +81,10 @@ public class JasperReportTemplate extends BaseEntity {
                 type,
                 status,
                 createdAt,
-                parentIndex,
                 menuPosition,
-                lanPath,
-                web,
-                subMenu,
-                sendEmail,
-                internal,
-                highRisk,
-                visible,
-                cancel,
-                rootIndex,
-                language,
                 conectionDto,
-                query,
                 moduleSystems,
-                dataValueStatic
+                query
         );
     }
 

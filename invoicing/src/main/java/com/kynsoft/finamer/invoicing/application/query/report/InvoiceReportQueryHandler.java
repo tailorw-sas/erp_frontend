@@ -133,16 +133,30 @@ public class InvoiceReportQueryHandler implements IQueryHandler<InvoiceReportQue
 
     private Map<EInvoiceReportType, Optional<byte[]>> groupPdfContentByReportType(List<String> invoicesIds, Map<EInvoiceReportType, IInvoiceReport> reportService) throws DocumentException, IOException {
         Map<EInvoiceReportType, Optional<byte[]>> content = new HashMap<>();
-        for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
-            if (Objects.nonNull(entry.getValue())) {
-                List<Optional<byte[]>> reportContent = invoicesIds.stream().map(invoicesId -> entry.getValue().generateReport(invoicesId)).toList();
-                content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
-                        .filter(Optional::isPresent)
-                        .map(bytes -> new ByteArrayInputStream(bytes.get()))
-                        .map(InputStream.class::cast).toList())));
 
+        for (String id : invoicesIds){
+            for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
+                if (Objects.nonNull(entry.getValue())) {
+                    List<Optional<byte[]>> reportContent = List.of(entry.getValue().generateReport(id));
+                    content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
+                            .filter(Optional::isPresent)
+                            .map(bytes -> new ByteArrayInputStream(bytes.get()))
+                            .map(InputStream.class::cast).toList())));
+
+                }
             }
         }
+
+//        for (Map.Entry<EInvoiceReportType, IInvoiceReport> entry : reportService.entrySet()) {
+//            if (Objects.nonNull(entry.getValue())) {
+//                List<Optional<byte[]>> reportContent = invoicesIds.stream().map(invoicesId -> entry.getValue().generateReport(invoicesId)).toList();
+//                content.put(entry.getKey(), Optional.of(PDFUtils.mergePDFtoByte(reportContent.stream()
+//                        .filter(Optional::isPresent)
+//                        .map(bytes -> new ByteArrayInputStream(bytes.get()))
+//                        .map(InputStream.class::cast).toList())));
+//
+//            }
+//        }
         return content;
     }
 

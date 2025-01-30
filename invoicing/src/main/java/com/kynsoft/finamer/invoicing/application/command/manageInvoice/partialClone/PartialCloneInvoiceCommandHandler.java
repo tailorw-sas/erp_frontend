@@ -12,8 +12,6 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 
 import java.time.LocalDate;
@@ -125,11 +123,11 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
                             invoiceDate(invoiceToClone.getHotel().getId()),
                             adjustmentRequest.getAdjustment().getDescription(),
                             adjustmentRequest.getAdjustment().getTransactionType() != null
-                            ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())
-                            : null,
+                                ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())
+                                : null,
                             adjustmentRequest.getAdjustment().getPaymentTransactionType() != null
-                            ? this.paymentTransactionTypeService.findById(adjustmentRequest.getAdjustment().getPaymentTransactionType())
-                            : null,
+                                ? this.paymentTransactionTypeService.findById(adjustmentRequest.getAdjustment().getPaymentTransactionType())
+                                : null,
                             null,
                             adjustmentRequest.getAdjustment().getEmployee(),
                             false
@@ -191,7 +189,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         }
 
         for (ManageBookingDto booking : bookingDtos) {
-            this.calculateBookingHotelAmount(booking);
+            this.calculateBookingAmounts(booking);
         }
         if (!validateManageAdjustments(bookingDtos)) {
             throw new BusinessException(
@@ -243,9 +241,10 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         ManageInvoiceDto created = service.create(invoiceDto);
 
         //calcular el amount de los bookings
-        for (ManageBookingDto booking : created.getBookings()) {
-            this.bookingService.calculateInvoiceAmount(booking);
-        }
+//        for (ManageBookingDto booking : created.getBookings()) {
+//            this.bookingService.calculateInvoiceAmount(booking);
+//        }
+
         //calcular el amount del invoice
         this.service.calculateInvoiceAmount(created);
 
@@ -317,19 +316,17 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
-    public void calculateBookingHotelAmount(ManageBookingDto dto) {
-        Double HotelAmount = 0.00;
-
+    public void calculateBookingAmounts(ManageBookingDto dto) {
+        Double hotelAmount = 0.00;
+        Double bookingAmount = 0.00;
         if (dto.getRoomRates() != null) {
-
             for (int i = 0; i < dto.getRoomRates().size(); i++) {
-
-                HotelAmount += dto.getRoomRates().get(i).getHotelAmount();
-
+                hotelAmount += dto.getRoomRates().get(i).getHotelAmount();
+                bookingAmount += dto.getRoomRates().get(i).getInvoiceAmount();
             }
-
-            dto.setHotelAmount(HotelAmount);
-
+            dto.setHotelAmount(hotelAmount);
+            dto.setInvoiceAmount(bookingAmount);
+            dto.setDueAmount(bookingAmount);
         }
     }
 
