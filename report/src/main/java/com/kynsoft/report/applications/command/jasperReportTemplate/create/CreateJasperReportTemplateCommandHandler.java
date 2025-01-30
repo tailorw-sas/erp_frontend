@@ -12,20 +12,14 @@ import com.kynsoft.report.domain.rules.jasperReport.ManageReportParentIndexMustB
 import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsoft.report.domain.services.IReportParameterService;
-import com.kynsoft.report.domain.services.IReportService;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Component
 public class CreateJasperReportTemplateCommandHandler implements ICommandHandler<CreateJasperReportTemplateCommand> {
@@ -50,7 +44,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
         RulesChecker.checkRule(new ManageReportCodeMustBeNullRule(command.getCode()));
         RulesChecker.checkRule(new ManageReportNameMustBeNullRule(command.getName()));
-        RulesChecker.checkRule(new ManageReportParentIndexMustBeNullRule(command.getParentIndex()));
+        // RulesChecker.checkRule(new ManageReportParentIndexMustBeNullRule(command.getParentIndex()));
         RulesChecker.checkRule(new ManageJasperReportCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
         DBConectionDto dbConectionDto = command.getDbConection() != null ? this.connectionService.findById(command.getDbConection()) : null;
@@ -61,27 +55,22 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
                 command.getDescription(),
                 command.getFile(),
                 command.getType(),
-                command.getParentIndex(),
                 command.getMenuPosition(),
-                command.getLanPath(),
-                command.getWeb(),
-                command.getSubMenu(),
-                command.getSendEmail(),
-                command.getInternal(),
-                command.getHighRisk(),
-                command.getVisible(),
-                command.getCancel(),
-                command.getRootIndex(),
-                command.getLanguage(),
                 command.getStatus(),
                 dbConectionDto,
-                command.getQuery()
+                ""
         );
 
         reportTemplateDto.setModuleSystems(command.getModuleSystems());
         UUID id = this.service.create(reportTemplateDto);
 
-        addParameters(command.getFile(), reportTemplateDto);
+        try {
+
+            addParameters(command.getFile(), reportTemplateDto);
+        } catch (Exception exception) {
+            System.out.println("ERROR al crear los parametros de reporte");
+            System.out.println(exception.getMessage());
+        }
         command.setId(id);
 
     }
@@ -89,20 +78,67 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
     private void addParameters(String fileUrl, JasperReportTemplateDto reportTemplateDto) {
         byte[] data = restTemplate.getForObject(fileUrl, byte[].class);
         InputStream inputStream = new ByteArrayInputStream(Objects.requireNonNull(data));
-        JasperReport jasperReport = null;
+        JasperReport jasperReport;
+
         try {
             jasperReport = JasperCompileManager.compileReport(inputStream);
         } catch (JRException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error compiling Jasper report: " + e.getMessage(), e);
         }
+
+        // Crear un mapa vacío de parámetros
+        Map<String, Object> parameters = new HashMap<>();
+
+        // Llenar el reporte con un datasource vacío para evaluar expresiones
+        try {
+            JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+        } catch (JRException e) {
+            throw new RuntimeException("Error filling Jasper report: " + e.getMessage(), e);
+        }
+
+        // Iterar sobre los parámetros obtenidos del JasperReport original
         for (JRParameter param : jasperReport.getParameters()) {
-            if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que son promptables
-                this.reportParameterService.create(new JasperReportParameterDto(
-                        UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
-                        "", "","", reportTemplateDto,"",
-                        "",0, "", "",""
-                ));
+            if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que requieren entrada
+                try {
+                    // Obtener valor si existe en el mapa de parámetros evaluados
+                    Object paramValue = parameters.getOrDefault(param.getName(), "");
+
+                    // Si el parámetro es de tipo fecha, formatearlo correctamente
+                    if (paramValue instanceof Date) {
+                        paramValue = new SimpleDateFormat("MM/dd/yyyy").format((Date) paramValue);
+                    }
+
+                    // Guardar el parámetro en la base de datos
+                    this.reportParameterService.create(new JasperReportParameterDto(
+                            UUID.randomUUID(), param.getName(), param.getValueClassName(),
+                            paramValue.toString(), "", "", "", reportTemplateDto, "",
+                            "", 0, "", "", ""
+                    ));
+
+                } catch (Exception e) {
+                    System.out.println("Error processing parameter: " + param.getName() + " - " + e.getMessage());
+                }
             }
         }
     }
+
+//    private void addParameters(String fileUrl, JasperReportTemplateDto reportTemplateDto) {
+//        byte[] data = restTemplate.getForObject(fileUrl, byte[].class);
+//        InputStream inputStream = new ByteArrayInputStream(Objects.requireNonNull(data));
+//        JasperReport jasperReport = null;
+//        try {
+//            jasperReport = JasperCompileManager.compileReport(inputStream);
+//        } catch (JRException e) {
+//            throw new RuntimeException(e);
+//        }
+//        for (JRParameter param : jasperReport.getParameters()) {
+//            if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que son promptables
+//                this.reportParameterService.create(new JasperReportParameterDto(
+//                        UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
+//                        "", "", "", reportTemplateDto, "",
+//                        "", 0, "", "", ""
+//                ));
+//            }
+//        }
+//    }
 }

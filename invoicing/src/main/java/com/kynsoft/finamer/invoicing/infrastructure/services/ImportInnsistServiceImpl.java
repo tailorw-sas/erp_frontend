@@ -63,18 +63,21 @@ public class ImportInnsistServiceImpl {
                     .build();
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
             int rowNumber = 0;
+            boolean stop = true;
             for (BookingImportCache bookingImportCache : list) {
                 BookingRow row = bookingImportCache.toAggregateImportInsist();
                 row.setRowNumber(rowNumber);
                 row.setImportProcessId(row.getInsistImportProcessId());
                 if (validatorFactory.validate(row)) {
                     bookingImportHelperService.groupAndCachingImportBooking(row, EImportType.NO_VIRTUAL);
+                } else {
+                    stop = false;
                 }
                 rowNumber++;
             }
             list.clear();
             validatorFactory.removeValidators();
-            if (validateInsist) {
+            if (validateInsist && stop) {
                 this.bookingImportHelperService.createInvoiceGroupingByCoupon(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
                 this.bookingImportHelperService.createInvoiceGroupingByBooking(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
             }
