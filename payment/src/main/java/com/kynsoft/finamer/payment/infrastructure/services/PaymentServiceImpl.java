@@ -12,6 +12,8 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
@@ -39,6 +41,12 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Autowired
     private PaymentReadDataJPARepository repositoryQuery;
+
+    @Autowired
+    private IPaymentDetailService paymentDetailService;
+
+    @Autowired
+    private IMasterPaymentAttachmentService masterPaymentAttachmentService;
 
     @Override
     public PaymentDto create(PaymentDto dto) {
@@ -218,6 +226,16 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public void clearCache() {
         System.out.println("Clearing PaymentProjectionSimple cache");
+    }
+
+    @Override
+    public void getAll() {
+        List<Payment> payment = this.repositoryQuery.findAll();
+        for (Payment payment1 : payment) {
+            payment1.setHasAttachment(this.masterPaymentAttachmentService.countByAttachmentResource(payment1.getId()) > 0);
+            payment1.setHasDetailTypeDeposit(this.paymentDetailService.countByPaymentDetailIdAndTransactionTypeDeposit(payment1.getId()) > 0);
+            this.repositoryCommand.save(payment1);
+        }
     }
 
 }
