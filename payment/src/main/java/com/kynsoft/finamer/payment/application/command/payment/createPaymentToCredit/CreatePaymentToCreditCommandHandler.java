@@ -167,8 +167,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
         paymentDto.setCreateByCredit(true);
         paymentDto.setImportType(ImportType.AUTOMATIC);
         paymentDto.setApplyPayment(true);
-        paymentDto.setHasAttachment(true);
-        paymentDto.setHasDetailTypeDeposit(true);
+//        paymentDto.setHasAttachment(true);
+//        paymentDto.setHasDetailTypeDeposit(true);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
 //        if (command.getInvoiceDto().getBookings() != null) {
@@ -249,8 +249,8 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
         paymentDto.setCreateByCredit(true);
         paymentDto.setImportType(ImportType.AUTOMATIC);
-        paymentDto.setHasAttachment(true);
-        paymentDto.setHasDetailTypeDeposit(false);
+//        paymentDto.setHasAttachment(true);
+//        paymentDto.setHasDetailTypeDeposit(false);
         PaymentDto paymentSave = this.paymentService.create(paymentDto);
         if (command.getInvoiceDto().getBookings() != null) {
             for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
