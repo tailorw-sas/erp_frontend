@@ -278,8 +278,8 @@ async function getList() {
         agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
         hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
         roomType: `${iterator?.roomType?.code || ''}`,
-        rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
-        selected: isRowSelectable(iterator)
+        // rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
+        // selected: isRowSelectable(iterator)
       })
 
       totalHotelInvoiceAmount.value += iterator.hotelInvoiceAmount ? Number(iterator.hotelInvoiceAmount) : 0
@@ -949,16 +949,13 @@ async function getErrorList(processId: any) {
           })
           existingIds.add(iterator.row?.insistImportProcessBookingId)
         }
-        /* else {
-          console.log(typeof listItemsErrors.value)
-          console.log(typeof iterator.row?.insistImportProcessBookingId)
-          console.log(`iterator.row?.insistImportProcessBookingId es: ${iterator.row?.insistImportProcessBookingId}`)
-          console.log(listItemsErrors)
-          const booking = listItemsErrors.value.filter(item => item.id === iterator.row?.insistImportProcessBookingId)
-          console.log(booking)
-          // booking?.values[0].amount = booking?.amount + iterator.row?.invoiceAmount
-          // booking?.hotelInvoiceAmount = booking?.hotelInvoiceAmount + iterator.row?.hotelInvoiceAmount
-        } */
+        else {
+          const booking = newListItems.filter(item => item.id === iterator.row?.insistImportProcessBookingId)
+          if (booking.length > 0) {
+            booking[0].amount = booking[0].amount + iterator.row?.invoiceAmount
+            booking[0].hotelInvoiceAmount = booking[0].hotelInvoiceAmount + iterator.row?.hotelInvoiceAmount
+          }
+        }
       }
 
       paginationErroList.value.page = page
@@ -1203,7 +1200,11 @@ onMounted(async () => {
           @on-expand-row="getRoomRateByBooking($event)"
         >
           <template #column-status="{ data }">
-            <Badge :value="getStatusName(data.status)" :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.status)}`" />
+            <Badge
+              v-tooltip.top="data.message"
+              :value="getStatusName(data.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.status)}`"
+            />
           </template>
           <template #column-message="{ data }">
             <div id="fieldError">
