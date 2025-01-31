@@ -27,6 +27,7 @@ const filterAllDateRange = ref(false)
 const loadingSearch = ref(false)
 const fileUpload = ref()
 const loadingSaveAll = ref(false)
+const resultTable = ref()
 
 const errorList = ref<any[]>([])
 const reviewError = ref(false)
@@ -159,6 +160,7 @@ async function getList() {
     return
   }
   try {
+    resultTable.value?.clearSelectedItems()
     idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listItems.value = []
@@ -1016,6 +1018,7 @@ onMounted(async () => {
       </div>
 
       <DynamicTable
+        ref="resultTable"
         :data="listItems"
         :columns="columns"
         :options="options"
