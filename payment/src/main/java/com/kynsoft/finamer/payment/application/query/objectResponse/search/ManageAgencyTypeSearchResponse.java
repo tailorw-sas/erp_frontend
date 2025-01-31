@@ -29,9 +29,9 @@ public class ManageAgencyTypeSearchResponse implements IResponse {
     }
 
     public ManageAgencyTypeSearchResponse(AgencyProjection agency) {
-        this.id = agency.getId();
-        this.code = agency.getCode();
-        this.name = agency.getName();
-        this.status = agency.getStatus();
+        this.id = agency.getManageAgencyType().getId();
+        this.code = agency.getManageAgencyType().getCode();
+        this.name = agency.getManageAgencyType().getName();
+        this.status = agency.getManageAgencyType().getStatus();
     }
 }
