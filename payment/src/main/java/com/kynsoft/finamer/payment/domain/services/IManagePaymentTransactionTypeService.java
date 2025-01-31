@@ -31,4 +31,6 @@ public interface IManagePaymentTransactionTypeService {
     ManagePaymentTransactionTypeDto findByApplyDeposit();
 
     void clearCache();
+
+    ManagePaymentTransactionTypeDto findByApplyDepositAndDefaults();
 }

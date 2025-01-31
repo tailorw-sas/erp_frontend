@@ -154,4 +154,14 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
+    @Override
+    public ManagePaymentTransactionTypeDto findByApplyDepositAndDefaults() {
+        Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findByApplyDepositAndDefaults();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
 }
