@@ -86,7 +86,7 @@ const columns: IColumn[] = [
   { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
   { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
-  { field: 'amount', header: 'Invoice Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
+  { field: 'amount', header: 'Booking Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
   { field: 'status', header: 'Status', type: 'slot-text', minWidth: '10px', maxWidth: '50px' }
 ]
 
@@ -101,7 +101,7 @@ const columnsExpandable: IColumn[] = [
   { field: 'stayDays', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'amount', header: 'Invoice Amount', type: 'text' },
+  { field: 'amount', header: 'Rate Amount', type: 'text' },
 ]
 
 const columnsErrors: IColumn[] = [
