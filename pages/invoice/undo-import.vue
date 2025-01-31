@@ -199,8 +199,9 @@ const Pagination = ref<IPagination>({
 })
 // -------------------------------------------------------------------------------------------------------
 function openUndo() {
-  openDialog.value = true
   randomCode.value = generateRandomCode()
+  entryCode.value = ''
+  openDialog.value = true
 }
 const invoiceIdofSelectedItems = ref('')
 
