@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.domain.dto;
+package com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails;
 
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ManageEmployeeDto implements Serializable {
+public class PaymentDetailSimple implements Serializable {
 
     private UUID id;
-    private String firstName;
-    private String lastName;;
-    private String email;
+    private Long paymentDetailId;
 }

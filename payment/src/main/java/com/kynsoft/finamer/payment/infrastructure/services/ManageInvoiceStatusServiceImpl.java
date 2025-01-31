@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusService {
@@ -86,6 +87,7 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     }
 
     @Override
+    @Cacheable(value = "invoiceStatusCache", key = "#code", unless = "#result == null")
     public ManageInvoiceStatusDto findByCode(String code) {
         ManageInvoiceStatus invoiceStatus = this.repositoryQuery.findByCode(code);
 

@@ -26,4 +26,7 @@ public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRe
 
     @Query("SELECT b FROM ManagePaymentTransactionType b WHERE b.applyDeposit = true")
     Optional<ManagePaymentTransactionType> findByApplyDeposit();
+
+    @Query("SELECT b FROM ManagePaymentTransactionType b WHERE b.applyDeposit = true AND b.defaults = true")
+    Optional<ManagePaymentTransactionType> findByApplyDepositAndDefaults();
 }

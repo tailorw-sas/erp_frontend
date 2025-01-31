@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails.PaymentDetailSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
@@ -44,4 +45,10 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
             "LEFT JOIN pd.payment pp " +
             "WHERE pd.paymentDetailId = :id")
     Optional<PaymentDetailSimpleDto> findSimpleDetailByGenId(@Param("id") int id);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails.PaymentDetailSimple(" +
+            "pd.id, pd.paymentDetailId) " +
+            "FROM PaymentDetail pd " +
+            "WHERE pd.paymentDetailId = :id")
+    Optional<PaymentDetailSimple> findPaymentDetailsSimpleCacheableByGenId(@Param("id") int id);
 }
