@@ -102,6 +102,7 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
                 ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
                 this.createPaymentAttachmentStatusHistory(employeeDto, update);
                 update.setApplyPayment(this.service.countByApplyPaymentAndPaymentId(update.getId()) > 0);
+                update.setHasDetailTypeDeposit(this.service.countByPaymentDetailIdAndTransactionTypeDeposit(update.getId()) > 0);
             }
             service.delete(delete);
         }
