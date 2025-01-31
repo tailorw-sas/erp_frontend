@@ -23,6 +23,7 @@ const multiSelectLoading = ref({
   hotel: false,
 })
 const loadingSaveAll = ref(false)
+const resultTable = ref()
 
 // const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
@@ -158,6 +159,7 @@ async function getList() {
     return
   }
   try {
+    resultTable.value?.clearSelectedItems()
     idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listItems.value = []
@@ -1001,6 +1003,7 @@ onMounted(async () => {
       </div>
       <!-- :selected-items="selectedItems" -->
       <DynamicTable
+        ref="resultTable"
         :data="listItems"
         :columns="columns"
         :options="options"
