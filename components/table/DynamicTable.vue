@@ -139,6 +139,8 @@ const objetoFilter: { [key: string]: any } = {
 }
 // Asignar el objeto a objListData y hacerlo reactivo
 const objListData = reactive(objeto)
+const objForLoadings = ref<{ [key: string]: any }>({})
+const objForValues = ref<Record<string, Array<{ [key: string]: any }>>>({})
 
 const objFilterToClear = ref()
 
@@ -225,6 +227,7 @@ function clearFilter1() {
 
 function clearIndividualFilter(param1) {
   filters1.value[param1] = JSON.parse(JSON.stringify(objFilterToClear.value[param1]))
+  objForValues.value[param1] = []
 
   // Llama a la función callback
   onChangeFilters(filters1.value)
@@ -323,12 +326,29 @@ async function deleteItem(id: string, isLocal = false) {
   }
 }
 
-async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined, sortOptions?: ISortOptions | undefined) {
+async function getList(
+  objApi: IObjApi | null = null,
+  filter: IFilter[] = [],
+  localItems: any[] = [],
+  mapFunction?: (data: any) => any | undefined,
+  sortOptions?: ISortOptions | undefined,
+  objToSearch: IQueryToSearch = {
+    query: '',
+    keys: ['name', 'code'],
+  }
+) {
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
       const payload = {
-        filter,
+        filter: objToSearch && objToSearch.query !== ''
+          ? [
+              ...objToSearch.keys.map(key => ({ key, operator: 'LIKE', value: objToSearch.query, logicalOperation: 'OR' })),
+              ...filter
+            ]
+          : [
+              ...filter
+            ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -450,6 +470,8 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
+        objForLoadings.value[iterator.field] = false
+        objForValues.value[iterator.field] = []
         const response = await getList(
           {
             moduleApi: iterator.objApi?.moduleApi || '',
@@ -461,15 +483,39 @@ async function getDataFromSelectors() {
           iterator.objApi?.mapFunction,
           iterator.objApi?.sortOption
         )
-
         objListData[iterator.field] = response
       }
     }
   }
   catch (error) {
-
+    console.log(error)
   }
 }
+
+async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryToSearch) {
+  try {
+    objForLoadings.value[column.field] = true
+    const response = await getList(
+      {
+        moduleApi: column.objApi?.moduleApi || '',
+        uriApi: column.objApi?.uriApi || '',
+        keyValue: column.objApi?.keyValue
+      },
+      column.objApi?.filter || [],
+      column.localItems || [],
+      column.objApi?.mapFunction,
+      column.objApi?.sortOption,
+      objToSearch
+    )
+    objListData[column.field] = response
+    objForLoadings.value[column.field] = false
+  }
+  catch (error) {
+    objForLoadings.value[column.field] = false
+    console.log(error)
+  }
+}
+
 function onSortField(event: any) {
   if (event && event.filters) {
     const shortAndFilter = {
@@ -622,6 +668,7 @@ defineExpose({ clearSelectedItems })
         :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '70vh'"
         :filters="filters1"
         edit-mode="cell"
+        style="border: 0"
         @sort="onSortField"
         @update:selection="onSelectItem"
         @update:filters="onChangeFilters"
@@ -633,7 +680,6 @@ defineExpose({ clearSelectedItems })
         @column-resize-end="($event) => {
           console.log('column-resize-end', $event);
         }"
-        style="border: 0"
       >
         <!-- @row-select="onRowSelect"
         @row-unselect="onRowUnselect"
@@ -828,8 +874,38 @@ defineExpose({ clearSelectedItems })
                 placeholder="Select a operator"
                 class="w-full mb-2"
               />
-
-              <MultiSelect
+              <!-- Es este -->
+              <DebouncedMultiSelectComponent
+                id="autocomplete"
+                class="w-full h-2rem align-items-center"
+                field="name"
+                item-value="id"
+                :max-selected-labels="2"
+                :model="objForValues[column.field]"
+                :suggestions="[...objListData[column.field]]"
+                :loading="objForLoadings[column.field]"
+                @change="($event) => {
+                  objForValues[column.field] = $event
+                  filterModel.value = $event
+                }"
+                @load="async($event) => {
+                  const filter: FilterCriteria[] = [
+                    {
+                      key: 'status',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: 'ACTIVE',
+                    },
+                  ]
+                  const objQueryToSearch = {
+                    query: $event,
+                    keys: ['name', 'code'],
+                  }
+                  await getDataFromFiltersSelectors(column, objQueryToSearch)
+                }"
+              />
+              <!-- No Eliminar -->
+              <!-- <MultiSelect
                 v-model="filterModel.value"
                 :options="objListData[column.field]"
                 option-label="name"
@@ -842,7 +918,7 @@ defineExpose({ clearSelectedItems })
                     <span>{{ slotProps.option.name }}</span>
                   </div>
                 </template>
-              </MultiSelect>
+              </MultiSelect> -->
               <Button
                 v-if="false"
                 type="button"
