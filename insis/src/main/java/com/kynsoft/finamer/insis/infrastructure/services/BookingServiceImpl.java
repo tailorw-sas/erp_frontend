@@ -148,6 +148,7 @@ public class BookingServiceImpl implements IBookingService {
 
     private List<String> getBookingErrorsHistory(UUID bookingId){
         return importBookingRepository.findByBooking_Id(bookingId).stream()
+                .filter(importBooking -> importBooking.getErrorMessage() != null && !importBooking.getErrorMessage().isBlank())
                 .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
                 .map(importBooking -> {
                     return importBooking.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:ss")) + ": " + importBooking.getErrorMessage();
