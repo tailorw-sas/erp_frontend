@@ -13,17 +13,20 @@ import com.kynsoft.finamer.insis.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.insis.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.insis.domain.services.IBookingService;
 import com.kynsoft.finamer.insis.infrastructure.model.Booking;
+import com.kynsoft.finamer.insis.infrastructure.model.ImportBooking;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageAgency;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.BookingWriteDataJPARepository;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.BookingReadDataJPARepository;
+import com.kynsoft.finamer.insis.infrastructure.repository.query.ImportBookingReadDataJPARepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +37,13 @@ public class BookingServiceImpl implements IBookingService {
 
     private final BookingWriteDataJPARepository writeRepository;
     private final BookingReadDataJPARepository readRepository;
+    private final ImportBookingReadDataJPARepository importBookingRepository;
 
-    public BookingServiceImpl(BookingWriteDataJPARepository writeRepository, BookingReadDataJPARepository readRepository){
+    public BookingServiceImpl(BookingWriteDataJPARepository writeRepository, BookingReadDataJPARepository readRepository,
+                              ImportBookingReadDataJPARepository importBookingRepository){
         this.writeRepository = writeRepository;
         this.readRepository = readRepository;
+        this.importBookingRepository = importBookingRepository;
     }
 
     @Override
@@ -115,16 +121,38 @@ public class BookingServiceImpl implements IBookingService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<Booking> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Booking> data = readRepository.findAll(specifications, pageable);
-
         return getPagintatedResponse(data);
     }
 
     public PaginatedResponse getPagintatedResponse(Page<Booking> data){
         List<BookingResponse> response = new ArrayList<>();
         for(Booking booking : data.getContent()){
-            response.add(new BookingResponse(booking.toAggregate()));
+            BookingResponse bookingResponse = getBookingResponse(booking);
+            response.add(bookingResponse);
         }
         return new PaginatedResponse(response, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    private BookingResponse getBookingResponse(Booking booking){
+        BookingResponse bookingResponse = new BookingResponse(booking.toAggregate());
+        if(booking.getStatus().equals(BookingStatus.FAILED)){
+            StringBuilder messageErrors = new StringBuilder();
+            for(String message : getBookingErrorsHistory(booking.getId())){
+                messageErrors.append(message).append("\n");
+            }
+            bookingResponse.setMessage(messageErrors.toString());
+        }
+        return bookingResponse;
+    }
+
+    private List<String> getBookingErrorsHistory(UUID bookingId){
+        return importBookingRepository.findByBooking_Id(bookingId).stream()
+                .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
+                .map(importBooking -> {
+                    return importBooking.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:ss")) + ": " + importBooking.getErrorMessage();
+                })
+                .limit(2)
+                .toList();
     }
 }
