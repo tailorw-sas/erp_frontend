@@ -523,25 +523,6 @@ function clearSelectedItems() {
   clickedItem.value = []
 }
 
-function onRowSelect(event) {
-  console.log('Select', event)
-  console.log('clickedItem', clickedItem.value)
-}
-function onRowUnselect(event) {
-  console.log('Unselect', event)
-}
-
-function onRowSelectAll(event) {
-  console.log('Select All', event)
-  console.log('clickedItem', clickedItem.value)
-}
-
-function onRowUnselectAll(event) {
-  console.log('Unselect All', event)
-
-  console.log('clickedItem', clickedItem.value)
-}
-
 watch(() => props.data, async (newValue) => {
   if (props.options?.selectAllItemByDefault) {
     clickedItem.value = [...clickedItem.value, ...props.data]
