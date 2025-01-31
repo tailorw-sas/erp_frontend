@@ -15,6 +15,8 @@ import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaym
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentRequest;
 import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaymentMessage;
+import com.kynsoft.finamer.payment.application.command.payment.setVariables.SetCommand;
+import com.kynsoft.finamer.payment.application.command.payment.setVariables.SetMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentRequest;
@@ -95,6 +97,15 @@ public class PaymentController {
 
         FindPaymentByIdQuery query = new FindPaymentByIdQuery(id);
         PaymentResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(path = "/set")
+    public ResponseEntity<?> getSet() {
+
+        SetCommand query = new SetCommand();
+        SetMessage response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }
