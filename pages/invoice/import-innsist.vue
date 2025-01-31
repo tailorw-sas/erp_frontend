@@ -949,6 +949,16 @@ async function getErrorList(processId: any) {
           })
           existingIds.add(iterator.row?.insistImportProcessBookingId)
         }
+        /* else {
+          console.log(typeof listItemsErrors.value)
+          console.log(typeof iterator.row?.insistImportProcessBookingId)
+          console.log(`iterator.row?.insistImportProcessBookingId es: ${iterator.row?.insistImportProcessBookingId}`)
+          console.log(listItemsErrors)
+          const booking = listItemsErrors.value.filter(item => item.id === iterator.row?.insistImportProcessBookingId)
+          console.log(booking)
+          // booking?.values[0].amount = booking?.amount + iterator.row?.invoiceAmount
+          // booking?.hotelInvoiceAmount = booking?.hotelInvoiceAmount + iterator.row?.hotelInvoiceAmount
+        } */
       }
 
       paginationErroList.value.page = page

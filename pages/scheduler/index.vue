@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
+import dayjs from 'dayjs'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
@@ -36,6 +37,7 @@ const listFrequencyItems = ref<any[]>([])
 const listIntervalTypeItems = ref<any[]>([])
 const listExecutionDateTypeItems = ref<any[]>([])
 const listProcessingDateTypeItems = ref<any[]>([])
+const intervalList = ref<any[]>([])
 
 const disableFrequency = ref(false)
 const disableIntervalType = ref(false)
@@ -50,14 +52,16 @@ const disableProcessingDate = ref(false)
 
 const frequencySelected = ref<any>([])
 const intervalTypeSelected = ref<any>([])
-const intervalSelected = ref('')
-const executionDateTypeSelected = ref<any>([])
-const executionDateValueSelected = ref('')
-const executionDate = ref('')
-const executionTime = ref('')
-const processingDateTypeSelected = ref<any>([])
-const processingDateValueSelected = ref('')
-const processingDateSelected = ref('')
+const interval = ref('')
+const executionDateType = ref<any>([])
+const executionDateValue = ref('')
+// const executionDate = ref<Date>(new Date())
+const executionDate = ref()
+const executionTime = ref()
+const processingDateType = ref<any>([])
+const processingDateValue = ref('')
+// const processingDate = ref<Date>(new Date())
+const processingDate = ref()
 
 const menu = ref()
 const menuItems = ref([
@@ -277,19 +281,12 @@ const fieldsScheduler: Array<FieldDefinitionType> = [
     class: 'field col-12 required',
     disabled: false,
   },
-  // {
-  //  field: 'intervalType',
-  //  header: 'Interval Type',
-  //  dataType: 'select',
-  //  class: 'field col-12 required',
-  //  disabled: false,
-  // },
   {
     field: 'interval-custom',
-    header: 'Interval Custom',
+    header: '',
     dataType: 'text',
-    // class: 'field col-12',
-    // disabled: false,
+    class: 'field col-12',
+    disabled: false,
   },
   {
     field: 'executionDateType',
@@ -299,6 +296,13 @@ const fieldsScheduler: Array<FieldDefinitionType> = [
     disabled: disableExecutionDateType.value,
   },
   {
+    field: 'execution-custom',
+    header: '',
+    dataType: 'text',
+    class: 'field col-12',
+    disabled: false,
+  },
+  /* {
     field: 'executionDateValue',
     header: 'Execution Date Value',
     dataType: 'text',
@@ -318,7 +322,7 @@ const fieldsScheduler: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     disabled: disableExecutionTime.value,
-  },
+  }, */
   {
     field: 'processingDateType',
     header: 'Processing Date Type',
@@ -327,6 +331,13 @@ const fieldsScheduler: Array<FieldDefinitionType> = [
     disabled: disableProcessingDateType.value,
   },
   {
+    field: 'processing-custom',
+    header: '',
+    dataType: 'text',
+    class: 'field col-12',
+    disabled: false,
+  },
+  /* {
     field: 'processingDateValue',
     header: 'Processing Date Value',
     dataType: 'text',
@@ -339,7 +350,7 @@ const fieldsScheduler: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     disabled: disableProcessingDate.value,
-  },
+  }, */
   {
     field: 'params',
     header: 'Additional Parameters',
@@ -468,69 +479,51 @@ async function onProcessSelected() {
 
 async function onFrequencySelected(event: any) {
   frequencySelected.value = event
+
+  // Interval
+  disableIntervalType.value = false
   intervalTypeSelected.value = {
     id: '',
     name: '',
     status: true
   }
   disableInterval.value = true
-  itemScheduler.value.interval = ''
-  executionDateTypeSelected.value = {
+  interval.value = ''
+
+  // Execution
+  disableExecutionDateType.value = true
+  disableExecutionDate.value = true
+  disableExecutionTime.value = true
+  disableExecutionDateValue.value = true
+
+  executionDateType.value = {
     id: '',
     name: '',
     status: true
   }
-  disableExecutionDateType.value = true
-  disableIntervalType.value = false
+  executionDateValue.value = ''
+  executionDate.value = ''
+  executionTime.value = ''
+
+  // Processing
   disableProcessingDateType.value = false
-}
+  disableProcessingDateValue.value = true
+  disableProcessingDate.value = true
 
-async function onProcessingDateTypeSelected(event: any) {
-  processingDateTypeSelected.value = event
-  try {
-    const payload = {
-      filter: [{
-        key: 'status',
-        operator: 'EQUALS',
-        value: 'ACTIVE',
-        logicalOperation: 'AND'
-      }, {
-        key: 'frequency.id',
-        operator: 'EQUALS',
-        value: frequencySelected.value.id,
-        logicalOperation: 'AND'
-      }, {
-        key: 'processingDateType.id',
-        operator: 'EQUALS',
-        value: processingDateTypeSelected.value.id,
-        logicalOperation: 'AND'
-      }],
-      query: '',
-      pageSize: 50,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(objApis.value.businessProcessSchedulerProcessingRule.moduleApi, objApis.value.businessProcessSchedulerProcessingRule.uriApi, payload)
-    const { data: dataList } = response
-
-    const enableProcessingDateValueRules = dataList.map((rule: any) => rule.enableProcessingDateValue)
-    loadProcessingDateValue(enableProcessingDateValueRules)
-
-    const enableProcessingDateRules = dataList.map((rule: any) => rule.enableProcessingDate)
-    loadProcessingDate(enableProcessingDateRules)
+  processingDateType.value = {
+    id: '',
+    name: '',
+    status: true
   }
-  catch (error) {
-    console.error(`There is a problem when try to load processingDateValue and processingDate fields. Error: ${error}`)
-  }
+
+  processingDateValue.value = ''
+  processingDate.value = ''
 }
 
 async function onIntervalTypeSelected(event: any) {
   intervalTypeSelected.value = event
   disableExecutionDateType.value = false
-  itemScheduler.value.interval = ''
-  intervalSelected.value = ''
+  interval.value = ''
   await loadInterval()
 }
 
@@ -590,6 +583,48 @@ async function loadInterval() {
   }
   catch (error) {
     console.error('Error on loading ExecutionDateType Items:', error)
+  }
+}
+
+async function onprocessingDateType(event: any) {
+  processingDateType.value = event
+  processingDate.value = ''
+  try {
+    const payload = {
+      filter: [{
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      }, {
+        key: 'frequency.id',
+        operator: 'EQUALS',
+        value: frequencySelected.value.id,
+        logicalOperation: 'AND'
+      }, {
+        key: 'processingDateType.id',
+        operator: 'EQUALS',
+        value: processingDateType.value.id,
+        logicalOperation: 'AND'
+      }],
+      query: '',
+      pageSize: 50,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(objApis.value.businessProcessSchedulerProcessingRule.moduleApi, objApis.value.businessProcessSchedulerProcessingRule.uriApi, payload)
+    const { data: dataList } = response
+
+    const enableProcessingDateValueRules = dataList.map((rule: any) => rule.enableProcessingDateValue)
+    loadProcessingDateValue(enableProcessingDateValueRules)
+
+    const enableProcessingDateRules = dataList.map((rule: any) => rule.enableProcessingDate)
+    loadProcessingDate(enableProcessingDateRules)
+  }
+  catch (error) {
+    console.error(`There is a problem when try to load processingDateValue and processingDate fields. Error: ${error}`)
   }
 }
 
@@ -715,6 +750,29 @@ async function getIntervalTypeFilter(query: string) {
   }
   catch (error) {
     console.error('Error on loading Interval Type list:', error)
+  }
+}
+
+function getIntervalList() {
+  if (intervalTypeSelected.value.name === 'MINUTE') {
+    for (let i = 0; i < 60; i++) {
+      const element = {
+        id: i,
+        code: i.toString(),
+        name: i.toString()
+      }
+      intervalList.value.push(element)
+    }
+  }
+  else if (intervalTypeSelected.value.name === 'HOUR') {
+    for (let i = 0; i < 12; i++) {
+      const element = {
+        id: i,
+        code: i.toString(),
+        name: i.toString()
+      }
+      intervalList.value.push(element)
+    }
   }
 }
 
@@ -1200,31 +1258,31 @@ async function getItemByIdScheduler(id: string) {
             status: response.intervalType.status
           }
         }
-        intervalSelected.value = response.interval
+        interval.value = response.interval
 
         if (response.executionDateType) {
-          executionDateTypeSelected.value = {
+          executionDateType.value = {
             id: response.executionDateType.id,
             name: response.executionDateType.code,
             status: response.executionDateType.status
           }
         }
         else {
-          executionDateTypeSelected.value = null
+          executionDateType.value = null
         }
-        executionDateValueSelected.value = response.executionDateValue
+        executionDateValue.value = response.executionDateValue
         executionDate.value = response.executionDate
         executionTime.value = response.executionTime
 
         if (response.processingDateType) {
-          processingDateTypeSelected.value = {
+          processingDateType.value = {
             id: response.processingDateType.id,
             name: response.processingDateType.code,
             status: response.processingDateType.status
           }
         }
-        processingDateValueSelected.value = response.processingDateValue
-        processingDateSelected.value = response.processingDate
+        processingDateValue.value = response.processingDateValue
+        processingDate.value = response.processingDate
         itemScheduler.value.params = response.params
         itemScheduler.value.lastExecutionDatetime = response.lastExecutionDatetime
         itemScheduler.value.isInProcess = response.isInProcess
@@ -1316,16 +1374,16 @@ function disableFormFields() {
 function clearFormFields() {
   frequencySelected.value = null
   intervalTypeSelected.value = null
-  intervalSelected.value = ''
+  interval.value = ''
 
-  executionDateTypeSelected.value = null
-  executionDateValueSelected.value = ''
+  executionDateType.value = null
+  executionDateValue.value = ''
   executionDate.value = ''
   executionTime.value = ''
 
-  processingDateTypeSelected.value = null
-  processingDateValueSelected.value = ''
-  processingDateSelected.value = ''
+  processingDateType.value = null
+  processingDateValue.value = ''
+  processingDate.value = ''
 }
 
 async function requireConfirmationToSaveScheduler(item: any) {
@@ -1409,23 +1467,23 @@ async function createScheduler(item: { [key: string]: any }) {
   if (item) {
     loadingSaveScheduler.value = true
     const payload = await itemToPayloadScheduler(item)
-    toast.add({ severity: 'info', detail: payload, life: 5000 })
-    const response = await GenericService.create(optionsScheduler.value.moduleApi, optionsScheduler.value.uriApi, payload)
-    return response
+    // toast.add({ severity: 'info', detail: payload, life: 5000 })
+    // const response = await GenericService.create(optionsScheduler.value.moduleApi, optionsScheduler.value.uriApi, payload)
+    // return response
   }
 }
 async function itemToPayloadScheduler(item: { [key: string]: any }) {
   const payloadApi = {
-    frequency: item.frequency.id,
+    frequency: frequencySelected.value.id,
     intervalType: intervalTypeSelected.value.id,
-    interval: intervalSelected.value,
-    executionDateType: item.executionDateType.id,
-    executionDateValue: item.executionDateValue,
-    executionDate: item.executionDate,
-    executionTime: item.executionTime,
-    processingDateType: item.processingDateType.id,
-    processingDateValue: item.processingDateValue,
-    processingDate: item.processingDate,
+    interval: interval.value,
+    executionDateType: executionDateType.value.id,
+    executionDateValue: executionDateValue.value,
+    executionDate: executionDate.value,
+    executionTime: executionTime.value,
+    processingDateType: processingDateType.value.id,
+    processingDateValue: processingDateValue.value,
+    processingDate: processingDate.value,
     params: item.params,
     process: item.process.id,
     allowsQueueing: item.allowsQueueing,
@@ -1591,6 +1649,9 @@ onMounted(() => {
             />
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
+
+          <!-- F R E Q U E N C Y -->
+
           <template #field-frequency="{ onUpdate }">
             <DebouncedAutoCompleteComponent
               v-if="!loadingSaveScheduler"
@@ -1600,6 +1661,7 @@ onMounted(() => {
               :disabled="disableFrequency"
               :model="frequencySelected"
               :suggestions="listFrequencyItems"
+              class="mt-1"
               @change="($event) => {
                 onUpdate('frequency', $event)
                 onFrequencySelected($event)
@@ -1608,32 +1670,60 @@ onMounted(() => {
             />
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
-          <template #field-intervalType="{ onUpdate }">
-            <DebouncedAutoCompleteComponent
-              v-if="!loadingSaveScheduler"
-              id="autocomplete"
-              field="name"
-              item-value="id"
-              :disabled="disableIntervalType"
-              :model="intervalTypeSelected"
-              :suggestions="listIntervalTypeItems"
-              @change="($event) => {
-                onUpdate('intervalType', $event)
-                onIntervalTypeSelected($event)
-              }"
-              @load="($event) => getIntervalTypeFilter($event)"
-            />
-            <Skeleton v-else height="2rem" class="mb-2" />
+
+          <!-- I N T E R V A L   -   I N T E R V A L - T Y P E -->
+
+          <template #field-interval-custom="{ onUpdate }">
+            <div class="flex justify-content-between align-items-center mt-4 ml-3 mr-3 gap-6">
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Interval Type</strong>
+                  <span class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveScheduler"
+                    id="autocomplete"
+                    class="w-full"
+                    field="name"
+                    item-value="id"
+                    :disabled="disableIntervalType"
+                    :model="intervalTypeSelected"
+                    :suggestions="listIntervalTypeItems"
+                    @change="($event) => {
+                      onUpdate('intervalType', $event)
+                      onIntervalTypeSelected($event)
+                    }"
+                    @load="($event) => getIntervalTypeFilter($event)"
+                  />
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Interval</strong>
+                  <span v-if="!disableInterval" class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <DebouncedAutoCompleteComponent
+                    v-if="!loadingSaveScheduler"
+                    id="autocomplete"
+                    class="w-full"
+                    field="name"
+                    item-value="id"
+                    :disabled="disableInterval"
+                    :model="interval"
+                    :suggestions="intervalList"
+                    @load="($event) => getIntervalList()"
+                  />
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+            </div>
           </template>
-          <template #field-interval>
-            <InputText
-              v-if="!loadingSaveScheduler"
-              v-model="intervalSelected"
-              show-clear
-              :disabled="disableInterval"
-            />
-            <Skeleton v-else height="2rem" />
-          </template>
+
+          <!-- E X E C U T I O N   D A T E   T Y P E -->
+
           <template #field-executionDateType="{ item: data, onUpdate }">
             <DebouncedAutoCompleteComponent
               v-if="!loadingSaveScheduler"
@@ -1641,43 +1731,78 @@ onMounted(() => {
               field="name"
               item-value="id"
               :disabled="disableExecutionDateType"
-              :model="executionDateTypeSelected"
+              :model="executionDateType"
               :suggestions="listExecutionDateTypeItems"
+              class="mt-1"
               @change="($event) => {
                 onUpdate('executionDateType', $event)
-                console.log(data)
               }"
               @load="($event) => getExecutionTypeFilter($event)"
             />
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
-          <template #field-executionDateValue>
-            <InputText
-              v-if="!loadingSaveScheduler"
-              v-model="executionDateValueSelected"
-              show-clear
-              :disabled="disableExecutionDateValue"
-            />
-            <Skeleton v-else height="2rem" />
+
+          <!-- E X E C U T I O N   P A R A M S -->
+
+          <template #field-execution-custom>
+            <div class="flex justify-content-between align-items-center mt-4 ml-3 mr-3 gap-6">
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Execution Date</strong>
+                  <span v-if="!disableExecutionDate" class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <Calendar
+                    v-if="!loadingSaveScheduler"
+                    v-model="executionDate"
+                    date-format="yy-mm-dd"
+                    show-icon icon-display="input" icon="pi pi-calendar-plus" show-button-bar
+                    :disabled="disableExecutionDate"
+                  />
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Execution Time</strong>
+                  <span v-if="!executionTime" class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <Calendar
+                    v-if="!loadingSaveScheduler"
+                    id="calendar-timeonly"
+                    v-model="executionTime"
+                    time-only
+                    show-icon icon-display="input"
+                    :disabled="disableExecutionTime"
+                  >
+                    <template #inputicon="{ clickCallback }">
+                      <InputIcon class="pi pi-clock cursor-pointer" @click="clickCallback" />
+                    </template>
+                  </Calendar>
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Execution Value</strong>
+                  <span v-if="!disableExecutionDateValue" class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <InputText
+                    v-if="!loadingSaveScheduler"
+                    v-model="executionDateValue"
+                    show-clear
+                    :disabled="disableExecutionDateValue"
+                  />
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+            </div>
           </template>
-          <template #field-executionDate>
-            <InputText
-              v-if="!loadingSaveScheduler"
-              v-model="executionDate"
-              show-clear
-              :disabled="disableExecutionDate"
-            />
-            <Skeleton v-else height="2rem" />
-          </template>
-          <template #field-executionTime>
-            <InputText
-              v-if="!loadingSaveScheduler"
-              v-model="executionTime"
-              show-clear
-              :disabled="disableExecutionTime"
-            />
-            <Skeleton v-else height="2rem" />
-          </template>
+
+          <!-- P R O C E S S I N G   D A T E   T Y P E -->
+
           <template #field-processingDateType>
             <DebouncedAutoCompleteComponent
               v-if="!loadingSaveScheduler"
@@ -1685,19 +1810,59 @@ onMounted(() => {
               field="name"
               item-value="id"
               :disabled="disableProcessingDateType"
-              :model="processingDateTypeSelected"
+              :model="processingDateType"
               :suggestions="listProcessingDateTypeItems"
+              class="mt-1"
               @change="($event) => {
-                onProcessingDateTypeSelected($event)
+                onprocessingDateType($event)
               }"
               @load="($event) => getProcessingDateTypeFilter($event)"
             />
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
-          <template #field-processingDateValue>
+
+          <!-- P R O C E S S I N G   P A R A M S -->
+
+          <template #field-processing-custom>
+            <div class="flex justify-content-between align-items-center mt-4 ml-3 mr-3 gap-6">
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Processing Date</strong>
+                  <span v-if="!disableProcessingDate" class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <Calendar
+                    v-if="!loadingSaveScheduler"
+                    v-model="processingDate"
+                    date-format="yy-mm-dd"
+                    show-icon icon-display="input" icon="pi pi-calendar-plus"
+                    :disabled="disableProcessingDate"
+                  />
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+              <div class="grid">
+                <div class="flex w-full">
+                  <strong>Processing Date Value</strong>
+                  <span v-if="!disableProcessingDateValue" class="p-error">*</span>
+                </div>
+                <div class="flex mt-1 w-full">
+                  <InputText
+                    v-if="!loadingSaveScheduler"
+                    v-model="processingDateValue"
+                    show-clear
+                    :disabled="disableProcessingDateValue"
+                  />
+                  <Skeleton v-else height="2rem" />
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- <template #field-processingDateValue>
             <InputText
               v-if="!loadingSaveScheduler"
-              v-model="processingDateValueSelected"
+              v-model="processingDateValue"
               show-clear
               :disabled="disableProcessingDateValue"
             />
@@ -1706,12 +1871,12 @@ onMounted(() => {
           <template #field-processingDate>
             <InputText
               v-if="!loadingSaveScheduler"
-              v-model="processingDateSelected"
+              v-model="processingDate"
               show-clear
               :disabled="disableProcessingDate"
             />
             <Skeleton v-else height="2rem" />
-          </template>
+          </template> -->
         </EditFormV2>
       </div>
     </div>
