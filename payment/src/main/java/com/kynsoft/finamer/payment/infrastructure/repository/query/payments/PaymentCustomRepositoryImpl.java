@@ -119,6 +119,8 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(root.get("applyPayment"));
         selections.add(root.get("paymentSupport"));
         selections.add(root.get("createByCredit"));
+        selections.add(root.get("hasAttachment"));
+        selections.add(root.get("hasDetailTypeDeposit"));
 
         query.multiselect(selections.toArray(new Selection[0]));
 
@@ -211,7 +213,9 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                     tuple.get(56, EAttachment.class), // eAttachment
                     tuple.get(57, Boolean.class), // applyPayment
                     tuple.get(58, Boolean.class), // paymentSupport
-                    tuple.get(59, Boolean.class)  // createByCredit
+                    tuple.get(59, Boolean.class) , // createByCredit
+                    tuple.get(60, Boolean.class) , // hasAttachment
+                    tuple.get(61, Boolean.class)  // hasDetailTypeDeposit
             );
         }).collect(Collectors.toList());
 

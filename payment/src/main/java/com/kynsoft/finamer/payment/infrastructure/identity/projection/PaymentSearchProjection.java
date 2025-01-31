@@ -35,6 +35,8 @@ public class PaymentSearchProjection {
     private Boolean applyPayment;
     private Boolean paymentSupport;
     private Boolean createByCredit;
+    private boolean hasAttachment;
+    private boolean hasDetailTypeDeposit;
 
     // Constructor Manual
     public PaymentSearchProjection(
@@ -62,7 +64,9 @@ public class PaymentSearchProjection {
             EAttachment eAttachment,
             Boolean applyPayment,
             Boolean paymentSupport,
-            Boolean createByCredit
+            Boolean createByCredit,
+            Boolean hasAttachment,
+            Boolean hasDetailTypeDeposit
     ) {
         this.id = id;
         this.paymentId = paymentId;
@@ -89,6 +93,8 @@ public class PaymentSearchProjection {
         this.applyPayment = applyPayment;
         this.paymentSupport = paymentSupport;
         this.createByCredit = createByCredit;
+        this.hasAttachment = hasAttachment;
+        this.hasDetailTypeDeposit = hasDetailTypeDeposit;
     }
 
     // Métodos Setter manuales
@@ -190,5 +196,12 @@ public class PaymentSearchProjection {
 
     public void setCreateByCredit(Boolean createByCredit) {
         this.createByCredit = createByCredit;
+    }
+
+    public void setHasAttachment(Boolean hasAttachment) {
+        this.hasAttachment = hasAttachment;
+    }
+    public void setHasDetailTypeDeposit(Boolean hasDetailTypeDeposit) {
+        this.hasDetailTypeDeposit = hasDetailTypeDeposit;
     }
 }
