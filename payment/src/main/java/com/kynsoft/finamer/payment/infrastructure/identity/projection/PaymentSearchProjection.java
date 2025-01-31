@@ -204,4 +204,8 @@ public class PaymentSearchProjection {
     public void setHasDetailTypeDeposit(Boolean hasDetailTypeDeposit) {
         this.hasDetailTypeDeposit = hasDetailTypeDeposit;
     }
+
+    public Boolean getHasAttachment() {
+        return hasAttachment;
+    }
 }

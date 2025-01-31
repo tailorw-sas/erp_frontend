@@ -17,8 +17,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
+//@NoArgsConstructor
+//@AllArgsConstructor
 @Getter
 @Setter
 public class PaymentSearchResponse implements IResponse {
@@ -54,50 +54,50 @@ public class PaymentSearchResponse implements IResponse {
     private boolean createByCredit;
     private boolean existDetails;
 
-    public PaymentSearchResponse(PaymentDto dto) {
-        this.id = dto.getId();
-        this.createdAt = dto.getCreatedAt();
-        this.paymentId = dto.getPaymentId();
-        this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceSearchResponse(dto.getPaymentSource()) : null;
-        this.reference = dto.getReference();
-        this.transactionDate = dto.getTransactionDate();
-        this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatusSearchResponse(dto.getPaymentStatus()) : null;
-        this.client = dto.getClient() != null ? new ManageClientSearchResponse(dto.getClient()) : null;
-        this.agency = dto.getAgency() != null ? new ManageAgencySearchResponse(dto.getAgency()) : null;
-        this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
-        this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountSearchResponse(dto.getBankAccount()) : null;
-        this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getAttachmentStatus()) : null;
-        this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
-        this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
-        this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
-        this.depositBalance = ScaleAmount.scaleAmount(dto.getDepositBalance());
-        this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
-        this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
-        this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
-        this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
-        this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
-        this.remark = dto.getRemark();
-        this.eAttachment = dto.getEAttachment();
-        this.applyPayment = dto.isApplyPayment();
-        this.paymentSupport = dto.isPaymentSupport();
-        this.createByCredit = dto.isCreateByCredit();
-        this.existDetails = !dto.getPaymentDetails().isEmpty();
-
-        this.hasAttachment = !dto.getAttachments().isEmpty();
-        if (dto.getInvoice() != null) {
-            if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
-                this.hasAttachment = dto.getInvoice().getHasAttachment();
-            }
-        }
-        if (dto.getPaymentDetails() != null) {
-            for (PaymentDetailDto paymentDetail : dto.getPaymentDetails()) {
-                if (paymentDetail.getTransactionType().getDeposit()) {
-                    this.hasDetailTypeDeposit = true;
-                    break;
-                }
-            }
-        }
-    }
+//    public PaymentSearchResponse(PaymentDto dto) {
+//        this.id = dto.getId();
+//        this.createdAt = dto.getCreatedAt();
+//        this.paymentId = dto.getPaymentId();
+//        this.paymentSource = dto.getPaymentSource() != null ? new ManagePaymentSourceSearchResponse(dto.getPaymentSource()) : null;
+//        this.reference = dto.getReference();
+//        this.transactionDate = dto.getTransactionDate();
+//        this.paymentStatus = dto.getPaymentStatus() != null ? new ManagePaymentStatusSearchResponse(dto.getPaymentStatus()) : null;
+//        this.client = dto.getClient() != null ? new ManageClientSearchResponse(dto.getClient()) : null;
+//        this.agency = dto.getAgency() != null ? new ManageAgencySearchResponse(dto.getAgency()) : null;
+//        this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
+//        this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountSearchResponse(dto.getBankAccount()) : null;
+//        this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusSearchResponse(dto.getAttachmentStatus()) : null;
+//        this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
+//        this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
+//        this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
+//        this.depositBalance = ScaleAmount.scaleAmount(dto.getDepositBalance());
+//        this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
+//        this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
+//        this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
+//        this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
+//        this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
+//        this.remark = dto.getRemark();
+//        this.eAttachment = dto.getEAttachment();
+//        this.applyPayment = dto.isApplyPayment();
+//        this.paymentSupport = dto.isPaymentSupport();
+//        this.createByCredit = dto.isCreateByCredit();
+//        this.existDetails = !dto.getPaymentDetails().isEmpty();
+//
+//        this.hasAttachment = !dto.getAttachments().isEmpty();
+//        if (dto.getInvoice() != null) {
+//            if (dto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+//                this.hasAttachment = dto.getInvoice().getHasAttachment();
+//            }
+//        }
+//        if (dto.getPaymentDetails() != null) {
+//            for (PaymentDetailDto paymentDetail : dto.getPaymentDetails()) {
+//                if (paymentDetail.getTransactionType().getDeposit()) {
+//                    this.hasDetailTypeDeposit = true;
+//                    break;
+//                }
+//            }
+//        }
+//    }
 
     public PaymentSearchResponse(PaymentSearchProjection dto) {
         this.id = dto.getId();
@@ -127,6 +127,6 @@ public class PaymentSearchResponse implements IResponse {
         this.paymentSupport = dto.getPaymentSupport();
         this.createByCredit = dto.getCreateByCredit();
         this.hasDetailTypeDeposit = dto.isHasDetailTypeDeposit();
-        this.hasAttachment = dto.isHasAttachment();
+        this.hasAttachment = dto.getHasAttachment();
     }
 }
