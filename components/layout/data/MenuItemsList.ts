@@ -75,36 +75,36 @@ export const model = ref([
         label: 'General',
         icon: 'pi pi-fw pi-folder',
         items: [
-          {
-            label: 'Action Log',
-            icon: 'pi pi-fw pi-folder',
-            to: '/settings/action-log'
-          },
-          {
-            label: 'Alert',
-            icon: 'pi pi-fw pi-folder',
-            to: '/settings/alert'
-          },
-          {
-            label: 'Charge Type',
-            icon: 'pi pi-fw pi-folder',
-            to: '/settings/charge-type'
-          },
+          // {
+          //   label: 'Action Log',
+          //   icon: 'pi pi-fw pi-folder',
+          //   to: '/settings/action-log'
+          // },
+          // {
+          //   label: 'Alert',
+          //   icon: 'pi pi-fw pi-folder',
+          //   to: '/settings/alert'
+          // },
+          // {
+          //   label: 'Charge Type',
+          //   icon: 'pi pi-fw pi-folder',
+          //   to: '/settings/charge-type'
+          // },
           {
             label: 'Language',
             icon: 'pi pi-fw pi-folder',
             to: '/settings/language'
           },
-          {
-            label: 'Message',
-            icon: 'pi pi-fw pi-folder',
-            to: '/settings/message'
-          },
-          {
-            label: 'Report Param Type',
-            icon: 'pi pi-fw pi-file-o',
-            to: '/settings/report-param-type'
-          },
+          // {
+          //   label: 'Message',
+          //   icon: 'pi pi-fw pi-folder',
+          //   to: '/settings/message'
+          // },
+          // {
+          //   label: 'Report Param Type',
+          //   icon: 'pi pi-fw pi-file-o',
+          //   to: '/settings/report-param-type'
+          // },
           // {
           //   label: 'Report',
           //   icon: 'pi pi-fw pi-file-o',
@@ -652,42 +652,42 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
         {
           label: 'General',
           items: [
-            {
-              label: 'Action Log',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/action-log'),
-              items: []
-            },
-            {
-              label: 'Alert',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/alert'),
-              items: []
-            },
-            {
-              label: 'Charge Type',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/charge-type'),
-              items: []
-            },
+            // {
+            //   label: 'Action Log',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/action-log'),
+            //   items: []
+            // },
+            // {
+            //   label: 'Alert',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/alert'),
+            //   items: []
+            // },
+            // {
+            //   label: 'Charge Type',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/charge-type'),
+            //   items: []
+            // },
             {
               label: 'Language',
               icon: 'pi pi-fw pi-file',
               command: () => navigateTo('/settings/language'),
               items: []
             },
-            {
-              label: 'Message',
-              icon: 'pi pi-fw pi-file',
-              command: () => navigateTo('/settings/message'),
-              items: []
-            },
-            {
-              label: 'Report Param Type',
-              icon: 'pi pi-fw pi-file-o',
-              command: () => navigateTo('/settings/report-param-type'),
-              items: []
-            },
+            // {
+            //   label: 'Message',
+            //   icon: 'pi pi-fw pi-file',
+            //   command: () => navigateTo('/settings/message'),
+            //   items: []
+            // },
+            // {
+            //   label: 'Report Param Type',
+            //   icon: 'pi pi-fw pi-file-o',
+            //   command: () => navigateTo('/settings/report-param-type'),
+            //   items: []
+            // },
           ]
         },
         {
