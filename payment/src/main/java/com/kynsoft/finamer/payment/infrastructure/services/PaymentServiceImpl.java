@@ -12,8 +12,11 @@ import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.services.IMasterPaymentAttachmentService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
+import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.PaymentWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.PaymentReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,12 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Autowired
     private PaymentReadDataJPARepository repositoryQuery;
+
+    @Autowired
+    private IPaymentDetailService paymentDetailService;
+
+    @Autowired
+    private IMasterPaymentAttachmentService masterPaymentAttachmentService;
 
     @Override
     public PaymentDto create(PaymentDto dto) {
@@ -113,7 +122,8 @@ public class PaymentServiceImpl implements IPaymentService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
+      //  Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
+        Page<PaymentSearchProjection> data = this.repositoryQuery.findAllProjected(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -151,14 +161,23 @@ public class PaymentServiceImpl implements IPaymentService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<Payment> data) {
+    private PaginatedResponse getPaginatedResponse(Page<PaymentSearchProjection> data) {
         List<PaymentSearchResponse> responses = new ArrayList<>();
-        for (Payment p : data.getContent()) {
-            responses.add(new PaymentSearchResponse(p.toAggregateWihtDetails()));
+        for (PaymentSearchProjection p : data.getContent()) {
+            responses.add(new PaymentSearchResponse(p));
         }
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
+
+//    private PaginatedResponse getPaginatedResponse(Page<Payment> data) {
+//        List<PaymentSearchResponse> responses = new ArrayList<>();
+//        for (Payment p : data.getContent()) {
+//            responses.add(new PaymentSearchResponse(p.toAggregateWihtDetails()));
+//        }
+//        return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
+//                data.getTotalElements(), data.getSize(), data.getNumber());
+//    }
 
     private PaginatedResponse getPaginatedExcelExporter(Page<Payment> data) {
         List<PaymentDto> responses = new ArrayList<>();
@@ -207,6 +226,16 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public void clearCache() {
         System.out.println("Clearing PaymentProjectionSimple cache");
+    }
+
+    @Override
+    public void getAll() {
+        List<Payment> payment = this.repositoryQuery.findAll();
+        for (Payment payment1 : payment) {
+            payment1.setHasAttachment(this.masterPaymentAttachmentService.countByAttachmentResource(payment1.getId()) > 0);
+            payment1.setHasDetailTypeDeposit(this.paymentDetailService.countByPaymentDetailIdAndTransactionTypeDeposit(payment1.getId()) > 0);
+            this.repositoryCommand.save(payment1);
+        }
     }
 
 }

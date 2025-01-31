@@ -169,4 +169,9 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         return list;
     }
 
+    @Override
+    public Long countByPaymentDetailIdAndTransactionTypeDeposit(UUID payment) {
+        return this.repositoryQuery.countByPaymentDetailIdAndTransactionTypeDeposit(payment);
+    }
+
 }
