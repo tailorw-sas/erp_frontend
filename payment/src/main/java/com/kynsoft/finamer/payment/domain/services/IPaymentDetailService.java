@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails.PaymentDetailSimple;
+import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -42,4 +43,6 @@ public interface IPaymentDetailService {
     Long countByPaymentDetailIdAndTransactionTypeDeposit(UUID payment);
 
     PaymentDetailSimple findPaymentDetailsSimpleCacheableByGenId(int id);
+
+    List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids);
 }
