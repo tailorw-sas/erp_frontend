@@ -31,4 +31,8 @@ public interface IManageBookingService {
     List<ManageBookingDto> findByBookingIdIn(List<Long> ids);
 
     BookingProjectionControlAmountBalance findSimpleBookingByGenId(long id);
+
+    BookingProjectionControlAmountBalance findByCoupon(String coupon);
+
+    Long countByCoupon(String coupon);
 }

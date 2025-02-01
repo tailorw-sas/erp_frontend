@@ -73,6 +73,9 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
                     return false;
                 }
                 try {
+                    if (Objects.isNull(obj.getBookId())){
+                        return true;
+                    }
                     ManageBookingDto bookingDto = this.getBookingDto(Long.valueOf(obj.getBookId()));
                     //Si es de tipo other deduction, el booking balance debe ser mayor o igual que el balance del excel.
                     //TODO: duda, creo que para el other deduction debia ser igual estricto. el balnce del booking y el del excel????
