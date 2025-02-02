@@ -46,6 +46,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public void updateAll(List<Booking> list) {
+        this.repositoryCommand.saveAll(list);
+    }
+
+    @Override
     public ManageBookingDto findById(UUID id) {
         Optional<Booking> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
@@ -122,6 +127,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
             list.add(booking.toAggregate());
         }
         return list;
+    }
+
+    @Override
+    public List<Booking> findAllByBookingIdIn(List<Long> ids) {
+        return this.repositoryQuery.findByBookingIdIn(ids);
     }
 
     @Override

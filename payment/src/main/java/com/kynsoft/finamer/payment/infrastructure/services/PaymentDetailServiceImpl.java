@@ -43,6 +43,11 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
+    public void createAll(List<PaymentDetail> dto) {
+        this.repositoryCommand.saveAll(dto);
+    }
+
+    @Override
     public void update(PaymentDetailDto dto) {
         PaymentDetail update = new PaymentDetail(dto);
 

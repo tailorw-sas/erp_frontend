@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
+import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,10 +17,13 @@ public interface IPaymentService {
 
     void update(PaymentDto dto);
 
+    void update(Payment dto);
+
     void delete(PaymentDto dto);
 
     PaymentDto findById(UUID id);
 
+    Payment findPaymentById(UUID id);
     /**
      * Permite obtener los Payment con Detalles.
      * Cuando existe pago aplicado, te proporciona los Booking y el invoice al cual
