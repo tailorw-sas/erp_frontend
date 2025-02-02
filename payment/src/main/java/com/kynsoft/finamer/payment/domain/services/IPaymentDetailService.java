@@ -47,4 +47,8 @@ public interface IPaymentDetailService {
     PaymentDetailSimple findPaymentDetailsSimpleCacheableByGenId(int id);
 
     List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids);
+
+    List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids);
+
+    List<PaymentDetailDto> change(List<PaymentDetail> pd);
 }

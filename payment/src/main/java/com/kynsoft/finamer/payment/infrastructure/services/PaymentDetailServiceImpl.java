@@ -177,6 +177,20 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
+    public List<PaymentDetailDto> change(List<PaymentDetail> pd) {
+        List<PaymentDetailDto> list = new ArrayList<>();
+        for (PaymentDetail paymentDetail : pd) {
+            list.add(paymentDetail.toAggregate());
+        }
+        return list;
+    }
+
+    @Override
+    public List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids) {
+        return this.repositoryQuery.findByIdIn(ids);
+    }
+
+    @Override
     public List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids) {
         return this.repositoryQuery.findByPaymentDetailIdIn(ids);
     }
