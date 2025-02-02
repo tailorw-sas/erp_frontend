@@ -144,4 +144,14 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return null;
     }
 
+    @Override
+    public BookingProjectionControlAmountBalance findByCoupon(String coupon) {
+        return this.repositoryQuery.findByCouponNumber(coupon).orElse(null);
+    }
+
+    @Override
+    public Long countByCoupon(String coupon) {
+        return this.repositoryQuery.countByCouponNumber(coupon);
+    }
+
 }

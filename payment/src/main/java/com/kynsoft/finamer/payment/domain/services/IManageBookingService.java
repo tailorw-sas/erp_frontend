@@ -36,4 +36,8 @@ public interface IManageBookingService {
     List<Booking> findAllByBookingIdIn(List<Long> ids);
 
     void updateAll(List<Booking> list);
+
+    BookingProjectionControlAmountBalance findByCoupon(String coupon);
+
+    Long countByCoupon(String coupon);
 }

@@ -10,6 +10,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -32,6 +33,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.Payment
 import io.jsonwebtoken.lang.Assert;
 import java.util.Comparator;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -152,44 +154,60 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     boolean applyPayment = true;
                     if (bookingDto == null) {
                         applyPayment = false;
-                    }
-
-                    //cash
-                    double amount = Math.min(bookingDto.getAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
-                    if (managePaymentTransactionTypeDto.getCash()) {
-                        this.sendCreatePaymentDetail(
-                                paymentDto.getId(),
-                                amount,
-                                UUID.fromString(request.getEmployeeId()),
-                                managePaymentTransactionTypeDto.getId(),
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto != null ? bookingDto.getId() : null,
-                                applyPayment);
-
-                        //Crear el deposit.
-                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
-                        if (restAmount > 0) {
-                            DepositEvent depositEvent = new DepositEvent(this);
-                            depositEvent.setAmount(restAmount);
-                            depositEvent.setPaymentDto(paymentDto);
-                            //depositEvent.setRemark("Create deposit in import details.");
-                            String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
-                            String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
-                            String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
-                            String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
-
-                            depositEvent.setRemark("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
-                            this.applicationEventPublisher.publishEvent(depositEvent);
+                        try {
+                            if (this.bookingService.countByCoupon(paymentImportCache.getCoupon()) > 1){
+                                //todo: implementar cuando existe mas de un booking con este coupon
+                                System.out.println(this.bookingService.countByCoupon(paymentImportCache.getCoupon()));
+                            } else {
+                                BookingProjectionControlAmountBalance bookingProjection = this.bookingService.findByCoupon(paymentImportCache.getCoupon());
+                                if (bookingProjection == null) {
+                                    //todo: implementar cuando no existe el booking
+                                } else {
+                                    //todo: implementar el caso de que existe el booking
+                                }
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
                     } else {
-                        ///Other deductions
-                        this.sendCreatePaymentDetail(paymentDto.getId(),
-                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                UUID.fromString(request.getEmployeeId()),
-                                managePaymentTransactionTypeDto.getId(),
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto != null ? bookingDto.getId() : null,
-                                applyPayment);
+
+                        //cash
+                        double amount = Math.min(bookingDto.getAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
+                        if (managePaymentTransactionTypeDto.getCash()) {
+                            this.sendCreatePaymentDetail(
+                                    paymentDto.getId(),
+                                    amount,
+                                    UUID.fromString(request.getEmployeeId()),
+                                    managePaymentTransactionTypeDto.getId(),
+                                    getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                    bookingDto != null ? bookingDto.getId() : null,
+                                    applyPayment);
+
+                            //Crear el deposit.
+                            double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
+                            if (restAmount > 0) {
+                                DepositEvent depositEvent = new DepositEvent(this);
+                                depositEvent.setAmount(restAmount);
+                                depositEvent.setPaymentDto(paymentDto);
+                                //depositEvent.setRemark("Create deposit in import details.");
+                                String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
+                                String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
+                                String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
+                                String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
+
+                                depositEvent.setRemark("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
+                                this.applicationEventPublisher.publishEvent(depositEvent);
+                            }
+                        } else {
+                            ///Other deductions
+                            this.sendCreatePaymentDetail(paymentDto.getId(),
+                                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                    UUID.fromString(request.getEmployeeId()),
+                                    managePaymentTransactionTypeDto.getId(),
+                                    getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                    bookingDto != null ? bookingDto.getId() : null,
+                                    applyPayment);
+                        }
                     }
                 }
             });
@@ -256,4 +274,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }
+
+
 }

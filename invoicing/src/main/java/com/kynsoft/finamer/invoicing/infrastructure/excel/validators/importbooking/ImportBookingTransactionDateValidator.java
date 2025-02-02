@@ -28,7 +28,7 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        return this.validateDateFormat(obj,errorFieldList) && this.validateCloseOperation(obj, errorFieldList);
+        return this.validateDateFormat(obj,errorFieldList);// && this.validateCloseOperation(obj, errorFieldList);
     }
 
     private boolean validateDateFormat(BookingRow obj,List<ErrorField> errorFieldList){
