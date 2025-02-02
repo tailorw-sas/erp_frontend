@@ -43,6 +43,11 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
+    public void createAll(List<PaymentDetail> dto) {
+        this.repositoryCommand.saveAll(dto);
+    }
+
+    @Override
     public void update(PaymentDetailDto dto) {
         PaymentDetail update = new PaymentDetail(dto);
 
@@ -169,6 +174,20 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
             list.add(paymentDetail.toAggregate());
         }
         return list;
+    }
+
+    @Override
+    public List<PaymentDetailDto> change(List<PaymentDetail> pd) {
+        List<PaymentDetailDto> list = new ArrayList<>();
+        for (PaymentDetail paymentDetail : pd) {
+            list.add(paymentDetail.toAggregate());
+        }
+        return list;
+    }
+
+    @Override
+    public List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids) {
+        return this.repositoryQuery.findByIdIn(ids);
     }
 
     @Override

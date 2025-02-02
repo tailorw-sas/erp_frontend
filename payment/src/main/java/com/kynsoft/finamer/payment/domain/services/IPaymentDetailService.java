@@ -14,6 +14,8 @@ import java.util.UUID;
 public interface IPaymentDetailService {
     PaymentDetailDto create(PaymentDetailDto dto);
 
+    void createAll(List<PaymentDetail> dto);
+
     void update(PaymentDetailDto dto);
 
     void delete(PaymentDetailDto dto);
@@ -45,4 +47,8 @@ public interface IPaymentDetailService {
     PaymentDetailSimple findPaymentDetailsSimpleCacheableByGenId(int id);
 
     List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids);
+
+    List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids);
+
+    List<PaymentDetailDto> change(List<PaymentDetail> pd);
 }

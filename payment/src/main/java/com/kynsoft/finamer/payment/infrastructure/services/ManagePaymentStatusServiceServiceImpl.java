@@ -118,6 +118,16 @@ public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStat
     }
 
     @Override
+    public ManagePaymentStatus findPaymentStatusByApplied() {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByApplied();
+        if (result.isPresent()) {
+            return result.get();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     @Cacheable(value = "paymentStatusCache", unless = "#result == null")
     public ManagePaymentStatusDto findByAppliedCacheable() {
         Optional<ManagePaymentStatus> result = this.repositoryQuery.findByApplied();

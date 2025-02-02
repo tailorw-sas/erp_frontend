@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
 import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
+import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -31,6 +32,10 @@ public interface IManageBookingService {
     List<ManageBookingDto> findByBookingIdIn(List<Long> ids);
 
     BookingProjectionControlAmountBalance findSimpleBookingByGenId(long id);
+
+    List<Booking> findAllByBookingIdIn(List<Long> ids);
+
+    void updateAll(List<Booking> list);
 
     BookingProjectionControlAmountBalance findByCoupon(String coupon);
 
