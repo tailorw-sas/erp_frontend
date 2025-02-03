@@ -8,7 +8,7 @@ public class ScaleAmount {
 
     public static Double scaleAmount(Double amount) {
         BigDecimal bd = new BigDecimal(Double.toString(amount));
-        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        bd = bd.setScale(2, RoundingMode.HALF_EVEN);
         return bd.doubleValue();
     }
 
