@@ -4405,7 +4405,7 @@ onMounted(async () => {
         </template>
         <template #default>
           <div class="p-fluid pt-3">
-            <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
+            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
               <DataTable
                 v-model:selection="paymentDetailsTypeDepositSelected"
                 :value="paymentDetailsTypeDepositList"
