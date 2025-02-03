@@ -85,6 +85,9 @@ public class PaymentSearchResponse implements IResponse {
         this.createByCredit = dto.getCreateByCredit();
         this.hasDetailTypeDeposit = dto.isHasDetailTypeDeposit();
         this.hasAttachment = dto.getHasAttachment();
+        if (importType.equals(ImportType.AUTOMATIC)) {
+            this.hasAttachment = true;
+        }
         this.importType = dto.getImportType();
     }
 }
