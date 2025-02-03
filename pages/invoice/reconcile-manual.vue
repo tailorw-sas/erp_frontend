@@ -458,7 +458,7 @@ async function saveItem() {
 }
 */
 async function saveItem() {
-  if (selectedElements.value.length > 50) {
+  /* if (selectedElements.value.length > 50) {
     toast.add({
       severity: 'error',
       summary: 'Error',
@@ -466,7 +466,7 @@ async function saveItem() {
       life: 6000
     })
     return
-  }
+  } */
   options.value.loading = true
   loadingSaveAll.value = true
 

@@ -253,14 +253,7 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: 'ASC'
-  }
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
   getList()
