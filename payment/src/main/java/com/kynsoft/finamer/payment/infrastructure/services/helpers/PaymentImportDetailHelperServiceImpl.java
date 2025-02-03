@@ -154,7 +154,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             if (this.bookingService.countByCoupon(paymentImportCache.getCoupon()) > 1){
                                 //todo: implementar cuando existe mas de un booking con este coupon
                                 ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByPaymentInvoice();
-                                String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the Booking is duplicated.";
+                                String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
 
                                 //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
                                 createDetailAndDeposit(paymentImportCache, null, transactionTypeDto, paymentDto, request, false, Double.parseDouble(paymentImportCache.getPaymentAmount()), remarks);
