@@ -258,8 +258,12 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                 String finalAttachment = attachment;
                 cacheList.forEach(paymentImportCache -> {
                     Optional<PaymentDetail> foundDetail = details.stream().filter(detail -> detail.getPaymentDetailId().equals(Long.valueOf(paymentImportCache.getTransactionId()))).findFirst();
+                    double amount = Double.parseDouble(paymentImportCache.getPaymentAmount());
+                    if (foundDetail.get().getApplyDepositValue() - amount < 0) {
+                        return;
+                    }
                     String remark = paymentImportCache.getRemarks() == null ? transactionTypeDto.getDefaultRemark() : paymentImportCache.getRemarks();
-                    this.createDetailsAndIncome(employeeDto, transactionTypeDto, foundDetail.get(), Double.parseDouble(paymentImportCache.getPaymentAmount()), remark, attachment);
+                    this.createDetailsAndIncome(employeeDto, transactionTypeDto, foundDetail.get(), amount, remark, attachment);
                 });
                 pageable = pageable.next();
             } while (cacheList.hasNext());
