@@ -114,7 +114,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         InvoiceUtils.establishDueDate(dto);
-        InvoiceUtils.calculateInvoiceAging(dto);
+        InvoiceUtils.calculateInvoiceAging(dto);//TODO Eliminar esto
         Invoice entity = new Invoice(dto);
         entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
