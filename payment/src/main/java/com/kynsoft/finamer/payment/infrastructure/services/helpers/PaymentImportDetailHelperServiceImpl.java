@@ -162,7 +162,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                 BookingProjectionControlAmountBalance bookingProjection = this.bookingService.findByCoupon(paymentImportCache.getCoupon());
                                 if (bookingProjection == null) {
                                     //todo: implementar cuando no existe el booking
-                                    getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), true, "#coupon not found");
+                                    DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), true, "#coupon not found");
+                                    this.applicationEventPublisher.publishEvent(depositEvent);
                                 } else {
                                     //todo: implementar el caso de que existe el booking
                                     //mismo flujo de cuando existe el booking por el id, en este caso el que se encuentra por el coupon
