@@ -81,11 +81,11 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
     private void addMainHeader(ManageInvoiceDto invoiceDto, Table table) {
         // Primera fila: Encabezado con la palabra "Hotel" y fechas
-        table.addHeaderCell(createCell("Hotel",headerStyle).setTextAlignment(TextAlignment.LEFT)); // Solo "Hotel" como encabezado
-        table.addHeaderCell(createEmptyCell(3)); // Espacio vacío
-        table.addHeaderCell(createCell("Create Date",headerStyle));
-        table.addHeaderCell(createEmptyCell()); // Espacio vacío
-        table.addHeaderCell(createCell("Booking Date",headerStyle));
+        table.addCell(createCell("Hotel",headerStyle).setTextAlignment(TextAlignment.LEFT)); // Solo "Hotel" como encabezado
+        table.addCell(createEmptyCell(3)); // Espacio vacío
+        table.addCell(createCell("Create Date",headerStyle));
+        table.addCell(createEmptyCell()); // Espacio vacío
+        table.addCell(createCell("Booking Date",headerStyle));
 
         // Segunda fila: Nombre del hotel en una celda combinada de tres columnas
         String hotelName = (invoiceDto.getHotel() != null
@@ -166,8 +166,10 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         }
 
         //added summary
-        table.addCell(createEmptyCell(4));
+        table.addCell(createEmptyCell(5));
         table.addCell(createCell("TOTAL", headerStyle));
+        table.addCell(createEmptyCell());
+        table.addCell(createEmptyCell(5));
         table.addCell(createCell("$ " + DECIMAL_FORMAT.format(total), cellStyle).setKeepTogether(false));
         table.addCell(createCell(currency, cellStyle));
     }

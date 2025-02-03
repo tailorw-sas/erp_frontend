@@ -78,6 +78,14 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
+    public void update(Payment dto) {
+        
+        dto.setUpdatedAt(OffsetDateTime.now(ZoneId.of("UTC")));
+
+        this.repositoryCommand.save(dto);
+    }
+
+    @Override
     public void delete(PaymentDto dto) {
         try {
             this.repositoryCommand.deleteById(dto.getId());
@@ -91,6 +99,15 @@ public class PaymentServiceImpl implements IPaymentService {
         Optional<Payment> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregateWihtDetails();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public Payment findPaymentById(UUID id) {
+        Optional<Payment> userSystem = this.repositoryQuery.findById(id);
+        if (userSystem.isPresent()) {
+            return userSystem.get();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
     }

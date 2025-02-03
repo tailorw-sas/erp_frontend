@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.identity.projection;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ public class PaymentSearchProjection {
     private Boolean createByCredit;
     private boolean hasAttachment;
     private boolean hasDetailTypeDeposit;
+    private ImportType importType;
 
     // Constructor Manual
     public PaymentSearchProjection(
@@ -66,7 +68,8 @@ public class PaymentSearchProjection {
             Boolean paymentSupport,
             Boolean createByCredit,
             Boolean hasAttachment,
-            Boolean hasDetailTypeDeposit
+            Boolean hasDetailTypeDeposit,
+            ImportType importType
     ) {
         this.id = id;
         this.paymentId = paymentId;
@@ -95,6 +98,7 @@ public class PaymentSearchProjection {
         this.createByCredit = createByCredit;
         this.hasAttachment = hasAttachment;
         this.hasDetailTypeDeposit = hasDetailTypeDeposit;
+        this.importType = importType;
     }
 
     // Métodos Setter manuales

@@ -41,4 +41,12 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     Optional<BookingProjectionControlAmountBalance> findSimpleBookingByGenId(@Param("id") long id);
 
     List<Booking> findByBookingIdIn(List<Long> ids);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
+            "pd.id, pd.bookingId, pd.amountBalance) " +
+            "FROM Booking pd " +
+            "WHERE pd.couponNumber = :couponNumber")
+    Optional<BookingProjectionControlAmountBalance> findByCouponNumber(@Param("couponNumber") String couponNumber);
+
+    Long countByCouponNumber(String couponNumber);
 }

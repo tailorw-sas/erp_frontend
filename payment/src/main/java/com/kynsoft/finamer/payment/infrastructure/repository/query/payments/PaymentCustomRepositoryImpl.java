@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.infrastructure.identity.*;
 import com.kynsoft.finamer.payment.infrastructure.identity.projection.*;
 import jakarta.persistence.EntityManager;
@@ -121,6 +122,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(root.get("createByCredit"));
         selections.add(root.get("hasAttachment"));
         selections.add(root.get("hasDetailTypeDeposit"));
+        selections.add(root.get("importType"));
 
         query.multiselect(selections.toArray(new Selection[0]));
 
@@ -215,7 +217,8 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                     tuple.get(58, Boolean.class), // paymentSupport
                     tuple.get(59, Boolean.class) , // createByCredit
                     tuple.get(60, Boolean.class) , // hasAttachment
-                    tuple.get(61, Boolean.class)  // hasDetailTypeDeposit
+                    tuple.get(61, Boolean.class),  // hasDetailTypeDeposit
+                    tuple.get(62, ImportType.class) // ImportType
             );
         }).collect(Collectors.toList());
 
