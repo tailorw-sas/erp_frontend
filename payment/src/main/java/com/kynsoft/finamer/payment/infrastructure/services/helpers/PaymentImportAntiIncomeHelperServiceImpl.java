@@ -260,6 +260,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                     Optional<PaymentDetail> foundDetail = details.stream().filter(detail -> detail.getPaymentDetailId().equals(Long.valueOf(paymentImportCache.getTransactionId()))).findFirst();
                     double amount = Double.parseDouble(paymentImportCache.getPaymentAmount());
                     if (foundDetail.get().getApplyDepositValue() - amount < 0) {
+                        this.totalProcessRow--;
                         return;
                     }
                     String remark = paymentImportCache.getRemarks() == null ? transactionTypeDto.getDefaultRemark() : paymentImportCache.getRemarks();
