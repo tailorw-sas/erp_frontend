@@ -55,7 +55,7 @@ public class ImportInnsistServiceImpl {
             //Obtengo de cache
             List<BookingImportCache> list = this.repository.findAllByImportProcessId(insistImportProcessId.toString());
             boolean validateInsist = validatorFactory.validateInsist(list);
-            validatorFactory.createValidators(EImportType.NO_VIRTUAL.name());
+            validatorFactory.createValidators(EImportType.INNSIST.name());
 
             BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
                     .status(EProcessStatus.RUNNING)

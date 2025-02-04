@@ -239,6 +239,12 @@
             <version>2.21.7</version>
         <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.14</version>
+        </dependency>
     </dependencies>
 
     <build>

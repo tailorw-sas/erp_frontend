@@ -18,6 +18,8 @@ import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.Boo
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -84,6 +86,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     @Override
     public void groupAndCachingImportBooking(BookingRow bookingRow, EImportType importType) {
+        //TODO Validar o quitar
         ManageAgencyDto manageAgencyDto = agencyService.findByCode(bookingRow.getManageAgencyCode());
         this.createCache(bookingRow, manageAgencyDto.getGenerationType().name());
     }
@@ -151,7 +154,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
-    public void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean insisit) {
+    public void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean innsist) {
         Map<GroupByCoupon, List<BookingRow>> groupedByHotelBookingNumber;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
@@ -169,7 +172,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             groupedByHotelBookingNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon", insisit);
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon", innsist);
             });
         }
     }
@@ -212,7 +215,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
     }
 
-    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType, boolean insisit) {
+    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType, boolean innsist) {
+        //TODO - Mejorar todo este proceso
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
@@ -226,19 +230,21 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
-        manageInvoiceDto.setInvoiceAmount(ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList)));
-        manageInvoiceDto.setDueAmount(ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList)));
-        manageInvoiceDto.setOriginalAmount(ScaleAmount.scaleAmount(manageInvoiceDto.getInvoiceAmount()));
+        double invoiceAmount = ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList));
+        manageInvoiceDto.setInvoiceAmount(invoiceAmount);
+        manageInvoiceDto.setDueAmount(invoiceAmount);
+        manageInvoiceDto.setOriginalAmount(invoiceAmount);
         if (hotel.isVirtual()) {
             manageInvoiceDto.setImportType(ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL);
         } else {
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
         }
-        if (insisit) {
+        if (innsist) {
             manageInvoiceDto.setImportType(ImportType.INSIST);
         }
         manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
         manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber() != null ? Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()) : null);
+        //TODO Eliminar esto y devolver el manageInvoiceDto antes de crear para garantizar transaccionalidad
         manageInvoiceDto = invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
 
@@ -264,6 +270,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
+        //TODO Mejorar este proceso (Cargar en memoria los catalogos)
         ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode()) : null;
         ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRowList.get(0).getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRowList.get(0).getRoomType(), hotel.getCode()) : null;
         ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRowList.get(0).getNightType()) ? nightTypeService.findByCode(bookingRowList.get(0).getNightType()) : null;
@@ -276,8 +283,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         double bookingHotelAmount = 0;
         for (BookingRow bookingRow : bookingRowList) {
             rates.add(this.createRoomRateDto(bookingRow));
-            bookingAmount = bookingAmount + bookingRow.getInvoiceAmount();
-            bookingHotelAmount = bookingHotelAmount + bookingRow.getHotelInvoiceAmount();
+            bookingAmount = ScaleAmount.scaleAmount(bookingRow.getInvoiceAmount() + bookingAmount);
+            bookingHotelAmount = ScaleAmount.scaleAmount(bookingRow.getHotelInvoiceAmount() + bookingHotelAmount);
         }
         bookingDto.setInvoiceAmount(bookingAmount);
         bookingDto.setDueAmount(bookingAmount);
@@ -306,7 +313,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     public void calculateRateAdults(ManageBookingDto bookingDto) {
-
         double total = bookingDto.getRoomRates().stream()
                 .mapToDouble(rate -> Optional.ofNullable(rate.getRateAdult())
                 .orElse(0.0))
@@ -349,11 +355,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
-        return adults == 0 ? 0.0 : rateAmount / (nights * adults);
+        return adults == 0 ? 0.0 : ScaleAmount.scaleAmount(rateAmount / (nights * adults));
     }
 
     private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
-        return children == 0 ? 0.0 : rateAmount / (nights * children);
+        return children == 0 ? 0.0 : ScaleAmount.scaleAmount(rateAmount / (nights * children));
     }
 
     private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel, String groupType) {

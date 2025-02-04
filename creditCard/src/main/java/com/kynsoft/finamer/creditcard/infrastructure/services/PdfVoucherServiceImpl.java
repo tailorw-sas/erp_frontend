@@ -146,7 +146,7 @@ public class PdfVoucherServiceImpl implements IPdfVoucherService {
                 e.printStackTrace();
             }
 
-            String footerText = "© 2024 FINAMER. All rights reserved.";
+            String footerText = "© 2025 FINAMER. All rights reserved.";
             float textWidth = font.getWidth(footerText, 10); // Obtener el ancho del texto
             float textX = (pageSize.getWidth() - textWidth) / 2; // Calcular posición centrada
 

@@ -26,6 +26,8 @@
         <module>creditCard</module>
         <module>audit</module>
         <module>audit-agent</module>
+        <module>tcaInnsist</module>
+        <module>scheduler</module>
     </modules>
     <build>
     </build>
