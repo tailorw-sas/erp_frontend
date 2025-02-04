@@ -24,7 +24,7 @@ public class ManageRatePlanCodeSizeRule extends BusinessRule {
     }
 
     private boolean validateCode(String code) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z]{1,10}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]{1,10}$");
         Matcher matcher = pattern.matcher(code);
 
         return matcher.matches();

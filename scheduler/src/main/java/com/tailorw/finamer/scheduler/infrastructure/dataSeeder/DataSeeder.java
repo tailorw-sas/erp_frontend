@@ -18,6 +18,10 @@ public class DataSeeder implements ApplicationRunner {
     private final IIntervalTypeService intervalTypeService;
     private final IExecutionDateTypeService executionDateTypeService;
     private final IProcessingDateTypeService processingDateTypeService;
+
+    private final IBusinessProcessService businessProcessService;
+    private final IBusinessProcessSchedulerService businessProcessSchedulerService;
+
     private final IBusinessProcessSchedulerExecutionRuleService businessProcessSchedulerRuleService;
     private final IBusinessProcessSchedulerProcessingRuleService businessProcessSchedulerProcessingRuleService;
 
@@ -32,12 +36,16 @@ public class DataSeeder implements ApplicationRunner {
                       IIntervalTypeService intervalTypeService,
                       IExecutionDateTypeService executionDateTypeService,
                       IProcessingDateTypeService processingDateTypeService,
+                      IBusinessProcessService businessProcessService,
+                      IBusinessProcessSchedulerService businessProcessSchedulerService,
                       IBusinessProcessSchedulerExecutionRuleService businessProcessSchedulerRuleService,
                       IBusinessProcessSchedulerProcessingRuleService businessProcessSchedulerProcessingRuleService){
         this.frecuencyService = frecuencyService;
         this.intervalTypeService = intervalTypeService;
         this.executionDateTypeService = executionDateTypeService;
         this.processingDateTypeService = processingDateTypeService;
+        this.businessProcessService = businessProcessService;
+        this.businessProcessSchedulerService = businessProcessSchedulerService;
         this.businessProcessSchedulerRuleService = businessProcessSchedulerRuleService;
         this.businessProcessSchedulerProcessingRuleService = businessProcessSchedulerProcessingRuleService;
     }
@@ -48,6 +56,8 @@ public class DataSeeder implements ApplicationRunner {
         createIntervalTypes();
         createExecutionDateTypes();
         createProcessingDateTypes();
+
+        createBusinessProcesses();
 
         createOnetimeFrequencyRules();
         createDailyFrequencyRules();
@@ -113,6 +123,10 @@ public class DataSeeder implements ApplicationRunner {
                 .collect(Collectors.toList());
     }
 
+    public void createBusinessProcesses(){
+        createBusinesProcessIfNotExists(new BusinessProcessDto(UUID.fromString("8cf67fd5-dc3f-412f-8960-653ca955e2a0"), "TCA-RR", "TCA-ROOM-RATE-REPLICATE", "Proceso de replicacion de room rates de TCA a Innsist", Status.ACTIVE, null, null));
+    }
+
     public void createOnetimeFrequencyRules(){
          createSchedulerRuleIfNotExists(new BusinessProcessSchedulerExecutionRuleDto(UUID.fromString("4164e438-994e-4990-b3ef-43552bee16aa"), getFrequency(EFrequency.ONE_TIME.name()), getIntervalType(EIntervalType.ONE_TIME.name()), false, true, getExecutionDateType(EExecutionDateType.CUSTOM.name()), false, true, true, Status.ACTIVE));
          createSchedulerRuleIfNotExists(new BusinessProcessSchedulerExecutionRuleDto(UUID.fromString("bf337656-dab3-4c94-96f5-2ba08ce33264"), getFrequency(EFrequency.ONE_TIME.name()), getIntervalType(EIntervalType.MINUTE.name()), true, true, getExecutionDateType(EExecutionDateType.CUSTOM.name()), false, true, true, Status.ACTIVE));
@@ -163,6 +177,22 @@ public class DataSeeder implements ApplicationRunner {
         createSchedulerProcessingRuleIfNotExists(new BusinessProcessSchedulerProcessingRuleDto(UUID.fromString("1db374b0-7d53-42d5-a120-77de711320c3"), getFrequency(EFrequency.ONE_TIME.name()), getProcessingDateType(EProcessingDateType.LAST_DAY_OF_THE_PREVIOUS_WEEK.name()), false, false, Status.ACTIVE));
 
 
+    }
+
+    private void createBusinesProcessIfNotExists(BusinessProcessDto businessProcess){
+        try{
+            businessProcessService.findById(businessProcess.getId());
+        }catch (BusinessNotFoundException e){
+            businessProcessService.create(businessProcess);
+        }
+    }
+
+    private void createBusinesProcessSchedulerIfNotExists(BusinessProcessSchedulerDto businessProcessScheduler){
+        try{
+            businessProcessSchedulerService.findById(businessProcessScheduler.getId());
+        }catch (BusinessNotFoundException e){
+            businessProcessSchedulerService.create(businessProcessScheduler);
+        }
     }
 
     private void createSchedulerRuleIfNotExists(BusinessProcessSchedulerExecutionRuleDto schedulerRule){
