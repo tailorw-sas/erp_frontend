@@ -77,12 +77,13 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
 
     @Override
     public boolean validate(PaymentDetailRow toValidate) {
-        paymentDetailExistPaymentValidator.validate(toValidate,errorFieldList);
-        paymentDetailsBookingFieldValidator.validate(toValidate, errorFieldList);
-        this.validatePaymentAmount(toValidate);
-        paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList);
-        this.validateAsAntiToIncome(toValidate);
-        this.validateAsExternalPaymentId(toValidate);
+        int errors = 0;
+        errors += paymentDetailExistPaymentValidator.validate(toValidate,errorFieldList) ? 0 : 1;
+        errors += paymentDetailsBookingFieldValidator.validate(toValidate, errorFieldList) ? 0 : 1;
+        errors += this.validatePaymentAmount(toValidate) ? 0 : 1;
+        errors += paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList) ? 0 : 1;
+        errors += this.validateAsAntiToIncome(toValidate) ? 0 : 1;
+        errors += this.validateAsExternalPaymentId(toValidate) ? 0 : 1;
 
         if (this.hasErrors()) {
             PaymentImportDetailErrorEvent paymentImportErrorEvent =
@@ -90,34 +91,35 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
                             toValidate.getImportProcessId(), errorFieldList, toValidate));
             this.sendErrorEvent(paymentImportErrorEvent);
         }
-        boolean result = !this.hasErrors();
+        boolean result = errors == 0;
         this.clearErrors();
         return result;
 
     }
 
-    private void validatePaymentAmount(PaymentDetailRow toValidate){
+    private boolean validatePaymentAmount(PaymentDetailRow toValidate){
         if (Objects.isNull(toValidate.getAnti())){
-            paymentImportDetailAmountValidator.validate(toValidate,errorFieldList);
-        }
+            return paymentImportDetailAmountValidator.validate(toValidate,errorFieldList);
+        } return true;
     }
-    private void validateAsAntiToIncome(PaymentDetailRow toValidate){
+    private boolean validateAsAntiToIncome(PaymentDetailRow toValidate){
+        int errors = 0;
         if (Objects.nonNull(toValidate.getAnti()) && toValidate.getAnti()>0){
             AntiToIncomeRow antiToIncomeRow = new AntiToIncomeRow();
             antiToIncomeRow.setTransactionId(toValidate.getAnti());
             antiToIncomeRow.setAmount(toValidate.getBalance());
             antiToIncomeRow.setRemarks(toValidate.getRemarks());
             antiToIncomeRow.setImportProcessId(toValidate.getImportProcessId());
-            paymentTransactionIdValidator.validate(antiToIncomeRow, errorFieldList);
-            paymentImportAmountValidator.validate(antiToIncomeRow, errorFieldList);
+            errors += paymentTransactionIdValidator.validate(antiToIncomeRow, errorFieldList) ? 0 : 1;
+            errors += paymentImportAmountValidator.validate(antiToIncomeRow, errorFieldList) ? 0 : 1;
         }
-
+        return errors == 0;
     }
 
-    private void validateAsExternalPaymentId(PaymentDetailRow toValidate){
+    private boolean validateAsExternalPaymentId(PaymentDetailRow toValidate){
         if (Objects.nonNull(toValidate.getExternalPaymentId())){
-            paymentDetailBelongToSamePayment.validate(toValidate,errorFieldList);
-        }
+            return paymentDetailBelongToSamePayment.validate(toValidate,errorFieldList);
+        } return true;
     }
 
 

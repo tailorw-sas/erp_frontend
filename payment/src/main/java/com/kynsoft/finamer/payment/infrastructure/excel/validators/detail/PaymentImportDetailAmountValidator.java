@@ -74,6 +74,9 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
                 }
                 try {
                     if (Objects.isNull(obj.getBookId())){
+                        if (Objects.nonNull(obj.getCoupon()) && bookingService.countByCoupon(obj.getCoupon()) > 1) {
+                            errorFieldList.add(new ErrorField("coupon", "Payment was not applied because the coupon is duplicated."));
+                        }
                         return true;
                     }
                     ManageBookingDto bookingDto = this.getBookingDto(Long.valueOf(obj.getBookId()));
