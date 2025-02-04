@@ -22,6 +22,8 @@ public class AFile extends BaseEntity {
 
     private String name;
     private String microServiceName;
+
+    @Column(columnDefinition = "TEXT")
     private String url;
 
     @Column(nullable = true)

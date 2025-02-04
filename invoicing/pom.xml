@@ -50,11 +50,13 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>audit-agent-dev</artifactId>
+            <artifactId>audit-agent</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+
         <!-- Dependencia de iText 7 para crear PDFs -->
         <dependency>
             <groupId>com.itextpdf</groupId>

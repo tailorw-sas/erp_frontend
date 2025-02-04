@@ -24,7 +24,7 @@ public class ImportBookingTypeValidator  extends ExcelRuleValidator<BookingRow> 
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if (Objects.nonNull(obj.getManageHotelCode()) && !obj.getManageHotelCode().isEmpty() && manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
-            if (EImportType.NO_VIRTUAL.name().equals(importType) && manageHotelDto.isVirtual()) {
+            if ((EImportType.NO_VIRTUAL.name().equals(importType) || EImportType.INNSIST.name().equals(importType)) && manageHotelDto.isVirtual()) {
                 errorFieldList.add(new ErrorField("Import type", "The hotel is virtual"));
                 return false;
             }

@@ -32,6 +32,8 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
     }
 
     private boolean validateDateFormat(BookingRow obj,List<ErrorField> errorFieldList){
+        //TODO Validar que el transaction date este en el rango del close operation
+
         if (Objects.isNull(obj.getTransactionDate()) || obj.getTransactionDate().isEmpty()){
             errorFieldList.add(new ErrorField("Transaction Date","Transaction Date can't be empty"));
             return false;
