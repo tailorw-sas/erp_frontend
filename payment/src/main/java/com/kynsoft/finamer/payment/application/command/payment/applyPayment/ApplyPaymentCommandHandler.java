@@ -103,6 +103,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         this.updatePayment = this.paymentService.findPaymentById(command.getPayment());
 
         List<ManageInvoiceDto> invoiceQueue = createInvoiceQueue(command);// Ordenar las Invoice
+        List<PaymentDetailDto> deposits = this.createPaymentDetailsTypeDepositQueue(command.getDeposits());
 
         double paymentBalance = this.updatePayment.getPaymentBalance();// PaymentBalance
         double notApplied = this.updatePayment.getNotApplied();// notApplied
@@ -128,16 +129,18 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                         || //Aqui aplica para cuando dentro del flujo se usa payment balance y deposit.
                         (command.isApplyDeposit() && !command.isApplyPaymentBalance() && amountBalance > 0 && depositBalance > 0)) {//TODO: este aplica para cuando se quiere aplicar solo a los deposit
                     if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
-                        List<PaymentDetailDto> deposits = this.createPaymentDetailsTypeDepositQueue(command.getDeposits());
+
                         for (PaymentDetailDto paymentDetailTypeDeposit : deposits) {
-                            double depositAmount = paymentDetailTypeDeposit.getApplyDepositValue();
+                            PaymentDetail parentDetail = this.detailTypeDeposits.stream().filter(detail -> detail.getId().equals(paymentDetailTypeDeposit.getId())).findFirst().get();
+                            //double depositAmount = paymentDetailTypeDeposit.getApplyDepositValue();
+                            double depositAmount = parentDetail.getApplyDepositValue();
                             if (depositAmount == 0) {
                                 continue;
                             }
                             while (depositAmount > 0) {
                                 double amountToApply = Math.min(depositAmount, amountBalance);// Debe de compararse con el amountBalance, porque puede venir de haber sido rebajado en el flujo anterior.
                                 //CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(this.updatePayment.toAggregate(), amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate(), false));// quite *-1
-                                this.applyPayment(command.getEmployee(), bookingDto, this.createDetailsTypeApplyDeposit(paymentDetailTypeDeposit, amountToApply));
+                                this.applyPayment(command.getEmployee(), bookingDto, this.createDetailsTypeApplyDeposit(parentDetail, amountToApply));
                                 //command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId(), command.getEmployee()));
                                 depositAmount = depositAmount - amountToApply;
                                 amountBalance = amountBalance - amountToApply;
@@ -173,11 +176,15 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      * @return
      */
     private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits) {
-        this.detailTypeDeposits = this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits);
-        List<PaymentDetailDto> queue = this.paymentDetailService.change(detailTypeDeposits);
+        try {
+            this.detailTypeDeposits = this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits);
+            List<PaymentDetailDto> queue = this.paymentDetailService.change(detailTypeDeposits);
 
-        Collections.sort(queue, Comparator.comparingDouble(m -> m.getApplyDepositValue()));
-        return queue;
+            Collections.sort(queue, Comparator.comparingDouble(m -> m.getApplyDepositValue()));
+            return queue;
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     /**
@@ -283,9 +290,9 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
-    public PaymentDetailDto createDetailsTypeApplyDeposit(PaymentDetailDto paymentDetailDto, double amount) {
+    public PaymentDetailDto createDetailsTypeApplyDeposit(PaymentDetail parentDetail, double amount) {
 
-        PaymentDetail parentDetail = this.detailTypeDeposits.stream().filter(detail -> detail.getId().equals(paymentDetailDto.getId())).findFirst().get();
+        //PaymentDetail parentDetail = this.detailTypeDeposits.stream().filter(detail -> detail.getId().equals(paymentDetailDto.getId())).findFirst().get();
         this.calculateApplyDeposit(amount);
         //TODO: Se debe de validar esta variable para que cumpla con el Close Operation
         OffsetDateTime transactionDate = OffsetDateTime.now(ZoneId.of("UTC"));
@@ -309,7 +316,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         updateChildrens.addAll(parentDetail.getChildren());
         updateChildrens.add(children);
         parentDetail.setChildren(updateChildrens);
-        parentDetail.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - amount);
+        parentDetail.setApplyDepositValue(parentDetail.getApplyDepositValue() - amount);
 
         //Actualizando el Deposit
         this.updatePaymentDetails(parentDetail);
