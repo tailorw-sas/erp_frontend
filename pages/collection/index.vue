@@ -2044,12 +2044,6 @@ onMounted(() => {
                               value: 'ACTIVE',
                               logicalOperation: 'AND',
                             },
-                            {
-                              key: 'autoReconcile',
-                              operator: 'EQUALS',
-                              value: true,
-                              logicalOperation: 'AND',
-                            },
                           ]
                           filterToSearch.agency = await getAgencyListForLoadAll(objApis.agency.moduleApi, objApis.agency.uriApi, {
                             query: '',
