@@ -117,11 +117,11 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     @Value("${payment.relate.invoice.status.code}")
     private String RELATE_INCOME_STATUS_CODE;
 
-    private List<PaymentDetail> details = new ArrayList<>();
-    private List<PaymentDetail> newDetails = new ArrayList<>();
-    private List<Payment> uniquePayments = new ArrayList<>();
-    private List<Booking> bookins = new ArrayList<>();
-    private String attachment = "";
+    private List<PaymentDetail> details;
+    private List<PaymentDetail> newDetails;
+    private List<Payment> uniquePayments;
+    private List<Booking> bookins;
+    private String attachment;
 
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentAntiValidatorFactory paymentAntiValidatorFactory,
@@ -146,6 +146,11 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
             ApplicationEventPublisher applicationEventPublisher) {
         super(redisTemplate);
+        this.details = new ArrayList<>();
+        this.newDetails = new ArrayList<>();
+        this.uniquePayments = new ArrayList<>();
+        this.bookins = new ArrayList<>();
+        this.attachment = "";
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentAntiValidatorFactory = paymentAntiValidatorFactory;
         this.paymentDetailService = paymentDetailService;
@@ -253,8 +258,12 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                 String finalAttachment = attachment;
                 cacheList.forEach(paymentImportCache -> {
                     Optional<PaymentDetail> foundDetail = details.stream().filter(detail -> detail.getPaymentDetailId().equals(Long.valueOf(paymentImportCache.getTransactionId()))).findFirst();
+                    double amount = Double.parseDouble(paymentImportCache.getPaymentAmount());
+                    if (foundDetail.get().getApplyDepositValue() - amount < 0) {
+                        return;
+                    }
                     String remark = paymentImportCache.getRemarks() == null ? transactionTypeDto.getDefaultRemark() : paymentImportCache.getRemarks();
-                    this.createDetailsAndIncome(employeeDto, transactionTypeDto, foundDetail.get(), Double.parseDouble(paymentImportCache.getPaymentAmount()), remark, attachment);
+                    this.createDetailsAndIncome(employeeDto, transactionTypeDto, foundDetail.get(), amount, remark, attachment);
                 });
                 pageable = pageable.next();
             } while (cacheList.hasNext());
@@ -275,10 +284,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             }
             System.err.println("Termina de crear los income: " + LocalTime.now());
             this.applyPayment(employeeDto, incomes, incoList);
-            this.newDetails.clear();
-            this.details.clear();
-            this.uniquePayments.clear();
-            this.bookins.clear();
         }
         System.err.println("Termina a leer la cache: " + LocalTime.now());
     }
