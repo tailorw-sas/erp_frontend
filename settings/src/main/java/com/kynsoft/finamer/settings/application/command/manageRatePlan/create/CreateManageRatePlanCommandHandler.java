@@ -30,9 +30,9 @@ public class CreateManageRatePlanCommandHandler implements ICommandHandler<Creat
 
     @Override
     public void handle(CreateManageRatePlanCommand command) {
-        //RulesChecker.checkRule(new ManageRatePlanCodeSizeRule(command.getCode()));
+        RulesChecker.checkRule(new ManageRatePlanCodeSizeRule(command.getCode()));
+        RulesChecker.checkRule(new ManageRatePlanCodeMustBeUniqueRule(this.service, command.getCode(), command.getId(), command.getHotel()));
         RulesChecker.checkRule(new ManageRatePlanNameMustBeNullRule(command.getName()));
-        //RulesChecker.checkRule(new ManageRatePlanCodeMustBeUniqueRule(this.service, command.getCode(), command.getId(), command.getHotel()));
 
         ManageHotelDto hotelDto = hotelService.findById(command.getHotel());
 
