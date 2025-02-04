@@ -57,7 +57,7 @@ public class DataSeeder implements ApplicationRunner {
         createExecutionDateTypes();
         createProcessingDateTypes();
 
-
+        createBusinessProcesses();
 
         createOnetimeFrequencyRules();
         createDailyFrequencyRules();
