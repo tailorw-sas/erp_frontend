@@ -42,6 +42,10 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  filter: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -84,7 +88,7 @@ watch(() => props.suggestions, (newSuggestions) => {
     :option-label="props.field"
     :placeholder="props.placeholder"
     :disabled="props.disabled"
-    :filter="true"
+    :filter="props.filter"
     :loading="props.loading"
     :max-selected-labels="props.maxSelectedLabels"
     @filter="debouncedComplete"
@@ -122,6 +126,11 @@ watch(() => props.suggestions, (newSuggestions) => {
 </template>
 
 <style>
+.custom-multiselect {
+  width: 100%;
+  max-height: 100%;
+}
+
 .custom-chip {
   display: inline-flex;
   align-items: center;

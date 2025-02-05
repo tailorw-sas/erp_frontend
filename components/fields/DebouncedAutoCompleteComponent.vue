@@ -140,5 +140,8 @@ function wait(ms: number) {
 }
 .p-autocomplete-multiple-container {
   width: 100%;
+  max-height: 30px;
+  display: flex;
+  flex-wrap: wrap;
 }
 </style>

@@ -2270,6 +2270,7 @@ const legend = ref(
                 </div>
               </div>
             </template>
+
             <div class="flex gap-4 flex-column lg:flex-row">
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
@@ -2277,15 +2278,15 @@ const legend = ref(
                   <label for="" class="font-bold">Agency:</label>
                 </div>
 
-                <div class="flex flex-column gap-2 ">
+                <div class="flex flex-column gap-2">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <div class="w-full" style=" z-index:5 ">
+                    <div class="w-full" style=" z-index:5; min-width: 200px;">
                       <DebouncedMultiSelectComponent
                         id="autocomplete"
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :max-selected-labels="3"
+                        :max-selected-labels="1"
                         :model="filterToSearch.client"
                         :suggestions="[...clientList]"
                         @change="async ($event) => {
@@ -2316,13 +2317,13 @@ const legend = ref(
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <div class="w-full lg:w-auto">
+                    <div class="w-full"">
                       <DebouncedMultiSelectComponent
                         id="autocomplete"
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :max-selected-labels="3"
+                        :max-selected-labels="1"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyList]"
                         @change="($event) => {
@@ -2370,7 +2371,7 @@ const legend = ref(
                   <label for="" class="font-bold">Status:</label>
                 </div>
 
-                <div class="flex flex-column gap-2 ">
+                <div class="flex flex-column gap-2 " >
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
                     <div class="w-full" style=" z-index:5">
                       <div class="flex gap-2 w-full">
@@ -2379,7 +2380,7 @@ const legend = ref(
                           class="w-full"
                           field="name"
                           item-value="id"
-                          :max-selected-labels="3"
+                          :max-selected-labels="1"
                           :model="filterToSearch.hotel"
                           :suggestions="[...hotelList]"
                           @change="($event) => {
@@ -2414,15 +2415,15 @@ const legend = ref(
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <div class="w-full lg:w-auto">
-                      <DebouncedAutoCompleteComponent
+                    <div class="w-full">
+                      <DebouncedMultiSelectComponent
                         id="autocomplete"
-                        class="w-full"
                         field="name"
                         item-value="id"
-                        :multiple="true"
+                        :max-selected-labels="3"
                         :model="filterToSearch.status"
                         :suggestions="[...statusList]"
+                        :filter="false"
                         @change="($event) => {
                           if (!filterToSearch.status.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.status = $event.filter((element: any) => element?.id === 'All')
@@ -2446,7 +2447,7 @@ const legend = ref(
                           }
                           await getStatusList(objApis.status.moduleApi, objApis.status.uriApi, objQueryToSearch, filter)
                         }"
-                      />
+                        />
                     </div>
                   </div>
                 </div>
@@ -2517,16 +2518,17 @@ const legend = ref(
                 </div>
 
                 <div class="flex flex-column gap-2 ">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <div class="w-full lg:w-auto" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
+                  <div class="flex align-items-center gap-2" style=" z-index:5;">
+                    <div class="w-full" style=" z-index:5;">
+                      <DebouncedMultiSelectComponent
                         id="autocomplete"
                         class="w-full"
                         field="name"
                         item-value="id"
-                        :multiple="true"
+                        :max-selected-labels="1"
                         :model="filterToSearch.invoiceType"
                         :suggestions="[...invoiceTypeList]"
+                        :filter="false"
                         @change="($event) => {
                           if (!filterToSearch.invoiceType.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.invoiceType = $event.filter((element: any) => element?.id === 'All')
