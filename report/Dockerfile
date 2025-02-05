@@ -1,5 +1,6 @@
 # Etapa de construcción: utiliza Maven para compilar la aplicación
-FROM maven:3.9.4-eclipse-temurin-17 AS builder
+#FROM maven:3.9.4-eclipse-temurin-17 AS builder
+FROM maven:3.9.4-eclipse-temurin-8 AS builder
 
 # Establece el directorio de trabajo
 WORKDIR /build
@@ -26,7 +27,8 @@ RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
 RUN mvn clean package -DskipTests -f ${POM_NAME}
 
 # Etapa final: imagen ligera de distroless
-FROM gcr.io/distroless/java17-debian11
+#FROM gcr.io/distroless/java17-debian11
+FROM gcr.io/distroless/java8-debian11
 
 # Establece la zona horaria
 ENV TZ="America/Guayaquil"
