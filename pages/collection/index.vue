@@ -2516,7 +2516,7 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
               <Column
-                :footer="`Total #: ${listItemsInvoice.length}`" :colspan="2"
+                :footer="`Total #: ${paginationInvoice.totalElements}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
