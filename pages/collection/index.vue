@@ -605,7 +605,7 @@ async function getList() {
       })
     }
 
-    const filterDepositAmount = payload.value.filter.find((item: IFilter) => item.key === 'depositAmount')
+    /* const filterDepositAmount = payload.value.filter.find((item: IFilter) => item.key === 'depositAmount')
     if (filterDepositAmount) {
       filterDepositAmount.value = 0
     }
@@ -616,7 +616,7 @@ async function getList() {
         value: 0,
         logicalOperation: 'AND',
       })
-    }
+    } */
 
     const filterStatusCanceled = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.cancelled')
     if (filterStatusCanceled) {
@@ -643,7 +643,6 @@ async function getList() {
         logicalOperation: 'AND',
       })
     }
-
     const filterDepositBalance = payload.value.filter.find((item: IFilter) => item.key === 'depositBalance' && item.type === 'filterTable')
     if (filterDepositBalance) {
       filterDepositBalance.value = 0
@@ -671,7 +670,6 @@ async function getList() {
         type: 'filterTable'
       })
     }
-
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
