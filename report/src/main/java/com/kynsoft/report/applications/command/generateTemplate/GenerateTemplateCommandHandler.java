@@ -96,7 +96,6 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 
             // Exportar el reporte a un stream en formato PDF
             JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
-            writeToFile(outputStream, "C:\\Users\\USER\\.m2\\repository\\net\\sf\\output.txt");
 
 //            // Verifica el tamaño del archivo generado
             if (outputStream.size() > getMaxFileSize()) {
