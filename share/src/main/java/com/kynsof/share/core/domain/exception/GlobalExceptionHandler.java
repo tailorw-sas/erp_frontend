@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -103,11 +104,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(apiError));
     }
 
-    @ExceptionHandler(javax.ws.rs.NotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleNotFoundException(javax.ws.rs.NotFoundException ex) {
-        ApiError apiError = new ApiError(ex.getMessage(), null); // Asume que tienes un constructor ApiError que acepte solo el mensaje de error.
-        ApiResponse<?> apiResponse = ApiResponse.fail(apiError);
-        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+//    @ExceptionHandler(javax.ws.rs.NotFoundException.class)
+//    public ResponseEntity<ApiResponse<?>> handleNotFoundException(javax.ws.rs.NotFoundException ex) {
+//        ApiError apiError = new ApiError(ex.getMessage(), null); // Asume que tienes un constructor ApiError que acepte solo el mensaje de error.
+//        ApiResponse<?> apiResponse = ApiResponse.fail(apiError);
+//        return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
+//    }
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<?>> handleNotFoundException(ResponseStatusException ex) {
+        ApiError apiError = new ApiError(ex.getReason(), null);
+        return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.fail(apiError));
     }
 
     @ExceptionHandler(NullPointerException.class)
