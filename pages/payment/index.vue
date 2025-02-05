@@ -3813,12 +3813,13 @@ onMounted(async () => {
                   <div class="flex align-items-center">
                     <label for="" class="mr-2 font-bold"> Agency:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete"
                         class="w-full h-2rem align-items-center"
                         field="name"
                         item-value="id"
+                        :max-selected-labels="3"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyItemsList]"
                         :loading="objLoading.loadingAgency"
