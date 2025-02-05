@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -131,6 +132,15 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 //PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
                 PaymentProjectionSimple paymentDto = paymentService.findPaymentIdCacheable(Long.parseLong(paymentImportCache.getPaymentId()));
                 BookingProjectionControlAmountBalance bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findSimpleBookingByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
+                if (bookingDto != null && bookingDto.getBookingAmountBalance() == 0) {
+                    PaymentProjection paymentProjection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());
+                    double rest = paymentProjection.getPaymentBalance() - Double.parseDouble(paymentImportCache.getPaymentAmount());
+                    if (rest >= 0) {
+                        DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), false, "");
+                        this.applicationEventPublisher.publishEvent(depositEvent);
+                    }
+                    return;
+                }
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     boolean applyPayment = true;
                     if (bookingDto == null) {
