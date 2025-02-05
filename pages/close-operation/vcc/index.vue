@@ -17,6 +17,7 @@ const selectedDate = ref<Date>()
 const loadingSearch = ref(false)
 const menu = ref() // Reference for the menu component
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+const resultTable = ref()
 const filterToSearch = ref<IData>({
   search: '',
   active: true,
@@ -51,7 +52,8 @@ const options = ref({
   loading: false,
   actionsAsMenu: false,
   messageToDelete: '',
-  selectionMode: 'multiple'
+  selectionMode: 'multiple',
+  showSelectedItems: true
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
@@ -83,6 +85,8 @@ async function getList() {
     return
   }
   try {
+    selectedElements.value = []
+    resultTable.value?.clearSelectedItems()
     options.value.loading = true
     listItems.value = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
@@ -394,6 +398,7 @@ onMounted(async () => {
         <Button v-tooltip.left="'Select date'" icon="pi pi-calendar" text rounded class="mr-1" @click="clearForm" />
       </div> -->
       <DynamicTable
+        ref="resultTable"
         :data="listItems"
         :columns="columns"
         :options="options"
