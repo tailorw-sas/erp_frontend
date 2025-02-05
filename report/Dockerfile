@@ -27,7 +27,7 @@ RUN mvn clean package -DskipTests -f ${POM_NAME}
 
 # Etapa final: imagen ligera de distroless
 #FROM gcr.io/distroless/java17-debian11
-FROM openjdk:17-slim-buster
+FROM container-registry.oracle.com/java/jdk:17
 
 # Establece la zona horaria
 ENV TZ="America/Guayaquil"
