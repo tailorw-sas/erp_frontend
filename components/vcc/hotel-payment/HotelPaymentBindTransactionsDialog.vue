@@ -41,9 +41,10 @@ const emit = defineEmits(['update:listItems', 'update:statusList'])
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const BindTransactionList = ref<any[]>([])
 const collectionStatusReconciledList = ref<any[]>([])
-const loadingSaveAll = ref(false)
 const dialogVisible = ref(props.openDialog)
 const selectedElements = ref<any[]>([])
+const totalAmountSelected = ref(0)
+const disabledConfirmButton = ref(true)
 
 const filterToSearch = ref<IData>({
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -114,11 +115,6 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0)
-  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
-})
-
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
 async function getCollectionStatusList() {
@@ -173,7 +169,7 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
@@ -232,22 +228,22 @@ async function handleSave() {
   props.closeDialog()
 }
 
-// Se deben solo tener en cuenta los elementos de la pagina actual contra los seleccionados globalmente.
-async function onMultipleSelect(data: any) {
-  // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
-  const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
-  const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
-
-  // Crear un nuevo array que contenga la selección global optimizada
-  // Actualizar selectedElements solo una vez
-  selectedElements.value = [
-    // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
-    ...selectedElements.value.filter((item: any) =>
-      currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
-    ),
-    // Agregar nuevos elementos seleccionados en la página actual
-    ...data.filter((item: any) => !selectedIds.has(item.id))
-  ]
+async function onSelectItem(event: any) {
+  selectedElements.value = event
+  if (selectedElements.value.length === 0) {
+    disabledConfirmButton.value = true
+    return totalAmountSelected.value = 0
+  }
+  totalAmountSelected.value = selectedElements.value.reduce((total, item) => {
+    // Verificamos si invoiceAmount es un número válido
+    if (typeof item.netAmount === 'number' && !Number.isNaN(item.netAmount)) {
+      return total + item.netAmount
+    }
+    else {
+      return total
+    }
+  }, 0) // 0 es el valor inicial
+  disabledConfirmButton.value = false
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -403,7 +399,7 @@ onMounted(async () => {
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @update:selected-items="onMultipleSelect($event)"
+      @update:selected-items="onSelectItem($event)"
     >
       <template #column-status="{ data, column }">
         <Badge
@@ -426,10 +422,10 @@ onMounted(async () => {
     </DynamicTable>
     <div class="flex justify-content-between align-items-center mt-3 card p-2 bg-surface-500">
       <div>
-        <Badge v-tooltip.top="'Total selected transactions amount'" :value="computedTransactionAmountSelected" class="mr-1" />
+        <Badge v-tooltip.top="'Total selected transactions amount'" :value="`Transaction Amount Selected: $${formatNumber(totalAmountSelected)}`" class="mr-1" />
       </div>
       <div>
-        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="options.loading" :disabled="BindTransactionList.length === 0" @click="handleSave()" />
+        <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-check" :loading="options.loading" :disabled="BindTransactionList.length === 0 || disabledConfirmButton" @click="handleSave()" />
         <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
       </div>
     </div>

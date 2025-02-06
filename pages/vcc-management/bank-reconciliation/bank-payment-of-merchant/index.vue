@@ -182,11 +182,6 @@ const paginatedData = computed(() => {
   return LocalBindTransactionList.value.slice(start, end)
 })
 
-const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0) : 0
-  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
-})
-
 const computedLocalBindTransactionList = computed(() => {
   return LocalBindTransactionList.value.filter((item: any) => !item.adjustment)
 })
@@ -201,25 +196,6 @@ async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
   if (!isCancel) {
     // guardar en memoria la transaccion de ajuste
   }
-}
-
-async function onMultipleSelect(data: any) {
-  // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
-  const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
-  const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
-
-  // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
-  const selectedPreviously = selectedElements.value.filter((item: any) =>
-    currentPageSelectedIds.has(item.id) || !paginatedData.value.some((pageItem: any) => pageItem.id === item.id)
-  )
-  // Agregar nuevos elementos seleccionados en la página actual
-  const newElements = data.filter((item: any) => !selectedIds.has(item.id))
-  // Crear un nuevo array que contenga la selección global optimizada
-  // Actualizar selectedElements solo una vez
-  selectedElements.value = [
-    ...selectedPreviously,
-    ...newElements
-  ]
 }
 
 function clearForm() {
@@ -682,10 +658,8 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       :options="options"
       :pagination="pagination"
       show-local-pagination
-      :selected-items="selectedElements"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @update:selected-items="onMultipleSelect($event)"
       @on-row-right-click="onRowRightClick"
       @on-row-double-click="onDoubleClick($event)"
     >
