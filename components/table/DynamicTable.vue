@@ -576,13 +576,7 @@ watch(() => props.data, async (newValue) => {
     clickedItem.value = [...removeDuplicatesMap(clickedItem.value, ['id'])]
   }
   else {
-    if (newValue.length > 0 && props.options?.selectionMode === 'multiple' && props.selectedItems && props.selectedItems.length > 0) {
-      // Filtra los elementos de newValue que están en selectedItems comparando por id
-      clickedItem.value = newValue.filter((item: any) =>
-        props.selectedItems?.some(selected => selected.id === item.id)
-      )
-    }
-    else if ('selectFirstItemByDefault' in props.options) {
+    if ('selectFirstItemByDefault' in props.options) {
       if (props.options?.selectFirstItemByDefault) {
         if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
           clickedItem.value = props.data[0]
@@ -593,10 +587,6 @@ watch(() => props.data, async (newValue) => {
     //   clickedItem.value = props.data[0]
     // }
   }
-})
-
-watch(() => props.selectedItems, async (newValue) => {
-  clickedItem.value = newValue
 })
 
 watch(clickedItem, async (newValue) => {
@@ -614,6 +604,9 @@ onMounted(() => {
         clickedItem.value = props.data[0]
       }
     }
+  }
+  if (props.selectedItems) {
+    clickedItem.value = props.selectedItems
   }
 })
 
