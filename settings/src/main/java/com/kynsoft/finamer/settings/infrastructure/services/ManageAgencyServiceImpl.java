@@ -7,6 +7,8 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.settings.application.query.manageAgency.search.ManageAgencyListResponse;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageAgencyResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
@@ -15,6 +17,7 @@ import com.kynsoft.finamer.settings.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageAgencyWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageAgencyReadDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CachePut;
@@ -38,9 +41,14 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     private final ManageAgencyWriteDataJPARepository repositoryCommand;
     private final ManageAgencyReadDataJPARepository repositoryQuery;
 
-    public ManageAgencyServiceImpl(ManageAgencyWriteDataJPARepository repositoryCommand, ManageAgencyReadDataJPARepository repositoryQuery) {
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
+    public ManageAgencyServiceImpl(ManageAgencyWriteDataJPARepository repositoryCommand, 
+                                   ManageAgencyReadDataJPARepository repositoryQuery,
+                                   ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -89,8 +97,8 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
 //    @Cacheable(cacheNames = "manageAgencyAll", unless = "#result == null")
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteria(filterCriteria, employeeId);
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageAgency> data = repositoryQuery.findAll(specifications, pageable);
         return getPaginatedResponse(data);
@@ -111,7 +119,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
         return this.repositoryQuery.countByDefaultAndNotId(id);
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+    private void filterCriteria(List<FilterCriteria> filterCriteria, UUID employeeId) {
         for (FilterCriteria filter : filterCriteria) {
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
                 try {
@@ -122,6 +130,15 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
                 }
             }
         }
+        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
+        System.err.println("Agencias: " + agencyIds.size());
+        //agencyIds.add(UUID.fromString("0ebacd4c-40b3-4cae-8f49-02a25207d3ee"));
+        FilterCriteria fc = new FilterCriteria();
+        fc.setKey("id");
+        fc.setLogicalOperation(LogicalOperation.AND);
+        fc.setOperator(SearchOperation.IN);
+        fc.setValue(agencyIds);
+        filterCriteria.add(fc);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageAgency> data) {
