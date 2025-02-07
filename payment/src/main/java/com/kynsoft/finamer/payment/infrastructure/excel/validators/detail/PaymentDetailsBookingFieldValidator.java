@@ -40,11 +40,11 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
         if (!Objects.isNull(obj.getBookId())) {
             try {
                 try {
-                    ManageBookingDto bookingDto = this.getBookingDto(Long.valueOf(obj.getBookId()));
-                    if (bookingDto.getAmountBalance() == 0) {
-                        errorFieldList.add(new ErrorField("bookingId", "The value of the booking balance is zero."));
-                        return false;
-                    }
+//                    ManageBookingDto bookingDto = this.getBookingDto(Long.valueOf(obj.getBookId()));
+//                    if (bookingDto.getAmountBalance() == 0) {
+//                        errorFieldList.add(new ErrorField("bookingId", "The value of the booking balance is zero."));
+//                        return false;
+//                    }
                 } catch (Exception e) {
                     errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
                     return false;
