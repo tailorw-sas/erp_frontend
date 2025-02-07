@@ -172,7 +172,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                 } else {
                                     //todo: implementar el caso de que existe el booking
                                     //mismo flujo de cuando existe el booking por el id, en este caso el que se encuentra por el coupon
-                                    if (bookingDto.getBookingAmountBalance() == 0) {
+                                    if (bookingProjection.getBookingAmountBalance() == 0) {
                                         sendToDeposit(paymentImportCache, paymentDto);
                                         return;
                                     }
