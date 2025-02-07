@@ -2049,7 +2049,12 @@ onMounted(() => {
                             query: '',
                             keys: ['name', 'code'],
                           }, filter)
-                          const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0);
+                          const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
+                            const credit = Number(item.creditDay)
+                            return isNaN(credit) ? 0 : credit
+                          }))
+
+                          // const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0); // Sumar los días de crédito
                           filterToSearch.creditDays = totalCreditDays
                           if (filterToSearch.agency?.length > 0) {
                             getListContactByAgency(filterToSearch.agency.map((item: any) => item.id))
@@ -2145,7 +2150,11 @@ onMounted(() => {
                         placeholder=""
                         @change="($event) => {
                           filterToSearch.agency = $event;
-                          const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0);
+                          // const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0); // total credit days
+                          const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
+                            const credit = Number(item.creditDay)
+                            return isNaN(credit) ? 0 : credit
+                          }))
                           filterToSearch.creditDays = totalCreditDays
                           filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
                           filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
