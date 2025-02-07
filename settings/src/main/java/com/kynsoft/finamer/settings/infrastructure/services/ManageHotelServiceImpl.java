@@ -130,12 +130,12 @@ public class ManageHotelServiceImpl implements IManageHotelService {
                 }
             }
         }
-        List<UUID> agencyIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        List<UUID> ids = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
         FilterCriteria fc = new FilterCriteria();
         fc.setKey("id");
         fc.setLogicalOperation(LogicalOperation.AND);
         fc.setOperator(SearchOperation.IN);
-        fc.setValue(agencyIds);
+        fc.setValue(ids);
         filterCriteria.add(fc);
     }
 

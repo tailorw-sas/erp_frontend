@@ -61,7 +61,8 @@ public class ManageTradingCompaniesController {
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchManageTradingCompaniesQuery query = new GetSearchManageTradingCompaniesQuery(pageable, request.getFilter(), request.getQuery());
+        UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchManageTradingCompaniesQuery query = new GetSearchManageTradingCompaniesQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);

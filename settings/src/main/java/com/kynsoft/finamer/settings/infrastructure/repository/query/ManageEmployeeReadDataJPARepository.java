@@ -28,4 +28,7 @@ public interface ManageEmployeeReadDataJPARepository extends JpaRepository<Manag
 
     @Query("SELECT hotel.id FROM ManageEmployee e JOIN e.manageHotelList hotel WHERE e.id = :employeeId")
     List<UUID> findHotelsIdsByEmployeeId(@Param("employeeId") UUID employeeId);
+
+    @Query("SELECT tCompany.id FROM ManageEmployee e JOIN e.manageTradingCompaniesList tCompany WHERE e.id = :employeeId")
+    List<UUID> findManageTradingCompaniesIdsByEmployeeId(@Param("employeeId") UUID employeeId);
 }
