@@ -31,7 +31,6 @@ public class AppConfig {
         // Asegura que el convertidor puede manejar diferentes tipos de Content-Type que son variaciones de JSON
         List<MediaType> mediaTypes = new ArrayList<>(jsonConverter.getSupportedMediaTypes());
         mediaTypes.add(MediaType.APPLICATION_JSON);
-        mediaTypes.add(MediaType.APPLICATION_JSON_UTF8);
         mediaTypes.add(new MediaType("application", "*+json", StandardCharsets.UTF_8));
         jsonConverter.setSupportedMediaTypes(mediaTypes);
 
