@@ -6,7 +6,10 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class InvoiceUtils {
 
@@ -93,6 +96,20 @@ public class InvoiceUtils {
             }
         }
         return 120;
+    }
+
+    public static String removeBlankSpaces(String text) {
+        return text.replaceAll("\\s+", " ").trim();
+    }
+
+    public static <T> boolean hasDuplicates(List<T> list) {
+        Set<T> set = new HashSet<>();
+        for (T item : list) {
+            if (!set.add(item)) {
+                return true; // Se encontró un duplicado
+            }
+        }
+        return false;
     }
 
 }
