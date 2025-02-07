@@ -851,19 +851,19 @@ async function getListInvoice() {
 
     // Filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
 
-    // const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
-    // if (objFilterByInvoiceType) {
-    //   objFilterByInvoiceType.value = true
-    // }
-    // else {
-    //   payloadInv.value.filter.push({
-    //     key: 'manageInvoiceType.enabledToPolicy',
-    //     operator: 'EQUALS',
-    //     value: true,
-    //     logicalOperation: 'AND',
-    //     type: 'filterSearch'
-    //   })
-    // }
+    const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
+    if (objFilterByInvoiceType) {
+      objFilterByInvoiceType.value = true
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'manageInvoiceType.enabledToPolicy',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
     // Aqui termina el filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
 
     // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
