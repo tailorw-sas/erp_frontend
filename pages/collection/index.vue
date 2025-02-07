@@ -415,6 +415,7 @@ const options = ref({
   loading: false,
   // selectionMode: 'single' as 'multiple' | 'single',
   scrollHeight: '70vh',
+  showPagination: false,
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
@@ -427,6 +428,7 @@ const optionsInv = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   showEdit: false,
   showAcctions: false,
   scrollHeight: '70vh',
@@ -460,7 +462,7 @@ const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -468,7 +470,7 @@ const payload = ref<IQueryRequest>({
 const payloadInv = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
