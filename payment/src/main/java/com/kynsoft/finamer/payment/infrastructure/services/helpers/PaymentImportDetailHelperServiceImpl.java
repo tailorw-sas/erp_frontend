@@ -133,12 +133,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 PaymentProjectionSimple paymentDto = paymentService.findPaymentIdCacheable(Long.parseLong(paymentImportCache.getPaymentId()));
                 BookingProjectionControlAmountBalance bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findSimpleBookingByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
                 if (bookingDto != null && bookingDto.getBookingAmountBalance() == 0) {
-                    PaymentProjection paymentProjection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());
-                    double rest = paymentProjection.getPaymentBalance() - Double.parseDouble(paymentImportCache.getPaymentAmount());
-                    if (rest >= 0) {
-                        DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), false, "");
-                        this.applicationEventPublisher.publishEvent(depositEvent);
-                    }
+                    sendToDeposit(paymentImportCache, paymentDto);
                     return;
                 }
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
@@ -177,6 +172,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                 } else {
                                     //todo: implementar el caso de que existe el booking
                                     //mismo flujo de cuando existe el booking por el id, en este caso el que se encuentra por el coupon
+                                    if (bookingDto.getBookingAmountBalance() == 0) {
+                                        sendToDeposit(paymentImportCache, paymentDto);
+                                        return;
+                                    }
                                     createDetailAndDeposit(paymentImportCache, bookingProjection, managePaymentTransactionTypeDto, paymentDto, request, true, Double.parseDouble(paymentImportCache.getPaymentAmount()), getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
                                 }
                             }
@@ -191,6 +190,16 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             pageable = pageable.next();
         } while (cacheList.hasNext());
         this.clearCache();
+    }
+
+    private void sendToDeposit(PaymentImportCache paymentImportCache, PaymentProjectionSimple paymentDto) {
+        PaymentProjection paymentProjection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());
+        double rest = paymentProjection.getPaymentBalance() - Double.parseDouble(paymentImportCache.getPaymentAmount());
+        if (rest >= 0) {
+            DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), false, "");
+            this.applicationEventPublisher.publishEvent(depositEvent);
+        }
+        return;
     }
 
     private void createDetailAndDeposit(PaymentImportCache paymentImportCache, BookingProjectionControlAmountBalance bookingDto, ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto, PaymentProjectionSimple paymentDto, PaymentImportDetailRequest request, boolean applyPayment, double amount, String remarks) {
