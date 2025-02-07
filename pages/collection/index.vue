@@ -1702,7 +1702,7 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+  if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -1715,7 +1715,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
+    if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = false
@@ -1724,10 +1724,10 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = false
@@ -1736,19 +1736,19 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === true) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === true) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
   }
