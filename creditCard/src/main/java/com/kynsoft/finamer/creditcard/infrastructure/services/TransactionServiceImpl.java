@@ -52,7 +52,11 @@ public class TransactionServiceImpl implements ITransactionService {
     public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
                                   TransactionReadDataJPARepository repositoryQuery,
                                   MailService mailService,
-                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService, IMerchantLanguageCodeService merchantLanguageCodeService) {
+                                  TemplateEntityServiceImpl templateEntityService,
+                                  IManageTransactionStatusService transactionStatusService,
+                                  ITransactionStatusHistoryService transactionStatusHistoryService,
+                                  IParameterizationService parameterizationService,
+                                  IMerchantLanguageCodeService merchantLanguageCodeService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.mailService = mailService;
@@ -87,7 +91,8 @@ public class TransactionServiceImpl implements ITransactionService {
             });
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
+                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
 
@@ -97,7 +102,8 @@ public class TransactionServiceImpl implements ITransactionService {
         if (entity.isPresent()) {
             return entity.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
     @Override
     public TransactionDto findByUuid(UUID uuid) {
@@ -105,7 +111,8 @@ public class TransactionServiceImpl implements ITransactionService {
         if (entity.isPresent()) {
             return entity.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
@@ -126,14 +133,6 @@ public class TransactionServiceImpl implements ITransactionService {
         double commission = 0.0;
         double netAmount = 0.0;
 
-        // Se comenta iteracion sobre lista de transactions ya que no se va a usar por ahora el total global
-        /*for (Transaction transaction : repositoryQuery.findAll(specifications)) {
-            if (transaction.getAmount() != null) {
-                totalAmount += transaction.getAmount();
-                commission += transaction.getCommission();
-                netAmount += transaction.getNetAmount();
-            }
-        }*/
         ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
         //si no encuentra la parametrization que agarre 2 decimales por defecto
@@ -171,7 +170,8 @@ public class TransactionServiceImpl implements ITransactionService {
             Optional<Double> sumOfChildrenAmount = this.repositoryQuery.findSumOfAmountByParentId(parentId);
             return (sumOfChildrenAmount.orElse(0.0) + amount) > parentAmount;
         } else {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND,
+                    new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
         }
     }
 
@@ -192,15 +192,6 @@ public class TransactionServiceImpl implements ITransactionService {
                 }
             }
         }
-    }
-
-    private PaginatedResponse getPaginatedResponse(Page<Transaction> data) {
-        List<TransactionResponse> responseList = new ArrayList<>();
-        for (Transaction entity : data.getContent()) {
-            responseList.add(new TransactionResponse(entity.toAggregate()));
-        }
-        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
-                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private PaginatedResponse getPaginatedSearchResponse(Page<Transaction> data) {
