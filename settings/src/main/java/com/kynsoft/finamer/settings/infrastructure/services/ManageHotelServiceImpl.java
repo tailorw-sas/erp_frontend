@@ -7,6 +7,8 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.settings.application.query.manageHotel.search.ManageHotelSearchResponse;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageHotelResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
@@ -14,6 +16,7 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageHotelService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageHotel;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageHotelWriteDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageHotelReadDataJPARepository;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CachePut;
@@ -34,9 +37,14 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     private final ManageHotelWriteDataJPARepository repositoryCommand;
     private final ManageHotelReadDataJPARepository repositoryQuery;
 
-    public ManageHotelServiceImpl(ManageHotelWriteDataJPARepository repositoryCommand, ManageHotelReadDataJPARepository repositoryQuery) {
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
+    public ManageHotelServiceImpl(ManageHotelWriteDataJPARepository repositoryCommand, 
+                                  ManageHotelReadDataJPARepository repositoryQuery,
+                                  ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -80,8 +88,8 @@ public class ManageHotelServiceImpl implements IManageHotelService {
 
     @Override
 //    @Cacheable(cacheNames = "manageHotelAll", unless = "#result == null")
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteria(filterCriteria, employeeId);
         GenericSpecificationsBuilder<ManageHotel> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageHotel> data = repositoryQuery.findAll(specifications, pageable);
         return getPaginatedResponse(data);
@@ -111,7 +119,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
         return objectDtos;
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+    private void filterCriteria(List<FilterCriteria> filterCriteria, UUID employeeId) {
         for (FilterCriteria filter : filterCriteria) {
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
                 try {
@@ -122,6 +130,13 @@ public class ManageHotelServiceImpl implements IManageHotelService {
                 }
             }
         }
+        List<UUID> ids = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fc = new FilterCriteria();
+        fc.setKey("id");
+        fc.setLogicalOperation(LogicalOperation.AND);
+        fc.setOperator(SearchOperation.IN);
+        fc.setValue(ids);
+        filterCriteria.add(fc);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageHotel> data) {

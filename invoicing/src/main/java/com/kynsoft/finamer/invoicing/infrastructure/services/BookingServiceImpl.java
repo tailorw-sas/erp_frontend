@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
@@ -112,6 +113,16 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
                         bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
+                        this.clearCache();
+                    } catch (BusinessException e) {
+                        System.err.println("Error: " + e.getLocalizedMessage());
+                        BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
+                                .hasError(true)
+                                .exceptionMessage(e.getDetails())
+                                .status(EProcessStatus.FINISHED)
+                                .total(0)
+                                .build();
+                        applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
                         this.clearCache();
                     } catch (Exception e) {
                         System.err.println("Error: " + e.getLocalizedMessage());
