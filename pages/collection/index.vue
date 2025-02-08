@@ -415,6 +415,7 @@ const options = ref({
   loading: false,
   // selectionMode: 'single' as 'multiple' | 'single',
   scrollHeight: '70vh',
+  showPagination: false,
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
@@ -427,6 +428,7 @@ const optionsInv = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   showEdit: false,
   showAcctions: false,
   scrollHeight: '70vh',
@@ -460,7 +462,7 @@ const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -468,7 +470,7 @@ const payload = ref<IQueryRequest>({
 const payloadInv = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -849,19 +851,19 @@ async function getListInvoice() {
 
     // Filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
 
-    // const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
-    // if (objFilterByInvoiceType) {
-    //   objFilterByInvoiceType.value = true
-    // }
-    // else {
-    //   payloadInv.value.filter.push({
-    //     key: 'manageInvoiceType.enabledToPolicy',
-    //     operator: 'EQUALS',
-    //     value: true,
-    //     logicalOperation: 'AND',
-    //     type: 'filterSearch'
-    //   })
-    // }
+    const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
+    if (objFilterByInvoiceType) {
+      objFilterByInvoiceType.value = true
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'manageInvoiceType.enabledToPolicy',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
     // Aqui termina el filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
 
     // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
@@ -1700,7 +1702,7 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+  if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -1713,7 +1715,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
+    if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = false
@@ -1722,10 +1724,10 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = false
@@ -1734,19 +1736,19 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === true) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === true) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
   }
@@ -2047,7 +2049,12 @@ onMounted(() => {
                             query: '',
                             keys: ['name', 'code'],
                           }, filter)
-                          const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0);
+                          const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
+                            const credit = Number(item.creditDay)
+                            return isNaN(credit) ? 0 : credit
+                          }))
+
+                          // const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0); // Sumar los días de crédito
                           filterToSearch.creditDays = totalCreditDays
                           if (filterToSearch.agency?.length > 0) {
                             getListContactByAgency(filterToSearch.agency.map((item: any) => item.id))
@@ -2143,7 +2150,11 @@ onMounted(() => {
                         placeholder=""
                         @change="($event) => {
                           filterToSearch.agency = $event;
-                          const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0);
+                          // const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0); // total credit days
+                          const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
+                            const credit = Number(item.creditDay)
+                            return isNaN(credit) ? 0 : credit
+                          }))
                           filterToSearch.creditDays = totalCreditDays
                           filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
                           filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
