@@ -11,14 +11,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class GroupedRatesKafka implements Serializable {
-    private UUID logId;
-    private UUID processId;
-    private String invoiceDate;
-    private String hotelCode;
+public class BookingKafka implements Serializable {
     private String reservationCode;
     private String couponNumber;
     private List<ManageRateKafka> rateKafkaList;
-    private boolean isFirstGroup;
-    private boolean isLastGroup;
 }
