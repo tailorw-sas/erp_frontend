@@ -26,7 +26,9 @@ public class ConsumerReplicateManageEmployeeService {
                     objKafka.getFirstName(), 
                     objKafka.getLastName(), 
                     objKafka.getEmail(), 
-                    objKafka.getPhoneExtension()
+                    objKafka.getPhoneExtension(),
+                    objKafka.getManageAgencyList(),
+                    objKafka.getManageHotelList()
             );
             mediator.send(command);
         } catch (Exception ex) {
