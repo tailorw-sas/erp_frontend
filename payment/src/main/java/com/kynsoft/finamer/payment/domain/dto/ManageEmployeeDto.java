@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.domain.dto;
 
 import java.io.Serializable;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,6 @@ public class ManageEmployeeDto implements Serializable {
     private String firstName;
     private String lastName;;
     private String email;
+    private List<ManageAgencyDto> manageAgencyList;
+    private List<ManageHotelDto> manageHotelList;
 }
