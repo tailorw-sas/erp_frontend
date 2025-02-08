@@ -58,4 +58,6 @@ public interface IPaymentService {
     Long countByAgencyOther(UUID agencyId);
 
     Long findMaxId();
+
+    PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria);
 }
