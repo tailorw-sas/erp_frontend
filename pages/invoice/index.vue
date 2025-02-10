@@ -125,6 +125,7 @@ const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
+const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 3, client: 3, hotel: 3})
 
 const confclientListApi = reactive({
   moduleApi: 'settings',
@@ -1475,6 +1476,16 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
+function mapFunction2(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: data.name,
+    status: data.status,
+    code: data.code,
+    description: data.description
+  }
+}
+
 interface DataListItemForStatus {
   id: string
   name: string
@@ -1528,14 +1539,14 @@ function mapFunctionForType(data: DataListItem): ListItem {
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
   clientList.value = []
-  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   clientTemp = [...new Set(clientTemp)];
   clientList.value = [...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyList.value = []
-  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   agencyTemp = [...new Set(agencyTemp)];
   agencyList.value = [...agencyTemp]
 }
@@ -2285,7 +2296,7 @@ const legend = ref(
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :max-selected-labels="3"
+                        :max-selected-labels="maxSelectedLabels.client"
                         :model="filterToSearch.client"
                         :suggestions="[...clientList]"
                         @change="async ($event) => {
@@ -2312,7 +2323,21 @@ const legend = ref(
                           }]
                           await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
                         }"
-                      />
+                      >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.client)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels.client" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels.client}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -2322,7 +2347,7 @@ const legend = ref(
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :max-selected-labels="3"
+                        :max-selected-labels="maxSelectedLabels.agency"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyList]"
                         @change="($event) => {
@@ -2358,7 +2383,21 @@ const legend = ref(
                             keys: ['name', 'code'],
                           }, filter)
                         }"
-                      />
+                      >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.agency)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels.agency" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels.agency}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                     </div>
                   </div>
                 </div>
@@ -2405,7 +2444,21 @@ const legend = ref(
                             }
                             await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
                           }"
-                        />
+                        >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.hotel)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels.hotel" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels.hotel}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">
                           <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel"
                             field as required</span>
