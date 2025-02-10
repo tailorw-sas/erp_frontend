@@ -124,7 +124,7 @@ public class DataSeeder implements ApplicationRunner {
     }
 
     public void createBusinessProcesses(){
-        createBusinesProcessIfNotExists(new BusinessProcessDto(UUID.fromString("8cf67fd5-dc3f-412f-8960-653ca955e2a0"), "TCA-RR", "TCA-ROOM-RATE-REPLICATE", "Proceso de replicacion de room rates de TCA a Innsist", Status.ACTIVE, null, null));
+        createBusinesProcessIfNotExists(new BusinessProcessDto(UUID.fromString("edaa4bac-f7e9-4e7e-95dc-08b0849bb395"), "TCA-RR", "TCA-ROOM-RATE-REPLICATE", "Proceso de replicacion de room rates de TCA a Innsist", Status.ACTIVE, null, null));
     }
 
     public void createOnetimeFrequencyRules(){
