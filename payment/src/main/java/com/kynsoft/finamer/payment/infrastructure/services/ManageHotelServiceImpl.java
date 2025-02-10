@@ -67,6 +67,11 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
+    public List<ManageHotelDto> findByIds(List<UUID> ids) {
+        return repositoryQuery.findAllById(ids).stream().map(ManageHotel::toAggregate).toList();
+    }
+
+    @Override
     public ManageHotelDto findById(UUID id) {
         Optional<ManageHotel> optionalEntity = repositoryQuery.findById(id);
 

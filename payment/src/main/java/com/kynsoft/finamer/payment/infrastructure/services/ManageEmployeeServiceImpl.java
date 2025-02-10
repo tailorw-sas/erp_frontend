@@ -98,4 +98,9 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
+    @Override
+    public List<UUID> findAgencyIdsByEmployeeId(UUID employeeId) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
 }
