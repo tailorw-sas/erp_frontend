@@ -120,10 +120,16 @@ type FilterDisplayMode = 'row' | 'menu' | undefined
 const modeFilterDisplay: Ref<FilterDisplayMode> = ref('menu')
 const menuFilter: { [key: string]: Ref<any> } = {}
 const menuFilterForRowDisplay: Ref = ref()
+const objeto: { [key: string]: any } = {}
+// Asignar el objeto a objListData y hacerlo reactivo
+const objListData = reactive(objeto)
 
 // Iteramos sobre el array de campos y añadimos las propiedades a menuFilter
 props.columns.forEach((field) => {
   menuFilter[field.field] = ref(null)
+  // if (field.type === 'select' || field.type === 'slot-select' || field.type === 'local-select') {
+  //   objListData[field.field] = []
+  // }
 })
 
 const openDialogDelete = ref(false)
@@ -133,12 +139,10 @@ const expandedRows = ref({})
 const metaKey = ref(false)
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
-const objeto: { [key: string]: any } = {}
 const objetoFilter: { [key: string]: any } = {
   search: { value: null, matchMode: FilterMatchMode.CONTAINS },
 }
-// Asignar el objeto a objListData y hacerlo reactivo
-const objListData = reactive(objeto)
+
 const objForLoadings = ref<{ [key: string]: any }>({})
 const objForValues = ref<Record<string, Array<{ [key: string]: any }>>>({})
 
@@ -362,7 +366,7 @@ async function getList(
         }
         else {
           for (const iterator of response.data) {
-            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name, code: iterator.code ? iterator.code : '' }]
           }
         }
       }
@@ -483,7 +487,14 @@ async function getDataFromSelectors() {
           iterator.objApi?.mapFunction,
           iterator.objApi?.sortOption
         )
-        objListData[iterator.field] = response
+        objListData[iterator.field] = []
+        for (const item of response) {
+          objListData[iterator.field] = [
+            ...objListData[iterator.field],
+            { ...item }
+            // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
+          ]
+        }
       }
     }
   }
@@ -507,7 +518,15 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
       column.objApi?.sortOption,
       objToSearch
     )
-    objListData[column.field] = response
+    objListData[column.field] = []
+    for (const item of response) {
+      objListData[column.field] = [
+        ...objListData[column.field],
+        { ...item }
+        // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
+      ]
+    }
+
     objForLoadings.value[column.field] = false
   }
   catch (error) {
@@ -896,7 +915,24 @@ defineExpose({ clearSelectedItems })
                   }
                   await getDataFromFiltersSelectors(column, objQueryToSearch)
                 }"
-              />
+              >
+                <template #custom-value="props">
+                  <span v-for="(item, index) in (props.value || []).slice(0, 2)" :key="index" class="custom-chip">
+                    <span v-if="'code' in item && 'name' in item" class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }} - {{ item.name }}</span>
+                    <span v-else class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.name }}</span>
+
+                    <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                  </span>
+                  <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                  <span v-if="props.value && props.value.length > 2" class="custom-chip">
+                    <span>{{ `+${props.value.length - 2}` }}</span>
+                  </span>
+                </template>
+                <template #option="props">
+                  <span v-if="'code' in props.item && 'name' in props.item">{{ props.item.code }} - {{ props.item.name }}</span>
+                  <span v-else>{{ props.item.name }}</span>
+                </template>
+              </DebouncedMultiSelectComponent>
               <!-- No Eliminar -->
               <!-- <MultiSelect
                 v-model="filterModel.value"
