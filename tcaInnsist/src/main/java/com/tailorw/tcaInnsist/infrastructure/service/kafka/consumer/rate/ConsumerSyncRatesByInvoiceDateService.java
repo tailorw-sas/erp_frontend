@@ -31,7 +31,8 @@ public class ConsumerSyncRatesByInvoiceDateService {
     @KafkaListener(topics = "finamer-sync-rates-by-date", groupId = "tcaInnsist-replicate-entity")
     public void listen(String message){
         try{
-            logInfo(String.format("Ingreso a ConsumerSyncRatesByInvoiceDateService. Data: %s", message));
+            logInfo(String.format("**************************************************************", message));
+            logInfo(String.format("Sync Rate Process start. Data: %s", message));
             ObjectMapper mapper = new ObjectMapper();
             SyncRatesByInvoiceDateKafka objKafka = mapper.readValue(message, new TypeReference<SyncRatesByInvoiceDateKafka>() {});
 
@@ -41,23 +42,6 @@ public class ConsumerSyncRatesByInvoiceDateService {
                     LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER)
             );
             mediator.send(command);
-
-            /*
-            int count = 1;
-            for(String hotel : objKafka.getHotels()){
-                logInfo(String.format("Rates By InvoiceDate Sync start. Hotel: %s", hotel));
-
-                SycnRateByInvoiceDateCommand command = new SycnRateByInvoiceDateCommand(
-                        objKafka.getProcessId(),
-                        hotel,
-                        LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER),
-                        count == 1,
-                        objKafka.getHotels().size() == count
-                );
-                mediator.send(command);
-                count++;
-            }*/
-
         }catch (Exception ex){
             Logger.getLogger(ConsumerSyncRatesByInvoiceDateService.class.getName()).log(Level.SEVERE, null, ex);
         }

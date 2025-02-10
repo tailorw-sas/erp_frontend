@@ -172,6 +172,7 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
             rates = convertResultSetToRates(resultSet);
         } catch (Exception ex) {
             Logger.getLogger(RateRepository.class.getName()).log(Level.WARNING, null, ex);
+            throw new RuntimeException(ex.getMessage());
         }
 
         return rates;
