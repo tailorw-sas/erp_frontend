@@ -30,6 +30,7 @@ import com.kynsoft.finamer.payment.application.query.payment.excelExporter.Searc
 import com.kynsoft.finamer.payment.application.query.payment.getByGenCodeProjection.FindPaymentByGenProjectionQuery;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
+import com.kynsoft.finamer.payment.application.query.payment.searchCollection.GetSearchPaymentCollectionsQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -133,6 +134,15 @@ public class PaymentController {
         Pageable pageable = PageableUtil.createPageable(request);
 
         GetSearchPaymentQuery query = new GetSearchPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/search-collectios")
+    public ResponseEntity<?> searchCollections(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchPaymentCollectionsQuery query = new GetSearchPaymentCollectionsQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
