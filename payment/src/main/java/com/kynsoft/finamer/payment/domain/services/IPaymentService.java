@@ -43,7 +43,7 @@ public interface IPaymentService {
 
     void clearCache();
 
-    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
 
     Page<PaymentDto> paymentCollectionSummary(Pageable pageable, List<FilterCriteria> filterCriteria);
 

@@ -27,6 +27,6 @@ public class ManageEmployeeResponse  implements IResponse, Serializable {
     private String userType;
 
     public ManageEmployeeDto createObject() {
-        return new ManageEmployeeDto(id, firstName, lastName, email);
+        return new ManageEmployeeDto(id, firstName, lastName, email, null, null);
     }
 }

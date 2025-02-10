@@ -24,7 +24,7 @@ public interface ITransactionService {
 
     TransactionDto findById(Long id);
 
-    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
 
     /*PaginatedResponse searchData(Pageable pageable, List<FilterCriteria> filterCriteria);*/
 

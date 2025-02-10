@@ -20,6 +20,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.PaymentWriteDataJPARepository;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.PaymentReadDataJPARepository;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.*;
@@ -53,6 +54,9 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Autowired
     private IMasterPaymentAttachmentService masterPaymentAttachmentService;
+
+    @Autowired
+    private ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     @Override
     public PaymentDto create(PaymentDto dto) {
@@ -141,8 +145,8 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteriaForEmployee(filterCriteria, employeeId);
 
         GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         //  Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
@@ -219,6 +223,35 @@ public class PaymentServiceImpl implements IPaymentService {
                 }
             }
         }
+    }
+
+    private void filterCriteriaForEmployee(List<FilterCriteria> filterCriteria, UUID employeeId) {
+        for (FilterCriteria filter : filterCriteria) {
+            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
+                try {
+                    Status enumValue = Status.valueOf((String) filter.getValue());
+                    filter.setValue(enumValue);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                }
+            }
+        }
+
+        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
+        FilterCriteria fcAgency = new FilterCriteria();
+        fcAgency.setKey("agency.id");
+        fcAgency.setLogicalOperation(LogicalOperation.AND);
+        fcAgency.setOperator(SearchOperation.IN);
+        fcAgency.setValue(agencyIds);
+        filterCriteria.add(fcAgency);
+
+        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fcHotel = new FilterCriteria();
+        fcHotel.setKey("hotel.id");
+        fcHotel.setLogicalOperation(LogicalOperation.AND);
+        fcHotel.setOperator(SearchOperation.IN);
+        fcHotel.setValue(hotelIds);
+        filterCriteria.add(fcHotel);
     }
 
     private Specification<Payment> filterBankPayments() {

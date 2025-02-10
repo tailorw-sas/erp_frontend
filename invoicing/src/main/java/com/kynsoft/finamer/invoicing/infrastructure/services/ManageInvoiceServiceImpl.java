@@ -11,6 +11,8 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanWriter;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.HotelInvoiceNumberSequenceDto;
@@ -52,6 +54,7 @@ import static com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.services.IHotelInvoiceNumberSequenceService;
 import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.UpdateSequenceEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -70,19 +73,22 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService;
     private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
             IInvoiceCloseOperationService closeOperationService,
             ApplicationEventPublisher applicationEventPublisher,
             IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
-            ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService) {
+            ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
         this.applicationEventPublisher = applicationEventPublisher;
         this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
         this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     public Long getInvoiceNumberSequence(String invoiceNumber) {
@@ -157,8 +163,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteriaSearch(filterCriteria, employeeId);
 
         Specification<Invoice> specifications = new GenericSpecificationsBuilder<Invoice>(filterCriteria).build();
         if (pageable.getSort().isSorted()) {
@@ -493,6 +499,35 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 }
             }
         }
+    }
+
+    private void filterCriteriaSearch(List<FilterCriteria> filterCriteria, UUID employeeId) {
+        for (FilterCriteria filter : filterCriteria) {
+
+            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
+                try {
+                    Status enumValue = Status.valueOf((String) filter.getValue());
+                    filter.setValue(enumValue);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
+                }
+            }
+        }
+        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
+        FilterCriteria fcAgency = new FilterCriteria();
+        fcAgency.setKey("agency.id");
+        fcAgency.setLogicalOperation(LogicalOperation.AND);
+        fcAgency.setOperator(SearchOperation.IN);
+        fcAgency.setValue(agencyIds);
+        filterCriteria.add(fcAgency);
+
+        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fcHotel = new FilterCriteria();
+        fcHotel.setKey("hotel.id");
+        fcHotel.setLogicalOperation(LogicalOperation.AND);
+        fcHotel.setOperator(SearchOperation.IN);
+        fcHotel.setValue(hotelIds);
+        filterCriteria.add(fcHotel);
     }
 
     @Override
