@@ -143,7 +143,7 @@ public class PaymentController {
         return ResponseEntity.ok(data);
     }
 
-    @PostMapping("/search-collectios")
+    @PostMapping("/search-collection")
     public ResponseEntity<?> searchCollections(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
