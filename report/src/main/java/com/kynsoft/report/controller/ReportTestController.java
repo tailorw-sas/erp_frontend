@@ -2,6 +2,10 @@ package com.kynsoft.report.controller;
 
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateRequest;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
@@ -19,16 +23,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports-test")
@@ -45,6 +48,31 @@ public class ReportTestController {
         this.mediator = mediator;
          this.reportService = reportService;
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @GetMapping("/parametros")
+    public ResponseEntity<List<String>> obtenerParametros(@RequestParam("url") String urlJRXML) {
+        List<String> parametros = new ArrayList<>();
+
+        try (InputStream reporteStream = new URL(urlJRXML).openStream()) {
+            // 1. Compilar el archivo JRXML desde la URL
+            JasperReport jasperReport = JasperCompileManager.compileReport(reporteStream);
+
+            // 2. Obtener parámetros del reporte
+            JRParameter[] reportParameters = jasperReport.getParameters();
+
+            // 3. Filtrar parámetros internos de JasperReports
+            for (JRParameter param : reportParameters) {
+                if (!param.isSystemDefined()) {
+                    parametros.add(param.getName());
+                }
+            }
+
+        } catch (JRException | IOException e) {
+            // Manejar la excepción (logs, rethrow, etc.)
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok(parametros);
     }
 
     @PostMapping(value = "/generate/template", produces = MediaType.APPLICATION_JSON_VALUE)
