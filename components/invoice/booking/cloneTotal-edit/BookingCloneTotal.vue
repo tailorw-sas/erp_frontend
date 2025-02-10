@@ -1047,6 +1047,12 @@ async function getratePlanList(query = '') {
             logicalOperation: 'OR'
           },
           {
+            key: 'hotel.id',
+            operator: 'EQUALS',
+            value: props.bookingObj.invoice.hotel.id || '',
+            logicalOperation: 'AND'
+          },
+          {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -1151,6 +1157,12 @@ async function getRoomTypeList(query = '') {
             operator: 'LIKE',
             value: query,
             logicalOperation: 'OR'
+          },
+          {
+            key: 'manageHotel.id',
+            operator: 'EQUALS',
+            value: props.bookingObj.invoice.hotel.id || '',
+            logicalOperation: 'AND'
           },
           {
             key: 'status',
