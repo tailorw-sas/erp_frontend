@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Data
@@ -90,7 +91,7 @@ public class BookingRow {
         manageBookingDto.setDueAmount(ScaleAmount.scaleAmount(this.invoiceAmount));
         manageBookingDto.setNights(this.nights.longValue());
         // manageBookingDto.setAmountPax();
-        manageBookingDto.setBookingDate(DateUtil.parseDateToDateTime(this.bookingDate));
+        manageBookingDto.setBookingDate(this.bookingDate != null ? DateUtil.parseDateToDateTime(this.bookingDate) : LocalDateTime.of(1999, 1, 1, 0, 0));
         return manageBookingDto;
     }
 
