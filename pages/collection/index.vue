@@ -23,6 +23,7 @@ const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
+const maxSelectedLabels = ref(3)
 
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
@@ -1499,8 +1500,14 @@ async function getAgencyList2(query: string) {
         ...agencyList.value,
         {
           id: iterator.id,
-          name: `${iterator.code} - ${iterator.name}`,
-          code: iterator.code
+          name: iterator.name,
+          code: iterator.code,
+          status: iterator.status,
+          description: iterator.description,
+          creditDay: iterator.creditDay,
+          primaryPhone: iterator?.phone,
+          alternativePhone: iterator?.alternativePhone,
+          email: iterator?.email
         }
       ]
     }
@@ -2143,7 +2150,7 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full hotel-input"
-                        :max-selected-labels="2"
+                        :max-selected-labels="maxSelectedLabels"
                         :model="filterToSearch.agency"
                         :loading="objLoading.loadingAgency"
                         :suggestions="agencyList"
@@ -2163,7 +2170,21 @@ onMounted(() => {
                           getListContactByAgency(listIds)
                         }"
                         @load="($event) => getAgencyList2($event)"
-                      />
+                      >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                     </div>
                   </div>
                 </div>
@@ -2183,7 +2204,7 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full hotel-input"
-                        :max-selected-labels="2"
+                        :max-selected-labels="maxSelectedLabels"
                         :model="filterToSearch.hotel"
                         :loading="objLoading.loadingHotel"
                         :suggestions="hotelList"
@@ -2215,6 +2236,16 @@ onMounted(() => {
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
                         </template> -->
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels}` }}</span>
+                          </span>
+                        </template>
                       </DebouncedMultiSelectComponent>
                     </div>
                   </div>

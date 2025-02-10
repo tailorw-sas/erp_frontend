@@ -98,7 +98,7 @@ watch(() => props.suggestions, (newSuggestions) => {
     }"
   >
     <template #value>
-      <slot name="custom-value" :value="props.model" class="custom-chip">
+      <slot name="custom-value" :value="props.model" :remove-item="removeItem" class="custom-chip">
         <span v-for="(item, index) in (props.model || []).slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
           <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item[props.field] }}</span>
           <button class="remove-button" aria-label="Remove" @click.stop="removeItem(item)"><i class="pi pi-times-circle" /></button>
