@@ -80,7 +80,8 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             }
 
             // Cargar el reporte
-            JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
+            // JasperReport jasperReport = loadJasperReportFromUrl(reportTemplateDto.getFile());
+            JasperReport jasperReport = getJasperReport(reportTemplateDto.getFile());
             if (jasperReport == null) {
                 throw new IllegalArgumentException("Could not load JasperReport from provided URL.");
             }
@@ -106,7 +107,7 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             throw new RuntimeException("PostgreSQL JDBC Driver not found. Ensure it is included in the classpath.", e);
         } catch (SQLException e) {
             throw new RuntimeException("Error connecting to the database. Verify credentials and connection settings.", e);
-        } catch (JRException e) {
+        } catch (JRException | IOException e) {
             throw new RuntimeException("Error generating the JasperReport.", e);
         } finally {
             // Cerrar la conexión a la base de datos
@@ -120,22 +121,6 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         }
     }
 
-    public static void writeToFile(ByteArrayOutputStream outStream, String filePath) {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath)) {
-            outStream.writeTo(fileOutputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private JasperReport loadJasperReportFromUrl(String templateUrl) throws JRException {
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(new URL(templateUrl).openStream().readAllBytes()))
-        {
-            return JasperCompileManager.compileReport(inputStream);
-        } catch (Exception e) {
-            throw new RuntimeException("Error loading JRXML template from URL: " + templateUrl, e);
-        }
-    }
 
     private int getMaxFileSize() {
         // Define el límite en bytes (por ejemplo, 50 MB)
@@ -183,12 +168,6 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         return DriverManager.getConnection(reportTemplateDto.getDbConectionDto().getUrl(),
                 reportTemplateDto.getDbConectionDto().getUsername(),
                 reportTemplateDto.getDbConectionDto().getPassword());
-    }
-
-    private JdbcTemplate getJdbcTemplate(JasperReportTemplateDto reportTemplateDto) {
-        DataSource dataSource = createDataSource(reportTemplateDto.getDbConectionDto().getUrl(), reportTemplateDto.getDbConectionDto().getUsername(),
-                reportTemplateDto.getDbConectionDto().getPassword());
-        return new JdbcTemplate(dataSource);
     }
 
     private JasperReport getJasperReport(String reportPath) throws JRException, IOException {
