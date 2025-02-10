@@ -59,5 +59,5 @@ public interface IPaymentService {
 
     Long findMaxId();
 
-    PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
 }
