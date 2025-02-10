@@ -17,21 +17,17 @@ public class ImportBookingDateValidator extends ExcelRuleValidator<BookingRow> {
     }
 
     private boolean validateDate(BookingRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.isNull(obj.getBookingDate()) || obj.getBookingDate().isEmpty()) {
-            errorFieldList.add(new ErrorField("Booking Date", "Booking Date can't be empty"));
-            return false;
-        }
+        if (Objects.nonNull(obj.getBookingDate()) && !obj.getBookingDate().isEmpty()) {
+            if (!DateUtil.validateDateFormat(obj.getBookingDate())) {
+                errorFieldList.add(new ErrorField("Booking Date", "Booking Date has invalid date format"));
+                return false;
+            }
 
-
-        if (!DateUtil.validateDateFormat(obj.getBookingDate())) {
-            errorFieldList.add(new ErrorField("Booking Date", "Booking Date has invalid date format"));
-            return false;
-        }
-
-        LocalDate dateToValidate= DateUtil.parseDateToLocalDate(obj.getBookingDate());
-        if (dateToValidate.isAfter(LocalDate.now())){
-            errorFieldList.add(new ErrorField("Booking Date", "Booking Date can't be future"));
-            return false;
+            LocalDate dateToValidate= DateUtil.parseDateToLocalDate(obj.getBookingDate());
+            if (dateToValidate.isAfter(LocalDate.now())){
+                errorFieldList.add(new ErrorField("Booking Date", "Booking Date can't be future"));
+                return false;
+            }
         }
         return true;
     }

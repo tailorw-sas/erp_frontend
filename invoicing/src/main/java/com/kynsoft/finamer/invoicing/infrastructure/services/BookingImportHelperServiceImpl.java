@@ -146,7 +146,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             if (!checkBookingNumberRepeated.isEmpty()){
                 throw new BusinessException(
                         DomainErrorMessage.HOTEL_BOOKING_NUMBER_REPEATED,
-                        "Hotel Booking Number: " + checkBookingNumberRepeated +"is repeated."
+                        "Hotel Booking Number: " + checkBookingNumberRepeated +"is repeated in the uploaded document."
                 );
             }
         }
@@ -156,7 +156,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             if (!checkInvoiceNumberRepeated.isEmpty()){
                 throw new BusinessException(
                         DomainErrorMessage.HOTEL_INVOICE_NUMBER_REPEATED,
-                        "Hotel Invoice Number: " + checkInvoiceNumberRepeated +"is repeated."
+                        "Hotel Invoice Number: " + checkInvoiceNumberRepeated +"is repeated in the uploaded document."
                 );
             }
 
