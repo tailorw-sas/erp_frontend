@@ -62,6 +62,8 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(sourceJoin.get("code"));
         selections.add(sourceJoin.get("name"));
         selections.add(sourceJoin.get("status"));
+        selections.add(sourceJoin.get("expense"));
+        selections.add(sourceJoin.get("isBank"));
 
         // Agency
         selections.add(agencyJoin.get("id"));
@@ -158,67 +160,69 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                             tuple.get(12, UUID.class),
                             tuple.get(13, String.class),
                             tuple.get(14, String.class),
-                            tuple.get(15, String.class)
+                            tuple.get(15, String.class),
+                            tuple.get(16, Boolean.class),
+                            tuple.get(17, Boolean.class)
                     ),
                     new AgencyProjection(
-                            tuple.get(16, UUID.class),
-                            tuple.get(17, String.class),
-                            tuple.get(18, String.class),
+                            tuple.get(18, UUID.class),
                             tuple.get(19, String.class),
+                            tuple.get(20, String.class),
+                            tuple.get(21, String.class),
                             new ManageAgencyTypeProjection(
-                                    tuple.get(20, UUID.class),
-                                    tuple.get(21, String.class),
-                                    tuple.get(22, String.class),
-                                    tuple.get(23, String.class)
+                                    tuple.get(22, UUID.class),
+                                    tuple.get(23, String.class),
+                                    tuple.get(24, String.class),
+                                    tuple.get(25, String.class)
                             )
                     ),
                     new BankAccountProjection(
-                            tuple.get(24, UUID.class),
-                            tuple.get(25, String.class),
-                            tuple.get(26, String.class),
-                            tuple.get(27, String.class)
+                            tuple.get(26, UUID.class),
+                            tuple.get(27, String.class),
+                            tuple.get(28, String.class),
+                            tuple.get(29, String.class)
                     ),
                     new ClientProjection(
-                            tuple.get(28, UUID.class),
-                            tuple.get(29, String.class),
-                            tuple.get(30, String.class),
-                            tuple.get(31, String.class)
+                            tuple.get(30, UUID.class),
+                            tuple.get(31, String.class),
+                            tuple.get(32, String.class),
+                            tuple.get(33, String.class)
                     ),
                     new HotelProjection(
-                            tuple.get(32, UUID.class),
-                            tuple.get(33, String.class),
-                            tuple.get(34, String.class),
-                            tuple.get(35, String.class)
+                            tuple.get(34, UUID.class),
+                            tuple.get(35, String.class),
+                            tuple.get(36, String.class),
+                            tuple.get(37, String.class)
                     ),
                     new PaymentAttachmentStatusProjection(
-                            tuple.get(36, UUID.class),
-                            tuple.get(37, String.class),
-                            tuple.get(38, String.class),
+                            tuple.get(38, UUID.class),
                             tuple.get(39, String.class),
-                            tuple.get(40, Boolean.class), // defaults
-                            tuple.get(41, Boolean.class), // nonNone
-                            tuple.get(42, Boolean.class), // patWithAttachment
-                            tuple.get(43, Boolean.class), // pwaWithOutAttachment
-                            tuple.get(44, Boolean.class), // supported
-                            tuple.get(45, Boolean.class)  // otherSupport
+                            tuple.get(40, String.class),
+                            tuple.get(41, String.class),
+                            tuple.get(42, Boolean.class), // defaults
+                            tuple.get(43, Boolean.class), // nonNone
+                            tuple.get(44, Boolean.class), // patWithAttachment
+                            tuple.get(45, Boolean.class), // pwaWithOutAttachment
+                            tuple.get(46, Boolean.class), // supported
+                            tuple.get(47, Boolean.class)  // otherSupport
                     ),
-                    tuple.get(46, Double.class), // paymentAmount
-                    tuple.get(47, Double.class), // paymentBalance
-                    tuple.get(48, Double.class), // depositAmount
-                    tuple.get(49, Double.class), // depositBalance
-                    tuple.get(50, Double.class), // otherDeductions
-                    tuple.get(51, Double.class), // identified
-                    tuple.get(52, Double.class), // notIdentified
-                    tuple.get(53, Double.class), // notApplied
-                    tuple.get(54, Double.class), // applied
-                    tuple.get(55, String.class), // remark
-                    tuple.get(56, EAttachment.class), // eAttachment
-                    tuple.get(57, Boolean.class), // applyPayment
-                    tuple.get(58, Boolean.class), // paymentSupport
-                    tuple.get(59, Boolean.class) , // createByCredit
-                    tuple.get(60, Boolean.class) , // hasAttachment
-                    tuple.get(61, Boolean.class),  // hasDetailTypeDeposit
-                    tuple.get(62, ImportType.class) // ImportType
+                    tuple.get(48, Double.class), // paymentAmount
+                    tuple.get(49, Double.class), // paymentBalance
+                    tuple.get(50, Double.class), // depositAmount
+                    tuple.get(51, Double.class), // depositBalance
+                    tuple.get(52, Double.class), // otherDeductions
+                    tuple.get(53, Double.class), // identified
+                    tuple.get(54, Double.class), // notIdentified
+                    tuple.get(55, Double.class), // notApplied
+                    tuple.get(56, Double.class), // applied
+                    tuple.get(57, String.class), // remark
+                    tuple.get(58, EAttachment.class), // eAttachment
+                    tuple.get(59, Boolean.class), // applyPayment
+                    tuple.get(60, Boolean.class), // paymentSupport
+                    tuple.get(61, Boolean.class) , // createByCredit
+                    tuple.get(62, Boolean.class) , // hasAttachment
+                    tuple.get(63, Boolean.class),  // hasDetailTypeDeposit
+                    tuple.get(64, ImportType.class) // ImportType
             );
         }).collect(Collectors.toList());
 
