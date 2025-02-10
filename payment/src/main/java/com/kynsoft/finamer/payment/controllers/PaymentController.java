@@ -30,11 +30,14 @@ import com.kynsoft.finamer.payment.application.query.payment.excelExporter.Searc
 import com.kynsoft.finamer.payment.application.query.payment.getByGenCodeProjection.FindPaymentByGenProjectionQuery;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
+import com.kynsoft.finamer.payment.application.query.payment.searchCollection.GetSearchPaymentCollectionsQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -129,10 +132,22 @@ public class PaymentController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<?> search(@RequestBody SearchRequest request) {
+    public ResponseEntity<?> search(@AuthenticationPrincipal Jwt jwt, @RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchPaymentQuery query = new GetSearchPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        String userId = jwt.getClaim("sub");
+        UUID employeeId = UUID.fromString(userId);
+        //UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchPaymentQuery query = new GetSearchPaymentQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/search-collection")
+    public ResponseEntity<?> searchCollections(@RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        GetSearchPaymentCollectionsQuery query = new GetSearchPaymentCollectionsQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }

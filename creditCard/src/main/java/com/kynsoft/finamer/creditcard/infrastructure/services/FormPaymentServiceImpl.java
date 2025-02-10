@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,18 +45,14 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
 
     private final IMerchantLanguageCodeService merchantLanguageCodeService;
 
-    @Autowired
-    private final TransactionReadDataJPARepository transactionRepositoryQuery;
 
     public FormPaymentServiceImpl(ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand,
                                   TransactionPaymentLogsReadDataJPARepository repositoryQuery,
-                                  ICardNetJobService cardNetJobService, IMerchantLanguageCodeService merchantLanguageCodeService,
-                                  TransactionReadDataJPARepository transactionRepositoryQuery) {
+                                  ICardNetJobService cardNetJobService, IMerchantLanguageCodeService merchantLanguageCodeService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.cardNetJobService = cardNetJobService;
         this.merchantLanguageCodeService = merchantLanguageCodeService;
-        this.transactionRepositoryQuery = transactionRepositoryQuery;
     }
 
     public MerchantRedirectResponse redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
@@ -153,84 +152,145 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         }
     }
 
-    private MerchantRedirectResponse redirectToCardNet(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
-        // Paso 1: Enviar los datos para generar la sesión
-        String successUrl = merchantConfigDto.getSuccessUrl();
-        String cancelUrl = merchantConfigDto.getErrorUrl();
-        CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
-        String cardNetSession = "";
-        String cardNetSessionKey = "";
+    private MerchantRedirectResponse redirectToCardNet(TransactionDto transactionDto,
+                                                       ManagerMerchantConfigDto merchantConfigDto) {
+        // Construir los datos de la transacción
+        Map<String, String> requestData = buildRequestData(transactionDto, merchantConfigDto);
 
-        Map<String, String> requestData = new HashMap<>();
-        String amountString = BigDecimal.valueOf(transactionDto.getAmount()).multiply(new BigDecimal(100)).stripTrailingZeros()
+        // Obtener o crear una sesión de CardNet
+        CardNetSessionResponse sessionResponse = createOrUpdateSession(transactionDto, merchantConfigDto, requestData);
+
+        if (sessionResponse == null || sessionResponse.getSession() == null) {
+            throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR,
+                    DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR.getReasonPhrase());
+        }
+
+        // Generar el formulario HTML de redirección
+        String htmlForm = generateHtmlForm(merchantConfigDto.getUrl(), sessionResponse.getSession(),
+                merchantConfigDto.getSuccessUrl(), merchantConfigDto.getErrorUrl());
+
+        return new MerchantRedirectResponse(htmlForm, requestData.toString());
+    }
+
+    /**
+     * Construye los datos de la transacción para enviarlos a CardNet.
+     */
+    private Map<String, String> buildRequestData(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+        String amountString = BigDecimal.valueOf(transactionDto.getAmount())
+                .multiply(BigDecimal.valueOf(100))
+                .stripTrailingZeros()
                 .toPlainString();
-        //obtener el language
-        String pageLanguaje = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
+
+        String pageLanguage = merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
                 transactionDto.getMerchant().getId(),
                 transactionDto.getLanguage().getId()
         );
-        String currencyCode = transactionDto.getMerchantCurrency().getValue();
-        String referenceNumberTrunc = transactionDto.getReferenceNumber().length() > 40 ? transactionDto.getReferenceNumber().substring(0, 40) : transactionDto.getReferenceNumber();
 
-        requestData.put("TransactionType", "0200"); // dejar 0200 por defecto por ahora
-        requestData.put("CurrencyCode", currencyCode); // dejar 214 por ahora que es el peso dominicano. El usd es 840
-        requestData.put("Tax", "0"); // 0 por defecto
-        requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode()); //Campo institutionCode de Merchant Config
-        requestData.put("MerchantType", merchantConfigDto.getMerchantType()); //Campo merchantType de Merchant Config
-        requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber()); //Campo merchantNumber de Merchant Config
-        requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal()); //Campo merchantTerminal de Merchant Config
-//            requestData.put("MerchantTerminal_amex", paymentRequest.getMerchantTerminalAmex()); //No enviar por ahora
-        requestData.put("ReturnUrl", successUrl); //Campo successUrl de Merchant Config
-        requestData.put("CancelUrl", cancelUrl); //Campo errorUrl de Merchant Config
-        requestData.put("PageLanguaje", pageLanguaje.isBlank() ? "ING" : pageLanguaje); //Se envia por ahora ENG
-        requestData.put("TransactionId", referenceNumberTrunc); //Viene en el request
-        requestData.put("OrdenId", transactionDto.getId().toString()); //Viene en el request
-        requestData.put("MerchantName", merchantConfigDto.getName()); //Campo name de Merchant Config
-        requestData.put("IpClient", ""); // Campo ip del b2b partner del merchant
-        requestData.put("Amount", amountString); //Viene en el request
+        String referenceNumber = Optional.ofNullable(transactionDto.getReferenceNumber())
+                .filter(ref -> ref.length() > 40)
+                .map(ref -> ref.substring(0, 40))
+                .orElse(transactionDto.getReferenceNumber());
 
-        // Solo invocar al servicio de obtener sesion si no se ha hecho previamente.
-        if (cardnetJobDto == null) {
-            CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
-            if (sessionResponse == null || sessionResponse.getSession() == null) {
-                throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR, DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR.getReasonPhrase());
+        Map<String, String> requestData = new HashMap<>();
+        requestData.put("TransactionType", "0200");
+        requestData.put("CurrencyCode", transactionDto.getMerchantCurrency().getValue());
+        requestData.put("Tax", "0");
+        requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode());
+        requestData.put("MerchantType", merchantConfigDto.getMerchantType());
+        requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber());
+        requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal());
+        requestData.put("ReturnUrl", merchantConfigDto.getSuccessUrl());
+        requestData.put("CancelUrl", merchantConfigDto.getErrorUrl());
+        requestData.put("PageLanguaje", pageLanguage.isBlank() ? "ING" : pageLanguage);
+        requestData.put("TransactionId", referenceNumber);
+        requestData.put("OrdenId", transactionDto.getId().toString());
+        requestData.put("MerchantName", merchantConfigDto.getName());
+        requestData.put("IpClient", "");
+        requestData.put("Amount", amountString);
+//        String keyEncryptionKey = generateMD5(
+//                merchantConfigDto.getMerchantType(),
+//                merchantConfigDto.getMerchantNumber(),
+//                merchantConfigDto.getMerchantTerminal(),
+//                referenceNumber,
+//                amountString,
+//                "0"
+//        );
+//        requestData.put("KeyEncriptionKey", keyEncryptionKey);
+
+        return requestData;
+    }
+
+    /**
+     * Genera un hash MD5 con los valores de los campos requeridos.
+     */
+    private String generateMD5(String... values) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            String concatenatedString = String.join("", values);
+            byte[] digest = md.digest(concatenatedString.getBytes(StandardCharsets.UTF_8));
+
+            // Convertir los bytes en una representación hexadecimal
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : digest) {
+                hexString.append(String.format("%02x", b));
             }
-            cardNetSession = sessionResponse.getSession();
-            cardNetSessionKey = sessionResponse.getSessionKey();
-            createCardNetJob(cardNetSession, cardNetSessionKey, transactionDto.getTransactionUuid());
-        } else if ((transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) || cardnetJobDto.isSessionExpired()) {
-            //  si esta como declinada previamente o expiró el tiempo de validez de la session
-            // TODO: para este caso lo ideal es crear nuevos cardnetDto, para dejar la traza de las sesiones previas por transaccion. En el get del cardetDto deberia devolver el mas reciente
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error generando MD5: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Maneja la obtención o actualización de la sesión de CardNet.
+     */
+    private CardNetSessionResponse createOrUpdateSession(TransactionDto transactionDto,
+                                                         ManagerMerchantConfigDto merchantConfigDto,
+                                                         Map<String, String> requestData) {
+        CardnetJobDto cardnetJobDto = cardNetJobService.findByTransactionId(transactionDto.getTransactionUuid());
+
+        if (cardnetJobDto == null || (transactionDto.getStatus().isDeclinedStatus() && cardnetJobDto.getIsProcessed()) || cardnetJobDto.isSessionExpired()) {
+            // Obtener una nueva sesión
             CardNetSessionResponse sessionResponse = getCardNetSession(requestData, merchantConfigDto.getAltUrl());
-            if (sessionResponse == null || sessionResponse.getSession() == null) {
-                throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR, DomainErrorMessage.MANAGE_TRANSACTION_CARD_NET_SESSION_ERROR.getReasonPhrase());
+
+            if (sessionResponse != null && sessionResponse.getSession() != null) {
+                if (cardnetJobDto == null) {
+                    createCardNetJob(sessionResponse.getSession(), sessionResponse.getSessionKey(), transactionDto.getTransactionUuid());
+                } else {
+                    cardnetJobDto.setIsProcessed(true);
+                    cardNetJobService.update(cardnetJobDto);
+                    createCardNetJob(sessionResponse.getSession(), sessionResponse.getSessionKey(), transactionDto.getTransactionUuid());
+                }
+                return sessionResponse;
             }
-            cardNetSession = sessionResponse.getSession();
-            cardNetSessionKey = sessionResponse.getSessionKey();
-            cardnetJobDto.setIsProcessed(true);
-            cardNetJobService.update(cardnetJobDto);
-            createCardNetJob(cardNetSession, cardNetSessionKey, transactionDto.getTransactionUuid());
         } else {
-            // Esto es por si es de tipo Link y le da clic varias veces no duplique la session
-            cardNetSession = cardnetJobDto.getSession();
+            // Reutilizar la sesión existente si es válida
             cardnetJobDto.setIsProcessed(false);
             cardnetJobDto.setNumberOfAttempts(0);
             cardNetJobService.update(cardnetJobDto);
+            return new CardNetSessionResponse(cardnetJobDto.getSession(), cardnetJobDto.getSessionKey());
         }
 
-        // Paso 2: Generar Formulario
-        String htmlForm = "<html lang=\"en\">" +
-                "<head></head>" +
-                "<body>" +
-                "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                "<input type=\"hidden\" name=\"SESSION\" value=\"" + cardNetSession + "\"/>" +
-                "<input type=\"hidden\" name=\"ReturnUrl\" value=\"" + successUrl + "\"/>" +
-                "<input type=\"hidden\" name=\"CancelUrl\" value=\"" + cancelUrl + "\"/>" +
-                "</form>" +
-                "<script>document.getElementById('paymentForm').submit();</script>" +
-                "</body>" +
-                "</html>";
-        return new MerchantRedirectResponse(htmlForm, requestData.toString());
+        return null;
+    }
+
+    /**
+     * Genera el formulario HTML para la redirección a CardNet.
+     */
+    private String generateHtmlForm(String actionUrl, String session, String successUrl, String cancelUrl) {
+        return String.format("""
+        <html lang="en">
+        <head></head>
+        <body>
+            <form action="%s" method="post" id="paymentForm">
+                <input type="hidden" name="SESSION" value="%s"/>
+                <input type="hidden" name="ReturnUrl" value="%s"/>
+                <input type="hidden" name="CancelUrl" value="%s"/>
+            </form>
+            <script>document.getElementById('paymentForm').submit();</script>
+        </body>
+        </html>
+        """, actionUrl, session, successUrl, cancelUrl);
     }
 
     private Boolean isValidLink(TransactionDto transaction) {

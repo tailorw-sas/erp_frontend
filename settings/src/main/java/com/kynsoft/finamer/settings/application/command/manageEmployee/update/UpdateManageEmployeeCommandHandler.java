@@ -21,6 +21,7 @@ import com.kynsoft.finamer.settings.infrastructure.services.kafka.producer.manag
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -98,10 +99,25 @@ public class UpdateManageEmployeeCommandHandler implements ICommandHandler<Updat
 
         if (update.getUpdate() > 0) {
             this.service.update(test);
-            this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(test.getId(),
-                    test.getFirstName(), test.getLastName(), test.getEmail(), test.getPhoneExtension()));
+            this.producerUpdateManageEmployeeService.update(new UpdateManageEmployeeKafka(
+                    test.getId(),
+                    test.getFirstName(), 
+                    test.getLastName(), 
+                    test.getEmail(), 
+                    test.getPhoneExtension(),
+                    this.agencys(test.getManageAgencyList()),
+                    this.hotels(test.getManageHotelList())
+            ));
         }
 
+    }
+
+    private List<UUID> agencys(List<ManageAgencyDto> agencyList) {
+        return agencyList.stream().map(ManageAgencyDto::getId).collect(Collectors.toList());
+    }
+
+    private List<UUID> hotels(List<ManageHotelDto> hotelsList) {
+        return hotelsList.stream().map(ManageHotelDto::getId).collect(Collectors.toList());
     }
 
     private void updateManageDepartmentGroup(Consumer<ManageDepartmentGroupDto> setter, UUID newValue, UUID oldValue,
