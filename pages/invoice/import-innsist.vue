@@ -427,7 +427,6 @@ async function getAgencyList(query: string = '') {
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
     for (const iterator of dataList) {
       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -483,7 +482,7 @@ async function searchAndFilter() {
     query: '',
     pageSize: 500,
     page: 0,
-    sortBy: '',
+    sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.ASC
   }
   // Mantener los filtros existentes
@@ -1107,10 +1106,18 @@ onMounted(async () => {
                   <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                     <label class="filter-label font-bold" for="">Agency:</label>
                     <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
-                        class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
-                        :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
+                      <DebouncedMultiSelectComponent
+                        v-if="!loadingSaveAll"
+                        id="autocomplete"
+                        class="w-full"
+                        field="name"
+                        item-value="id"
+                        :multiple="true"
+                        :max-selected-labels="1"
+                        :model="filterToSearch.agency"
+                        :suggestions="agencyList"
+                        @load="($event) => getAgencyList($event)"
+                        @change="($event) => {
                           if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                             filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
                           }
@@ -1122,7 +1129,7 @@ onMounted(async () => {
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
-                      </DebouncedAutoCompleteComponent>
+                      </DebouncedMultiSelectComponent>
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2 w-full">

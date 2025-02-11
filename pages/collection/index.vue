@@ -1954,6 +1954,19 @@ async function paymentExportToExcel(event: any) {
   }
 }
 
+function showIconAttachment(objData: any) {
+  if (objData.hasAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus && objData.attachmentStatus.pwaWithOutAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus && objData.attachmentStatus.patWithAttachment) {
+    return true
+  }
+  return false
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -2036,8 +2049,6 @@ onMounted(() => {
                           filterToSearch.agency = []
                           filterToSearch.clientName = $event?.onlyName ? $event?.onlyName : ''
                           filterToSearch.clientStatus = $event?.status ? $event?.status : ''
-                          // filterToSearch.client = $event.filter(element => element?.id !== 'All');
-                          // filterToSearch.agency = filterToSearch.client.length > 0 ? [{ id: 'All', name: 'All', code: 'All' }] : [];
                           const filter: FilterCriteria[] = [
                             {
                               key: 'client.id',
@@ -2052,17 +2063,19 @@ onMounted(() => {
                               logicalOperation: 'AND',
                             },
                           ]
-                          filterToSearch.agency = await getAgencyListForLoadAll(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                          const listAgencyTemp = await getAgencyListForLoadAll(objApis.agency.moduleApi, objApis.agency.uriApi, {
                             query: '',
                             keys: ['name', 'code'],
                           }, filter)
-                          const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
-                            const credit = Number(item.creditDay)
-                            return isNaN(credit) ? 0 : credit
-                          }))
 
-                          // const totalCreditDays = filterToSearch.agency.reduce((sum, item) => sum + item.creditDay, 0); // Sumar los días de crédito
-                          filterToSearch.creditDays = totalCreditDays
+                          if (listAgencyTemp && listAgencyTemp?.length > 0) {
+                            const totalCreditDays = Math.max(...listAgencyTemp.map((item: any) => {
+                              const credit = Number(item.creditDay)
+                              return isNaN(credit) ? 0 : credit
+                            }))
+                            filterToSearch.agency = [...listAgencyTemp]
+                            filterToSearch.creditDays = totalCreditDays
+                          }
                           if (filterToSearch.agency?.length > 0) {
                             getListContactByAgency(filterToSearch.agency.map((item: any) => item.id))
                           }
@@ -2158,11 +2171,11 @@ onMounted(() => {
                         @change="($event) => {
                           filterToSearch.agency = $event;
                           // const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0); // total credit days
-                          const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
-                            const credit = Number(item.creditDay)
-                            return isNaN(credit) ? 0 : credit
-                          }))
-                          filterToSearch.creditDays = totalCreditDays
+                          // const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
+                          //   const credit = Number(item.creditDay)
+                          //   return isNaN(credit) ? 0 : credit
+                          // }))
+                          // filterToSearch.creditDays = totalCreditDays
                           filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
                           filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
                           filterToSearch.email = $event[0]?.email ? $event[0]?.email : ''
@@ -2378,11 +2391,11 @@ onMounted(() => {
         <template #column-icon="{ data: objData, column }">
           <div class="flex align-items-center justify-content-center p-0 m-0">
             <Button
-              v-if="objData.hasAttachment"
+              v-if="showIconAttachment(objData)"
               :icon="column.icon"
               class="p-button-rounded p-button-text w-2rem h-2rem"
               aria-label="Submit"
-              :disabled="objData?.attachmentStatus?.nonNone"
+              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
               :style="{ color: objData.color }"
             />
           </div>

@@ -885,12 +885,13 @@ onMounted(() => {
                   <label for="" class="font-bold mr-2 mb-0 mt-2" style="margin-right: 8px; flex: 0 0 auto;">
                     Trading Company:</label>
                   <div class="w-full">
-                    <DebouncedAutoCompleteComponent
+                    <DebouncedMultiSelectComponent
                       id="autocomplete"
                       class="w-full"
                       field="name"
                       item-value="id"
                       :multiple="true"
+                      :max-selected-labels="1"
                       :model="filterToSearch.tradingCompany"
                       :suggestions="[...listTradingCompanyItems]"
                       @change="($event) => {
