@@ -37,7 +37,7 @@ const listFrequencyItems = ref<any[]>([])
 const listIntervalTypeItems = ref<any[]>([])
 const listExecutionDateTypeItems = ref<any[]>([])
 const listProcessingDateTypeItems = ref<any[]>([])
-const intervalList = ref<any[]>([])
+const intervalList = ref([])
 
 const disableFrequency = ref(false)
 const disableIntervalType = ref(false)
@@ -52,7 +52,7 @@ const disableProcessingDate = ref(false)
 
 const frequencySelected = ref<any>([])
 const intervalTypeSelected = ref<any>([])
-const interval = ref('')
+const interval = ref(null)
 const executionDateType = ref<any>([])
 const executionDateValue = ref('')
 // const executionDate = ref<Date>(new Date())
@@ -753,27 +753,24 @@ async function getIntervalTypeFilter(query: string) {
   }
 }
 
-function getIntervalList() {
+async function getIntervalList() {
+  intervalList.value = []
   if (intervalTypeSelected.value.name === 'MINUTE') {
-    for (let i = 0; i < 60; i++) {
-      const element = {
-        id: i,
-        code: i.toString(),
-        name: i.toString()
-      }
-      intervalList.value.push(element)
-    }
+    await addIntervals(60)
+    console.log(intervalList)
   }
   else if (intervalTypeSelected.value.name === 'HOUR') {
-    for (let i = 0; i < 12; i++) {
-      const element = {
-        id: i,
-        code: i.toString(),
-        name: i.toString()
-      }
-      intervalList.value.push(element)
-    }
+    await addIntervals(12)
   }
+}
+
+async function addIntervals(count: number) {
+  return new Promise<void>((resolve) => {
+    for (let i = 0; i < count; i++) {
+      intervalList.value.push(i + 1)
+    }
+    resolve()
+  })
 }
 
 async function getExecutionTypeFilter(query: string) {
@@ -1494,6 +1491,7 @@ async function itemToPayloadScheduler(item: { [key: string]: any }) {
 async function updateScheduler(item: { [key: string]: any }) {
   loadingSaveScheduler.value = true
   const payload = await itemToPayloadScheduler(item)
+  console.log(payload)
   await GenericService.update(optionsScheduler.value.moduleApi, optionsScheduler.value.uriApi, item.id, payload)
 }
 
@@ -1558,7 +1556,7 @@ onMounted(() => {
   </div>
 
   <div class="grid w-full">
-    <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9 py-4">
+    <div class="col-12 order-0 md:order-1 md:col-7 xl:col-9 py-4">
       <div class="card p-0 mb-1">
         <Accordion :active-index="0" class="mb-1">
           <AccordionTab>
@@ -1617,7 +1615,7 @@ onMounted(() => {
       />
     </div>
 
-    <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3 py-3">
+    <div class="col-12 order-1 md:order-0 md:col-5 xl:col-3 py-3">
       <div class="font-bold text-lg px-4 bg-primary custom-card-header mt-2">
         {{ formTitleScheduler }}
       </div>
@@ -1705,16 +1703,13 @@ onMounted(() => {
                   <span v-if="!disableInterval" class="p-error">*</span>
                 </div>
                 <div class="flex mt-1 w-full">
-                  <DebouncedAutoCompleteComponent
+                  <AutoComplete
                     v-if="!loadingSaveScheduler"
-                    id="autocomplete"
-                    class="w-full"
-                    field="name"
-                    item-value="id"
-                    :disabled="disableInterval"
-                    :model="interval"
+                    v-model="interval"
+                    dropdown
                     :suggestions="intervalList"
-                    @load="($event) => getIntervalList()"
+                    :disabled="disableInterval"
+                    @complete="getIntervalList"
                   />
                   <Skeleton v-else height="2rem" />
                 </div>
