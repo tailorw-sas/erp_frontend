@@ -144,10 +144,13 @@ public class PaymentController {
     }
 
     @PostMapping("/search-collection")
-    public ResponseEntity<?> searchCollections(@RequestBody SearchRequest request) {
+    public ResponseEntity<?> searchCollections(@AuthenticationPrincipal Jwt jwt, @RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchPaymentCollectionsQuery query = new GetSearchPaymentCollectionsQuery(pageable, request.getFilter(), request.getQuery());
+        String userId = jwt.getClaim("sub");
+        UUID employeeId = UUID.fromString(userId);
+//        UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchPaymentCollectionsQuery query = new GetSearchPaymentCollectionsQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }

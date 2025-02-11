@@ -19,7 +19,7 @@ public class ConsumerReplicateManageContactService {
         this.mediator = mediator;
     }
 
-    @KafkaListener(topics = "finamer-replicate-manage-contact", groupId = "invoicing-entity-replica")
+    @KafkaListener(topics = "finamer-replicate-manage-contact", groupId = "vcc-entity-replica")
     public void listen(ManageContactKafka objKafka) {
         try {
             CreateManageContactCommand command = new CreateManageContactCommand(
