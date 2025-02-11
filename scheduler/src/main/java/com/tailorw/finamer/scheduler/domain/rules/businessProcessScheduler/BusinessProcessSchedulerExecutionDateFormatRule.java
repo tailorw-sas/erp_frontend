@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 public class BusinessProcessSchedulerExecutionDateFormatRule extends BusinessRule {
 
     private final String executionDate;
-    private static final String DATE_REGEX = "^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\\d{4}$";
+    private static final String DATE_REGEX = "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
 
     public BusinessProcessSchedulerExecutionDateFormatRule(String executionDate){
         super(DomainErrorMessage.BUSINESS_PROCESS_SCHEDULER_EXECUTION_DATE_FORMAT_IS_NOT_VALID,
