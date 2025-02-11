@@ -17,7 +17,7 @@ public class GetSearchTransactionQueryHandler implements IQueryHandler<GetSearch
     @Override
     public TransactionResumeResponse handle(GetSearchTransactionQuery query) {
         TransactionTotalResume transactionTotalResume = service.searchTotal(query.getFilter());
-        PaginatedResponse paginatedResponse = service.search(query.getPageable(), query.getFilter());
+        PaginatedResponse paginatedResponse = service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
 
         return new TransactionResumeResponse(paginatedResponse, transactionTotalResume);
     }
