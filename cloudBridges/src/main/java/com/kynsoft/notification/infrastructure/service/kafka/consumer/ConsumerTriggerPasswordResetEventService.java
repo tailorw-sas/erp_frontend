@@ -1,6 +1,9 @@
 package com.kynsoft.notification.infrastructure.service.kafka.consumer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.UserOtpKafka;
+import com.kynsof.share.core.domain.kafka.event.CreateEvent;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.notification.application.command.sendMailjetEmail.SendMailJetEMailCommand;
 import com.kynsof.share.core.application.mailjet.MailJetRecipient;
@@ -30,8 +33,12 @@ public class ConsumerTriggerPasswordResetEventService {
     }
 
     @KafkaListener(topics = "finamer-otp", groupId = "otp")
-    public void listen(UserOtpKafka otpKafka) {
+    public void listen(String message) {
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            CreateEvent<UserOtpKafka> event = mapper.readValue(message, new TypeReference<CreateEvent<UserOtpKafka>>() {});
+            UserOtpKafka otpKafka = event.getData();
+
             List<MailJetRecipient> mailJetRecipients = new ArrayList<>();
             mailJetRecipients.add(new MailJetRecipient(otpKafka.getEmail(),otpKafka.getName()));
 
