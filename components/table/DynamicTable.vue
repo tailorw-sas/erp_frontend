@@ -491,7 +491,10 @@ async function getDataFromSelectors() {
         for (const item of response) {
           objListData[iterator.field] = [
             ...objListData[iterator.field],
-            { ...item }
+            {
+              ...item,
+              name: 'code' in item ? `${item.code} - ${item.name}` : item.name
+            }
             // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
           ]
         }
@@ -522,7 +525,10 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
     for (const item of response) {
       objListData[column.field] = [
         ...objListData[column.field],
-        { ...item }
+        {
+          ...item,
+          name: 'code' in item ? `${item.code} - ${item.name}` : item.name
+        }
         // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
       ]
     }
@@ -532,61 +538,6 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
   catch (error) {
     objForLoadings.value[column.field] = false
     console.log(error)
-  }
-}
-
-async function getDataFromFiltersSelectors2(query = '', column: IColumn, objToSearch: IQueryToSearch) {
-  try {
-    objForLoadings.value[column.field] = true
-    const payload
-            = {
-              filter: [
-                {
-                  key: 'name',
-                  operator: 'LIKE',
-                  value: query,
-                  logicalOperation: 'OR'
-                },
-                {
-                  key: 'code',
-                  operator: 'LIKE',
-                  value: query,
-                  logicalOperation: 'OR'
-                },
-                {
-                  key: 'status',
-                  operator: 'EQUALS',
-                  value: 'ACTIVE',
-                  logicalOperation: 'AND'
-                }
-              ],
-              query: '',
-              pageSize: 200,
-              page: 0,
-              sortBy: 'name',
-              sortType: ENUM_SHORT_TYPE.ASC
-            }
-
-    objListData[column.field] = []
-    const moduleApi = column.objApi?.moduleApi || ''
-    const uriApi = column.objApi?.uriApi || ''
-    const response = await GenericService.search(moduleApi, uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      objListData[column.field] = [...objListData[column.field], {
-        id: iterator.id,
-        name: `${iterator.name}`,
-        onlyName: iterator.name,
-        code: iterator.code,
-        status: iterator.status
-      }]
-    }
-
-    objForLoadings.value[column.field] = false
-  }
-  catch (error) {
-    objForLoadings.value[column.field] = false
-    console.error('Error loading client list:', error)
   }
 }
 
@@ -956,37 +907,14 @@ defineExpose({ clearSelectedItems })
                   filterModel.value = $event
                 }"
                 @load="async($event) => {
-                  const filter: FilterCriteria[] = [
-                    {
-                      key: 'status',
-                      logicalOperation: 'AND',
-                      operator: 'EQUALS',
-                      value: 'ACTIVE',
-                    },
-                  ]
                   const objQueryToSearch = {
                     query: $event,
                     keys: ['name', 'code'],
                   }
                   await getDataFromFiltersSelectors(column, objQueryToSearch)
                 }"
-              >
-                <!-- <template #custom-value="props">
-                  <span v-for="(item, index) in (props.value || []).slice(0, 2)" :key="index" class="custom-chip">
-                    <span v-if="'code' in item && 'name' in item" class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }} - {{ item.name }}</span>
-                    <span v-else class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.name }}</span>
+              />
 
-                    <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
-                  </span>
-                  <span v-if="props.value && props.value.length > 2" class="custom-chip">
-                    <span>{{ `+${props.value.length - 2}` }}</span>
-                  </span>
-                </template> -->
-                <!-- <template #option="props">
-                  <span v-if="'code' in props.item && 'name' in props.item">{{ props.item.code }} - {{ props.item.name }}</span>
-                  <span v-else>{{ props.item.name }}</span>
-                </template> -->
-              </DebouncedMultiSelectComponent>
               <!-- No Eliminar -->
               <!-- <MultiSelect
                 v-model="filterModel.value"
