@@ -1954,6 +1954,19 @@ async function paymentExportToExcel(event: any) {
   }
 }
 
+function showIconAttachment(objData: any) {
+  if (objData.hasAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus && objData.attachmentStatus.pwaWithOutAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus && objData.attachmentStatus.patWithAttachment) {
+    return true
+  }
+  return false
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -2378,11 +2391,11 @@ onMounted(() => {
         <template #column-icon="{ data: objData, column }">
           <div class="flex align-items-center justify-content-center p-0 m-0">
             <Button
-              v-if="objData.hasAttachment"
+              v-if="showIconAttachment(objData)"
               :icon="column.icon"
               class="p-button-rounded p-button-text w-2rem h-2rem"
               aria-label="Submit"
-              :disabled="objData?.attachmentStatus?.nonNone"
+              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
               :style="{ color: objData.color }"
             />
           </div>
