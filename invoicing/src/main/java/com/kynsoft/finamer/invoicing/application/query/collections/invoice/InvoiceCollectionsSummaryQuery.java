@@ -7,10 +7,12 @@ import lombok.Getter;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
 public class InvoiceCollectionsSummaryQuery implements IQuery {
     private List<FilterCriteria> filter;
     private Pageable pageable;
+    private UUID employeeId;
 }
