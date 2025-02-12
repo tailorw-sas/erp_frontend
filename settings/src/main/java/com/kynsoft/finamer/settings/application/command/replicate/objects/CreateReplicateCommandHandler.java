@@ -376,12 +376,22 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                 }
                 case MANAGE_BANK_ACCOUNT -> {//
                     for (ManageBankAccountDto bankAccountDto : this.manageBankAccountService.findAllToReplicate()) {
-                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName(), bankAccountDto.getManageHotel().getId(), bankAccountDto.getManageBank().getId(), bankAccountDto.getManageAccountType().getId(), bankAccountDto.getDescription()));
+                        this.replicateManageBankAccount.create(new ReplicateManageBankAccountKafka(bankAccountDto.getId(), 
+                                        bankAccountDto.getAccountNumber(), bankAccountDto.getStatus().name(), bankAccountDto.getManageBank().getName(), 
+                                        bankAccountDto.getManageHotel().getId(), bankAccountDto.getManageBank().getId(), bankAccountDto.getManageAccountType().getId(), bankAccountDto.getDescription()));
                     }
                 }
                 case MANAGE_EMPLOYEE -> {//
                     for (ManageEmployeeDto employeeDto : this.manageEmployeeService.findAllToReplicate()) {
-                        this.replicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(employeeDto.getId(), employeeDto.getFirstName(), employeeDto.getLastName(), employeeDto.getEmail(), employeeDto.getPhoneExtension()));
+                        this.replicateManageEmployeeService.create(new ReplicateManageEmployeeKafka(
+                                employeeDto.getId(), 
+                                employeeDto.getFirstName(), 
+                                employeeDto.getLastName(), 
+                                employeeDto.getEmail(), 
+                                employeeDto.getPhoneExtension(),
+                                employeeDto.getManageAgencyList().stream().map(ManageAgencyDto::getId).collect(Collectors.toList()),
+                                employeeDto.getManageHotelList().stream().map(ManageHotelDto::getId).collect(Collectors.toList())
+                        ));
                     }
                 }
                 case MANAGE_ATTACHMENT_STATUS -> {//

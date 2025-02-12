@@ -16,6 +16,6 @@ public class GetSearchPaymentCollectionsQueryHandler implements IQueryHandler<Ge
     @Override
     public PaginatedResponse handle(GetSearchPaymentCollectionsQuery query) {
 
-        return this.service.searchCollections(query.getPageable(),query.getFilter());
+        return this.service.searchCollections(query.getPageable(),query.getFilter(), query.getEmployeeId());
     }
 }
