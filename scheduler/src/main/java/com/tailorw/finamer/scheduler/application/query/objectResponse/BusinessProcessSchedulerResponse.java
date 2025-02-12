@@ -30,6 +30,7 @@ public class BusinessProcessSchedulerResponse implements IResponse {
     private LocalTime executionTime;
     private ProcessingDateTypeResponse processingDateType;
     private LocalDate processingDate;
+    private Integer processingDateValue;
     private String status;
     private String params;
     private LocalDateTime lastExecutionDatetime;
@@ -47,6 +48,7 @@ public class BusinessProcessSchedulerResponse implements IResponse {
         this.executionTime = dto.getExecutionTime();
         this.processingDateType = Objects.nonNull(dto.getProcessingDateType()) ? new ProcessingDateTypeResponse(dto.getProcessingDateType()) : null;
         this.processingDate = dto.getProcessingDate();
+        this.processingDateValue = dto.getProcessingDateValue();
         this.status = dto.getStatus().name();
         this.params = dto.getParams();
         this.lastExecutionDatetime = dto.getLastExecutionDatetime();

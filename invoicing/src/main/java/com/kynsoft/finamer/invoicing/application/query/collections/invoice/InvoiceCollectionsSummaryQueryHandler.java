@@ -21,7 +21,7 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
     @Override
     public InvoiceCollectionResponse handle(InvoiceCollectionsSummaryQuery query) {
 
-        Page<ManageInvoiceDto> invoiceForSummary = manageInvoiceService.getInvoiceForSummary(query.getPageable(),query.getFilter());
+        Page<ManageInvoiceDto> invoiceForSummary = manageInvoiceService.getInvoiceForSummary(query.getPageable(),query.getFilter(), query.getEmployeeId());
         long totalInvoiceWith30=invoiceForSummary.getContent().parallelStream().filter(invoice->invoice.getAging()==30)
                 .count();
         long totalInvoiceWith60=invoiceForSummary.getContent().parallelStream().filter(invoice->invoice.getAging()==60)

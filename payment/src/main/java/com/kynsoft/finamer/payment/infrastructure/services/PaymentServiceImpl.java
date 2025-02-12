@@ -156,7 +156,7 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria) {
+    public PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
 //
 //        FilterCriteria fcBank = new FilterCriteria();
@@ -179,6 +179,22 @@ public class PaymentServiceImpl implements IPaymentService {
         fcBankPaymentBalance.setOperator(SearchOperation.GREATER_THAN);
         fcBankPaymentBalance.setValue(0);
         filterCriteria.add(fcBankPaymentBalance);
+
+        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
+        FilterCriteria fcAgency = new FilterCriteria();
+        fcAgency.setKey("agency.id");
+        fcAgency.setLogicalOperation(LogicalOperation.AND);
+        fcAgency.setOperator(SearchOperation.IN);
+        fcAgency.setValue(agencyIds);
+        filterCriteria.add(fcAgency);
+
+        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fcHotel = new FilterCriteria();
+        fcHotel.setKey("hotel.id");
+        fcHotel.setLogicalOperation(LogicalOperation.AND);
+        fcHotel.setOperator(SearchOperation.IN);
+        fcHotel.setValue(hotelIds);
+        filterCriteria.add(fcHotel);
 
 //        FilterCriteria fcExpense = new FilterCriteria();
 //        fcExpense.setKey("paymentSource.expense");

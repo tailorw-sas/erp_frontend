@@ -30,7 +30,7 @@ public interface IManageInvoiceService {
 
     PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria>filterCriteria);
+    Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria>filterCriteria, UUID employeeId);
 
     List<ManageInvoiceDto> findByIds(List<UUID> ids);
 
