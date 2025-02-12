@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class ManageEmployeeServiceImpl implements IManageEmployeeService {
@@ -56,7 +55,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
     }
 
     @Override
-    @Cacheable(cacheNames = "manageEmployee", key = "#id", unless = "#result == null")
+    //@Cacheable(cacheNames = "manageEmployee", key = "#id", unless = "#result == null")
     public ManageEmployeeDto findById(UUID id) {
         Optional<ManageEmployee> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {

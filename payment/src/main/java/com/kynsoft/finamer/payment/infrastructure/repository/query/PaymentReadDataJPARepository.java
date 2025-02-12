@@ -37,7 +37,7 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection("
             + "p.id, p.paymentId, p.paymentAmount, p.paymentBalance, p.depositAmount, p.depositBalance, p.otherDeductions, "
-            + "p.identified, p.notIdentified, p.notApplied, p.applied) "
+            + "p.identified, p.notIdentified, p.notApplied, p.applied, p.agency.id, p.hotel.id) "
             + "FROM Payment p "
             + "WHERE p.paymentId = :paymentId")
     Optional<PaymentProjection> findPaymentId(@Param("paymentId") long paymentId);
@@ -50,7 +50,7 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection("
             + "p.id, p.paymentId, p.paymentAmount, p.paymentBalance, p.depositAmount, p.depositBalance, p.otherDeductions, "
-            + "p.identified, p.notIdentified, p.notApplied, p.applied) "
+            + "p.identified, p.notIdentified, p.notApplied, p.applied, p.agency.id, p.hotel.id) "
             + "FROM Payment p "
             + "WHERE p.id = :id")
     Optional<PaymentProjection> getPaymentByIdProjection(@Param("id") UUID id);
