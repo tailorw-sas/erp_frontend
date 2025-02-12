@@ -1144,8 +1144,8 @@ function navigateToInvoice($event: any) {
     }
   }
   else if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.applyDeposit) {
-    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id) {
-      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id}`
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) { // objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice.id}` // objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id
       window.open(url, '_blank')
     }
     else {
