@@ -7,12 +7,15 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageRoomTypeResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageRoomTypeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageRoomType;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageRoomTypeWriteDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageRoomTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -34,9 +37,14 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     @Autowired
     private final ManageRoomTypeReadDataJPARepository repositoryQuery;
 
-    public ManageRoomTypeServiceImpl(ManageRoomTypeWriteDataJPARepository repositoryCommand, ManageRoomTypeReadDataJPARepository repositoryQuery) {
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
+    public ManageRoomTypeServiceImpl(ManageRoomTypeWriteDataJPARepository repositoryCommand, 
+                                     ManageRoomTypeReadDataJPARepository repositoryQuery,
+                                     ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -76,8 +84,8 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteria(filterCriteria, employeeId);
 
         GenericSpecificationsBuilder<ManageRoomType> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageRoomType> data = repositoryQuery.findAll(specifications, pageable);
@@ -95,7 +103,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
         return repositoryQuery.countByCodeAndManageHotelIdAndNotId(code, manageHotelId, id);
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+    private void filterCriteria(List<FilterCriteria> filterCriteria, UUID employeeId) {
         for (FilterCriteria filter : filterCriteria) {
 
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
@@ -107,6 +115,13 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
                 }
             }
         }
+        List<UUID> ids = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fc = new FilterCriteria();
+        fc.setKey("manageHotel.id");
+        fc.setLogicalOperation(LogicalOperation.AND);
+        fc.setOperator(SearchOperation.IN);
+        fc.setValue(ids);
+        filterCriteria.add(fc);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageRoomType> data) {
