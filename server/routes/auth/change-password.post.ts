@@ -17,10 +17,9 @@ export default defineEventHandler(async (event) => {
     'Content-Type': 'application/json',
   }
 
-  const payload = body.payload
   const response: any = await $fetch(`${process.env.VITE_APP_BASE_URL}/identity/api/auth/change-password`, {
     method: 'POST',
-    payload,
+    body,
     headers: defaultHeaders
   })
 
