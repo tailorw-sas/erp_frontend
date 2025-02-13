@@ -18,6 +18,8 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.ManageRateP
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -58,10 +60,13 @@ public class ManageRatePlanController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<PaginatedResponse> search(@RequestBody SearchRequest request) {
+    public ResponseEntity<PaginatedResponse> search(@AuthenticationPrincipal Jwt jwt, @RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchManageRatePlanQuery query = new GetSearchManageRatePlanQuery(pageable, request.getFilter(), request.getQuery());
+        String userId = jwt.getClaim("sub");
+        UUID employeeId = UUID.fromString(userId);
+        //UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchManageRatePlanQuery query = new GetSearchManageRatePlanQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
