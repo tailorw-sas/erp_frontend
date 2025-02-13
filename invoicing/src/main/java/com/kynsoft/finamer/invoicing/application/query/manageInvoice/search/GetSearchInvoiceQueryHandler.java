@@ -17,6 +17,6 @@ public class GetSearchInvoiceQueryHandler implements IQueryHandler<GetSearchInvo
     @Override
     public PaginatedResponse handle(GetSearchInvoiceQuery query) {
 
-        return this.service.search(query.getPageable(),query.getFilter());
+        return this.service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
     }
 }

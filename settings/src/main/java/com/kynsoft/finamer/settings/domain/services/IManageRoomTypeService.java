@@ -18,7 +18,7 @@ public interface IManageRoomTypeService {
 
     ManageRoomTypeDto findById(UUID id);
 
-    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
 
     Long countByCodeAndNotId(String code, UUID id);
 

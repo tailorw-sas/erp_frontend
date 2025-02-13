@@ -10,7 +10,8 @@ import com.tailorw.tcaInnsist.domain.services.IManageHotelService;
 import com.tailorw.tcaInnsist.domain.services.IManageTradingCompanyService;
 import com.tailorw.tcaInnsist.domain.services.IRateService;
 import com.tailorw.tcaInnsist.domain.services.IManageConnectionService;
-import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedRatesKafka;
+import com.tailorw.tcaInnsist.infrastructure.model.kafka.BookingKafka;
+import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedBookingKafka;
 import com.tailorw.tcaInnsist.infrastructure.model.kafka.ManageRateKafka;
 import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerReplicateGroupedRatesService;
 import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerUpdateSchedulerLogService;
@@ -20,10 +21,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -58,6 +56,9 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
         }
 
         setLogProcessAsCompleted(command.getProcessId(), additionDetails.toString());
+
+        logInfo("Sync Rate Process End.");
+        logInfo("**************************************************************");
     }
 
     private ManageHotelDto validateHotel(String hotelCode){
@@ -108,24 +109,24 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
 
     private void syncRoomRates(UUID processId, String invoiceDate, String hotelCode, Map<String, List<RateDto>> groupedRates){
         UUID idLog = UUID.randomUUID();
-        int count = 1;
+        List<BookingKafka> bookingKafkaList = new ArrayList<>();
         for(Map.Entry<String, List<RateDto>> entry : groupedRates.entrySet()){
-            GroupedRatesKafka groupedRatesKafka = new GroupedRatesKafka(
-                    idLog,
-                    processId,
-                    invoiceDate,
-                    hotelCode,
+            BookingKafka bookingKafka = new BookingKafka(
                     entry.getKey().split("\\|")[0],
                     entry.getKey().split("\\|")[1],
                     entry.getValue().stream()
                             .map(ManageRateKafka::new)
-                            .collect(Collectors.toList()),
-                    count == 1,
-                    groupedRates.size() == count
+                            .collect(Collectors.toList())
             );
-            producerReplicateGroupedRatesService.create(groupedRatesKafka);
-            count++;
+            bookingKafkaList.add(bookingKafka);
         }
+        GroupedBookingKafka groupedRatesKafka = new GroupedBookingKafka(idLog,
+                processId,
+                invoiceDate,
+                hotelCode,
+                bookingKafkaList
+        );
+        producerReplicateGroupedRatesService.create(groupedRatesKafka);
     }
 
     private void setLogProcessAsCompleted(UUID processId, String message){
@@ -137,7 +138,11 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
     }
 
     private void logWarningAndAppend(StringBuilder details, String message) {
-        Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, message);
+        logInfo(message);
         details.append(message).append("\n");
+    }
+
+    private void logInfo(String message){
+        Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, message);
     }
 }

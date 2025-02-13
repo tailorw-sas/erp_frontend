@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.creditcard.application.query.transaction.search;
+package com.kynsoft.finamer.payment.application.query.payment.searchCollection;
 
 import com.kynsof.share.core.domain.bus.query.IQuery;
 import com.kynsof.share.core.domain.request.FilterCriteria;
@@ -13,7 +13,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GetSearchTransactionQuery implements IQuery {
+public class GetSearchPaymentCollectionsQuery implements IQuery {
+
     private Pageable pageable;
     private List<FilterCriteria> filter;
     private String query;

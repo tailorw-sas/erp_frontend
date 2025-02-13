@@ -16,6 +16,6 @@ public class GetSearchManageRatePlanQueryHandler implements IQueryHandler<GetSea
 
     @Override
     public PaginatedResponse handle(GetSearchManageRatePlanQuery query) {
-        return this.service.search(query.getPageable(), query.getFilter());
+        return this.service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
     }
 }

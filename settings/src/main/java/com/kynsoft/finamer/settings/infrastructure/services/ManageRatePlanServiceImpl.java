@@ -7,12 +7,15 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageRatePlanResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageRatePlan;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageRatePlanWriteDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageRatePlanReadDataJPARepository;
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,9 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
 
     @Autowired
     private ManageRatePlanReadDataJPARepository repositoryQuery;
+
+    @Autowired
+    private ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     @Override
     public UUID create(ManageRatePlanDto dto) {
@@ -68,8 +74,8 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteria(filterCriteria, employeeId);
 
         GenericSpecificationsBuilder<ManageRatePlan> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageRatePlan> data = this.repositoryQuery.findAll(specifications, pageable);
@@ -77,7 +83,7 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
         return getPaginatedResponse(data);
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+    private void filterCriteria(List<FilterCriteria> filterCriteria, UUID employeeId) {
         for (FilterCriteria filter : filterCriteria) {
 
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
@@ -89,6 +95,13 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
                 }
             }
         }
+        List<UUID> ids = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fc = new FilterCriteria();
+        fc.setKey("hotel.id");
+        fc.setLogicalOperation(LogicalOperation.AND);
+        fc.setOperator(SearchOperation.IN);
+        fc.setValue(ids);
+        filterCriteria.add(fc);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageRatePlan> data) {

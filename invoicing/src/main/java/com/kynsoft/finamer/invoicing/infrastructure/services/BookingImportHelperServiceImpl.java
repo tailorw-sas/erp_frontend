@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
+import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
@@ -16,21 +18,13 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.Booking
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -131,11 +125,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private void createInvoiceGroupingForVirtualHotel(String importProcessId, String employee) {
-        Map<GroupByVirtualHotel, List<BookingRow>> groupedByHotelBookingNumber;
+        Map<GroupByVirtualHotel, List<BookingRow>> groupedByHotelInvoiceNumber;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByImportProcessId(importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
-        groupedByHotelBookingNumber = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
+        groupedByHotelInvoiceNumber = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
                         -> new GroupByVirtualHotel(
                         bookingRow.getTransactionDate(),
@@ -144,13 +138,105 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         Long.valueOf(bookingRow.getHotelInvoiceNumber())
                 )));
 
+        //agrupando y comprobando el booking number
+        Map<GroupByHotelBookingNumber, List<BookingRow>> groupedByHotelBookingNumber;
+        groupedByHotelBookingNumber = groupByHotelBookingNumberListMap(bookingImportCacheStream);
         if (!groupedByHotelBookingNumber.isEmpty()) {
-            groupedByHotelBookingNumber.forEach((key, value) -> {
+            String checkBookingNumberRepeated = checkForDuplicateHotelBookingNumbers(groupedByHotelBookingNumber);
+            if (!checkBookingNumberRepeated.isEmpty()){
+                throw new BusinessException(
+                        DomainErrorMessage.HOTEL_BOOKING_NUMBER_REPEATED,
+                        "Hotel Booking Number: " + checkBookingNumberRepeated +"is repeated in the uploaded document."
+                );
+            }
+        }
+
+        if (!groupedByHotelInvoiceNumber.isEmpty()) {
+            String checkInvoiceNumberRepeated = checkForDuplicateHotelInvoiceNumbers(groupedByHotelInvoiceNumber);
+            if (!checkInvoiceNumberRepeated.isEmpty()){
+                throw new BusinessException(
+                        DomainErrorMessage.HOTEL_INVOICE_NUMBER_REPEATED,
+                        "Hotel Invoice Number: " + checkInvoiceNumberRepeated +"is repeated in the uploaded document."
+                );
+            }
+
+            //validando la cantidad de adultos en los booking agrupados
+            groupedByHotelInvoiceNumber.forEach((key, value) -> cantAdultsValid(value));
+
+            groupedByHotelInvoiceNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
                 this.createInvoiceWithBooking(agency, hotel, value, employee, "HotelInvoiceNumber", false);
             });
         }
+    }
+
+    private String checkForDuplicateHotelInvoiceNumbers(Map<GroupByVirtualHotel, List<BookingRow>> groupedByHotelBookingNumber) {
+        String resp = "";
+        // Crear un mapa auxiliar para agrupar por hotelInvoiceNumber
+        Map<Long, List<String>> invoiceNumberMap = new HashMap<>();
+
+        // Recorrer las claves del mapa original
+        for (GroupByVirtualHotel key : groupedByHotelBookingNumber.keySet()) {
+            Long hotelInvoiceNumber = key.getHotelInvoiceNumber();
+
+            // Agregar la clave al mapa auxiliar
+            invoiceNumberMap.computeIfAbsent(hotelInvoiceNumber, k -> new ArrayList<>()).add(key.getHotel());
+        }
+
+        // Verificar si hay algún hotelInvoiceNumber con más de una clave y hotel repetido
+        for (Map.Entry<Long, List<String>> entry : invoiceNumberMap.entrySet()) {
+            if (entry.getValue().size() > 1 && InvoiceUtils.hasDuplicates(entry.getValue())) {
+                resp = resp.concat(entry.getKey().toString() + " ");
+            }
+        }
+
+        return resp; // No hay duplicados
+    }
+
+    private String checkForDuplicateHotelBookingNumbers(Map<GroupByHotelBookingNumber, List<BookingRow>> groupedByHotelBookingNumber) {
+        String resp = "";
+        // Crear un mapa auxiliar para agrupar por hotelInvoiceNumber
+        Map<String, List<String>> invoiceNumberMap = new HashMap<>();
+
+        // Recorrer las claves del mapa original
+        for (GroupByHotelBookingNumber key : groupedByHotelBookingNumber.keySet()) {
+            String hotelBookingNumber = key.getHotelBookingNumber();
+
+            // Agregar la clave al mapa auxiliar
+            invoiceNumberMap.computeIfAbsent(hotelBookingNumber, k -> new ArrayList<>()).add(key.getHotel());
+        }
+
+        // Verificar si hay algún hotelInvoiceNumber con más de una clave y hotel repetido
+        for (Map.Entry<String, List<String>> entry : invoiceNumberMap.entrySet()) {
+            if (entry.getValue().size() > 1 && InvoiceUtils.hasDuplicates(entry.getValue())) {
+                resp = resp.concat(entry.getKey().toString() + " ");
+            }
+        }
+
+        return resp; // No hay duplicados
+    }
+
+    private Map<GroupByHotelBookingNumber, List<BookingRow>> groupByHotelBookingNumberListMap(List<BookingImportCache> bookingImportCacheStream){
+        Map<GroupByHotelBookingNumber, List<BookingRow>> groupedByHotelBookingNumber;
+        List<BookingImportCache> modifiedList = bookingImportCacheStream.stream()
+                .map(booking -> {
+                    BookingImportCache copy = new BookingImportCache();
+                    BeanUtils.copyProperties(booking, copy); // Copia las propiedades
+                    copy.setHotelBookingNumber(InvoiceUtils.removeBlankSpaces(booking.getHotelBookingNumber()));
+                    return copy;
+                })
+                .collect(Collectors.toList());
+
+        groupedByHotelBookingNumber = modifiedList.stream().map(BookingImportCache::toAggregate)
+                .collect(Collectors.groupingBy(bookingRow
+                        -> new GroupByHotelBookingNumber(
+                        bookingRow.getHotelBookingNumber(),
+                        bookingRow.getManageAgencyCode(),
+                        bookingRow.getManageHotelCode(),
+                        bookingRow.getTransactionDate())
+                ));
+        return groupedByHotelBookingNumber;
     }
 
     @Override
@@ -486,4 +572,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         );
     }
 
+    private void cantAdultsValid(List<BookingRow> rowList){
+        int cont = rowList.stream().map(BookingRow::getAdults).reduce(0.0, Double::sum).intValue();
+        if (cont <= 0){
+            throw new BusinessException(
+                    DomainErrorMessage.CANT_ADULTS_NOT_VALID,
+                    DomainErrorMessage.CANT_ADULTS_NOT_VALID.getReasonPhrase() + " Hotel Invoice Number: " + rowList.get(0).getHotelInvoiceNumber() + "."
+            );
+        }
+    }
 }

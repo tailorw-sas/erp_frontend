@@ -9,8 +9,9 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsoft.finamer.creditcard.application.query.objectResponse.TransactionResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionSearchResponse;
 import com.kynsoft.finamer.creditcard.application.query.transaction.search.TransactionTotalResume;
 import com.kynsoft.finamer.creditcard.domain.dto.*;
@@ -19,6 +20,7 @@ import com.kynsoft.finamer.creditcard.domain.dtoEnum.MethodType;
 import com.kynsoft.finamer.creditcard.domain.services.*;
 import com.kynsoft.finamer.creditcard.infrastructure.identity.Transaction;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.command.TransactionWriteDataJPARepository;
+import com.kynsoft.finamer.creditcard.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.creditcard.infrastructure.repository.query.TransactionReadDataJPARepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -48,11 +50,17 @@ public class TransactionServiceImpl implements ITransactionService {
     private final IParameterizationService parameterizationService;
 
     private final IMerchantLanguageCodeService merchantLanguageCodeService;
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public TransactionServiceImpl(TransactionWriteDataJPARepository repositoryCommand,
                                   TransactionReadDataJPARepository repositoryQuery,
                                   MailService mailService,
-                                  TemplateEntityServiceImpl templateEntityService, IManageTransactionStatusService transactionStatusService, ITransactionStatusHistoryService transactionStatusHistoryService, IParameterizationService parameterizationService, IMerchantLanguageCodeService merchantLanguageCodeService) {
+                                  TemplateEntityServiceImpl templateEntityService,
+                                  IManageTransactionStatusService transactionStatusService,
+                                  ITransactionStatusHistoryService transactionStatusHistoryService,
+                                  IParameterizationService parameterizationService,
+                                  IMerchantLanguageCodeService merchantLanguageCodeService,
+                                  ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.mailService = mailService;
@@ -61,6 +69,7 @@ public class TransactionServiceImpl implements ITransactionService {
         this.transactionStatusHistoryService = transactionStatusHistoryService;
         this.parameterizationService = parameterizationService;
         this.merchantLanguageCodeService = merchantLanguageCodeService;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -87,7 +96,8 @@ public class TransactionServiceImpl implements ITransactionService {
             });
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
+                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
 
@@ -97,7 +107,8 @@ public class TransactionServiceImpl implements ITransactionService {
         if (entity.isPresent()) {
             return entity.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
     @Override
     public TransactionDto findByUuid(UUID uuid) {
@@ -105,12 +116,29 @@ public class TransactionServiceImpl implements ITransactionService {
         if (entity.isPresent()) {
             return entity.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
+
+        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
+        FilterCriteria fcAgency = new FilterCriteria();
+        fcAgency.setKey("agency.id");
+        fcAgency.setLogicalOperation(LogicalOperation.AND);
+        fcAgency.setOperator(SearchOperation.IN);
+        fcAgency.setValue(agencyIds);
+        filterCriteria.add(fcAgency);
+
+        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
+        FilterCriteria fcHotel = new FilterCriteria();
+        fcHotel.setKey("hotel.id");
+        fcHotel.setLogicalOperation(LogicalOperation.AND);
+        fcHotel.setOperator(SearchOperation.IN);
+        fcHotel.setValue(hotelIds);
+        filterCriteria.add(fcHotel);
 
         GenericSpecificationsBuilder<Transaction> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Transaction> data = repositoryQuery.findAll(specifications, pageable);
@@ -126,14 +154,6 @@ public class TransactionServiceImpl implements ITransactionService {
         double commission = 0.0;
         double netAmount = 0.0;
 
-        // Se comenta iteracion sobre lista de transactions ya que no se va a usar por ahora el total global
-        /*for (Transaction transaction : repositoryQuery.findAll(specifications)) {
-            if (transaction.getAmount() != null) {
-                totalAmount += transaction.getAmount();
-                commission += transaction.getCommission();
-                netAmount += transaction.getNetAmount();
-            }
-        }*/
         ParameterizationDto parameterizationDto = this.parameterizationService.findActiveParameterization();
 
         //si no encuentra la parametrization que agarre 2 decimales por defecto
@@ -171,7 +191,8 @@ public class TransactionServiceImpl implements ITransactionService {
             Optional<Double> sumOfChildrenAmount = this.repositoryQuery.findSumOfAmountByParentId(parentId);
             return (sumOfChildrenAmount.orElse(0.0) + amount) > parentAmount;
         } else {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND,
+                    new ErrorField("id", DomainErrorMessage.VCC_TRANSACTION_NOT_FOUND.getReasonPhrase())));
         }
     }
 
@@ -192,15 +213,6 @@ public class TransactionServiceImpl implements ITransactionService {
                 }
             }
         }
-    }
-
-    private PaginatedResponse getPaginatedResponse(Page<Transaction> data) {
-        List<TransactionResponse> responseList = new ArrayList<>();
-        for (Transaction entity : data.getContent()) {
-            responseList.add(new TransactionResponse(entity.toAggregate()));
-        }
-        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
-                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private PaginatedResponse getPaginatedSearchResponse(Page<Transaction> data) {

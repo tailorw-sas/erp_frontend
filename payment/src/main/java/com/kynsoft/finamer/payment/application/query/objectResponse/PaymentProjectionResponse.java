@@ -36,6 +36,9 @@ public class PaymentProjectionResponse implements IResponse {
     private Double notApplied;
     private Double applied;
 
+    private UUID agencyId;
+    private UUID hotelId;
+
     public PaymentProjectionResponse(PaymentProjection dto) {
         this.id = dto.getId();
         this.paymentId = dto.getPaymentId();
@@ -48,6 +51,8 @@ public class PaymentProjectionResponse implements IResponse {
         this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
         this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
         this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
+        this.agencyId = dto.getAgencyId();
+        this.hotelId = dto.getHotelId();
     }
 
 }
