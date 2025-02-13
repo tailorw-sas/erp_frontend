@@ -475,6 +475,8 @@ const optionsRoomRate = ref({
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
+  scrollHeight: '35vh',
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?',
 })
 

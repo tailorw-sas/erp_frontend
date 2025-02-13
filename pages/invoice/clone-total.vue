@@ -520,7 +520,7 @@ async function saveItem(item: { [key: string]: any }) {
         listBookingForFlateRate.push(booking.hotelBookingNumber)
       }
 
-      if (booking?.roomType && booking?.roomType?.id && item.hotel && item.hotel?.id && booking?.roomType?.hotel?.id !== item.hotel?.id) {
+      if (booking?.roomType && booking?.roomType?.id && item.hotel && item.hotel?.id && booking?.roomType?.manageHotel?.id !== item.hotel?.id) {
         listBookingForRoomType.push(booking.hotelBookingNumber)
       }
 

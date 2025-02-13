@@ -120,10 +120,16 @@ type FilterDisplayMode = 'row' | 'menu' | undefined
 const modeFilterDisplay: Ref<FilterDisplayMode> = ref('menu')
 const menuFilter: { [key: string]: Ref<any> } = {}
 const menuFilterForRowDisplay: Ref = ref()
+const objeto: { [key: string]: any } = {}
+// Asignar el objeto a objListData y hacerlo reactivo
+const objListData = reactive(objeto)
 
 // Iteramos sobre el array de campos y añadimos las propiedades a menuFilter
 props.columns.forEach((field) => {
   menuFilter[field.field] = ref(null)
+  // if (field.type === 'select' || field.type === 'slot-select' || field.type === 'local-select') {
+  //   objListData[field.field] = []
+  // }
 })
 
 const openDialogDelete = ref(false)
@@ -133,12 +139,10 @@ const expandedRows = ref({})
 const metaKey = ref(false)
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
-const objeto: { [key: string]: any } = {}
 const objetoFilter: { [key: string]: any } = {
   search: { value: null, matchMode: FilterMatchMode.CONTAINS },
 }
-// Asignar el objeto a objListData y hacerlo reactivo
-const objListData = reactive(objeto)
+
 const objForLoadings = ref<{ [key: string]: any }>({})
 const objForValues = ref<Record<string, Array<{ [key: string]: any }>>>({})
 
@@ -362,7 +366,7 @@ async function getList(
         }
         else {
           for (const iterator of response.data) {
-            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name, code: iterator.code ? iterator.code : '' }]
           }
         }
       }
@@ -483,7 +487,17 @@ async function getDataFromSelectors() {
           iterator.objApi?.mapFunction,
           iterator.objApi?.sortOption
         )
-        objListData[iterator.field] = response
+        objListData[iterator.field] = []
+        for (const item of response) {
+          objListData[iterator.field] = [
+            ...objListData[iterator.field],
+            {
+              ...item,
+              name: 'code' in item ? `${item.code} - ${item.name}` : item.name
+            }
+            // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
+          ]
+        }
       }
     }
   }
@@ -507,7 +521,18 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
       column.objApi?.sortOption,
       objToSearch
     )
-    objListData[column.field] = response
+    objListData[column.field] = []
+    for (const item of response) {
+      objListData[column.field] = [
+        ...objListData[column.field],
+        {
+          ...item,
+          name: 'code' in item ? `${item.code} - ${item.name}` : item.name
+        }
+        // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
+      ]
+    }
+
     objForLoadings.value[column.field] = false
   }
   catch (error) {
@@ -882,14 +907,6 @@ defineExpose({ clearSelectedItems })
                   filterModel.value = $event
                 }"
                 @load="async($event) => {
-                  const filter: FilterCriteria[] = [
-                    {
-                      key: 'status',
-                      logicalOperation: 'AND',
-                      operator: 'EQUALS',
-                      value: 'ACTIVE',
-                    },
-                  ]
                   const objQueryToSearch = {
                     query: $event,
                     keys: ['name', 'code'],
@@ -897,6 +914,7 @@ defineExpose({ clearSelectedItems })
                   await getDataFromFiltersSelectors(column, objQueryToSearch)
                 }"
               />
+
               <!-- No Eliminar -->
               <!-- <MultiSelect
                 v-model="filterModel.value"
