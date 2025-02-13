@@ -11,7 +11,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -66,7 +66,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());
             validators.put(ImportBookingNightsValidator.class.getName(), new ImportBookingNightsValidator());
 
-            validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator(importType));
+//            validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator(importType));
 
             validators.put(ImportBookingInvoiceAmountValidator.class.getName(), new ImportBookingInvoiceAmountValidator(importType));
             validators.put(ImportBookingCouponValidator.class.getName(), new ImportBookingCouponValidator());

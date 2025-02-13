@@ -437,7 +437,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     BUSINESS_PROCESS_SCHEDULER_PROCESSING_RULE_NOT_FOUND(2018, Series.DOMAIN_ERROR, "Business Process Scheduler Processing Rule not found"),
     INNSIST_IMPORT_BOOKING_SIZE_RULE(2019, Series.DOMAIN_ERROR, "The current size or bookings is different from the initial size"),
     HOTEL_INVOICE_NUMBER_REPEATED(2020, Series.DOMAIN_ERROR, "Hotel Invoice Number already exists."),
-    HOTEL_BOOKING_NUMBER_REPEATED(2021, Series.DOMAIN_ERROR, "Hotel Booking Number already exists.")
+    HOTEL_BOOKING_NUMBER_REPEATED(2021, Series.DOMAIN_ERROR, "Hotel Booking Number already exists."),
+    CANT_ADULTS_NOT_VALID(2022, Series.DOMAIN_ERROR, "Adults must be greater than 0.")
     ;
 
     private static final DomainErrorMessage[] VALUES;
