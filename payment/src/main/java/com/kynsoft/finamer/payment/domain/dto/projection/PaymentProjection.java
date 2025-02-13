@@ -26,4 +26,7 @@ public class PaymentProjection implements Serializable {
     private double notIdentified;
     private Double notApplied;
     private Double applied;
+
+    private UUID agencyId;
+    private UUID hotelId;
 }
