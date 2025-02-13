@@ -160,6 +160,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 );
             }
 
+            //validando la cantidad de adultos en los booking agrupados
+            groupedByHotelInvoiceNumber.forEach((key, value) -> cantAdultsValid(value));
+
             groupedByHotelInvoiceNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
@@ -569,4 +572,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         );
     }
 
+    private void cantAdultsValid(List<BookingRow> rowList){
+        int cont = rowList.stream().map(BookingRow::getAdults).reduce(0.0, Double::sum).intValue();
+        if (cont <= 0){
+            throw new BusinessException(
+                    DomainErrorMessage.CANT_ADULTS_NOT_VALID,
+                    DomainErrorMessage.CANT_ADULTS_NOT_VALID.getReasonPhrase() + " Hotel Invoice Number: " + rowList.get(0).getHotelInvoiceNumber() + "."
+            );
+        }
+    }
 }
