@@ -412,7 +412,7 @@ const columnsAgency: IColumn[] = [
 const options = ref({
   tableName: 'Payment',
   moduleApi: 'payment',
-  uriApi: 'payment',
+  uriApi: 'payment/search-collection',
   loading: false,
   // selectionMode: 'single' as 'multiple' | 'single',
   scrollHeight: '70vh',
@@ -463,7 +463,7 @@ const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100000,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -595,18 +595,18 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
-    const filterPaymentSource = payload.value.filter.find((item: IFilter) => item.key === 'paymentSource.code')
-    if (filterPaymentSource) {
-      filterPaymentSource.value = ['EXP', 'BK']
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentSource.code',
-        operator: 'IN',
-        value: ['EXP', 'BK'],
-        logicalOperation: 'AND',
-      })
-    }
+    // const filterPaymentSource = payload.value.filter.find((item: IFilter) => item.key === 'paymentSource.code')
+    // if (filterPaymentSource) {
+    //   filterPaymentSource.value = ['EXP', 'BK']
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentSource.code',
+    //     operator: 'IN',
+    //     value: ['EXP', 'BK'],
+    //     logicalOperation: 'AND',
+    //   })
+    // }
 
     /* const filterDepositAmount = payload.value.filter.find((item: IFilter) => item.key === 'depositAmount')
     if (filterDepositAmount) {
@@ -621,59 +621,59 @@ async function getList() {
       })
     } */
 
-    const filterStatusCanceled = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.cancelled')
-    if (filterStatusCanceled) {
-      filterStatusCanceled.value = false
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentStatus.cancelled',
-        operator: 'EQUALS',
-        value: false,
-        logicalOperation: 'AND',
-      })
-    }
+    // const filterStatusCanceled = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.cancelled')
+    // if (filterStatusCanceled) {
+    //   filterStatusCanceled.value = false
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentStatus.cancelled',
+    //     operator: 'EQUALS',
+    //     value: false,
+    //     logicalOperation: 'AND',
+    //   })
+    // }
 
-    const filterStatusApplied = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.applied')
-    if (filterStatusApplied) {
-      filterStatusApplied.value = false
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentStatus.applied',
-        operator: 'EQUALS',
-        value: false,
-        logicalOperation: 'AND',
-      })
-    }
-    const filterDepositBalance = payload.value.filter.find((item: IFilter) => item.key === 'depositBalance' && item.type === 'filterTable')
-    if (filterDepositBalance) {
-      filterDepositBalance.value = 0
-    }
-    else {
-      payload.value.filter.push({
-        key: 'depositBalance',
-        operator: 'GREATER_THAN',
-        value: 0,
-        logicalOperation: 'OR',
-        type: 'filterTable'
-      })
-    }
+    // const filterStatusApplied = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.applied')
+    // if (filterStatusApplied) {
+    //   filterStatusApplied.value = false
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentStatus.applied',
+    //     operator: 'EQUALS',
+    //     value: false,
+    //     logicalOperation: 'AND',
+    //   })
+    // }
+    // const filterDepositBalance = payload.value.filter.find((item: IFilter) => item.key === 'depositBalance' && item.type === 'filterTable')
+    // if (filterDepositBalance) {
+    //   filterDepositBalance.value = 0
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'depositBalance',
+    //     operator: 'GREATER_THAN',
+    //     value: 0,
+    //     logicalOperation: 'OR',
+    //     type: 'filterTable'
+    //   })
+    // }
 
-    const filterPaymentBalance = payload.value.filter.find((item: IFilter) => item.key === 'paymentBalance' && item.type === 'filterTable')
-    if (filterPaymentBalance) {
-      filterPaymentBalance.value = 0
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentBalance',
-        operator: 'GREATER_THAN',
-        value: 0,
-        logicalOperation: 'OR',
-        type: 'filterTable'
-      })
-    }
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    // const filterPaymentBalance = payload.value.filter.find((item: IFilter) => item.key === 'paymentBalance' && item.type === 'filterTable')
+    // if (filterPaymentBalance) {
+    //   filterPaymentBalance.value = 0
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentBalance',
+    //     operator: 'GREATER_THAN',
+    //     value: 0,
+    //     logicalOperation: 'OR',
+    //     type: 'filterTable'
+    //   })
+    // }
+    const response = await GenericService.searchWithoutSearch(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1996,7 +1996,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
-    getListInvoice()
+    // getListInvoice()
   }
 })
 // -------------------------------------------------------------------------------------------------------
