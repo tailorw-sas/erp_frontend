@@ -6,6 +6,7 @@ import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowEr
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.error.expenseToBooking.PaymentImportExpenseToBookingErrorEvent;
+import com.kynsoft.finamer.payment.infrastructure.excel.validators.SecurityImportValidators;
 import com.kynsoft.finamer.payment.infrastructure.services.http.BookingHttpGenIdService;
 import com.kynsoft.finamer.payment.infrastructure.services.http.helper.BookingImportAutomaticeHelperServiceImpl;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,23 +25,25 @@ public class PaymentExpenseBookingValidatorFactory extends IValidatorFactory<Pay
 
     private final BookingHttpGenIdService bookingHttpGenIdService;
     private final BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl;
+    private final SecurityImportValidators securityImportValidators;
 
     public PaymentExpenseBookingValidatorFactory(ApplicationEventPublisher applicationEventPublisher,
                                                 IManageBookingService bookingService,
                                                 IManagePaymentTransactionTypeService paymentTransactionTypeService,
                                                 BookingHttpGenIdService bookingHttpGenIdService,
-                                                BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl) {
+                                                BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl,
+                                                SecurityImportValidators securityImportValidators) {
         super(applicationEventPublisher);
-
         this.bookingService = bookingService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.bookingHttpGenIdService = bookingHttpGenIdService;
         this.bookingImportAutomaticeHelperServiceImpl = bookingImportAutomaticeHelperServiceImpl;
+        this.securityImportValidators = securityImportValidators;
     }
 
     @Override
     public void createValidators() {
-        bookingFieldValidator = new BookingFieldValidator(applicationEventPublisher, bookingService, bookingHttpGenIdService, bookingImportAutomaticeHelperServiceImpl);
+        bookingFieldValidator = new BookingFieldValidator(applicationEventPublisher, bookingService, bookingHttpGenIdService, bookingImportAutomaticeHelperServiceImpl, securityImportValidators);
         bookingBalanceValidator = new BookingBalanceValidator(applicationEventPublisher, bookingService);
         transactionTypeValidation = new PaymentExpenseBookingTransactionTypeValidation(applicationEventPublisher, paymentTransactionTypeService);
         remarksValidator = new RemarksValidator(applicationEventPublisher, paymentTransactionTypeService);

@@ -28,7 +28,7 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     Optional<Booking> findManageBookingByBookingId(long bookingId);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple(" +
-            "pd.id, pd.bookingId, pd.amountBalance, pp.invoiceType, pp.hotel.id, pp.agency.client.name) " +
+            "pd.id, pd.bookingId, pd.amountBalance, pp.invoiceType, pp.hotel.id, pp.agency.client.name, pp.agency.id) " +
             "FROM Booking pd " +
             "JOIN pd.invoice pp " +
             "WHERE pd.bookingId = :id")

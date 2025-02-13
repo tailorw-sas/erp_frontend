@@ -23,6 +23,7 @@ import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBooki
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
 import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooking.PaymentExpenseBookingValidatorFactory;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
@@ -74,6 +75,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     @Value("${payment.attachment.type.code}")
     private String PAYMENT_EXPENSE_BOOKING_ATTACHMENT_TYPE;
 
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
     public PaymentImportExpenseBookingHelperServiceImpl(PaymentExpenseBookingImportCacheRepository cacheRepository,
             PaymentImportExpenseBookingErrorRepository errorRepository,
             RedisTemplate<String, String> redisTemplate,
@@ -88,7 +91,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             IManageAttachmentTypeService attachmentTypeService,
             IManageResourceTypeService resourceTypeService,
             IStorageService storageService, IPaymentDetailService paymentDetailService,
-            ServiceLocator<IMediator> serviceLocator
+            ServiceLocator<IMediator> serviceLocator,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
     ) {
         super(redisTemplate);
         this.cacheRepository = cacheRepository;
@@ -108,6 +112,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.paymentDetailService = paymentDetailService;
         this.serviceLocator = serviceLocator;
         this.availableClient = new HashSet<>();
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -116,6 +121,9 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         availableClient.clear();
         readerConfiguration.setStrictHeaderOrder(false);
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
+        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(request.getEmployeeId());
+        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(request.getEmployeeId());
+
         expenseBookingValidatorFactory.createValidators();
         ExcelBeanReader<PaymentExpenseBookingRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentExpenseBookingRow.class);
         ExcelBean<PaymentExpenseBookingRow> excelBean = new ExcelBean<>(excelBeanReader);
@@ -123,6 +131,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
             row.setHotelId(request.getHotelId() != null ? request.getHotelId().toString() : "");
+            row.setAgencys(agencys);
+            row.setHotels(hotels);
             if (expenseBookingValidatorFactory.validate(row)) {
                 row.setClientName(getClientName(row.getBookingId()));
                 availableClient.add(row.getClientName());
