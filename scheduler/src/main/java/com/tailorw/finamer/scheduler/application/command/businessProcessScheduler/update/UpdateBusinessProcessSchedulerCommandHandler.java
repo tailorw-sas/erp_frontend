@@ -29,7 +29,7 @@ public class UpdateBusinessProcessSchedulerCommandHandler implements ICommandHan
     private final IBusinessProcessService businessProcessService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     public UpdateBusinessProcessSchedulerCommandHandler(IFrecuencyService frecuencyService,
                                                         IIntervalTypeService intervalTypeService,

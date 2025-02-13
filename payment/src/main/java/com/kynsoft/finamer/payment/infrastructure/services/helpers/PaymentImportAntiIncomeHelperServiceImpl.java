@@ -54,6 +54,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageBooki
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.PaymentWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageBookingReadDataJPARepository;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportErrorRepository;
@@ -112,7 +113,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
     private final PaymentUploadAttachmentUtil paymentUploadAttachmentUtil;
-    private final ApplicationEventPublisher applicationEventPublisher; 
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     @Value("${payment.relate.invoice.status.code}")
     private String RELATE_INCOME_STATUS_CODE;
@@ -144,7 +146,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             ManageBookingWriteDataJPARepository repositoryBookingWriteDataJPARepository,
             IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
             PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
-            ApplicationEventPublisher applicationEventPublisher) {
+            ApplicationEventPublisher applicationEventPublisher,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         super(redisTemplate);
         this.details = new ArrayList<>();
         this.newDetails = new ArrayList<>();
@@ -172,29 +175,29 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.paymentUploadAttachmentUtil = paymentUploadAttachmentUtil;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
-        System.err.println("|||||||||||||||||||||||||||||||||||||||||||||||||||");
-        System.err.println("|||||||||||||||||||||||||||||||||||||||||||||||||||");
-        System.err.println("Comienza a leer el excel: " + LocalTime.now());
-        System.err.println("|||||||||||||||||||||||||||||||||||||||||||||||||||");
-        System.err.println("|||||||||||||||||||||||||||||||||||||||||||||||||||");
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
+        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
+        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
+
         paymentAntiValidatorFactory.createValidators();
         ExcelBeanReader<AntiToIncomeRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, AntiToIncomeRow.class);
         ExcelBean<AntiToIncomeRow> excelBean = new ExcelBean<>(excelBeanReader);
         for (AntiToIncomeRow row : excelBean) {
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
+            row.setAgencys(agencys);
+            row.setHotels(hotels);
             if (paymentAntiValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
                 totalProcessRow++;
             }
         }
-        System.err.println("Termina de leer el excel: " + LocalTime.now());
     }
 
     public void createAttachment(PaymentImportDetailRequest request) {

@@ -11,6 +11,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -27,7 +28,7 @@ public class BusinessProcessSchedulerResponse implements IResponse {
     private ExecutionDateTypeResponse executionDateType;
     private String executionDateValue;
     private LocalDate executionDate;
-    private LocalTime executionTime;
+    private String executionTime;
     private ProcessingDateTypeResponse processingDateType;
     private LocalDate processingDate;
     private Integer processingDateValue;
@@ -45,7 +46,7 @@ public class BusinessProcessSchedulerResponse implements IResponse {
         this.executionDateType = Objects.nonNull(dto.getExecutionDateType()) ? new ExecutionDateTypeResponse(dto.getExecutionDateType()) : null;
         this.executionDateValue = dto.getExecutionDateValue();
         this.executionDate = dto.getExecutionDate();
-        this.executionTime = dto.getExecutionTime();
+        this.executionTime = Objects.nonNull(dto.getExecutionTime()) ? dto.getExecutionTime().format(DateTimeFormatter.ofPattern("HH:mm")) : null;
         this.processingDateType = Objects.nonNull(dto.getProcessingDateType()) ? new ProcessingDateTypeResponse(dto.getProcessingDateType()) : null;
         this.processingDate = dto.getProcessingDate();
         this.processingDateValue = dto.getProcessingDateValue();
