@@ -23,7 +23,7 @@ public class ImportBookingInvoiceAmountValidator extends ExcelRuleValidator<Book
                 errorFieldList.add(new ErrorField("Invoice Amount"," Invoice Amount can't be empty"));
                 return false;
             }
-            if (obj.getInvoiceAmount() == 0) {
+            if (obj.getInvoiceAmount() <= 0) {
                 errorFieldList.add( new ErrorField("Invoice Amount", "Invoice Amount must be greater than 0"));
                 return false;
             }

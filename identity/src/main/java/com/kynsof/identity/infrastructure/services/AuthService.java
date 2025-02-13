@@ -130,7 +130,8 @@ public class AuthService implements IAuthService {
             UserRepresentation user = users.get(0);
             String otpCode = otpService.generateOtpCode();
             otpService.saveOtpCode(email, otpCode);
-            producerOtp.create(new UserOtpKafka(email, otpCode, user.getFirstName()));
+
+            producerOtp.create(new UserOtpKafka(email, otpCode, String.format("%s %s", user.getFirstName(), user.getLastName())));
             return true;
         }
         throw new UserNotFoundException("User not found", new ErrorField("email", "Email not found"));
