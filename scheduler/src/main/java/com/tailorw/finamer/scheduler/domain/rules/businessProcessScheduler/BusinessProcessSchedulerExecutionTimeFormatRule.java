@@ -7,7 +7,7 @@ import com.kynsof.share.core.domain.rules.BusinessRule;
 public class BusinessProcessSchedulerExecutionTimeFormatRule extends BusinessRule {
 
     private final String executionTime;
-    private static final String TIME_REGEX_24H = "^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$";
+    private static final String TIME_REGEX_24H = "^([01][0-9]|2[0-3]):[0-5][0-9]$";
 
     public BusinessProcessSchedulerExecutionTimeFormatRule(String executionTime){
         super(DomainErrorMessage.BUSINESS_PROCESS_SCHEDULER_EXECUTION_TIME_FORMAT_IS_NOT_VALID,
