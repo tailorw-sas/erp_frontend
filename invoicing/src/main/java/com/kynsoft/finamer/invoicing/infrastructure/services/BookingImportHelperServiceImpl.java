@@ -255,6 +255,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 )));
 
         if (!groupedByHotelBookingNumber.isEmpty()) {
+
+            //validando la cantidad de adultos en los booking agrupados
+            groupedByHotelBookingNumber.forEach((key, value) -> cantAdultsValid(value));
+
             groupedByHotelBookingNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
@@ -293,6 +297,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
 
         if (!orderedGrouped.isEmpty()) {
+
+            //validando la cantidad de adultos en los booking agrupados
+            orderedGrouped.forEach((key, value) -> cantAdultsValid(value));
+
             orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
