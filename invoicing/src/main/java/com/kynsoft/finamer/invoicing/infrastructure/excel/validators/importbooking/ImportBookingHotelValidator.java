@@ -35,6 +35,10 @@ public class ImportBookingHotelValidator extends ExcelRuleValidator<BookingRow> 
 //            }
 
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
+            if (!obj.getHotels().contains(manageHotelDto.getId())) {
+                errorFieldList.add(new ErrorField("Hotel", "The employee does not have access to the hotel."));
+                return false;
+            }
             if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())) {
                 errorFieldList.add(new ErrorField("Hotel", " Hotel is inactive"));
                 return false;
@@ -42,5 +46,4 @@ public class ImportBookingHotelValidator extends ExcelRuleValidator<BookingRow> 
         }
         return true;
     }
-
 }

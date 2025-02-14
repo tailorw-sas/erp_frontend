@@ -22,6 +22,7 @@ import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportProcessRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,8 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -54,6 +57,7 @@ public class BookingServiceImpl implements ImportBookingService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IManageHotelService hotelService;
     private final IManageAgencyService agencyService;
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     private final Lock redisLock = new ReentrantLock();
     private final Semaphore semaphore;
@@ -63,7 +67,8 @@ public class BookingServiceImpl implements ImportBookingService {
             BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
             ApplicationEventPublisher applicationEventPublisher,
             IManageHotelService hotelService,
-            IManageAgencyService agencyService
+            IManageAgencyService agencyService,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
     ) {
         this.validatorFactory = validatorFactory;
         this.bookingImportProcessRedisRepository = bookingImportProcessRedisRepository;
@@ -73,6 +78,7 @@ public class BookingServiceImpl implements ImportBookingService {
         this.semaphore = new Semaphore(1);
         this.hotelService = hotelService;
         this.agencyService = agencyService;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -97,8 +103,12 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .total(0)
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
+                        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
+                        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
                         for (BookingRow bookingRow : excelBean) {
                             bookingRow.setImportProcessId(request.getImportProcessId());
+                            bookingRow.setAgencys(agencys);
+                            bookingRow.setHotels(hotels);
                             if (validatorFactory.validate(bookingRow)) {
                                 bookingImportHelperService.groupAndCachingImportBooking(bookingRow,
                                         importBookingFromFileRequest.getRequest().getImportType());
