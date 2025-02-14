@@ -16,6 +16,6 @@ public class GetSearchManageRoomTypeQueryHandler implements IQueryHandler<GetSea
 
     @Override
     public PaginatedResponse handle(GetSearchManageRoomTypeQuery query) {
-        return service.search(query.getPageable(), query.getFilter());
+        return service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
     }
 }
