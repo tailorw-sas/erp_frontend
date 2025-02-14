@@ -1260,7 +1260,7 @@ async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  await getAgencyByClient(objClientFormChangeAgency.value.id)
+  await getAgencyByClient() // objClientFormChangeAgency.value.id
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -1433,17 +1433,19 @@ async function getAgencyByClient(clientId: string = '') {
       })
     }
 
-    const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
-    if (objFilterByClient) {
-      objFilterByClient.value = clientId
-    }
-    else {
-      payloadChangeAgency.value.filter.push({
-        key: 'client.id',
-        operator: 'EQUALS',
-        value: clientId,
-        logicalOperation: 'AND',
-      })
+    if (clientId !== '') {
+      const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
+      if (objFilterByClient) {
+        objFilterByClient.value = clientId
+      }
+      else {
+        payloadChangeAgency.value.filter.push({
+          key: 'client.id',
+          operator: 'EQUALS',
+          value: clientId,
+          logicalOperation: 'AND',
+        })
+      }
     }
 
     const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
@@ -2617,7 +2619,7 @@ async function openModalApplyPaymentOtherDeduction() {
 
 async function openModalApplyChangeAgency() {
   openDialogChangeAgency.value = true
-  getAgencyByClient(objClientFormChangeAgency.value.id)
+  getAgencyByClient() // objClientFormChangeAgency.value.id
 }
 
 function closeModalChangeAgency() {
@@ -3640,7 +3642,7 @@ watch(payloadOnChangePage, (newValue) => {
 watch(payloadOnChangePageChangeAgency, (newValue) => {
   payloadChangeAgency.value.page = newValue?.page ? newValue?.page : 0
   payloadChangeAgency.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getAgencyByClient(objClientFormChangeAgency.value.id)
+  getAgencyByClient() // objClientFormChangeAgency.value.id
 })
 
 watch(applyPaymentOnChangePage, (newValue) => {
@@ -4322,7 +4324,7 @@ onMounted(async () => {
         <div class="p-fluid pt-3">
           <!-- // Label -->
           <div class="flex justify-content-between mb-2">
-            <div v-if="true" class="flex align-items-center mb-3">
+            <div v-if="false" class="flex align-items-center mb-3">
               <div class="mr-2">
                 <label for="autocomplete" class="font-semibold"> Client: </label>
               </div>
@@ -4337,9 +4339,9 @@ onMounted(async () => {
                   :suggestions="[...listClientFormChangeAgency]"
                   @change="async ($event) => {
                     objClientFormChangeAgency = $event
-                    if ($event && $event.id) {
-                      await getAgencyByClient($event.id)
-                    }
+                    // if ($event && $event.id) {
+                    //   await getAgencyByClient($event.id)
+                    // }
                   }"
                   @load="async($event) => {
                     const objQueryToSearch = {
@@ -4357,7 +4359,7 @@ onMounted(async () => {
                 />
               </div>
             </div>
-            <div v-if="false" class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
+            <div v-if="true" class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
               <strong class="mr-2 w-auto">Client:</strong>
               <!-- <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.code }} - {{ objClientFormChangeAgency.name }}</span> -->
               <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.name }}</span>
