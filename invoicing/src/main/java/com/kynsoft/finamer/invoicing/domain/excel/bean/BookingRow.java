@@ -8,7 +8,10 @@ import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Data
 public class BookingRow {
@@ -66,6 +69,9 @@ public class BookingRow {
     private String trendingCompany;
     private String insistImportProcessId;
     private String insistImportProcessBookingId;
+    
+    List<UUID> agencys = new ArrayList<>();
+    List<UUID> hotels = new ArrayList<>();
 
     public BookingRow() {
         this.firstName = "";
