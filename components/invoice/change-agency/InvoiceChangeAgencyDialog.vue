@@ -7,6 +7,7 @@ import { statusToBoolean } from '~/utils/helpers'
 import type { FilterCriteria } from '~/composables/list'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { GenericObject } from '~/types'
 
 const props = defineProps({
   openDialog: {
@@ -29,6 +30,12 @@ const toast = useToast()
 const dialogVisible = ref(props.openDialog)
 const listAgencyByClient = ref<any[]>([])
 const payloadOnChangePageChangeAgency = ref<PageState>()
+const objLoading = ref({
+  loadingAgency: false,
+  loadingClient: false,
+  loadingHotel: false,
+  loadingStatus: false
+})
 
 const columnsChangeAgency = ref<IColumn[]>([
   { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: true, showFilter: true },
@@ -70,7 +77,7 @@ function onClose(isCancel: boolean = true) {
   emit('onCloseDialog', isCancel)
 }
 
-async function getAgencyByClient() {
+async function getAgencyByClient(clientId: string) {
   if (optionsOfTableChangeAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -80,17 +87,30 @@ async function getAgencyByClient() {
     listAgencyByClient.value = []
     const newListItems = []
 
-    // Si es RECONCILED o SENT se deben listar solo las agencias del cliente
-    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(props.selectedInvoice.status) && props.selectedInvoice.agency.client) {
-      payloadChangeAgency.value.filter = [
-        ...payloadChangeAgency.value.filter,
-        {
-          key: 'client.id',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: props.selectedInvoice.agency.client.id,
-        }
-      ]
+    // // Si es RECONCILED o SENT se deben listar solo las agencias del cliente
+    // if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(props.selectedInvoice.status) && props.selectedInvoice.agency.client) {
+    //   payloadChangeAgency.value.filter = [
+    //     ...payloadChangeAgency.value.filter,
+    //     {
+    //       key: 'client.id',
+    //       logicalOperation: 'AND',
+    //       operator: 'EQUALS',
+    //       value: clientId, // props.selectedInvoice.agency.client.id,
+    //     }
+    //   ]
+    // }
+
+    const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
+    if (objFilterByClient) {
+      objFilterByClient.value = clientId
+    }
+    else {
+      payloadChangeAgency.value.filter.push({
+        key: 'client.id',
+        operator: 'EQUALS',
+        value: clientId,
+        logicalOperation: 'AND',
+      })
     }
 
     const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi, optionsOfTableChangeAgency.value.uriApi, payloadChangeAgency.value)
@@ -161,7 +181,7 @@ async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  await getAgencyByClient()
+  await getAgencyByClient(objClientFormChangeAgency.value.id)
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -172,10 +192,61 @@ function onSortFieldForChangeAgency(event: any) {
   }
 }
 
+const listClientFormChangeAgency = ref<any[]>([])
+const objClientFormChangeAgency = ref<GenericObject>({})
+const objApis = ref({
+  client: { moduleApi: 'settings', uriApi: 'manage-client' },
+  agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
+  hotel: { moduleApi: 'settings', uriApi: 'manage-hotel' },
+  status: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
+  transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
+})
+interface DataListItem {
+  id: string
+  name: string
+  code: string
+  status: string
+  description?: string
+}
+
+interface ListItem {
+  id: string
+  name: string
+  status: boolean | string
+  code?: string
+  description?: string
+}
+
+function mapFunction(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    status: data.status,
+    code: data.code,
+    description: data.description
+  }
+}
+
+async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
+  try {
+    objLoading.value.loadingClient = true
+    let clientTemp: any[] = []
+    listClientFormChangeAgency.value = []
+    clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    listClientFormChangeAgency.value = [...listClientFormChangeAgency.value, ...clientTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingClient = false
+  }
+  finally {
+    objLoading.value.loadingClient = false
+  }
+}
+
 watch(payloadOnChangePageChangeAgency, (newValue) => {
   payloadChangeAgency.value.page = newValue?.page ? newValue?.page : 0
   payloadChangeAgency.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getAgencyByClient()
+  getAgencyByClient(objClientFormChangeAgency.value.id)
 })
 
 watch(() => props.openDialog, (newValue) => {
@@ -184,6 +255,7 @@ watch(() => props.openDialog, (newValue) => {
 })
 
 onMounted(async () => {
+  objClientFormChangeAgency.value = props.selectedInvoice.agency.client
   payloadChangeAgency.value.filter = [
     { // no listar la actual
       key: 'id',
@@ -200,7 +272,7 @@ onMounted(async () => {
       type: 'filterSearch'
     },
   ]
-  await getAgencyByClient()
+  await getAgencyByClient(objClientFormChangeAgency.value.id)
 })
 </script>
 
@@ -240,7 +312,42 @@ onMounted(async () => {
         <!-- // Label -->
         <!--        <pre>{{ props.selectedInvoice }}</pre> -->
         <div class="flex justify-content-between mb-2">
-          <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
+          <div v-if="true" class="flex align-items-center mb-3">
+            <div class="mr-2">
+              <label for="autocomplete" class="font-semibold"> Client: </label>
+            </div>
+            <div class="mr-4">
+              <!-- <pre>{{ objClientFormChangeAgency }}</pre> -->
+              <DebouncedAutoCompleteComponent
+                id="autocomplete"
+                class="w-29rem"
+                field="name"
+                item-value="id"
+                :model="objClientFormChangeAgency"
+                :suggestions="[...listClientFormChangeAgency]"
+                @change="async ($event) => {
+                  objClientFormChangeAgency = $event
+                  if ($event && $event.id) {
+                    await getAgencyByClient($event.id)
+                  }
+                }"
+                @load="async($event) => {
+                  const objQueryToSearch = {
+                    query: $event,
+                    keys: ['name', 'code'],
+                  }
+                  const filter: FilterCriteria[] = [{
+                    key: 'status',
+                    logicalOperation: 'AND',
+                    operator: 'EQUALS',
+                    value: 'ACTIVE',
+                  }]
+                  await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
+                }"
+              />
+            </div>
+          </div>
+          <div v-if="false" class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Client:</strong>
             <span class="w-auto text-white font-semibold">{{ props.selectedInvoice.agency?.client.code ?? '' }} - {{ props.selectedInvoice.agency?.client.name ?? '' }}</span>
           </div>
