@@ -15,6 +15,7 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.mapper.PaymentBankRowMapper;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.bank.PaymentBankValidatorFactory;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportBankErrorRepository;
 import java.util.Comparator;
@@ -58,6 +59,8 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     @Value("${payment.default.attachment.status.code}")
     private String PAYMENT_ATTACHMENT_STATUS;
 
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
     public PaymentImportBankHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentImportBankErrorRepository paymentImportErrorRepository,
             PaymentBankValidatorFactory paymentBankValidatorFactory,
@@ -72,7 +75,8 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
             IManagePaymentAttachmentStatusService attachmentStatusService,
             IPaymentStatusHistoryService paymentStatusHistoryService,
             IManageEmployeeService employeeService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService) {
+            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentImportErrorRepository = paymentImportErrorRepository;
@@ -89,18 +93,24 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
         this.paymentStatusHistoryService = paymentStatusHistoryService;
         this.employeeService = employeeService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
         this.totalProcessRow = 0;
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
+        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(request.getEmployeeId());
+        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(request.getEmployeeId());
+
         paymentBankValidatorFactory.createValidators();
         ExcelBeanReader<PaymentBankRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentBankRow.class);
         ExcelBean<PaymentBankRow> excelBean = new ExcelBean<>(excelBeanReader);
         for (PaymentBankRow row : excelBean) {
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
+            row.setAgencys(agencys);
+            row.setHotels(hotels);
             if (paymentBankValidatorFactory.validate(row)) {
                 cachingPaymentImport(row);
                 this.totalProcessRow++;

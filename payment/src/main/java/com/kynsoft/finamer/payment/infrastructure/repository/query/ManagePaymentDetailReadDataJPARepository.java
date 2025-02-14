@@ -41,7 +41,7 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
     Long countByApplyPaymentAndPaymentId(@Param("id") UUID paymentId);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto(" +
-            "pd.id, pd.applyDepositValue, tt.deposit, pp.id) " +
+            "pd.id, pd.applyDepositValue, tt.deposit, pp.id, pp.agency.id, pp.hotel.id) " +
             "FROM PaymentDetail pd " +
             "JOIN pd.transactionType tt " +
             "LEFT JOIN pd.payment pp " +

@@ -34,8 +34,8 @@ public class PaymentValidatorFactory extends IValidatorFactory<PaymentExpenseRow
 
     @Override
     public boolean validate(PaymentExpenseRow toValidate) {
-        boolean isAgencyValid =commonImportValidators.validateAgency(toValidate.getManageAgencyCode(), errorFieldList);
-        commonImportValidators.validateHotel(toValidate.getManageHotelCode(), errorFieldList);
+        boolean isAgencyValid =commonImportValidators.validateAgency(toValidate.getManageAgencyCode(), errorFieldList, toValidate.getAgencys());
+        commonImportValidators.validateHotel(toValidate.getManageHotelCode(), errorFieldList, toValidate.getHotels());
         commonImportValidators.validateRemarks(toValidate.getRemarks(), errorFieldList);
         boolean isValidTransactionDate = commonImportValidators.validateTransactionDate(toValidate.getTransactionDate(),
                 "dd/MM/yyyy", errorFieldList);

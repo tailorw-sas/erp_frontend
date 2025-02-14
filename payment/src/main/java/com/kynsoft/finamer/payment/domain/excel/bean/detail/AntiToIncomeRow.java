@@ -12,6 +12,9 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -32,6 +35,9 @@ public class AntiToIncomeRow extends Row implements Serializable {
     private String transactionCategoryName;
     private String transactionCheckDepositAmount;
     private String transactionCheckDepositBalance;
+
+    private List<UUID> agencys = new ArrayList<>();
+    private List<UUID> hotels = new ArrayList<>();
 
     public PaymentDetailDto toAggregate() {
         PaymentDetailDto paymentDetailDto = new PaymentDetailDto();
