@@ -25,4 +25,5 @@ public class BookingProjectionSimple implements Serializable {
     private EInvoiceType invoiceType;
     private UUID invoiceHotel;
     private String clientName;
+    private UUID invoiceAgency;
 }

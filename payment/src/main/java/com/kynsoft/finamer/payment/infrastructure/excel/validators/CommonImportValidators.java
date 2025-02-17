@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 public class CommonImportValidators {
@@ -21,16 +22,19 @@ public class CommonImportValidators {
     private final IManageHotelService hotelService;
     private final IManageAgencyService agencyService;
     private final IPaymentCloseOperationService closeOperationService;
+    private final SecurityImportValidators securityImportValidators;
 
     public CommonImportValidators(IManageHotelService hotelService,
                                   IManageAgencyService agencyService,
-                                  IPaymentCloseOperationService closeOperationService) {
+                                  IPaymentCloseOperationService closeOperationService,
+                                  SecurityImportValidators securityImportValidators) {
         this.hotelService = hotelService;
         this.agencyService = agencyService;
         this.closeOperationService = closeOperationService;
+        this.securityImportValidators = securityImportValidators;
     }
 
-    public boolean validateAgency(String agencyCode, List<ErrorField> errorFieldList) {
+    public boolean validateAgency(String agencyCode, List<ErrorField> errorFieldList, List<UUID> agencyList) {
         if (Objects.isNull(agencyCode)){
             errorFieldList.add(new ErrorField("Agency", "Agency can't be empty"));
             return false;
@@ -38,6 +42,7 @@ public class CommonImportValidators {
         boolean existAgency = agencyService.existByCode(agencyCode);
         if (existAgency) {
             ManageAgencyDto manageAgencyDto = agencyService.findByCode(agencyCode);
+            this.securityImportValidators.validateAgency(agencyList, manageAgencyDto.getId(), errorFieldList);
             if (Status.INACTIVE.name().equals(manageAgencyDto.getStatus())) {
                 errorFieldList.add(new ErrorField("Agency", "The agency is inactive"));
                 return false;
@@ -49,7 +54,7 @@ public class CommonImportValidators {
         return true;
     }
 
-    public boolean validateHotel(String hotelCode, List<ErrorField> errorFieldList) {
+    public boolean validateHotel(String hotelCode, List<ErrorField> errorFieldList, List<UUID> hotelList) {
         if (Objects.isNull(hotelCode)){
             errorFieldList.add(new ErrorField("Hotel", "Hotel can't be empty"));
             return false;
@@ -57,6 +62,7 @@ public class CommonImportValidators {
         boolean existHotel = hotelService.existByCode(hotelCode);
         if (existHotel) {
             ManageHotelDto manageHotelDto = hotelService.findByCode(hotelCode);
+            this.securityImportValidators.validateHotel(hotelList, manageHotelDto.getId(), errorFieldList);
             if (Status.INACTIVE.name().equals(manageHotelDto.getStatus())) {
                 errorFieldList.add(new ErrorField("Hotel", "The hotel is inactive"));
                 return false;

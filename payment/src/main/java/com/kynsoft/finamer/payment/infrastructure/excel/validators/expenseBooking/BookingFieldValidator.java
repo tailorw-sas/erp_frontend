@@ -6,12 +6,11 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBookingRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
+import com.kynsoft.finamer.payment.infrastructure.excel.validators.SecurityImportValidators;
 import com.kynsoft.finamer.payment.infrastructure.services.http.BookingHttpGenIdService;
 import com.kynsoft.finamer.payment.infrastructure.services.http.helper.BookingImportAutomaticeHelperServiceImpl;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,15 +26,18 @@ public class BookingFieldValidator extends ExcelRuleValidator<PaymentExpenseBook
     private final IManageBookingService bookingService;
     private final BookingHttpGenIdService bookingHttpGenIdService;
     private final BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl;
+    private final SecurityImportValidators securityImportValidators;
 
     protected BookingFieldValidator(ApplicationEventPublisher applicationEventPublisher,
                                     IManageBookingService bookingService,
                                     BookingHttpGenIdService bookingHttpGenIdService,
-                                    BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl) {
+                                    BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl,
+                                    SecurityImportValidators securityImportValidators) {
         super(applicationEventPublisher);
         this.bookingService = bookingService;
         this.bookingHttpGenIdService = bookingHttpGenIdService;
         this.bookingImportAutomaticeHelperServiceImpl = bookingImportAutomaticeHelperServiceImpl;
+        this.securityImportValidators = securityImportValidators;
     }
 
     @Override
@@ -52,6 +54,9 @@ public class BookingFieldValidator extends ExcelRuleValidator<PaymentExpenseBook
             //ManageBookingDto manageBooking = bookingService.findByGenId(Long.parseLong(obj.getBookingId()));
             //ManageBookingDto manageBooking = this.getBookingDto(Long.valueOf(obj.getBookingId()));
             BookingProjectionSimple manageBooking = this.getBookingDto(Long.valueOf(obj.getBookingId()));
+            this.securityImportValidators.validateAgency(obj.getAgencys(), manageBooking.getInvoiceAgency(), errorFieldList);
+            this.securityImportValidators.validateHotel(obj.getHotels(), manageBooking.getInvoiceHotel(), errorFieldList);
+
             if (!EInvoiceType.INVOICE.equals(manageBooking.getInvoiceType())) {
                 errorFieldList.add(new ErrorField("bookingId", "The invoice related isn't invoice type"));
                 return false;

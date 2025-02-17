@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 //@Data
 @Getter
@@ -35,6 +38,9 @@ public class PaymentBankRow extends Row implements Serializable {
     private String transactionDate;
 
     private String manageClientCode;
+
+    private List<UUID> agencys = new ArrayList<>();
+    private List<UUID> hotels = new ArrayList<>();
 
     public PaymentDto toAggregate() {
         PaymentDto paymentDto = new PaymentDto();
