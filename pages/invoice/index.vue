@@ -468,7 +468,7 @@ async function SendInvoiceByType() {
   finally {
     options.value.loading = false
     if (completed) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoice sent successfully', life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `Invoice ${selectedInvoiceObj.value.invoiceNumberTemp}  was ReSend successfully`, life: 10000 })
         await getList()
       }
   }
@@ -957,6 +957,7 @@ async function getList() {
           // dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
           // invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
+          invoiceNumberTemp: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
           agency: { ...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}` }
         })
