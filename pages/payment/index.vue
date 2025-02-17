@@ -1260,7 +1260,7 @@ async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  await getAgencyByClient()
+  await getAgencyByClient() // objClientFormChangeAgency.value.id
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -1346,8 +1346,10 @@ async function getClientList(moduleApi: string, uriApi: string, queryObj: { quer
     objLoading.value.loadingClient = true
     let clientTemp: any[] = []
     clientItemsList.value = []
+    listClientFormChangeAgency.value = []
     clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
     clientItemsList.value = [...clientItemsList.value, ...clientTemp]
+    listClientFormChangeAgency.value = [...listClientFormChangeAgency.value, ...clientTemp]
   }
   catch (error) {
     objLoading.value.loadingClient = false
@@ -1408,7 +1410,7 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   }
 }
 
-async function getAgencyByClient() {
+async function getAgencyByClient(clientId: string = '') {
   if (optionsOfTableChangeAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -1429,6 +1431,21 @@ async function getAgencyByClient() {
         value: currentAgencyForChangeAgency.value?.id,
         logicalOperation: 'AND',
       })
+    }
+
+    if (clientId !== '') {
+      const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
+      if (objFilterByClient) {
+        objFilterByClient.value = clientId
+      }
+      else {
+        payloadChangeAgency.value.filter.push({
+          key: 'client.id',
+          operator: 'EQUALS',
+          value: clientId,
+          logicalOperation: 'AND',
+        })
+      }
     }
 
     const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
@@ -2602,7 +2619,7 @@ async function openModalApplyPaymentOtherDeduction() {
 
 async function openModalApplyChangeAgency() {
   openDialogChangeAgency.value = true
-  getAgencyByClient()
+  getAgencyByClient() // objClientFormChangeAgency.value.id
 }
 
 function closeModalChangeAgency() {
@@ -3625,7 +3642,7 @@ watch(payloadOnChangePage, (newValue) => {
 watch(payloadOnChangePageChangeAgency, (newValue) => {
   payloadChangeAgency.value.page = newValue?.page ? newValue?.page : 0
   payloadChangeAgency.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getAgencyByClient()
+  getAgencyByClient() // objClientFormChangeAgency.value.id
 })
 
 watch(applyPaymentOnChangePage, (newValue) => {
@@ -4312,22 +4329,37 @@ onMounted(async () => {
                 <label for="autocomplete" class="font-semibold"> Client: </label>
               </div>
               <div class="mr-4">
+                <!-- <pre>{{ objClientFormChangeAgency }}</pre> -->
                 <DebouncedAutoCompleteComponent
                   id="autocomplete"
                   class="w-29rem"
                   field="name"
                   item-value="id"
-                  disabled
                   :model="objClientFormChangeAgency"
                   :suggestions="[...listClientFormChangeAgency]"
-                  @change="($event) => {
+                  @change="async ($event) => {
                     objClientFormChangeAgency = $event
+                    // if ($event && $event.id) {
+                    //   await getAgencyByClient($event.id)
+                    // }
                   }"
-                  @load="async($event) => {}"
+                  @load="async($event) => {
+                    const objQueryToSearch = {
+                      query: $event,
+                      keys: ['name', 'code'],
+                    }
+                    const filter: FilterCriteria[] = [{
+                      key: 'status',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: 'ACTIVE',
+                    }]
+                    await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
+                  }"
                 />
               </div>
             </div>
-            <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
+            <div v-if="true" class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
               <strong class="mr-2 w-auto">Client:</strong>
               <!-- <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.code }} - {{ objClientFormChangeAgency.name }}</span> -->
               <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.name }}</span>

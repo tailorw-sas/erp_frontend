@@ -14,6 +14,17 @@ export const GenericService = {
     })
   },
 
+  async searchWithoutSearch(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
+    const { $api } = useNuxtApp()
+
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+    return $api<SearchResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
   async export(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
     const { $api } = useNuxtApp()
 
