@@ -63,20 +63,19 @@ public class BookingServiceImpl implements ImportBookingService {
     private final Semaphore semaphore;
 
     public BookingServiceImpl(ValidatorFactory<BookingRow> validatorFactory,
-            BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
-            BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
-            ApplicationEventPublisher applicationEventPublisher,
-            IManageHotelService hotelService,
-            IManageAgencyService agencyService,
-            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
+                              BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
+                              BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
+                              ApplicationEventPublisher applicationEventPublisher,
+                              IManageHotelService hotelService,
+                              IManageAgencyService agencyService,
+                              ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
     ) {
         this.validatorFactory = validatorFactory;
         this.bookingImportProcessRedisRepository = bookingImportProcessRedisRepository;
         this.bookingImportRowErrorRedisRepository = bookingImportRowErrorRedisRepository;
         this.bookingImportHelperService = bookingImportHelperService;
         this.applicationEventPublisher = applicationEventPublisher;
-        //this.semaphore = new Semaphore(1);
-        this.semaphore = new Semaphore(2);
+        this.semaphore = new Semaphore(1);
         this.hotelService = hotelService;
         this.agencyService = agencyService;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
@@ -85,12 +84,13 @@ public class BookingServiceImpl implements ImportBookingService {
     @Override
     @Async
     public void importBookingFromFile(ImportBookingFromFileRequest importBookingFromFileRequest) {
+        String processId = importBookingFromFileRequest.getRequest().getImportProcessId();
         try {
-            Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Ingreso a procesar importacion de Excel. ID: " + importBookingFromFileRequest.getRequest().getImportProcessId() + "*************");
+            Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Ingreso a procesar importacion de Excel. ID: " + processId + "*************");
             try {
                 semaphore.acquire();
                 try {
-                    Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Inicio procesamiento de importacion de Excel luego de semaforo. ID: " + importBookingFromFileRequest.getRequest().getImportProcessId() + "*************");
+                    Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Inicio procesamiento de importacion de Excel luego de semaforo. ID: " + processId + "*************");
                     ImportBookingRequest request = importBookingFromFileRequest.getRequest();
                     try {
                         ReaderConfiguration readerConfiguration = new ReaderConfiguration();
@@ -118,7 +118,7 @@ public class BookingServiceImpl implements ImportBookingService {
                             }
                         }
                         validatorFactory.removeValidators();
-                        
+
                         bookingImportHelperService.createInvoiceFromGroupedBooking(request);
                         BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                                 .status(EProcessStatus.FINISHED)
@@ -127,7 +127,7 @@ public class BookingServiceImpl implements ImportBookingService {
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
                         bookingImportHelperService.removeAllImportCache(request.getImportProcessId());
                         this.clearCache();
-                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Fin de procesamiento de importacion de Excel. ID: " + importBookingFromFileRequest.getRequest().getImportProcessId() + " *************");
+                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Fin de procesamiento de importacion de Excel. ID: " + processId + " *************");
                     } catch (BusinessException e) {
                         System.err.println("Error: " + e.getLocalizedMessage());
                         BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
@@ -138,7 +138,7 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
                         this.clearCache();
-                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Error en BusinessException de importacion de Excel. ID: " + importBookingFromFileRequest.getRequest().getImportProcessId() + " *************" + "\n" + e);
+                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Error en BusinessException de importacion de Excel. ID: " + processId + " *************" + "\n" + e);
                     } catch (Exception e) {
                         System.err.println("Error: " + e.getLocalizedMessage());
                         BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
@@ -149,7 +149,7 @@ public class BookingServiceImpl implements ImportBookingService {
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, bookingImportProcessDto));
                         this.clearCache();
-                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Error en Exception de importacion de Excel. ID: " + importBookingFromFileRequest.getRequest().getImportProcessId() + " *************" + "\n" + e);
+                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "*************Error en Exception de importacion de Excel. ID: " + processId + " *************" + "\n" + e);
                     }
                 } catch (Exception e) {
                     System.err.println("Errror ocurrido: " + e.getMessage());
@@ -191,7 +191,7 @@ public class BookingServiceImpl implements ImportBookingService {
     public ImportBookingProcessStatusResponse getImportBookingProcessStatus(ImportBookingProcessStatusRequest importBookingProcessStatusRequest) {
         BookingImportProcessDto statusDtp
                 = bookingImportProcessRedisRepository.findByImportProcessId(importBookingProcessStatusRequest.getImportProcessId())
-                        .map(BookingImportProcessRedisEntity::toAgreggate).get();
+                .map(BookingImportProcessRedisEntity::toAgreggate).get();
 
         if (statusDtp.isHasError()) {
             throw new ExcelException(statusDtp.getExceptionMessage());
