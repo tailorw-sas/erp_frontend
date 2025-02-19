@@ -21,6 +21,7 @@ import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.v
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 import type { UndoImportInvoiceResponse } from './undo-import.vue'
 import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
+import ImportManualDialog from '~/pages/invoice/import.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -66,7 +67,7 @@ const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
 const ImportVirtualDialogVisible =ref(false)
-
+const ImportManualDialogVisible =ref(false)
 
 const itemSend = ref<GenericObject>({
   employee:userData?.value?.user?.userId,
@@ -697,7 +698,7 @@ const computedShowMenuItemUndoImport = computed(() => {
 const itemsMenuImport = ref([
   {
     label: 'Booking From File',
-    command: () => navigateTo('invoice/import', { open: { target: '_blank' } }),
+    command:()=> ImportManualDialogVisible.value=true,
     disabled: computedShowMenuItemImportBookingFromFile
   },
   {
@@ -719,8 +720,11 @@ const itemsMenuImport = ref([
 
 // Asegurar que el modal se cierre cuando se emita @close
 const closeBookingFromFileVirtual = () => {
-  console.log('Cerrando modal desde closeBookingFromFileVirtual')
   ImportVirtualDialogVisible.value = false
+}
+
+const closeBookingFromFileManual = () => {
+  ImportManualDialogVisible.value = false
 }
 
 const itemsMenuSend = ref([
@@ -3032,6 +3036,11 @@ const legend = ref(
       header="Bookings Import From File (Virtual Hotels)" @close="closeBookingFromFileVirtual"
       :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
     />
+    <DynamicContentModalImport
+      :visible="ImportManualDialogVisible" :component="ImportManualDialog"
+      header="Bookings Import From File" @close="closeBookingFromFileManual"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
 </template>
 
 
