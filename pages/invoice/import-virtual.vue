@@ -51,7 +51,7 @@ const columns: IColumn[] = [
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
   { field: 'ratePlan', header: 'R. Plan', tooltip: 'Rate Plan', type: 'text' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', tooltip: 'Hotel Amount', type: 'text' },
+  { field: 'hotelInvoiceAmount', header: 'Hot. Amount', tooltip: 'Hotel Amount', type: 'text' },
   { field: 'invoiceAmount', header: 'Inv. Amount', tooltip: 'Invoice Amount', type: 'text' },
   { field: 'impSta', header: 'Imp. Sta', tooltip: 'Import Status', type: 'slot-text', frozen: true, showFilter: false, minWidth: '150px' },
 ]
@@ -210,7 +210,7 @@ async function importFile() {
         options.value.loading = false
         // messageDialog.value = `The file was upload successful!. ${totalImportedRows.value} rows imported.`
         // openSuccessDialog.value = true
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value} rows imported.`, life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value} rows imported.`, life: 5000 })
         await clearForm()
       }
     }
@@ -317,7 +317,7 @@ onMounted(async () => {
                         @click="fileUpload.click()"
                       />
                     </span>
-                    <span class="p-inputgroup-addon p-0 m-0 ml-5">
+                    <span class="p-inputgroup-addon p-0 m-0 ml-1">
                       <Button
                         v-tooltip.top="'Import file'"
                         class="w-3rem mx-2"

@@ -52,8 +52,9 @@ function onHide() {
     class="flex items-center justify-center"
     @hide="onHide"
   >
-    <div class="w-full h-full">
+    <component :is="props.component" v-bind="props.componentProps" />
+    <!-- <div class="w-full h-full">
       <component :is="props.component" v-bind="props.componentProps" />
-    </div>
+    </div> -->
   </Dialog>
 </template>
