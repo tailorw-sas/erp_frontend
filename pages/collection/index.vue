@@ -378,7 +378,7 @@ const ENUM_FILTER = [
 ]
 const columns = ref<IColumn[]>([
   { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
-  { field: 'paymentId', header: 'Id', type: 'text' },
+  { field: 'paymentInternalId', header: 'Id', type: 'text' },
   { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
   { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', isSingleSelect: true, objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', } },
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
@@ -463,7 +463,7 @@ const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 1000,
+  pageSize: 10,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -520,6 +520,157 @@ function clearForm() {
   fields[0].disabled = false
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
+}
+
+function extractPaymentStatus(originalObject: any) {
+  return {
+    paymentStatus: {
+      id: originalObject.paymentStatusId,
+      code: originalObject.paymentStatusCode,
+      name: originalObject.paymentStatusName,
+      confirmed: originalObject.paymentStatusConfirmed,
+      applied: originalObject.paymentStatusApplied,
+      cancelled: originalObject.paymentStatusCancelled,
+      transit: originalObject.paymentStatusTransit,
+      status: originalObject.paymentStatusStatus ? originalObject.paymentStatusStatus : null
+    },
+    hotel: {
+      id: originalObject.hotelId,
+      code: originalObject.hotelCode,
+      name: originalObject.hotelName
+    },
+    agency: {
+      id: originalObject.agencyId,
+      code: originalObject.agencyCode,
+      name: originalObject.agencyName
+    },
+    attachmentStatus: {
+      id: originalObject.paymentAttachmentStatusId,
+      code: originalObject.paymentAttachmentStatusCode,
+      name: originalObject.paymentAttachmentStatusName,
+      nonNone: originalObject.paymentAttachmentStatusNonNone,
+      patWithAttachment: originalObject.paymentAttachmentStatusPatWithAttachment,
+      pwaWithOutAttachment: originalObject.paymentAttachmentStatusPwAWithoutAttachment,
+      supported: originalObject.paymentAttachmentStatusSupported,
+      status: originalObject.paymentAttachmentStatusStatus ? originalObject.paymentAttachmentStatusStatus : null
+    }
+  }
+}
+
+async function getPaymentData() {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    const count: SubTotals = { paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0, noAppliedPorcentage: 0, appliedPorcentage: 0, depositBalancePorcentage: 0 }
+    options.value.loading = true
+    listItems.value = []
+    const newListItems = []
+    const response = await GenericService.search('payment', 'payments-view', payload.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(listItems.value.map(item => item.id))
+
+    interface ListColor {
+      NONE: string
+      ATTACHMENT_WITH_ERROR: string
+      ATTACHMENT_WITHOUT_ERROR: string
+    }
+
+    const listColor: ListColor = {
+      NONE: '#616161',
+      ATTACHMENT_WITH_ERROR: '#ff002b',
+      ATTACHMENT_WITHOUT_ERROR: '#00b816',
+    }
+    let color = listColor.NONE
+
+    for (const iterator of dataList) {
+      const transformedObject = extractPaymentStatus(iterator)
+      iterator.paymentStatus = transformedObject.paymentStatus
+      iterator.hotel = transformedObject.hotel
+      iterator.agency = transformedObject.agency
+      iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
+      iterator.attachmentStatus = transformedObject.attachmentStatus
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
+        iterator.hotel = {
+          ...iterator.hotel,
+          name: `${iterator.hotel.code} - ${iterator.hotel.name}`
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
+        iterator.agencyType = iterator.agency.agencyTypeResponse
+        iterator.agency = {
+          ...iterator.agency,
+          name: `${iterator.agency.code} - ${iterator.agency.name}`
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'paymentId')) {
+        iterator.paymentId = String(iterator.paymentId)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'paymentAmount')) {
+        count.paymentAmount = count.paymentAmount + iterator.paymentAmount
+        iterator.paymentAmount = iterator.paymentAmount || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'depositBalance')) {
+        count.depositBalance += iterator.depositBalance
+        iterator.depositBalance = iterator.depositBalance || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
+        count.applied += iterator.applied
+        iterator.applied = iterator.applied || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'notApplied')) {
+        count.noApplied += iterator.notApplied
+        iterator.notApplied = iterator.notApplied || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'depositAmount')) {
+        iterator.depositAmount = iterator.depositAmount || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'otherDeductions')) {
+        iterator.otherDeductions = String(iterator.otherDeductions)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
+        if (iterator.attachmentStatus?.patWithAttachment) {
+          color = listColor.ATTACHMENT_WITHOUT_ERROR
+        }
+        else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
+          color = listColor.ATTACHMENT_WITH_ERROR
+        }
+        else if (iterator.attachmentStatus?.nonNone) {
+          color = listColor.NONE
+        }
+        else {
+          color = listColor.NONE
+        }
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, color, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    listItems.value = [...listItems.value, ...newListItems]
+  }
+  catch (error) {
+    console.log(error)
+  }
+  finally {
+    options.value.loading = false
+  }
 }
 
 async function getListContactByAgency(agencyIds: string[] = []) {
@@ -1011,7 +1162,7 @@ function searchAndFilter() {
     if (filteredItems.length > 0) {
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
-        key: 'agency.id',
+        key: 'agencyId',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
@@ -1055,7 +1206,7 @@ function searchAndFilter() {
     if (filteredItems.length > 0) {
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
-        key: 'hotel.id',
+        key: 'hotelId',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
@@ -1097,8 +1248,9 @@ function searchAndFilter() {
   dynamicTable.value = dynamicTable.value + 1
   dynamicTableInv.value = dynamicTableInv.value + 1
 
-  getList()
+  // getList()
   getListInvoice()
+  getPaymentData()
 }
 
 function clearFilterToSearch() {
@@ -1132,7 +1284,8 @@ function clearFilterToSearch() {
 
 async function resetListItems() {
   payload.value.page = 0
-  getList()
+  // getList()
+  getPaymentData()
 }
 function goToInvoice() {
   navigateTo('/invoice')
@@ -1190,7 +1343,8 @@ async function deleteItem(id: string) {
     await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     clearForm()
-    getList()
+    // getList()
+    getPaymentData()
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
@@ -1228,7 +1382,8 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    // getList()
+    getPaymentData()
   }
 }
 
@@ -1279,7 +1434,8 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns.value)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  getList()
+  // getList()
+  getPaymentData()
 }
 
 async function parseDataTableFilterForContactAgency(payloadFilter: any) {
@@ -1662,7 +1818,8 @@ async function checkAttachment(code: string) {
   try {
     await GenericService.create('payment', 'payment/change-attachment-status', payload)
     toast.add({ severity: 'success', summary: 'Success', detail: `The payment with id ${objItemSelectedForRightClickPaymentWithOrNotAttachment.value?.paymentId} was updated successfully`, life: 3000 })
-    await getList()
+    // await getList()
+    await getPaymentData()
   }
   catch (error) {
     console.log(error)
@@ -1709,6 +1866,7 @@ function onRowContextMenu(event: any) {
     }
   }
 
+  console.log('event', event.data.attachmentStatus.pwaWithOutAttachment)
   if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
@@ -1973,7 +2131,8 @@ function showIconAttachment(objData: any) {
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getList()
+  // getList()
+  getPaymentData()
 })
 watch(payloadOnChangePageInv, (newValue) => {
   payloadInv.value.page = newValue?.page ? newValue?.page : 0
@@ -1995,7 +2154,8 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
-    getList()
+    // getList()
+    getPaymentData()
     // getListInvoice()
   }
 })
@@ -2269,6 +2429,11 @@ onMounted(() => {
                   v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
+
+                <!-- <Button
+                  v-tooltip.top="'Test'" class="w-3rem mx-2" icon="pi pi-search"
+                  :loading="loadingSearch" @click="getPaymentData"
+                /> -->
                 <Button
                   v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
@@ -2673,7 +2838,8 @@ onMounted(() => {
       :add-item="addAttachment"
       :close-dialog="() => {
         attachmentDialogOpen = false
-        getList()
+        // getList()
+        getPaymentData()
       }"
       :is-creation-dialog="true"
       header="Manage Payment Attachment"
@@ -2691,7 +2857,8 @@ onMounted(() => {
       :add-item="addAttachment"
       :close-dialog="() => {
         shareFilesDialogOpen = false
-        getList()
+        // getList()
+        getPaymentData()
       }"
       :is-creation-dialog="true"
       header="Share Files"
