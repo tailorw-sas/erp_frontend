@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -50,27 +52,71 @@ public class PaymentView implements Serializable {
     @Column(name = "hasattachment") // Indica si tiene adjunto
     private boolean hasAttachment;
 
-    @Column(name = "payment_status_id") // ID del estado de pago
+    // Estado del pago
+    @Column(name = "payment_status_id")
     private UUID paymentStatusId;
 
-    @Column(name = "payment_status_code") // Código del estado de pago
+    @Column(name = "payment_status_code")
     private String paymentStatusCode;
 
-    @Column(name = "payment_status_name") // Nombre del estado de pago
+    @Column(name = "payment_status_name")
     private String paymentStatusName;
 
-    @Column(name = "payment_status_confirmed") // Estado confirmado
+    @Column(name = "payment_status_confirmed")
     private Boolean paymentStatusConfirmed;
 
-    @Column(name = "payment_status_applied") // Estado aplicado
+    @Column(name = "payment_status_applied")
     private Boolean paymentStatusApplied;
 
-    @Column(name = "payment_status_cancelled") // Estado cancelado
+    @Column(name = "payment_status_cancelled")
     private Boolean paymentStatusCancelled;
 
-    @Column(name = "payment_status_transit") // Estado en tránsito
+    @Column(name = "payment_status_transit")
     private Boolean paymentStatusTransit;
 
-    @Column(name = "payment_status_status") // Estado del status
+    @Column(name = "payment_status_status")
     private String paymentStatusStatus;
+
+    @Column(name = "transactiondate") // Fecha de la transacción
+    private LocalDate transactionDate;
+
+    @Column(name = "createdat") // Fecha de creación
+    private OffsetDateTime createdAt;
+
+    @Column(name = "paymentamount") // Monto del pago
+    private Double paymentAmount;
+
+    @Column(name = "depositbalance") // Saldo de depósito
+    private Double depositBalance;
+
+    @Column(name = "applied") // Monto aplicado
+    private Double applied;
+
+    @Column(name = "notapplied") // Monto no aplicado
+    private Double notApplied;
+
+    // Estado del adjunto del pago
+    @Column(name = "payment_attachment_status_id")
+    private UUID paymentAttachmentStatusId;
+
+    @Column(name = "payment_attachment_status_code")
+    private String paymentAttachmentStatusCode;
+
+    @Column(name = "payment_attachment_status_name")
+    private String paymentAttachmentStatusName;
+
+    @Column(name = "payment_attachment_status_NonNone")
+    private Boolean paymentAttachmentStatusNonNone;
+
+    @Column(name = "payment_attachment_status_patwithattachment")
+    private Boolean paymentAttachmentStatusPatWithAttachment;
+
+    @Column(name = "payment_attachment_status_pwawithoutattachment")
+    private Boolean paymentAttachmentStatusPwAWithoutAttachment;
+
+    @Column(name = "payment_attachment_status_supported")
+    private Boolean paymentAttachmentStatusSupported;
+
+    @Column(name = "payment_attachment_status_status")
+    private String paymentAttachmentStatusStatus;
 }
