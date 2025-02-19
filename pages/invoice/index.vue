@@ -20,6 +20,7 @@ import { ENUM_INVOICE_STATUS } from '~/utils/Enums'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 import type { UndoImportInvoiceResponse } from './undo-import.vue'
+import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -64,6 +65,7 @@ const paymentsDialogOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
+const ImportVirtualDialogVisible =ref(false)
 
 
 const itemSend = ref<GenericObject>({
@@ -700,7 +702,7 @@ const itemsMenuImport = ref([
   },
   {
     label: 'Booking From File (Virtual Hotels)',
-    command: () => navigateTo('invoice/import-virtual'),
+    command:()=> ImportVirtualDialogVisible.value=true,
     disabled: computedShowMenuItemImportBookingFromVirtual
   },
   {
@@ -714,6 +716,12 @@ const itemsMenuImport = ref([
     //disabled: computedShowMenuItemUndoImport
   }
 ])
+
+// Asegurar que el modal se cierre cuando se emita @close
+const closeBookingFromFileVirtual = () => {
+  console.log('Cerrando modal desde closeBookingFromFileVirtual')
+  ImportVirtualDialogVisible.value = false
+}
 
 const itemsMenuSend = ref([
   {
@@ -3017,9 +3025,13 @@ const legend = ref(
             />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalPrint()" />
           </div>
-        </div>
-    
+        </div>    
     </Dialog>
+    <DynamicContentModalImport
+      :visible="ImportVirtualDialogVisible" :component="ImportVirtualDialog"
+      header="Bookings Import From File (Virtual Hotels)" @close="closeBookingFromFileVirtual"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+    />
 </template>
 
 
