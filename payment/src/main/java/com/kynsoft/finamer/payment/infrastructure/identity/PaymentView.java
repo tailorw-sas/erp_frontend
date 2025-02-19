@@ -46,4 +46,31 @@ public class PaymentView implements Serializable {
 
     @Column(name = "agency_id") // ID de la agencia
     private UUID agencyId;
+
+    @Column(name = "hasattachment") // Indica si tiene adjunto
+    private boolean hasAttachment;
+
+    @Column(name = "payment_status_id") // ID del estado de pago
+    private UUID paymentStatusId;
+
+    @Column(name = "payment_status_code") // Código del estado de pago
+    private String paymentStatusCode;
+
+    @Column(name = "payment_status_name") // Nombre del estado de pago
+    private String paymentStatusName;
+
+    @Column(name = "payment_status_confirmed") // Estado confirmado
+    private Boolean paymentStatusConfirmed;
+
+    @Column(name = "payment_status_applied") // Estado aplicado
+    private Boolean paymentStatusApplied;
+
+    @Column(name = "payment_status_cancelled") // Estado cancelado
+    private Boolean paymentStatusCancelled;
+
+    @Column(name = "payment_status_transit") // Estado en tránsito
+    private Boolean paymentStatusTransit;
+
+    @Column(name = "payment_status_status") // Estado del status
+    private String paymentStatusStatus;
 }
