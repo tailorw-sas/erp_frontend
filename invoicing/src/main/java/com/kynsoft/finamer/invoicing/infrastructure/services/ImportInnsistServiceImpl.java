@@ -10,6 +10,7 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import org.springframework.stereotype.Service;
 
@@ -31,19 +32,21 @@ public class ImportInnsistServiceImpl {
     private final IBookingImportHelperService bookingImportHelperService;
     private final ValidatorFactory<BookingRow> validatorFactory;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ImportInnsistServiceImpl(IManageAgencyService agencyService,
             IManageHotelService manageHotelService,
             BookingImportCacheRedisRepository repository,
             IBookingImportHelperService bookingImportHelperService,
             ValidatorFactory<BookingRow> validatorFactory,
-            ApplicationEventPublisher applicationEventPublisher) {
+            ApplicationEventPublisher applicationEventPublisher, ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
         this.repository = repository;
         this.bookingImportHelperService = bookingImportHelperService;
         this.validatorFactory = validatorFactory;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     private void createCache(ImportInnsistKafka request) {
@@ -64,10 +67,16 @@ public class ImportInnsistServiceImpl {
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
             int rowNumber = 0;
             boolean stop = true;
+
+            List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
+            List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
+
             for (BookingImportCache bookingImportCache : list) {
                 BookingRow row = bookingImportCache.toAggregateImportInsist();
                 row.setRowNumber(rowNumber);
                 row.setImportProcessId(row.getInsistImportProcessId());
+                row.setAgencys(agencys);
+                row.setHotels(hotels);
                 if (validatorFactory.validate(row)) {
                     bookingImportHelperService.groupAndCachingImportBooking(row, EImportType.NO_VIRTUAL);
                 } else {
