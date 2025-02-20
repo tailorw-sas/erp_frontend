@@ -14,6 +14,8 @@ ENV PACKAGE_TOKEN=${PACKAGE_TOKEN}
 # Reemplaza el token de configuración en settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
+RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+
 # Copia los archivos de proyecto
 COPY . /build
 
@@ -35,7 +37,7 @@ ENV TZ="America/Guayaquil"
 COPY --from=builder /build/target/audit-1.0.0.jar /app/audit-1.0.0.jar
 
 #Download dependencias for monitoring
-RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
 COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Expone el puerto que utiliza la aplicación

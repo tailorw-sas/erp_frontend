@@ -14,6 +14,8 @@ ENV PACKAGE_TOKEN=${PACKAGE_TOKEN}
 # Reemplaza el token de configuración en settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
+RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+
 # Copia los archivos de proyecto
 COPY . /build
 
@@ -35,13 +37,13 @@ ENV TZ="America/Guayaquil"
 COPY --from=builder /build/target/payment-1.0.0.jar /app/payment-1.0.0.jar
 COPY src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
 
+#Download dependencias for monitoring
+COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
+COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
+
 # Expone el puerto que utiliza la aplicación
 EXPOSE 8097
 EXPOSE 9904
-
-#Download dependencias for monitoring
-RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
-COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Comando de inicio de la aplicación
 ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/payment-1.0.0.jar"]
