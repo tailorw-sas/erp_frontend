@@ -146,9 +146,9 @@ watch(() => props.suggestions, (newSuggestions) => {
   justify-content: center;
 }
 
-.p-multiselect .p-multiselect-label {
+/* .p-multiselect .p-multiselect-label {
   padding: 0.2145rem 0.571rem !important;
-}
+} */
 
 .remove-button:hover {
   color: #2d2d3a; /* Color más oscuro al hacer hover */
