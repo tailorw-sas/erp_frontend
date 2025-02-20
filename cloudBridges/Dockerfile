@@ -55,6 +55,7 @@ RUN mvn --no-transfer-progress clean package -DskipTests -f ${POM_NAME}
 FROM bellsoft/liberica-openjdk-alpine:17.0.6
 
 EXPOSE 9908
+EXPOSE 9904
 
 #Configurar Zona Horaria
 RUN apk upgrade --no-cache
@@ -72,4 +73,9 @@ RUN apk add --no-cache font-noto
 # Copy the native executable into the containers
 WORKDIR /app
 COPY --from=builder /build/target/cloudBridges-1.0.0.jar .
-ENTRYPOINT [ "java", "-jar", "/app/cloudBridges-1.0.0.jar" ]
+
+#Download dependencias for monitoring
+RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
+
+ENTRYPOINT [ "java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/cloudBridges-1.0.0.jar" ]

@@ -33,4 +33,6 @@ build/
 .DS_Store
 
 /cloudBridges/target/
-/settings/.gitignore
+/settings/.gitignore    
+jmx_prometheus_javaagent-0.20.0.jar
+settings/libs/jmx_prometheus_javaagent-0.20.0.jar

@@ -28,6 +28,10 @@ RUN mvn clean package -DskipTests -f ${POM_NAME}
 # Etapa final: imagen ligera de distroless
 FROM gcr.io/distroless/java17-debian11
 
+# Expone el puerto que utiliza la aplicación
+EXPOSE 9909
+EXPOSE 9904
+
 # Establece la zona horaria
 ENV TZ="America/Guayaquil"
 
@@ -35,8 +39,9 @@ ENV TZ="America/Guayaquil"
 COPY --from=builder /build/target/invoicing-1.0.0.jar /app/invoicing-1.0.0.jar
 COPY src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
 
-# Expone el puerto que utiliza la aplicación
-EXPOSE 9909
+#Download dependencias for monitoring
+RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Comando de inicio de la aplicación
-ENTRYPOINT ["java", "-jar", "/app/invoicing-1.0.0.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/invoicing-1.0.0.jar"]

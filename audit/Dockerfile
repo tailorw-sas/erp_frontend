@@ -34,8 +34,13 @@ ENV TZ="America/Guayaquil"
 # Copia el JAR generado desde la etapa de construcción
 COPY --from=builder /build/target/audit-1.0.0.jar /app/audit-1.0.0.jar
 
+#Download dependencias for monitoring
+RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
+
 # Expone el puerto que utiliza la aplicación
 EXPOSE 9909
+EXPOSE 9904
 
 # Comando de inicio de la aplicación
-ENTRYPOINT ["java", "-jar", "/app/audit-1.0.0.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/audit-1.0.0.jar"]
