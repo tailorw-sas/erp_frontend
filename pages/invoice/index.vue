@@ -22,6 +22,7 @@ import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentH
 import type { UndoImportInvoiceResponse } from './undo-import.vue'
 import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
 import ImportManualDialog from '~/pages/invoice/import.vue'
+import ImportInssistDialog from '~/pages/invoice/import-innsist.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -68,6 +69,8 @@ const attachmentInvoice = <any>ref(null)
 const active = ref(0)
 const ImportVirtualDialogVisible =ref(false)
 const ImportManualDialogVisible =ref(false)
+const ImportInssistDialogVisible =ref(false)
+
 
 const itemSend = ref<GenericObject>({
   employee:userData?.value?.user?.userId,
@@ -713,7 +716,8 @@ const itemsMenuImport = ref([
   },
   {
     label: 'Import From Innsist',
-    command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
+    command:()=> ImportInssistDialogVisible.value=true,
+    // command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
     //disabled: computedShowMenuItemUndoImport
   }
 ])
@@ -725,6 +729,10 @@ const closeBookingFromFileVirtual = () => {
 
 const closeBookingFromFileManual = () => {
   ImportManualDialogVisible.value = false
+}
+
+const closeImportFromInssist = () => {
+  ImportInssistDialogVisible.value = false
 }
 
 const itemsMenuSend = ref([
@@ -3041,6 +3049,11 @@ const legend = ref(
       header="Bookings Import From File" @close="closeBookingFromFileManual"
       :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
       />
+    <DynamicContentModalImport
+      :visible="ImportInssistDialogVisible" :component="ImportInssistDialog"
+      header="Bookings From Innsist" @close="closeImportFromInssist"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+    />
 </template>
 
 

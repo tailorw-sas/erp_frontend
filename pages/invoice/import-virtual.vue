@@ -298,7 +298,7 @@ onMounted(async () => {
           <div class="grid p-0 m-0" style="margin: 0 auto">
             <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
               <div class="flex align-items-center mb-2">
-                <label class="w-7rem">Import Data: </label>
+                <label class="w-16rem">Import Data (XLS or XLSX): </label>
                 <div class="w-full">
                   <div class="p-inputgroup w-full">
                     <InputText
@@ -311,6 +311,7 @@ onMounted(async () => {
                     />
                     <span class="p-inputgroup-addon p-0 m-0">
                       <Button
+                        v-tooltip.top="'Upload file'"
                         icon="pi pi-file-import"
                         severity="secondary"
                         class="w-2rem h-2rem p-0 m-0"
@@ -328,7 +329,7 @@ onMounted(async () => {
                       />
                     </span>
                   </div>
-                  <small id="username-help" style="color: #808080">Select a file of type XLS or XLSX</small>
+                  <!-- <small id="username-help" style="color: #808080">Select a file of type XLS or XLSX</small> -->
                   <input
                     ref="fileUpload"
                     type="file"
