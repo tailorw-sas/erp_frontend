@@ -14,6 +14,9 @@ ENV PACKAGE_TOKEN=${PACKAGE_TOKEN}
 # Reemplaza el token de configuración en settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
+# Descargar el agente JMX en la imagen de construcción
+RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+
 # Copia los archivos de proyecto
 COPY . /build
 
@@ -40,7 +43,7 @@ COPY --from=builder /build/target/invoicing-1.0.0.jar /app/invoicing-1.0.0.jar
 COPY src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
 
 #Download dependencias for monitoring
-RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
 COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Comando de inicio de la aplicación
