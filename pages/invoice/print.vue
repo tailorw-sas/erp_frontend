@@ -556,11 +556,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-    Invoice to Print
-  </div>
+  <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+    Invoices to Print
+  </div> -->
   <div class="grid">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-2">
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-0">
       <div class="p-fluid pt-3">
         <DynamicTable
           class="card p-0 "
@@ -640,7 +640,7 @@ onMounted(async () => {
 
         <div class="flex align-items-end justify-content-end">
           <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
-          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+          <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
         </div>
       </div>
     </div>

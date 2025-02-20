@@ -23,6 +23,8 @@ import type { UndoImportInvoiceResponse } from './undo-import.vue'
 import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
 import ImportManualDialog from '~/pages/invoice/import.vue'
 import ImportInssistDialog from '~/pages/invoice/import-innsist.vue'
+import InvoiceToPrintDialog from '~/pages/invoice/print.vue'
+
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -70,6 +72,10 @@ const active = ref(0)
 const ImportVirtualDialogVisible =ref(false)
 const ImportManualDialogVisible =ref(false)
 const ImportInssistDialogVisible =ref(false)
+const InvoiceToPrintDialogVisible =ref(false)
+
+
+
 
 
 const itemSend = ref<GenericObject>({
@@ -444,10 +450,11 @@ function openDialogToPrint() {
   getPrintList()
 }
 function Print() {
-  navigateTo('/invoice/print',{ open: { target: '_blank' } })
+  InvoiceToPrintDialogVisible.value = true
 }
 
-////
+
+
 
 async function SendInvoiceByType() {
   loadingSaveAll.value = true
@@ -734,6 +741,12 @@ const closeBookingFromFileManual = () => {
 const closeImportFromInssist = () => {
   ImportInssistDialogVisible.value = false
 }
+
+const closeInvoiceToPrint = () => {
+  InvoiceToPrintDialogVisible.value = false
+}
+
+
 
 const itemsMenuSend = ref([
   {
@@ -2954,7 +2967,7 @@ const legend = ref(
       <template #header>
         <div class="flex align-items-center justify-content-between w-full">
           <h5 class="m-0">
-            Invoice to Print
+            Invoices to Print
           </h5>
           <div class="flex align-items-center">
             <h5 class="m-0 mr-2">
@@ -3049,6 +3062,12 @@ const legend = ref(
       header="Bookings Import From File" @close="closeBookingFromFileManual"
       :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
       />
+      <DynamicContentModalImport
+      :visible="InvoiceToPrintDialogVisible" :component="InvoiceToPrintDialog"
+      header="Invoices To Print" @close="closeInvoiceToPrint"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      
     <DynamicContentModalImport
       :visible="ImportInssistDialogVisible" :component="ImportInssistDialog"
       header="Bookings From Innsist" @close="closeImportFromInssist"
