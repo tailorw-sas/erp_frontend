@@ -151,7 +151,7 @@ public class BookingServiceImpl implements IBookingService {
                 .filter(importBooking -> importBooking.getErrorMessage() != null && !importBooking.getErrorMessage().isBlank())
                 .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
                 .map(importBooking -> {
-                    return importBooking.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:ss")) + ": " + importBooking.getErrorMessage();
+                    return importBooking.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + ":" + importBooking.getErrorMessage();
                 })
                 .limit(2)
                 .toList();
