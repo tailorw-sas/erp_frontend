@@ -17,6 +17,8 @@ target/
 *.iws
 *.iml
 *.ipr
+**/libs/
+**/demo/
 
 ### NetBeans ###
 /nbproject/private/
@@ -32,7 +34,3 @@ build/
 .vscode/
 .DS_Store
 
-/cloudBridges/target/
-/settings/.gitignore    
-jmx_prometheus_javaagent-0.20.0.jar
-settings/libs/jmx_prometheus_javaagent-0.20.0.jar

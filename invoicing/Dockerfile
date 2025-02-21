@@ -21,9 +21,33 @@ RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prome
 COPY . /build
 
 # Argumento para obtener el nombre del POM de forma dinámica
-ARG POM_NAME
+ARG POM_NAME=pom.xml
 ENV POM_NAME=${POM_NAME}
 
+# Define argumentos para controlar el comportamiento y parametrizar la copia
+ARG DOCKER_HUB=false
+ARG ARTIFACT_VERSION=0.0.1-SNAPSHOT
+# Lista de artefactos a copiar (separados por espacios)
+ARG ARTIFACTS="share audit-agent"
+
+RUN if [ "$DOCKER_HUB" = "false" ]; then \
+      echo "Entorno local detectado, copiando artefactos locales..."; \
+      for artifact in $ARTIFACTS; do \
+          target_dir="$MAVEN_CONFIG/repository/com/kynsoft/finamer/$artifact/$ARTIFACT_VERSION"; \
+          echo "Procesando artefacto: $artifact"; \
+          mkdir -p "$target_dir" && \
+          if [ -f libs/${artifact}-${ARTIFACT_VERSION}.jar ]; then \
+              cp -v libs/${artifact}-${ARTIFACT_VERSION}.jar "$target_dir/"; \
+          else \
+              echo "❌ ERROR: No se encontró libs/${artifact}-${ARTIFACT_VERSION}.jar" && exit 1; \
+          fi && \
+          if [ -f libs/${artifact}-${ARTIFACT_VERSION}.pom ]; then \
+              cp -v libs/${artifact}-${ARTIFACT_VERSION}.pom "$target_dir/"; \
+          else \
+              echo "⚠️  Advertencia: No se encontró libs/${artifact}-${ARTIFACT_VERSION}.pom"; \
+          fi; \
+      done; \
+    fi
 # Compila las dependencias offline y el paquete
 RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
 RUN mvn clean package -DskipTests -f ${POM_NAME}
