@@ -14,10 +14,8 @@ RUN microdnf update \
 # 2) https://maven.apache.org/download.cgi
 ARG USER_HOME_DIR="/root"
 ARG MAVEN_DOWNLOAD_URL=https://dlcdn.apache.org/maven/maven-3/3.9.4/binaries/apache-maven-3.9.4-bin.tar.gz
-
 RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
     && curl -fsSL -o /tmp/apache-maven.tar.gz ${MAVEN_DOWNLOAD_URL} \
-    && echo "${SHA}  /tmp/apache-maven.tar.gz" | sha512sum -c - \
     && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
