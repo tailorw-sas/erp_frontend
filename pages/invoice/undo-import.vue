@@ -746,10 +746,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="bg-white" style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <div class="bg-gray" style="max-height: 100vh; height: 90vh">
+    <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       Bookings To Remove
-    </div>
+    </div> -->
     <div class="grid">
       <div class="col-12 order-0 w-full md:order-1 md:col-6  lg:col-6 xl:col-6">
         <div class="mb-0">
@@ -912,10 +912,10 @@ onMounted(async () => {
         <div class="flex align-items-end justify-content-end">
           <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="selectedElements.length === 0" @click="openUndo()" />
 
-          <Button
+          <!-- <Button
             v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
             @click="clearForm"
-          />
+          /> -->
         </div>
         <div v-if="openDialog">
           <Dialog
@@ -957,12 +957,6 @@ onMounted(async () => {
                     icon="pi pi-save"
                     :loading="loadingSaveAll"
                     @click="applyUndo"
-                  />
-
-                  <Button
-                    v-if="false"
-                    v-tooltip.top="'Cancel'" severity="secondary" class="h-2rem w-3rem p-button mt-3 px-2" icon="pi pi-times"
-                    @click="handleClose"
                   />
                 </div>
               </div>

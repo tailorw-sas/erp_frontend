@@ -84,13 +84,13 @@ const confagencyListApi = reactive({
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text', width: '6%' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi, width: '15%' },
-  { field: 'invoiceNumber', header: 'Inv. No', type: 'text', width: '8%' },
+  { field: 'invoiceNumber', header: 'Invoice. No', tooltip: 'Invoice Number', type: 'text', width: '8%' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, width: '15%' },
-  { field: 'invoiceDate', header: 'Gen.  Date', type: 'date', width: '12%' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '14%' },
-  { field: 'recStatus', header: 'Rec Status', type: 'text', width: '15%' },
-  // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
+  { field: 'invoiceDate', header: 'Gen.  Date', tooltip: 'Generation Date', type: 'date', width: '10%' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text', width: '10%' },
   { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', showFilter: false, localItems: ENUM_INVOICE_STATUS, sortable: true },
+  { field: 'recStatus', header: 'Rec. Status', tooltip: 'Reconcile Status', type: 'text', width: '15%' },
+  // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', sortable: true , objApi: { moduleApi: 'settings', uriApi: 'manage-invoice-status'}},
 
 ]
 
@@ -836,10 +836,10 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
               <div
                 class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
               >
@@ -847,28 +847,28 @@ onMounted(async () => {
                   Invoice to Reconcile Automatic
                 </div>
               </div>
-            </template>
+            </template> -->
 
-            <div class="grid">
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">Agency:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedMultiSelectComponent
-                        id="autocomplete"
-                        field="name"
-                        item-value="id"
-                        :model="filterToSearch.agency"
-                        :suggestions="agencyList"
-                        :loading="multiSelectLoading.agency"
-                        @change="($event) => {
-                          filterToSearch.agency = $event
-                        }"
-                        @load="($event) => getAgencyList($event)"
-                      />
+          <div class="grid">
+            <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="flex flex-column gap-2 w-full">
+                <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">Agency:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <DebouncedMultiSelectComponent
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.agency"
+                      :suggestions="agencyList"
+                      :loading="multiSelectLoading.agency"
+                      @change="($event) => {
+                        filterToSearch.agency = $event
+                      }"
+                      @load="($event) => getAgencyList($event)"
+                    />
 
-                      <!--  <DebouncedAutoCompleteComponent
+                    <!--  <DebouncedAutoCompleteComponent
                         id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
                         :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
@@ -885,25 +885,25 @@ onMounted(async () => {
                         </template>
                       </DebouncedAutoCompleteComponent>
                       -->
-                    </div>
                   </div>
-                  <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedMultiSelectComponent
-                        id="autocomplete"
-                        field="name"
-                        item-value="id"
-                        :model="filterToSearch.hotel"
-                        :suggestions="hotelList"
-                        :loading="multiSelectLoading.hotel"
-                        @change="($event) => {
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <label class="filter-label font-bold ml-3" for="">Hotel:</label>
+                  <div class="w-full">
+                    <DebouncedMultiSelectComponent
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="multiSelectLoading.hotel"
+                      @change="($event) => {
 
-                          filterToSearch.hotel = $event
-                        }"
-                        @load="($event) => getHotelList($event)"
-                      />
-                      <!-- <DebouncedAutoCompleteComponent
+                        filterToSearch.hotel = $event
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    />
+                    <!-- <DebouncedAutoCompleteComponent
                         id="autocomplete" :multiple="true"
                         class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
                         :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => {
@@ -920,101 +920,101 @@ onMounted(async () => {
                         </template>
                       </DebouncedAutoCompleteComponent>
                     -->
-                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">From:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)" :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
-                      />
-                    </div>
+            <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+              <div class="flex flex-column gap-2 w-full">
+                <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">From:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <Calendar
+                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                      show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)" :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
+                    />
                   </div>
-                  <div class="flex align-items-center gap-2 ml-4">
-                    <label class="filter-label font-bold" for="">To:</label>
-                    <div class="w-full">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
-                      />
-                    </div>
+                </div>
+                <div class="flex align-items-center gap-2 ml-4">
+                  <label class="filter-label font-bold" for="">To:</label>
+                  <div class="w-full">
+                    <Calendar
+                      v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      icon-display="input" class="w-full" :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
+                    />
                   </div>
                 </div>
               </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0 pr-2">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex flex-column gap-2 w-full">
-                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                        <label class="filter-label font-bold" for="">Criteria:</label>
-                        <div class="w-full">
-                          <Dropdown
-                            v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
-                            placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+            </div>
+            <div class="col-12 md:col-6 lg:col-3 flex pb-0 pr-2">
+              <div class="flex w-full">
+                <div class="flex flex-row w-full">
+                  <div class="flex flex-column gap-2 w-full">
+                    <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                      <label class="filter-label font-bold" for="">Criteria:</label>
+                      <div class="w-full">
+                        <Dropdown
+                          v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
+                          placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                        />
+                      </div>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <label class="filter-label font-bold" for="">Search:</label>
+                      <div class="w-full">
+                        <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex align-items-center mx-3">
+                    <Button
+                      v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
+                      :disabled="disabledSearch" :loading="options.loading" @click="searchAndFilter"
+                    />
+                    <Button
+                      v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                      :loading="loadingSearch" @click="clearFilterToSearch"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6 lg:col-3 flex pb-0 ml-8">
+              <div class="flex w-full">
+                <div class="flex flex-row w-full">
+                  <div class="flex flex-column gap-2 w-full">
+                    <div class="flex align-items-center gap-2 mt-3 ml-2">
+                      <label class="w-16rem" for="">Import (XLS or XLSX)<span class="p-error">*</span>:
+                      </label>
+                      <div class="w-full">
+                        <div class="p-inputgroup w-full">
+                          <InputText
+                            ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                            class="w-full" show-clear aria-describedby="inputtext-help"
                           />
-                        </div>
-                      </div>
-                      <div class="flex align-items-center gap-2">
-                        <label class="filter-label font-bold" for="">Search:</label>
-                        <div class="w-full">
-                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex align-items-center mx-3">
-                      <Button
-                        v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                        :disabled="disabledSearch" :loading="options.loading" @click="searchAndFilter"
-                      />
-                      <Button
-                        v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                        :loading="loadingSearch" @click="clearFilterToSearch"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0 ml-8">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex flex-column gap-2 w-full">
-                      <div class="flex align-items-center gap-2 mt-3 ml-2">
-                        <label class="filter-label font-bold ml-1 mb-3" for="">Import<span class="p-error">*</span>:
-                        </label>
-                        <div class="w-full">
-                          <div class="p-inputgroup w-full">
-                            <InputText
-                              ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
-                              class="w-full" show-clear aria-describedby="inputtext-help"
+                          <span class="p-inputgroup-addon p-0 m-0">
+                            <Button
+                              icon="pi pi-file-import" severity="secondary" :disabled="listItems.length === 0"
+                              class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()"
                             />
-                            <span class="p-inputgroup-addon p-0 m-0">
-                              <Button
-                                icon="pi pi-file-import" severity="secondary" :disabled="listItems.length === 0"
-                                class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()"
-                              />
-                            </span>
-                          </div>
-                          <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                          <input
-                            ref="fileUpload" type="file" style="display: none;"
-                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                            @change="onChangeFile($event)"
-                          >
+                          </span>
                         </div>
+                        <!-- <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small> -->
+                        <input
+                          ref="fileUpload" type="file" style="display: none;"
+                          accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                          @change="onChangeFile($event)"
+                        >
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
+          </div>
+        </AccordionTab>
+        <!-- </Accordion> -->
       </div>
 
       <DynamicTable
@@ -1060,10 +1060,10 @@ onMounted(async () => {
           :loading="options.loading"
           :disabled="!importModel.importFile || selectedElements.length === 0" @click="ApplyImport"
         />
-        <Button
+        <!-- <Button
           v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
           @click="clearForm"
-        />
+        /> -->
       </div>
     </div>
   </div>
