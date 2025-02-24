@@ -75,7 +75,7 @@ public class ImportInnsistServiceImpl {
                 BookingRow row = bookingImportCache.toAggregateImportInsist();
                 row.setRowNumber(rowNumber);
                 row.setImportProcessId(row.getInsistImportProcessId());
-                row.setAgencys(agencys);
+                row.setAgencies(agencys);
                 row.setHotels(hotels);
                 if (validatorFactory.validate(row)) {
                     bookingImportHelperService.groupAndCachingImportBooking(row, EImportType.NO_VIRTUAL);

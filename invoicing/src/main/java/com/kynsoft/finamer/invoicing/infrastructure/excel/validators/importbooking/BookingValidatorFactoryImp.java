@@ -23,13 +23,9 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
 
     private final IManageHotelService manageHotelService;
     private final IManageRoomTypeService roomTypeService;
-
     private final IManageRatePlanService ratePlanService;
-
     private final IManageAgencyService manageAgencyService;
-
     private final IManageBookingService manageBookingService;
-
     private final BookingImportCacheRedisRepository cacheRedisRepository;
     private final IInvoiceCloseOperationService closeOperationService;
     private final IManageNightTypeService nightTypeService;

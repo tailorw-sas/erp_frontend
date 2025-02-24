@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/import-innsist")
-public class ImportInnisitController {
+public class ImportInnsistController {
 
     private final ImportInnsistServiceImpl service;
-    public ImportInnisitController(ImportInnsistServiceImpl service) {
+    public ImportInnsistController(ImportInnsistServiceImpl service) {
         this.service = service;
     }
 
