@@ -24,7 +24,13 @@ import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
 import ImportManualDialog from '~/pages/invoice/import.vue'
 import ImportInssistDialog from '~/pages/invoice/import-innsist.vue'
 import InvoiceToPrintDialog from '~/pages/invoice/print.vue'
-
+import ReconcileManualDialog from '~/pages/invoice/reconcile-manual.vue'
+import ReconcileAutomaticDialog from '~/pages/invoice/reconcile-automatic.vue'
+import ReconcileFilesDialog from '~/pages/invoice/reconcile-automatic.vue'
+import SendByFtpDialog from '~/pages/invoice/sendInvoice-ftp.vue'
+import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
+import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
+import UndoImportDialog from '~/pages/invoice/undo-import.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -73,10 +79,13 @@ const ImportVirtualDialogVisible =ref(false)
 const ImportManualDialogVisible =ref(false)
 const ImportInssistDialogVisible =ref(false)
 const InvoiceToPrintDialogVisible =ref(false)
-
-
-
-
+const ReconcileManualDialogVisible =ref(false)
+const ReconcileAutomaticDialogVisible =ref(false)
+const ReconcileFilesDialogVisible =ref(false)
+const SendByFtpDialogVisible =ref(false)
+const SendByEmailDialogVisible =ref(false)
+const SendByBavelDialogVisible =ref(false)
+const UndoImportDialogVisible =ref(false)
 
 const itemSend = ref<GenericObject>({
   employee:userData?.value?.user?.userId,
@@ -629,17 +638,20 @@ const createItems = ref([
 const createReconcile = ref([
   {
     label: 'Automatic',
-    command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
+    command:()=> ReconcileAutomaticDialogVisible.value=true, 
+    //command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
    // disabled: computedShowMenuItemReconcile
   },
    {
     label: 'Manual',
-     command: () => navigateTo('invoice/reconcile-manual',{open:{target:'blank'}}),
+    command:()=> ReconcileManualDialogVisible.value=true, 
+    //command: () => navigateTo('invoice/reconcile-manual',{open:{target:'blank'}}),
   //   disabled: computedShowMenuItemCredit
    },
   {
     label: 'Reconcile from Files',
-    command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
+    command:()=> ReconcileFilesDialogVisible.value=true, 
+    //command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
     
   },
 ])
@@ -718,7 +730,8 @@ const itemsMenuImport = ref([
   },
   {
     label: 'Undo Import',
-    command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
+    command:()=> UndoImportDialogVisible.value=true,
+    //command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
     //disabled: computedShowMenuItemUndoImport
   },
   {
@@ -727,6 +740,7 @@ const itemsMenuImport = ref([
     // command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
     //disabled: computedShowMenuItemUndoImport
   }
+  
 ])
 
 // Asegurar que el modal se cierre cuando se emita @close
@@ -742,6 +756,32 @@ const closeImportFromInssist = () => {
   ImportInssistDialogVisible.value = false
 }
 
+const closeReconcileManual = () => {
+  ReconcileManualDialogVisible.value = false
+}
+
+const closeReconcileAutomatic = () => {
+  ReconcileAutomaticDialogVisible.value = false
+}
+
+const closeReconcileFiles = () => {
+  ReconcileFilesDialogVisible.value = false
+}
+
+
+const closeSendByBavel = () => {
+  SendByFtpDialogVisible.value = false
+}
+const closeSendByEmail = () => {
+  SendByEmailDialogVisible.value = false
+}
+const closeSendByFtp = () => {
+  SendByFtpDialogVisible.value = false
+}
+const closeUndoImport = () => {
+  UndoImportDialogVisible.value = false
+}
+
 const closeInvoiceToPrint = () => {
   InvoiceToPrintDialogVisible.value = false
 }
@@ -751,17 +791,20 @@ const closeInvoiceToPrint = () => {
 const itemsMenuSend = ref([
   {
     label: 'By FTP',
-    command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
+    command:()=> SendByFtpDialogVisible.value=true, 
+    //command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromFile
   },
   {
     label: 'By Email',
-    command: () => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
+    command:()=> SendByEmailDialogVisible.value=true, 
+    //command: () => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   },
   {
     label: 'By Bavel',
-    command: () => navigateTo(`invoice/sendInvoice-bavel?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
+    command:()=> SendByBavelDialogVisible.value=true, 
+    //command: () => navigateTo(`invoice/sendInvoice-bavel?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   }
 ])
@@ -3067,7 +3110,41 @@ const legend = ref(
       header="Invoices To Print" @close="closeInvoiceToPrint"
       :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
       />
-      
+      <DynamicContentModalImport
+      :visible="ReconcileManualDialogVisible" :component="ReconcileManualDialog"
+      header="Invoice To Reconcile Manual" @close="closeReconcileManual"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="ReconcileAutomaticDialogVisible" :component="ReconcileAutomaticDialog"
+      header="Invoice To Reconcile Automatic" @close="closeReconcileAutomatic"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="ReconcileFilesDialogVisible" :component="ReconcileFilesDialog"
+      header="Reconcile Invoice From files" @close="closeReconcileFiles"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="SendByBavelDialogVisible" :component="SendByBavelDialog"
+      header="Invoice to Send by Bavel" @close="closeSendByBavel"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="SendByEmailDialogVisible" :component="SendByEmailDialog"
+      header="Invoice to Send by Email" @close="closeSendByEmail"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="SendByFtpDialogVisible" :component="SendByFtpDialog"
+      header="Invoice to Send by FTP" @close="closeSendByFtp"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="UndoImportDialogVisible" :component="UndoImportDialog"
+      header="Bookings To Remove" @close="closeUndoImport"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
     <DynamicContentModalImport
       :visible="ImportInssistDialogVisible" :component="ImportInssistDialog"
       header="Bookings From Innsist" @close="closeImportFromInssist"
