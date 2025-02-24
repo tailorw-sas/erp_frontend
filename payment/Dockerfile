@@ -71,7 +71,7 @@ EXPOSE 8097
 EXPOSE 9904
 
 #Download dependencias for monitoring
-RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
 COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Comando de inicio de la aplicación
