@@ -20,14 +20,14 @@ RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prome
 COPY . /build
 
 # Argumento para obtener el nombre del POM de forma dinámica
-ARG POM_NAME=pom.xml
+ARG POM_NAME=pom-dev.xml
 ENV POM_NAME=${POM_NAME}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia
 ARG DOCKER_HUB=false
 ARG ARTIFACT_VERSION=0.0.1-SNAPSHOT
 # Lista de artefactos a copiar (separados por espacios)
-ARG ARTIFACTS="share audit-agent"
+ARG ARTIFACTS="share-dev audit-agent"
 
 RUN if [ "$DOCKER_HUB" = "false" ]; then \
       echo "Entorno local detectado, copiando artefactos locales..."; \

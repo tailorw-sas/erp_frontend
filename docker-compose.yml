@@ -33,9 +33,6 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: "1"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       CLUSTER_ID: "29KtM_8-S9eaMK3cK93AFA"
-#    volumes:
-#      - ./kafka/logs:/var/lib/kafka/data
-#      - ./kafka.properties:/tmp/kafka.properties
     networks:
       - custom_network
 
@@ -53,24 +50,6 @@ services:
     networks:
       - custom_network
 
-  registry:
-    build:
-      context: ./registry
-      dockerfile: Dockerfile
-    container_name: registry
-    ports:
-        - "8761:8761"
-    environment:
-      - EUREKA_INSTANCE_HOSTNAME=registry
-    healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://registry:8761/actuator/health" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-    networks:
-      - custom_network
-
   config:
     build:
       context: ./config
@@ -79,48 +58,15 @@ services:
     ports:
       - "8081:8081"
     environment:
+      - RC_ACTIVE_PROFILE=development
       - GIT_USERNAME=tailorwr
       - GIT_PASSWORD=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
-      - REGISTRY_SERVICE=registry
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://config:8081/actuator/health" ]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
-    depends_on:
-      registry:
-        condition: service_healthy
-    networks:
-      - custom_network
-
-  report:
-    #image: tailorw/erp-report:dev
-    build:
-      context: ./report
-      dockerfile: Dockerfile
-    container_name: report
-    ports:
-      - "9908:9909"
-    environment:
-      - RC_ACTIVE_PROFILE=development
-      - RC_SERVER_CONFIG=config
-      - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-reposts
-      - DB_USER_RW=finamer_rw
-      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
-      - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-reposts
-      - DB_USER_R=finamer_ro
-      - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - REGISTRY_SERVICE=registry
-      - AWS_ACCESS_KEY=RIfhLlj8UiJM7zBk4rzB
-      - AWS_ACCESS_SECRET=ISEyv5ZymrpE8AXnzcFxnlYxQdNimuzB8RJzd1pj
-      - REPORT_SERVICE=http://report:9909/api/reports/generate-template
-      - MINIO_URL=https://miniodev-api.tailorw.net/
-    depends_on:
-      registry:
-        condition: service_healthy
-      config:
-        condition: service_healthy
     networks:
       - custom_network
 
@@ -135,43 +81,116 @@ services:
       - SERVER_PORT=8080
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
-      - REGISTRY_SERVICE=registry
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
+      - JWT_AUTH_RESOURCE_ID=tailorw
       - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
-      - KAFKA_GROUP_ID=groupId
-      - REPORT_SERVICE=report:9908
+      - KAFKA_GROUP_ID=settings
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - REPORT_SERVICE=http://report:9909
+      - INVOICING_SERVICE=http://invoicing:9909
+      - IDENTITY_SERVICE=http://identity:9909
+      - SETTINGS_SERVICE=http://settings:9909
+      - CLOUDBRIDGES_SERVICE=http://cloudbridges:9909
+      - CREDITCARD_SERVICE=http://creditcard:9909
+      - INNSIST_SERVICE=http://innsist:9909
+      - PAYMENT_SERVICE=http://payment:9909
+      - SCHEDULER_SERVICE=http://scheduler:9909
+      - SETTINGS_SERVICE=http://settings:9909
     depends_on:
-      registry:
+      config:
         condition: service_healthy
+    networks:
+      - custom_network
+
+  report:
+    build:
+      context: ./report
+      dockerfile: Dockerfile
+    container_name: report
+    ports:
+      - "9901:9909"
+    environment:
+      - RC_ACTIVE_PROFILE=development
+      - RC_SERVER_CONFIG=config
+      - SERVER_PORT=9909
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
+      - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-reposts
+      - DB_USER_RW=finamer_rw
+      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
+      - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-reposts
+      - DB_USER_R=finamer_ro
+      - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
+      - AWS_ACCESS_KEY=RIfhLlj8UiJM7zBk4rzB
+      - AWS_ACCESS_SECRET=ISEyv5ZymrpE8AXnzcFxnlYxQdNimuzB8RJzd1pj
+      - AWS_BUCKET_NAME=bucket-erp-dev
+      - AWS_REGION=enam
+      - AWS_CLOUDFRONT_DOMAIN=https://tailorw.net/
+      - MINIO_URL=https://miniodev-api.tailorw.net/
+      - MINIO_ACCESS_KEY=RIfhLlj8UiJM7zBk4rzB
+      - MINIO_ACCESS_SECRET=ISEyv5ZymrpE8AXnzcFxnlYxQdNimuzB8RJzd1pj
+      - MINIO_BUCKET_NAME=finamer-erp-dev
+    depends_on:
       config:
         condition: service_healthy
     networks:
       - custom_network
 
   identity:
-    #image: tailorw/erp-identity:dev
     build:
       context: ./identity
       dockerfile: Dockerfile
     container_name: identity
     ports:
-      - "9901:9909"
+      - "9902:9909"
     environment:
       - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
       - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-identity
       - DB_USER_RW=finamer_rw
       - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
       - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-identity
       - DB_USER_R=finamer_ro
       - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - REGISTRY_SERVICE=registry
-      - REPORT_SERVICE=http://report:9908/api/reports/generate-template
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
+      - KEYCLOAK_BASE_URI=https://authdev.tailorw.net/
+      - KEYCLOAK_REALM_NAME=Erp
+      - KEYCLOAK_REAL_MASTER=master
+      - KEYCLOAK_ADMIN_CLI=admin-cli
+      - KEYCLOAK_USER_CONSOLE=admin
+      - KEYCLOAK_PASSWORD_CONSOLE=dd6bcd2e9ccc488c8048e81c30196125
+      - KEYCLOAK_CLIENT_ID=login-app
+      - KEYCLOAK_CLIENT_SECRET=MyaXWiB2w5EpADndgsk6PgGBt3ffYovX
+      - KEYCLOAK_GRANT_TYPE=password
+      - KEYCLOAK_DEFAULT_ROLE=ADMIN
+      - IDENTITY_USER_SYSTEM_ID=d0e43c35-3762-426b-8edb-49a6680ef93b
+      - IDENTITY_USER_SYSTEM_EMAIL=admin@tailorw.com
+      - IDENTITY_USER_SYSTEM_USERNAME=admin@tailorw.com
+      - IDENTITY_USER_SYSTEM_NAME=Admin
+      - IDENTITY_USER_SYSTEM_LASTNAME=Tailorw
+      - IDENTITY_BUSINESS_ID=41833c25-5ca2-41cd-b22f-8488723097da
+      - IDENTITY_BUSINESS_NAME=ERP
+      - IDENTITY_BUSINESS_DESCRIPTION=FinaErp
+      - IDENTITY_BUSINESS_LOGO_URL=https://static.kynsoft.net/bizum_2024-05-13_12-35-00.png
+      - IDENTITY_BUSINESS_RUC=111111111
+      - IDENTITY_BUSINESS_ADDRESS=RD
+      - REPORT_SERVICE=http://report:9909
       - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
       - KAFKA_GROUP_ID=identity
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
     depends_on:
-      registry:
-        condition: service_healthy
       config:
         condition: service_healthy
     networks:
@@ -183,57 +202,77 @@ services:
       dockerfile: Dockerfile
     container_name: settings
     ports:
-      - "9906:9909"
+      - "9903:9909"
     environment:
+      - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
       - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-settings
       - DB_USER_RW=finamer_rw
       - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
       - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-settings
       - DB_USER_R=finamer_ro
       - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - REGISTRY_SERVICE=registry
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
       - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
       - KAFKA_GROUP_ID=settings
-      - REPORT_SERVICE=http://report:9908/api/reports/generate-template
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - REPORT_SERVICE=http://report:9909
     depends_on:
-      registry:
-        condition: service_healthy
       config:
         condition: service_healthy
     networks:
       - custom_network
 
-  cloud-bridges:
+  cloudbridges:
     #mage: tailorw/erp-cloud-bridges:dev
     build:
       context: ./cloudBridges
       dockerfile: Dockerfile
-    container_name: cloudBridges
+    container_name: cloudbridges
     ports:
-      - "8097:9909"
+      - "9904:9909"
     environment:
+      - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
-      - REGISTRY_SERVICE=registry
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
       - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-cloudbridges
       - DB_USER_RW=finamer_rw
       - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
       - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-cloudbridges
       - DB_USER_R=finamer_ro
       - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
-      - KAFKA_GROUP_ID=CLODUBRIDGES
-      - REPORT_SERVICE=http://report:9908/api/reports/generate-template
-      - MINIO_URL=https://miniodev-api.tailorw.net/
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
       - AWS_ACCESS_KEY=RIfhLlj8UiJM7zBk4rzB
       - AWS_ACCESS_SECRET=ISEyv5ZymrpE8AXnzcFxnlYxQdNimuzB8RJzd1pj
+      - AWS_BUCKET_URL=https://ce466f7855d28d8d9392264b21d9b24f.r2.cloudflarestorage.com
+      - AWS_BUCKET_NAME=bucket-erp-dev
+      - AWS_REGION=enam
+      - AWS_URL_DOMAIN=https://tailorw.net/
+      - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
+      - KAFKA_GROUP_ID=cloudbridges
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - REPORT_SERVICE=http://report:9909
+      - MINIO_URL=https://miniodev-api.tailorw.net/
+      - MINIO_ACCESS_KEY=RIfhLlj8UiJM7zBk4rzB
+      - MINIO_ACCESS_SECRET=ISEyv5ZymrpE8AXnzcFxnlYxQdNimuzB8RJzd1pj
+      - MINIO_BUCKET_NAME=finamer-erp-dev
       - MAILJET_KEY=ad3d635ddaf288b3c6111b37cefb1d4a
       - MAILJET_SECRET=41a65d3eb55b24c2db2d9f7dff54a767
+      - MAIL_TEMPLATE_WELCOME=6049570
+      - MAIL_TEMPATE_PASSWORD_RESET=6049570
+      - MAIL_TEMPLATE_OTP=5964805
     depends_on:
-      registry:
-        condition: service_healthy
       config:
         condition: service_healthy
     networks:
@@ -245,29 +284,33 @@ services:
       dockerfile: Dockerfile
     container_name: invoicing
     ports:
-      - "9907:9909"
+      - "9905:9909"
     environment:
+      - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
       - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-invoicing
       - DB_USER_RW=finamer_rw
       - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
       - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-invoicing
       - DB_USER_R=finamer_ro
       - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - REGISTRY_SERVICE=registry
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
       - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
-      - KAFKA_GROUP_ID=IDENTITY
+      - KAFKA_GROUP_ID=creditcard
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
       - REDIS_ADDRESS=redis
       - REDIS_PORT=6379
-      - REPORT_SERVICE=http://report:9908/api/reports/generate-template
-      - FILE_SERVICE_URL=http://cloudBridges:8097/api/files
-      - MAIL_API_URL=http://cloudBridges:8097/api/mail/send
-      - MAIL_API_URL=http://cloudBridges:8097/api/ftp
-      - PAYMENT_SERVICE=http://payment:9902
+      - REPORT_SERVICE=http://report:9909
+      - FILE_SERVICE_URL=http://cloudbridges:9909
+      - MAIL_API_URL=http://cloudbridges:9909
+      - PAYMENT_SERVICE=http://payment:9909
     depends_on:
-      registry:
-        condition: service_healthy
       config:
         condition: service_healthy
     networks:
@@ -275,119 +318,224 @@ services:
 
   payment:
     build:
-        context: ./payment
-        dockerfile: Dockerfile
+      context: ./payment
+      dockerfile: Dockerfile
     container_name: payment
     ports:
-      - "9902:9909"
+      - "9906:9909"
     environment:
+      - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
       - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-payments
       - DB_USER_RW=finamer_rw
       - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
       - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-payments
       - DB_USER_R=finamer_ro
       - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - REGISTRY_SERVICE=registry
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
       - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
-      - KAFKA_GROUP_ID=PAYMENT
-      - REPORT_SERVICE=http://report:9908/api/reports/generate-template
-      - INVOICE_SERVICE=http://invoicing:9907/api/manage-invoice/report
-      - PAYMENT_SERVICE=http://payment:9902
-      - SETTINGS_SERVICE=http://settings:9906
-      - REDIS_ADDRESS=redis
-      - REDIS_PORT=6379
-      - PAYMENT_FILE_SERVICE_URL=http://cloudBridges:8097/api/files
-      - MAIL_API_URL=http://cloudBridges:8097/api/ftp
-      - FILE_SERVICE_URL=http://cloudBridges:8097/api/files
-      - MAIL_API_URL=http://cloudBridges:8097/api/mail/send
+      - KAFKA_GROUP_ID=creditcard
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - PAYMENT_SOURCE_EXP_CODE=EXP
+      - PAYMENT_SOURCE_BANK_CODE=BK
+      - PAYMENT_STATUS_CONF_CODE=CON
+      - PAYMENT_SOURCE_APPLY_CODE=APL
+      - PAYMENT_ATTACHEMENT_STATUS_CODE=OTHER
+      - PAYMENT_SOURCE_APPLY_CODE=PAY
+      - PAYMENT_ATTACHEMENT_TYPE_CODE=PYD
+      - PAYMENT_ATTACHMENT_STATUS_CODE=NON
+      - PAYMENT_RELATED_INCOME_STATUS_CODE=SENT
+      - ALL_SUPPORT_CODE=PAY
+      - PAYMENT_FILE_SERVICE_URL=http://cloudbridges:9909
+      - REPORT_SERVICE=http://report:9909
+      - INVOICE_SERVICE=http://invoicing:9909
+      - MAIL_API_URL=http://cloudbridges:9909
+      - FTP_SERVER=162.55.193.5
+      - FTP_PORT=21
+      - FTP_USERNAME=usrftp01
+      - FTP_PASSWORD=usuarioftp01*
+      - FTP_BASE_PATH=payment
+      - SETTINGS_SERVICE=http://settings:9909
+      - INVOICE_SERVICE=http://invoicing:9909
     depends_on:
-      registry:
-        condition: service_healthy
       config:
         condition: service_healthy
     networks:
       - custom_network
 
-  credit-card:
+  creditcard:
     build:
       context: ./creditCard
       dockerfile: Dockerfile
-    container_name: creditCard
+    container_name: creditcard
     ports:
-      - "9904:9909"
+      - "9907:9909"
     environment:
+      - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
       - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-credit-card
       - DB_USER_RW=finamer_rw
       - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
       - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-credit-card
       - DB_USER_R=finamer_ro
       - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-      - REGISTRY_SERVICE=registry
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
       - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
-      - KAFKA_GROUP_ID=CREDITCARD
-      - REPORT_SERVICE=http://report:9908/api/reports/generate-template
-      - MAIL_API_URL=http://cloudBridges:8097/api/mail/send
-      - FILE_SERVICE_URL=http://cloudBridges:8097/api/files
+      - KAFKA_GROUP_ID=creditcard
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - REPORT_SERVICE=http://report:9909
+      - MAIL_API_URL=http://cloudbridges:9909
+      - REDIRECT_PRIVATE_KEY=asdhakjshdkjasdasmndajksdkjaskldga8odya9d8yoasyd98asdyaisdhoaisyd0a8sydoashd8oasydoiahdpiashd09ayusidhaos8dy0a8dya08syd0a8ssdsax
+      - FILE_SERVICE_URL=http://cloudbridges:9909
     depends_on:
-      registry:
-        condition: service_healthy
       config:
         condition: service_healthy
     networks:
       - custom_network
-#  audit:
-#    image: tailorw/erp-audit:dev
-#    container_name: audit
-#    ports:
-#      - "9905:9908"
-#    environment:
-#      - RC_ACTIVE_PROFILE=development
-#      - RC_SERVER_CONFIG=192.168.100.57
-#      - DB_HOST_RW=jdbc:postgresql://192.168.100.57:5432/finamer-audit
-#      - DB_USER_RW=finamer_rw
-#      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
-#      - REGISTRY_SERVICE=192.168.100.57
-#      - KAFKA_BOOTSTRAP_ADDRESS=192.168.100.57:9092
-#      - KAFKA_GROUP_ID=audit
-#      - ELASTIC_SEARCH_URL=192.168.100.57:9200
-#      - ELASTIC_SEARCH_USERNAME=elastic
-#      - ELASTIC_SEARCH_PASSWORD=3WT2tyFUzaZWKADl
-#    depends_on:
-#      registry:
-#        condition: service_healthy
-#      config:
-#        condition: service_healthy
-#    networks:
-#      - custom_network
-#
-#  scheduler:
-#    image: tailorw/erp-scheduler:dev
-#    container_name: scheduler
-#    ports:
-#      - "9912:9909"
-#    environment:
-#      - RC_ACTIVE_PROFILE=development
-#      - RC_SERVER_CONFIG=192.168.100.57
-#      - DB_HOST_RW=jdbc:postgresql://192.168.100.57:5432/finamer-scheduler
-#      - DB_USER_RW=finamer_rw
-#      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
-#      - DB_HOST_R=jdbc:postgresql://192.168.100.57:5432/finamer-scheduler
-#      - DB_USER_R=finamer_ro
-#      - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
-#      - REGISTRY_SERVICE=192.168.100.57
-#      - KAFKA_BOOTSTRAP_ADDRESS=192.168.100.57:9092
-#      - KAFKA_GROUP_ID=SCHEDULER
-#    depends_on:
-#      registry:
-#        condition: service_healthy
-#      config:
-#        condition: service_healthy
-#    networks:
-#      - custom_network
+
+  innsist:
+    image: tailorw/erp-innsist:dev
+    container_name: innsist
+    ports:
+      - "9908:9909"
+    environment:
+      - SERVER_PORT=9909
+      - RC_ACTIVE_PROFILE=development
+      - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
+      - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-innsist
+      - DB_USER_RW=finamer_rw
+      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
+      - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-innsist
+      - DB_USER_R=finamer_ro
+      - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
+      - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
+      - KAFKA_GROUP_ID=innsist
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - ENCRYPTION_SECRET_KEY=23Wjb+bTh8R77uVNm9i6VCAMndiFS2nVltol1wdBeUc=
+      - ENCRYPTION_ALGORITM=AES
+      - ENCRYPTION_MODE=ECB
+      - ENCRYPTION_PADDING=PKCS5Padding
+    depends_on:
+      config:
+        condition: service_healthy
+    networks:
+      - custom_network
+
+  audit:
+    image: tailorw/erp-audit:dev
+    container_name: audit
+    ports:
+      - "9910:9909"
+    environment:
+      - SERVER_PORT=9909
+      - RC_ACTIVE_PROFILE=development
+      - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
+      - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-audit
+      - DB_USER_RW=finamer_rw
+      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
+      - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
+      - KAFKA_GROUP_ID=audit
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - ELASTIC_SEARCH_URL=elasticsearch:9200
+      - ELASTIC_SEARCH_USERNAME=elastic
+      - ELASTIC_SEARCH_PASSWORD=3WT2tyFUzaZWKADl
+    depends_on:
+      config:
+        condition: service_healthy
+    networks:
+      - custom_network
+
+  tcaInnsist:
+    image: tailorw/erp-tcainnsist:dev
+    container_name: tcaInnsist
+    ports:
+      - "9911:9909"
+    environment:
+      - SERVER_PORT=9909
+      - RC_ACTIVE_PROFILE=development
+      - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
+      - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-tcainnsist
+      - DB_USER_RW=finamer_rw
+      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
+      - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-tcainnsist
+      - DB_USER_R=finamer_ro
+      - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
+      - REDIS_ADDRESS=redis
+      - REDIS_PORT=6379
+      - ENCRYPTION_SECRET_KEY=23Wjb+bTh8R77uVNm9i6VCAMndiFS2nVltol1wdBeUc=
+      - ENCRYPTION_ALGORITM=AES
+      - ENCRYPTION_MODE=ECB
+      - ENCRYPTION_PADDING=PKCS5Padding
+      - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
+      - KAFKA_GROUP_ID=tcaInnsist
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+    depends_on:
+      config:
+        condition: service_healthy
+    networks:
+      - custom_network
+
+  scheduler:
+    image: tailorw/erp-scheduler:dev
+    container_name: scheduler
+    ports:
+      - "9912:9909"
+    environment:
+      - SERVER_PORT=9909
+      - RC_ACTIVE_PROFILE=development
+      - RC_SERVER_CONFIG=config
+      - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
+      - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token
+      - DB_HOST_RW=jdbc:postgresql://postgres_db:5432/finamer-scheduler
+      - DB_USER_RW=finamer_rw
+      - DB_PASSWORD_RW=5G30y1cXz89cA1yc0gCE3OhhBLQkvUTV2icqz5qNRQGq4cbM5F0bc
+      - DB_HOST_R=jdbc:postgresql://postgres_db:5432/finamer-scheduler
+      - DB_USER_R=finamer_ro
+      - DB_PASSWORD_RO=DCMhpzOICbuUxiUSZ044mhWSHU1R2U53IDwOyJLRuwU1r9J74lITp
+      - JWT_AUTH_RESOURCE_ID=tailorw
+      - GATEWAY_SERVICE=http://gateway:8080
+      - KAFKA_BOOTSTRAP_ADDRESS=kafka:9092
+      - KAFKA_GROUP_ID=scheduler
+      - KAFKA_USERNAME=user1
+      - KAFKA_PASSWORD=Y9Gqxg2UZq
+      - ENCRYPTION_SECRET_KEY=23Wjb+bTh8R77uVNm9i6VCAMndiFS2nVltol1wdBeUc=
+      - ENCRYPTION_ALGORITM=AES
+      - ENCRYPTION_MODE=ECB
+      - ENCRYPTION_PADDING=PKCS5Padding
+    depends_on:
+      config:
+        condition: service_healthy
+    networks:
+      - custom_network
 
 networks:
   custom_network:
