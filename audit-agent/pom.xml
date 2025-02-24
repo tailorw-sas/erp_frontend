@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.kynsoft.finamer</groupId>
-    <artifactId>${packaging.artifactId}</artifactId>
+    <artifactId>audit-agent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>audit-agent</name>
     <packaging>jar</packaging>
