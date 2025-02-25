@@ -1431,7 +1431,7 @@ function onRowRightClick(event: any) {
     return;
   }
 
-  if (props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  if (props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
     return;
   }
 
@@ -1559,7 +1559,7 @@ onMounted(() => {
         //   return;
         // }
 
-        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
         //   return;
         // }
 

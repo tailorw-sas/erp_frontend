@@ -432,7 +432,7 @@ function handleAttachmentHistoryDialogOpen() {
 
 async function getAgencyList(query = '') {
   try {
-    const listFilter = invoiceStatus.value !== InvoiceStatus.PROCECSED ? [
+    const listFilter = invoiceStatus.value !== InvoiceStatus.PROCESSED ? [
             {
               key: 'name',
               operator: 'LIKE',
@@ -958,7 +958,7 @@ function disabledFieldAgency() {
     return true
   } else {
     let result = true
-    if (invoiceStatus.value !== InvoiceStatus.PROCECSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
+    if (invoiceStatus.value !== InvoiceStatus.PROCESSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
       result = true
     } else {
       result = false
@@ -972,7 +972,7 @@ function disableBtnSave() {
     return true
   } else {
     let result = true
-    if ( invoiceStatus.value !== InvoiceStatus.PROCECSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
+    if ( invoiceStatus.value !== InvoiceStatus.PROCESSED && invoiceStatus.value !== InvoiceStatus.SENT && invoiceStatus.value !== InvoiceStatus.RECONCILED) {
       result = true
     } else {
       result = false
@@ -1024,7 +1024,7 @@ onMounted(async () => {
             v-model="data.invoiceDate" 
             date-format="yy-mm-dd" 
             :max-date="new Date()" 
-            :disabled="invoiceStatus !== InvoiceStatus.PROCECSED "
+            :disabled="invoiceStatus !== InvoiceStatus.PROCESSED "
             @update:model-value="($event) => {
               onUpdate('invoiceDate', $event)
             }" 
@@ -1064,7 +1064,7 @@ onMounted(async () => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
         <template #field-status="{ item: data, onUpdate }">
-          <!-- :disabled="data?.status?.id !== InvoiceStatus.PROCECSED"  -->
+          <!-- :disabled="data?.status?.id !== InvoiceStatus.PROCESSED"  -->
           <Dropdown 
             v-if="!loadingSaveAll" 
             v-model="data.status" 
@@ -1111,7 +1111,7 @@ onMounted(async () => {
             id="autocomplete" 
             field="fullName" 
             item-value="id" 
-            :disabled="invoiceStatus === InvoiceStatus.PROCECSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED || invoiceStatus === InvoiceStatus.CANCELED || invoiceStatus === 'CANCELED' "
+            :disabled="invoiceStatus === InvoiceStatus.PROCESSED || invoiceStatus === InvoiceStatus.SENT || invoiceStatus === InvoiceStatus.RECONCILED || invoiceStatus === InvoiceStatus.CANCELED || invoiceStatus === 'CANCELED' "
             :model="data.hotel" 
             :suggestions="hotelList" 
             @change="($event) => {
@@ -1224,7 +1224,7 @@ onMounted(async () => {
 
                 <IfCan :perms="['INVOICE-MANAGEMENT:BOOKING-CREATE']">
                   <Button v-if="active === 0" v-tooltip.top="'Add Booking'" class="w-3rem mx-1" icon="pi pi-plus"
-                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCECSED" />
+                    :loading="loadingSaveAll" @click="handleDialogOpen()" :disabled="item?.invoiceType?.id === InvoiceType.INCOME || invoiceStatus !== InvoiceStatus.PROCESSED" />
                 </IfCan>
                 
                 <!-- <Button v-tooltip.top="'Import'" v-if="item?.invoiceType?.id === InvoiceType.INCOME" class="w-3rem ml-1"

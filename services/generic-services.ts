@@ -148,7 +148,7 @@ export const GenericService = {
 
   async getUrlByImage(file: File) {
     if (file) {
-      const response = await GenericService.uploadFile('CLOUDBRIDGES', 'files', file)
+      const response = await GenericService.uploadFile('cloudbridges', 'files', file)
       return (response as any)?.data.url
     }
   },

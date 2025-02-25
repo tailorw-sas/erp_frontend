@@ -2045,13 +2045,13 @@ function onRowRightClick(event: any) {
 
   if (event.data?.invoiceType === InvoiceType.INVOICE) {
     // Mostrar Clone solo si es de tipo Invoice y esta como showClone el status en el nomenclador Invoice Status
-    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status) &&
+    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status) &&
       event.data?.invoiceStatus?.showClone && !event.data?.hotel?.virtual) {
       findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
     }
 
     // Mostrar undo import solo para Processed y no sea manual (Solo para invoice)
-    if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
+    if (event?.data?.status === InvoiceStatus.PROCESSED && !event.data.isManual) {
       findMenuItemByLabelSetShow('Undo Import', invoiceContextMenuItems.value, true)
     }
     
@@ -2065,9 +2065,9 @@ function onRowRightClick(event: any) {
   }
 
   //Change Agency
-  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status)
+  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
     && event?.data.dueAmount === event?.data.invoiceAmount) {
-    if (event.data.status === InvoiceStatus.PROCECSED) {
+    if (event.data.status === InvoiceStatus.PROCESSED) {
       if (event.data.isInCloseOperation) {
         let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
         changeAgencyItem.showItem = true
@@ -2087,7 +2087,7 @@ function onRowRightClick(event: any) {
   }
 
   // Payments
-  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
+  if ([InvoiceStatus.SENT, InvoiceStatus.PROCESSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
     findMenuItemByLabelSetShow('Payments Details Applied', invoiceContextMenuItems.value, true)
   }
 
@@ -2112,7 +2112,7 @@ function onRowRightClick(event: any) {
   }
 
   // Adjustment (Se comenta temporalmente, no borrar)
-  // if (event?.data?.status === InvoiceStatus.PROCECSED) {
+  // if (event?.data?.status === InvoiceStatus.PROCESSED) {
   //   findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
   // }
 
