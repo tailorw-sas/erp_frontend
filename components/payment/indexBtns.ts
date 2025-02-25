@@ -45,7 +45,7 @@ const items = ref([
 ])
 
 const itemsImport = ref([
-  { label: 'Payment of bank', command: () => navigateTo('/payment/import-of-bank') },
+  { label: 'Payment of bank', command: () => window.open('/payment/import-of-bank'), disabled: false },
   { label: 'Payment of expense', command: () => navigateTo('/payment/import-of-expense') },
   { label: 'Anti to Income', command: () => navigateTo('/payment/import-anti-income') },
   { label: 'Expense To Booking', command: () => navigateTo('/payment/import-expense-booking') },
