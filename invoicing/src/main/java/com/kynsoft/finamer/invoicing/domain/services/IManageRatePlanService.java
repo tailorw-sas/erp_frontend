@@ -6,6 +6,8 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
 import java.util.List;
 
 import java.util.UUID;
+
+import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
 import org.springframework.data.domain.Pageable;
 
 public interface IManageRatePlanService {
@@ -19,6 +21,8 @@ public interface IManageRatePlanService {
     ManageRatePlanDto findById(UUID id);
 
     ManageRatePlanDto findByCode(String code);
+
+    List<ManageRatePlanDto> findByCodes(List<String> codes);
 
     boolean existByCode(String code);
 
