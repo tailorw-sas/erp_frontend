@@ -13,6 +13,7 @@ import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
+import PaymentBankDialog from '~/pages/payment/import-of-bank.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -49,6 +50,7 @@ const idInvoicesSelectedToApplyPaymentForOtherDeduction = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
+const PaymentBankDialogVisible = ref(false)
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -421,6 +423,24 @@ const sClassMap: IStatusClass[] = [
   { status: 'Confirmed', class: 'text-confirmed' },
   { status: 'Applied', class: 'text-applied' },
 ]
+
+// Encuentra el menú 'import'
+const importMenu = computed(() => itemMenuList.value.find(item => item.id === 'import'))
+
+// Encuentra el ítem 'Payment of bank'
+const paymentOfBankItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Payment of bank')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentOfBankItem.value) {
+  paymentOfBankItem.value.command = () => {
+    PaymentBankDialogVisible.value = true
+  }
+}
+function closeImportBank() {
+  PaymentBankDialogVisible.value = false
+}
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 interface SubTotals {
@@ -5080,6 +5100,11 @@ onMounted(async () => {
       </div>
     </template>
   </ContextMenu>
+  <DynamicContentModalImport
+    :visible="PaymentBankDialogVisible" :component="PaymentBankDialog"
+    header="Payment of Bank Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportBank"
+  />
 </template>
 
 <style lang="scss">
