@@ -19,7 +19,7 @@ target/
 *.ipr
 **/libs/
 **/demo/
-
+docker-compose.yml
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
