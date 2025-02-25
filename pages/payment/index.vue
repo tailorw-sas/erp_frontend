@@ -14,6 +14,10 @@ import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
 import PaymentBankDialog from '~/pages/payment/import-of-bank.vue'
+import PaymentExpenseDialog from '~/pages/payment/import-of-expense.vue'
+import PaymentAntiToIncomeDialog from '~/pages/payment/import-anti-income.vue'
+import PaymentExpenseToBookingDialog from '~/pages/payment/import-expense-booking.vue'
+import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -51,6 +55,10 @@ const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
 const PaymentBankDialogVisible = ref(false)
+const PaymentExpenseDialogVisible = ref(false)
+const PaymentAntiToIncomeDialogVisible = ref(false)
+const PaymentExpenseToBookingDialogVisible = ref(false)
+const PaymentDetailDialogVisible = ref(false)
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -183,26 +191,27 @@ const objApis = ref({
 
 const legend = ref(
   [
-    {
-      name: 'Transit',
-      color: '#ff002b',
-      colClass: 'pr-4',
-    },
-    {
-      name: 'Cancelled',
-      color: '#888888',
-      colClass: 'pr-4',
-    },
+    // {
+    //   name: 'Transit',
+    //   color: '#ff002b',
+    //   colClass: 'pr-4',
+    // },
     {
       name: 'Confirmed',
       color: '#0c2bff',
-      colClass: 'pr-4',
+      colClass: 'pr-3',
     },
     {
       name: 'Applied',
       color: '#00b816',
-      colClass: '',
+      colClass: 'pr-3',
     },
+    {
+      name: 'Cancelled',
+      color: '#888888',
+      colClass: 'pr-3',
+    },
+
   ]
 )
 const filterAllDateRange = ref(false)
@@ -429,7 +438,7 @@ const importMenu = computed(() => itemMenuList.value.find(item => item.id === 'i
 
 // Encuentra el ítem 'Payment of bank'
 const paymentOfBankItem = computed(() =>
-  importMenu.value?.menuItems.find(item => item.label === 'Payment of bank')
+  importMenu.value?.menuItems.find(item => item.label === 'Payment Of Bank')
 )
 
 // Reemplaza el command con la nueva función
@@ -440,6 +449,66 @@ if (paymentOfBankItem.value) {
 }
 function closeImportBank() {
   PaymentBankDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Payment of Expense'
+const paymentOfExpenseItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Payment Of Expense')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentOfBankItem.value) {
+  paymentOfExpenseItem.value.command = () => {
+    PaymentExpenseDialogVisible.value = true
+  }
+}
+function closeImportExpense() {
+  PaymentExpenseDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Anti To Income'
+const paymentAntiToIncomeItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Anti To Income')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentAntiToIncomeItem.value) {
+  paymentAntiToIncomeItem.value.command = () => {
+    PaymentAntiToIncomeDialogVisible.value = true
+  }
+}
+function closeImportAntiToIncome() {
+  PaymentAntiToIncomeDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Expense To Booking'
+const paymentExpenseToBookingItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Expense To Booking')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentExpenseToBookingItem.value) {
+  paymentExpenseToBookingItem.value.command = () => {
+    PaymentExpenseToBookingDialogVisible.value = true
+  }
+}
+function closeImportExpenseToBooking() {
+  PaymentExpenseToBookingDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Payment Detail'
+const paymentPaymentDetailItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Payment Detail')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentPaymentDetailItem.value) {
+  paymentPaymentDetailItem.value.command = () => {
+    PaymentDetailDialogVisible.value = true
+  }
+}
+function closePaymentDetail() {
+  PaymentDetailDialogVisible.value = false
 }
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -5101,17 +5170,37 @@ onMounted(async () => {
     </template>
   </ContextMenu>
   <DynamicContentModalImport
+    :visible="PaymentExpenseToBookingDialogVisible" :component="PaymentExpenseToBookingDialog"
+    header="Expense To Booking Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportExpenseToBooking"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentDetailDialogVisible" :component="PaymentDetailDialog"
+    header="Payment Detail Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closePaymentDetail"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentAntiToIncomeDialogVisible" :component="PaymentAntiToIncomeDialog"
+    header="Anti To Income Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportAntiToIncome"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentExpenseDialogVisible" :component="PaymentExpenseDialog"
+    header="Payment of Expense Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportExpense"
+  />
+  <DynamicContentModalImport
     :visible="PaymentBankDialogVisible" :component="PaymentBankDialog"
     header="Payment of Bank Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
     @close="closeImportBank"
   />
 </template>
 
-<style lang="scss">
-.text-transit {
-  background-color: #ff002b;
-  color: #fff;
-}
+// <style lang="scss">
+// .text-transit {
+//   background-color: #ff002b;
+//   color: #fff;
+// }
 .text-cancelled {
   background-color: #888888;
   color: #fff;
