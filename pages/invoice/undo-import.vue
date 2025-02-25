@@ -462,7 +462,7 @@ async function resetListItems() {
 }
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
+    case 'PROCESSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -475,7 +475,7 @@ function getStatusName(code: string) {
 }
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#888888'

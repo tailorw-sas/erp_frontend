@@ -864,7 +864,7 @@ function handleShareFilesDialogOpen() {
 
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#888888'
@@ -877,7 +877,7 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
+    case 'PROCESSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -1689,7 +1689,7 @@ async function applyPaymentGetList() {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
-                  // if (iterator.status !== 'PROCECSED') {
+                  // if (iterator.status !== 'PROCESSED') {
                   // }
                 }
 
@@ -1770,7 +1770,7 @@ async function applyPaymentGetList() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -1885,7 +1885,7 @@ async function applyPaymentGetList() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -2314,7 +2314,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
-                  // if (iterator.status !== 'PROCECSED') {
+                  // if (iterator.status !== 'PROCESSED') {
                   // }
                 }
 
@@ -2430,7 +2430,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -2575,7 +2575,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 

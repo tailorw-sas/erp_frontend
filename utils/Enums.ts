@@ -45,7 +45,7 @@ export const OBJ_ENUM_INVOICE = {
 }
 
 export const OBJ_ENUM_INVOICE_STATUS = {
-  PROCECSED: 'Processed',
+  PROCESSED: 'Processed',
   RECONCILED: 'Reconciled',
   SENT: 'Sent',
   PENDING: 'Pending',
@@ -70,13 +70,13 @@ export const ENUM_INVOICE_CRITERIA = [
 export const ENUM_INVOICE_STATUS = [
   { id: 'CANCELED', name: 'Cancelled', code: 'CANC' },
   { id: 'PENDING', name: 'Pending', code: 'PEND' },
-  { id: 'PROCECSED', name: 'Processed', code: 'PRO' },
+  { id: 'PROCESSED', name: 'Processed', code: 'PRO' },
   { id: 'RECONCILED', name: 'Reconciled', code: 'REC' },
   { id: 'SENT', name: 'Sent', code: 'SENT' },
 ]
 
 export enum InvoiceStatus {
-  PROCECSED = 'PROCECSED',
+  PROCESSED = 'PROCESSED',
   RECONCILED = 'RECONCILED',
   SENT = 'SENT',
   CANCELED = 'CANCELLED',
@@ -84,7 +84,7 @@ export enum InvoiceStatus {
 }
 
 export const OBJ_INVOICE_STATUS_NAME = {
-  [InvoiceStatus.PROCECSED]: 'PROCESSED',
+  [InvoiceStatus.PROCESSED]: 'PROCESSED',
   [InvoiceStatus.RECONCILED]: 'RECONCILED',
   [InvoiceStatus.SENT]: 'SENT',
   [InvoiceStatus.CANCELED]: 'CANCELED',

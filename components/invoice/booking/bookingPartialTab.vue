@@ -1401,7 +1401,7 @@ function onRowRightClick(event: any) {
     return;
   }
 
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
     return;
   }
 
@@ -1547,7 +1547,7 @@ onMounted(() => {
         // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME || route.query.type === InvoiceType.CREDIT) {
         //   return;
         // }
-        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
         //   return;
         // }
         // if (!props.isDetailView) {
