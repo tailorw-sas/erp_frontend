@@ -38,7 +38,7 @@ public class InvoiceReportReconcileAutomaticService implements IInvoiceReport {
 
     private Optional<byte[]> getInvoiceAndBooking(String invoiceId) throws IOException {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("invoiceId", invoiceId);
+        parameters.put("idInvoice", invoiceId);
         AbstractReportContentProvider abstractReportContentProvider = reportContentProviderFactory.getReportContentProvider(EInvoiceContentProvider.RECONCILE_AUTO);
         return abstractReportContentProvider.getContent(parameters, reportCode);
     }
