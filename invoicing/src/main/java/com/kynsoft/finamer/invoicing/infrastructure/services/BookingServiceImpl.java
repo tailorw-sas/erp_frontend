@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.services;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
@@ -11,20 +12,18 @@ import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.BookingImportProcessDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
-import com.kynsoft.finamer.invoicing.domain.services.IBookingImportHelperService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
-import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import com.kynsoft.finamer.invoicing.domain.services.ImportBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportProcessRedisEntity;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportProcessRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.ImportDataCache;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Async;
@@ -32,9 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -42,6 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class BookingServiceImpl implements ImportBookingService {
@@ -57,6 +55,10 @@ public class BookingServiceImpl implements ImportBookingService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IManageHotelService hotelService;
     private final IManageAgencyService agencyService;
+    private final IManageRoomTypeService roomTypeService;
+    private final IManageRatePlanService ratePlanService;
+    private final IInvoiceCloseOperationService closeOperationService;
+    private final IManageNightTypeService nightTypeService;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     private final Lock redisLock = new ReentrantLock();
@@ -64,10 +66,15 @@ public class BookingServiceImpl implements ImportBookingService {
 
     public BookingServiceImpl(ValidatorFactory<BookingRow> validatorFactory,
                               BookingImportProcessRedisRepository bookingImportProcessRedisRepository,
-                              BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository, IBookingImportHelperService bookingImportHelperService,
+                              BookingImportRowErrorRedisRepository bookingImportRowErrorRedisRepository,
+                              IBookingImportHelperService bookingImportHelperService,
                               ApplicationEventPublisher applicationEventPublisher,
                               IManageHotelService hotelService,
                               IManageAgencyService agencyService,
+                              IManageRoomTypeService roomTypeService,
+                              IManageRatePlanService ratePlanService,
+                              IInvoiceCloseOperationService closeOperationService,
+                              IManageNightTypeService nightTypeService,
                               ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
     ) {
         this.validatorFactory = validatorFactory;
@@ -75,6 +82,10 @@ public class BookingServiceImpl implements ImportBookingService {
         this.bookingImportRowErrorRedisRepository = bookingImportRowErrorRedisRepository;
         this.bookingImportHelperService = bookingImportHelperService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.roomTypeService = roomTypeService;
+        this.ratePlanService = ratePlanService;
+        this.closeOperationService = closeOperationService;
+        this.nightTypeService = nightTypeService;
         this.semaphore = new Semaphore(1);
         this.hotelService = hotelService;
         this.agencyService = agencyService;
@@ -100,17 +111,20 @@ public class BookingServiceImpl implements ImportBookingService {
                         readerConfiguration.setReadLastActiveSheet(true);
                         ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
                         ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
+
+                        //loadImportDataCache(excelBean, request.getEmployee());
+
                         validatorFactory.createValidators(request.getImportType().name());
                         BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId())
                                 .status(EProcessStatus.RUNNING)
                                 .total(0)
                                 .build();
                         applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
-                        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
+                        List<UUID> agencies = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
                         List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
                         for (BookingRow bookingRow : excelBean) {
                             bookingRow.setImportProcessId(request.getImportProcessId());
-                            bookingRow.setAgencys(agencys);
+                            bookingRow.setAgencies(agencies);
                             bookingRow.setHotels(hotels);
                             if (validatorFactory.validate(bookingRow)) {
                                 bookingImportHelperService.groupAndCachingImportBooking(bookingRow,
@@ -164,6 +178,124 @@ public class BookingServiceImpl implements ImportBookingService {
         } catch (InterruptedException ex) {
             Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void loadImportDataCache(ExcelBean<BookingRow> _excel_bean, String _employee) {
+        //region searching hotels
+        // Extraer los códigos únicos de hoteles desde `ExcelBean`
+        Set<String> hotelCodesInExcel = StreamSupport.stream(_excel_bean.spliterator(), false)
+                .map(BookingRow::getManageHotelCode)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Obtener los hoteles a los que el usuario tiene acceso
+        Set<UUID> hotelsUserHasAccessTo = new HashSet<>(this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(_employee)));
+
+        // Filtrar los hoteles que aparecen en `ExcelBean` y que el usuario tiene acceso
+        List<UUID> hotelsToSearch = hotelsUserHasAccessTo.stream()
+                .filter(hotel -> hotelCodesInExcel.contains(hotel.toString())) // Mantener solo los que están en Excel
+                .collect(Collectors.toList());
+
+        // Si después del filtrado no quedan hoteles, lanzar excepción
+        if (hotelsToSearch.isEmpty()) {
+            throw new BusinessException(DomainErrorMessage.HOTEL_ACCESS, "No hay hoteles disponibles en el Excel a los que el usuario tenga acceso.");
+        }
+
+        // Buscar solo los hoteles permitidos en `hotelService`
+        Map<String, ManageHotelDto> hotelDtoMap = hotelService.findByIds(hotelsToSearch)
+                .stream()
+                .collect(Collectors.toMap(ManageHotelDto::getCode, hotel -> hotel));
+
+        //endregion
+
+        //region searching agency
+
+        // Extraer los códigos únicos de agencias desde `ExcelBean`
+        Set<String> agencyCodesInExcel = StreamSupport.stream(_excel_bean.spliterator(), false)
+                .map(BookingRow::getManageAgencyCode)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Obtener las agencias a las que el usuario tiene acceso
+        Set<UUID> agenciesUserHasAccessTo = new HashSet<>(this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(_employee)));
+
+        // Filtrar las agencias que aparecen en `ExcelBean` y que el usuario tiene acceso
+        List<UUID> agenciesToSearch = agenciesUserHasAccessTo.stream()
+                .filter(agency -> agencyCodesInExcel.contains(agency.toString())) // Mantener solo las que están en Excel
+                .toList();
+
+        // Si después del filtrado no quedan agencias, lanzar excepción
+        if (agenciesToSearch.isEmpty()) {
+            throw new BusinessException(DomainErrorMessage.AGENCY_ACCESS,
+                    "No hay agencias disponibles en el Excel a las que el usuario tenga acceso.");
+        }
+
+        // 🔹 5️⃣ Buscar solo las agencias permitidas en `agencyService`
+        Map<String, ManageAgencyDto> agencyDtoMap = agencyService.findByIds(agenciesToSearch)
+                .stream()
+                .collect(Collectors.toMap(ManageAgencyDto::getCode, agency -> agency));
+        //endregion
+
+        //region searching roomType
+        Set<String> roomTypeCodesInExcel = StreamSupport.stream(_excel_bean.spliterator(), false)
+                .map(BookingRow::getRoomType)
+                .filter(Objects::nonNull)
+                .filter(code -> !code.isEmpty())
+                .collect(Collectors.toSet());
+
+        Map<String, ManageRoomTypeDto> roomTypeDtoMap = Collections.emptyMap();
+
+        // Solo buscar si hay elementos en `roomTypeCodesInExcel`
+        if (!roomTypeCodesInExcel.isEmpty()) {
+            roomTypeDtoMap = roomTypeService.findByCodes(new ArrayList<>(roomTypeCodesInExcel))
+                    .stream()
+                    .collect(Collectors.toMap(ManageRoomTypeDto::getCode, roomType -> roomType));
+        }
+        //endregion
+
+        //region searching ratePlan
+        // Extraer los códigos de rate plan desde el Excel
+        Set<String> ratePlanCodesInExcel = StreamSupport.stream(_excel_bean.spliterator(), false)
+                .map(BookingRow::getRatePlan)
+                .filter(Objects::nonNull)
+                .filter(code -> !code.isEmpty())
+                .collect(Collectors.toSet());
+
+        Map<String, ManageRatePlanDto> ratePlanDtoMap = Collections.emptyMap();
+
+        // Si hay códigos de rate plan, se consulta el servicio y se arma un mapa
+        if (!ratePlanCodesInExcel.isEmpty()) {
+            ratePlanDtoMap = ratePlanService.findByCodes(new ArrayList<>(ratePlanCodesInExcel))
+                    .stream()
+                    .collect(Collectors.toMap(ManageRatePlanDto::getCode, ratePlan -> ratePlan));
+        }
+        //endregion
+
+        //region searching nightType
+        Set<String> nightTypeCodesInExcel = StreamSupport.stream(_excel_bean.spliterator(), false)
+                .map(BookingRow::getNightType)
+                .filter(Objects::nonNull)
+                .filter(code -> !code.isEmpty())
+                .collect(Collectors.toSet());
+
+        Map<String, ManageNightTypeDto> nightTypeDtoMap = Collections.emptyMap();
+
+        // Si hay códigos de night type, se consulta el servicio y se arma un mapa
+        if (!nightTypeCodesInExcel.isEmpty()) {
+            nightTypeDtoMap = nightTypeService.findByCodes(new ArrayList<>(nightTypeCodesInExcel))
+                    .stream()
+                    .collect(Collectors.toMap(ManageNightTypeDto::getCode, nightType -> nightType));
+        }
+        //endregion
+
+        Map<String, InvoiceCloseOperationDto> closeOperationDtosMap = closeOperationService.findByHotelIds(hotelsToSearch)
+                .stream()
+                .collect(Collectors.toMap(invoiceCloseOperation -> invoiceCloseOperation.getHotel().getCode(),
+                        invoiceCloseOperation -> invoiceCloseOperation));
+
+
+
+        //return new ImportDataCache(hotelDtoMap, agencyDtoMap, roomTypeDtoMap, ratePlanDtoMap, nightTypeDtoMap, closeOperationDtosMap)
     }
 
     private void clearCache() {

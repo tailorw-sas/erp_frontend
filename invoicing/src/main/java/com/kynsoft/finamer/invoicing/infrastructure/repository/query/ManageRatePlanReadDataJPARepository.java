@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRatePlan;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +20,9 @@ public interface ManageRatePlanReadDataJPARepository extends JpaRepository<Manag
     Page<ManageRatePlan> findAll(Specification specification, Pageable pageable);
 
     Optional<ManageRatePlan> findManageRatePlanByCode(String code);
+
+    @Query("SELECT r FROM ManageRatePlan r WHERE r.code IN :codes")
+    List<ManageRatePlan> findManageRatePlanByCodes(List<String> codes);
 
     @Query("SELECT b FROM ManageRatePlan b WHERE b.code = :code AND b.hotel.code = :hotelCode")
     Optional<ManageRatePlan> findManageRatePlanByCodeAndHotelCode(@Param("code") String code, @Param("hotelCode") String hotelCode);

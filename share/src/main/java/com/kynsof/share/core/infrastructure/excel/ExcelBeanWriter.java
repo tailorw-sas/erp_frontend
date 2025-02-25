@@ -54,7 +54,7 @@ public class ExcelBeanWriter<T> extends ExcelWriter<T> {
         Map<CellInfo, BeanField> fields = columPositionAnnotationProcessor.getAnnotatedFields();
         fields.forEach((cellInfo, beanField) -> {
             Cell cell = row.createCell(cellInfo.getPosition());
-            ExcelUtils.setCellValue(cellInfo, cell, beanField.getFieldValue(bean), beanField.getFieldType());
+            ExcelUtils.setCellValue(cellInfo, cell, beanField.getFieldValue(bean));
         });
     }
 }

@@ -19,7 +19,7 @@ target/
 *.ipr
 **/libs/
 **/demo/
-
+docker-compose.yml
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -34,3 +34,5 @@ build/
 .vscode/
 .DS_Store
 
+### jasper report ###
+*.jasper

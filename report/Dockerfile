@@ -20,14 +20,14 @@ RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prome
 COPY . /build
 
 # Argumento para obtener el nombre del POM de forma dinámica
-ARG POM_NAME=pom.xml
+ARG POM_NAME=pom-dev.xml
 ENV POM_NAME=${POM_NAME}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia
 ARG DOCKER_HUB=false
 ARG ARTIFACT_VERSION=0.0.1-SNAPSHOT
 # Lista de artefactos a copiar (separados por espacios)
-ARG ARTIFACTS="share"
+ARG ARTIFACTS="share-dev"
 
 RUN if [ "$DOCKER_HUB" = "false" ]; then \
       echo "Entorno local detectado, copiando artefactos locales..."; \
@@ -54,7 +54,6 @@ RUN mvn clean package -DskipTests -f ${POM_NAME}
 
 # Etapa final: imagen ligera de distroless
 FROM gcr.io/distroless/java17-debian11
-#FROM amazoncorretto:17
 
 # Establece la zona horaria
 ENV TZ="America/Guayaquil"

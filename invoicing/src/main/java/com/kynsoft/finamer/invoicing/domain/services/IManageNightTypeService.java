@@ -6,6 +6,8 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageNightTypeDto;
 import java.util.List;
 
 import java.util.UUID;
+
+import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomTypeDto;
 import org.springframework.data.domain.Pageable;
 
 public interface IManageNightTypeService {
@@ -20,6 +22,8 @@ public interface IManageNightTypeService {
     boolean existNightTypeByCode(String code);
 
     ManageNightTypeDto findByCode(String code);
+
+    List<ManageNightTypeDto> findByCodes(List<String> codes);
 
     Long countByCodeAndNotId(String code, UUID id);
 

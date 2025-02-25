@@ -7,6 +7,8 @@ import java.util.List;
 
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface IManageRoomTypeService {
 
@@ -19,6 +21,8 @@ public interface IManageRoomTypeService {
     ManageRoomTypeDto findById(UUID id);
 
     ManageRoomTypeDto findByCode(String code);
+
+    List<ManageRoomTypeDto> findByCodes(List<String> codes);
 
     boolean existByCode(String code);
 

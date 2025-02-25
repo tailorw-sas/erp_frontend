@@ -102,5 +102,4 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
             }
         }
     }
-
 }
