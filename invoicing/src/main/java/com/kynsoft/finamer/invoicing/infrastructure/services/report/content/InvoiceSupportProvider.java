@@ -30,7 +30,7 @@ public class InvoiceSupportProvider extends AbstractReportContentProvider {
     }
 
     private Optional<byte[]> getInvoiceReport(Map<String, Object> parameters) {
-        String invoiceId= (String) parameters.getOrDefault("invoiceId","");
+        String invoiceId= (String) parameters.getOrDefault("idInvoice","");
         try {
             return getMergeAttachmentPdfContent(invoiceId);
         } catch (Exception e) {
