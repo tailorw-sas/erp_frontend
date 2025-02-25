@@ -113,9 +113,10 @@ services:
     ports:
       - "9901:9909"
     environment:
+      - SERVER_PORT=9909
       - RC_ACTIVE_PROFILE=development
       - RC_SERVER_CONFIG=config
-      - SERVER_PORT=9909
+      - REPORT_SERVICE=http://report:9909
       - KEYCLOAK_JWT_ISSUER_URI=https://authdev.tailorw.net/realms/Erp
       - KEYCLOAK_JWT_JWK_SET_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/certs
       - KEYCLOAK_TOKEN_URI=https://authdev.tailorw.net/realms/Erp/protocol/openid-connect/token

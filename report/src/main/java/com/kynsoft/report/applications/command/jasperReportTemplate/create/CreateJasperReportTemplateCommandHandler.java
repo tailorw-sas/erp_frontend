@@ -40,11 +40,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
     @Override
     public void handle(CreateJasperReportTemplateCommand command) {
-
-
         RulesChecker.checkRule(new ManageReportCodeMustBeNullRule(command.getCode()));
         RulesChecker.checkRule(new ManageReportNameMustBeNullRule(command.getName()));
-        // RulesChecker.checkRule(new ManageReportParentIndexMustBeNullRule(command.getParentIndex()));
         RulesChecker.checkRule(new ManageJasperReportCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
         DBConectionDto dbConectionDto = command.getDbConection() != null ? this.connectionService.findById(command.getDbConection()) : null;
@@ -121,24 +118,4 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
             }
         }
     }
-
-//    private void addParameters(String fileUrl, JasperReportTemplateDto reportTemplateDto) {
-//        byte[] data = restTemplate.getForObject(fileUrl, byte[].class);
-//        InputStream inputStream = new ByteArrayInputStream(Objects.requireNonNull(data));
-//        JasperReport jasperReport = null;
-//        try {
-//            jasperReport = JasperCompileManager.compileReport(inputStream);
-//        } catch (JRException e) {
-//            throw new RuntimeException(e);
-//        }
-//        for (JRParameter param : jasperReport.getParameters()) {
-//            if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que son promptables
-//                this.reportParameterService.create(new JasperReportParameterDto(
-//                        UUID.randomUUID(), param.getName(), param.getValueClassName(), "",
-//                        "", "", "", reportTemplateDto, "",
-//                        "", 0, "", "", ""
-//                ));
-//            }
-//        }
-//    }
 }

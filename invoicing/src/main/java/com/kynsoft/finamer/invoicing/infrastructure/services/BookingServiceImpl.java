@@ -183,7 +183,7 @@ public class BookingServiceImpl implements ImportBookingService {
         }
     }
 
-    private ImportDataCache loadImportDataCache(ExcelBean<BookingRow> _excel_bean, String _employee) {
+    private void loadImportDataCache(ExcelBean<BookingRow> _excel_bean, String _employee) {
         //region searching hotels
         // 🔹 1️⃣ Extraer los códigos únicos de hoteles desde `ExcelBean`
         Set<String> hotelCodesInExcel = StreamSupport.stream(_excel_bean.spliterator(), false)
@@ -201,7 +201,7 @@ public class BookingServiceImpl implements ImportBookingService {
 
         // 🔹 4️⃣ Si después del filtrado no quedan hoteles, lanzar excepción
         if (hotelsToSearch.isEmpty()) {
-            throw new BusinessException(DomainErrorMessage.MANAGE_INVOICE_STATUS_CHECK_CANCELED "No hay hoteles disponibles en el Excel a los que el usuario tenga acceso.");
+            throw new BusinessException(DomainErrorMessage.HOTEL_ACCESS, "No hay hoteles disponibles en el Excel a los que el usuario tenga acceso.");
         }
 
         // 🔹 5️⃣ Buscar solo los hoteles permitidos en `hotelService`
@@ -229,7 +229,8 @@ public class BookingServiceImpl implements ImportBookingService {
 
         // 🔹 4️⃣ Si después del filtrado no quedan agencias, lanzar excepción
         if (agenciesToSearch.isEmpty()) {
-            throw new BusinessException("No hay agencias disponibles en el Excel a las que el usuario tenga acceso.");
+            throw new BusinessException(DomainErrorMessage.AGENCY_ACCESS,
+                    "No hay agencias disponibles en el Excel a las que el usuario tenga acceso.");
         }
 
         // 🔹 5️⃣ Buscar solo las agencias permitidas en `agencyService`
