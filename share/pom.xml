@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.kynsoft.finamer</groupId>
-    <artifactId>share</artifactId>
+    <artifactId>${packaging.artifactId}</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>share</name>
     <packaging>jar</packaging>
@@ -32,7 +32,7 @@
                 </property>
             </activation>
             <properties>
-                <project.artifactId>share-dev</project.artifactId>
+                <packaging.artifactId>share-dev</packaging.artifactId>
             </properties>
         </profile>
         <profile>
@@ -44,7 +44,7 @@
                 </property>
             </activation>
             <properties>
-                <project.artifactId>share-qa</project.artifactId>
+                <packaging.artifactId>share-qa</packaging.artifactId>
             </properties>
         </profile>
         <profile>
@@ -57,7 +57,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <project.artifactId>share</project.artifactId>
+                <packaging.artifactId>share</packaging.artifactId>
             </properties>
         </profile>
     </profiles>
