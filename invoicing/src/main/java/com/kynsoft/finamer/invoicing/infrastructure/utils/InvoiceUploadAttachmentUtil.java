@@ -55,7 +55,7 @@ public class InvoiceUploadAttachmentUtil {
         System.out.println(UPLOAD_FILE_URL);
         System.out.println("Headers: " + requestEntity.getHeaders());
         System.out.println("Body: " + requestEntity.getBody());
-        
+
         ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, requestEntity, String.class);
 
         // Validar si la respuesta es exitosa

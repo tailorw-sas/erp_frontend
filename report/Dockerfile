@@ -20,8 +20,8 @@ RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prome
 COPY . /build
 
 # Argumento para obtener el nombre del POM de forma dinámica
-ARG POM_NAME=pom-dev.xml
-ENV POM_NAME=${POM_NAME}
+ARG ENVIRONMENT
+ENV ENVIRONMENT ${ENVIRONMENT}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia
 ARG DOCKER_HUB=false
@@ -49,8 +49,8 @@ RUN if [ "$DOCKER_HUB" = "false" ]; then \
     fi
 
 # Compila las dependencias offline y el paquete
-RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
-RUN mvn clean package -DskipTests -f ${POM_NAME}
+RUN mvn dependency:go-offline -f pom.xml -s settings.xml -Denv=$ENVIRONMENT
+RUN mvn clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
 
 # Etapa final: imagen ligera de distroless
 FROM gcr.io/distroless/java17-debian11
