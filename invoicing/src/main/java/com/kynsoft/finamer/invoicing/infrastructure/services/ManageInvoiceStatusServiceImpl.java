@@ -140,7 +140,7 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
     @Override
     public ManageInvoiceStatusDto findByEInvoiceStatus(EInvoiceStatus invoiceStatus) {
         return switch (invoiceStatus) {
-            case PROCECSED, PROCESSED ->
+            case PROCESSED ->
                 this.repositoryQuery.findByProcessStatus()
                         .map(ManageInvoiceStatus::toAggregate)
                         .orElseThrow(() -> new BusinessException(
