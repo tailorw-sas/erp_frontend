@@ -97,6 +97,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 LinkedHashMap<String, String> response = invoiceUploadAttachmentUtil.uploadAttachmentContent(filename, fileContent.get());
                 file = response.get("url");
             } catch (Exception e) {
+                System.out.println("Error al subir el adjunto: " + e);
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto,
                         "The attachment could not be uploaded."
