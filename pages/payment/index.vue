@@ -3771,10 +3771,10 @@ onMounted(async () => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
+    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 4px;">
       Payment Management
     </h5>
-    <div class="flex justify-content-end px-0">
+    <div class="flex flex-row w-full place-content-center justify-center justify-content-end -mt-2 -mb-1">
       <span v-for="(objBtnAndMenu, index) in itemMenuList" :key="index">
         <IfCan :perms="objBtnAndMenu.permission && objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
           <div v-if="objBtnAndMenu.showBtn()" class="my-2 flex justify-content-end pl-2 pr-0">
@@ -3822,7 +3822,7 @@ onMounted(async () => {
   </div>
   <div>
     <div class="card p-0 m-0">
-      <Accordion id="accordion" :active-index="0">
+      <Accordion :active-index="0" class="mb-0">
         <AccordionTab content-class="p-0 m-0">
           <template #header>
             <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
@@ -3834,13 +3834,13 @@ onMounted(async () => {
               </div>
             </div>
           </template>
-          <div v-if="true" class="grid p-0 m-0" style="margin: 0 auto;">
+          <div class="flex gap-4 flex-column lg:flex-row -mt-2">
             <!-- first filter -->
             <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-2 font-bold"> Client:</label>
+                    <label for="" class="mr-0 font-bold w-6rem"> Client:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
@@ -4244,7 +4244,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="w-4rem font-bold">Value:</label>
+                    <label for="" class="w-4rem font-bold mr-1">Value:</label>
                     <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-12rem" style="max-width: 12rem;" />
                   </div>
                 </div>
@@ -4328,56 +4328,58 @@ onMounted(async () => {
       </div>
     </div>
     <!-- @update:clicked-item="assingFuntionsForPrint($event)" -->
-    <DynamicTable
-      :data="listItems"
-      :columns="columns"
-      :options="options"
-      :pagination="pagination"
-      @on-confirm-create="goToCreateForm"
-      @on-change-pagination="payloadOnChangePage = $event"
-      @on-change-filter="parseDataTableFilter"
-      @on-list-item="resetListItems"
-      @on-sort-field="onSortField"
-      @on-row-double-click="goToFormInNewTab($event)"
-      @on-row-right-click="onRowContextMenu($event)"
-    >
-      <template #column-icon="{ data: objData, column }">
-        <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
-          <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
-          <Button
-            v-if="showIconAttachment(objData)"
-            :icon="column.icon"
-            class="p-button-rounded p-button-text w-2rem h-2rem"
-            aria-label="Submit"
-            :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
-            :style="{ color: objData.color }"
-          />
-        </div>
+    <div class="-mt-4">
+      <DynamicTable
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="goToCreateForm"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
+        @on-row-double-click="goToFormInNewTab($event)"
+        @on-row-right-click="onRowContextMenu($event)"
+      >
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
+            <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
+            <Button
+              v-if="showIconAttachment(objData)"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
+              :style="{ color: objData.color }"
+            />
+          </div>
         <!-- style="color: #616161;" -->
         <!-- :style="{ 'background-color': '#00b816' }" -->
-      </template>
+        </template>
 
-      <template #column-paymentStatus="{ data, column }">
-        <Badge
-          v-tooltip.top="data.paymentStatus.name.toString()"
-          :value="data.paymentStatus.name"
-          :class="column.statusClassMap?.find(e => e.status === data.paymentStatus.name)?.class"
-        />
-      </template>
-      <template #datatable-footer>
-        <ColumnGroup type="footer" class="flex align-items-center">
-          <Row>
-            <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :colspan="0" />
-            <Column :colspan="0" />
-          </Row>
-        </ColumnGroup>
-      </template>
-    </DynamicTable>
+        <template #column-paymentStatus="{ data, column }">
+          <Badge
+            v-tooltip.top="data.paymentStatus.name.toString()"
+            :value="data.paymentStatus.name"
+            :class="column.statusClassMap?.find(e => e.status === data.paymentStatus.name)?.class"
+          />
+        </template>
+        <template #datatable-footer>
+          <ColumnGroup type="footer" class="flex align-items-center">
+            <Row>
+              <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :colspan="0" />
+              <Column :colspan="0" />
+            </Row>
+          </ColumnGroup>
+        </template>
+      </DynamicTable>
+    </div>
     <!-- Dialog change agency -->
     <Dialog
       v-model:visible="openDialogChangeAgency"

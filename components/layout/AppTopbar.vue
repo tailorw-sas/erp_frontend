@@ -172,69 +172,71 @@ async function onConfirmSignOut() {
           </li>
         </IfCan>
 
-        <li class="profile-item topbar-item">
-          <a
-            v-ripple
-            v-styleclass="{ selector: '@next', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
-            class="p-ripple cursor-pointer"
-          >
-            <Avatar v-if="data?.user?.image" :image="data?.user?.image" shape="circle" />
-            <Avatar v-else icon="pi pi-user" style="background-color: #dee9fc; color: #1a2551" shape="circle" />
-          </a>
+        <div class="-mt-4 mr-5">
+          <li class="profile-item topbar-item">
+            <a
+              v-ripple
+              v-styleclass="{ selector: '@next', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+              class="p-ripple cursor-pointer"
+            >
+              <Avatar v-if="data?.user?.image" :image="data?.user?.image" shape="circle" />
+              <Avatar v-else icon="pi pi-user" style="background-color: #dee9fc; color: #1a2551" shape="circle" />
+            </a>
 
-          <ul class="topbar-menu active-topbar-menu p-4 w-15rem z-5 hidden border-round">
-            <li role="menuitem" class="m-0 mb-3">
-              <a
-                v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
-                href="/user/profile" class="flex align-items-center hover:text-primary-500 transition-duration-200"
-              >
-                <i class="pi pi-fw pi-user mr-2" />
-                <span>My Profile</span>
-              </a>
-            </li>
+            <ul class="topbar-menu active-topbar-menu p-4 w-15rem z-5 hidden border-round">
+              <li role="menuitem" class="m-0 mb-3">
+                <a
+                  v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+                  href="/user/profile" class="flex align-items-center hover:text-primary-500 transition-duration-200"
+                >
+                  <i class="pi pi-fw pi-user mr-2" />
+                  <span>My Profile</span>
+                </a>
+              </li>
 
-            <li role="menuitem" class="m-0 mb-3">
-              <a
-                v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
-                href="https://kibanadev.tailorw.net/" target="_blank" class="flex align-items-center hover:text-primary-500 transition-duration-200"
-              >
-                <i class="pi pi-fw pi-external-link mr-2" />
-                <span>Kibana</span>
-              </a>
-            </li>
+              <li role="menuitem" class="m-0 mb-3">
+                <a
+                  v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+                  href="https://kibanadev.tailorw.net/" target="_blank" class="flex align-items-center hover:text-primary-500 transition-duration-200"
+                >
+                  <i class="pi pi-fw pi-external-link mr-2" />
+                  <span>Kibana</span>
+                </a>
+              </li>
 
-            <li role="menuitem" class="m-0 mb-3">
-              <a
-                v-if="currentBussiness !== null"
-                v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
-                :href="`/business/profile/${currentBussiness.businessId}`"
-                class="flex align-items-center hover:text-primary-500 transition-duration-200"
-              >
-                <i class="pi pi-fw pi-folder mr-2" />
-                <span>My Business</span>
-              </a>
-            </li>
+              <li role="menuitem" class="m-0 mb-3">
+                <a
+                  v-if="currentBussiness !== null"
+                  v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+                  :href="`/business/profile/${currentBussiness.businessId}`"
+                  class="flex align-items-center hover:text-primary-500 transition-duration-200"
+                >
+                  <i class="pi pi-fw pi-folder mr-2" />
+                  <span>My Business</span>
+                </a>
+              </li>
 
-            <li role="menuitem" class="m-0 mb-3" @click="openDialogConfirmChangePassword">
-              <a
-                v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
-                href="#" class="flex align-items-center hover:text-primary-500 transition-duration-200"
-              >
-                <i class="pi pi-fw pi-key mr-2" />
-                <span>Change Password</span>
-              </a>
-            </li>
-            <li role="menuitem" class="m-0" @click="openDialogSignOut">
-              <a
-                v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
-                href="#" class="flex align-items-center hover:text-primary-500 transition-duration-200"
-              >
-                <i class="pi pi-fw pi-sign-out mr-2" />
-                <span>Sign Out</span>
-              </a>
-            </li>
-          </ul>
-        </li>
+              <li role="menuitem" class="m-0 mb-3" @click="openDialogConfirmChangePassword">
+                <a
+                  v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+                  href="#" class="flex align-items-center hover:text-primary-500 transition-duration-200"
+                >
+                  <i class="pi pi-fw pi-key mr-2" />
+                  <span>Change Password</span>
+                </a>
+              </li>
+              <li role="menuitem" class="m-0" @click="openDialogSignOut">
+                <a
+                  v-styleclass="{ selector: '@grandparent', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"
+                  href="#" class="flex align-items-center hover:text-primary-500 transition-duration-200"
+                >
+                  <i class="pi pi-fw pi-sign-out mr-2" />
+                  <span>Sign Out</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </div>
       </ul>
 
       <div class="12">
