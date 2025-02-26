@@ -678,34 +678,34 @@ onMounted(async () => {
         </AccordionTab>
         <!-- </Accordion> -->
       </div>
+      <div class="mt-0">
+        <DynamicTable
+          ref="tableRef"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @update:clicked-item="onMultipleSelect"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+        >
+          <template #column-sendStatusError="{ data }">
+            <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
+              <span style="color: red;">{{ data.sendStatusError }}</span>
+            </div>
+          </template>
 
-      <DynamicTable
-        ref="tableRef"
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @update:clicked-item="onMultipleSelect"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-      >
-        <template #column-sendStatusError="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
-            <span style="color: red;">{{ data.sendStatusError }}</span>
-          </div>
-        </template>
-
-        <template #column-status="{ data }">
-          <Badge
-            :value="getStatusName(data?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
-          />
-        </template>
-      </DynamicTable>
-
+          <template #column-status="{ data }">
+            <Badge
+              :value="getStatusName(data?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+            />
+          </template>
+        </DynamicTable>
+      </div>
       <div class="flex align-items-end justify-content-end">
         <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
         <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->

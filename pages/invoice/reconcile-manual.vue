@@ -1002,31 +1002,32 @@ onMounted(async () => {
         <!-- </Accordion> -->
       </div>
       <!-- :selected-items="selectedItems" -->
-      <DynamicTable
-        ref="resultTable"
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @update:clicked-item="onMultipleSelect($event)"
-      >
-        <template #column-message="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
-          </div>
-        </template>
+      <div class="mt-1">
+        <DynamicTable
+          ref="resultTable"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @update:clicked-item="onMultipleSelect($event)"
+        >
+          <template #column-message="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            </div>
+          </template>
 
-        <template #column-status="{ data: item }">
-          <Badge
-            :value="getStatusName(item?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-          />
-        </template>
+          <template #column-status="{ data: item }">
+            <Badge
+              :value="getStatusName(item?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+            />
+          </template>
 
         <!-- <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
@@ -1037,7 +1038,8 @@ onMounted(async () => {
             </Row>
           </ColumnGroup>
         </template> -->
-      </DynamicTable>
+        </DynamicTable>
+      </div>
 
       <div class="flex align-items-end justify-content-end">
         <Button

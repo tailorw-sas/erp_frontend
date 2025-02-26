@@ -985,7 +985,7 @@ onMounted(async () => {
                 <div class="flex flex-row w-full">
                   <div class="flex flex-column gap-2 w-full">
                     <div class="flex align-items-center gap-2 mt-3 ml-2">
-                      <label class="w-16rem" for="">Import (XLS or XLSX)<span class="p-error">*</span>:
+                      <label class="w-18rem" for="">Import (XLS or XLSX)<span class="p-error">*</span>:
                       </label>
                       <div class="w-full">
                         <div class="p-inputgroup w-full">
@@ -1016,32 +1016,32 @@ onMounted(async () => {
         </AccordionTab>
         <!-- </Accordion> -->
       </div>
+      <div class="mt-1">
+        <DynamicTable
+          ref="resultTable"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @update:clicked-item="onMultipleSelect($event)"
+        >
+          <template #column-status="{ data: item }">
+            <Badge
+              :value="getStatusName(item?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+            />
+          </template>
 
-      <DynamicTable
-        ref="resultTable"
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @update:clicked-item="onMultipleSelect($event)"
-      >
-        <template #column-status="{ data: item }">
-          <Badge
-            :value="getStatusName(item?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-          />
-        </template>
-
-        <template #column-sendStatusError="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.sendStatusError" style="color: red;">{{ data.sendStatusError }}</span>
-          </div>
-        </template>
+          <template #column-sendStatusError="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.sendStatusError" style="color: red;">{{ data.sendStatusError }}</span>
+            </div>
+          </template>
 
         <!-- <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
@@ -1052,8 +1052,8 @@ onMounted(async () => {
             </Row>
           </ColumnGroup>
         </template> -->
-      </DynamicTable>
-
+        </DynamicTable>
+      </div>
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check"

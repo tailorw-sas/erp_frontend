@@ -752,8 +752,8 @@ onMounted(async () => {
     </div> -->
     <div class="grid">
       <div class="col-12 order-0 w-full md:order-1 md:col-6  lg:col-6 xl:col-6">
-        <div class="mb-0">
-          <div class="grid mt-1 m-2">
+        <div class="mt-0">
+          <div class="grid mt-0 m-0">
             <div class="col-12 md:col-6 lg:col-3 xl:col-3 flex pb-0">
               <div class="flex flex-column gap-2 w-full">
                 <div class="flex align-items-center gap-2">
@@ -842,7 +842,7 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <div class="m-3">
+        <div class="mt-0">
           <DynamicTable
             :data="listItems"
             :columns="columns"
