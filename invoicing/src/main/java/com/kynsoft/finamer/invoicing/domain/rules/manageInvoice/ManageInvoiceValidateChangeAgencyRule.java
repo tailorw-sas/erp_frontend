@@ -19,7 +19,7 @@ public class ManageInvoiceValidateChangeAgencyRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return !this.status.equals(EInvoiceStatus.PROCECSED) && !this.status.equals(EInvoiceStatus.SENT) && !this.status.equals(EInvoiceStatus.RECONCILED);
+        return !this.status.equals(EInvoiceStatus.PROCESSED) && !this.status.equals(EInvoiceStatus.SENT) && !this.status.equals(EInvoiceStatus.RECONCILED);
     }
 
 }

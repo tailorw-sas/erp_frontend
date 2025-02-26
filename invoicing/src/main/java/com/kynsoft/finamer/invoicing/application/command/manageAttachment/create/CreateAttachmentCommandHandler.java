@@ -93,7 +93,7 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
         }
         if (defaultAttachment) {
             boolean reconciled = false;
-            if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCECSED)) {
+            if (invoiceDto.getStatus().equals(EInvoiceStatus.PROCESSED)) {
                 ManageInvoiceStatusDto reconcileStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
                 invoiceDto = this.manageInvoiceService.changeInvoiceStatus(invoiceDto, reconcileStatus);
                 reconciled = true;
