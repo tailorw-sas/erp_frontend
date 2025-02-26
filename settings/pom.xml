@@ -25,6 +25,61 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>dev</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>share-dev</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>qa</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>qa</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>share-qa</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>main</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>main</value>
+                </property>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>share</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -45,14 +100,6 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Proyecto interno -->
-        <dependency>
-            <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>share</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-
         <dependency>
             <groupId>com.kynsoft.finamer</groupId>
             <artifactId>audit-agent</artifactId>
@@ -99,10 +146,6 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
         <!-- Spring Security dependencies -->

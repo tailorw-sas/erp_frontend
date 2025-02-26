@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum EInvoiceStatus {
-    PROCECSED("PROC" ),
     RECONCILED("REC" ),
     SENT("SEND" ),
     CANCELED("CAN" ),

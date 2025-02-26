@@ -62,7 +62,7 @@ public class ReconcileManualCommandHandler implements ICommandHandler<ReconcileM
                 ));
                 continue;
             }
-            if (invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCECSED) != 0) {
+            if (invoiceDto.getStatus().compareTo(EInvoiceStatus.PROCESSED) != 0) {
                 errorResponse.add(new ReconcileManualErrorResponse(
                         invoiceDto,
                         "The invoice is not in processed status."
