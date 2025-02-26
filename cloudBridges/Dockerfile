@@ -68,7 +68,7 @@ RUN if [ "$DOCKER_HUB" = "false" ]; then \
 
 # Build
 RUN mvn dependency:go-offline -f pom.xml -s settings.xml -Denv=$ENVIRONMENT
-RUN mvn --no-transfer-progress clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
+RUN mvn clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
 
 # The deployment Image
 # FROM docker.io/oraclelinux:9-slim
@@ -80,7 +80,7 @@ EXPOSE 9904
 #Configurar Zona Horaria
 RUN apk upgrade --no-cache
 RUN apk add --no-cache tzdata
-ENV TZ="America/Guayaquil"
+ENV TZ="America/Santo_Domingo"
 ENV JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
 
 RUN apk update && \
