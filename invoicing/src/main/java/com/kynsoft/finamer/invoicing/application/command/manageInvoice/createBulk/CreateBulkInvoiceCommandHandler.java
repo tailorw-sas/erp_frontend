@@ -370,8 +370,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             invoiceNumber += "-" + hotelDto.getCode();
         }
 
-        EInvoiceStatus status = EInvoiceStatus.PROCECSED;
-        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
+        EInvoiceStatus status = EInvoiceStatus.PROCESSED;
+        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
                 || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
@@ -379,7 +379,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         }
 
-        if (status.equals(EInvoiceStatus.PROCECSED) && !attachmentDtos.isEmpty()) {
+        if (status.equals(EInvoiceStatus.PROCESSED) && !attachmentDtos.isEmpty()) {
             status = EInvoiceStatus.RECONCILED;
 
             invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);

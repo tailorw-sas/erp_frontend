@@ -311,7 +311,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList, String employee, String groupType, boolean innsist) {
         //TODO - Mejorar todo este proceso
-        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
+        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
         manageInvoiceDto.setAgency(agency);
@@ -322,7 +322,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
         manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel, groupType));
         manageInvoiceDto.setId(UUID.randomUUID());
-        manageInvoiceDto.setStatus(EInvoiceStatus.PROCECSED);
+        manageInvoiceDto.setStatus(EInvoiceStatus.PROCESSED);
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
         double invoiceAmount = ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList));
         manageInvoiceDto.setInvoiceAmount(invoiceAmount);
@@ -574,7 +574,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         "The invoice data was inserted.",
                         LocalDateTime.now(),
                         this.employeeService.getEmployeeFullName(employee),
-                        EInvoiceStatus.PROCECSED,
+                        EInvoiceStatus.PROCESSED,
                         0L
                 )
         );
