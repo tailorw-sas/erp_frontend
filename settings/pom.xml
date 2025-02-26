@@ -41,6 +41,12 @@
                     <version>0.0.1-SNAPSHOT</version>
                     <scope>compile</scope>
                 </dependency>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>audit-agent-dev</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
             </dependencies>
         </profile>
         <profile>
@@ -55,6 +61,12 @@
                 <dependency>
                     <groupId>com.kynsoft.finamer</groupId>
                     <artifactId>share-qa</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>audit-agent-qa</artifactId>
                     <version>0.0.1-SNAPSHOT</version>
                     <scope>compile</scope>
                 </dependency>
@@ -73,6 +85,12 @@
                 <dependency>
                     <groupId>com.kynsoft.finamer</groupId>
                     <artifactId>share</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>audit-agent</artifactId>
                     <version>0.0.1-SNAPSHOT</version>
                     <scope>compile</scope>
                 </dependency>
@@ -100,13 +118,6 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>audit-agent</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- Spring Boot dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -345,7 +345,7 @@
 			<expression><![CDATA[$F{Country Name}]]></expression>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 		</element>
-		<element kind="textField" uuid="edbb487d-3aa9-4d71-a186-0ccc2315ded9" x="429" y="130" width="100" height="12" fontSize="8.0" bold="true" hTextAlign="Center">
+		<element kind="textField" uuid="edbb487d-3aa9-4d71-a186-0ccc2315ded9" x="429" y="130" width="100" height="12" fontSize="8.0" pattern="M/d/yyyy" bold="true" hTextAlign="Center">
 			<expression><![CDATA[$F{Invoice Date}]]></expression>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 		</element>
@@ -383,21 +383,27 @@
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 			</element>
-			<element kind="textField" uuid="b0b68442-63d9-4d50-a533-ead093ac20be" x="290" y="0" width="50" height="25" fontName="SansSerif" fontSize="7.0" blankWhenNull="true" hTextAlign="Center">
+			<element kind="textField" uuid="b0b68442-63d9-4d50-a533-ead093ac20be" x="290" y="0" width="50" height="25" fontName="SansSerif" fontSize="7.0" linkType="None" linkTarget="Self" blankWhenNull="true" hTextAlign="Center">
 				<paragraph leftIndent="0"/>
-				<expression><![CDATA[$F{Checkin}]]></expression>
+				<expression><![CDATA[java.time.LocalDate.parse($F{Checkin}, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")).format(java.time.format.DateTimeFormatter.ofPattern("M/d/yyyy"))
+
+
+
+]]></expression>
 				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="46342a73-8ddf-48e9-8869-f62bd66e91c4"/>
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 			</element>
-			<element kind="textField" uuid="47b8c322-4eb9-4a21-bd36-6730ed498721" x="341" y="0" width="50" height="25" fontName="SansSerif" fontSize="7.0" blankWhenNull="true" hTextAlign="Center">
+			<element kind="textField" uuid="47b8c322-4eb9-4a21-bd36-6730ed498721" x="341" y="0" width="50" height="25" fontName="SansSerif" fontSize="7.0" pattern="M/d/yyyy" blankWhenNull="true" hTextAlign="Center">
 				<paragraph leftIndent="0"/>
-				<expression><![CDATA[$F{Checkout}]]></expression>
+				<expression><![CDATA[java.time.LocalDate.parse($F{Checkout}, 
+        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    .format(java.time.format.DateTimeFormatter.ofPattern("M/d/yyyy"))]]></expression>
 				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="af944aa6-fc2f-4734-81cb-dbbed12af32c"/>
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 			</element>
-			<element kind="textField" uuid="e1344497-62a2-454e-afbc-813511960b7b" x="391" y="0" width="30" height="25" fontName="SansSerif" fontSize="7.0" blankWhenNull="true" hTextAlign="Left">
+			<element kind="textField" uuid="e1344497-62a2-454e-afbc-813511960b7b" x="391" y="0" width="30" height="25" fontName="SansSerif" fontSize="7.0" blankWhenNull="true" hTextAlign="Center">
 				<paragraph leftIndent="2"/>
 				<expression><![CDATA[$F{Qty}]]></expression>
 				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="2e613c43-b4dc-487b-aa9e-a4733980943d"/>
@@ -411,29 +417,19 @@
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 			</element>
-			<element kind="textField" uuid="b5dd6fa5-0189-4a0b-9aae-48b409b5fc66" x="462" y="0" width="39" height="25" fontSize="7.0" pattern="#,##0.####;-#,##0.####" blankWhenNull="true" hTextAlign="Left">
+			<element kind="textField" uuid="b5dd6fa5-0189-4a0b-9aae-48b409b5fc66" x="462" y="0" width="39" height="25" fontSize="7.0" pattern="$ #,##0.####;-#,##0.####" blankWhenNull="true" hTextAlign="Left">
 				<paragraph leftIndent="0"/>
 				<expression><![CDATA[$F{Price}]]></expression>
 				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="2e613c43-b4dc-487b-aa9e-a4733980943d"/>
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
 			</element>
-			<element kind="textField" uuid="48b5d36c-90fd-456c-8c20-c4749eef74b2" x="509" y="0" width="46" height="25" fontSize="7.0" pattern="#,##0.####;-#,##0.####" blankWhenNull="true" hTextAlign="Left">
+			<element kind="textField" uuid="48b5d36c-90fd-456c-8c20-c4749eef74b2" x="509" y="0" width="46" height="25" fontSize="7.0" pattern="$ #,##0.####;-#,##0.####" blankWhenNull="true" hTextAlign="Left">
 				<paragraph leftIndent="0"/>
 				<expression><![CDATA[$F{Invoice Amount}]]></expression>
 				<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="2e613c43-b4dc-487b-aa9e-a4733980943d"/>
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
-			</element>
-			<element kind="staticText" uuid="a2a3a007-03c0-4aee-83ce-53a0cd93497c" x="457" y="0" width="5" height="20" fontSize="7.0" vTextAlign="Top">
-				<text><![CDATA[$]]></text>
-				<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			</element>
-			<element kind="staticText" uuid="f281536b-4264-48bf-9f89-3dcf29de3c54" x="504" y="0" width="5" height="20" fontSize="7.0" vTextAlign="Top">
-				<text><![CDATA[$]]></text>
-				<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			</element>
 		</band>
 	</detail>

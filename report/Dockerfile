@@ -20,7 +20,7 @@ RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prome
 COPY . /build
 
 # Argumento para obtener el nombre del POM de forma dinámica
-ARG ENVIRONMENT
+ARG ENVIRONMENT=dev
 ENV ENVIRONMENT ${ENVIRONMENT}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia
