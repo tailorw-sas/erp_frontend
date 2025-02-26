@@ -32,7 +32,7 @@
                 </property>
             </activation>
             <properties>
-                <packaging.artifactId>share-dev</packaging.artifactId>
+                <project.artifactId>share-dev</project.artifactId>
             </properties>
         </profile>
         <profile>
@@ -44,7 +44,7 @@
                 </property>
             </activation>
             <properties>
-                <packaging.artifactId>share-qa</packaging.artifactId>
+                <project.artifactId>share-qa</project.artifactId>
             </properties>
         </profile>
         <profile>
@@ -57,7 +57,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <packaging.artifactId>share</packaging.artifactId>
+                <project.artifactId>share</project.artifactId>
             </properties>
         </profile>
     </profiles>
