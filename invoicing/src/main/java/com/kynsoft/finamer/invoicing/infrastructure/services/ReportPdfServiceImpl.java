@@ -231,6 +231,7 @@ public class ReportPdfServiceImpl implements IReportPdfService {
         PdfDocument mergedPdf = new PdfDocument(new PdfWriter(outputStream));
         try {
             for (UUID invoice : request.getInvoices()) {
+                System.out.println("El ID de invoice es: " +invoice);
                 ManageInvoiceDto invoiceDto = invoiceService.findById(invoice);
                 // Generar el PDF para el INVOICING ID  actual
                 byte[] pdfBytes = generatePdf(invoiceDto);
@@ -244,12 +245,13 @@ public class ReportPdfServiceImpl implements IReportPdfService {
             }
         } catch (IOException | PdfException e) {
             // Maneja la excepción apropiadamente
+            System.out.println("Error al generar el PDF " + e);
             throw new RuntimeException("Error procesando el PDF", e);
         }
 
         // Cerrar el PDF combinado
         mergedPdf.close();
-
+        System.out.println("El pdf es: " + outputStream.toString());
         return outputStream.toByteArray(); // Devuelve el PDF combinado como un array de bytes
     }
 }
