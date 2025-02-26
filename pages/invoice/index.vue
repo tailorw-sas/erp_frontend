@@ -26,7 +26,7 @@ import ImportInssistDialog from '~/pages/invoice/import-innsist.vue'
 import InvoiceToPrintDialog from '~/pages/invoice/print.vue'
 import ReconcileManualDialog from '~/pages/invoice/reconcile-manual.vue'
 import ReconcileAutomaticDialog from '~/pages/invoice/reconcile-automatic.vue'
-import ReconcileFilesDialog from '~/pages/invoice/reconcile-automatic.vue'
+import ReconcileFilesDialog from '~/pages/invoice/reconcile-from-files.vue'
 import SendByFtpDialog from '~/pages/invoice/sendInvoice-ftp.vue'
 import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
 import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
@@ -3122,7 +3122,7 @@ const legend = ref(
       />
       <DynamicContentModalImport
       :visible="ReconcileFilesDialogVisible" :component="ReconcileFilesDialog"
-      header="Reconcile Invoice From files" @close="closeReconcileFiles"
+      header="Invoice To Reconcile From Files" @close="closeReconcileFiles"
       :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport

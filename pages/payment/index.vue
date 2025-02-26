@@ -3771,7 +3771,7 @@ onMounted(async () => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
+    <h5 class="mt-1">
       Payment Management
     </h5>
     <div class="flex justify-content-end px-0">

@@ -698,7 +698,7 @@ onMounted(async () => {
         </AccordionTab>
         <!-- </Accordion> -->
       </div>
-      <div class="p-fluid pt-3">
+      <div class="p-fluid mt-0">
         <DynamicTable
           ref="tableRef"
           :data="listItems"
