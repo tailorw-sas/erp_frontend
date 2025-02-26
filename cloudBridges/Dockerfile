@@ -38,8 +38,8 @@ ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 COPY rc-settings.xml settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN |g" settings.xml
 
-ARG POM_NAME=pom-dev.xml
-ENV POM_NAME ${POM_NAME}
+ARG ENVIRONMENT
+ENV ENVIRONMENT ${ENVIRONMENT}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia
 ARG DOCKER_HUB=false
@@ -67,10 +67,8 @@ RUN if [ "$DOCKER_HUB" = "false" ]; then \
     fi
 
 # Build
-RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
-# RUN mvn -B clean package -Pnative  --no-transfer-progress
-# RUN mvn package -Pnative -f pom.xml
-RUN mvn --no-transfer-progress clean package -DskipTests -f ${POM_NAME}
+RUN mvn dependency:go-offline -f pom.xml -s settings.xml -Denv=$ENVIRONMENT
+RUN mvn --no-transfer-progress clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
 
 # The deployment Image
 # FROM docker.io/oraclelinux:9-slim
