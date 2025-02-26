@@ -9,15 +9,11 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean } from '~/utils/helpers'
-import { itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
-import PaymentBankDialog from '~/pages/payment/import-of-bank.vue'
-import PaymentExpenseDialog from '~/pages/payment/import-of-expense.vue'
-import PaymentAntiToIncomeDialog from '~/pages/payment/import-anti-income.vue'
-import PaymentExpenseToBookingDialog from '~/pages/payment/import-expense-booking.vue'
-import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
+import { isPrintModalOpen, itemMenuList } from '~/components/payment/indexBtns'
+import PayPrint from '~/pages/payment/print/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -54,11 +50,6 @@ const idInvoicesSelectedToApplyPaymentForOtherDeduction = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
-const PaymentBankDialogVisible = ref(false)
-const PaymentExpenseDialogVisible = ref(false)
-const PaymentAntiToIncomeDialogVisible = ref(false)
-const PaymentExpenseToBookingDialogVisible = ref(false)
-const PaymentDetailDialogVisible = ref(false)
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -77,6 +68,13 @@ const currentAgencyForChangeAgency = ref<GenericObject>({})
 const listClientFormChangeAgency = ref<any[]>([])
 const openDialogChangeAgency = ref(false)
 const listAgencyByClient = ref<any[]>([])
+
+
+  //Modal
+
+const closePrintModal = () =>{
+  isPrintModalOpen.value =false;
+}
 
 const columnsChangeAgency = ref<IColumn[]>([
   { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: true, showFilter: true },
@@ -191,27 +189,26 @@ const objApis = ref({
 
 const legend = ref(
   [
-    // {
-    //   name: 'Transit',
-    //   color: '#ff002b',
-    //   colClass: 'pr-4',
-    // },
     {
-      name: 'Confirmed',
-      color: '#0c2bff',
-      colClass: 'pr-3',
-    },
-    {
-      name: 'Applied',
-      color: '#00b816',
-      colClass: 'pr-3',
+      name: 'Transit',
+      color: '#ff002b',
+      colClass: 'pr-4',
     },
     {
       name: 'Cancelled',
       color: '#888888',
-      colClass: 'pr-3',
+      colClass: 'pr-4',
     },
-
+    {
+      name: 'Confirmed',
+      color: '#0c2bff',
+      colClass: 'pr-4',
+    },
+    {
+      name: 'Applied',
+      color: '#00b816',
+      colClass: '',
+    },
   ]
 )
 const filterAllDateRange = ref(false)
@@ -432,84 +429,6 @@ const sClassMap: IStatusClass[] = [
   { status: 'Confirmed', class: 'text-confirmed' },
   { status: 'Applied', class: 'text-applied' },
 ]
-
-// Encuentra el menú 'import'
-const importMenu = computed(() => itemMenuList.value.find(item => item.id === 'import'))
-
-// Encuentra el ítem 'Payment of bank'
-const paymentOfBankItem = computed(() =>
-  importMenu.value?.menuItems.find(item => item.label === 'Payment Of Bank')
-)
-
-// Reemplaza el command con la nueva función
-if (paymentOfBankItem.value) {
-  paymentOfBankItem.value.command = () => {
-    PaymentBankDialogVisible.value = true
-  }
-}
-function closeImportBank() {
-  PaymentBankDialogVisible.value = false
-}
-
-// Encuentra el ítem 'Payment of Expense'
-const paymentOfExpenseItem = computed(() =>
-  importMenu.value?.menuItems.find(item => item.label === 'Payment Of Expense')
-)
-
-// Reemplaza el command con la nueva función
-if (paymentOfBankItem.value) {
-  paymentOfExpenseItem.value.command = () => {
-    PaymentExpenseDialogVisible.value = true
-  }
-}
-function closeImportExpense() {
-  PaymentExpenseDialogVisible.value = false
-}
-
-// Encuentra el ítem 'Anti To Income'
-const paymentAntiToIncomeItem = computed(() =>
-  importMenu.value?.menuItems.find(item => item.label === 'Anti To Income')
-)
-
-// Reemplaza el command con la nueva función
-if (paymentAntiToIncomeItem.value) {
-  paymentAntiToIncomeItem.value.command = () => {
-    PaymentAntiToIncomeDialogVisible.value = true
-  }
-}
-function closeImportAntiToIncome() {
-  PaymentAntiToIncomeDialogVisible.value = false
-}
-
-// Encuentra el ítem 'Expense To Booking'
-const paymentExpenseToBookingItem = computed(() =>
-  importMenu.value?.menuItems.find(item => item.label === 'Expense To Booking')
-)
-
-// Reemplaza el command con la nueva función
-if (paymentExpenseToBookingItem.value) {
-  paymentExpenseToBookingItem.value.command = () => {
-    PaymentExpenseToBookingDialogVisible.value = true
-  }
-}
-function closeImportExpenseToBooking() {
-  PaymentExpenseToBookingDialogVisible.value = false
-}
-
-// Encuentra el ítem 'Payment Detail'
-const paymentPaymentDetailItem = computed(() =>
-  importMenu.value?.menuItems.find(item => item.label === 'Payment Detail')
-)
-
-// Reemplaza el command con la nueva función
-if (paymentPaymentDetailItem.value) {
-  paymentPaymentDetailItem.value.command = () => {
-    PaymentDetailDialogVisible.value = true
-  }
-}
-function closePaymentDetail() {
-  PaymentDetailDialogVisible.value = false
-}
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 interface SubTotals {
@@ -933,7 +852,7 @@ function handleShareFilesDialogOpen() {
 
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
-    case 'PROCESSED': return '#FF8D00'
+    case 'PROCECSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#888888'
@@ -946,7 +865,7 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCESSED': return 'Processed'
+    case 'PROCECSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -1758,7 +1677,7 @@ async function applyPaymentGetList() {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
-                  // if (iterator.status !== 'PROCESSED') {
+                  // if (iterator.status !== 'PROCECSED') {
                   // }
                 }
 
@@ -1839,7 +1758,7 @@ async function applyPaymentGetList() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCESSED') {
+                // if (iterator.status !== 'PROCECSED') {
                 // }
               }
 
@@ -1954,7 +1873,7 @@ async function applyPaymentGetList() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCESSED') {
+                // if (iterator.status !== 'PROCECSED') {
                 // }
               }
 
@@ -2383,7 +2302,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
-                  // if (iterator.status !== 'PROCESSED') {
+                  // if (iterator.status !== 'PROCECSED') {
                   // }
                 }
 
@@ -2499,7 +2418,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCESSED') {
+                // if (iterator.status !== 'PROCECSED') {
                 // }
               }
 
@@ -2644,7 +2563,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCESSED') {
+                // if (iterator.status !== 'PROCECSED') {
                 // }
               }
 
@@ -3771,10 +3690,10 @@ onMounted(async () => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 4px;">
+    <h5 class="mb-0">
       Payment Management
     </h5>
-    <div class="flex flex-row w-full place-content-center justify-center justify-content-end -mt-2 -mb-1">
+    <div class="flex justify-content-end px-0">
       <span v-for="(objBtnAndMenu, index) in itemMenuList" :key="index">
         <IfCan :perms="objBtnAndMenu.permission && objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
           <div v-if="objBtnAndMenu.showBtn()" class="my-2 flex justify-content-end pl-2 pr-0">
@@ -3822,7 +3741,7 @@ onMounted(async () => {
   </div>
   <div>
     <div class="card p-0 m-0">
-      <Accordion :active-index="0" class="mb-0">
+      <Accordion id="accordion" :active-index="0">
         <AccordionTab content-class="p-0 m-0">
           <template #header>
             <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
@@ -3834,13 +3753,13 @@ onMounted(async () => {
               </div>
             </div>
           </template>
-          <div class="flex gap-4 flex-column lg:flex-row -mt-2">
+          <div v-if="true" class="grid p-0 m-0" style="margin: 0 auto;">
             <!-- first filter -->
             <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-0 font-bold w-6rem"> Client:</label>
+                    <label for="" class="mr-2 font-bold"> Client:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
@@ -4244,7 +4163,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="w-4rem font-bold mr-1">Value:</label>
+                    <label for="" class="w-4rem font-bold">Value:</label>
                     <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-12rem" style="max-width: 12rem;" />
                   </div>
                 </div>
@@ -4328,58 +4247,56 @@ onMounted(async () => {
       </div>
     </div>
     <!-- @update:clicked-item="assingFuntionsForPrint($event)" -->
-    <div class="-mt-4">
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="goToCreateForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @on-row-double-click="goToFormInNewTab($event)"
-        @on-row-right-click="onRowContextMenu($event)"
-      >
-        <template #column-icon="{ data: objData, column }">
-          <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
-            <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
-            <Button
-              v-if="showIconAttachment(objData)"
-              :icon="column.icon"
-              class="p-button-rounded p-button-text w-2rem h-2rem"
-              aria-label="Submit"
-              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
-              :style="{ color: objData.color }"
-            />
-          </div>
+    <DynamicTable
+      :data="listItems"
+      :columns="columns"
+      :options="options"
+      :pagination="pagination"
+      @on-confirm-create="goToCreateForm"
+      @on-change-pagination="payloadOnChangePage = $event"
+      @on-change-filter="parseDataTableFilter"
+      @on-list-item="resetListItems"
+      @on-sort-field="onSortField"
+      @on-row-double-click="goToFormInNewTab($event)"
+      @on-row-right-click="onRowContextMenu($event)"
+    >
+      <template #column-icon="{ data: objData, column }">
+        <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
+          <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
+          <Button
+            v-if="showIconAttachment(objData)"
+            :icon="column.icon"
+            class="p-button-rounded p-button-text w-2rem h-2rem"
+            aria-label="Submit"
+            :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
+            :style="{ color: objData.color }"
+          />
+        </div>
         <!-- style="color: #616161;" -->
         <!-- :style="{ 'background-color': '#00b816' }" -->
-        </template>
+      </template>
 
-        <template #column-paymentStatus="{ data, column }">
-          <Badge
-            v-tooltip.top="data.paymentStatus.name.toString()"
-            :value="data.paymentStatus.name"
-            :class="column.statusClassMap?.find(e => e.status === data.paymentStatus.name)?.class"
-          />
-        </template>
-        <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center">
-            <Row>
-              <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
-              <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-              <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-              <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-              <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-              <Column :colspan="0" />
-              <Column :colspan="0" />
-            </Row>
-          </ColumnGroup>
-        </template>
-      </DynamicTable>
-    </div>
+      <template #column-paymentStatus="{ data, column }">
+        <Badge
+          v-tooltip.top="data.paymentStatus.name.toString()"
+          :value="data.paymentStatus.name"
+          :class="column.statusClassMap?.find(e => e.status === data.paymentStatus.name)?.class"
+        />
+      </template>
+      <template #datatable-footer>
+        <ColumnGroup type="footer" class="flex align-items-center">
+          <Row>
+            <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+            <Column :colspan="0" />
+            <Column :colspan="0" />
+          </Row>
+        </ColumnGroup>
+      </template>
+    </DynamicTable>
     <!-- Dialog change agency -->
     <Dialog
       v-model:visible="openDialogChangeAgency"
@@ -5171,38 +5088,28 @@ onMounted(async () => {
       </div>
     </template>
   </ContextMenu>
-  <DynamicContentModalImport
-    :visible="PaymentExpenseToBookingDialogVisible" :component="PaymentExpenseToBookingDialog"
-    header="Expense To Booking Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
-    @close="closeImportExpenseToBooking"
-  />
-  <DynamicContentModalImport
-    :visible="PaymentDetailDialogVisible" :component="PaymentDetailDialog"
-    header="Payment Detail Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
-    @close="closePaymentDetail"
-  />
-  <DynamicContentModalImport
-    :visible="PaymentAntiToIncomeDialogVisible" :component="PaymentAntiToIncomeDialog"
-    header="Anti To Income Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
-    @close="closeImportAntiToIncome"
-  />
-  <DynamicContentModalImport
-    :visible="PaymentExpenseDialogVisible" :component="PaymentExpenseDialog"
-    header="Payment of Expense Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
-    @close="closeImportExpense"
-  />
-  <DynamicContentModalImport
-    :visible="PaymentBankDialogVisible" :component="PaymentBankDialog"
-    header="Payment of Bank Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
-    @close="closeImportBank"
-  />
+    
+   <!-- Modal para Print -->
+<template>
+  <div>
+    <Dialog v-model:visible="isPrintModalOpen"  modal header="Print" :style="{ width: '80vw', height: '80vh' }" 
+      :closable="true"
+    >
+    <PayPrint/>
+      <template #footer>
+        <Button label="Close" @click="closePrintModal"  />
+      </template>
+    </Dialog>
+  </div>
 </template>
 
-// <style lang="scss">
-// .text-transit {
-//   background-color: #ff002b;
-//   color: #fff;
-// }
+</template>
+
+<style lang="scss">
+.text-transit {
+  background-color: #ff002b;
+  color: #fff;
+}
 .text-cancelled {
   background-color: #888888;
   color: #fff;
