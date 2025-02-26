@@ -52,6 +52,10 @@ public class InvoiceUploadAttachmentUtil {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         // Enviar la solicitud al servidor (MinIO o servicio S3)
+        System.out.println(UPLOAD_FILE_URL);
+        System.out.println("Headers: " + requestEntity.getHeaders());
+        System.out.println("Body: " + requestEntity.getBody());
+        
         ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, requestEntity, String.class);
 
         // Validar si la respuesta es exitosa
