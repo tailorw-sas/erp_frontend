@@ -36,7 +36,7 @@ ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 COPY rc-settings.xml settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN |g" settings.xml
 
-ARG ENVIRONMENT
+ARG ENVIRONMENT=dev
 ENV ENVIRONMENT ${ENVIRONMENT}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia

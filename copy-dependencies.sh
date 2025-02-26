@@ -61,19 +61,19 @@ for ms in "${microservices[@]}"; do
     log "${YELLOW}🔹 Procesando microservicio: $ms. Destino: $DEST_DIR${NC}"
 
     # Asignar artefactos según el microservicio mediante condicionales
-    if [[ "$ms" == "cloudBridges"
-    || "$ms" == "gateway"
+    if [[ "$ms" == "gateway"
     ||  "$ms" == "identity"
     ||  "$ms" == "insis"
     ||  "$ms" == "report"
     ||  "$ms" == "scheduler"
     ||  "$ms" == "tcaInnsist" ]]; then
         artifacts=("share-dev")
-    elif [[ "$ms" == "creditCard"
+    elif [[ "$ms" == "cloudBridges"
+    || "$ms" == "creditCard"
     ||  "$ms" == "invoicing"
     ||  "$ms" == "payment"
     ||  "$ms" == "settings" ]]; then
-        artifacts=("share-dev" "audit-agent")
+        artifacts=("share-dev" "audit-agent-dev")
     else
         log "${YELLOW}⚠️ No se definió un mapeo de artefactos para el microservicio: $ms. Saltando...${NC}"
         continue
