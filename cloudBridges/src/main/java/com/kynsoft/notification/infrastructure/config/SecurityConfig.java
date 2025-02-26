@@ -35,7 +35,7 @@ public class SecurityConfig {
                 // -- Swagger UI v2
                 "/api/**",
         };
-        return httpSecurity
+        /*return httpSecurity
         		.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> exchanges
@@ -51,7 +51,12 @@ public class SecurityConfig {
                                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)
                                 )
                 )
-                
+          */
+        return httpSecurity
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .authorizeExchange(exchanges -> exchanges
+                        .anyExchange().permitAll())
                 .build();
     }
 
