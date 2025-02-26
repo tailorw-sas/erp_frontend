@@ -2261,19 +2261,20 @@ const legend = ref(
 
 // -------------------------------------------------------------------------------------------------------
 </script>
-
 <template>
-  <div class=" col-12 align-items-center grid w-full">
+  <div class=" col-1 align-items-center grid w-full">
     <div class="flex align-items-center justify-content-between w-full">
-      <h5 class="mb-0 w-6">
+      <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 8px;">
         Invoice Management
       </h5>
-      <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
+      <div class="flex flex-row w-full place-content-center justify-center justify-content-end -mt-2 -mb-3 -mx-5">
+        
         <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))"
           v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
           aria-controls="overlay_menu" @click="toggle" />
-        <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
+          <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
 
+        
         <PopupNavigationMenu v-if="false" :items="createItems" icon="pi pi-plus" label="New">
           <template #item="props">
             <button :disabled="props.props.label === 'Credit' && expandedInvoice === ''"
@@ -2282,7 +2283,6 @@ const legend = ref(
             </button>
           </template>
         </PopupNavigationMenu>
-
         <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))"
           v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
           aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport">
@@ -2339,17 +2339,16 @@ const legend = ref(
         <Button class="ml-2" icon="pi pi-download" label="Export" :disabled="listItems.length === 0"
           @click="() => exportList()" />
         <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
-      </div>
+      </div>   
     </div>
   </div>
-  <div class="grid w-full">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
+  <div class="grid">
+    <div class="col-12 order-0">
+      <div class="card p-0 mb-0">
+        <Accordion :active-index="0" class="mb-0">
           <AccordionTab>
             <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
                   Search Fields
                 </div>
@@ -2358,7 +2357,7 @@ const legend = ref(
                 </div>
               </div>
             </template>
-            <div class="flex gap-4 flex-column lg:flex-row">
+            <div class="flex gap-4 flex-column lg:flex-row -mt-2">
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
                   <label for="" class="font-bold">Client:</label>
@@ -2708,6 +2707,7 @@ const legend = ref(
           </AccordionTab>
         </Accordion>
       </div>
+      <div class="-mt-2">
       <ExpandableTable 
         :data="listItems" 
         :columns="columns" 
@@ -2777,6 +2777,7 @@ const legend = ref(
 
 
       </ExpandableTable>
+    </div>
     </div>
     <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" >
       <template #itemicon="{ item }">
@@ -3020,7 +3021,7 @@ const legend = ref(
         </div>
       </template>
 
-        <div class="p-fluid pt-3">
+        <div class="p-fluid t-0">
           <DynamicTable
             class="card p-0"
             :data="listPrintItems"
@@ -3122,7 +3123,7 @@ const legend = ref(
       />
       <DynamicContentModalImport
       :visible="ReconcileFilesDialogVisible" :component="ReconcileFilesDialog"
-      header="Invoice To Reconcile From Files" @close="closeReconcileFiles"
+      header="Reconcile Invoice From files" @close="closeReconcileFiles"
       :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
