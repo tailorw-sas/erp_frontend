@@ -89,19 +89,16 @@ pipeline {
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
                         env.NAMESPACE = env.NAMESPACE_DEV_QA
-                        env.POM_NAME = "pom-${env.BRANCH_NAME}.xml"
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
                         env.NAMESPACE = env.NAMESPACE_DEV_QA
-                        env.POM_NAME = "pom-${env.BRANCH_NAME}.xml"
                     }
                     if(env.BRANCH_NAME == 'main'){
                         env.SERVER_K3S_URL = env.URL_PROD
                         env.EMAIL_LIST = env.EMAIL_LIST_PROD
                         env.NAMESPACE = env.NAMESPACE_PROD
-                        env.POM_NAME = "pom.xml"
                     }
                 }
             }
@@ -111,7 +108,7 @@ pipeline {
             steps {
                 echo '* * * * STAGE: Creating docker image * * * *'
                 dir("${SRC}"){
-                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg POM_NAME=$POM_NAME --build-arg DOCKER_HUB=$DOCKER_HUB .'
+                    sh 'docker build --no-cache -t $DOCKER_IMAGE --build-arg PACKAGE_TOKEN=$GIT_PACKAGE_TOKEN --build-arg ENVIRONMENT=$BRANCH_NAME --build-arg DOCKER_HUB=$DOCKER_HUB .'
                     withDockerRegistry(credentialsId: "${DOCKER_CREDENTIALS}", url: "") {
                         sh 'docker push $DOCKER_IMAGE'
                     }

@@ -89,19 +89,16 @@ pipeline {
                         env.SERVER_K3S_URL = env.URL_DEV
                         env.EMAIL_LIST = env.EMAIL_LIST_DEV_ERP
                         env.NAMESPACE = env.NAMESPACE_DEV_QA
-                        env.POM_NAME = "pom-${env.BRANCH_NAME}.xml"
                     }
                     if(env.BRANCH_NAME == 'qa'){
                         env.SERVER_K3S_URL = env.URL_QA
                         env.EMAIL_LIST = env.EMAIL_LIST_QA
                         env.NAMESPACE = env.NAMESPACE_DEV_QA
-                        env.POM_NAME = "pom-${env.BRANCH_NAME}.xml"
                     }
                     if(env.BRANCH_NAME == 'main'){
                         env.SERVER_K3S_URL = env.URL_PROD
                         env.EMAIL_LIST = env.EMAIL_LIST_PROD
                         env.NAMESPACE = env.NAMESPACE_PROD
-                        env.POM_NAME = "pom.xml"
                     }
                 }
             }
