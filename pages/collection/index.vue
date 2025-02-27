@@ -377,25 +377,76 @@ const ENUM_FILTER = [
   { id: 'name', name: 'Name' },
 ]
 const columns = ref<IColumn[]>([
-  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
+  {
+    field: 'icon',
+    header: '',
+    width: '20px', // Establece un tamaño fijo para la columna del icono
+    minWidth: '20px', // Evita que se haga más pequeña
+    maxWidth: '30px', // Evita que se haga más grande
+    type: 'slot-icon',
+    icon: 'pi pi-paperclip',
+    sortable: false,
+    showFilter: false,
+    hidden: false
+  },
   { field: 'paymentInternalId', header: 'Id', type: 'text' },
-  { field: 'transactionDate', header: 'Trans. Date', type: 'date' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', isSingleSelect: true, objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', } },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'paymentAmount', header: 'P.Amount', type: 'number' },
-  { field: 'depositBalance', header: 'D.Balance', type: 'number' },
+  {
+    field: 'transactionDate',
+    header: 'Trans. D',
+    tooltip: 'Transaction Date',
+    type: 'date',
+    width: '90px', // Establece un ancho fijo
+    minWidth: '70px', // Previene que la columna se haga demasiado pequeña
+    maxWidth: '90px', // Previene que la columna se expanda demasiado
+    columnClass: 'truncate-text' // Aplica truncamiento si es necesario
+  },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '80px',
+    minWidth: '80px', // Mantiene un tamaño mínimo
+    maxWidth: '120px', // Controla el tamaño máximo
+    widthTruncate: '80px', // Personalizado para truncar correctamente
+    columnClass: 'truncate-text', // Clase CSS para aplicar truncado
+    type: 'select',
+    isSingleSelect: true,
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    width: '80px', // Establece un ancho base
+    minWidth: '80px', // Asegura un tamaño mínimo
+    maxWidth: '120px', // Limita el tamaño máximo para evitar expansión excesiva
+    widthTruncate: '80px', // Propiedad personalizada para truncar
+    columnClass: 'truncate-text', // Clase CSS para truncar el texto
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }
+  },
+  { field: 'paymentAmount', header: 'P.Amount', tooltip: 'Payment Amount', type: 'number' },
+  { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', type: 'number' },
   { field: 'applied', header: 'Applied', type: 'number' },
   { field: 'notApplied', header: 'Not Applied', type: 'number' },
 ])
 const columnsInvoice = ref<IColumn[]>([
   // { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '80px',
+    minWidth: '80px',
+    maxWidth: '80px',
+    widthTruncate: '80px',
+    type: 'select',
+    columnClass: 'truncate-text', // ⬅️ Agregar esta clase
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'invoiceNumber', header: 'Inv.No', type: 'text' },
-  { field: 'invoiceDate', header: 'Gen.Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
-  { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
+  { field: 'invoiceNumber', header: 'I.No', tooltip: 'Invoice No', type: 'text' },
+  { field: 'invoiceDate', header: 'I.Date', tooltip: 'Invoice Date', type: 'date' },
+  { field: 'invoiceAmount', header: 'I. Amnt', tooltip: 'Invoice Amount', type: 'number' },
+  { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
+  { field: 'dueAmount', header: 'I. Balance', tooltip: 'Invoice Balance', type: 'number' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
 ])
@@ -1288,10 +1339,10 @@ async function resetListItems() {
   getPaymentData()
 }
 function goToInvoice() {
-  navigateTo('/invoice')
+  window.open('/invoice', '_blank')
 }
 function goToPayment() {
-  navigateTo('/payment')
+  window.open('/payment', '_blank')
 }
 async function getItemById(id: string) {
   if (id) {
@@ -2163,10 +2214,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="grid p-0 m-0 my-0 py-0 px-0 mx-0">
+  <div class="grid p-0 m-0 my-0 py-0 px-0 -mx-3">
     <div class="col-12 py-0 px-1">
       <div class="font-bold p-0 m-0">
-        <h5 class="mb-0 p-0 ">
+        <h5 class="-mb-2 w-6 mt-0" style="line-height: 1; position: relative; top: -7px;">
           Collection Management
         </h5>
       </div>
@@ -2176,7 +2227,7 @@ onMounted(() => {
 
       <div v-if="showClientView" class="card p-0 m-0">
         <!-- Encabezado Completo -->
-        <div class="font-bold text-lg bg-primary custom-card-header px-4">
+        <div class="font-bold text-lg bg-primary custom-card-header px-2">
           Search View
         </div>
 
@@ -2188,8 +2239,8 @@ onMounted(() => {
               <!-- Selector de Cliente -->
               <div class="col-12 md:col-12 lg:col-12 xl:col-12 flex pb-0  w-full">
                 <div class="flex flex-column gap-2 py-0 w-full">
-                  <div class="flex align-items-center gap-2 px-0 py-0 ">
-                    <label class="filter-label font-bold ml-3" for="client">Client<span
+                  <div class="flex align-items-center gap-2 px-0 py-0 -mb-2 -mt-2">
+                    <label class="filter-label font-bold -ml-2" for="client">Client<span
                       class="text-red"
                     >*</span></label>
                     <div class="w-full">
@@ -2256,8 +2307,8 @@ onMounted(() => {
               <!-- Selector de Agencia -->
               <div class="col-12 pb-0">
                 <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 px-0 py-0">
-                    <label class="filter-label font-bold " for="agency">Agency<span
+                  <div class="flex align-items-center gap-2 px-0 py-0 -mb-2 -mt-1,5">
+                    <label class="filter-label font-bold -ml-3 -mr-1" for="agency">Agency<span
                       class="text-red"
                     >*</span></label>
                     <div class="w-full ">
@@ -2366,8 +2417,8 @@ onMounted(() => {
               <!-- Selector de Hotel -->
               <div class="col-12 pb-0">
                 <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 px-0 py-0">
-                    <label class="filter-label font-bold ml-3" for="hotel">Hotel<span
+                  <div class="flex align-items-center gap-2 px-0 py-0 -mb-1 -mt-1,5">
+                    <label class="filter-label font-bold -ml-0 -mr-1" for="hotel">Hotel<span
                       class="text-red"
                     >*</span></label>
                     <div class="w-full">
@@ -2426,16 +2477,16 @@ onMounted(() => {
               </div>
               <div class="flex col-12 justify-content-end mt-2 py-2 xl:mt-0 py-2 pb-3">
                 <Button
-                  v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search"
+                  v-tooltip.top="'Search'" class="w-2,5rem mx-1" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
 
                 <!-- <Button
-                  v-tooltip.top="'Test'" class="w-3rem mx-2" icon="pi pi-search"
+                  v-tooltip.top="'Test'" class="w-3rem mx-1" icon="pi pi-search"
                   :loading="loadingSearch" @click="getPaymentData"
                 /> -->
                 <Button
-                  v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                  v-tooltip.top="'Clear'" outlined class="w-2,5rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
                 />
               </div>
@@ -2443,17 +2494,17 @@ onMounted(() => {
           </div>
 
           <!-- Divisor Vertical -->
-          <div style="width: 4px; background-color: #d3d3d3; height: auto; margin: 0;" />
+          <div style="width: 2px; background-color: #d3d3d3; height: auto; margin: 0;" />
 
           <!-- Sección Derecha -->
           <div class="px-2 py-0 m-0 my-0 mt-0" style="flex: 1; padding: 16px;">
-            <div class="grid py-0 my-0 px-0" style="max-width: 1200px; margin: auto;">
+            <div class="grid py-0 my-0 px-1 -mx-3" style="max-width: 1200px; margin: auto;">
               <!-- Fila para Cliente y Agencia -->
-              <div class="col-12 mb-0 ">
+              <div class="col-12 -mb-2 -mt-3 pt-4">
                 <div class="flex items-center w-full" style="flex-wrap: nowrap;">
                   <!-- Usar flex para alinear en una fila -->
                   <label
-                    for="client" class="font-bold mb-0 mt-2 required"
+                    for="client" class="font-bold mb-0 mt-1 required"
                     style="margin-right: 8px; flex: 0 0 auto;"
                   >Client Name</label>
                   <InputText
@@ -2463,7 +2514,7 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="col-12 mb-0 py-0">
+              <div class="col-12 mb-0 py-0 -mb-2 -mt-1,5">
                 <div class="flex items-center w-full" style="flex-wrap: nowrap;">
                   <!-- Usar flex para alinear en una fila -->
                   <label
@@ -2476,7 +2527,7 @@ onMounted(() => {
                   />
                 </div>
               </div>
-              <div class="col-12 mb-0 ">
+              <div class="col-12 -mb-2 -mt-1,5">
                 <div class="flex items-center w-full" style="flex-wrap: nowrap;">
                   <!-- Usar flex para alinear en una fila -->
                   <label
@@ -2508,16 +2559,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="flex justify-content-between mt-0">
-        <div class="flex align-items-center gap-2">
-          <div class="p-2 font-bold">
+      <div class="flex justify-content-between -mt-6 pb-2">
+        <div class="flex align-items-center gap-2 pt-2">
+          <div class="p-1 font-bold -mb-5">
             Payment View
           </div>
         </div>
-        <div class="flex align-items-center gap-2">
+        <div class="flex align-items-center gap-0 mt-5">
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-3 -mx-2"
           >
             <Button
               v-tooltip.left="'Share File'" text label="Share File" icon="pi pi-share-alt"
@@ -2526,17 +2577,19 @@ onMounted(() => {
           </div>
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-3 mx-1"
           >
             <Button
               v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
               severity="primary" @click="openDialogExportToExcel"
             />
           </div>
-          <Button
-            v-tooltip.left="'More'" label="+More"
-            severity="primary" text class="" @click="goToPayment()"
-          />
+          <div class="-mb-3 -mx-2">
+            <Button
+              v-tooltip.left="'More'" label="+More"
+              severity="primary" text class="" @click="goToPayment()"
+            />
+          </div>
         </div>
       </div>
       <DynamicTable
@@ -2635,7 +2688,7 @@ onMounted(() => {
     </div>
     <!-- Section Invoice -->
     <div class="col-12 md:order-0 md:col-12 xl:col-6 lg:col-12 px-1 py-0">
-      <div v-if="showClientDetail" class="card px-1 m-0 py-0">
+      <div v-if="showClientDetail" class="card px-0 m-0 py-0">
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Agency Contact
         </div>
@@ -2672,16 +2725,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="flex justify-content-between mt-0">
-        <div class="flex align-items-center gap-2">
-          <div class="p-2 font-bold">
+      <div class="flex justify-content-between -mt-7">
+        <div class="flex align-items-center gap-2 pt-2">
+          <div class="p-1 font-bold -mb-4">
             Invoice View
           </div>
         </div>
-        <div class="flex align-items-center gap-2">
+        <div class="flex align-items-center gap-2 mt-4">
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="flex justify-content-end px-0"
+            class="flex justify-content-end px-0 -mb-2"
           >
             <Button
               v-tooltip.left="'Email'" text label="Email" icon="pi pi-envelope" class="w-6rem"
@@ -2690,7 +2743,7 @@ onMounted(() => {
           </div>
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-2 -mx-3"
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
@@ -2699,17 +2752,19 @@ onMounted(() => {
           </div>
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-2"
           >
             <Button
               v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
               severity="primary" @click="() => { exportDialogOpen = true }"
             />
           </div>
-          <Button
-            v-tooltip.left="'More'" label="+More"
-            severity="primary" text class="" @click="goToInvoice()"
-          />
+          <div class="-mb-2">
+            <Button
+              v-tooltip.left="'More'" label="+More"
+              severity="primary" text class="" @click="goToInvoice()"
+            />
+          </div>
         </div>
       </div>
 
