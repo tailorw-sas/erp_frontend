@@ -8,7 +8,7 @@ import com.kynsof.share.core.domain.kafka.event.EventType;
 import com.kynsof.share.core.infrastructure.util.CustomMultipartFile;
 import com.kynsoft.notification.domain.dto.AFileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
-import com.kynsoft.notification.infrastructure.service.AmazonClient;
+import com.kynsoft.notification.domain.service.IAmazonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 public class ConsumerSaveFileEventService {
 
     @Autowired
-    private AmazonClient amazonClient;
+    private IAmazonClient amazonClient;
 
     @Autowired
     private IAFileService fileService;
