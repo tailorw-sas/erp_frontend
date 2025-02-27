@@ -9,7 +9,7 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean } from '~/utils/helpers'
-import { itemMenuList } from '~/components/payment/indexBtns'
+import { isPrintModalOpen, itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
@@ -18,6 +18,7 @@ import PaymentExpenseDialog from '~/pages/payment/import-of-expense.vue'
 import PaymentAntiToIncomeDialog from '~/pages/payment/import-anti-income.vue'
 import PaymentExpenseToBookingDialog from '~/pages/payment/import-expense-booking.vue'
 import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
+import PayPrint from '~/pages/payment/print/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -77,6 +78,12 @@ const currentAgencyForChangeAgency = ref<GenericObject>({})
 const listClientFormChangeAgency = ref<any[]>([])
 const openDialogChangeAgency = ref(false)
 const listAgencyByClient = ref<any[]>([])
+
+// Print Modal
+
+function closePrintModal() {
+  isPrintModalOpen.value = false
+}
 
 const columnsChangeAgency = ref<IColumn[]>([
   { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: true, showFilter: true },
@@ -543,16 +550,80 @@ function mapFunctionForBankAccount(data: DataListItemForBankAccount): ListItemFo
   }
 }
 const columns: IColumn[] = [
-  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
-  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: true },
-  { field: 'paymentSource', header: 'P.Source', tooltip: 'Payment Source', width: '60px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
-  { field: 'transactionDate', header: 'Trans. Date', tooltip: 'Transaction Date', width: '60px', type: 'date' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
-  { field: 'client', header: 'Client', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-client' } },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
+  {
+    field: 'icon',
+    header: '',
+    width: '20px', // Establece un tamaño fijo para la columna del icono
+    minWidth: '20px', // Evita que se haga más pequeña
+    maxWidth: '30px', // Evita que se haga más grande
+    type: 'slot-icon',
+    icon: 'pi pi-paperclip',
+    sortable: false,
+    showFilter: false,
+    hidden: false
+  },
+  { field: 'paymentId', header: 'Id', tooltip: 'Payment ID', width: 'auto', type: 'text', showFilter: true },
+  { field: 'paymentSource', header: 'P.S', tooltip: 'Payment Source', width: 'auto', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
+  { field: 'transactionDate', header: 'Trans. D', tooltip: 'Transaction Date', width: 'auto', type: 'date' },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '120px', // Aumenta el ancho principal
+    minWidth: '100px', // Define un ancho mínimo mayor
+    maxWidth: '120px', // Permite un máximo de 120px antes de truncar
+    widthTruncate: '120px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text',
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
+  {
+    field: 'client',
+    header: 'Client',
+    width: '90px',
+    minWidth: '60px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '90px', // Límite máximo antes de truncar
+    widthTruncate: '90px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-client'
+    }
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    width: '120px',
+    minWidth: '100px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '120px', // Límite máximo antes de truncar
+    widthTruncate: '120px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-agency'
+    }
+  },
+  { field: 'agencyType', header: 'Agency T.', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
-  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name', mapFunction: mapFunctionForBankAccount, sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC } } },
+  {
+    field: 'bankAccount',
+    header: 'Bank Acc',
+    tooltip: 'Bank Account',
+    width: '100px',
+    minWidth: '80px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '100px', // Límite máximo antes de truncar
+    widthTruncate: '100px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-bank-account',
+      keyValue: 'name',
+      mapFunction: mapFunctionForBankAccount,
+      sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC }
+    }
+  },
   { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'number' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
@@ -5113,6 +5184,18 @@ onMounted(async () => {
       </template>
     </Dialog>
   </div>
+  // <!-- Modal para Print -->
+  <template>
+    <div>
+      <Dialog
+        v-model:visible="isPrintModalOpen" modal header="Payment To Print" :style="{ width: '95vw', height: '100vh' }"
+        :closable="true"
+      >
+        <PayPrint />
+        <template #footer />
+      </Dialog>
+    </div>
+  </template>
 
   <div v-if="attachmentDialogOpen">
     <PaymentAttachmentDialog
