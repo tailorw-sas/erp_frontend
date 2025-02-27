@@ -1,6 +1,7 @@
 import type { ComponentPublicInstance } from 'vue'
 import { ref } from 'vue'
 
+export const isPrintModalOpen = ref(false) // Estado del modal de Print
 type MenuRefType = Element | ComponentPublicInstance | null
 interface SvgIcon {
   svgHeight: string
@@ -159,7 +160,7 @@ export const itemMenuList = ref<MenuItem[]>([
     btnAriaControls: 'overlay_menu5',
     btnDisabled: false,
     btnOnClick: () => {
-      navigateTo('/payment/print', { open: { target: '_blank' } })
+      isPrintModalOpen.value = true // Abrir modal de Print en lugar de navegar
     },
     menuId: 'overlay_menu5',
     menuRef: null as MenuRefType,
