@@ -36,14 +36,14 @@ public class KafkaConsumerConfig {
     @Value("${KAFKA_SASL_PASSWORD:password}")
     private String saslPassword;
 
-    List<String> profilesWithSasl = List.of("qa", "production");
+    List<String> profilesWithSasl = List.of("qa", "production", "default");
 
     @Bean
     public ConsumerFactory<String, Object> consumerFactory(Environment environment) {
         Map<String, Object> configProps = createBaseProps();
-        if(profileNeedsSasl(environment)){
+        //if(profileNeedsSasl(environment)){
             addSaslConfig(configProps, saslUsername, saslPassword);
-        }
+        //}
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
