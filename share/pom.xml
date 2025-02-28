@@ -30,6 +30,7 @@
                     <name>env</name>
                     <value>dev</value>
                 </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <packaging.artifactId>share-dev</packaging.artifactId>
@@ -54,7 +55,6 @@
                     <name>env</name>
                     <value>main</value>
                 </property>
-                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <packaging.artifactId>share</packaging.artifactId>
