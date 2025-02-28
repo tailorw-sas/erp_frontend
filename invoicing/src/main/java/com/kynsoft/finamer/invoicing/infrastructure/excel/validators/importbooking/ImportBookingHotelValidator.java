@@ -29,11 +29,6 @@ public class ImportBookingHotelValidator extends ExcelRuleValidator<BookingRow> 
             errorFieldList.add(new ErrorField("Hotel", " Hotel not exists"));
             return false;
         } else {
-//            if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
-//                errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
-//                return false;
-//            }
-
             ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
             if (!obj.getHotels().contains(manageHotelDto.getId())) {
                 errorFieldList.add(new ErrorField("Hotel", "The employee does not have access to the hotel."));

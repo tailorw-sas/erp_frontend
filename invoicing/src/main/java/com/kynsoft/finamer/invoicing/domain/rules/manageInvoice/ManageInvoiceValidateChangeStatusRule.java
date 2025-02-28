@@ -19,7 +19,7 @@ public class ManageInvoiceValidateChangeStatusRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return !this.status.equals(EInvoiceStatus.PROCECSED);
+        return !this.status.equals(EInvoiceStatus.PROCESSED);
     }
 
 }

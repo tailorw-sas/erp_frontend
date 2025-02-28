@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface ManageRoomTypeReadDataJPARepository extends JpaRepository<ManageRoomType, UUID>,
@@ -20,6 +21,9 @@ public interface ManageRoomTypeReadDataJPARepository extends JpaRepository<Manag
     Page<ManageRoomType> findAll(Specification specification, Pageable pageable);
 
     Optional<ManageRoomType> findManageRoomTypeByCode(String code);
+
+    @Query("SELECT r FROM ManageRoomType r WHERE r.code IN :codes")
+    List<ManageRoomType> findManageRoomTypesByCodes(List<String> codes);
 
     @Query("SELECT COUNT(b) FROM ManageRoomType b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);

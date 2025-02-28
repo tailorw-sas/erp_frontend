@@ -1,0 +1,47 @@
+startDelaySeconds: 0
+ssl: false
+whitelistObjectNames: ["java.lang:*", "java.nio:*", "java.util.logging:*", "com.zaxxer.hikari:*", "Tomcat:*"]
+rules:
+  # Monitoreo de Memoria
+  - pattern: "java.lang:type=Memory"
+    name: jvm_memory
+    labels:
+      area: "$1"
+
+  # Uso de CPU (JVM y Sistema)
+  - pattern: "java.lang:type=OperatingSystem,attribute=ProcessCpuLoad"
+    name: jvm_process_cpu_load
+  - pattern: "java.lang:type=OperatingSystem,attribute=SystemCpuLoad"
+    name: system_cpu_load
+
+  # Garbage Collector (GC)
+  - pattern: "java.lang:type=GarbageCollector,name=(.*)"
+    name: jvm_gc
+    labels:
+      collector: "$1"
+
+  # Hilos (Threads)
+  - pattern: "java.lang:type=Threading"
+    name: jvm_threads
+
+  # Tiempo de actividad de la JVM
+  - pattern: "java.lang:type=Runtime,attribute=Uptime"
+    name: jvm_uptime
+
+  # Uso de pools de memoria
+  - pattern: "java.lang:type=MemoryPool,name=(.*)"
+    name: jvm_memory_pool
+    labels:
+      pool: "$1"
+
+  # Pool de Conexiones (HikariCP)
+  - pattern: "com.zaxxer.hikari:type=Pool,name=(.*)"
+    name: hikari_connection_pool
+    labels:
+      pool: "$1"
+
+  # Threads en Tomcat
+  - pattern: "Tomcat<type=ThreadPool,name=(.*)>"
+    name: tomcat_threads
+    labels:
+      pool: "$1"

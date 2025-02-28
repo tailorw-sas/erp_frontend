@@ -48,12 +48,12 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
         }
 
 
-        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCECSED);
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceType());
 
         ManageInvoiceDto creInvoiceDto = new ManageInvoiceDto(command.getId(), 0L, 0L,
                 invoiceNumber, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
-                command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCECSED,
+                command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCESSED,
                 false,
                 null, null, null, null, invoiceTypeDto, manageInvoiceStatus, null,  false,
                 null, 0.0,0);

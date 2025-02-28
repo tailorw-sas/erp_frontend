@@ -1,6 +1,5 @@
 package com.kynsof.share.core.domain.exception;
 
-import com.kynsof.share.core.domain.response.ErrorField;
 import lombok.Getter;
 
 @Getter
@@ -9,6 +8,11 @@ public class ExcelException extends RuntimeException {
 
     public ExcelException(String domainErrorMessage) {
         super(domainErrorMessage);
+        this.domainErrorMessage = domainErrorMessage;
+    }
+
+    public ExcelException(String domainErrorMessage, Throwable cause) {
+        super(domainErrorMessage, cause);
         this.domainErrorMessage = domainErrorMessage;
     }
 }

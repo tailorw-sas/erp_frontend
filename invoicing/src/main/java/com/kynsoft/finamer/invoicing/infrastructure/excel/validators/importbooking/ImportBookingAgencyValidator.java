@@ -33,7 +33,7 @@ public class ImportBookingAgencyValidator extends ExcelRuleValidator<BookingRow>
         } else {
             try {
                 ManageAgencyDto manageAgencyDto = manageAgencyService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageAgencyCode()));
-                if (!obj.getAgencys().contains(manageAgencyDto.getId())) {
+                if (!obj.getAgencies().contains(manageAgencyDto.getId())) {
                     errorFieldList.add(new ErrorField("Agency", "The employee does not have access to the agency."));
                     return false;
                 }

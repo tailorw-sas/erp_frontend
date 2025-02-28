@@ -70,7 +70,7 @@ public class BookingRow {
     private String insistImportProcessId;
     private String insistImportProcessBookingId;
     
-    List<UUID> agencys = new ArrayList<>();
+    List<UUID> agencies = new ArrayList<>();
     List<UUID> hotels = new ArrayList<>();
 
     public BookingRow() {

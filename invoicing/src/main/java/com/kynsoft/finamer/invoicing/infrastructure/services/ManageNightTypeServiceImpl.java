@@ -9,8 +9,10 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageNightTypeResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageNightTypeDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageNightTypeService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageNightType;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRatePlan;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageNightTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageNightTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -83,6 +87,20 @@ public class ManageNightTypeServiceImpl implements IManageNightTypeService {
             return userSystem.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Manage Night Type not found.")));
+    }
+
+    @Override
+    @Cacheable(cacheNames = "manageNightType", key = "#codes", unless = "#result == null || #result.isEmpty()")
+    public List<ManageNightTypeDto> findByCodes(List<String> codes) {
+        List<ManageNightType> entities = repositoryQuery.findManageNightTypeByCodes(codes);
+
+        if (entities.isEmpty()) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(
+                    DomainErrorMessage.NOT_FOUND,
+                    new ErrorField("codes", "Night Type not found.")));
+        }
+
+        return entities.stream().map(ManageNightType::toAggregate).collect(Collectors.toList());
     }
 
     @Override

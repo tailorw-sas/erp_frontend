@@ -3,9 +3,6 @@ package com.kynsof.share.core.domain.exception;
 import jakarta.annotation.Nullable;
 
 public enum DomainErrorMessage implements IDomainErrorMessage {
-    PATIENTS_NOT_FOUND(601, Series.DOMAIN_ERROR, "Patients not found."),
-    QUALIFICATION_NOT_FOUND(602, Series.DOMAIN_ERROR, "Qualification not found."),
-    QUALIFICATION_OR_ID_NULL(603, Series.DOMAIN_ERROR, "Qualification DTO or ID cannot be null."),
     BUSINESS_NOT_FOUND(604, Series.DOMAIN_ERROR, "Business not found."),
     BUSINESS_OR_ID_NULL(605, Series.DOMAIN_ERROR, "Business DTO or ID cannot be null."),
     EXISTS_SCHEDULE_SOME_DATE_WHOSE_TIME_RANGE(606, Series.DOMAIN_ERROR,"There exists a schedule on the same date, whose time range coincides at some moment with what you want to create."),
@@ -438,7 +435,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     INNSIST_IMPORT_BOOKING_SIZE_RULE(2019, Series.DOMAIN_ERROR, "The current size or bookings is different from the initial size"),
     HOTEL_INVOICE_NUMBER_REPEATED(2020, Series.DOMAIN_ERROR, "Hotel Invoice Number already exists."),
     HOTEL_BOOKING_NUMBER_REPEATED(2021, Series.DOMAIN_ERROR, "Hotel Booking Number already exists."),
-    CANT_ADULTS_NOT_VALID(2022, Series.DOMAIN_ERROR, "Adults must be greater than 0.")
+    CANT_ADULTS_NOT_VALID(2022, Series.DOMAIN_ERROR, "Adults must be greater than 0."),
+    HOTEL_ACCESS(2100, Series.DOMAIN_ERROR,"The employee does not have access to the hotel."),
+    AGENCY_ACCESS(2101, Series.DOMAIN_ERROR,"TThe employee does not have access to the agency."),
     ;
 
     private static final DomainErrorMessage[] VALUES;
