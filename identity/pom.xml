@@ -33,6 +33,7 @@
                     <name>env</name>
                     <value>dev</value>
                 </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
@@ -67,7 +68,6 @@
                     <name>env</name>
                     <value>main</value>
                 </property>
-                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
