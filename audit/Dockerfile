@@ -20,7 +20,7 @@ RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prome
 COPY . /build
 
 # Argumento para establecer el profile segun el ambiente
-ARG ENVIRONMENT=dev
+ARG ENVIRONMENT=main
 ENV ENVIRONMENT ${ENVIRONMENT}
 
 # Copia las dependencias offline y el paquete
