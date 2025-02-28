@@ -172,7 +172,7 @@ async function onConfirmSignOut() {
           </li>
         </IfCan>
 
-        <li class="profile-item topbar-item">
+        <li class="profile-item topbar-item -mt-3 mr-2">
           <a
             v-ripple
             v-styleclass="{ selector: '@next', enterClass: 'hidden', enterActiveClass: 'px-scalein', leaveToClass: 'hidden', leaveActiveClass: 'px-fadeout', hideOnOutsideClick: true }"

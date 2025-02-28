@@ -910,10 +910,10 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
+    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 8px;">
       Virtual Credit Card Management
     </h5>
-    <div class="my-2 flex justify-content-end px-0">
+    <div class="my-1 flex justify-content-end px-0">
       <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
       <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Hotel Payment" @click="openHotelPayment()" />
@@ -937,9 +937,9 @@ onMounted(() => {
               </div>
             </template>
             <div class="grid">
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0 -mt-2">
                 <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5">
                     <label class="filter-label font-bold" for="">Merchant:</label>
                     <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll"
@@ -958,8 +958,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getMerchantList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Hotel:</label>
@@ -980,15 +979,14 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getHotelList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                 </div>
               </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0 -mt-2">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">CC Type:</label>
+                    <label class="filter-label font-bold w-5rem" for="">CC Type:</label>
                     <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll"
                       id="autocomplete"
@@ -1006,11 +1004,10 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getCCTypeList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold" for="">Status:</label>
+                    <label class="filter-label font-bold w-5rem" for="">Status:</label>
                     <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll"
                       id="autocomplete"
@@ -1028,8 +1025,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getStatusList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                 </div>
               </div>
@@ -1097,51 +1093,53 @@ onMounted(() => {
           Transactions
         </div>
       </div> -->
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @on-row-right-click="onRowRightClick"
-        @on-row-double-click="onDoubleClick($event)"
-      >
-        <template #column-icon="{ data: objData, column }">
-          <div class="flex align-items-center justify-content-center p-0 m-0">
-            <!-- <pre>{{ objData }}</pre> -->
-            <Button
-              v-if="objData.hasAttachments"
-              :icon="column.icon"
-              class="p-button-rounded p-button-text w-2rem h-2rem"
-              aria-label="Submit"
-              :style="{ color: '#000' }"
-            />
-          </div>
+      <div class="p-fluid -mt-3">
+        <DynamicTable
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @on-row-right-click="onRowRightClick"
+          @on-row-double-click="onDoubleClick($event)"
+        >
+          <template #column-icon="{ data: objData, column }">
+            <div class="flex align-items-center justify-content-center p-0 m-0">
+              <!-- <pre>{{ objData }}</pre> -->
+              <Button
+                v-if="objData.hasAttachments"
+                :icon="column.icon"
+                class="p-button-rounded p-button-text w-2rem h-2rem"
+                aria-label="Submit"
+                :style="{ color: '#000' }"
+              />
+            </div>
           <!-- style="color: #616161;" -->
           <!-- :style="{ 'background-color': '#00b816' }" -->
-        </template>
-        <template #column-status="{ data, column }">
-          <Badge
-            v-tooltip.top="data.status.name.toString()"
-            :value="data.status.name"
-            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
-          />
-        </template>
-        <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center">
-            <Row>
-              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
-              <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.commission)" />
-              <Column :footer="formatNumber(subTotals.net)" />
-              <Column :colspan="2" />
-            </Row>
-          </ColumnGroup>
-        </template>
-      </DynamicTable>
+          </template>
+          <template #column-status="{ data, column }">
+            <Badge
+              v-tooltip.top="data.status.name.toString()"
+              :value="data.status.name"
+              :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+            />
+          </template>
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center">
+              <Row>
+                <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
+                <Column :footer="formatNumber(subTotals.amount)" />
+                <Column :footer="formatNumber(subTotals.commission)" />
+                <Column :footer="formatNumber(subTotals.net)" />
+                <Column :colspan="2" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
+      </div>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />

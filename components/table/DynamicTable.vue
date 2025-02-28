@@ -699,6 +699,14 @@ defineExpose({ clearSelectedItems })
           console.log('column-resize-end', $event);
         }"
       >
+        <!-- :virtual-scroller-options="{
+        lazy: true,
+        onLazyLoad: (event) => {
+        console.log('event', event);
+
+        },
+        itemSize: 20, // Altura estimada de cada fila en píxeles
+        }" -->
         <!-- @row-select="onRowSelect"
         @row-unselect="onRowUnselect"
         @row-select-all="onRowSelectAll"
@@ -756,6 +764,7 @@ defineExpose({ clearSelectedItems })
             // display: column?.hidden ? 'none' : 'table-cell',
             maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
             // maxWidth: '20px !important',
+            height: '20px',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->

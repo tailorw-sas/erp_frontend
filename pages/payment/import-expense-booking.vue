@@ -60,7 +60,7 @@ const columns: IColumn[] = [
   { field: 'balance', header: 'Amount', type: 'text' },
   { field: 'transactionType', header: 'Trans.', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
-  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
+  { field: 'impSta', header: 'Imp. Status', tooltip: 'Import Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -429,60 +429,50 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
-              >
-                <div>
-                  Expense to Booking
-                </div>
-              </div>
-            </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-4rem">Hotel: <span class="p-error">*</span></label>
-                  <div class="w-full">
-                    <!-- <Dropdown
+      <div class="mt-3">
+        <AccordionTab>
+          <div class="grid p-0 m-0" style="margin: 0 auto;">
+            <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-4rem">Hotel: <span class="p-error">*</span></label>
+                <div class="w-full">
+                  <!-- <Dropdown
                       v-model="importModel.hotel"
                       class="w-full" :options="hotelList" option-label="name"
                       option-value="id" placeholder="Select Hotel" @change="activeImport()"
                     /> -->
-                    <DebouncedAutoCompleteComponent
-                      id="autocomplete"
-                      class="w-full h-2rem align-items-center"
-                      field="name"
-                      item-value="id"
-                      :model="importModel.hotel"
-                      :loading="objLoading.loadingHotel"
-                      :suggestions="[...hotelList]"
-                      @change="($event) => {
-                        importModel.hotel = $event
-                      }"
-                      @load="async($event) => {
-                        const filter: FilterCriteria[] = [
-                          {
-                            key: 'status',
-                            logicalOperation: 'AND',
-                            operator: 'EQUALS',
-                            value: 'ACTIVE',
-                          },
-                        ]
-                        const objQueryToSearch = {
-                          query: $event,
-                          keys: ['name', 'code'],
-                        }
-                        await getHotelListForSelectField(confHotelApi.moduleApi, confHotelApi.uriApi, objQueryToSearch, filter)
-                      }"
-                    />
-                  </div>
+                  <DebouncedAutoCompleteComponent
+                    id="autocomplete"
+                    class="w-full h-2rem align-items-center"
+                    field="name"
+                    item-value="id"
+                    :model="importModel.hotel"
+                    :loading="objLoading.loadingHotel"
+                    :suggestions="[...hotelList]"
+                    @change="($event) => {
+                      importModel.hotel = $event
+                    }"
+                    @load="async($event) => {
+                      const filter: FilterCriteria[] = [
+                        {
+                          key: 'status',
+                          logicalOperation: 'AND',
+                          operator: 'EQUALS',
+                          value: 'ACTIVE',
+                        },
+                      ]
+                      const objQueryToSearch = {
+                        query: $event,
+                        keys: ['name', 'code'],
+                      }
+                      await getHotelListForSelectField(confHotelApi.moduleApi, confHotelApi.uriApi, objQueryToSearch, filter)
+                    }"
+                  />
                 </div>
               </div>
+            </div>
 
-              <!-- <div class="col-12 md:col-3 align-items-center my-0 py-0">
+            <!-- <div class="col-12 md:col-3 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Total Amount: </label>
                   <div class="w-full">
@@ -491,54 +481,53 @@ onMounted(async () => {
                 </div>
               </div> -->
 
-              <div class="col-12 md:col-4 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-8rem">Import Data: <span class="p-error">*</span> </label>
-                  <div class="w-full">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
-                        class="w-full" show-clear aria-describedby="inputtext-help"
-                      />
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input
-                      ref="fileUpload" type="file" style="display: none;"
-                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile($event)"
-                    >
+            <div class="col-12 md:col-4 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-18rem">Import Data (XLS or XLSX): <span class="p-error">*</span> </label>
+                <div class="w-full">
+                  <div class="p-inputgroup w-full">
+                    <InputText
+                      ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                      class="w-full" show-clear aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                    </span>
                   </div>
-                </div>
-              </div>
 
-              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Attach File: <span class="p-error">*</span> </label>
-                  <div class="w-full">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="attachUpload" v-model="fileNames" placeholder="Choose file"
-                        class="w-full" show-clear aria-describedby="inputtext-help"
-                      />
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()" />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
-                    <!-- webkitdirectory -->
-                    <input
-                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf" multiple
-                      @change="onChangeAttachFile($event)"
-                    >
-                  </div>
+                  <input
+                    ref="fileUpload" type="file" style="display: none;"
+                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    @change="onChangeFile($event)"
+                  >
                 </div>
               </div>
             </div>
-          </accordionTab>
-        </accordion>
+
+            <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-11rem">Attach File (PDF): <span class="p-error">*</span> </label>
+                <div class="w-full">
+                  <div class="p-inputgroup w-full">
+                    <InputText
+                      ref="attachUpload" v-model="fileNames" placeholder="Choose file"
+                      class="w-full" show-clear aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()" />
+                    </span>
+                  </div>
+
+                  <!-- webkitdirectory -->
+                  <input
+                    ref="attachUpload" type="file" style="display: none;" accept="application/pdf" multiple
+                    @change="onChangeAttachFile($event)"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </accordionTab>
       </div>
 
       <DynamicTable
@@ -559,10 +548,6 @@ onMounted(async () => {
           :loading="options.loading"
           :disabled="uploadComplete || !importModel.hotel || !inputFile || !fileNames"
           @click="importExpenseBooking"
-        />
-        <Button
-          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
-          @click="clearForm"
         />
       </div>
     </div>

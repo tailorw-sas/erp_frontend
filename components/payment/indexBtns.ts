@@ -1,6 +1,7 @@
 import type { ComponentPublicInstance } from 'vue'
 import { ref } from 'vue'
 
+export const isPrintModalOpen = ref(false) // Estado del modal de Print
 type MenuRefType = Element | ComponentPublicInstance | null
 interface SvgIcon {
   svgHeight: string
@@ -45,11 +46,11 @@ const items = ref([
 ])
 
 const itemsImport = ref([
-  { label: 'Payment of bank', command: () => navigateTo('/payment/import-of-bank') },
-  { label: 'Payment of expense', command: () => navigateTo('/payment/import-of-expense') },
-  { label: 'Anti to Income', command: () => navigateTo('/payment/import-anti-income') },
-  { label: 'Expense To Booking', command: () => navigateTo('/payment/import-expense-booking') },
-  { label: 'Payment Detail', command: () => navigateTo('/payment/import-detail') },
+  { label: 'Payment Of Bank', command: () => window.open('/payment/import-of-bank'), disabled: false },
+  { label: 'Payment Of Expense', command: () => window.open('/payment/import-of-expense'), disabled: false },
+  { label: 'Anti To Income', command: () => window.open('/payment/import-anti-income') },
+  { label: 'Expense To Booking', command: () => window.open('/payment/import-expense-booking') },
+  { label: 'Payment Detail', command: () => window.open('/payment/import-detail') },
 ])
 
 const itemsExportToExcel = ref([
@@ -159,7 +160,7 @@ export const itemMenuList = ref<MenuItem[]>([
     btnAriaControls: 'overlay_menu5',
     btnDisabled: false,
     btnOnClick: () => {
-      navigateTo('/payment/print', { open: { target: '_blank' } })
+      isPrintModalOpen.value = true // Abrir modal de Print en lugar de navegar
     },
     menuId: 'overlay_menu5',
     menuRef: null as MenuRefType,

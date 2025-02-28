@@ -75,18 +75,17 @@ const confInvoiceApi = reactive({
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '50px', maxWidth: '150px' },
+  { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '25px', maxWidth: '150px' },
   { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
-  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', minWidth: '15px', maxWidth: '150px' },
-  { field: 'firstName', header: 'First Name', type: 'text', minWidth: '12px', maxWidth: '50px' },
-  { field: 'lastName', header: 'Last Name', type: 'text', minWidth: '12px', maxWidth: '50px' },
-  { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '50px' },
-  { field: 'roomType', header: 'Room Type', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', minWidth: '25px', maxWidth: '150px' },
+  { field: 'firstName', header: 'First Name', type: 'text', minWidth: '12px', maxWidth: '75px' },
+  { field: 'lastName', header: 'Last Name', type: 'text', minWidth: '12px', maxWidth: '75px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '75px' },
   { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '20px', maxWidth: '50px' },
   { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
   { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
-  { field: 'amount', header: 'Booking Amount', type: 'number', minWidth: '10px', maxWidth: '30px' },
+  { field: 'hotelInvoiceAmount', header: 'Hot. Amount', tooltip: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '40px' },
+  { field: 'amount', header: 'Book. Amount', tooltip: 'Booking Amount', type: 'number', minWidth: '10px', maxWidth: '40px' },
   { field: 'status', header: 'Status', type: 'slot-text', minWidth: '10px', maxWidth: '50px' }
 ]
 
@@ -95,8 +94,8 @@ const columnsExpandable: IColumn[] = [
   { field: 'lastName', header: 'Last Name', type: 'text' },
   { field: 'checkInDate', header: 'Check In', type: 'date' },
   { field: 'checkOutDate', header: 'Check Out', type: 'date' },
-  { field: 'childrens', header: 'Children', type: 'text' },
   { field: 'adults', header: 'Adults', type: 'text' },
+  { field: 'childrens', header: 'Children', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select' },
   { field: 'stayDays', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select' },
@@ -141,7 +140,7 @@ const messageForEmptyTable = ref('The data does not correspond to the selected c
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Bookings To Import From Innsist',
+  // tableName: 'Bookings To Import From Innsist',
   moduleApi: 'innsist',
   uriApi: 'booking',
   loading: false,
@@ -1087,111 +1086,113 @@ onMounted(async () => {
   </div>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-1">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
-              >
-                <div>
-                  Filters
-                </div>
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
+            <div
+              class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
+            >
+              <div>
+                Filters
               </div>
-            </template>
+            </div>
+          </template> -->
 
-            <div class="grid">
-              <div class="col-12 md:col-6 lg:col-6 flex pb-0">
-                <div class="flex flex-row gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">Agency:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll"
-                        id="autocomplete"
-                        class="w-full"
-                        field="name"
-                        item-value="id"
-                        :multiple="true"
-                        :max-selected-labels="1"
-                        :model="filterToSearch.agency"
-                        :suggestions="agencyList"
-                        @load="($event) => getAgencyList($event)"
-                        @change="($event) => {
-                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedMultiSelectComponent>
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2 w-full">
-                    <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
-                        class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
-                        :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+          <div class="grid">
+            <div class="col-12 md:col-6 lg:col-6 flex pb-0">
+              <div class="flex flex-row gap-2 w-full">
+                <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">Agency:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      class="w-full"
+                      field="name"
+                      item-value="id"
+                      :multiple="true"
+                      :max-selected-labels="1"
+                      :model="filterToSearch.agency"
+                      :suggestions="agencyList"
+                      @load="($event) => getAgencyList($event)"
+                      @change="($event) => {
+                        if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-5 flex pb-0">
-                <div class="flex flex-row gap-5 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">From:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2 ml-4">
-                    <label class="filter-label font-bold" for="">To:</label>
-                    <div class="w-full">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-1 flex pb-0 pr-2">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex align-items-center mx-3">
-                      <Button
-                        v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                        :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
-                      />
-                      <Button
-                        v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                        :loading="loadingSearch" @click="clearFilterToSearch"
-                      />
-                    </div>
+                <div class="flex align-items-center gap-2 w-full">
+                  <label class="filter-label font-bold ml-3" for="">Hotel:</label>
+                  <div class="w-full">
+                    <DebouncedAutoCompleteComponent
+                      v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
+                      class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
+                      :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedAutoCompleteComponent>
                   </div>
                 </div>
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
+
+            <div class="col-12 md:col-6 lg:col-5 flex pb-0">
+              <div class="flex flex-row gap-5 w-full">
+                <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">From:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <Calendar
+                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                      show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                    />
+                  </div>
+                </div>
+                <div class="flex align-items-center gap-2 ml-4">
+                  <label class="filter-label font-bold" for="">To:</label>
+                  <div class="w-full">
+                    <Calendar
+                      v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-1 flex pb-0 pr-2">
+              <div class="flex w-full">
+                <div class="flex flex-row w-full">
+                  <div class="flex align-items-center mx-3">
+                    <Button
+                      v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
+                      :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
+                    />
+                    <Button
+                      v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                      :loading="loadingSearch" @click="clearFilterToSearch"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </AccordionTab>
+        <!-- </Accordion> -->
       </div>
+      <div class="mt-2" />
+
       <div v-if="showDataTable" class="p-0">
         <DynamicTable
           ref="resultTable"
@@ -1311,7 +1312,7 @@ onMounted(async () => {
       <div class="flex align-items-end justify-content-end">
         <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-save" :disabled="disabledImport" @click="importBookings" />
         <Button v-tooltip.top="'View Errors Search'" :outlined="disabledSearchErrors" severity="danger" class="w-3rem mx-2" icon="pi pi-times-circle" :disabled="disabledSearchErrors" @click="openErrorsSearch($event)" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
       </div>
     </div>
   </div>

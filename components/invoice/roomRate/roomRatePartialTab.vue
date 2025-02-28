@@ -511,7 +511,7 @@ function ClearForm() {
 }
 
 function onRowRightClick(event: any) {
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
     return
   }
   selectedRoomRate.value = event.data
@@ -901,7 +901,7 @@ watch(() => props.bookingObj, () => {
         // if (route.query.type === InvoiceType.INCOME || props.invoiceObj?.invoiceType?.id === InvoiceType.INCOME) {
         //   return;
         // }
-        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED){
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED){
         //   return;
         // }
         // openEditDialog($event)

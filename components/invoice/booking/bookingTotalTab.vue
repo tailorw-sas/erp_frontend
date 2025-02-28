@@ -2134,7 +2134,7 @@ onMounted(() => {
         //   return;
         // }
 
-        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        // if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
         //   return;
         // }
 

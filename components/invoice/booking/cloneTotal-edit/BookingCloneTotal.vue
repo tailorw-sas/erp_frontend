@@ -859,8 +859,8 @@ function onRowRightClick(event: any) {
   // Si el estado de la factura no es procesada, no se puede editar
   // Pendiente
 
-  // !props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCECSED
-  // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  // !props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCESSED
+  // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCESSED) {
   //   return
   // }
   selectedRoomRate.value = event.data
@@ -1614,7 +1614,7 @@ onMounted(async () => {
                           //   return;
                           // }
 
-                          // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCECSED){
+                          // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCESSED){
                           //   return;
                           // }
                           openEditDialog($event)

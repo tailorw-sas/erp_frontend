@@ -1467,9 +1467,8 @@ async function createScheduler(item: { [key: string]: any }) {
   if (item) {
     loadingSaveScheduler.value = true
     const payload = await itemToPayloadScheduler(item)
-    // toast.add({ severity: 'info', detail: payload, life: 5000 })
-    // const response = await GenericService.create(optionsScheduler.value.moduleApi, optionsScheduler.value.uriApi, payload)
-    // return response
+    console.log(payload)
+    await GenericService.create(optionsScheduler.value.moduleApi, optionsScheduler.value.uriApi, payload)
   }
 }
 async function itemToPayloadScheduler(item: { [key: string]: any }) {
@@ -1558,7 +1557,7 @@ onMounted(() => {
   </div>
 
   <div class="grid w-full">
-    <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9 py-4">
+    <div class="col-12 order-0 md:order-1 md:col-6 xl:col-8 py-4">
       <div class="card p-0 mb-1">
         <Accordion :active-index="0" class="mb-1">
           <AccordionTab>
@@ -1617,7 +1616,7 @@ onMounted(() => {
       />
     </div>
 
-    <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3 py-3">
+    <div class="col-12 order-1 md:order-0 md:col-6 xl:col-4 py-3">
       <div class="font-bold text-lg px-4 bg-primary custom-card-header mt-2">
         {{ formTitleScheduler }}
       </div>
