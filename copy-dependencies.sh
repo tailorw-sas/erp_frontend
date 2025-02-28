@@ -67,13 +67,13 @@ for ms in "${microservices[@]}"; do
     ||  "$ms" == "report"
     ||  "$ms" == "scheduler"
     ||  "$ms" == "tcaInnsist" ]]; then
-        artifacts=("share-dev")
+        artifacts=("share")
     elif [[ "$ms" == "cloudBridges"
     || "$ms" == "creditCard"
     ||  "$ms" == "invoicing"
     ||  "$ms" == "payment"
     ||  "$ms" == "settings" ]]; then
-        artifacts=("share-dev" "audit-agent-dev")
+        artifacts=("share" "audit-agent")
     else
         log "${YELLOW}⚠️ No se definió un mapeo de artefactos para el microservicio: $ms. Saltando...${NC}"
         continue

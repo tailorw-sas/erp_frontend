@@ -37,14 +37,14 @@ ENV PACKAGE_TOKEN ${PACKAGE_TOKEN}
 COPY rc-settings.xml settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN |g" settings.xml
 
-ARG ENVIRONMENT=dev
+ARG ENVIRONMENT=main
 ENV ENVIRONMENT ${ENVIRONMENT}
 
 # Define argumentos para controlar el comportamiento y parametrizar la copia
 ARG DOCKER_HUB=false
 ARG ARTIFACT_VERSION=0.0.1-SNAPSHOT
 # Lista de artefactos a copiar (separados por espacios)
-ARG ARTIFACTS="share-dev"
+ARG ARTIFACTS="share"
 
 RUN if [ "$DOCKER_HUB" = "false" ]; then \
       echo "Entorno local detectado, copiando artefactos locales..."; \
