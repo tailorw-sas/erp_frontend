@@ -8,7 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import org.springframework.context.ApplicationEventPublisher;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,6 +32,8 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
     }
 
     private boolean validateDateFormat(BookingRow obj,List<ErrorField> errorFieldList){
+        //TODO Validar que el transaction date este en el rango del close operation
+
         if (Objects.isNull(obj.getTransactionDate()) || obj.getTransactionDate().isEmpty()){
             errorFieldList.add(new ErrorField("Transaction Date","Transaction Date can't be empty"));
             return false;
@@ -51,7 +53,7 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
         if (!hotelService.existByCode(bookingRow.getManageHotelCode())){
             return false;
         }
-        ManageHotelDto manageHotelDto = hotelService.findByCode(bookingRow.getManageHotelCode());
+        ManageHotelDto manageHotelDto = hotelService.findByCode(InvoiceUtils.upperCaseAndTrim(bookingRow.getManageHotelCode()));
         InvoiceCloseOperationDto invoiceCloseOperationDto = closeOperationService.findActiveByHotelId(manageHotelDto.getId());
         LocalDate beginDate= invoiceCloseOperationDto.getBeginDate();
         LocalDate endDate = invoiceCloseOperationDto.getEndDate();
@@ -62,4 +64,5 @@ public class ImportBookingTransactionDateValidator extends ExcelRuleValidator<Bo
         }
         return !result;
     }
+
 }

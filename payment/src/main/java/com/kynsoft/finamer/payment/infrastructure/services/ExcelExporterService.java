@@ -241,23 +241,23 @@ public class ExcelExporterService {
         headerRow1.createCell(0).setCellValue("Total $"  + decimalFormat.format(pBalance));
         headerRow1.getCell(0).setCellStyle(style);
 
-        headerRow1.createCell(3).setCellValue("Transit $" + transitImpStatus);
+        headerRow1.createCell(3).setCellValue("Transit $" + decimalFormat.format(transitImpStatus));
         headerRow1.getCell(3).setCellStyle(style);
 
-        headerRow1.createCell(4).setCellValue("Can. $" + cancelledImpStatus);
+        headerRow1.createCell(4).setCellValue("Can. $" + decimalFormat.format(cancelledImpStatus));
         headerRow1.getCell(4).setCellStyle(style);
 
-        headerRow1.createCell(5).setCellValue("Conf. $" + confirmedImpStatus);
+        headerRow1.createCell(5).setCellValue("Conf. $" + decimalFormat.format(confirmedImpStatus));
         headerRow1.getCell(5).setCellStyle(style);
 
-        headerRow1.createCell(6).setCellValue("Applied. $" + appliedImpStatus);
+        headerRow1.createCell(6).setCellValue("Applied. $" + decimalFormat.format(appliedImpStatus));
         headerRow1.getCell(6).setCellStyle(style);
 
         headerRow1.createCell(10).setCellValue("Dep. $" + decimalFormat.format(dAmount));
         headerRow1.getCell(10).setCellStyle(style);
         headerRow1.createCell(11).setCellValue("Appl. $" + decimalFormat.format(applied));
         headerRow1.getCell(11).setCellStyle(style);
-        headerRow1.createCell(12).setCellValue("N. Appl." + decimalFormat.format(notApplied));
+        headerRow1.createCell(12).setCellValue("N. Appl. $" + decimalFormat.format(notApplied));
         headerRow1.getCell(12).setCellStyle(style);
     }
 

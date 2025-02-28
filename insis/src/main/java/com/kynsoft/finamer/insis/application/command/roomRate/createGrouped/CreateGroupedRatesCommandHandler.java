@@ -193,9 +193,11 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
                 rateCommands.get(0).getRateByChild(),
                 rateCommands.get(0).getRemarks(),
                 rateCommands.get(0).getRoomNumber(),
-                rateCommands.get(0).getHotelInvoiceAmount() == 0
-                        || rateCommands.get(0).getQuote() == 0 ? 0
-                        :Math.round((rateCommands.get(0).getHotelInvoiceAmount() / rateCommands.get(0).getQuote()) * 100.0) / 100.0,
+                rateCommands.get(0).getQuote() == 0 ? 0 : rateCommands.stream()
+                        .mapToDouble(roomRate -> {
+                            return Math.round((roomRate.getHotelInvoiceAmount() / roomRate.getQuote()) * 100.0) / 100.0;
+                        }).sum(),
+                        //:Math.round((rateCommands.get(0).getHotelInvoiceAmount() / rateCommands.get(0).getQuote()) * 100.0) / 100.0,
                 rateCommands.get(0).getHotelInvoiceNumber(),
                 rateCommands.get(0).getInvoiceFolioNumber(),
                 rateCommands.get(0).getQuote(),

@@ -6,10 +6,11 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -26,11 +27,13 @@ import com.kynsoft.finamer.payment.infrastructure.excel.event.createPayment.Crea
 import com.kynsoft.finamer.payment.infrastructure.excel.event.deposit.DepositEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailValidatorFactory;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
 import io.jsonwebtoken.lang.Assert;
 import java.util.Comparator;
+import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -55,6 +58,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private final IPaymentDetailService paymentDetailService;
     private final PaymentImportDetailErrorRepository detailErrorRepository;
     private final IManageBookingService bookingService;
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentDetailValidatorFactory paymentDetailValidatorFactory,
@@ -64,7 +68,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             IManagePaymentTransactionTypeService transactionTypeService,
             IPaymentService paymentService, IPaymentDetailService paymentDetailService,
             PaymentImportDetailErrorRepository detailErrorRepository,
-            IManageBookingService bookingService) {
+            IManageBookingService bookingService,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
@@ -75,18 +80,24 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         this.paymentDetailService = paymentDetailService;
         this.detailErrorRepository = detailErrorRepository;
         this.bookingService = bookingService;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
+        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
+        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
+
         paymentDetailValidatorFactory.createValidators();
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
         ExcelBean<PaymentDetailRow> excelBean = new ExcelBean<>(excelBeanReader);
         for (PaymentDetailRow row : excelBean) {
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
+            row.setAgencys(agencys);
+            row.setHotels(hotels);
             if (Objects.nonNull(request.getPaymentId())
                     && !request.getPaymentId().isEmpty()) {
                 row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
@@ -96,6 +107,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 this.totalProcessRow++;
             }
         }
+    }
+
+    private void clearCache() {
+        this.transactionTypeService.clearCache();
     }
 
     @Override
@@ -125,71 +140,129 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             cacheList.forEach(paymentImportCache -> {
                 ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = transactionTypeService.findByCode(paymentImportCache.getTransactionId());
                 Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
-                PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
-                ManageBookingDto bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
+                //PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
+                PaymentProjectionSimple paymentDto = paymentService.findPaymentIdCacheable(Long.parseLong(paymentImportCache.getPaymentId()));
+                BookingProjectionControlAmountBalance bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findSimpleBookingByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
+                if (bookingDto != null && bookingDto.getBookingAmountBalance() == 0) {
+                    sendToDeposit(paymentImportCache, paymentDto);
+                    return;
+                }
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     boolean applyPayment = true;
                     if (bookingDto == null) {
                         applyPayment = false;
                     }
-                    PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getAnti()));
+                    //PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getAnti()));
+                    PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(Integer.parseInt(paymentImportCache.getAnti()));
                     this.sendToCreateApplyDeposit(paymentDetailDto.getId(),
                             Double.parseDouble(paymentImportCache.getPaymentAmount()),
                             UUID.fromString(request.getEmployeeId()),
                             managePaymentTransactionTypeDto.getId(),
                             null,
                             getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                            bookingDto != null ? bookingDto.getId() : null,
+                            bookingDto != null ? bookingDto.getBookingId() : null,
                             applyPayment
                     );
 
                 } else {
-                    boolean applyPayment = true;
                     if (bookingDto == null) {
-                        applyPayment = false;
-                    }
+                        try {
+                            if (this.bookingService.countByCoupon(paymentImportCache.getCoupon()) > 1) {
+                                //todo: implementar cuando existe mas de un booking con este coupon
+                                ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByPaymentInvoice();
+                                String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
 
-                    //cash
-                    if (managePaymentTransactionTypeDto.getCash()) {
-                        this.sendCreatePaymentDetail(
-                                paymentDto.getId(),
-                                bookingDto.getAmountBalance(),
-                                //Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                UUID.fromString(request.getEmployeeId()),
-                                managePaymentTransactionTypeDto.getId(),
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto != null ? bookingDto.getId() : null,
-                                applyPayment);
-
-                        //Crear el deposit.
-                        double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - bookingDto.getAmountBalance();
-                        if (restAmount > 0) {
-                            DepositEvent depositEvent = new DepositEvent(this);
-                            depositEvent.setAmount(restAmount);
-                            depositEvent.setPaymentDto(paymentDto);
-                            //depositEvent.setRemark("Create deposit in import details.");
-                            depositEvent.setRemark(
-                                    "" + paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : ""
-                                       + " " + paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : ""
-                                       + " " + paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : ""
-                                       + " " + paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : ""
-                            );
-                            this.applicationEventPublisher.publishEvent(depositEvent);
+                                //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
+                                createDetailAndDeposit(paymentImportCache, null, transactionTypeDto, paymentDto, request, false, Double.parseDouble(paymentImportCache.getPaymentAmount()), remarks);
+                            } else {
+                                BookingProjectionControlAmountBalance bookingProjection = this.bookingService.findByCoupon(paymentImportCache.getCoupon());
+                                if (bookingProjection == null) {
+                                    //todo: implementar cuando no existe el booking
+                                    DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), true, "#coupon not found");
+                                    this.applicationEventPublisher.publishEvent(depositEvent);
+                                } else {
+                                    //todo: implementar el caso de que existe el booking
+                                    //mismo flujo de cuando existe el booking por el id, en este caso el que se encuentra por el coupon
+                                    if (bookingProjection.getBookingAmountBalance() == 0) {
+                                        sendToDeposit(paymentImportCache, paymentDto);
+                                        return;
+                                    }
+                                    createDetailAndDeposit(paymentImportCache, bookingProjection, managePaymentTransactionTypeDto, paymentDto, request, true, Double.parseDouble(paymentImportCache.getPaymentAmount()), getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
+                                }
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
                         }
                     } else {
-                        ///Other deductions
-                        this.sendCreatePaymentDetail(paymentDto.getId(),
-                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                UUID.fromString(request.getEmployeeId()),
-                                managePaymentTransactionTypeDto.getId(),
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto != null ? bookingDto.getId() : null,
-                                applyPayment);
+                        createDetailAndDeposit(paymentImportCache, bookingDto, managePaymentTransactionTypeDto, paymentDto, request, true, Double.parseDouble(paymentImportCache.getPaymentAmount()), getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
                     }
                 }
             });
             pageable = pageable.next();
         } while (cacheList.hasNext());
+        this.clearCache();
+    }
+
+    private void sendToDeposit(PaymentImportCache paymentImportCache, PaymentProjectionSimple paymentDto) {
+        PaymentProjection paymentProjection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());
+        double rest = paymentProjection.getPaymentBalance() - Double.parseDouble(paymentImportCache.getPaymentAmount());
+        if (rest >= 0) {
+            DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), false, "");
+            this.applicationEventPublisher.publishEvent(depositEvent);
+        }
+        return;
+    }
+
+    private void createDetailAndDeposit(PaymentImportCache paymentImportCache, BookingProjectionControlAmountBalance bookingDto, ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto, PaymentProjectionSimple paymentDto, PaymentImportDetailRequest request, boolean applyPayment, double amount, String remarks) {
+        //cash
+        if (bookingDto != null) {
+            amount = Math.min(bookingDto.getBookingAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
+        }
+
+        if (managePaymentTransactionTypeDto.getCash() || managePaymentTransactionTypeDto.getPaymentInvoice()) {
+            this.sendCreatePaymentDetail(
+                    paymentDto.getId(),
+                    amount,
+                    UUID.fromString(request.getEmployeeId()),
+                    managePaymentTransactionTypeDto.getId(),
+                    remarks,
+                    bookingDto != null ? bookingDto.getBookingId() : null,
+                    applyPayment);
+
+            //Crear el deposit.
+            double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
+            if (restAmount > 0) {
+                DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, restAmount, false, "");
+                this.applicationEventPublisher.publishEvent(depositEvent);
+            }
+        } else {
+            ///Other deductions
+            this.sendCreatePaymentDetail(paymentDto.getId(),
+                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                    UUID.fromString(request.getEmployeeId()),
+                    managePaymentTransactionTypeDto.getId(),
+                    remarks,
+                    bookingDto != null ? bookingDto.getBookingId() : null,
+                    applyPayment);
+        }
+    }
+
+    private DepositEvent getDepositEvent(PaymentImportCache paymentImportCache, PaymentProjectionSimple paymentDto, double restAmount, boolean byCoupon, String remarks) {
+        DepositEvent depositEvent = new DepositEvent(this);
+        depositEvent.setAmount(restAmount);
+        depositEvent.setPaymentDto(paymentDto);
+        //depositEvent.setRemark("Create deposit in import details.");
+        String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
+        String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
+        String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
+        String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
+
+        if (byCoupon) {
+            depositEvent.setRemark(remarks);
+        } else {
+            depositEvent.setRemark("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
+        }
+        return depositEvent;
     }
 
     private String getRemarks(PaymentImportCache paymentImportCache, ManagePaymentTransactionTypeDto transactionTypeDto) {
@@ -250,4 +323,5 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         applicationEventPublisher.publishEvent(applyDepositEvent);
 
     }
+
 }

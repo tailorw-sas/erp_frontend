@@ -23,4 +23,6 @@ public interface IManageHotelService {
     boolean existByCode(String hotelCode);
 
     ManageHotelDto findByCode(String hotelCode);
+
+    List<ManageHotelDto> findByIds(List<UUID> ids);
 }

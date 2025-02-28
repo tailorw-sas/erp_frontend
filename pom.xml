@@ -12,10 +12,11 @@
     <dependencies>
     </dependencies>
     <modules>
+        <module>share</module>
+        <module>audit-agent</module>
         <module>config</module>
         <module>gateway</module>
         <module>registry</module>
-        <module>share</module>
         <module>identity</module>
         <module>cloudBridges</module>
         <module>report</module>
@@ -25,8 +26,7 @@
         <module>insis</module>
         <module>creditCard</module>
         <module>audit</module>
-        <module>audit-agent</module>
-    <module>tcaInnsist</module>
+        <module>tcaInnsist</module>
         <module>scheduler</module>
     </modules>
     <build>

@@ -21,8 +21,8 @@ public class PaymentBankValidatorFactory extends IValidatorFactory<PaymentBankRo
     private final ApplicationEventPublisher paymentEventPublisher;
     private final CommonImportValidators commonImportValidators;
 
-    private  PaymentImportAmountValidator paymentImportAmountValidator;
-    private  PaymentImportBankAccountValidator paymentImportBankAccountValidator;
+    private PaymentImportAmountValidator paymentImportAmountValidator;
+    private PaymentImportBankAccountValidator paymentImportBankAccountValidator;
 
     private final IManageBankAccountService bankAccountService;
 
@@ -30,10 +30,10 @@ public class PaymentBankValidatorFactory extends IValidatorFactory<PaymentBankRo
     private final IManageAgencyService agencyService;
 
     public PaymentBankValidatorFactory(ApplicationEventPublisher paymentEventPublisher,
-                                       CommonImportValidators commonImportValidators,
-                                       IManageBankAccountService bankAccountService,
-                                       IManageHotelService manageHotelService,
-                                       IManageAgencyService agencyService) {
+            CommonImportValidators commonImportValidators,
+            IManageBankAccountService bankAccountService,
+            IManageHotelService manageHotelService,
+            IManageAgencyService agencyService) {
         super(paymentEventPublisher);
         this.paymentEventPublisher = paymentEventPublisher;
         this.commonImportValidators = commonImportValidators;
@@ -44,31 +44,33 @@ public class PaymentBankValidatorFactory extends IValidatorFactory<PaymentBankRo
 
     @Override
     public void createValidators() {
-        paymentImportAmountValidator =new PaymentImportAmountValidator(paymentEventPublisher);
-      paymentImportBankAccountValidator = new PaymentImportBankAccountValidator(applicationEventPublisher,
-              bankAccountService,manageHotelService);
+        paymentImportAmountValidator = new PaymentImportAmountValidator(paymentEventPublisher);
+        paymentImportBankAccountValidator = new PaymentImportBankAccountValidator(applicationEventPublisher,
+                bankAccountService, manageHotelService);
     }
 
     @Override
     public boolean validate(PaymentBankRow toValidate) {
-               boolean isAgencyValid= commonImportValidators.validateAgency(toValidate.getManageAgencyCode(),errorFieldList);
-                commonImportValidators.validateHotel(toValidate.getManageHotelCode(),errorFieldList);
-                commonImportValidators.validateRemarks(toValidate.getRemarks(),errorFieldList);
-                boolean isValidTransactionDate=commonImportValidators.validateTransactionDate(toValidate.getTransactionDate(),
-                        "dd/MM/yyyy", errorFieldList) ;
-                commonImportValidators.validateCloseOperation(toValidate.getTransactionDate(),
-                        toValidate.getManageHotelCode(),"dd/MM/yyyy",errorFieldList,isValidTransactionDate) ;
-                paymentImportAmountValidator.validate(toValidate,errorFieldList);
-                paymentImportBankAccountValidator.validate(toValidate,errorFieldList);
+        boolean isAgencyValid = commonImportValidators.validateAgency(toValidate.getManageAgencyCode(), errorFieldList, toValidate.getAgencys());
+        commonImportValidators.validateHotel(toValidate.getManageHotelCode(), errorFieldList, toValidate.getHotels());
+        commonImportValidators.validateRemarks(toValidate.getRemarks(), errorFieldList);
+        boolean isValidTransactionDate = commonImportValidators.validateTransactionDate(toValidate.getTransactionDate(),
+                "dd/MM/yyyy", errorFieldList);
+        commonImportValidators.validateCloseOperation(toValidate.getTransactionDate(),
+                toValidate.getManageHotelCode(), "dd/MM/yyyy", errorFieldList, isValidTransactionDate);
+        paymentImportAmountValidator.validate(toValidate, errorFieldList);
+        paymentImportBankAccountValidator.validate(toValidate, errorFieldList);
+
         if (this.hasErrors()) {
-            if (isAgencyValid){
-                ManageAgencyDto agencyDto =agencyService.findByCode(toValidate.getManageAgencyCode());
+            if (isAgencyValid) {
+                ManageAgencyDto agencyDto = agencyService.findByCode(toValidate.getManageAgencyCode());
                 ManageClientDto clientDto = agencyDto.getClient();
-                if (Objects.nonNull(clientDto))
+                if (Objects.nonNull(clientDto)) {
                     toValidate.setManageClientCode(clientDto.getName());
+                }
             }
             PaymentImportBankAccountErrorEvent paymentImportErrorEvent = new PaymentImportBankAccountErrorEvent(
-                    new PaymentBankRowError(null,toValidate.getRowNumber(), toValidate.getImportProcessId(),
+                    new PaymentBankRowError(null, toValidate.getRowNumber(), toValidate.getImportProcessId(),
                             errorFieldList, toValidate));
             this.sendErrorEvent(paymentImportErrorEvent);
         }

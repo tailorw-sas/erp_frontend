@@ -24,6 +24,79 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>dev</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>share-dev</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>audit-agent-dev</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>qa</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>qa</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>share-qa</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>audit-agent-qa</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>main</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>main</value>
+                </property>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>share</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.kynsoft.finamer</groupId>
+                    <artifactId>audit-agent</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -44,17 +117,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>share</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.kynsoft.finamer</groupId>
-            <artifactId>audit-agent-dev</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
+
         <!-- Dependencia de iText 7 para crear PDFs -->
         <dependency>
             <groupId>com.itextpdf</groupId>
@@ -81,11 +144,6 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-resource-server</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
         <dependency>

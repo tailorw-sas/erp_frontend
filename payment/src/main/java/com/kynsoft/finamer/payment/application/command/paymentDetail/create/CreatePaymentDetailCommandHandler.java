@@ -128,6 +128,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             RulesChecker.checkRule(new CheckAmountIfGreaterThanPaymentBalanceRule(command.getAmount(), paymentDto.getPaymentBalance(), paymentDto.getDepositAmount()));
             UpdateIfNotNull.updateDouble(paymentDto::setDepositAmount, paymentDto.getDepositAmount() + command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setDepositBalance, paymentDto.getDepositBalance() + command.getAmount(), updatePayment::setUpdate);
+            UpdateIfNotNull.updateBoolean(paymentDto::setHasDetailTypeDeposit, true, paymentDto.isHasDetailTypeDeposit(), updatePayment::setUpdate);
             if (paymentDto.getNotApplied() == null) {
                 paymentDto.setNotApplied(0.0);
             }

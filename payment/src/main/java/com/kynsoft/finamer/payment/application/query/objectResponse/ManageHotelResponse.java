@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.payment.infrastructure.identity.projection.HotelProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,4 +34,13 @@ public class ManageHotelResponse implements IResponse {
         this.autoApplyCredit = dto.getAutoApplyCredit();
     }
 
+    public ManageHotelResponse(HotelProjection hotel) {
+        this.id = hotel.getId();
+        this.code = hotel.getCode();
+        this.name = hotel.getName();
+        this.status = hotel.getStatus();
+        this.applyByTradingCompany = null;
+        this.manageTradingCompany = null;
+        this.autoApplyCredit = null;
+    }
 }

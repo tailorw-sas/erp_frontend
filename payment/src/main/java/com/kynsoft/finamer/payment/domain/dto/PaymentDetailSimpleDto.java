@@ -17,4 +17,6 @@ public class PaymentDetailSimpleDto {
     private double applyDepositValue;
     private boolean deposit;
     private UUID paymentId;
+    private UUID paymentAgency;
+    private UUID paymentHotel;
 }

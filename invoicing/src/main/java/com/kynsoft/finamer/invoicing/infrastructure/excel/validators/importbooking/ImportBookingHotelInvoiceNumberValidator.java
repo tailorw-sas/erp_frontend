@@ -8,6 +8,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,12 +37,14 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         try {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
-            if (manageHotelDto.isVirtual() && Objects.isNull(obj.getHotelInvoiceNumber())) {
-                errorFieldList.add(new ErrorField("HotelInvoiceNumber", " Hotel Invoice Number can't be empty"));
+            if (!manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+                //errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
                 return false;
             }
-            if (!manageHotelService.existByCode(obj.getManageHotelCode())) {
+
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
+            if (manageHotelDto.isVirtual() && Objects.isNull(obj.getHotelInvoiceNumber())) {
+                errorFieldList.add(new ErrorField("HotelInvoiceNumber", " Hotel Invoice Number can't be empty"));
                 return false;
             }
 
@@ -50,11 +53,11 @@ public class ImportBookingHotelInvoiceNumberValidator extends ExcelRuleValidator
                 return false;
             }
 
-            List<Optional<BookingImportCache>> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
-            if (this.checkDuplicateHotelInvoiceNumbers(list)) {
-                errorFieldList.add(new ErrorField("HotelInvoiceNumber", "The Hotel Invoice Number exists for another date within this import."));
-                return false;
-            }
+//            List<Optional<BookingImportCache>> list = this.cacheRedisRepository.findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(obj.getHotelInvoiceNumber(), obj.getImportProcessId());
+//            if (this.checkDuplicateHotelInvoiceNumbers(list)) {
+//                errorFieldList.add(new ErrorField("HotelInvoiceNumber", "The Hotel Invoice Number exists for another date within this import."));
+//                return false;
+//            }
             if (manageHotelDto.isVirtual() && manageBookingService.existsByHotelInvoiceNumber(obj.getHotelInvoiceNumber(), manageHotelDto.getId())) {
                 errorFieldList.add(new ErrorField("HotelInvoiceNumber", "Hotel Invoice Number already exists"));
                 return false;

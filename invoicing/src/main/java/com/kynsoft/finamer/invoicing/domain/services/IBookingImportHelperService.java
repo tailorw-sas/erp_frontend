@@ -15,4 +15,9 @@ public interface IBookingImportHelperService {
 
     boolean canImportRow(BookingRow bookingRow,EImportType importType);
 
+    void saveCachingImportBooking(BookingRow bookingRow);
+
+    void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean insisit);
+
+    void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insisit);
 }

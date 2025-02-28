@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStatusService {
@@ -108,6 +109,27 @@ public class ManagePaymentStatusServiceServiceImpl implements IManagePaymentStat
 
     @Override
     public ManagePaymentStatusDto findByApplied() {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByApplied();
+        if (result.isPresent()) {
+            return result.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentStatus findPaymentStatusByApplied() {
+        Optional<ManagePaymentStatus> result = this.repositoryQuery.findByApplied();
+        if (result.isPresent()) {
+            return result.get();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGER_PAYMENT_STATUS_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    @Cacheable(value = "paymentStatusCache", unless = "#result == null")
+    public ManagePaymentStatusDto findByAppliedCacheable() {
         Optional<ManagePaymentStatus> result = this.repositoryQuery.findByApplied();
         if (result.isPresent()) {
             return result.get().toAggregate();

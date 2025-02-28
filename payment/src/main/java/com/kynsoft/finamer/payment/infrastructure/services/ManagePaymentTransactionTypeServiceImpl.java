@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTransactionTypeService {
@@ -66,8 +68,15 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
+    @Cacheable(cacheNames = "paymentTransactionType", key = "#code", unless = "#result == null")
     public ManagePaymentTransactionTypeDto findByCode(String code) {
-            return repositoryQuery.findByCode(code).map(ManagePaymentTransactionType::toAggregate).orElse(null);
+        return repositoryQuery.findByCode(code).map(ManagePaymentTransactionType::toAggregate).orElse(null);
+    }
+
+    @CacheEvict(allEntries = true, value = "paymentTransactionType")
+    @Override
+    public void clearCache() {
+        System.out.println("Clearing paymentTransactionType cache");
     }
 
     @Override
@@ -115,6 +124,17 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
+    @Cacheable(value = "paymentTransactionTypeCache", unless = "#result == null")
+    public ManagePaymentTransactionTypeDto findByPaymentInvoiceCacheable() {
+        Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findByPaymentInvoice();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
     public ManagePaymentTransactionTypeDto findByDeposit() {
         Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findByDeposit();
         if (optionalEntity.isPresent()) {
@@ -127,6 +147,16 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     @Override
     public ManagePaymentTransactionTypeDto findByApplyDeposit() {
         Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findByApplyDeposit();
+        if (optionalEntity.isPresent()) {
+            return optionalEntity.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public ManagePaymentTransactionTypeDto findByApplyDepositAndDefaults() {
+        Optional<ManagePaymentTransactionType> optionalEntity = repositoryQuery.findByApplyDepositAndDefaults();
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
         }

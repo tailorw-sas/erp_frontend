@@ -16,6 +16,6 @@ public class GetSearchManageAgencyQueryHandler implements IQueryHandler<GetSearc
 
     @Override
     public PaginatedResponse handle(GetSearchManageAgencyQuery query) {
-        return service.search(query.getPageable(), query.getFilter());
+        return service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
     }
 }

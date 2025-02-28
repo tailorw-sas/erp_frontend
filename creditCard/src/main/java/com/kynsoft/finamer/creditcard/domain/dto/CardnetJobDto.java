@@ -23,7 +23,8 @@ public class CardnetJobDto {
     private Integer numberOfAttempts;
     private LocalDateTime createdAt;
 
-    public CardnetJobDto(UUID id, UUID transactionId, String session, String sessionKey, Boolean isProcessed, Integer numberOfAttempts) {
+    public CardnetJobDto(UUID id, UUID transactionId, String session, String sessionKey, Boolean isProcessed,
+                         Integer numberOfAttempts) {
         this.id = id;
         this.transactionId = transactionId;
         this.session = session;

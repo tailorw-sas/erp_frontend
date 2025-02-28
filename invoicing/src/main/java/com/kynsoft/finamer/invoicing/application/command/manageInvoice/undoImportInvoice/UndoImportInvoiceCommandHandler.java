@@ -35,10 +35,10 @@ public class UndoImportInvoiceCommandHandler implements ICommandHandler<UndoImpo
         for (UUID id : command.getIds()) {
             ManageInvoiceDto delete = this.service.findById(id);
             if (delete.getManageInvoiceStatus().getProcessStatus()) {
-                if (delete.getBookings() != null || !delete.getBookings().isEmpty()) {
+                if (delete.getBookings() != null && !delete.getBookings().isEmpty()) {
                     command.getMediator().send(new UndoImportInvoiceBookingCommand(delete.getBookings(), command.getMediator()));
                 }
-                if (delete.getAttachments() != null || !delete.getAttachments().isEmpty()) {
+                if (delete.getAttachments() != null && !delete.getAttachments().isEmpty()) {
                     command.getMediator().send(new UndoImportInvoiceAttachmentCommand(delete.getAttachments()));
                 }
                 ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findByCanceledStatus();

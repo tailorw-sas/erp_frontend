@@ -27,6 +27,8 @@ public interface IBookingService {
 
     List<BookingDto> findAllByIds(List<UUID> idList);
 
+    List<BookingDto> findAllByIdsToImport(List<UUID> idList);
+
     BookingDto findByTcaId(ManageHotelDto hotelDto, LocalDate invoicingDate, String reservationNumber, String couponNumber);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);

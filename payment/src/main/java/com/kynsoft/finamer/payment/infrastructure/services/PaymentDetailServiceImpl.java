@@ -10,6 +10,7 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentDetailResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails.PaymentDetailSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
@@ -24,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class PaymentDetailServiceImpl implements IPaymentDetailService {
@@ -38,6 +40,11 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     public PaymentDetailDto create(PaymentDetailDto dto) {
         PaymentDetail data = new PaymentDetail(dto);
         return this.repositoryCommand.save(data).toAggregate();
+    }
+
+    @Override
+    public void createAll(List<PaymentDetail> dto) {
+        this.repositoryCommand.saveAll(dto);
     }
 
     @Override
@@ -156,6 +163,49 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         Optional<PaymentDetail> userSystem = this.repositoryCommand.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public List<PaymentDetailDto> findByIdIn(List<UUID> ids) {
+        List<PaymentDetailDto> list = new ArrayList<>();
+        for (PaymentDetail paymentDetail : this.repositoryQuery.findByIdIn(ids)) {
+            list.add(paymentDetail.toAggregate());
+        }
+        return list;
+    }
+
+    @Override
+    public List<PaymentDetailDto> change(List<PaymentDetail> pd) {
+        List<PaymentDetailDto> list = new ArrayList<>();
+        for (PaymentDetail paymentDetail : pd) {
+            list.add(paymentDetail.toAggregate());
+        }
+        return list;
+    }
+
+    @Override
+    public List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids) {
+        return this.repositoryQuery.findByIdIn(ids);
+    }
+
+    @Override
+    public List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids) {
+        return this.repositoryQuery.findByPaymentDetailIdIn(ids);
+    }
+
+    @Override
+    public Long countByPaymentDetailIdAndTransactionTypeDeposit(UUID payment) {
+        return this.repositoryQuery.countByPaymentDetailIdAndTransactionTypeDeposit(payment);
+    }
+
+    @Override
+    @Cacheable(cacheNames = "PaymentDetailSimple", key = "#id", unless = "#result == null")
+    public PaymentDetailSimple findPaymentDetailsSimpleCacheableByGenId(int id) {
+        Optional<PaymentDetailSimple> userSystem = this.repositoryQuery.findPaymentDetailsSimpleCacheableByGenId(id);
+        if (userSystem.isPresent()) {
+            return userSystem.get();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_DETAIL_NOT_FOUND.getReasonPhrase())));
     }

@@ -25,12 +25,12 @@ public interface IManageInvoiceService {
 
     ManageInvoiceDto findById(UUID id);
 
-    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
     PaginatedResponse sendList(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     PaginatedResponse searchToPayment(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria>filterCriteria);
+    Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria>filterCriteria, UUID employeeId);
 
     List<ManageInvoiceDto> findByIds(List<UUID> ids);
 

@@ -49,11 +49,6 @@ public class BusinessProcessSchedulerServiceImpl implements IBusinessProcessSche
 
     @Override
     public void delete(UUID id) {
-        /*try{
-            writeRepository.deleteById(id);
-        }catch (Exception ex){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
-        }*/
         readRepository.findById(id).ifPresent(businessProcessScheduler -> {
             businessProcessScheduler.setDeletedAt(LocalDateTime.now());
             writeRepository.save(businessProcessScheduler);

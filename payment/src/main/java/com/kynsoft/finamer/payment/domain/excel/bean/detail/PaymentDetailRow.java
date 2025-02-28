@@ -12,6 +12,8 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -48,6 +50,8 @@ public class PaymentDetailRow extends Row implements Serializable {
     private String impStatus;
 
     private UUID externalPaymentId;
+    private List<UUID> agencys = new ArrayList<>();
+    private List<UUID> hotels = new ArrayList<>();
 
     public PaymentDetailDto toAggregate() {
         PaymentDetailDto paymentDetailDto = new PaymentDetailDto();

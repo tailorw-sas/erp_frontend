@@ -8,7 +8,7 @@ import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
@@ -55,7 +55,8 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
             return false;
         }
         try {
-            PaymentDto paymentDto = this.service.findByPaymentId(Long.parseLong(obj.getPaymentId()));
+//            PaymentDto paymentDto = this.service.findByPaymentId(Long.parseLong(obj.getPaymentId()));
+            PaymentProjection paymentDto = this.service.findByPaymentIdProjection(Long.parseLong(obj.getPaymentId()));
             if (Objects.isNull(obj.getBalance())) {
                 errorFieldList.add(new ErrorField("Balance", "Payment Amount can't be empty"));
                 return false;
@@ -72,6 +73,12 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
                     return false;
                 }
                 try {
+                    if (Objects.isNull(obj.getBookId())){
+                        if (Objects.nonNull(obj.getCoupon()) && bookingService.countByCoupon(obj.getCoupon()) > 1) {
+                            errorFieldList.add(new ErrorField("coupon", "Payment was not applied because the coupon is duplicated."));
+                        }
+                        return true;
+                    }
                     ManageBookingDto bookingDto = this.getBookingDto(Long.valueOf(obj.getBookId()));
                     //Si es de tipo other deduction, el booking balance debe ser mayor o igual que el balance del excel.
                     //TODO: duda, creo que para el other deduction debia ser igual estricto. el balnce del booking y el del excel????

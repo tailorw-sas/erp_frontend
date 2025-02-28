@@ -49,7 +49,7 @@ public class InvoiceReportInvoiceSupportService implements IInvoiceReport {
 
     private Optional<byte[]> getInvoiceSupport(String invoiceId, String reportCode) {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("invoiceId", invoiceId);
+        parameters.put("idInvoice", invoiceId);
         AbstractReportContentProvider abstractReportContentProvider = reportContentProviderFactory.
                 getReportContentProvider(EInvoiceContentProvider.INVOICE_SUPPORT_CONTENT);
         return abstractReportContentProvider.getContent(parameters, reportCode);

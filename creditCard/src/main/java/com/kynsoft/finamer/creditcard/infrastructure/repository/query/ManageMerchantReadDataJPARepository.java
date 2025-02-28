@@ -18,4 +18,7 @@ public interface ManageMerchantReadDataJPARepository extends JpaRepository<Manag
 
     @Query("SELECT COUNT(b) FROM ManageMerchant b WHERE b.code = :code AND b.id <> :id")
     Long countByCodeAndNotId(@Param("code") String code, @Param("id") UUID id);
+
+    @Query("SELECT COUNT(b) FROM ManageMerchant b WHERE b.defaultm = true AND b.id <> :id")
+    Long countByDefaultAndNotId(@Param("id") UUID id);
 }

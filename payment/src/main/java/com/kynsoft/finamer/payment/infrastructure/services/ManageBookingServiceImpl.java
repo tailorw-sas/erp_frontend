@@ -9,6 +9,8 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManageBookingResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
@@ -41,6 +43,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public void update(ManageBookingDto dto) {
         this.repositoryCommand.save(new Booking(dto));
+    }
+
+    @Override
+    public void updateAll(List<Booking> list) {
+        this.repositoryCommand.saveAll(list);
     }
 
     @Override
@@ -101,6 +108,50 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public void deleteAll() {
         this.repositoryCommand.deleteAll();
+    }
+
+    @Override
+    public BookingProjectionSimple findSimpleDetailByGenId(long id) {
+        Optional<BookingProjectionSimple> booking = this.repositoryQuery.findSimpleDetailByGenId(id);
+        if (booking.isPresent()) {
+            return booking.get();
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<ManageBookingDto> findByBookingIdIn(List<Long> ids) {
+        List<ManageBookingDto> list = new ArrayList<>();
+        for (Booking booking : this.repositoryQuery.findByBookingIdIn(ids)) {
+            list.add(booking.toAggregate());
+        }
+        return list;
+    }
+
+    @Override
+    public List<Booking> findAllByBookingIdIn(List<Long> ids) {
+        return this.repositoryQuery.findByBookingIdIn(ids);
+    }
+
+    @Override
+    public BookingProjectionControlAmountBalance findSimpleBookingByGenId(long id) {
+        Optional<BookingProjectionControlAmountBalance> booking = this.repositoryQuery.findSimpleBookingByGenId(id);
+        if (booking.isPresent()) {
+            return booking.get();
+        }
+
+        return null;
+    }
+
+    @Override
+    public BookingProjectionControlAmountBalance findByCoupon(String coupon) {
+        return this.repositoryQuery.findByCouponNumber(coupon).orElse(null);
+    }
+
+    @Override
+    public Long countByCoupon(String coupon) {
+        return this.repositoryQuery.countByCouponNumber(coupon);
     }
 
 }

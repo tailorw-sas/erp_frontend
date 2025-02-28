@@ -4,7 +4,7 @@ public class InvoiceStatus {
 
     public static String getInvoiceStatusCode(EInvoiceStatus status){
         switch (status) {
-            case PROCECSED:
+            case PROCESSED:
                 return "PRO";
 
             case RECONCILED:

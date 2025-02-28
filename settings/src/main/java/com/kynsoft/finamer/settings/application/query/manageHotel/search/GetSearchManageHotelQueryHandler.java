@@ -16,6 +16,6 @@ public class GetSearchManageHotelQueryHandler implements IQueryHandler<GetSearch
 
     @Override
     public PaginatedResponse handle(GetSearchManageHotelQuery query) {
-        return service.search(query.getPageable(), query.getFilter());
+        return service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
     }
 }

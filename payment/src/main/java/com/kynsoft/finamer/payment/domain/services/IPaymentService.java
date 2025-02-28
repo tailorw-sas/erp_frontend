@@ -3,6 +3,9 @@ package com.kynsoft.finamer.payment.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
+import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
+import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,10 +17,13 @@ public interface IPaymentService {
 
     void update(PaymentDto dto);
 
+    void update(Payment dto);
+
     void delete(PaymentDto dto);
 
     PaymentDto findById(UUID id);
 
+    Payment findPaymentById(UUID id);
     /**
      * Permite obtener los Payment con Detalles.
      * Cuando existe pago aplicado, te proporciona los Booking y el invoice al cual
@@ -31,7 +37,13 @@ public interface IPaymentService {
 
     PaymentDto findByPaymentId(long paymentId);
 
-    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+    PaymentProjection findByPaymentIdProjection(long paymentId);
+
+    PaymentProjectionSimple findPaymentIdCacheable(long paymentId);
+
+    void clearCache();
+
+    PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
 
     Page<PaymentDto> paymentCollectionSummary(Pageable pageable, List<FilterCriteria> filterCriteria);
 
@@ -39,9 +51,13 @@ public interface IPaymentService {
 
     List<PaymentDto> createBulk(List<PaymentDto> dtoList);
 
+    void getAll();
+
     Long countByAgency(UUID agencyId);
 
     Long countByAgencyOther(UUID agencyId);
 
     Long findMaxId();
+
+    PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
 }

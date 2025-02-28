@@ -7,12 +7,15 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
+import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.settings.application.query.objectResponse.ManageTradingCompaniesResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageTradingCompaniesDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageTradingCompaniesService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageTradingCompanies;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageTradingCompaniesWriteDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageTradingCompaniesReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,9 +38,14 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
     @Autowired
     private final ManageTradingCompaniesReadDataJPARepository repositoryQuery;
 
-    public ManageTradingCompaniesServiceImpl(ManageTradingCompaniesWriteDataJPARepository repositoryCommand, ManageTradingCompaniesReadDataJPARepository repositoryQuery) {
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
+    public ManageTradingCompaniesServiceImpl(ManageTradingCompaniesWriteDataJPARepository repositoryCommand, 
+                                             ManageTradingCompaniesReadDataJPARepository repositoryQuery,
+                                             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -77,8 +85,8 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
     }
 
     @Override
-    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
-        filterCriteria(filterCriteria);
+    public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+        filterCriteria(filterCriteria, employeeId);
 
         GenericSpecificationsBuilder<ManageTradingCompanies> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageTradingCompanies> data = repositoryQuery.findAll(specifications, pageable);
@@ -101,7 +109,7 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
         return repositoryQuery.findAll().stream().map(ManageTradingCompanies::toAggregate).collect(Collectors.toList());
     }
 
-    private void filterCriteria(List<FilterCriteria> filterCriteria) {
+    private void filterCriteria(List<FilterCriteria> filterCriteria, UUID employeeId) {
         for (FilterCriteria filter : filterCriteria) {
 
             if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
@@ -113,6 +121,14 @@ public class ManageTradingCompaniesServiceImpl implements IManageTradingCompanie
                 }
             }
         }
+
+        List<UUID> ids = this.employeeReadDataJPARepository.findManageTradingCompaniesIdsByEmployeeId(employeeId);
+        FilterCriteria fc = new FilterCriteria();
+        fc.setKey("id");
+        fc.setLogicalOperation(LogicalOperation.AND);
+        fc.setOperator(SearchOperation.IN);
+        fc.setValue(ids);
+        filterCriteria.add(fc);
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageTradingCompanies> data) {

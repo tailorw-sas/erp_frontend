@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageNightType;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRatePlan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,5 +25,8 @@ public interface ManageNightTypeReadDataJPARepository extends JpaRepository<Mana
     boolean existsManageNightTypeByCode(String code);
 
     Optional<ManageNightType> findManageNightTypeByCode(String code);
+
+    @Query("SELECT r FROM ManageNightType r WHERE r.code IN :codes")
+    List<ManageNightType> findManageNightTypeByCodes(List<String> codes);
 
 }

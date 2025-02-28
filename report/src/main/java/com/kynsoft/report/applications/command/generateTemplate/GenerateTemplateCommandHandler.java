@@ -1,5 +1,6 @@
 package com.kynsoft.report.applications.command.generateTemplate;
 
+import com.kynsoft.report.domain.dto.DBConectionDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
@@ -17,11 +18,17 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.net.URL;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,7 +58,9 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
             if (Objects.equals(command.getReportFormatType(), "XLS")) {
                 response = generateExcelReport(command.getParameters(), reportTemplateDto.getFile(), reportTemplateDto);
             } else {
-                response = generatePdfReport(command.getParameters(), reportTemplateDto.getFile(), reportTemplateDto);
+                response = generatePdfReport(command.getParameters(), reportTemplateDto);
+                System.out.println("Se genero el reporte");
+                System.out.println(response.length);
             }
             command.setResult(response);
         } catch (Exception e) {
@@ -60,58 +69,78 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         }
     }
 
-    public byte[] generatePdfReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
-        JasperReport jasperReport = getJasperReport(reportPath);
-        logger.info("Generating PDF report with database: {}", reportTemplateDto.getDbConectionDto().getName());
+    public byte[] generatePdfReport(Map<String, Object> parameters, JasperReportTemplateDto reportTemplateDto) {
+        // Validar que el DTO contenga la información necesaria
+        if (reportTemplateDto == null || reportTemplateDto.getDbConectionDto() == null) {
+            throw new IllegalArgumentException("Database connection details are missing.");
+        }
 
-        JRFileVirtualizer virtualizer = new JRFileVirtualizer(20, "temp/");
-        parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
-
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
-            String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
-            NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
-
-            query = replaceQueryParameters(query, parameters);
-            List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
-
-            JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
-
-            JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
-
-            // Verifica el tamaño del archivo generado
-            if (outputStream.size() > getMaxFileSize()) {
-                throw new RuntimeException("The generated PDF report is too large. Size: " + outputStream.size() + " bytes.");
+        try {
+            // Cargar y compilar el reporte
+            JasperReport jasperReport = getJasperReport(reportTemplateDto.getFile());
+            if (jasperReport == null) {
+                throw new IllegalArgumentException("Could not load JasperReport from provided URL.");
             }
 
-            return outputStream.toByteArray();
-        } catch (IOException | JRException e) {
-            logger.error("Error generating PDF report: {}", e.getMessage(), e);
-            throw e;
-        } finally {
-            virtualizer.cleanup();
+            // Obtener la configuración de la base de datos
+            DBConectionDto dbConnection = reportTemplateDto.getDbConectionDto();
+
+            // Asegurar que el driver de PostgreSQL esté cargado
+            try {
+                Class.forName("org.postgresql.Driver");
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("PostgreSQL JDBC Driver not found. Ensure it is included in the classpath.", e);
+            }
+
+            // Uso de try-with-resources para gestionar la conexión y el output stream
+            try (Connection connection = DriverManager.getConnection(
+                    dbConnection.getUrl(),
+                    dbConnection.getUsername(),
+                    dbConnection.getPassword());
+                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+                // Llenar el reporte con los parámetros y la conexión
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, connection);
+
+                // Exportar el reporte a PDF
+                JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+
+                // Validar que el tamaño del PDF no exceda el máximo permitido
+                if (outputStream.size() > getMaxFileSize()) {
+                    throw new RuntimeException("The generated PDF report is too large. Size: " + outputStream.size() + " bytes.");
+                }
+                return outputStream.toByteArray();
+
+            } catch (SQLException e) {
+                throw new RuntimeException("Error connecting to the database. Verify credentials and connection settings.", e);
+            } catch (JRException | IOException e) {
+                throw new RuntimeException("Error generating the JasperReport.", e);
+            }
+        } catch (JRException | IOException e) {
+            throw new RuntimeException("Error loading or compiling the JasperReport.", e);
         }
     }
 
     private int getMaxFileSize() {
-        // Define el límite en bytes (por ejemplo, 50 MB)
         return 50 * 1024 * 1024; // 50 MB
     }
 
-    public byte[] generateExcelReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto) throws JRException, IOException {
-        JasperReport jasperReport = getJasperReport(reportPath);
-        logger.info("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
-
-        JRFileVirtualizer virtualizer = new JRFileVirtualizer(2048, "temp/");
+    public byte[] generateExcelReport(Map<String, Object> parameters, String reportPath, JasperReportTemplateDto reportTemplateDto)
+            throws JRException, IOException {
+        JRFileVirtualizer virtualizer = new JRFileVirtualizer(20, "temp/");
         parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            JdbcTemplate jdbcTemplate = getJdbcTemplate(reportTemplateDto);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+             Connection connection = createConnection(reportTemplateDto)) {
+
+            JasperReport jasperReport = getJasperReport(reportPath);
+            logger.error("Generating Excel report with database: {}", reportTemplateDto.getDbConectionDto().getName());
+
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
             String query = reportTemplateDto.getQuery() != null ? reportTemplateDto.getQuery() : "";
-            NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+            NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbcTemplate);
             query = replaceQueryParameters(query, parameters);
-            List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(query, parameters);
+            List<Map<String, Object>> rows = namedJdbc.queryForList(query, parameters);
 
             JRDataSource jrDataSource = new JRBeanCollectionDataSource(rows);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
@@ -127,15 +156,17 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
 
             exporter.exportReport();
             return outputStream.toByteArray();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         } finally {
             virtualizer.cleanup();
         }
     }
 
-    private JdbcTemplate getJdbcTemplate(JasperReportTemplateDto reportTemplateDto) {
-        DataSource dataSource = createDataSource(reportTemplateDto.getDbConectionDto().getUrl(), reportTemplateDto.getDbConectionDto().getUsername(),
+    private Connection createConnection(JasperReportTemplateDto reportTemplateDto) throws SQLException {
+        return DriverManager.getConnection(reportTemplateDto.getDbConectionDto().getUrl(),
+                reportTemplateDto.getDbConectionDto().getUsername(),
                 reportTemplateDto.getDbConectionDto().getPassword());
-        return new JdbcTemplate(dataSource);
     }
 
     private JasperReport getJasperReport(String reportPath) throws JRException, IOException {
@@ -146,13 +177,18 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
     }
 
     private InputStream loadReportInputStream(String reportPath) throws IOException {
-        Resource localResource = resourceLoader.getResource("classpath:templates/" + reportPath);
-        if (localResource.exists()) {
-            logger.info("Loading JRXML template from local resources: templates/{}", reportPath);
-            return localResource.getInputStream();
+        if (reportPath.startsWith("http")) {
+            logger.warn("Report path is a URL, fetching JRXML template from URL: {}", reportPath);
+            byte[] jrxmlBytes = restTemplate.getForObject(reportPath, byte[].class);
+            return new ByteArrayInputStream(Objects.requireNonNull(jrxmlBytes, "No se pudo obtener el contenido del JRXML desde la URL"));
         } else {
-            logger.warn("Local template not found, fetching JRXML template from URL: {}", reportPath);
-            return new ByteArrayInputStream(Objects.requireNonNull(restTemplate.getForObject(reportPath, byte[].class)));
+            Resource localResource = resourceLoader.getResource("classpath:templates/" + reportPath);
+            if (localResource.exists()) {
+                logger.info("Loading JRXML template from local resources: templates/{}", reportPath);
+                return localResource.getInputStream();
+            } else {
+                throw new FileNotFoundException("Template no encontrado en classpath: templates/" + reportPath);
+            }
         }
     }
 

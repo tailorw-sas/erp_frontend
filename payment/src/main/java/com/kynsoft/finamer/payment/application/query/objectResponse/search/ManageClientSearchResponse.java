@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
+import com.kynsoft.finamer.payment.infrastructure.identity.projection.ClientProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,4 +28,10 @@ public class ManageClientSearchResponse implements IResponse{
         this.status = dto.getStatus();
     }
 
+    public ManageClientSearchResponse(ClientProjection client) {
+        this.id = client.getId();
+        this.code = client.getCode();
+        this.name = client.getName();
+        this.status = client.getStatus();
+    }
 }

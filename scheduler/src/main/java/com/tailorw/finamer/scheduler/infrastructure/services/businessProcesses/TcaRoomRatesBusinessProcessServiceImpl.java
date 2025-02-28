@@ -56,7 +56,7 @@ public class TcaRoomRatesBusinessProcessServiceImpl extends SchedulerService imp
         producerTcaRoomRatesBusinessProcessService.create(syncProcess);
     }
 
-    @Scheduled(fixedRate = 60000, initialDelay = 10000)
+    @Scheduled(fixedRate = 60000, initialDelay = 30000)
     public void processDaily(){
         processDailySchedulers(this::executeProcess);
     }
@@ -66,7 +66,7 @@ public class TcaRoomRatesBusinessProcessServiceImpl extends SchedulerService imp
         processWeeklySchedulers(this::executeProcess);
     }
 
-    @Scheduled(fixedRate = 60000, initialDelay = 10000)
+    @Scheduled(fixedRate = 60000, initialDelay = 30000)
     protected void processOneTime() {
         processOneTimeSchedulers(this::executeProcess);
     }

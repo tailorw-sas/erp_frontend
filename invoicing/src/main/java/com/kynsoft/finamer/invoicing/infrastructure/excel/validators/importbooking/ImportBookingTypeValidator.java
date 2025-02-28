@@ -1,13 +1,12 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.importbooking;
 
-
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.application.excel.ExcelRuleValidator;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
-import org.springframework.context.ApplicationEventPublisher;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,9 +22,9 @@ public class ImportBookingTypeValidator  extends ExcelRuleValidator<BookingRow> 
 
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
-        if (Objects.nonNull(obj.getManageHotelCode()) && !obj.getManageHotelCode().isEmpty() && manageHotelService.existByCode(obj.getManageHotelCode())) {
-            ManageHotelDto manageHotelDto = manageHotelService.findByCode(obj.getManageHotelCode());
-            if (EImportType.NO_VIRTUAL.name().equals(importType) && manageHotelDto.isVirtual()) {
+        if (Objects.nonNull(obj.getManageHotelCode()) && !obj.getManageHotelCode().isEmpty() && manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+            ManageHotelDto manageHotelDto = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
+            if ((EImportType.NO_VIRTUAL.name().equals(importType) || EImportType.INNSIST.name().equals(importType)) && manageHotelDto.isVirtual()) {
                 errorFieldList.add(new ErrorField("Import type", "The hotel is virtual"));
                 return false;
             }
@@ -34,6 +33,7 @@ public class ImportBookingTypeValidator  extends ExcelRuleValidator<BookingRow> 
                 return false;
             }
         }else{
+            //errorFieldList.add(new ErrorField("Hotel", " Hotel not found."));
             return false;
         }
         return true;

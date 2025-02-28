@@ -57,7 +57,7 @@ public class InvoiceStatusHistory implements Serializable {
         this.invoice = new Invoice(dto.getInvoice());
         this.description = dto.getDescription();
         this.employee = dto.getEmployee();
-        this.invoiceStatus = dto.getInvoiceStatus() != null ? dto.getInvoiceStatus() : EInvoiceStatus.PROCECSED;
+        this.invoiceStatus = dto.getInvoiceStatus() != null ? dto.getInvoiceStatus() : EInvoiceStatus.PROCESSED;
     }
 
     public InvoiceStatusHistoryDto toAggregate() {

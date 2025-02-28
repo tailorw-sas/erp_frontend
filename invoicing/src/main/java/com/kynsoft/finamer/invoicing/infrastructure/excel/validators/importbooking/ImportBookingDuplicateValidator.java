@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageHotelService;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 
 import java.util.List;
 
@@ -18,8 +19,8 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
     private final IManageHotelService manageHotelService;
 
     public ImportBookingDuplicateValidator(IManageBookingService service,
-                                           BookingImportCacheRedisRepository cacheRedisRepository,
-                                           IManageHotelService manageHotelService) {
+            BookingImportCacheRedisRepository cacheRedisRepository,
+            IManageHotelService manageHotelService) {
         this.service = service;
         this.cacheRedisRepository = cacheRedisRepository;
         this.manageHotelService = manageHotelService;
@@ -28,17 +29,17 @@ public class ImportBookingDuplicateValidator extends ExcelRuleValidator<BookingR
     @Override
     public boolean validate(BookingRow obj, List<ErrorField> errorFieldList) {
         if (obj.getHotelBookingNumber() == null) {
-            //errorFieldList.add(new ErrorField("Hotel Booking No"," Hotel Booking No. must be not empty"));
             return false;
         }
-//        String validate = obj.getHotelBookingNumber()
-//                        .split("\\s+")[obj.getHotelBookingNumber()
-//                        .split("\\s+").length - 1];
-        ManageHotelDto hotel = manageHotelService.findByCode(obj.getManageHotelCode());
-        //if (service.existByBookingHotelNumber(obj.getHotelBookingNumber()) ||
-        if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId()) ||
-                cacheRedisRepository.findBookingImportCacheByHotelBookingNumberAndImportProcessId(obj.getHotelBookingNumber(),obj.getImportProcessId()).isPresent()) {
-            errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported"));
+        try {
+            if (manageHotelService.existByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()))) {
+                ManageHotelDto hotel = manageHotelService.findByCode(InvoiceUtils.upperCaseAndTrim(obj.getManageHotelCode()));
+                if (service.existsByExactLastChars(this.removeBlankSpaces(obj.getHotelBookingNumber()), hotel.getId())) {
+                    errorFieldList.add(new ErrorField("Hotel Booking Number", "Record has already been imported."));
+                    return false;
+                }
+            }
+        } catch (Exception e) {
             return false;
         }
         return true;

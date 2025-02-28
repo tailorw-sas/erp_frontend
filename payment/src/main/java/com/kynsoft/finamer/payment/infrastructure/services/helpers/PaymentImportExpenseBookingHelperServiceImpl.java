@@ -13,6 +13,8 @@ import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaym
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createFormImport.CreatePaymentDetailFromFileCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.PaymentExpenseBookingImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -21,6 +23,7 @@ import com.kynsoft.finamer.payment.domain.excel.bean.payment.PaymentExpenseBooki
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentExpenseBookingRowError;
 import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.expenseBooking.PaymentExpenseBookingValidatorFactory;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportExpenseBookingErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.expenseBooking.PaymentExpenseBookingImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
@@ -72,6 +75,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     @Value("${payment.attachment.type.code}")
     private String PAYMENT_EXPENSE_BOOKING_ATTACHMENT_TYPE;
 
+    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+
     public PaymentImportExpenseBookingHelperServiceImpl(PaymentExpenseBookingImportCacheRepository cacheRepository,
             PaymentImportExpenseBookingErrorRepository errorRepository,
             RedisTemplate<String, String> redisTemplate,
@@ -86,7 +91,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             IManageAttachmentTypeService attachmentTypeService,
             IManageResourceTypeService resourceTypeService,
             IStorageService storageService, IPaymentDetailService paymentDetailService,
-            ServiceLocator<IMediator> serviceLocator
+            ServiceLocator<IMediator> serviceLocator,
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
     ) {
         super(redisTemplate);
         this.cacheRepository = cacheRepository;
@@ -106,6 +112,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.paymentDetailService = paymentDetailService;
         this.serviceLocator = serviceLocator;
         this.availableClient = new HashSet<>();
+        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
     }
 
     @Override
@@ -114,6 +121,9 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         availableClient.clear();
         readerConfiguration.setStrictHeaderOrder(false);
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
+        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(request.getEmployeeId());
+        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(request.getEmployeeId());
+
         expenseBookingValidatorFactory.createValidators();
         ExcelBeanReader<PaymentExpenseBookingRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentExpenseBookingRow.class);
         ExcelBean<PaymentExpenseBookingRow> excelBean = new ExcelBean<>(excelBeanReader);
@@ -121,6 +131,8 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
             row.setHotelId(request.getHotelId() != null ? request.getHotelId().toString() : "");
+            row.setAgencys(agencys);
+            row.setHotels(hotels);
             if (expenseBookingValidatorFactory.validate(row)) {
                 row.setClientName(getClientName(row.getBookingId()));
                 availableClient.add(row.getClientName());
@@ -154,11 +166,13 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         Map<String, List<PaymentExpenseBookingImportCache>> grouped = this.groupCacheByClient(request.getImportProcessId());
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
             //PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
-            List<ManageBookingDto> bookingDtos = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
-            List<PaymentExpenseBookingHelper> data = entry.getValue().stream().map(cache -> 
-                    new PaymentExpenseBookingHelper(
-                            cache.getTransactionType(), 
-                            cache.getBalance(), 
+            //List<ManageBookingDto> bookingDtosP = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
+            List<Long> ids = entry.getValue().stream().map(cache -> Long.valueOf(cache.getBookingId())).toList();
+            List<ManageBookingDto> bookingDtos = bookingService.findByBookingIdIn(ids);//Se puede refactorizar.
+            List<PaymentExpenseBookingHelper> data = entry.getValue().stream().map(cache
+                    -> new PaymentExpenseBookingHelper(
+                            cache.getTransactionType(),
+                            cache.getBalance(),
                             cache.getRemarks()
                     )).toList();
             double paymentAmount = entry.getValue().stream().mapToDouble(PaymentExpenseBookingImportCache::getBalance).sum();
@@ -167,14 +181,14 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 //            String remarks = Objects.isNull(sampleCache.getRemarks()) || sampleCache.getRemarks().isEmpty() ? paymentTransactionType.getDefaultRemark() : sampleCache.getRemarks();
             UUID paymentId = createPayment(request.getHotelId(), request.getEmployeeId(), manageBooking.getInvoice().getAgency(), paymentAmount);
             createAttachment(request.getImportProcessId(), request.getEmployeeId(), paymentId);
-            createPaymentDetails(bookingDtos, request.getEmployeeId(), paymentId, data);
+            createPaymentDetails(ids, bookingDtos, request.getEmployeeId(), paymentId, data);
         }
-
     }
 
     private String getClientName(String bookingId) {
-        ManageInvoiceDto manageInvoiceDto = bookingService.findByGenId(Long.parseLong(bookingId)).getInvoice();
-        return manageInvoiceDto.getAgency().getClient().getName();
+        //ManageInvoiceDto manageInvoiceDto = bookingService.findByGenId(Long.parseLong(bookingId)).getInvoice();
+        BookingProjectionSimple manageInvoiceDto = bookingService.findSimpleDetailByGenId(Long.parseLong(bookingId));
+        return manageInvoiceDto.getClientName();
     }
 
     private Map<String, List<PaymentExpenseBookingImportCache>> groupCacheByClient(String importProcessId) {
@@ -217,23 +231,29 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         return createPaymentMessage.getPayment().getId();
     }
 
-    private void createPaymentDetails(List<ManageBookingDto> manageBookingDtos, UUID employeeId, UUID paymentId, List<PaymentExpenseBookingHelper> data) {
-        for (int i = 0; i < manageBookingDtos.size(); i++) {
-        //for (ManageBookingDto manageBookingDto : manageBookingDtos) {
-            CreatePaymentDetailFromFileCommand createPaymentDetailCommand = new CreatePaymentDetailFromFileCommand(
-                            Status.ACTIVE, 
-                            paymentId, 
-                            //transactionTypeService.findByCode(transactions.get(i)).getId(),
-                            transactionTypeService.findByCode(data.get(i).getTransactionType()).getId(),
-                            //bookingBalance.get(String.valueOf(manageBookingDtos.get(i).getBookingId())), 
-                            data.get(i).getBalance(),
-                            data.get(i).getRemark(), 
-                            employeeId, 
-                            manageBookingDtos.get(i).getId(), 
-                            true, 
-                            serviceLocator.getBean(IMediator.class)
-                    );
-            serviceLocator.getBean(IMediator.class).send(createPaymentDetailCommand);
+    private void createPaymentDetails(List<Long> ids, List<ManageBookingDto> manageBookingDtos, UUID employeeId, UUID paymentId, List<PaymentExpenseBookingHelper> data) {
+        //for (int i = 0; i < manageBookingDtos.size(); i++) {
+        for (int i = 0; i < ids.size(); i++) {
+            //Cada vez que tome el booking, neecsito controlar el amountBalance que le queda porque sino lo pone negativo.
+            //BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(manageBookingDtos.get(i).getBookingId());
+            BookingProjectionControlAmountBalance amountBalance = this.bookingService.findSimpleBookingByGenId(ids.get(i));
+            ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(data.get(i).getTransactionType());
+            String remark = data.get(i).getRemark() != null ? data.get(i).getRemark() : transactionTypeDto.getDefaultRemark();
+            //for (ManageBookingDto manageBookingDto : manageBookingDtos) {
+            if (amountBalance.getBookingAmountBalance() >= data.get(i).getBalance()) {
+                CreatePaymentDetailFromFileCommand createPaymentDetailCommand = new CreatePaymentDetailFromFileCommand(
+                        Status.ACTIVE,
+                        paymentId,
+                        transactionTypeDto.getId(),
+                        data.get(i).getBalance(),
+                        remark,
+                        employeeId,
+                        amountBalance.getBookingId(),
+                        true,
+                        serviceLocator.getBean(IMediator.class)
+                );
+                serviceLocator.getBean(IMediator.class).send(createPaymentDetailCommand);
+            }
         }
     }
 
@@ -255,7 +275,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
                     CreateMasterPaymentAttachmentCommand createMasterPaymentAttachmentCommand
                             = new CreateMasterPaymentAttachmentCommand(Status.ACTIVE, employeeId,
                                     paymentId,
-                                     resourceTypeDto.getId(), attachmentTypeDto.getId(),
+                                    resourceTypeDto.getId(), attachmentTypeDto.getId(),
                                     attachment.getKey(), response.get("url"),
                                     "Attachment added automatically when the payment was imported",
                                     String.valueOf(fileContent.length));

@@ -30,7 +30,6 @@
 					<name>env</name>
 					<value>dev</value>
 				</property>
-				<activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
 				<packaging.artifactId>audit-agent-dev</packaging.artifactId>
@@ -55,6 +54,7 @@
 					<name>env</name>
 					<value>main</value>
 				</property>
+                <activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
 				<packaging.artifactId>audit-agent</packaging.artifactId>
@@ -84,13 +84,6 @@
 			
 			
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.kynsoft.finamer</groupId>-->
-<!--            <artifactId>share</artifactId>-->
-<!--            <version>0.0.1-SNAPSHOT</version>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>

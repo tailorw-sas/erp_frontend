@@ -25,6 +25,7 @@ public class CreateRatePlanCommandHandler implements ICommandHandler<CreateRateP
     @Override
     public void handle(CreateRatePlanCommand command) {
         ManageHotelDto hotelDto = hotelService.findById(command.getHotelId());
+        //Validar si el code del rateplan y el id del hotel ya existe
         ManageRatePlanDto dto = new ManageRatePlanDto(command.getId(),command.getCode(), command.getName(), command.getStatus(), command.isDeleted(), null, hotelDto);
         service.create(dto);
     }

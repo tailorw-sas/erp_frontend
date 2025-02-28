@@ -29,4 +29,6 @@ public interface IManageHotelService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageHotelDto> findAll();
+
+    void clearManageHotelCache();
 }

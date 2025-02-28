@@ -29,29 +29,42 @@ public class InvoiceUploadAttachmentUtil {
         this.objectMapper = new ObjectMapper();
     }
 
-    public LinkedHashMap<String,String> uploadAttachmentContent(String fileName,byte[] fileContent) throws JsonProcessingException {
-        ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, this.createBody(fileName,fileContent), String.class);
-        ApiResponse apiResponse = objectMapper.readValue(response.getBody(), ApiResponse.class);
-        LinkedHashMap<String,String> saveFileS3Message = (LinkedHashMap) apiResponse.getData();
-        return saveFileS3Message;
-    }
-
-    private HttpEntity<MultiValueMap<String, Object>> createBody(String fileName,byte[] fileContent){
+    public LinkedHashMap<String, String> uploadAttachmentContent(String fileName, byte[] fileContent) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, String> contentDispositionMap = new LinkedMultiValueMap<>();
-        ContentDisposition contentDisposition = ContentDisposition
-                .builder("form-data")
+
+        // Crear las cabeceras para el archivo
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentType(MediaType.APPLICATION_PDF); // Asegurar que se sube como PDF
+        fileHeaders.setContentDisposition(ContentDisposition.builder("form-data")
                 .name("file")
                 .filename(fileName)
-                .build();
-        contentDispositionMap.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
-        HttpEntity<byte[]> fileEntity = new HttpEntity<>(fileContent, contentDispositionMap);
+                .build());
 
+        // Crear la parte del archivo con los encabezados correctos
+        HttpEntity<byte[]> fileEntity = new HttpEntity<>(fileContent, fileHeaders);
+
+        // Construir el cuerpo de la solicitud multipart
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-
         body.add("file", fileEntity);
 
-        return  new HttpEntity<>(body, headers);
+        // Construir la solicitud HTTP final
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // Enviar la solicitud al servidor (MinIO o servicio S3)
+        System.out.println(UPLOAD_FILE_URL);
+        System.out.println("Headers: " + requestEntity.getHeaders());
+        System.out.println("Body: " + requestEntity.getBody());
+
+        ResponseEntity<String> response = restTemplate.postForEntity(UPLOAD_FILE_URL, requestEntity, String.class);
+
+        // Validar si la respuesta es exitosa
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Error subiendo el archivo: " + response.getStatusCode());
+        }
+
+        // Procesar la respuesta JSON
+        ApiResponse apiResponse = objectMapper.readValue(response.getBody(), ApiResponse.class);
+        return (LinkedHashMap<String, String>) apiResponse.getData();
     }
 }

@@ -4,7 +4,9 @@ import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsoft.finamer.invoicing.application.query.manageHotel.getByCode.FindManageHotelByCodeQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageHotel.search.GetSearchHotelQuery;
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageHotelResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,4 +30,14 @@ public class HotelController {
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping(path = "/{code}")
+    public ResponseEntity<?> getById(@PathVariable String code) {
+
+        FindManageHotelByCodeQuery query = new FindManageHotelByCodeQuery(code);
+        ManageHotelResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

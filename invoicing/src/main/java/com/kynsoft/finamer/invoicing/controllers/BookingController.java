@@ -30,7 +30,7 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.search.GetS
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBookingResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
-import java.util.List;
+
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
@@ -173,6 +173,7 @@ public class BookingController {
 
     @GetMapping(path = "/{importProcessId}/import-status")
     public ResponseEntity<?> getImportBookingProcessStatus(@PathVariable("importProcessId") String importProcessId) {
+        System.out.println("*************************************Ingreso a Import Status con importProcessId: " + importProcessId);
         ImportBookingProcessStatusRequest request = new ImportBookingProcessStatusRequest(importProcessId);
         ImportBookingProcessStatusQuery importBookingProcessStatusQuery = new ImportBookingProcessStatusQuery(request);
         return ResponseEntity.ok(mediator.send(importBookingProcessStatusQuery));

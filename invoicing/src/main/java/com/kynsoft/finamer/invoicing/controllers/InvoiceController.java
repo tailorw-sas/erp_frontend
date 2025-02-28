@@ -50,6 +50,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("/api/manage-invoice")
@@ -147,10 +149,13 @@ public class InvoiceController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<?> search(@RequestBody SearchRequest request) {
+    public ResponseEntity<?> search(@AuthenticationPrincipal Jwt jwt, @RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery());
+        String userId = jwt.getClaim("sub");
+        UUID employeeId = UUID.fromString(userId);
+        //UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchInvoiceQuery query = new GetSearchInvoiceQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }
@@ -235,36 +240,4 @@ public class InvoiceController {
 
         return ResponseEntity.ok(response);
     }
-/*
-    //Probar el metodo para generar PDFs a partir de un listado de invoicings UUIDs
-    @PostMapping("/reconcile-pdf-manual-test")
-    public ResponseEntity<byte[]> generatePdf(@RequestBody List<UUID> ids) {
-
-        try {
-            // Generar el buffer de manera dinámica
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-            InvoiceReconcileManualPdfRequest pdfRequest = new InvoiceReconcileManualPdfRequest(ids, outputStream.toByteArray());
-            *//*byte[] pdf = pdfService.concatenateManualPDFs(pdfRequest);*//*
-             InvoiceReconcileManualPdfCommand pdfCommand = new InvoiceReconcileManualPdfCommand(pdfRequest);
-
-            // Enviar el comando y obtener el mensaje
-            InvoiceReconcileManualPdfMessage message = mediator.send(pdfCommand);
-
-            // Validar los datos del PDF
-
-            // Responder con el PDF
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=booking.pdf")
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdfCommand.getRequest().getPdfData());
-
-        } catch (Exception e) {
-            // Manejar errores
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
-        }
-
-    }*/
-
 }

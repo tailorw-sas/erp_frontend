@@ -17,10 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -78,6 +78,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     }
 
     @Override
+    @Cacheable(cacheNames = "manageRoomType", key = "#code", unless = "#result == null")
     public ManageRoomTypeDto findByCode(String code) {
         Optional<ManageRoomType> optionalEntity = repositoryQuery.findManageRoomTypeByCode(code);
 
@@ -86,6 +87,20 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("code", "Room type not found.")));
+    }
+
+    @Override
+    @Cacheable(cacheNames = "manageRoomType", key = "#codes", unless = "#result == null || #result.isEmpty()")
+    public List<ManageRoomTypeDto> findByCodes(List<String> codes) {
+        List<ManageRoomType> entities = repositoryQuery.findManageRoomTypesByCodes(codes);
+
+        if (entities.isEmpty()) {
+            throw new BusinessNotFoundException(new GlobalBusinessException(
+                    DomainErrorMessage.NOT_FOUND,
+                    new ErrorField("codes", "Room types not found.")));
+        }
+
+        return entities.stream().map(ManageRoomType::toAggregate).collect(Collectors.toList());
     }
 
     @Override
@@ -122,6 +137,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     }
 
     @Override
+    @Cacheable(cacheNames = "manageHotel", key = "#code", unless = "#result == null")
     public ManageRoomTypeDto findManageRoomTypenByCodeAndHotelCode(String code, String hotelCode) {
         Optional<ManageRoomType> optionalEntity = repositoryQuery.findManageRatePlanByCodeAndHotelCode(code, hotelCode);
 

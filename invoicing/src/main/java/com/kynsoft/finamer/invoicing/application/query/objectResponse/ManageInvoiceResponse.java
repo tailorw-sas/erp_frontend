@@ -62,7 +62,7 @@ public class ManageInvoiceResponse implements IResponse {
         this.hotel = dto.getHotel();
         this.agency = dto.getAgency();
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
-        this.status = dto.getStatus() != null ? dto.getStatus() : EInvoiceStatus.PROCECSED;
+        this.status = dto.getStatus() != null ? dto.getStatus() : EInvoiceStatus.PROCESSED;
         this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : false;
         this.hasAttachments = dto.getAttachments() != null && dto.getAttachments().size() > 0;
         this.reSend = dto.getReSend();

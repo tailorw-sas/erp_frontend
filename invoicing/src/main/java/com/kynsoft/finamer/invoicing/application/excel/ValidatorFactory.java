@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.application.excel;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.error.ImportBookingRowErrorEvent;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -26,6 +27,8 @@ public abstract class ValidatorFactory<T> {
     abstract public void createValidators(String importType);
 
     abstract public boolean validate(T toValidate);
+
+    abstract public boolean validateInsist(List<BookingImportCache> list);
 
     protected void sendErrorEvent(BookingRow bookingRow){
         if (!errorFieldList.isEmpty()) {

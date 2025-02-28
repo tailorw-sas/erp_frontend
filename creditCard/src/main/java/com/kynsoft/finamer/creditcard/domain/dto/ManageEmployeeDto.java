@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.creditcard.domain.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,4 +18,6 @@ public class ManageEmployeeDto {
     private String firstName;
     private String lastName;
     private String email;
+    private List<ManageAgencyDto> manageAgencyList;
+    private List<ManageHotelDto> manageHotelList;
 }

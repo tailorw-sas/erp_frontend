@@ -46,6 +46,7 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
         newDetailDto.setApplyDepositValue(newDetailDto.getAmount() * -1);
         newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         newDetailDto.setCreateByCredit(command.isCreateByCredit());
+        newDetailDto.getPayment().setHasDetailTypeDeposit(true);
 
         PaymentDetailDto save = this.paymentDetailService.create(newDetailDto);
         command.setNewDetailDto(save);

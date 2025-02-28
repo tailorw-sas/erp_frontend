@@ -115,4 +115,24 @@ public class Invoice {
         );
     }
 
+    public ManageInvoiceDto toAggregateApplyPayment() {
+        return new ManageInvoiceDto(
+                id,
+                invoiceId,
+                null,
+                null,
+                invoiceType,
+                invoiceAmount,
+                bookings != null ? bookings.stream().map(b -> {
+                            return b.toAggregateSimple();
+                        }).collect(Collectors.toList()) : null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
 }

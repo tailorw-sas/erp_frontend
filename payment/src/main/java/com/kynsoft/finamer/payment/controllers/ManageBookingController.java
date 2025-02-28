@@ -7,7 +7,11 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.payment.application.query.http.invoice.booking.genId.FindBookingByGenIdQuery;
 import com.kynsoft.finamer.payment.application.query.http.invoice.booking.uuid.FindBookingByUUIDQuery;
+import com.kynsoft.finamer.payment.application.query.manageBooking.getByGenId.GetBookingByGenIdQuery;
+import com.kynsoft.finamer.payment.application.query.manageBooking.getByListIds.GetBookingByListIdsQuery;
 import com.kynsoft.finamer.payment.application.query.manageBooking.search.GetSearchManageBookingQuery;
+import com.kynsoft.finamer.payment.application.query.objectResponse.BookingProjectionResponse;
+import com.kynsoft.finamer.payment.application.query.objectResponse.ManageBookingResponse;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +56,24 @@ public class ManageBookingController {
 
         FindBookingByUUIDQuery query = new FindBookingByUUIDQuery(id, mediator);
         BookingHttp response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/projection/{id}")
+    public ResponseEntity<?> getByGenProjection(@PathVariable long id) {
+
+        GetBookingByGenIdQuery query = new GetBookingByGenIdQuery(id);
+        BookingProjectionResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/projection-all/{id}")
+    public ResponseEntity<?> getByGenProjectionAll(@PathVariable long id) {
+
+        GetBookingByListIdsQuery query = new GetBookingByListIdsQuery(id);
+        ManageBookingResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);
     }

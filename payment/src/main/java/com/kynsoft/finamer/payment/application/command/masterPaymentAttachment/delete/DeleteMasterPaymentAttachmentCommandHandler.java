@@ -61,6 +61,7 @@ public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHand
             paymentDto.setPaymentSupport(false);
             if (attachmentSize == 1) {
                 ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByNonNone();
+                paymentDto.setHasAttachment(false);
                 paymentDto.setAttachmentStatus(attachmentStatusDto);
             }
 
@@ -69,27 +70,14 @@ public class DeleteMasterPaymentAttachmentCommandHandler implements ICommandHand
             PaymentDto paymentDto = delete.getResource();
             ManagePaymentAttachmentStatusDto attachmentStatusDto = this.attachmentStatusService.findByNonNone();
             paymentDto.setAttachmentStatus(attachmentStatusDto);
+            paymentDto.setHasAttachment(false);
             this.paymentService.update(paymentDto);
         }
 
         deleteAttachmentStatusHistory(employeeDto, delete.getResource(), delete.getFileName(), delete.getAttachmentId());
-//        createPaymentAttachmentStatusHistory(employeeDto, delete);
     }
 
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-//    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, MasterPaymentAttachmentDto delete) {
-//
-//        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto.setDescription("An attachment to the payment was deleted. The file name: " + delete.getFileName());
-//        attachmentStatusHistoryDto.setEmployee(employeeDto);
-//        attachmentStatusHistoryDto.setPayment(delete.getResource());
-//        attachmentStatusHistoryDto.setStatus(delete.getResource().getPaymentStatus().getCode() + "-" + delete.getResource().getPaymentStatus().getName());
-//
-//        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
     private void deleteAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, String fileName, Long attachmentId) {
-        //ManageEmployeeDto employeeDto = employee != null ? this.manageEmployeeService.findById(employee) : null;
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
 
         attachmentStatusHistoryDto.setId(UUID.randomUUID());

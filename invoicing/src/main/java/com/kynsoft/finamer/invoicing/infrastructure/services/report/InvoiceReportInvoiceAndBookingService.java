@@ -38,7 +38,7 @@ public class InvoiceReportInvoiceAndBookingService implements IInvoiceReport {
 
     private Optional<byte[]> getInvoiceAndBooking(String invoiceId) throws IOException {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("invoiceId", invoiceId);
+        parameters.put("idInvoice", invoiceId);
         AbstractReportContentProvider abstractReportContentProvider = reportContentProviderFactory.getReportContentProvider(EInvoiceContentProvider.INVOICE_AND_BOOKING_CONTENT);
         return abstractReportContentProvider.getContent(parameters, reportCode);
     }

@@ -15,22 +15,29 @@ import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaym
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentRequest;
 import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaymentMessage;
+import com.kynsoft.finamer.payment.application.command.payment.setVariables.SetCommand;
+import com.kynsoft.finamer.payment.application.command.payment.setVariables.SetMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentRequest;
+import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentProjectionResponse;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentResponse;
 import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceQuery;
 import com.kynsoft.finamer.payment.application.query.payment.countByAgency.CountAgencyByPaymentBalanceAndDepositBalanceResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.GetPaymentExcelExporterQuery;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.PaymentExcelExporterResponse;
 import com.kynsoft.finamer.payment.application.query.payment.excelExporter.SearchExcelExporter;
+import com.kynsoft.finamer.payment.application.query.payment.getByGenCodeProjection.FindPaymentByGenProjectionQuery;
 import com.kynsoft.finamer.payment.application.query.payment.getById.FindPaymentByIdQuery;
 import com.kynsoft.finamer.payment.application.query.payment.search.GetSearchPaymentQuery;
+import com.kynsoft.finamer.payment.application.query.payment.searchCollection.GetSearchPaymentCollectionsQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -97,6 +104,24 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping(path = "/set")
+    public ResponseEntity<?> getSet() {
+
+        SetCommand query = new SetCommand();
+        SetMessage response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/projection/{id}")
+    public ResponseEntity<?> getByGenProjection(@PathVariable long id) {
+
+        FindPaymentByGenProjectionQuery query = new FindPaymentByGenProjectionQuery(id);
+        PaymentProjectionResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping(path = "/agency/{agencyId}")
     public ResponseEntity<?> CountAgencyByPaymentBalanceAndDepositBalance(@PathVariable UUID agencyId) {
 
@@ -107,10 +132,25 @@ public class PaymentController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<?> search(@RequestBody SearchRequest request) {
+    public ResponseEntity<?> search(@AuthenticationPrincipal Jwt jwt, @RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
 
-        GetSearchPaymentQuery query = new GetSearchPaymentQuery(pageable, request.getFilter(), request.getQuery());
+        String userId = jwt.getClaim("sub");
+        UUID employeeId = UUID.fromString(userId);
+        //UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchPaymentQuery query = new GetSearchPaymentQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
+        PaginatedResponse data = mediator.send(query);
+        return ResponseEntity.ok(data);
+    }
+
+    @PostMapping("/search-collection")
+    public ResponseEntity<?> searchCollections(@AuthenticationPrincipal Jwt jwt, @RequestBody SearchRequest request) {
+        Pageable pageable = PageableUtil.createPageable(request);
+
+        String userId = jwt.getClaim("sub");
+        UUID employeeId = UUID.fromString(userId);
+//        UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
+        GetSearchPaymentCollectionsQuery query = new GetSearchPaymentCollectionsQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
     }

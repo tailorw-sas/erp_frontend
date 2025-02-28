@@ -16,6 +16,6 @@ public class GetSearchManageTradingCompaniesQueryHandler implements IQueryHandle
 
     @Override
     public PaginatedResponse handle(GetSearchManageTradingCompaniesQuery query) {
-        return service.search(query.getPageable(), query.getFilter());
+        return service.search(query.getPageable(), query.getFilter(), query.getEmployeeId());
     }
 }

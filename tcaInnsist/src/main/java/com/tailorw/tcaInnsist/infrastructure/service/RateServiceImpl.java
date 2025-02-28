@@ -66,7 +66,7 @@ public class RateServiceImpl implements IRateService {
         configurationProperties.setUserName(encryptionService.decrypt(configurationDto.getUserName()));
         configurationProperties.setPassword(encryptionService.decrypt(configurationDto.getPassword()));
 
-        Logger.getLogger(RateServiceImpl.class.getName()).log(Level.INFO, String.format("ConnectionProperties. User: %s, Pass: %s Bdd: %s, IP: %s, Puerto: %s", configurationProperties.getUserName(), configurationProperties.getPassword(), configurationProperties.getDbName(), configurationProperties.getId(), configurationProperties.getPort()));
+        Logger.getLogger(RateServiceImpl.class.getName()).log(Level.INFO, String.format("ConnectionProperties. User: %s, Bdd: %s, IP: %s, Puerto: %s", configurationProperties.getUserName(), configurationProperties.getDbName(), configurationProperties.getServer(), configurationProperties.getPort()));
 
         List<RateDto> rateDtos = manageRateRepository.findByInvoiceCreatedAt(configurationProperties, invoiceDate, hotelDto.getRoomType()).stream()
                 .map(Rate::toAggregate)

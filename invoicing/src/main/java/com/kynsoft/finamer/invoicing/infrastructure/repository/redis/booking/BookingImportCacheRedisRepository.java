@@ -16,7 +16,11 @@ public interface BookingImportCacheRedisRepository extends CrudRepository<Bookin
 
     List<BookingImportCache> findAllByImportProcessId(String importProcessId);
 
-    Optional<BookingImportCache> findBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber, String importProcessId);
+    //Optional<BookingImportCache> findBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber, String importProcessId);
 
-    List<Optional<BookingImportCache>> findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(String hotelInvoiceNumber, String importProcessId);
+    List<Optional<BookingImportCache>> findAllBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber, String importProcessId);
+
+    List<BookingImportCache> findBookingImportCacheByHotelInvoiceNumberAndImportProcessId(String hotelInvoiceNumber, String importProcessId);
+
+    List<BookingImportCache> findBookingImportCacheByHotelBookingNumberAndImportProcessId(String hotelBookingNumber, String importProcessId);
 }

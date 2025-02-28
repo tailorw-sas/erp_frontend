@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.query.objectResponse.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentAttachmentStatusDto;
+import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentAttachmentStatusProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,5 +37,16 @@ public class ManagePaymentAttachmentStatusSearchResponse implements IResponse {
     public ManagePaymentAttachmentStatusSearchResponse() {
         this.code="";
         this.name="";
+    }
+
+    public ManagePaymentAttachmentStatusSearchResponse(PaymentAttachmentStatusProjection attachmentStatus) {
+        this.id = attachmentStatus.getId();
+        this.code = attachmentStatus.getCode();
+        this.name = attachmentStatus.getName();
+        this.nonNone = attachmentStatus.isNonNone();
+        this.patWithAttachment = attachmentStatus.isPatWithAttachment();
+        this.pwaWithOutAttachment = attachmentStatus.isPwaWithOutAttachment();
+        this.supported = attachmentStatus.isSupported();
+        this.status = attachmentStatus.getStatus();
     }
 }

@@ -1,6 +1,9 @@
 package com.kynsoft.finamer.payment.infrastructure.repository.query;
 
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
+import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface ManageBookingReadDataJPARepository extends JpaRepository<Booking, UUID>, 
@@ -21,4 +26,27 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     boolean existsManageBookingByBookingId(long bookingId);
 
     Optional<Booking> findManageBookingByBookingId(long bookingId);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple(" +
+            "pd.id, pd.bookingId, pd.amountBalance, pp.invoiceType, pp.hotel.id, pp.agency.client.name, pp.agency.id) " +
+            "FROM Booking pd " +
+            "JOIN pd.invoice pp " +
+            "WHERE pd.bookingId = :id")
+    Optional<BookingProjectionSimple> findSimpleDetailByGenId(@Param("id") long id);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
+            "pd.id, pd.bookingId, pd.amountBalance) " +
+            "FROM Booking pd " +
+            "WHERE pd.bookingId = :id")
+    Optional<BookingProjectionControlAmountBalance> findSimpleBookingByGenId(@Param("id") long id);
+
+    List<Booking> findByBookingIdIn(List<Long> ids);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
+            "pd.id, pd.bookingId, pd.amountBalance) " +
+            "FROM Booking pd " +
+            "WHERE pd.couponNumber = :couponNumber")
+    Optional<BookingProjectionControlAmountBalance> findByCouponNumber(@Param("couponNumber") String couponNumber);
+
+    Long countByCouponNumber(String couponNumber);
 }

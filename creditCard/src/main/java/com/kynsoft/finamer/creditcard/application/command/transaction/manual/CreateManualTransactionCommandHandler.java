@@ -82,7 +82,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
         ManageMerchantDto merchantDto = this.merchantService.findById(command.getMerchant());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
-        RulesChecker.checkRule(new ManualTransactionReservationNumberUniqueRule(this.transactionService, command.getReservationNumber(), command.getHotel()));
+//        RulesChecker.checkRule(new ManualTransactionReservationNumberUniqueRule(this.transactionService, command.getReservationNumber(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageLanguageDto languageDto = this.languageService.findById(command.getLanguage());
@@ -142,7 +142,7 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(merchantDto.getId());
                 String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
                 String paymentLink = baseUrl + "payment?token=" + token;
-                transactionService.sendTransactionPaymentLinkEmail(newTransaction, paymentLink);
+                transactionService.sendTransactionPaymentLinkEmail(transactionDto, paymentLink);
             }
         }
         this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());

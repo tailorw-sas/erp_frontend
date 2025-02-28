@@ -27,6 +27,7 @@ import com.kynsoft.finamer.insis.application.query.objectResponse.manageRoomCate
 import com.kynsoft.finamer.insis.application.query.objectResponse.manageRoomType.ManageRoomTypeIdsResponse;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BatchStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BatchType;
+import com.kynsoft.finamer.insis.infrastructure.model.kafka.BookingKafka;
 import com.kynsoft.finamer.insis.infrastructure.model.kafka.GroupedRatesKafka;
 import com.kynsoft.finamer.insis.infrastructure.model.kafka.ManageRateKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -35,10 +36,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -59,31 +57,33 @@ public class ConsumerReplicateGroupedRatesService {
             ObjectMapper mapper = new ObjectMapper();
             GroupedRatesKafka objKafka = mapper.readValue(message, new TypeReference<GroupedRatesKafka>() {});
 
-            if(objKafka.isFirstGroup()){
-                createLog(objKafka.getLogId(), objKafka.getHotelCode(), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), objKafka.getProcessId());
-            }
+            createLog(objKafka.getLogId(), objKafka.getHotelCode(), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), objKafka.getProcessId());
 
             UUID hotelId = getHotelIdFromCode(objKafka.getHotelCode());
+            List<ManageRateKafka> newRatesKafkaList = new ArrayList<>();
+            objKafka.getBookingKafkaList().forEach(bookingKafka -> {
+                newRatesKafkaList.addAll(bookingKafka.getRateKafkaList());
+            });
 
-            processNewRatePlans(objKafka.getRateKafkaList(), hotelId);
-            processNewRoomTypes(objKafka.getRateKafkaList(), hotelId);
-            processNewRoomCategories(objKafka.getRateKafkaList());
+            processNewRatePlans(newRatesKafkaList, hotelId);
+            processNewRoomTypes(newRatesKafkaList, hotelId);
+            processNewRoomCategories(newRatesKafkaList);
 
-            CreateGroupedRatesCommand command = new CreateGroupedRatesCommand(
-                    objKafka.getLogId(),
-                    objKafka.getHotelCode(),
-                    LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER),
-                    objKafka.getReservationCode(),
-                    objKafka.getCouponNumber(),
-                    objKafka.getRateKafkaList().stream()
-                            .map(this::rateKafkaToCommand)
-                            .collect(Collectors.toList())
-            );
-            mediator.send(command);
+            objKafka.getBookingKafkaList().forEach(bookingKafka -> {
+                CreateGroupedRatesCommand command = new CreateGroupedRatesCommand(
+                        objKafka.getLogId(),
+                        objKafka.getHotelCode(),
+                        LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER),
+                        bookingKafka.getReservationCode(),
+                        bookingKafka.getCouponNumber(),
+                        bookingKafka.getRateKafkaList().stream()
+                                .map(this::rateKafkaToCommand)
+                                .collect(Collectors.toList())
+                );
+                mediator.send(command);
+            });
 
-            if(objKafka.isLastGroup()){
-                setLogAsCompleted(objKafka.getLogId(), command.getHotel());
-            }
+            setLogAsCompleted(objKafka.getLogId(), objKafka.getHotelCode());
         }catch (Exception ex){
             Logger.getLogger(ConsumerReplicateGroupedRatesService.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -99,8 +99,8 @@ public class ConsumerReplicateGroupedRatesService {
         mediator.send(command);
     }
 
-    private void processNewRatePlans(List<ManageRateKafka> newRatesKafkaList, UUID hotel){
-        List<String> newRatePlansCodes = newRatesKafkaList.stream()
+    private void processNewRatePlans(List<ManageRateKafka> newRateKafkaList, UUID hotel){
+        List<String> newRatePlansCodes = newRateKafkaList.stream()
                 .map(ManageRateKafka::getRatePlanCode)
                 .filter(Objects::nonNull)
                 .map(String::trim)

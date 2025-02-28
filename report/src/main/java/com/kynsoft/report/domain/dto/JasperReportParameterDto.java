@@ -26,5 +26,6 @@ public class JasperReportParameterDto {
     private int parameterPosition;
     private String dependentField;
     private String filterKeyValue;
+    private String dataValueStatic;
 
 }

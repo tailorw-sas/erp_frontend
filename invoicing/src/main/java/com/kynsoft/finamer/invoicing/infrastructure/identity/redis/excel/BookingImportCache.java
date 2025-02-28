@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel;
 
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -69,6 +70,10 @@ public class BookingImportCache {
 
     @Indexed
     private int rowNumber;
+    
+    @Indexed
+    private String insistImportProcessId;
+    private String insistImportProcessBookingId;
 
     public BookingImportCache() {
     }
@@ -76,8 +81,8 @@ public class BookingImportCache {
     public BookingImportCache(BookingRow bookingRow) {
         this.rowNumber = bookingRow.getRowNumber();
         this.transactionDate = bookingRow.getTransactionDate();
-        this.manageHotelCode = bookingRow.getManageHotelCode();
-        this.manageAgencyCode = bookingRow.getManageAgencyCode();
+        this.manageHotelCode = InvoiceUtils.upperCaseAndTrim(bookingRow.getManageHotelCode());
+        this.manageAgencyCode = InvoiceUtils.upperCaseAndTrim(bookingRow.getManageAgencyCode());
         this.firstName = bookingRow.getFirstName();
         this.lastName = bookingRow.getLastName();
         this.checkIn = bookingRow.getCheckIn();
@@ -88,8 +93,8 @@ public class BookingImportCache {
         this.invoiceAmount = Objects.nonNull(bookingRow.getInvoiceAmount()) ? bookingRow.getInvoiceAmount() : 0;
         this.coupon = bookingRow.getCoupon();
         this.hotelBookingNumber = bookingRow.getHotelBookingNumber();
-        this.roomType = bookingRow.getRoomType();
-        this.ratePlan = bookingRow.getRatePlan();
+        this.roomType = InvoiceUtils.upperCaseAndTrim(bookingRow.getRoomType());
+        this.ratePlan = InvoiceUtils.upperCaseAndTrim(bookingRow.getRatePlan());
         this.hotelInvoiceNumber = bookingRow.getHotelInvoiceNumber();
         this.remarks = bookingRow.getRemarks();
         this.amountPAX = bookingRow.getAmountPAX();
@@ -97,7 +102,7 @@ public class BookingImportCache {
         this.hotelInvoiceAmount = Objects.nonNull(bookingRow.getHotelInvoiceAmount()) ? bookingRow.getHotelInvoiceAmount() : 0;
         this.bookingDate = bookingRow.getBookingDate();
         this.hotelType = bookingRow.getHotelType();
-        this.nightType = bookingRow.getNightType();
+        this.nightType = InvoiceUtils.upperCaseAndTrim(bookingRow.getNightType());
     }
 
     public BookingRow toAggregate() {
@@ -126,6 +131,68 @@ public class BookingImportCache {
         bookingRow.setBookingDate(this.bookingDate);
         bookingRow.setHotelType(this.hotelType);
         bookingRow.setNightType(this.nightType);
+        return bookingRow;
+    }
+
+    public BookingRow toAggregateImportInsist() {
+        BookingRow bookingRow = new BookingRow();
+        bookingRow.setTransactionDate(this.transactionDate);
+        bookingRow.setManageHotelCode(this.manageHotelCode);
+        bookingRow.setManageAgencyCode(this.manageAgencyCode);
+        bookingRow.setFirstName(this.firstName);
+        bookingRow.setLastName(this.lastName);
+        bookingRow.setCheckIn(this.checkIn);
+        bookingRow.setCheckOut(this.checkOut);
+        bookingRow.setNights(this.nights);
+        bookingRow.setAdults(this.adults);
+        bookingRow.setChildren(this.children);
+        bookingRow.setInvoiceAmount(this.invoiceAmount);
+        bookingRow.setCoupon(this.coupon);
+        bookingRow.setHotelBookingNumber(this.hotelBookingNumber);
+        bookingRow.setRoomType(this.roomType);
+        bookingRow.setRatePlan(this.ratePlan);
+        bookingRow.setHotelInvoiceNumber(this.hotelInvoiceNumber);
+        bookingRow.setRemarks(this.remarks);
+        bookingRow.setAmountPAX(this.amountPAX);
+        bookingRow.setRoomNumber(this.roomNumber);
+        bookingRow.setHotelInvoiceAmount(this.hotelInvoiceAmount);
+        bookingRow.setBookingDate(this.bookingDate);
+        bookingRow.setHotelType(this.hotelType);
+        bookingRow.setNightType(this.nightType);
+        bookingRow.setInsistImportProcessId(insistImportProcessId);
+        bookingRow.setImportProcessId(importProcessId);
+        bookingRow.setInsistImportProcessBookingId(insistImportProcessBookingId);
+        return bookingRow;
+    }
+
+    public BookingRow toAggregateImportInsistValidate() {
+        BookingRow bookingRow = new BookingRow();
+        bookingRow.setTransactionDate(this.transactionDate);
+        bookingRow.setManageHotelCode(this.manageHotelCode);
+        bookingRow.setManageAgencyCode(this.manageAgencyCode);
+        bookingRow.setFirstName(this.firstName);
+        bookingRow.setLastName(this.lastName);
+        bookingRow.setCheckIn(this.checkIn);
+        bookingRow.setCheckOut(this.checkOut);
+        bookingRow.setNights(this.nights);
+        bookingRow.setAdults(this.adults);
+        bookingRow.setChildren(this.children);
+        bookingRow.setInvoiceAmount(this.invoiceAmount);
+        bookingRow.setCoupon(this.coupon);
+        bookingRow.setHotelBookingNumber(this.hotelBookingNumber);
+        bookingRow.setRoomType(this.roomType);
+        bookingRow.setRatePlan(this.ratePlan);
+        bookingRow.setHotelInvoiceNumber(this.hotelInvoiceNumber);
+        bookingRow.setRemarks(this.remarks);
+        bookingRow.setAmountPAX(this.amountPAX);
+        bookingRow.setRoomNumber(this.roomNumber);
+        bookingRow.setHotelInvoiceAmount(this.hotelInvoiceAmount);
+        bookingRow.setBookingDate(this.bookingDate);
+        bookingRow.setHotelType(this.hotelType);
+        bookingRow.setNightType(this.nightType);
+        bookingRow.setInsistImportProcessId(insistImportProcessId);
+        bookingRow.setImportProcessId(importProcessId);
+        bookingRow.setInsistImportProcessBookingId(insistImportProcessBookingId);
         return bookingRow;
     }
 }

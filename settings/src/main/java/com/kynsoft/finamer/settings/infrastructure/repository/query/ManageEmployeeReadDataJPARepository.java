@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.repository.query;
 
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageEmployee;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,4 +23,12 @@ public interface ManageEmployeeReadDataJPARepository extends JpaRepository<Manag
     @Query("SELECT COUNT(b) FROM ManageEmployee b WHERE b.email = :email AND b.id <> :id")
     Long countByEmailAndNotId(@Param("email") String email, @Param("id") UUID id);
 
+    @Query("SELECT agency.id FROM ManageEmployee e JOIN e.manageAgencyList agency WHERE e.id = :employeeId")
+    List<UUID> findAgencyIdsByEmployeeId(@Param("employeeId") UUID employeeId);
+
+    @Query("SELECT hotel.id FROM ManageEmployee e JOIN e.manageHotelList hotel WHERE e.id = :employeeId")
+    List<UUID> findHotelsIdsByEmployeeId(@Param("employeeId") UUID employeeId);
+
+    @Query("SELECT tCompany.id FROM ManageEmployee e JOIN e.manageTradingCompaniesList tCompany WHERE e.id = :employeeId")
+    List<UUID> findManageTradingCompaniesIdsByEmployeeId(@Param("employeeId") UUID employeeId);
 }

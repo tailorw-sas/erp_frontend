@@ -14,16 +14,43 @@ ENV PACKAGE_TOKEN=${PACKAGE_TOKEN}
 # Reemplaza el token de configuración en settings.xml
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
+RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+
 # Copia los archivos de proyecto
 COPY . /build
 
 # Argumento para obtener el nombre del POM de forma dinámica
-ARG POM_NAME
-ENV POM_NAME=${POM_NAME}
+ARG ENVIRONMENT=main
+ENV ENVIRONMENT ${ENVIRONMENT}
+
+# Define argumentos para controlar el comportamiento y parametrizar la copia
+ARG DOCKER_HUB=false
+ARG ARTIFACT_VERSION=0.0.1-SNAPSHOT
+# Lista de artefactos a copiar (separados por espacios)
+ARG ARTIFACTS="share"
+
+RUN if [ "$DOCKER_HUB" = "false" ]; then \
+      echo "Entorno local detectado, copiando artefactos locales..."; \
+      for artifact in $ARTIFACTS; do \
+          target_dir="$MAVEN_CONFIG/repository/com/kynsoft/finamer/$artifact/$ARTIFACT_VERSION"; \
+          echo "Procesando artefacto: $artifact"; \
+          mkdir -p "$target_dir" && \
+          if [ -f libs/${artifact}-${ARTIFACT_VERSION}.jar ]; then \
+              cp -v libs/${artifact}-${ARTIFACT_VERSION}.jar "$target_dir/"; \
+          else \
+              echo "❌ ERROR: No se encontró libs/${artifact}-${ARTIFACT_VERSION}.jar" && exit 1; \
+          fi && \
+          if [ -f libs/${artifact}-${ARTIFACT_VERSION}.pom ]; then \
+              cp -v libs/${artifact}-${ARTIFACT_VERSION}.pom "$target_dir/"; \
+          else \
+              echo "⚠️  Advertencia: No se encontró libs/${artifact}-${ARTIFACT_VERSION}.pom"; \
+          fi; \
+      done; \
+    fi
 
 # Compila las dependencias offline y el paquete
-RUN mvn dependency:go-offline -f ${POM_NAME} -s settings.xml
-RUN mvn clean package -DskipTests -f ${POM_NAME}
+RUN mvn dependency:go-offline -f pom.xml -s settings.xml -Denv=$ENVIRONMENT
+RUN mvn clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
 
 # Etapa final: imagen ligera de distroless
 FROM gcr.io/distroless/java17-debian11
@@ -34,11 +61,16 @@ ENV TZ="America/Guayaquil"
 # Copia el JAR generado desde la etapa de construcción
 COPY --from=builder /build/target/report-1.0.0.jar /app/report-1.0.0.jar
 
+#Download dependencias for monitoring
+COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
+COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
+
 # Expone el puerto que utiliza la aplicación
 EXPOSE 9909
+EXPOSE 9904
 
 # Variables de entorno para depuración y monitoreo
-ENV JAVA_TOOL_OPTIONS="-Xmx1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/ -Dlogging.level.org.springframework=DEBUG"
+#ENV JAVA_TOOL_OPTIONS="-Xmx1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/ -Dlogging.level.org.springframework=DEBUG"
 
 # Comando de inicio de la aplicación con más memoria y recolección de basura mejorada
-ENTRYPOINT ["java", "-Xmx1024m", "-XX:+UseG1GC", "-jar", "/app/report-1.0.0.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-Xmx1024m", "-XX:+UseG1GC", "-jar", "/app/report-1.0.0.jar"]
