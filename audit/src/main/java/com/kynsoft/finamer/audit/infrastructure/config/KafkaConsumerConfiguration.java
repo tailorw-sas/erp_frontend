@@ -42,9 +42,9 @@ public class KafkaConsumerConfiguration {
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        if(profileNeedsSasl(environment)){
+        //if(profileNeedsSasl(environment)){
             addSaslConfig(configProps, saslUsername, saslPassword);
-        }
+        //}
         /*
         if (saslUsername != null && !saslUsername.isEmpty() && saslPassword != null && !saslPassword.isEmpty()) {
             addSaslConfig(configProps, saslUsername, saslPassword);

@@ -32,19 +32,19 @@ public class KafkaProducerConfig {
     private String saslPassword;
 
     @Bean
-    @Profile("qa | production")
+    //@Profile("qa | production | default")
     public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         addSaslConfig(configProps, saslUsername, saslPassword);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    @Bean
-    @Profile("!qa & !production")
-    public ProducerFactory<String, Object> devProducerFactory() {
+    //@Bean
+    //@Profile("!qa & !production")
+    /*public ProducerFactory<String, Object> devProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         return new DefaultKafkaProducerFactory<>(configProps);
-    }
+    }*/
 
     private Map<String, Object> createBaseProps() {
         Map<String, Object> configProps = new HashMap<>();

@@ -23,19 +23,20 @@
     </properties>
 
 	<profiles>
-		<profile>
-			<id>dev</id>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>dev</value>
-				</property>
-			</activation>
-			<properties>
-				<packaging.artifactId>audit-agent-dev</packaging.artifactId>
-			</properties>
-		</profile>
-		<profile>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>dev</value>
+                </property>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <packaging.artifactId>audit-agent-dev</packaging.artifactId>
+            </properties>
+        </profile>
+        <profile>
 			<id>qa</id>
 			<activation>
 				<property>
@@ -47,19 +48,18 @@
 				<packaging.artifactId>audit-agent-qa</packaging.artifactId>
 			</properties>
 		</profile>
-		<profile>
-			<id>main</id>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>main</value>
-				</property>
-                <activeByDefault>true</activeByDefault>
-			</activation>
-			<properties>
-				<packaging.artifactId>audit-agent</packaging.artifactId>
-			</properties>
-		</profile>
+        <profile>
+            <id>main</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>main</value>
+                </property>
+            </activation>
+            <properties>
+                <packaging.artifactId>audit-agent</packaging.artifactId>
+            </properties>
+        </profile>
 	</profiles>
 
 	<build>
