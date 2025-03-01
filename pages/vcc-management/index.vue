@@ -11,6 +11,9 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import { formatCardNumber } from '~/components/vcc/vcc_utils'
 import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
+import BankReconciliation from '~/pages/vcc-management/bank-reconciliation/index.vue'// Karina
+import HotelPayment from '~/pages/vcc-management/hotel-payment/index.vue'// Karina
+
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const authStore = useAuthStore()
@@ -47,6 +50,9 @@ const filterToSearch = ref<IData>({
 })
 const selectedTransactionId = ref('')
 const contextMenu = ref()
+
+const isBankReconciliationOpen = ref(false)// Karina
+const isHotelPaymentOpen = ref(false)// Karina
 
 enum MenuType {
   refund, resendLink, resendPost, cancelled, document
@@ -261,8 +267,21 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-// -------------------------------------------------------------------------------------------------------
+// MODAL-Karina------------------------------------------------------------------------------------------------------
 
+function openBankReconciliation() {
+  isBankReconciliationOpen.value = true
+}
+function closeBankReconciliation() {
+  isBankReconciliationOpen.value = false
+}
+
+function openHotelPayment() {
+  isHotelPaymentOpen.value = true
+}
+function closeHotelPayment() {
+  isHotelPaymentOpen.value = false
+}
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
   if (options.value.loading) {
@@ -880,13 +899,13 @@ function setRefundAvailable(isAvailable: boolean) {
   }
 }
 
-function openBankReconciliation() {
-  window.open('/vcc-management/bank-reconciliation', '_blank')
-}
+// function openBankReconciliation() {
+//   window.open('/vcc-management/bank-reconciliation', '_blank')
+// }
 
-function openHotelPayment() {
-  window.open('/vcc-management/hotel-payment', '_blank')
-}
+// function openHotelPayment() {
+//   window.open('/vcc-management/hotel-payment', '_blank')
+// }
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -917,7 +936,7 @@ onMounted(() => {
       <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
       <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Hotel Payment" @click="openHotelPayment()" />
-      <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
+      <!-- <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled /> -->
       <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
     </div>
   </div>
@@ -1159,6 +1178,30 @@ onMounted(() => {
         }" header="Manage Transaction Attachment" :open-dialog="attachmentDialogOpen" :selected-transaction="contextMenuTransaction"
       />
     </div>
+    <!-- Modal para Bank Reconciliation Management Karina -->
+    <Dialog
+      v-model:visible="isBankReconciliationOpen"
+      modal
+      header="Bank Reconciliation Management"
+      :style="{ width: '95vw', height: '95vh', overflow: 'hidden' }"
+      :closable="true"
+    >
+      <div class="p-4" style="height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <BankReconciliation style="max-height: 50vh; overflow: hidden; width: 100%;" />
+      </div>
+    </Dialog>
+    <!-- Modal para Hotel Payment Karina -->
+    <Dialog
+      v-model:visible="isHotelPaymentOpen"
+      modal
+      header="Hotel Payment Management"
+      :style="{ width: '95vw', height: '95vh', overflow: 'hidden' }"
+      :closable="true"
+    >
+      <div class="p-4" style="height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <HotelPayment style="max-height: 50vh; overflow: hidden; width: 100%;" />
+      </div>
+    </Dialog>
   </div>
 </template>
 
