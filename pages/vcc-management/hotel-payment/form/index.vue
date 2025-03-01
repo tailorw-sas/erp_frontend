@@ -615,10 +615,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <div class="-mr-4 -ml-4" style="max-height: 100vh; height: 90vh">
+    <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       New Hotel Payment
-    </div>
+    </div> -->
     <div class="card p-4 mb-0">
       <EditFormV2
         :key="formReload"
@@ -736,7 +736,7 @@ onMounted(() => {
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.manageHotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" />
+        <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" /> -->
       </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">

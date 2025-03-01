@@ -673,9 +673,6 @@ onMounted(async () => {
 
 <template>
   <div style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      Edit Hotel Payment
-    </div>
     <div class="card p-4 mb-0">
       <EditFormV2
         :key="formReload"
@@ -773,7 +770,7 @@ onMounted(async () => {
           <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
           <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
         </IfCan>
-        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" />
+        <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" /> -->
       </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">

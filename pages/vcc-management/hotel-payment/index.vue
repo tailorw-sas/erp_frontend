@@ -11,6 +11,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import HotelPaymentStatusHistoryDialog from '~/components/vcc/history/HotelPaymentStatusHistoryDialog.vue'
 import AttachmentHotelPaymentDialog from '~/components/vcc/hotel-payment/attachment/AttachmentHotelPaymentDialog.vue'
+import NewHotelPayment from '~/pages/vcc-management/hotel-payment/form/index.vue'// Karina
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const { data: userData } = useAuth()
@@ -38,6 +39,8 @@ const accordionLoading = ref({
   status: false,
 })
 const contextMenu = ref()
+
+const isNewHotelPaymentModalOpen = ref(false)// Karina
 
 const menuListItems = ref<any[]>([])
 
@@ -95,6 +98,15 @@ const confHotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
 })
+
+// MODAL-Karina------------------------------------------------------------------------------------------------------
+function openNewHotelPaymentModal() {
+  isNewHotelPaymentModalOpen.value = true
+}
+
+function closeNewHotelPaymentModal() {
+  isNewHotelPaymentModalOpen.value = false
+}
 
 const activeStatusFilter: IFilter[] = [
   {
@@ -621,18 +633,16 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
-      Hotel Payment Management
-    </h5>
+    <h5 class="mb-0" />
     <IfCan :perms="['HOTEL-PAYMENT:CREATE']">
-      <div class="my-2 flex justify-content-end px-0">
-        <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToHotelPaymentInNewTab()" />
+      <div class="my-2 flex justify-content-end px-2">
+        <Button class="ml-2 -mt-4 py-1 px-2 -mx-5" icon="pi pi-plus" label="New" @click="openNewHotelPaymentModal()" />
       </div>
     </IfCan>
   </div>
-  <div class="grid">
-    <div class="col-12 order-0">
-      <div class="card p-0 mb-0">
+  <div class="grid mb-0">
+    <div class="col-12 order-0 ml-4 -mt-1">
+      <div class="card p-0 mb-0 -ml-6">
         <Accordion id="accordion" :active-index="0">
           <AccordionTab content-class="p-0 m-0">
             <template #header>
@@ -668,8 +678,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getHotelList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Status:</label>
@@ -691,8 +700,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getStatusList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                 </div>
               </div>
@@ -772,60 +780,62 @@ onMounted(() => {
           Transactions
         </div>
       </div> -->
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @on-row-right-click="onRowRightClick"
-        @on-row-double-click="goToEditHotelPaymentInNewTab($event)"
-      >
-        <template #expansion="{ data: item }">
-          <!--          <pre>{{item}}</pre> -->
-          <HotelPaymentTransactions
-            :hotel-payment-id="item.id" :hide-bind-transaction-menu="item.status && (item.status.completed || item.status.cancelled)"
-            @update:list="($event) => {
-              getList()
-            }"
-          />
-        </template>
-        <template #column-icon="{ data: objData, column }">
-          <div class="flex align-items-center justify-content-center p-0 m-0">
-            <!-- <pre>{{ objData }}</pre> -->
-            <Button
-              v-if="objData.hasAttachments"
-              :icon="column.icon"
-              class="p-button-rounded p-button-text w-2rem h-2rem"
-              aria-label="Submit"
-              :style="{ color: '#000' }"
+      <div class="card p-0 mb-0 -ml-6">
+        <DynamicTable
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @on-row-right-click="onRowRightClick"
+          @on-row-double-click="goToEditHotelPaymentInNewTab($event)"
+        >
+          <template #expansion="{ data: item }">
+            <!--          <pre>{{item}}</pre> -->
+            <HotelPaymentTransactions
+              :hotel-payment-id="item.id" :hide-bind-transaction-menu="item.status && (item.status.completed || item.status.cancelled)"
+              @update:list="($event) => {
+                getList()
+              }"
             />
-          </div>
+          </template>
+          <template #column-icon="{ data: objData, column }">
+            <div class="flex align-items-center justify-content-center p-0 m-0">
+              <!-- <pre>{{ objData }}</pre> -->
+              <Button
+                v-if="objData.hasAttachments"
+                :icon="column.icon"
+                class="p-button-rounded p-button-text w-2rem h-2rem"
+                aria-label="Submit"
+                :style="{ color: '#000' }"
+              />
+            </div>
           <!-- style="color: #616161;" -->
           <!-- :style="{ 'background-color': '#00b816' }" -->
-        </template>
-        <template #column-status="{ data, column }">
-          <Badge
-            v-tooltip.top="data.status.name.toString()"
-            :value="data.status.name"
-            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
-          />
-        </template>
-        <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center">
-            <Row>
-              <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
-              <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.commission)" />
-              <Column :footer="formatNumber(subTotals.net)" />
-              <Column :colspan="2" />
-            </Row>
-          </ColumnGroup>
-        </template>
-      </DynamicTable>
+          </template>
+          <template #column-status="{ data, column }">
+            <Badge
+              v-tooltip.top="data.status.name.toString()"
+              :value="data.status.name"
+              :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+            />
+          </template>
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center">
+              <Row>
+                <Column footer="Totals:" :colspan="6" footer-style="text-align:right" />
+                <Column :footer="formatNumber(subTotals.amount)" />
+                <Column :footer="formatNumber(subTotals.commission)" />
+                <Column :footer="formatNumber(subTotals.net)" />
+                <Column :colspan="2" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
+      </div>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <div v-if="hotelPaymentHistoryDialogVisible">
@@ -842,6 +852,18 @@ onMounted(() => {
       />
     </div>
   </div>
+  <!-- Modal de New Hotel Payment Karina -->
+  <Dialog
+    v-model:visible="isNewHotelPaymentModalOpen"
+    modal
+    header="New Hotel Payment"
+    :style="{ width: '80vw', height: '55vh' }"
+    :closable="true"
+  >
+    <div class="p-4" style="height: auto; overflow: hidden;">
+      <NewHotelPayment style="max-height: 45vh; overflow: hidden;" />
+    </div>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -849,5 +871,45 @@ onMounted(() => {
   min-width: 55px;
   max-width: 55px;
   text-align: end;
+}
+/* Contenedor general de los modales Karina*/
+.modal-container {
+  position: fixed;
+  top: 10%;
+  left: 5%;
+  width: 90%;
+  height: 80vh;
+  display: flex;
+  gap: 10px;
+}
+
+/* Panel izquierdo */
+.modal-left {
+  width: 50%;
+  height: 100%;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+}/* Panel derecho */
+
+.modal-right {
+  width: 50%;
+  height: 100%;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+}
+/* Encabezado de cada modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 </style>

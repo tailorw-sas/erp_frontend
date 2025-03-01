@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
 const multiSelectLoading = ref({
 
   hotel: false,
@@ -622,8 +623,9 @@ async function applyUndo() {
           severity: 'success',
           summary: 'Success',
           detail: `Undo successfully applied to ${response.satisfactoryQuantity} records.`,
-          life: 6000
+          life: 5000
         })
+        onClose()
         await searchAndFilter()
       }
       else {
@@ -640,6 +642,9 @@ async function applyUndo() {
     loadingSaveAll.value = false
     console.error('Error applying undo:', error)
   }
+}
+function onClose() {
+  emit('close')
 }
 
 const disabledSearch = computed(() => {

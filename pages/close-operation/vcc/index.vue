@@ -65,14 +65,14 @@ const payload = ref<IQueryRequest>({
     type: 'filterSearch',
   }],
   query: '',
-  pageSize: 50,
+  pageSize: 100,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -177,7 +177,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.hotel = typeof item.data.hotel === 'object' ? item.data.hotel.id : item.data.hotel
   payload.status = statusToString(item.data.status)
   await GenericService.update(confApi.moduleApi, confApi.uriApi, item.data.id || '', payload)
-  toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 5000 })
 }
 
 async function saveItem(item: { [key: string]: any }) {
@@ -190,7 +190,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
   }
   finally {
     options.value.loading = false
@@ -216,11 +216,11 @@ async function saveMultiple() {
     const selectedHotels = currentList.filter(item => selectedElements.value.includes(item.id))
     payload.hotels = selectedHotels.map((e: any) => e.hotel.id)
     await GenericService.update(confApi.moduleApi, confApi.uriApi, 'all', payload, 'PUT')
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 5000 })
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
   }
   finally {
     options.value.loading = false

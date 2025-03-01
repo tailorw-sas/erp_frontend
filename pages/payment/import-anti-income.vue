@@ -7,6 +7,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
+const emit = defineEmits(['close'])
 const { data: userData } = useAuth()
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -217,7 +218,8 @@ async function importAntiIncome() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 10000 })
+        onClose()
         options.value.loading = false
         await clearForm()
       }
@@ -227,6 +229,9 @@ async function importAntiIncome() {
   options.value.loading = false
 }
 
+function onClose() {
+  emit('close')
+}
 async function validateStatusImport() {
   options.value.loading = true
   return new Promise<void>((resolve) => {

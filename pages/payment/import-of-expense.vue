@@ -8,6 +8,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { base64ToFile } from '~/utils/helpers'
 
+const emit = defineEmits(['close'])
 const toast = useToast()
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
@@ -182,7 +183,8 @@ async function importFile() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 10000 })
+        onClose()
         options.value.loading = false
         await clearForm()
       }
@@ -190,7 +192,9 @@ async function importFile() {
   }
   options.value.loading = false
 }
-
+function onClose() {
+  emit('close')
+}
 async function validateStatusImport() {
   options.value.loading = true
   return new Promise<void>((resolve) => {
