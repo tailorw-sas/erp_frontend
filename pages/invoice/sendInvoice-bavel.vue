@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
 const sendType = ref('')
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
@@ -519,6 +520,7 @@ async function send() {
     options.value.loading = false
     if (completed) {
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 10000 })
+      onClose()
       if (clickedItem.value.length === listItems.value.length) {
         clickedItem.value = []
         navigateTo('/invoice')
@@ -531,6 +533,9 @@ async function send() {
   }
 
   loadingSaveAll.value = false // Opcional: Puedes manejar el estado de carga aquí
+}
+function onClose() {
+  emit('close')
 }
 
 const disabledSearch = computed(() => {

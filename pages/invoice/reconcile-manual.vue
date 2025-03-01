@@ -10,6 +10,8 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
+
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -496,13 +498,14 @@ async function saveItem() {
         getErrors(errorsResponse)
       }
       else {
-        navigateTo('/invoice')
+        // navigateTo('/invoice')
         toast.add({
           severity: 'info',
           summary: 'Confirmed',
           detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
           life: 5000
         })
+        onClose()
       }
     }
     else if (errorsResponse && errorsResponse.length > 0) {
@@ -513,6 +516,7 @@ async function saveItem() {
           detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
           life: 5000
         })
+        onClose()
       }
       getErrors(errorsResponse)
     }
@@ -520,6 +524,10 @@ async function saveItem() {
 
   loadingSaveAll.value = false // Detener el loading al final de la función
   options.value.loading = false
+}
+
+function onClose() {
+  emit('close')
 }
 
 async function getErrors(errorsResponse: any) {

@@ -10,6 +10,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
 const { data: userData } = useAuth()
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
@@ -818,6 +819,7 @@ async function importBookings() {
         detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
         life: 5000
       })
+      onClose()
       options.value.loading = false
       await getList()
       showErrorsDataTable.value = false
@@ -852,6 +854,10 @@ async function importBookings() {
   finally {
     options.value.loading = false
   }
+}
+
+function onClose() {
+  emit('close')
 }
 
 async function checkProcessStatus(id: any) {
