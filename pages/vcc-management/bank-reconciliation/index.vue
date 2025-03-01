@@ -8,6 +8,8 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+
+import BankPaymentOfMerchant from '~/pages/vcc-management/bank-reconciliation/bank-payment-of-merchant/index.vue'// Karina
 // VARIABLES -----------------------------------------------------------------------------------------
 const listItems = ref<any[]>([])
 const loadingSaveAll = ref(false)
@@ -31,6 +33,8 @@ const accordionLoading = ref({
   status: false,
 })
 const contextMenu = ref()
+
+const isBankPaymentModalOpen = ref(false)// Karina
 
 const menuListItems = [
   {
@@ -94,6 +98,15 @@ interface ListItem {
   status: string
 }
 // -------------------------------------------------------------------------------------------------------
+
+// MODAL-Karina------------------------------------------------------------------------------------------------------
+function openBankPaymentModal() {
+  isBankPaymentModalOpen.value = true
+}
+
+function closeBankPaymentModal() {
+  isBankPaymentModalOpen.value = false
+}
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const hotelFilters: IFilter[] = [{
@@ -538,18 +551,16 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
-      Bank Reconciliation Management
-    </h5>
+    <h5 class="mb-0" />
     <IfCan :perms="['BANK-RECONCILIATION:CREATE']">
-      <div class="my-2 flex justify-content-end px-0">
-        <Button class="ml-2" icon="pi pi-plus" label="New" @click="goToBankPaymentInNewTab()" />
+      <div class="my-2 flex justify-content-end px-2">
+        <Button class="ml-2 -mt-4 py-1 px-2 -mx-5" icon="pi pi-plus" label="New" @click="openBankPaymentModal()" />
       </div>
     </IfCan>
   </div>
-  <div class="grid">
-    <div class="col-12 order-0">
-      <div class="card p-0 mb-0">
+  <div class="grid mb-0">
+    <div class="col-12 order-0 ml-4 -mt-1">
+      <div class="card p-0 mb-0 -ml-6">
         <Accordion id="accordion" :active-index="0">
           <AccordionTab content-class="p-0 m-0">
             <template #header>
@@ -713,50 +724,64 @@ onMounted(() => {
           Transactions
         </div>
       </div> -->
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @on-row-right-click="onRowRightClick"
-        @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
-      >
-        <template #column-reconcileStatus="{ data, column }">
-          <Badge
-            v-tooltip.top="data.reconcileStatus.name.toString()"
-            :value="data.reconcileStatus.name"
-            :class="column.statusClassMap?.find(e => e.status === data.reconcileStatus.name)?.class"
-          />
-        </template>
-        <template #expansion="{ data: item }">
-          <BankPaymentTransactions
-            :bank-reconciliation-id="item.id" :hide-bind-transaction-menu="item.reconcileStatus && (item.reconcileStatus.completed || item.reconcileStatus.cancelled)"
-            @update:details-amount="($event) => {
-              item.detailsAmount = formatNumber($event)
-            }"
-          />
-        </template>
-        <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center">
-            <Row>
-              <Column footer="Totals:" :colspan="4" footer-style="text-align:right" />
-              <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.details)" />
-              <Column :colspan="3" />
-            </Row>
-          </ColumnGroup>
-        </template>
-      </DynamicTable>
+      <div class="card p-0 mb-0 -ml-6">
+        <DynamicTable
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @on-row-right-click="onRowRightClick"
+          @on-row-double-click="goToPaymentOfMerchantInNewTab($event)"
+        >
+          <template #column-reconcileStatus="{ data, column }">
+            <Badge
+              v-tooltip.top="data.reconcileStatus.name.toString()"
+              :value="data.reconcileStatus.name"
+              :class="column.statusClassMap?.find(e => e.status === data.reconcileStatus.name)?.class"
+            />
+          </template>
+          <template #expansion="{ data: item }">
+            <BankPaymentTransactions
+              :bank-reconciliation-id="item.id" :hide-bind-transaction-menu="item.reconcileStatus && (item.reconcileStatus.completed || item.reconcileStatus.cancelled)"
+              @update:details-amount="($event) => {
+                item.detailsAmount = formatNumber($event)
+              }"
+            />
+          </template>
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center">
+              <Row>
+                <Column footer="Totals:" :colspan="4" footer-style="text-align:right" />
+                <Column :footer="formatNumber(subTotals.amount)" />
+                <Column :footer="formatNumber(subTotals.details)" />
+                <Column :colspan="3" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
+      </div>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <div v-if="bankReconciliationHistoryDialogVisible">
       <BankReconciliationStatusHistoryDialog :close-dialog="() => { bankReconciliationHistoryDialogVisible = false }" :open-dialog="bankReconciliationHistoryDialogVisible" :selected-bank-reconciliation="contextMenuTransaction" :s-class-map="sClassMap" />
     </div>
   </div>
+  <!-- Modal de Bank Payment Of Merchant Karina -->
+  <Dialog
+    v-model:visible="isBankPaymentModalOpen"
+    modal
+    header="New Bank Payment of Merchant"
+    :style="{ width: '80vw', height: '55vh' }"
+    :closable="true"
+  >
+    <div class="p-4" style="height: auto; overflow: hidden;">
+      <BankPaymentOfMerchant style="max-height: 45vh; overflow: hidden;" />
+    </div>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -764,5 +789,45 @@ onMounted(() => {
   min-width: 55px;
   max-width: 55px;
   text-align: end;
+}
+/* Contenedor general de los modales Karina*/
+.modal-container {
+  position: fixed;
+  top: 10%;
+  left: 5%;
+  width: 90%;
+  height: 80vh;
+  display: flex;
+  gap: 10px;
+}
+
+/* Panel izquierdo */
+.modal-left {
+  width: 50%;
+  height: 100%;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+}/* Panel derecho */
+
+.modal-right {
+  width: 50%;
+  height: 100%;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+}
+/* Encabezado de cada modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 </style>
