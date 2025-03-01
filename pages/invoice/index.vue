@@ -727,17 +727,17 @@ const itemsMenuImport = ref([
     label: 'Booking From File (Virtual Hotels)',
     command:()=> ImportVirtualDialogVisible.value=true,
     disabled: computedShowMenuItemImportBookingFromVirtual
+  }, 
+  {
+    label: 'Import From Innsist',
+    command:()=> ImportInssistDialogVisible.value=true,
+    // command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
+    //disabled: computedShowMenuItemUndoImport
   },
   {
     label: 'Undo Import',
     command:()=> UndoImportDialogVisible.value=true,
     //command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
-    //disabled: computedShowMenuItemUndoImport
-  },
-  {
-    label: 'Import From Innsist',
-    command:()=> ImportInssistDialogVisible.value=true,
-    // command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
     //disabled: computedShowMenuItemUndoImport
   }
   

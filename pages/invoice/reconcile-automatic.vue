@@ -11,6 +11,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
 const { data: userData } = useAuth()
 const multiSelectLoading = ref({
   agency: false,
@@ -411,13 +412,18 @@ async function ApplyImport() {
       else {
         navigateTo('/invoice')
         const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 5000 })
+        onClose()
       }
     }
     catch (error) {
 
     }
   }
+}
+
+function onClose() {
+  emit('close')
 }
 
 async function validateStatusImport() {

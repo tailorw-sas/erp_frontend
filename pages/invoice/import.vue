@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
+const emit = defineEmits(['close'])
 const toast = useToast()
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
@@ -213,6 +214,7 @@ async function importFile() {
         // messageDialog.value = `The file was upload successful!. ${totalImportedRows.value} rows imported.`
         // openSuccessDialog.value = true
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value} rows imported.`, life: 5000 })
+        onClose()
         await clearForm()
       }
     }
@@ -222,6 +224,9 @@ async function importFile() {
   options.value.loading = false
 }
 
+function onClose() {
+  emit('close')
+}
 async function validateStatusImport() {
   options.value.loading = true
   return new Promise<void>((resolve) => {
