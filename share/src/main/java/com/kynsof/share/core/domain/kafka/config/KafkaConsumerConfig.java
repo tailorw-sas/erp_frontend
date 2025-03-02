@@ -36,40 +36,13 @@ public class KafkaConsumerConfig {
     @Value("${KAFKA_SASL_PASSWORD:password}")
     private String saslPassword;
 
-    List<String> profilesWithSasl = List.of("qa", "production", "default");
-
     @Bean
-    public ConsumerFactory<String, Object> consumerFactory(Environment environment) {
+    public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = createBaseProps();
-        //if(profileNeedsSasl(environment)){
-            addSaslConfig(configProps, saslUsername, saslPassword);
-        //}
+        addSaslConfig(configProps, saslUsername, saslPassword);
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
-
-    private boolean profileNeedsSasl(Environment environment){
-        List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
-        return activeProfiles.stream().anyMatch(profilesWithSasl::contains);
-    }
-
-//    public ConsumerFactory<String, Object> defaultConsumerFactory() {
-//        System.out.println("************** Ingreso a defaultConsumerFactory sin SASL");
-//        Map<String, Object> configProps = createBaseProps();
-        // Verificar si SASL es requerido
-//        if (saslUsername != null && !saslUsername.isEmpty() && saslPassword != null && !saslPassword.isEmpty()) {
-//            addSaslConfig(configProps, saslUsername, saslPassword);
-//        } else {
-//            // Asegúrate de que no esté configurado ningún protocolo de seguridad si no se requiere
-//            configProps.remove("security.protocol");
-//            configProps.remove("sasl.mechanism");
-//            configProps.remove("sasl.jaas.config");
-//        }
-//        configProps.remove("security.protocol");
-//        configProps.remove("sasl.mechanism");
-//        configProps.remove("sasl.jaas.config");
-//        return new DefaultKafkaConsumerFactory<>(configProps);
-//    }
 
     private Map<String, Object> createBaseProps() {
         Map<String, Object> configProps = new HashMap<>();
@@ -85,14 +58,14 @@ public class KafkaConsumerConfig {
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
         props.put("security.protocol", "SASL_PLAINTEXT");
-        props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256");
-        props.put("sasl.jaas.config", String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password));
+        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put("sasl.jaas.config", String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(Environment environment) {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory(environment));
+        factory.setConsumerFactory(consumerFactory());
         return factory;
     }
 }

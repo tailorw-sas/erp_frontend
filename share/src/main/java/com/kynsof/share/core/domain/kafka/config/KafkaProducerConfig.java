@@ -7,7 +7,6 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -32,19 +31,11 @@ public class KafkaProducerConfig {
     private String saslPassword;
 
     @Bean
-    //@Profile("qa | production | default")
     public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
         addSaslConfig(configProps, saslUsername, saslPassword);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
-
-    //@Bean
-    //@Profile("!qa & !production")
-    /*public ProducerFactory<String, Object> devProducerFactory() {
-        Map<String, Object> configProps = createBaseProps();
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }*/
 
     private Map<String, Object> createBaseProps() {
         Map<String, Object> configProps = new HashMap<>();
@@ -57,8 +48,9 @@ public class KafkaProducerConfig {
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-        props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256");
-        props.put(SaslConfigs.SASL_JAAS_CONFIG, String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", username, password));
+        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG, String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
+
     }
 
     @Bean
