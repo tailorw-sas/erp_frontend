@@ -58,7 +58,6 @@ public class KafkaConsumerConfig {
 
     private void addSaslConfig(Map<String, Object> props, String username, String password) {
         props.put("security.protocol", "SASL_PLAINTEXT");
-        //props.put(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256");
         props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         props.put("sasl.jaas.config", String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";", username, password));
     }
