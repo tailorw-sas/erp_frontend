@@ -74,7 +74,7 @@ RUN mvn clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
 # FROM docker.io/oraclelinux:9-slim
 FROM bellsoft/liberica-openjdk-alpine:17.0.6
 
-EXPOSE 9908
+EXPOSE 9909
 EXPOSE 9904
 
 #Configurar Zona Horaria
