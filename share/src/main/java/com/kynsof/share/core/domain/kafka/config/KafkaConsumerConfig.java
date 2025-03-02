@@ -39,7 +39,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = createBaseProps();
-        addSaslConfig(configProps, saslUsername, saslPassword);
+        addSaslConfig(configProps, saslUsername, saslPassword);//Comentar esta linea si no se tiene configurado Kafka en docker con autenticacion SASL
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
