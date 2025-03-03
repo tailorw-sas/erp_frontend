@@ -58,7 +58,6 @@ const objTitle = ref({
     max-width: calc(20% - 10px); /* Ensure max width doesn't exceed 20% */
     box-sizing: border-box;
   }
-
   .blue-line {
     height: 20px;
     border-radius: 50px;

@@ -17,6 +17,7 @@ const selectedDate = ref<Date>()
 const loadingSearch = ref(false)
 const menu = ref() // Reference for the menu component
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+const resultTable = ref()
 const filterToSearch = ref<IData>({
   search: '',
   active: true,
@@ -51,7 +52,8 @@ const options = ref({
   loading: false,
   actionsAsMenu: false,
   messageToDelete: '',
-  selectionMode: 'multiple'
+  selectionMode: 'multiple',
+  showSelectedItems: true
 })
 const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
@@ -63,14 +65,14 @@ const payload = ref<IQueryRequest>({
     type: 'filterSearch',
   }],
   query: '',
-  pageSize: 50,
+  pageSize: 100,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -83,6 +85,8 @@ async function getList() {
     return
   }
   try {
+    selectedElements.value = []
+    resultTable.value?.clearSelectedItems()
     options.value.loading = true
     listItems.value = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
@@ -173,7 +177,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.hotel = typeof item.data.hotel === 'object' ? item.data.hotel.id : item.data.hotel
   payload.status = statusToString(item.data.status)
   await GenericService.update(confApi.moduleApi, confApi.uriApi, item.data.id || '', payload)
-  toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+  toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 5000 })
 }
 
 async function saveItem(item: { [key: string]: any }) {
@@ -186,7 +190,7 @@ async function saveItem(item: { [key: string]: any }) {
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
   }
   finally {
     options.value.loading = false
@@ -212,11 +216,11 @@ async function saveMultiple() {
     const selectedHotels = currentList.filter(item => selectedElements.value.includes(item.id))
     payload.hotels = selectedHotels.map((e: any) => e.hotel.id)
     await GenericService.update(confApi.moduleApi, confApi.uriApi, 'all', payload, 'PUT')
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 5000 })
   }
   catch (error: any) {
     successOperation = false
-    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 5000 })
   }
   finally {
     options.value.loading = false
@@ -394,6 +398,7 @@ onMounted(async () => {
         <Button v-tooltip.left="'Select date'" icon="pi pi-calendar" text rounded class="mr-1" @click="clearForm" />
       </div> -->
       <DynamicTable
+        ref="resultTable"
         :data="listItems"
         :columns="columns"
         :options="options"

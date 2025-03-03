@@ -475,6 +475,8 @@ const optionsRoomRate = ref({
   loading: false,
   showFilters: false,
   actionsAsMenu: false,
+  scrollHeight: '35vh',
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?',
 })
 
@@ -857,8 +859,8 @@ function onRowRightClick(event: any) {
   // Si el estado de la factura no es procesada, no se puede editar
   // Pendiente
 
-  // !props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCECSED
-  // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCECSED) {
+  // !props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCESSED
+  // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCESSED) {
   //   return
   // }
   selectedRoomRate.value = event.data
@@ -1047,6 +1049,12 @@ async function getratePlanList(query = '') {
             logicalOperation: 'OR'
           },
           {
+            key: 'hotel.id',
+            operator: 'EQUALS',
+            value: props.bookingObj.invoice.hotel.id || '',
+            logicalOperation: 'AND'
+          },
+          {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -1064,7 +1072,19 @@ async function getratePlanList(query = '') {
     const { data: dataList } = response
     ratePlanList.value = []
     for (const iterator of dataList) {
-      ratePlanList.value = [...ratePlanList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      ratePlanList.value = [...ratePlanList.value, {
+        id: iterator.id,
+        name: `${iterator.code} - ${iterator.name}`,
+        nameTemp: iterator.name,
+        code: iterator.code,
+        status: iterator.status,
+        hotel: {
+          id: iterator.hotel.id,
+          name: iterator.hotel.name,
+          code: iterator.hotel.code,
+          status: iterator.hotel.status
+        }
+      }]
     }
   }
   catch (error) {
@@ -1111,7 +1131,8 @@ async function getRoomCategoryList(query = '') {
         ...roomCategoryList.value,
         {
           id: iterator.id,
-          name: iterator.name,
+          name: `${iterator.code} - ${iterator.name}`,
+          nameTemp: iterator.name,
           code: iterator.code,
           status: iterator.status
         }
@@ -1140,6 +1161,12 @@ async function getRoomTypeList(query = '') {
             logicalOperation: 'OR'
           },
           {
+            key: 'manageHotel.id',
+            operator: 'EQUALS',
+            value: props.bookingObj.invoice.hotel.id || '',
+            logicalOperation: 'AND'
+          },
+          {
             key: 'status',
             operator: 'EQUALS',
             value: 'ACTIVE',
@@ -1157,7 +1184,19 @@ async function getRoomTypeList(query = '') {
     const { data: dataList } = response
     roomTypeList.value = []
     for (const iterator of dataList) {
-      roomTypeList.value = [...roomTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      roomTypeList.value = [...roomTypeList.value, {
+        id: iterator.id,
+        name: `${iterator.code} - ${iterator.name}`,
+        nameTemp: iterator.name,
+        code: iterator.code,
+        status: iterator.status,
+        manageHotel: {
+          id: iterator.manageHotel.id,
+          name: iterator.manageHotel.name,
+          code: iterator.manageHotel.code,
+          status: iterator.manageHotel.status
+        }
+      }]
     }
   }
   catch (error) {
@@ -1199,7 +1238,16 @@ async function getNightTypeList(query = '') {
     const { data: dataList } = response
     nightTypeList.value = []
     for (const iterator of dataList) {
-      nightTypeList.value = [...nightTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+      nightTypeList.value = [
+        ...nightTypeList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          nameTemp: iterator.name,
+          code: iterator.code,
+          status: iterator.status
+        }
+      ]
     }
   }
   catch (error) {
@@ -1467,9 +1515,9 @@ onMounted(async () => {
               }"
               @load="($event) => getratePlanList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1480,9 +1528,9 @@ onMounted(async () => {
                 onUpdate('roomCategory', $event)
               }" @load="($event) => getRoomCategoryList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1505,9 +1553,9 @@ onMounted(async () => {
                 onUpdate('roomType', $event)
               }" @load="($event) => getRoomTypeList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1524,9 +1572,9 @@ onMounted(async () => {
               }"
               @load="($event) => getNightTypeList($event)"
             >
-              <template #option="props">
+              <!-- <template #option="props">
                 <span>{{ props.item.code }} - {{ props.item.name }}</span>
-              </template>
+              </template> -->
             </DebouncedAutoCompleteComponent>
             <Skeleton v-else height="2rem" class="mb-2" />
           </template>
@@ -1566,7 +1614,7 @@ onMounted(async () => {
                           //   return;
                           // }
 
-                          // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCECSED){
+                          // if (!props.isCreationDialog && props.bookingObj?.status?.id !== InvoiceStatus.PROCESSED){
                           //   return;
                           // }
                           openEditDialog($event)

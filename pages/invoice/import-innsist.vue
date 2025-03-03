@@ -10,21 +10,26 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
 const { data: userData } = useAuth()
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
 const listItems = ref<any[]>([])
 const listItemsErrors = ref<any[]>([])
+const listItemsSearchErrors = ref<any[]>([])
 const selectedElements = ref<string[]>([])
 const loadingSearch = ref(false)
 const loadingSaveAll = ref(false)
 const importProcess = ref(false)
-const marcadosTodos = ref(true)
-const resultTable = ref(null)
+const resultTable = ref<InstanceType<typeof DynamicTable> | null>(null)
 const showDataTable = ref(true)
 const showErrorsDataTable = ref(false)
+const showErrorsSearchDataTable = ref(false)
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const processId = ref('')
+const totalImportedRows = ref(0)
+const totalHotelInvoiceAmount = ref(0)
+const totalInvoiceAmount = ref(0)
 
 const filterToSearch = ref<IData>({
   criteria: null,
@@ -64,26 +69,25 @@ const confImportBookingApi = reactive({
   uriApi: 'import-booking',
 })
 
-const confImportProcessApi = reactive({
-  moduleApi: 'innsist',
-  uriApi: 'import-process',
+const confInvoiceApi = reactive({
+  moduleApi: 'invoicing',
+  uriApi: 'manage-booking',
 })
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'hotel', header: 'Hotel', type: 'text', maxWidth: '50px' },
-  { field: 'agencyCode', header: 'Agency', type: 'text', maxWidth: '10px' },
-  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', maxWidth: '15px' },
-  { field: 'firstName', header: 'First Name', type: 'text', maxWidth: '12px' },
-  { field: 'lastName', header: 'Last Name', type: 'text', maxWidth: '12px' },
-  { field: 'reservationCode', header: 'Reserv No', type: 'text', maxWidth: '10px' },
-  { field: 'roomType', header: 'Room Type', type: 'text', maxWidth: '10px' },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', maxWidth: '20px' },
-  { field: 'checkInDate', header: 'Check In', type: 'date', maxWidth: '10px' },
-  { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'number', maxWidth: '10px' },
-  { field: 'amount', header: 'Invoice Amount', type: 'number', maxWidth: '10px' },
-  { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '10px' }
+  { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '25px', maxWidth: '150px' },
+  { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'agencyAlias', header: 'Agency Alias', type: 'text', minWidth: '25px', maxWidth: '150px' },
+  { field: 'firstName', header: 'First Name', type: 'text', minWidth: '12px', maxWidth: '75px' },
+  { field: 'lastName', header: 'Last Name', type: 'text', minWidth: '12px', maxWidth: '75px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '75px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '20px', maxWidth: '50px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'hotelInvoiceAmount', header: 'Hot. Amount', tooltip: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '40px' },
+  { field: 'amount', header: 'Book. Amount', tooltip: 'Booking Amount', type: 'number', minWidth: '10px', maxWidth: '40px' },
+  { field: 'status', header: 'Status', type: 'slot-text', minWidth: '10px', maxWidth: '50px' }
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -91,13 +95,44 @@ const columnsExpandable: IColumn[] = [
   { field: 'lastName', header: 'Last Name', type: 'text' },
   { field: 'checkInDate', header: 'Check In', type: 'date' },
   { field: 'checkOutDate', header: 'Check Out', type: 'date' },
-  { field: 'childrens', header: 'Children', type: 'text' },
   { field: 'adults', header: 'Adults', type: 'text' },
+  { field: 'childrens', header: 'Children', type: 'text' },
   { field: 'roomType', header: 'Room Type', type: 'select' },
   { field: 'stayDays', header: 'Nights', type: 'text' },
   { field: 'ratePlan', header: 'Rate Plan', type: 'select' },
   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'amount', header: 'Invoice Amount', type: 'text' },
+  { field: 'amount', header: 'Rate Amount', type: 'text' },
+]
+
+const columnsErrors: IColumn[] = [
+  { field: 'hotel', header: 'Hotel', type: 'text', maxWidth: '30px' },
+  { field: 'agency', header: 'Agency', type: 'text', maxWidth: '10px' },
+  { field: 'invoicingDate', header: 'Booking Date', type: 'date', maxWidth: '10px' },
+  { field: 'guestName', header: 'Full Name', type: 'text', maxWidth: '20px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', maxWidth: '10px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', maxWidth: '10px' },
+  { field: 'roomType', header: 'Room Type', type: 'text', maxWidth: '10px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', maxWidth: '10px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', maxWidth: '10px' },
+  { field: 'ratePlan', header: 'Rate Plan', type: 'text', maxWidth: '10px' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', maxWidth: '10px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'text', maxWidth: '10px' },
+  { field: 'message', header: 'Error', type: 'slot-text', maxWidth: '70px' }
+]
+
+const columnsSearchErrors: IColumn[] = [
+  { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '30px', maxWidth: '120px' },
+  { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'invoicingDate', header: 'Booking Date', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'guestName', header: 'Full Name', type: 'text', minWidth: '20px', maxWidth: '100px' },
+  { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '10px', maxWidth: '70px' },
+  { field: 'roomType', header: 'Room Type', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
+  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
+  { field: 'amount', header: 'Invoice Amount', type: 'text', minWidth: '10px', maxWidth: '40px' },
+  { field: 'message', header: 'Error', type: 'slot-text', minWidth: '50px', maxWidth: '100px' }
 ]
 
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
@@ -106,19 +141,20 @@ const messageForEmptyTable = ref('The data does not correspond to the selected c
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
-  tableName: 'Bookings To Import From Innsist',
+  // tableName: 'Bookings To Import From Innsist',
   moduleApi: 'innsist',
   uriApi: 'booking',
   loading: false,
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
   showFilters: true,
-  selectAllItemByDefault: false,
+  selectAllItemByDefault: true,
   expandableRows: true,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
   selectFirstItemByDefault: false,
-  scrollHeight: '500px'
+  showLocalPagination: false,
+  showSelectedItems: true
 })
 
 const optionsListErrors = ref({
@@ -133,7 +169,24 @@ const optionsListErrors = ref({
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?',
   selectFirstItemByDefault: false,
-  scrollHeight: '500px'
+  scrollHeight: '500px',
+  showPagination: true
+})
+
+const optionsSearchErrors = ref({
+  tableName: 'List Errors Import From Innsist',
+  moduleApi: 'innsist',
+  uriApi: 'booking',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  selectAllItemByDefault: false,
+  expandableRows: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?',
+  selectFirstItemByDefault: false,
+  scrollHeight: '500px',
+  showPagination: true
 })
 
 const payload = ref<IQueryRequest>({
@@ -154,8 +207,33 @@ const errorListPayload = ref<IQueryRequest>({
   sortType: ENUM_SHORT_TYPE.ASC
 })
 
+const payloadSearchErrors = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 500,
+  page: 0,
+  sortBy: 'createdAt',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
+  page: 0,
+  limit: 500,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+const paginationErroList = ref<IPagination>({
+  page: 0,
+  limit: 500,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+
+const paginationSearchErrors = ref<IPagination>({
   page: 0,
   limit: 500,
   totalElements: 0,
@@ -167,25 +245,7 @@ const payloadOnChangePageErrorList = ref<PageState>()
 
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
-  if (data.length > 0) {
-    if (data.length === pagination.value.totalElements && marcadosTodos.value === true) {
-      resultTable?.value.clearSelectedItems()
-      selectedElements.value = []
-      marcadosTodos.value = !marcadosTodos.value
-      importProcess.value = false
-    }
-    else {
-      if (data.length === pagination.value.totalElements) {
-        marcadosTodos.value = true
-      }
-      selectedElements.value = data.filter((item: { message: string | null | undefined }) => item.message === undefined || item.message === null || item.message.trim() === '')
-      importProcess.value = true
-    }
-  }
-  else {
-    importProcess.value = false
-    selectedElements.value = []
-  }
+  selectedElements.value = data
 }
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -195,14 +255,15 @@ async function getList() {
     return
   }
   try {
+    selectedElements.value = []
+    resultTable.value?.clearSelectedItems()
     listItems.value = []
     options.value.loading = true
     idItemToLoadFirstTime.value = ''
-    options.value.loading = true
+
     const newListItems = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { data: dataList, totalPages, totalElements, size, page } = response
 
     pagination.value.page = page
     pagination.value.limit = size
@@ -217,24 +278,26 @@ async function getList() {
         agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
         hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
         roomType: `${iterator?.roomType?.code || ''}`,
-        rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
-        selected: isRowSelectable(iterator)
+        // rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
+        // selected: isRowSelectable(iterator)
       })
+
+      totalHotelInvoiceAmount.value += iterator.hotelInvoiceAmount ? Number(iterator.hotelInvoiceAmount) : 0
+      totalInvoiceAmount.value += iterator.amount
     }
 
     listItems.value = [...listItems.value, ...newListItems]
 
-    // Seleccionar automáticamente todos los elementos retornados
     if (listItems.value && listItems.value.length > 0) {
-      selectedElements.value = listItems.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '')// .map(item => item.id)
+      selectedElements.value = listItems.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '').map(item => item.id)
     }
     else {
-      selectedElements.value = [] // Asegurarse de que esté vacío si no hay resultados
+      selectedElements.value = []
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
         detail: `No bookings available. `,
-        life: 5000 // Duración del toast en milisegundos
+        life: 5000
       })
     }
   }
@@ -248,6 +311,45 @@ async function getList() {
 
 function isRowSelectable(rowData: any) {
   return (rowData.message === undefined || rowData.message === null || rowData.message.trim() === '')
+}
+
+async function getListSearchErrors() {
+  if (optionsSearchErrors.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    listItemsSearchErrors.value = []
+    optionsSearchErrors.value.loading = true
+    const newListItems = []
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payloadSearchErrors.value)
+    const { data: dataList, totalPages, totalElements, size, page } = response
+
+    paginationSearchErrors.value.page = page
+    paginationSearchErrors.value.limit = size
+    paginationSearchErrors.value.totalElements = totalElements
+    paginationSearchErrors.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      newListItems.push({
+        ...iterator,
+        loadingEdit: false,
+        loadingDelete: false,
+        agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
+        hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
+        roomType: `${iterator?.roomType?.code || ''}`,
+        selected: isRowSelectable(iterator)
+      })
+    }
+
+    listItemsSearchErrors.value = [...listItemsSearchErrors.value, ...newListItems]
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    optionsSearchErrors.value.loading = false
+  }
 }
 
 async function getHotelList(query: string = '') {
@@ -325,7 +427,6 @@ async function getAgencyList(query: string = '') {
 
     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
     const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
     for (const iterator of dataList) {
       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -333,6 +434,11 @@ async function getAgencyList(query: string = '') {
   catch (error) {
     console.error('Error loading hotel list:', error)
   }
+}
+
+async function openErrorsSearch(event: any) {
+  showErrorsSearchDataTable.value = event
+  await getListSearchErrors()
 }
 
 async function clearForm() {
@@ -369,12 +475,14 @@ function onSortField(event: any) {
 async function searchAndFilter() {
   showErrorsDataTable.value = false
   showDataTable.value = true
+  totalHotelInvoiceAmount.value = 0
+  totalInvoiceAmount.value = 0
   const newPayload: IQueryRequest = {
     filter: [],
     query: '',
     pageSize: 500,
     page: 0,
-    sortBy: '',
+    sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.ASC
   }
   // Mantener los filtros existentes
@@ -442,12 +550,108 @@ async function searchAndFilter() {
       type: 'filterSearch'
     })
   }
+  //
+  newPayload.filter.push({
+    key: 'agency.id',
+    operator: 'IS_NOT_NULL',
+    value: '',
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  })
 
   payload.value = newPayload
 
   await getList()
+  await searchAndFilterSearchErrors()
 
   importProcess.value = true
+}
+
+async function searchAndFilterSearchErrors() {
+  const newPayload: IQueryRequest = {
+    filter: [],
+    query: '',
+    pageSize: 500,
+    page: 0,
+    sortBy: '',
+    sortType: ENUM_SHORT_TYPE.ASC
+  }
+  newPayload.filter = [
+    ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
+  ]
+
+  const statusList = ['PENDING', 'FAILED']
+  statusList.forEach((element: any) => {
+    newPayload.filter.push({
+      key: 'status',
+      operator: 'EQUALS',
+      value: element,
+      logicalOperation: 'OR',
+      type: 'filterSearch'
+    })
+  })
+
+  // Filtros de hoteles
+  if (filterToSearch.value.hotel) {
+    if (filterToSearch.value.hotel?.id !== 'All') {
+      newPayload.filter.push({
+        key: 'hotel.id',
+        operator: 'EQUALS',
+        value: filterToSearch.value.hotel?.id,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+  }
+
+  // Filtros de agencias
+  if (filterToSearch.value.agency?.length > 0) {
+    const selectedAgencyIds = filterToSearch.value.agency
+      .filter((item: any) => item?.id !== 'All')
+      .map((item: any) => item?.id)
+
+    if (selectedAgencyIds.length > 0) {
+      newPayload.filter.push({
+        key: 'agency.id',
+        operator: 'IN',
+        value: selectedAgencyIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
+  }
+
+  // Filtros de rango de fechas usando 'from' y 'to'
+  if (filterToSearch.value.from) {
+    newPayload.filter.push({
+      key: 'invoicingDate',
+      operator: 'GREATER_THAN_OR_EQUAL_TO',
+      value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    })
+  }
+  if (filterToSearch.value.to) {
+    newPayload.filter.push({
+      key: 'invoicingDate',
+      operator: 'LESS_THAN_OR_EQUAL_TO',
+      value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    })
+  }
+  //
+  newPayload.filter.push({
+    key: 'agency.id',
+    operator: 'IS_NULL',
+    value: '',
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  })
+
+  payloadSearchErrors.value = newPayload
+
+  await getListSearchErrors()
 }
 
 function clearFilterToSearch() {
@@ -463,8 +667,17 @@ function clearFilterToSearch() {
     from: dayjs(new Date()).startOf('month').toDate(),
     to: dayjs(new Date()).endOf('month').toDate(),
   }
+  pagination.value = {
+    page: 0,
+    limit: 500,
+    totalElements: 0,
+    totalPages: 0,
+    search: ''
+  }
+
   listItems.value = []
-  pagination.value.totalElements = 0
+  listItemsSearchErrors.value = []
+  listItemsErrors.value = []
 }
 
 const disabledSearch = computed(() => {
@@ -476,8 +689,28 @@ const disabledImport = computed(() => {
   return selectedElements.value.length === 0 && importProcess.value === false
 })
 
+const disabledSearchErrors = computed(() => {
+  return listItemsSearchErrors.value.length === 0
+})
+
 async function getRoomRateByBooking(bookingId: string) {
   const objInvoice = listItems.value.find((item: any) => item.id === bookingId)
+
+  if (objInvoice) {
+    objInvoice.roomRates = await getRoomRateList(bookingId)
+  }
+}
+
+async function getRoomRateByBookingErrors(bookingId: string) {
+  const objInvoice = listItemsErrors.value.find((item: any) => item.id === bookingId)
+
+  if (objInvoice) {
+    objInvoice.roomRates = await getRoomRateList(bookingId)
+  }
+}
+
+async function getRoomRateByBookingSearchErrors(bookingId: string) {
+  const objInvoice = listItemsSearchErrors.value.find((item: any) => item.id === bookingId)
 
   if (objInvoice) {
     objInvoice.roomRates = await getRoomRateList(bookingId)
@@ -507,12 +740,7 @@ async function getRoomRateList(bookingId: string = '') {
 
     const response = await GenericService.search(confRoomRateApi.moduleApi, confRoomRateApi.uriApi, payload)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
+    const { data: dataList } = response
 
     for (const iterator of dataList) {
       listRoomRateTemp = [...listRoomRateTemp, {
@@ -542,6 +770,8 @@ function generateProcessId() {
 }
 
 async function importBookings() {
+  listItemsSearchErrors.value = []
+  const idItemsToImport = selectedElements.value
   if (selectedElements.value.length === 0) {
     toast.add({
       severity: 'info',
@@ -561,71 +791,104 @@ async function importBookings() {
     const payload = {
       id: processId.value,
       userId: userData?.value?.user?.userId,
-      bookings: selectedElements.value.map(item => item.id)
+      bookings: selectedElements.value
     }
 
+    selectedElements.value = []
     await GenericService.import(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
 
-    const result = await checkProcessStatus(processId.value)
+    await checkProcessStatus(processId.value)
 
-    options.value.loading = false
-    if (result?.failedRecords > 0) {
-      await getErrorList(processId.value)
+    await getErrorList(processId.value)
+
+    if (listItemsErrors.value.length !== 0) {
       showErrorsDataTable.value = true
       showDataTable.value = false
       toast.add({
-        severity: 'warn',
-        summary: 'Confirmed',
-        detail: `Import process unsuccessful. ${result?.failedRecords} bookings have errors`,
+        severity: 'error',
+        summary: 'Error',
+        detail: `Failed to import data. Ensure all fields are correct.`,
         life: 5000
       })
+      importProcess.value = false
     }
     else {
-      await getList()
-      showErrorsDataTable.value = false
-      showDataTable.value = true
       toast.add({
         severity: 'info',
         summary: 'Confirmed',
         detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
         life: 5000
       })
+      onClose()
+      options.value.loading = false
+      await getList()
+      showErrorsDataTable.value = false
+      showDataTable.value = true
     }
+
+    await updateBookingsStatus(processId.value)
   }
   catch (error: any) {
+    const messageError = error?.data?.data?.error?.errorMessage || 'Unexpected error. Please, try again'
+
+    // invocar al servicio de reverso de bookings
+    listItemsErrors.value = idItemsToImport.map(item => ({
+      id: item,
+      message: messageError,
+    }))
+    await updateBookingsStatus(processId.value)
+
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: error.message || 'There was a problem with the import process. Please try again later.',
+      summary: 'Error importing bookings',
+      detail: messageError,
       life: 3000
     })
+
+    options.value.loading = false
+    await getList()
+    await searchAndFilterSearchErrors()
+    showErrorsDataTable.value = false
+    showDataTable.value = true
+  }
+  finally {
     options.value.loading = false
   }
 }
 
+function onClose() {
+  emit('close')
+}
+
 async function checkProcessStatus(id: any) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
+    let status = 'RUNNING'
     let attempts = 0
     const maxAttempts = 30
     const interval = setInterval(async () => {
       try {
-        const response = await GenericService.getById(confImportProcessApi.moduleApi, confImportProcessApi.uriApi, id)
-        if (response.status === 'COMPLETED') {
-          clearInterval(interval)
-          resolve({ status: response.status, successfulRecords: response.totalSuccessful, failedRecords: response.totalFailed, })
-          return
-        }
-
+        attempts++
         if (attempts >= maxAttempts) {
           clearInterval(interval)
           reject(new Error('There was a problem with the import process. Please try again later.'))
           return
         }
-        attempts++
+
+        const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, id, 'import-status')
+        status = response.status
+        totalImportedRows.value = response.totalRows ?? 0
+
+        if (status === 'FINISHED') {
+          clearInterval(interval)
+          resolve()
+        }
       }
-      catch (error) {
+      catch (error: any) {
         clearInterval(interval)
-        reject(error)
+        const errorMessage
+          = error?.data?.data?.error?.errorMessage
+          || 'An unexpected error occurred while checking the process status.'
+        reject(new Error(errorMessage))
       }
     }, 2000)
   })
@@ -634,51 +897,112 @@ async function checkProcessStatus(id: any) {
 async function getErrorList(processId: any) {
   try {
     optionsListErrors.value.loading = true
+    payload.value = { ...payload.value, query: processId }
+    listItemsErrors.value = []
     const newListItems = []
-    const newPayload: IQueryRequest = {
-      filter: [],
-      query: processId,
-      pageSize: 100,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-    errorListPayload.value = newPayload
+    const response = await GenericService.importSearch(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, payload.value)
 
-    const response = await GenericService.search(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, errorListPayload.value)
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
 
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
+    if (totalElements !== null && totalElements > 0) {
+      const existingIds = new Set(listItemsErrors.value.map(item => item.id))
 
-    for (const iterator of dataList) {
-      newListItems.push({
-        ...iterator,
-        loadingEdit: false,
-        loadingDelete: false,
-        agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
-        agencyCd: iterator?.agency?.code,
-        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-        rowClass: 'p-disabled p-text-disabled'
-      })
-    }
+      for (const iterator of dataList) {
+        if (!existingIds.has(iterator.row?.insistImportProcessBookingId)) {
+          let errorMessage = ''
+          const errorFields = iterator.errorFields
+          let errorsCount = 0
+          for (const errorField of errorFields) {
+            errorsCount++
+            errorMessage += `${errorsCount} - ${errorField.message}.\n`
+          }
+          errorMessage = errorMessage.trim()
+          newListItems.push({
+            id: iterator?.row?.insistImportProcessBookingId,
+            trendingCompany: iterator.row?.trendingCompany,
+            hotel: iterator?.row?.manageHotelCode,
+            agencyCode: iterator?.row?.manageAgencyCode,
+            agency: iterator?.row?.manageAgencyCode,
+            checkInDate: iterator?.row?.checkIn,
+            checkOutDate: iterator?.row?.checkOut,
+            stayDays: iterator?.row?.nights,
+            reservationCode: iterator.row?.hotelBookingNumber,
+            guestName: `${iterator?.row?.firstName} ${iterator?.row?.lastName}`,
+            firstName: iterator?.row?.firstName,
+            lastName: iterator?.row?.lastName,
+            amount: iterator.row?.invoiceAmount,
+            roomType: iterator.row?.roomType,
+            couponNumber: iterator.row?.coupon,
+            totalNumberOfGuest: 0,
+            adults: iterator.row?.adults,
+            childrens: iterator.row?.childrens,
+            ratePlan: iterator.row?.ratePlan,
+            invoicingDate: iterator.row?.bookingDate,
+            hotelCreationDate: '',
+            originalAmount: 0,
+            amountPaymentApplied: 0,
+            rateByChild: '',
+            remarks: iterator.row?.remarks,
+            roomNumber: iterator.row?.roomNumber,
+            hotelInvoiceAmount: iterator.row?.hotelInvoiceAmount,
+            hotelInvoiceNumber: iterator.row?.hotelInvoiceNumber,
+            invoiceFolioNumber: '',
+            quote: '',
+            renewalNumber: '',
+            message: errorMessage
+          })
+          existingIds.add(iterator.row?.insistImportProcessBookingId)
+        }
+        else {
+          const booking = newListItems.filter(item => item.id === iterator.row?.insistImportProcessBookingId)
+          if (booking.length > 0) {
+            booking[0].amount = booking[0].amount + iterator.row?.invoiceAmount
+            booking[0].hotelInvoiceAmount = booking[0].hotelInvoiceAmount + iterator.row?.hotelInvoiceAmount
+          }
+        }
+      }
 
-    if (!newListItems || newListItems.length > 0) {
+      paginationErroList.value.page = page
+      paginationErroList.value.limit = size
+      paginationErroList.value.totalElements = newListItems.length
+      paginationErroList.value.totalPages = totalPages
+
       listItemsErrors.value = [...listItemsErrors.value, ...newListItems]
     }
   }
   catch (error) {
-    console.error(error)
+    console.error('Error loading file:', error)
   }
   finally {
     optionsListErrors.value.loading = false
   }
 }
 
+async function updateBookingsStatus(processId: any) {
+  try {
+    const newListErrorResponse = []
+
+    for (const item of listItemsErrors.value) {
+      newListErrorResponse.push({
+        bookingId: item.id,
+        errorMessage: item.message
+      })
+    }
+
+    const payload = {
+      importProcessId: processId,
+      errorResponses: newListErrorResponse
+    }
+
+    await GenericService.updateBookings(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
+  }
+  catch (error: any) {
+    toast.add({ severity: 'warn', summary: 'Completed with errors', detail: 'The import process finished with errors, please validate the bookings in Manage Invoice', life: 5000 })
+  }
+}
+
 async function parseDataTableFilterErrorList(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsErrors)
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
       if (parseFilter[i]?.key === 'invoiceNumber') {
@@ -691,6 +1015,20 @@ async function parseDataTableFilterErrorList(payloadFilter: any) {
   getErrorList(processId.value)
 }
 
+async function parseDataTableFilterSearchErrors(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsSearchErrors)
+  if (parseFilter && parseFilter?.length > 0) {
+    for (let i = 0; i < parseFilter?.length; i++) {
+      if (parseFilter[i]?.key === 'invoiceNumber') {
+        parseFilter[i].key = 'invoiceNumberPrefix'
+      }
+    }
+  }
+
+  payload.value.filter = [...parseFilter || []]
+  getListSearchErrors()
+}
+
 async function resetErrorListItems() {
   errorListPayload.value.page = 0
   getErrorList(processId.value)
@@ -701,6 +1039,29 @@ function onSortFieldErrorList(event: any) {
     errorListPayload.value.sortBy = event.sortField
     errorListPayload.value.sortType = event.sortOrder
     getErrorList(processId.value)
+  }
+}
+
+function onSortFieldSearchErrors(event: any) {
+  if (event) {
+    errorListPayload.value.sortBy = event.sortField
+    errorListPayload.value.sortType = event.sortOrder
+    getListSearchErrors()
+  }
+}
+
+function getStatusBadgeBackgroundColorByItem(status: string) {
+  if (!status) { return }
+  if (status === 'PENDING') { return '#005FB7' }
+  if (status === 'FAILED') { return '#F74646' }
+}
+
+function getStatusName(code: string) {
+  switch (code) {
+    case 'PENDING': return 'Pending'
+    case 'FAILED': return 'Failed'
+    default:
+      return ''
   }
 }
 
@@ -730,104 +1091,114 @@ onMounted(async () => {
     </h5>
   </div>
   <div class="grid">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
-              >
-                <div>
-                  Filters
-                </div>
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-1">
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
+            <div
+              class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
+            >
+              <div>
+                Filters
               </div>
-            </template>
+            </div>
+          </template> -->
 
-            <div class="grid">
-              <div class="col-12 md:col-6 lg:col-6 flex pb-0">
-                <div class="flex flex-row gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">Agency:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="true"
-                        class="w-full" field="name" item-value="id" :model="filterToSearch.agency"
-                        :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
-                          if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
-                          }
-                          else {
-                            filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                          }
-                        }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2 w-full">
-                    <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedAutoCompleteComponent
-                        v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
-                        class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
-                        :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
-                      >
-                        <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
+          <div class="grid">
+            <div class="col-12 md:col-6 lg:col-6 flex pb-0">
+              <div class="flex flex-row gap-2 w-full">
+                <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">Agency:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll"
+                      id="autocomplete"
+                      class="w-full"
+                      field="name"
+                      item-value="id"
+                      :multiple="true"
+                      :max-selected-labels="1"
+                      :model="filterToSearch.agency"
+                      :suggestions="agencyList"
+                      @load="($event) => getAgencyList($event)"
+                      @change="($event) => {
+                        if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
+                          filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
+                        }
+                        else {
+                          filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
+                        }
+                      }"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-5 flex pb-0">
-                <div class="flex flex-row gap-5 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">From:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2 ml-4">
-                    <label class="filter-label font-bold" for="">To:</label>
-                    <div class="w-full">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-1 flex pb-0 pr-2">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex align-items-center mx-3">
-                      <Button
-                        v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                        :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
-                      />
-                      <Button
-                        v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                        :loading="loadingSearch" @click="clearFilterToSearch"
-                      />
-                    </div>
+                <div class="flex align-items-center gap-2 w-full">
+                  <label class="filter-label font-bold ml-3" for="">Hotel:</label>
+                  <div class="w-full">
+                    <DebouncedAutoCompleteComponent
+                      v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
+                      class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
+                      :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
+                    >
+                      <template #option="props">
+                        <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                      </template>
+                    </DebouncedAutoCompleteComponent>
                   </div>
                 </div>
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
+
+            <div class="col-12 md:col-6 lg:col-5 flex pb-0">
+              <div class="flex flex-row gap-5 w-full">
+                <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">From:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <Calendar
+                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                      show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                    />
+                  </div>
+                </div>
+                <div class="flex align-items-center gap-2 ml-4">
+                  <label class="filter-label font-bold" for="">To:</label>
+                  <div class="w-full">
+                    <Calendar
+                      v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-1 flex pb-0 pr-2">
+              <div class="flex w-full">
+                <div class="flex flex-row w-full">
+                  <div class="flex align-items-center mx-3">
+                    <Button
+                      v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
+                      :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
+                    />
+                    <Button
+                      v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                      :loading="loadingSearch" @click="clearFilterToSearch"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </AccordionTab>
+        <!-- </Accordion> -->
       </div>
+      <div class="mt-2" />
+
       <div v-if="showDataTable" class="p-0">
         <DynamicTable
           ref="resultTable"
@@ -835,14 +1206,20 @@ onMounted(async () => {
           :columns="columns"
           :options="options"
           :pagination="pagination"
-          :selected-items="selectedElements"
           @on-change-pagination="payloadOnChangePage = $event"
           @on-change-filter="parseDataTableFilter"
           @on-list-item="resetListItems"
           @on-sort-field="onSortField"
-          @update:selected-items="onMultipleSelect($event)"
+          @update:clicked-item="onMultipleSelect($event)"
           @on-expand-row="getRoomRateByBooking($event)"
         >
+          <template #column-status="{ data }">
+            <Badge
+              v-tooltip.top="data.message"
+              :value="getStatusName(data.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.status)}`"
+            />
+          </template>
           <template #column-message="{ data }">
             <div id="fieldError">
               <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
@@ -870,19 +1247,44 @@ onMounted(async () => {
               </DataTable>
             </div>
           </template>
+
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center font-bold font-100" style="font-weight: 700">
+              <Row>
+                <Column footer="Totals:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
+                <Column :footer="formatNumber(Math.round((totalHotelInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+                <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+                <Column :colspan="12" />
+              </Row>
+            </ColumnGroup>
+          </template>
         </DynamicTable>
+        <div class="flex align-items-center justify-content-end gap-2 mt-3">
+          <ColumnGroup type="footer" class="flex align-items-center font-bold font-100" style="font-weight: 700">
+            <Row>
+              <Column footer="Booking to import:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((pagination.totalElements + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+              <Column :colspan="12" />
+            </Row>
+            <Row>
+              <Column footer="Booking with errors:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
+              <Column :footer="formatNumber(Math.round((paginationSearchErrors.totalElements + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+              <Column :colspan="12" />
+            </Row>
+          </ColumnGroup>
+        </div>
       </div>
       <div v-if="showErrorsDataTable" class="p-0">
         <DynamicTable
           :data="listItemsErrors"
-          :columns="columns"
+          :columns="columnsErrors"
           :options="optionsListErrors"
-          :pagination="pagination"
+          :pagination="paginationErroList"
           @on-change-pagination="payloadOnChangePageErrorList = $event"
           @on-change-filter="parseDataTableFilterErrorList"
           @on-list-item="resetErrorListItems"
           @on-sort-field="onSortFieldErrorList"
-          @on-expand-row="getRoomRateByBooking($event)"
+          @on-expand-row="getRoomRateByBookingErrors($event)"
         >
           <template #column-message="{ data }">
             <div id="fieldError">
@@ -915,10 +1317,55 @@ onMounted(async () => {
       </div>
       <div class="flex align-items-end justify-content-end">
         <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-save" :disabled="disabledImport" @click="importBookings" />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        <Button v-tooltip.top="'View Errors Search'" :outlined="disabledSearchErrors" severity="danger" class="w-3rem mx-2" icon="pi pi-times-circle" :disabled="disabledSearchErrors" @click="openErrorsSearch($event)" />
+        <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
       </div>
     </div>
   </div>
+  <Dialog v-model:visible="showErrorsSearchDataTable" modal header="Bookings with errors" :style="{ width: '150rem' }">
+    <div class="grid">
+      <div class="col-12 md:order-1 md:col-12 xl:col-12">
+        <DynamicTable
+          :data="listItemsSearchErrors"
+          :columns="columnsSearchErrors"
+          :options="optionsSearchErrors"
+          :pagination="paginationSearchErrors"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilterSearchErrors"
+          @on-sort-field="onSortFieldSearchErrors"
+          @on-expand-row="getRoomRateByBookingSearchErrors($event)"
+        >
+          <template #column-message="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            </div>
+          </template>
+          <template #expansion="{ data: item }">
+            <div class="p-0 m-0">
+              <DataTable :value="item.roomRates" striped-rows>
+                <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <template #empty>
+                  <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                    <span v-if="!optionsListErrors?.loading" class="flex flex-column align-items-center justify-content-center">
+                      <div class="row">
+                        <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                      </div>
+                      <div class="row">
+                        <p>{{ messageForEmptyTable }}</p>
+                      </div>
+                    </span>
+                    <span v-else class="flex flex-column align-items-center justify-content-center">
+                      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                    </span>
+                  </div>
+                </template>
+              </DataTable>
+            </div>
+          </template>
+        </DynamicTable>
+      </div>
+    </div>
+  </Dialog>
 </template>
 
 <style lang="scss">

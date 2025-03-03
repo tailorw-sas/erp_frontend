@@ -98,9 +98,11 @@ const fields: Array<FieldDefinitionType> = [
     field: 'hotelContactEmail',
     header: 'Hotel Email Contact',
     dataType: 'text',
-    class: 'field col-12 md:col-6',
+    class: 'field col-12',
     tabIndex: 0,
-    validation: z.string().trim().email('Invalid email').or(z.string().length(0))
+    validation: z.array(
+      z.string().trim().email('Invalid email') // Valida que cada elemento sea un email
+    ).optional()
   }
 ]
 
@@ -111,7 +113,7 @@ const item = ref<GenericObject>({
   checkIn: '',
   reservationNumber: '',
   referenceNumber: '',
-  hotelContactEmail: ''
+  hotelContactEmail: []
 })
 
 const itemTemp = ref<GenericObject>({
@@ -121,7 +123,7 @@ const itemTemp = ref<GenericObject>({
   checkIn: '',
   reservationNumber: '',
   referenceNumber: '',
-  hotelContactEmail: ''
+  hotelContactEmail: []
 })
 
 const AgencyList = ref<any[]>([])
@@ -166,6 +168,7 @@ async function save(item: { [key: string]: any }) {
     payload.language = typeof payload.language === 'object' ? payload.language.id : payload.language
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
+    payload.hotelContactEmail = Array.isArray(item.hotelContactEmail) ? item.hotelContactEmail.join(';') : item.hotelContactEmail
     delete payload.event
     const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
@@ -207,7 +210,9 @@ async function getItemById(id: string) {
         item.value.checkIn = viewDate2.toDate()
         item.value.reservationNumber = response.reservationNumber
         item.value.referenceNumber = response.referenceNumber
-        item.value.hotelContactEmail = response.hotelContactEmail
+        item.value.hotelContactEmail = response.hotelContactEmail.split(';') // Separa el string por el delimitador `;`
+          .map((email: any) => email.trim()) // Elimina espacios en blanco adicionales
+          .filter((email: any) => email !== '')
       }
       formReload.value += 1
     }
@@ -440,6 +445,33 @@ watch(() => props.openDialog, async (newValue) => {
             :manual-input="false"
             @update:model-value="($event) => {
               onUpdate('checkIn', $event)
+            }"
+          />
+          <Skeleton v-else height="2rem" class="" />
+        </template>
+        <template #field-hotelContactEmail="{ item: data, onUpdate }">
+          <Chips
+            v-if="!loadingSaveAll"
+            v-model="data.hotelContactEmail"
+            separator=";"
+            class="custom-chips"
+            @update:model-value="($event) => {
+              onUpdate('hotelContactEmail', $event)
+              item.hotelContactEmail = $event
+            }"
+            @blur="($event) => {
+              const input = ($event.target as HTMLInputElement)?.value || '';
+              if (input && input.trim() !== '') {
+                // Agregar el valor al modelo de chips
+                const newChip = input.trim();
+                if (!item.hotelContactEmail.includes(newChip)) {
+                  item.hotelContactEmail.push(newChip); // Añade el nuevo chip
+                  onUpdate('hotelContactEmail', item.hotelContactEmail)
+                }
+
+                // Limpiar el input manualmente
+                $event.target.value = '';
+              }
             }"
           />
           <Skeleton v-else height="2rem" class="" />

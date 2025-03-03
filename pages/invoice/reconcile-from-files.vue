@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
+const emit = defineEmits(['close'])
 const toast = useToast()
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
@@ -276,13 +277,18 @@ async function importFile() {
         options.value.loading = false
         navigateTo('/invoice')
         const successMessage = `The files were uploaded successfully, total attachments imported: ${count}!`
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 0 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: successMessage, life: 5000 })
+        onClose()
       }
     }
   }
 
   loadingSaveAll.value = false
   options.value.loading = false
+}
+
+function onClose() {
+  emit('close')
 }
 
 async function validateStatusImport() {
@@ -354,77 +360,60 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
-              >
-                <div>
-                  Reconcile Invoice From Files
-                </div>
-              </div>
-            </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center ">
-                  <label class="pr-2 mb-3">Browse Folder:</label>
+      <div class="mt-3">
+        <AccordionTab>
+          <div class="grid p-0 m-0" style="margin: 0 auto;">
+            <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center ">
+                <label class="pr-2 mt-0">Browse Folder (PDF):</label>
+                <div style="flex: 1; max-width: 500px; min-width: 0;">
+                  <div class="p-inputgroup w-full">
+                    <InputText
+                      ref="attachUpload" v-model="fileNames" placeholder="Choose file"
+                      class="w-full" show-clear aria-describedby="inputtext-help"
+                    />
 
-                  <div style="flex: 1; max-width: 500px; min-width: 0;">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="attachUpload" v-model="fileNames" placeholder="Choose file"
-                        class="w-full" show-clear aria-describedby="inputtext-help"
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button
+                        icon="pi pi-file-import" severity="secondary"
+                        class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()"
                       />
-
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button
-                          icon="pi pi-file-import" severity="secondary"
-                          class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()"
-                        />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type
-                      PDF</small>
-                    <input
-                      ref="attachUpload" type="file" style="display: none;" webkitdirectory multiple
-                      @change="onChangeAttachFile($event)"
-                    >
+                    </span>
                   </div>
+
+                  <input
+                    ref="attachUpload" type="file" style="display: none;" webkitdirectory multiple
+                    @change="onChangeAttachFile($event)"
+                  >
                 </div>
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
-      </div>
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-      >
-        <template #column-message="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
           </div>
-        </template>
-      </DynamicTable>
-
+        </AccordionTab>
+      </div>
+      <div class="mt-1">
+        <DynamicTable
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+        >
+          <template #column-message="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            </div>
+          </template>
+        </DynamicTable>
+      </div>
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Apply'" class="w-3rem  mx-1" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete"
           @click="importFile"
-        />
-
-        <Button
-          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button mx-1" icon="pi pi-times"
-          @click="clearForm"
         />
       </div>
     </div>

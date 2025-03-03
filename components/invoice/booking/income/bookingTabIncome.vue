@@ -1644,7 +1644,7 @@ function onRowRightClick(event: any) {
     ]
   }
 
-  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED && bookingAmount !== bookingBalance) {
+  if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED && bookingAmount !== bookingBalance) {
     menuModel.value = [
       {
         label: 'Payment Details Applied',
@@ -1726,7 +1726,7 @@ const onChangePagePaymentDetailsApplied = ref<PageState>()
 
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#888888'
@@ -1739,7 +1739,7 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
+    case 'PROCESSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -1888,7 +1888,7 @@ onMounted(() => {
           return;
         }
 
-        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCECSED) {
+        if (!props.isCreationDialog && props.invoiceObj?.status?.id !== InvoiceStatus.PROCESSED) {
           return;
         }
 

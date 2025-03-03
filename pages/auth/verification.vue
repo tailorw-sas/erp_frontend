@@ -58,31 +58,30 @@ const email = route.query ? route.query.email : ''
 const { $api } = useNuxtApp()
 const repo = repository($api)
 
-const { executeRecaptcha } = useGoogleRecaptcha()
-
 async function changePassword() {
   try {
     loading.value = true
     if (form.newPassword.value !== form.confirmPassword.value) {
-      // TODO: Show toast error if there is an error
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Las contraseñas no coinciden', life: 3000 })
+      toast.add({ severity: 'error', summary: 'Error', detail: 'The passwords do not match.', life: 3000 })
       return
     }
 
-    const { token } = await executeRecaptcha('recoverPassword')
-    await repo.changePasswordWithOtp({ payload: { newPassword: form.newPassword.value, otp: form.otp.value, email }, tokenCaptcha: token })
-    loading.value = false
-    navigateTo({ path: '/auth/login' })
+    const payload = { email, newPassword: form.newPassword.value, otp: form.otp.value }
+    const result = await repo.changePasswordWithOtp(payload)
+    if (result.data) {
+      toast.add({ severity: 'info', summary: 'Password Changed', detail: 'Your password has been changed successfully.', life: 3000 })
+    }
+    else {
+      toast.add({ severity: 'info', summary: 'Password Changed', detail: 'Unable to change the password.', life: 3000 })
+    }
+    navigateTo('/auth/login')
   }
   catch (error) {
-    // TODO: Show toast error if there is an error
     toast.add({ severity: 'error', summary: 'Error', detail: error.message, life: 3000 })
+  }
+  finally {
     loading.value = false
   }
-}
-
-function goHome() {
-  navigateTo({ path: '/' })
 }
 </script>
 

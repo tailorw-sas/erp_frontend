@@ -98,7 +98,27 @@ const itemTemp = ref<GenericObject>({
 const HotelList = ref<any[]>([])
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
+interface DataListItemForHotel {
+  id: string
+  name: string
+  code: string
+  status: string
+}
 
+interface ListItemForHotel {
+  id: string
+  name: string
+  code: string
+  status: string
+}
+function mapFunctionForHotel(data: DataListItemForHotel): ListItemForHotel {
+  return {
+    id: data.id,
+    name: `${data.code} - ${data.name}`,
+    code: data.code,
+    status: data.status
+  }
+}
 const ENUM_FILTER = [
   { id: 'code', name: 'Code' },
   { id: 'name', name: 'Name' },
@@ -107,7 +127,7 @@ const ENUM_FILTER = [
 const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
-  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
+  { field: 'manageHotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name', mapFunction: mapFunctionForHotel }, sortable: true },
   { field: 'description', header: 'Description', type: 'text' },
   { field: 'status', header: 'Active', type: 'bool' },
 ]
@@ -253,14 +273,7 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: 'ASC'
-  }
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value.criterial = ENUM_FILTER[0]
   filterToSearch.value.search = ''
   getList()

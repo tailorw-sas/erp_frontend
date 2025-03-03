@@ -179,16 +179,16 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: false, showFilter: false },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: false, showFilter: false },
-  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: false, showFilter: false },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: false, showFilter: false },
-  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'checkIn', header: 'Check-In', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'checkOut', header: 'Check-Out', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: false, showFilter: false },
-  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: true },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: true },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: true, showFilter: true },
+  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
@@ -364,7 +364,7 @@ const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '140px', type: 'text' },
   { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '140px', type: 'text' },
-  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
+  { field: 'transactionDate', header: 'T. Date', tooltip: 'Transaction Date', width: 'auto', type: 'date' },
   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
@@ -1144,8 +1144,8 @@ function navigateToInvoice($event: any) {
     }
   }
   else if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.applyDeposit) {
-    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id) {
-      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id}`
+    if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) { // objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id
+      const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice.id}` // objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.parent?.id
       window.open(url, '_blank')
     }
     else {
@@ -1829,9 +1829,12 @@ async function updatePaymentDetails(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAllForEdit.value = true
     const payload: { [key: string]: any } = { ...item }
-    // payload.payment = idItem.value || ''
-    // payload.amount = Number.parseFloat(payload.amount)
-    // payload.transactionType = Object.prototype.hasOwnProperty.call(payload.transactionType, 'id') ? payload.transactionType.id : payload.transactionType
+
+    if (payload.transactionType && payload.transactionType.remarkRequired === false) {
+      if (payload.remark === '') {
+        payload.remark = payload?.transactionType?.defaultRemark
+      }
+    }
 
     try {
       await GenericService.update(confApiPaymentDetail.moduleApi, confApiPaymentDetail.uriApi, item.id, {
@@ -2474,7 +2477,7 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     }
 
     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
-    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount')
+    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.type !== 'filterSearch')
 
     if (objFilter) {
       objFilter.value = Number.parseFloat(validNumber).toFixed(2)
@@ -2845,6 +2848,22 @@ async function applyPaymentParseDataTableFilter(payloadFilter: any) {
   if (objFilterForInvoiceId) {
     objFilterForInvoiceId.key = 'invoice.invoiceId'
   }
+  const objFilterForInvoiceNo = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNo')
+  if (objFilterForInvoiceNo) {
+    objFilterForInvoiceNo.key = 'invoice.invoiceNumberPrefix'
+  }
+
+  const objFilterForBookingAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmount')
+  if (objFilterForBookingAmount) {
+    objFilterForBookingAmount.key = 'invoiceAmount'
+  }
+
+  const objFilterForBookingBalance = parseFilter?.find((item: IFilter) => item?.key === 'bookingBalance')
+  if (objFilterForBookingBalance) {
+    objFilterForBookingBalance.key = 'dueAmount'
+    objFilterForBookingBalance.type = 'filterSearch'
+  }
+
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   applyPaymentPayload.value.filter = [...parseFilter || []]
   applyPaymentGetList(amountOfDetailItem.value)
@@ -2854,6 +2873,15 @@ function onSortFieldApplyPayment(event: any) {
   if (event) {
     if (event.sortField === 'invoiceId') {
       event.sortField = 'invoice.invoiceId'
+    }
+    if (event.sortField === 'invoiceNo') {
+      event.sortField = 'invoice.invoiceNumberPrefix'
+    }
+    if (event.sortField === 'bookingAmount') {
+      event.sortField = 'invoiceAmount'
+    }
+    if (event.sortField === 'bookingBalance') {
+      event.sortField = 'dueAmount'
     }
     applyPaymentPayload.value.sortBy = event.sortField ? event.sortField : 'dueAmount'
     applyPaymentPayload.value.sortType = event.sortOrder
@@ -2879,6 +2907,37 @@ async function historyParseDataTableFilter(payloadFilter: any) {
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+
+  const objFilterBookingId = parseFilter?.find((item: IFilter) => item?.key === 'bookingId')
+  if (objFilterBookingId) {
+    objFilterBookingId.key = 'manageBooking.bookingId'
+  }
+
+  const objFilterInvoiceNumber = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
+  if (objFilterInvoiceNumber) {
+    objFilterInvoiceNumber.key = 'manageBooking.invoice.invoiceNumber'
+  }
+
+  const objFilterReservationNumber = parseFilter?.find((item: IFilter) => item?.key === 'reservationNumber')
+  if (objFilterReservationNumber) {
+    objFilterReservationNumber.key = 'manageBooking.reservationNumber'
+  }
+
+  const objFilterAdults = parseFilter?.find((item: IFilter) => item?.key === 'adults')
+  if (objFilterAdults) {
+    objFilterAdults.key = 'manageBooking.adults'
+  }
+
+  const objFilterChildren = parseFilter?.find((item: IFilter) => item?.key === 'childrens')
+  if (objFilterChildren) {
+    objFilterChildren.key = 'manageBooking.children'
+  }
+
+  const objFilterCouponNumber = parseFilter?.find((item: IFilter) => item?.key === 'couponNumber')
+  if (objFilterCouponNumber) {
+    objFilterCouponNumber.key = 'manageBooking.couponNumber'
+  }
+
   payload.value.filter = [...parseFilter || []]
   getListPaymentDetail()
 }
@@ -2887,6 +2946,24 @@ function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'transactionType') {
       event.sortField = 'transactionType.name'
+    }
+    if (event.sortField === 'bookingId') {
+      event.sortField = 'manageBooking.bookingId'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'manageBooking.invoice.invoiceNumber'
+    }
+    if (event.sortField === 'reservationNumber') {
+      event.sortField = 'manageBooking.reservationNumber'
+    }
+    if (event.sortField === 'adults') {
+      event.sortField = 'manageBooking.adults'
+    }
+    if (event.sortField === 'childrens') {
+      event.sortField = 'manageBooking.children'
+    }
+    if (event.sortField === 'couponNumber') {
+      event.sortField = 'manageBooking.couponNumber'
     }
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
@@ -3966,7 +4043,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '60%' }"
+      :style="{ width: '80%' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',

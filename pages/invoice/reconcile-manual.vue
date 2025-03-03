@@ -10,6 +10,8 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+const emit = defineEmits(['close'])
+
 const idItemToLoadFirstTime = ref('')
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -23,6 +25,7 @@ const multiSelectLoading = ref({
   hotel: false,
 })
 const loadingSaveAll = ref(false)
+const resultTable = ref()
 
 // const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
@@ -122,7 +125,7 @@ const options = ref({
   loading: false,
   showDelete: false,
   selectionMode: 'multiple' as 'multiple' | 'single',
-  selectAllItemByDefault: false,
+  selectAllItemByDefault: true,
   showFilters: true,
   expandableRows: false,
   showSelectedItems: true,
@@ -146,6 +149,7 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+const selectedItems = ref<any[]>([])
 // -------------------------------------------------------------------------------------------------------
 async function onMultipleSelect(data: any) {
   selectedElements.value = data
@@ -157,6 +161,7 @@ async function getList() {
     return
   }
   try {
+    resultTable.value?.clearSelectedItems()
     idItemToLoadFirstTime.value = ''
     options.value.loading = true
     listItems.value = []
@@ -164,7 +169,7 @@ async function getList() {
     payload.value.filter = [...payload.value.filter, {
       key: 'invoiceStatus',
       operator: 'IN',
-      value: ['PROCECSED'],
+      value: ['PROCESSED'],
       logicalOperation: 'AND'
     },]
 
@@ -228,6 +233,9 @@ async function getList() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+    selectedItems.value = [...selectedItems.value, ...newListItems]
+    selectedItems.value = [...removeDuplicatesMap(selectedItems.value, ['id'])]
+
     return listItems
   }
 
@@ -393,7 +401,6 @@ async function reconcileManual() {
         payload.invoices = invoicesFromState // Asignar directamente
       }
     }
-
     // Enviar el payload a la API
     response = await GenericService.create(confReconcileApi.moduleApi, confReconcileApi.uriApi, payload)
   }
@@ -453,6 +460,15 @@ async function saveItem() {
 }
 */
 async function saveItem() {
+  /* if (selectedElements.value.length > 50) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'You can only select up to 50 invoices.',
+      life: 6000
+    })
+    return
+  } */
   options.value.loading = true
   loadingSaveAll.value = true
 
@@ -475,35 +491,43 @@ async function saveItem() {
     return // Salir de la función si hay un error
   }
 
-  const { errorsResponse, totalInvoicesRec } = response
-  if (errorsResponse && errorsResponse.length === 0) {
-    if (totalInvoicesRec === 0) {
+  if (response) {
+    const { errorsResponse, totalInvoicesRec } = response
+    if (errorsResponse && errorsResponse.length === 0) {
+      if (totalInvoicesRec === 0) {
+        getErrors(errorsResponse)
+      }
+      else {
+        // navigateTo('/invoice')
+        toast.add({
+          severity: 'info',
+          summary: 'Confirmed',
+          detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
+          life: 5000
+        })
+        onClose()
+      }
+    }
+    else if (errorsResponse && errorsResponse.length > 0) {
+      if (totalInvoicesRec > 0) {
+        toast.add({
+          severity: 'info',
+          summary: 'Confirmed',
+          detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
+          life: 5000
+        })
+        onClose()
+      }
       getErrors(errorsResponse)
     }
-    else {
-      navigateTo('/invoice')
-      toast.add({
-        severity: 'info',
-        summary: 'Confirmed',
-        detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
-        life: 0
-      })
-    }
-  }
-  else if (errorsResponse && errorsResponse.length > 0) {
-    if (totalInvoicesRec > 0) {
-      toast.add({
-        severity: 'info',
-        summary: 'Confirmed',
-        detail: `The invoices have been reconciled successfully. Total invoices reconciled: ${totalInvoicesRec}`,
-        life: 0
-      })
-    }
-    getErrors(errorsResponse)
   }
 
   loadingSaveAll.value = false // Detener el loading al final de la función
   options.value.loading = false
+}
+
+function onClose() {
+  emit('close')
 }
 
 async function getErrors(errorsResponse: any) {
@@ -606,7 +630,7 @@ async function resetListItems() {
 }
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
+    case 'PROCESSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -619,7 +643,7 @@ function getStatusName(code: string) {
 }
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#888888'
@@ -765,13 +789,14 @@ async function searchAndFilter() {
   newPayload.filter.push({
     key: 'invoiceStatus',
     operator: 'IN',
-    value: ['PROCECSED'], // Asegúrate de que esté correctamente escrito
+    value: ['PROCESSED'], // Asegúrate de que esté correctamente escrito
     logicalOperation: 'AND'
   })
 
   payload.value = newPayload
   // Obtener la lista de facturas
-  options.value.selectAllItemByDefault = true
+
+  // options.value.selectAllItemByDefault = false
   const dataList = await getList()
 
   // Seleccionar automáticamente todos los elementos retornados
@@ -833,37 +858,37 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
-                <div>
-                  Invoice to Reconcile Manual
-                </div>
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
+            <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div>
+                Invoice to Reconcile Manual
               </div>
-            </template>
+            </div>
+          </template> -->
 
-            <div class="grid">
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">Agency:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedMultiSelectComponent
-                        id="autocomplete"
-                        field="name"
-                        item-value="id"
-                        :model="filterToSearch.agency"
-                        :suggestions="agencyList"
-                        :loading="multiSelectLoading.agency"
-                        @change="($event) => {
+          <div class="grid">
+            <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="flex flex-column gap-2 w-full">
+                <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">Agency:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <DebouncedMultiSelectComponent
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.agency"
+                      :suggestions="agencyList"
+                      :loading="multiSelectLoading.agency"
+                      @change="($event) => {
 
-                          filterToSearch.agency = $event
-                        }"
-                        @load="($event) => getAgencyList($event)"
-                      />
-                      <!--  <DebouncedAutoCompleteComponent
+                        filterToSearch.agency = $event
+                      }"
+                      @load="($event) => getAgencyList($event)"
+                    />
+                    <!--  <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
                         item-value="id" :model="filterToSearch.agency" :suggestions="agencyList"
@@ -881,24 +906,24 @@ onMounted(async () => {
                         </template>
                       </DebouncedAutoCompleteComponent>
                       -->
-                    </div>
                   </div>
-                  <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                    <div class="w-full">
-                      <DebouncedMultiSelectComponent
-                        id="autocomplete"
-                        field="name"
-                        item-value="id"
-                        :model="filterToSearch.hotel"
-                        :suggestions="hotelList"
-                        :loading="multiSelectLoading.hotel"
-                        @change="($event) => {
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <label class="filter-label font-bold ml-3" for="">Hotel:</label>
+                  <div class="w-full">
+                    <DebouncedMultiSelectComponent
+                      id="autocomplete"
+                      field="name"
+                      item-value="id"
+                      :model="filterToSearch.hotel"
+                      :suggestions="hotelList"
+                      :loading="multiSelectLoading.hotel"
+                      @change="($event) => {
 
-                          filterToSearch.hotel = $event
-                        }"
-                        @load="($event) => getHotelList($event)"
-                      />
+                        filterToSearch.hotel = $event
+                      }"
+                      @load="($event) => getHotelList($event)"
+                    />
                     <!--  <DebouncedAutoCompleteComponent
                         v-if="!loadingSaveAll" id="autocomplete"
                         :multiple="true" class="w-full" field="name"
@@ -917,98 +942,100 @@ onMounted(async () => {
                         </template>
                       </DebouncedAutoCompleteComponent>
                       -->
-                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">From:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)" :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2 ml-4">
-                    <label class="filter-label font-bold" for="">To:</label>
-                    <div class="w-full">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex flex-column gap-2 w-full">
-                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                        <label class="filter-label font-bold" for="">Criteria:</label>
-                        <div class="w-full">
-                          <Dropdown
-                            v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
-                            placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
-                          />
-                        </div>
-                      </div>
-                      <div class="flex align-items-center gap-2">
-                        <label class="filter-label font-bold ml-1" for="">Search:</label>
-                        <div class="w-full">
-                          <IconField icon-position="left">
-                            <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                            <!-- <InputIcon class="pi pi-search" /> -->
-                          </IconField>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex align-items-center ">
-                <Button
-                  v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
-                  :loading="loadingSearch" @click="searchAndFilter"
-                />
-                <Button
-                  v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                  :loading="loadingSearch" @click="clearFilterToSearch"
-                />
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
-      </div>
 
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @update:clicked-item="onMultipleSelect($event)"
-      >
-        <template #column-message="{ data }">
-          <div id="fieldError">
-            <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+              <div class="flex flex-column gap-2 w-full">
+                <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">From:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <Calendar
+                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                      show-icon icon-display="input" class="w-full" :min-date="new Date(startOfMonth)" :max-date="filterToSearch.to ? new Date(filterToSearch.to) : new Date(endOfMonth)"
+                    />
+                  </div>
+                </div>
+                <div class="flex align-items-center gap-2 ml-4">
+                  <label class="filter-label font-bold" for="">To:</label>
+                  <div class="w-full">
+                    <Calendar
+                      v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      icon-display="input" class="w-full" :min-date="filterToSearch.from ? new Date(filterToSearch.from) : new Date(startOfMonth)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+              <div class="flex w-full">
+                <div class="flex flex-row w-full">
+                  <div class="flex flex-column gap-2 w-full">
+                    <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                      <label class="filter-label font-bold" for="">Criteria:</label>
+                      <div class="w-full">
+                        <Dropdown
+                          v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
+                          placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                        />
+                      </div>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <label class="filter-label font-bold ml-1" for="">Search:</label>
+                      <div class="w-full">
+                        <!-- <IconField icon-position="left"> -->
+                        <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
+                        <!-- <InputIcon class="pi pi-search" /> -->
+                        <!-- </IconField> -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex align-items-center ">
+              <Button
+                v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
+                :loading="loadingSearch" @click="searchAndFilter"
+              />
+              <Button
+                v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                :loading="loadingSearch" @click="clearFilterToSearch"
+              />
+            </div>
           </div>
-        </template>
+        </AccordionTab>
+        <!-- </Accordion> -->
+      </div>
+      <!-- :selected-items="selectedItems" -->
+      <div class="mt-1">
+        <DynamicTable
+          ref="resultTable"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @update:clicked-item="onMultipleSelect($event)"
+        >
+          <template #column-message="{ data }">
+            <div id="fieldError">
+              <span v-tooltip.bottom="data.message" style="color: red;">{{ data.message }}</span>
+            </div>
+          </template>
 
-        <template #column-status="{ data: item }">
-          <Badge
-            :value="getStatusName(item?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-          />
-        </template>
+          <template #column-status="{ data: item }">
+            <Badge
+              :value="getStatusName(item?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+            />
+          </template>
 
         <!-- <template #datatable-footer>
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-500" style="font-weight: 700">
@@ -1019,14 +1046,15 @@ onMounted(async () => {
             </Row>
           </ColumnGroup>
         </template> -->
-      </DynamicTable>
+        </DynamicTable>
+      </div>
 
       <div class="flex align-items-end justify-content-end">
         <Button
           v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="selectedElements.length === 0"
           @click="saveItem()"
         />
-        <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
+        <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
       </div>
     </div>
   </div>

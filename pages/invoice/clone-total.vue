@@ -504,6 +504,9 @@ async function saveItem(item: { [key: string]: any }) {
 
   let countBookingWithoutNightType = 0
   const listOfBookingsWithoutNightType: string[] = []
+  const listBookingForFlateRate: string[] = []
+  const listBookingForRoomType: string[] = []
+  const listBookingForRatePlan: string[] = []
 
   try {
     bookingList.value?.forEach((booking) => {
@@ -512,10 +515,34 @@ async function saveItem(item: { [key: string]: any }) {
         countBookingWithoutNightType++
         listOfBookingsWithoutNightType.push(booking.hotelBookingNumber)
       }
+
+      if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
+        listBookingForFlateRate.push(booking.hotelBookingNumber)
+      }
+
+      if (booking?.roomType && booking?.roomType?.id && item.hotel && item.hotel?.id && booking?.roomType?.manageHotel?.id !== item.hotel?.id) {
+        listBookingForRoomType.push(booking.hotelBookingNumber)
+      }
+
+      if (booking?.ratePlan && booking?.ratePlan?.id && item.hotel && item.hotel?.id && booking?.ratePlan?.hotel?.id !== item.hotel?.id) {
+        listBookingForRatePlan.push(booking.hotelBookingNumber)
+      }
     })
 
     if (countBookingWithoutNightType > 0) {
       throw new Error(`The Night Type field is required for this Hotel Booking No: ${listOfBookingsWithoutNightType.toString()}`)
+    }
+
+    if (listBookingForFlateRate.length > 0) {
+      throw new Error(`The Hotel amount field must be greater than 0 for this Hotel Booking No: ${listBookingForFlateRate.toString()}`)
+    }
+
+    if (listBookingForRoomType.length > 0) {
+      throw new Error(`The Room Type field must be the same for this Hotel Booking No: ${listBookingForRoomType.toString()}`)
+    }
+
+    if (listBookingForRatePlan.length > 0) {
+      throw new Error(`The Rate Plan field must be the same for this Hotel Booking No: ${listBookingForRatePlan.toString()}`)
     }
 
     const response: any = await createClonation(item)
@@ -1151,20 +1178,35 @@ async function getBookingList(clearFilter: boolean = false) {
         hotelCreationDate: iterator?.hotelCreationDate ? iterator?.hotelCreationDate : new Date(),
         agency: iterator?.invoice?.agency,
         nights: dayjs(iterator?.checkOut).endOf('day').diff(dayjs(iterator?.checkIn).startOf('day'), 'day', false),
-        nightType: iterator.nightType ? iterator.nightType : null,
+        nightType: iterator.nightType
+          ? {
+              ...iterator.nightType,
+              name: iterator.nightType?.code ? `${iterator.nightType?.code || ''}-${iterator.nightType?.nameTemp ? iterator.nightType?.nameTemp : iterator.nightType?.name}` : '',
+              nameTemp: iterator.name
+            }
+          : null,
         ratePlan: iterator.ratePlan
           ? {
               ...iterator.ratePlan,
-              name: iterator.ratePlan?.code ? `${iterator.ratePlan?.code || ''}-${iterator.ratePlan?.name || ''}` : ''
+              name: iterator.ratePlan?.code ? `${iterator.ratePlan?.code || ''}-${iterator.ratePlan?.nameTemp ? iterator.ratePlan?.nameTemp : iterator.ratePlan?.name}` : '',
+              nameTemp: iterator.name
             }
           : null,
         roomType: iterator.roomType
           ? {
               ...iterator.roomType,
-              name: iterator.roomType?.code ? `${iterator.roomType?.code || ''}-${iterator.roomType?.name || ''}` : ''
+              name: iterator.roomType?.code ? `${iterator.roomType?.code || ''}-${iterator.roomType?.nameTemp ? iterator.roomType?.nameTemp : iterator.roomType?.name}` : '',
+              nameTemp: iterator.name
             }
           : null,
-        roomCategory: iterator.roomCategory ? iterator.roomCategory : null,
+        roomCategory: iterator.roomCategory
+          ? {
+              ...iterator.roomCategory,
+              name: iterator.roomCategory?.code ? `${iterator.roomCategory?.code || ''}-${iterator.roomCategory?.nameTemp ? iterator.roomCategory?.nameTemp : iterator.roomCategory?.name}` : '',
+              nameTemp: iterator.name
+            }
+          : null,
+
         fullName: `${iterator.firstName ? iterator.firstName : ''} ${iterator.lastName ? iterator.lastName : ''}`
       }]
 
@@ -1418,7 +1460,6 @@ function calcInvoiceAmountUpdate() {
 function updateBookingLocal(booking: any) {
   if (booking && booking.id) {
     const bookingToEdit = bookingList.value.find(item => item.id === booking.id)
-
     if (bookingToEdit) {
       bookingToEdit.description = booking.description
       bookingToEdit.contract = booking.contract
@@ -1434,6 +1475,11 @@ function updateBookingLocal(booking: any) {
       bookingToEdit.fullName = `${booking.firstName} ${booking.lastName}`
 
       bookingToEdit.roomType = booking.roomType
+      // ? {
+      //     ...booking.roomType,
+      //     name: `${booking?.roomType?.code || ''}-${booking?.roomType?.nameTemp || ''}`
+      //   }
+      // : null
       bookingToEdit.nightType = booking.nightType
       bookingToEdit.ratePlan = booking.ratePlan
       bookingToEdit.roomCategory = booking.roomCategory

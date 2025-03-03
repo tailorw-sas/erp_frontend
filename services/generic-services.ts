@@ -14,6 +14,17 @@ export const GenericService = {
     })
   },
 
+  async searchWithoutSearch(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
+    const { $api } = useNuxtApp()
+
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}`
+    return $api<SearchResponse>(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
   async export(MODULE_NAME: string, URI_API: string, payload: IQueryRequest) {
     const { $api } = useNuxtApp()
 
@@ -137,7 +148,7 @@ export const GenericService = {
 
   async getUrlByImage(file: File) {
     if (file) {
-      const response = await GenericService.uploadFile('CLOUDBRIDGES', 'files', file)
+      const response = await GenericService.uploadFile('cloudbridges', 'files', file)
       return (response as any)?.data.url
     }
   },
@@ -285,6 +296,16 @@ export const GenericService = {
     const { $api } = useNuxtApp()
     const serverUrl = useRequestURL()
     const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/import-innsist`
+    return $api(url, {
+      method: 'POST',
+      body: payload
+    })
+  },
+
+  async updateBookings(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/update`
     return $api(url, {
       method: 'POST',
       body: payload

@@ -120,10 +120,16 @@ type FilterDisplayMode = 'row' | 'menu' | undefined
 const modeFilterDisplay: Ref<FilterDisplayMode> = ref('menu')
 const menuFilter: { [key: string]: Ref<any> } = {}
 const menuFilterForRowDisplay: Ref = ref()
+const objeto: { [key: string]: any } = {}
+// Asignar el objeto a objListData y hacerlo reactivo
+const objListData = reactive(objeto)
 
 // Iteramos sobre el array de campos y añadimos las propiedades a menuFilter
 props.columns.forEach((field) => {
   menuFilter[field.field] = ref(null)
+  // if (field.type === 'select' || field.type === 'slot-select' || field.type === 'local-select') {
+  //   objListData[field.field] = []
+  // }
 })
 
 const openDialogDelete = ref(false)
@@ -133,12 +139,12 @@ const expandedRows = ref({})
 const metaKey = ref(false)
 const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 
-const objeto: { [key: string]: any } = {}
 const objetoFilter: { [key: string]: any } = {
   search: { value: null, matchMode: FilterMatchMode.CONTAINS },
 }
-// Asignar el objeto a objListData y hacerlo reactivo
-const objListData = reactive(objeto)
+
+const objForLoadings = ref<{ [key: string]: any }>({})
+const objForValues = ref<Record<string, Array<{ [key: string]: any }>>>({})
 
 const objFilterToClear = ref()
 
@@ -225,6 +231,7 @@ function clearFilter1() {
 
 function clearIndividualFilter(param1) {
   filters1.value[param1] = JSON.parse(JSON.stringify(objFilterToClear.value[param1]))
+  objForValues.value[param1] = []
 
   // Llama a la función callback
   onChangeFilters(filters1.value)
@@ -323,12 +330,29 @@ async function deleteItem(id: string, isLocal = false) {
   }
 }
 
-async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], localItems: any[] = [], mapFunction?: (data: any) => any | undefined, sortOptions?: ISortOptions | undefined) {
+async function getList(
+  objApi: IObjApi | null = null,
+  filter: IFilter[] = [],
+  localItems: any[] = [],
+  mapFunction?: (data: any) => any | undefined,
+  sortOptions?: ISortOptions | undefined,
+  objToSearch: IQueryToSearch = {
+    query: '',
+    keys: ['name', 'code'],
+  }
+) {
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
       const payload = {
-        filter,
+        filter: objToSearch && objToSearch.query !== ''
+          ? [
+              ...objToSearch.keys.map(key => ({ key, operator: 'LIKE', value: objToSearch.query, logicalOperation: 'OR' })),
+              ...filter
+            ]
+          : [
+              ...filter
+            ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -342,7 +366,7 @@ async function getList(objApi: IObjApi | null = null, filter: IFilter[] = [], lo
         }
         else {
           for (const iterator of response.data) {
-            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name }]
+            listItems = [...listItems, { id: iterator.id, name: objApi.keyValue ? iterator[objApi.keyValue] : iterator.name, code: iterator.code ? iterator.code : '' }]
           }
         }
       }
@@ -450,6 +474,8 @@ async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
       if (iterator.type === 'select' || iterator.type === 'custom-badge' || iterator.type === 'slot-select') {
+        objForLoadings.value[iterator.field] = false
+        objForValues.value[iterator.field] = []
         const response = await getList(
           {
             moduleApi: iterator.objApi?.moduleApi || '',
@@ -461,15 +487,60 @@ async function getDataFromSelectors() {
           iterator.objApi?.mapFunction,
           iterator.objApi?.sortOption
         )
-
-        objListData[iterator.field] = response
+        objListData[iterator.field] = []
+        for (const item of response) {
+          objListData[iterator.field] = [
+            ...objListData[iterator.field],
+            {
+              ...item,
+              name: 'code' in item ? `${item.code} - ${item.name}` : item.name
+            }
+            // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
+          ]
+        }
       }
     }
   }
   catch (error) {
-
+    console.log(error)
   }
 }
+
+async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryToSearch) {
+  try {
+    objForLoadings.value[column.field] = true
+    const response = await getList(
+      {
+        moduleApi: column.objApi?.moduleApi || '',
+        uriApi: column.objApi?.uriApi || '',
+        keyValue: column.objApi?.keyValue
+      },
+      column.objApi?.filter || [],
+      column.localItems || [],
+      column.objApi?.mapFunction,
+      column.objApi?.sortOption,
+      objToSearch
+    )
+    objListData[column.field] = []
+    for (const item of response) {
+      objListData[column.field] = [
+        ...objListData[column.field],
+        {
+          ...item,
+          name: 'code' in item ? `${item.code} - ${item.name}` : item.name
+        }
+        // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
+      ]
+    }
+
+    objForLoadings.value[column.field] = false
+  }
+  catch (error) {
+    objForLoadings.value[column.field] = false
+    console.log(error)
+  }
+}
+
 function onSortField(event: any) {
   if (event && event.filters) {
     const shortAndFilter = {
@@ -492,7 +563,7 @@ function haveFilterApplay(filtersValue: any, column: any) {
   if (column.type === 'date' || column.type === 'date-editable') {
     result = filtersValue[column.field].constraints[0].value !== null
   }
-  if (column.type === 'text' || column.type === 'slot-text') {
+  if (column.type === 'text' || column.type === 'slot-text' || column.type === 'number') {
     result = filtersValue[column.field].value
   }
   return result
@@ -525,16 +596,12 @@ function clearSelectedItems() {
 
 watch(() => props.data, async (newValue) => {
   if (props.options?.selectAllItemByDefault) {
-    clickedItem.value = props.data
+    clickedItem.value = [...clickedItem.value, ...props.data]
+    // Delete item duplicated
+    clickedItem.value = [...removeDuplicatesMap(clickedItem.value, ['id'])]
   }
   else {
-    if (newValue.length > 0 && props.options?.selectionMode === 'multiple' && props.selectedItems && props.selectedItems.length > 0) {
-      // Filtra los elementos de newValue que están en selectedItems comparando por id
-      clickedItem.value = newValue.filter((item: any) =>
-        props.selectedItems?.some(selected => selected.id === item.id)
-      )
-    }
-    else if ('selectFirstItemByDefault' in props.options) {
+    if ('selectFirstItemByDefault' in props.options) {
       if (props.options?.selectFirstItemByDefault) {
         if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
           clickedItem.value = props.data[0]
@@ -547,8 +614,8 @@ watch(() => props.data, async (newValue) => {
   }
 })
 
-watch(() => props.selectedItems, async (newValue) => {
-  clickedItem.value = newValue
+watch(clickedItem, async (newValue) => {
+  onSelectItem(newValue)
 })
 
 onMounted(() => {
@@ -563,6 +630,9 @@ onMounted(() => {
       }
     }
   }
+  if (props.selectedItems) {
+    clickedItem.value = props.selectedItems
+  }
 })
 
 getOptionsList()
@@ -570,20 +640,20 @@ defineExpose({ clearSelectedItems })
 </script>
 
 <template>
-  <Toolbar v-if="props.options?.hasOwnProperty('showTitleBar') ? props.options?.showTitleBar : false" class="mb-4">
-    <template #start>
-      <div class="my-2">
-        <h5 class="m-0">
-          {{ options?.tableName }}
-        </h5>
-      </div>
-    </template>
-
-    <template #end>
-      <FileUpload mode="basic" accept="image/*" :max-file-size="1000000" label="Importar" choose-label="Importar" class="mr-2 inline-block" />
-    </template>
-  </Toolbar>
-
+  <slot v-if="props.options?.hasOwnProperty('showTitleBar') ? props.options?.showTitleBar : false" name="datatable-toolbar">
+    <Toolbar class="mb-4">
+      <template #start>
+        <div class="my-2">
+          <h5 class="m-0">
+            {{ options?.tableName }}
+          </h5>
+        </div>
+      </template>
+      <template #end>
+        <FileUpload mode="basic" accept="image/*" :max-file-size="1000000" label="Importar" choose-label="Importar" class="mr-2 inline-block" />
+      </template>
+    </Toolbar>
+  </slot>
   <BlockUI :blocked="options?.loading || parentComponentLoading" class="block-ui-container">
     <div
       v-if="options?.loading"
@@ -599,6 +669,8 @@ defineExpose({ clearSelectedItems })
         v-model:selection="clickedItem"
         v-model:expandedRows="expandedRows"
         context-menu
+        resizable-columns
+        column-resize-mode="fit"
         :meta-key-selection="metaKey"
         :selection-mode="options?.selectionMode ?? 'single'"
         :filter-display="modeFilterDisplay"
@@ -614,6 +686,7 @@ defineExpose({ clearSelectedItems })
         :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '70vh'"
         :filters="filters1"
         edit-mode="cell"
+        style="border: 0"
         @sort="onSortField"
         @update:selection="onSelectItem"
         @update:filters="onChangeFilters"
@@ -622,7 +695,22 @@ defineExpose({ clearSelectedItems })
         @cell-edit-complete="onTableCellEditComplete"
         @row-expand="onRowExpand"
         @row-collapse="onRowCollapse"
+        @column-resize-end="($event) => {
+          console.log('column-resize-end', $event);
+        }"
       >
+        <!-- :virtual-scroller-options="{
+        lazy: true,
+        onLazyLoad: (event) => {
+        console.log('event', event);
+
+        },
+        itemSize: 20, // Altura estimada de cada fila en píxeles
+        }" -->
+        <!-- @row-select="onRowSelect"
+        @row-unselect="onRowUnselect"
+        @row-select-all="onRowSelectAll"
+        @row-unselect-all="onRowUnselectAll" -->
         <template #loading>
           <!-- Loading customers data. Please wait. -->
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
@@ -671,10 +759,12 @@ defineExpose({ clearSelectedItems })
           align-frozen="right"
           class="custom-table-head" :class="column.columnClass"
           :style="{
-            width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-            minWidth: column?.minWidth ? column?.minWidth : 'auto',
-            display: column?.hidden ? 'none' : 'table-cell',
+            // width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
+            // minWidth: column?.minWidth ? column?.minWidth : 'auto',
+            // display: column?.hidden ? 'none' : 'table-cell',
             maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
+            // maxWidth: '20px !important',
+            height: '20px',
           }"
         >
           <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
@@ -811,8 +901,31 @@ defineExpose({ clearSelectedItems })
                 placeholder="Select a operator"
                 class="w-full mb-2"
               />
+              <!-- Es este -->
+              <DebouncedMultiSelectComponent
+                id="autocomplete"
+                class="w-full h-2rem align-items-center"
+                field="name"
+                item-value="id"
+                :max-selected-labels="2"
+                :model="objForValues[column.field]"
+                :suggestions="[...objListData[column.field]]"
+                :loading="objForLoadings[column.field]"
+                @change="($event) => {
+                  objForValues[column.field] = $event
+                  filterModel.value = $event
+                }"
+                @load="async($event) => {
+                  const objQueryToSearch = {
+                    query: $event,
+                    keys: ['name', 'code'],
+                  }
+                  await getDataFromFiltersSelectors(column, objQueryToSearch)
+                }"
+              />
 
-              <MultiSelect
+              <!-- No Eliminar -->
+              <!-- <MultiSelect
                 v-model="filterModel.value"
                 :options="objListData[column.field]"
                 option-label="name"
@@ -825,7 +938,7 @@ defineExpose({ clearSelectedItems })
                     <span>{{ slotProps.option.name }}</span>
                   </div>
                 </template>
-              </MultiSelect>
+              </MultiSelect> -->
               <Button
                 v-if="false"
                 type="button"

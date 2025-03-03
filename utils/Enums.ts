@@ -45,7 +45,7 @@ export const OBJ_ENUM_INVOICE = {
 }
 
 export const OBJ_ENUM_INVOICE_STATUS = {
-  PROCECSED: 'Processed',
+  PROCESSED: 'Processed',
   RECONCILED: 'Reconciled',
   SENT: 'Sent',
   PENDING: 'Pending',
@@ -70,13 +70,13 @@ export const ENUM_INVOICE_CRITERIA = [
 export const ENUM_INVOICE_STATUS = [
   { id: 'CANCELED', name: 'Cancelled', code: 'CANC' },
   { id: 'PENDING', name: 'Pending', code: 'PEND' },
-  { id: 'PROCECSED', name: 'Processed', code: 'PRO' },
+  { id: 'PROCESSED', name: 'Processed', code: 'PRO' },
   { id: 'RECONCILED', name: 'Reconciled', code: 'REC' },
   { id: 'SENT', name: 'Sent', code: 'SENT' },
 ]
 
 export enum InvoiceStatus {
-  PROCECSED = 'PROCECSED',
+  PROCESSED = 'PROCESSED',
   RECONCILED = 'RECONCILED',
   SENT = 'SENT',
   CANCELED = 'CANCELLED',
@@ -84,7 +84,7 @@ export enum InvoiceStatus {
 }
 
 export const OBJ_INVOICE_STATUS_NAME = {
-  [InvoiceStatus.PROCECSED]: 'PROCESSED',
+  [InvoiceStatus.PROCESSED]: 'PROCESSED',
   [InvoiceStatus.RECONCILED]: 'RECONCILED',
   [InvoiceStatus.SENT]: 'SENT',
   [InvoiceStatus.CANCELED]: 'CANCELED',
@@ -374,14 +374,16 @@ export enum CALENDAR_MODE {
 }
 
 export const FORM_FIELD_TYPE = [
+  { id: 'local-select', name: 'Local Select' },
   { id: 'select', name: 'Select' },
+  { id: 'multiselect', name: 'Select Multiple' },
   { id: 'text', name: 'Text', show: false },
   { id: 'number', name: 'Number' },
   { id: 'email', name: 'Email' },
   { id: 'date', name: 'Date' },
   // { id: 'time', name: 'Time' },
-  { id: 'checkbox', name: 'Checkbox' },
-  { id: 'radio', name: 'Radio' },
+  // { id: 'checkbox', name: 'Checkbox' },
+  // { id: 'radio', name: 'Radio' },
   { id: 'textarea', name: 'Textarea' },
   // { id: 'file', name: 'File' },
 ]

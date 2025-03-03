@@ -2,19 +2,23 @@
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import dayjs from 'dayjs'
-import { useRoute } from 'vue-router'
 import { z } from 'zod'
 import { formatNumber } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { statusToBoolean, statusToString } from '~/utils/helpers'
-import type { IData } from '~/components/table/interfaces/IModelData'
-import { itemMenuList } from '~/components/payment/indexBtns'
+import { statusToBoolean } from '~/utils/helpers'
+import { isPrintModalOpen, itemMenuList } from '~/components/payment/indexBtns'
 import IfCan from '~/components/auth/IfCan.vue'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import PaymentShareFilesDialog from '~/components/payment/PaymentShareFilesDialog.vue'
+import PaymentBankDialog from '~/pages/payment/import-of-bank.vue'
+import PaymentExpenseDialog from '~/pages/payment/import-of-expense.vue'
+import PaymentAntiToIncomeDialog from '~/pages/payment/import-anti-income.vue'
+import PaymentExpenseToBookingDialog from '~/pages/payment/import-expense-booking.vue'
+import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
+import PayPrint from '~/pages/payment/print/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -29,6 +33,7 @@ const agencyItemsList = ref<any[]>([])
 const hotelItemsList = ref<any[]>([])
 const statusItemsList = ref<any[]>([])
 const openDialogApplyPayment = ref(false)
+const openDialogImportTransactionsFromVCC = ref(false)
 const openDialogApplyPaymentOtherDeduction = ref(false)
 const disabledBtnApplyPayment = ref(true)
 const disabledBtnApplyPaymentOtherDeduction = ref(true)
@@ -50,6 +55,11 @@ const idInvoicesSelectedToApplyPaymentForOtherDeduction = ref<string[]>([])
 const invoiceAmmountSelected = ref(0)
 const paymentAmmountSelected = ref(0)
 const paymentBalance = ref(0)
+const PaymentBankDialogVisible = ref(false)
+const PaymentExpenseDialogVisible = ref(false)
+const PaymentAntiToIncomeDialogVisible = ref(false)
+const PaymentExpenseToBookingDialogVisible = ref(false)
+const PaymentDetailDialogVisible = ref(false)
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -68,6 +78,12 @@ const currentAgencyForChangeAgency = ref<GenericObject>({})
 const listClientFormChangeAgency = ref<any[]>([])
 const openDialogChangeAgency = ref(false)
 const listAgencyByClient = ref<any[]>([])
+
+// Print Modal
+
+function closePrintModal() {
+  isPrintModalOpen.value = false
+}
 
 const columnsChangeAgency = ref<IColumn[]>([
   { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: true, showFilter: true },
@@ -182,26 +198,27 @@ const objApis = ref({
 
 const legend = ref(
   [
-    {
-      name: 'Transit',
-      color: '#ff002b',
-      colClass: 'pr-4',
-    },
-    {
-      name: 'Cancelled',
-      color: '#888888',
-      colClass: 'pr-4',
-    },
+    // {
+    //   name: 'Transit',
+    //   color: '#ff002b',
+    //   colClass: 'pr-4',
+    // },
     {
       name: 'Confirmed',
       color: '#0c2bff',
-      colClass: 'pr-4',
+      colClass: 'pr-3',
     },
     {
       name: 'Applied',
       color: '#00b816',
-      colClass: '',
+      colClass: 'pr-3',
     },
+    {
+      name: 'Cancelled',
+      color: '#888888',
+      colClass: 'pr-3',
+    },
+
   ]
 )
 const filterAllDateRange = ref(false)
@@ -357,9 +374,9 @@ const allMenuListItems = ref([
     viewBox: '',
     width: '24px',
     height: '24px',
-    command: ($event: any) => {},
-    disabled: true,
-    visible: true,
+    command: ($event: any) => { openDialogImportTransactionsFromVCC.value = true },
+    disabled: false,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
   {
     id: 'paymentWithoutAttachment',
@@ -423,6 +440,84 @@ const sClassMap: IStatusClass[] = [
   { status: 'Applied', class: 'text-applied' },
 ]
 
+// Encuentra el menú 'import'
+const importMenu = computed(() => itemMenuList.value.find(item => item.id === 'import'))
+
+// Encuentra el ítem 'Payment of bank'
+const paymentOfBankItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Payment Of Bank')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentOfBankItem.value) {
+  paymentOfBankItem.value.command = () => {
+    PaymentBankDialogVisible.value = true
+  }
+}
+function closeImportBank() {
+  PaymentBankDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Payment of Expense'
+const paymentOfExpenseItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Payment Of Expense')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentOfBankItem.value) {
+  paymentOfExpenseItem.value.command = () => {
+    PaymentExpenseDialogVisible.value = true
+  }
+}
+function closeImportExpense() {
+  PaymentExpenseDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Anti To Income'
+const paymentAntiToIncomeItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Anti To Income')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentAntiToIncomeItem.value) {
+  paymentAntiToIncomeItem.value.command = () => {
+    PaymentAntiToIncomeDialogVisible.value = true
+  }
+}
+function closeImportAntiToIncome() {
+  PaymentAntiToIncomeDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Expense To Booking'
+const paymentExpenseToBookingItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Expense To Booking')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentExpenseToBookingItem.value) {
+  paymentExpenseToBookingItem.value.command = () => {
+    PaymentExpenseToBookingDialogVisible.value = true
+  }
+}
+function closeImportExpenseToBooking() {
+  PaymentExpenseToBookingDialogVisible.value = false
+}
+
+// Encuentra el ítem 'Payment Detail'
+const paymentPaymentDetailItem = computed(() =>
+  importMenu.value?.menuItems.find(item => item.label === 'Payment Detail')
+)
+
+// Reemplaza el command con la nueva función
+if (paymentPaymentDetailItem.value) {
+  paymentPaymentDetailItem.value.command = () => {
+    PaymentDetailDialogVisible.value = true
+  }
+}
+function closePaymentDetail() {
+  PaymentDetailDialogVisible.value = false
+}
+
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 interface SubTotals {
   paymentAmount: number
@@ -455,16 +550,80 @@ function mapFunctionForBankAccount(data: DataListItemForBankAccount): ListItemFo
   }
 }
 const columns: IColumn[] = [
-  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
-  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: true },
-  { field: 'paymentSource', header: 'P.Source', tooltip: 'Payment Source', width: '60px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
-  { field: 'transactionDate', header: 'Trans. Date', tooltip: 'Transaction Date', width: '60px', type: 'date' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
-  { field: 'client', header: 'Client', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-client' } },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
+  {
+    field: 'icon',
+    header: '',
+    width: '20px', // Establece un tamaño fijo para la columna del icono
+    minWidth: '20px', // Evita que se haga más pequeña
+    maxWidth: '30px', // Evita que se haga más grande
+    type: 'slot-icon',
+    icon: 'pi pi-paperclip',
+    sortable: false,
+    showFilter: false,
+    hidden: false
+  },
+  { field: 'paymentId', header: 'Id', tooltip: 'Payment ID', width: 'auto', type: 'text', showFilter: true },
+  { field: 'paymentSource', header: 'P.S', tooltip: 'Payment Source', width: 'auto', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
+  { field: 'transactionDate', header: 'Trans. D', tooltip: 'Transaction Date', width: 'auto', type: 'date' },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '120px', // Aumenta el ancho principal
+    minWidth: '100px', // Define un ancho mínimo mayor
+    maxWidth: '120px', // Permite un máximo de 120px antes de truncar
+    widthTruncate: '120px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text',
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
+  {
+    field: 'client',
+    header: 'Client',
+    width: '90px',
+    minWidth: '60px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '90px', // Límite máximo antes de truncar
+    widthTruncate: '90px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-client'
+    }
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    width: '120px',
+    minWidth: '100px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '120px', // Límite máximo antes de truncar
+    widthTruncate: '120px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-agency'
+    }
+  },
+  { field: 'agencyType', header: 'Agency T.', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
-  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name', mapFunction: mapFunctionForBankAccount, sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC } } },
+  {
+    field: 'bankAccount',
+    header: 'Bank Acc',
+    tooltip: 'Bank Account',
+    width: '100px',
+    minWidth: '80px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '100px', // Límite máximo antes de truncar
+    widthTruncate: '100px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-bank-account',
+      keyValue: 'name',
+      mapFunction: mapFunctionForBankAccount,
+      sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC }
+    }
+  },
   { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'number' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
@@ -521,17 +680,23 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
   { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: true },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
   { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: false },
+  // { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: true },
+  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status', filter: [{
+    key: 'enabledToApply',
+    operator: 'EQUALS',
+    value: true,
+    logicalOperation: 'AND'
+  }] }, sortable: true },
 ])
 
 // Table
 const columnsExpandTable: IColumn[] = [
   { field: 'bookingId', header: 'Id', width: '120px', type: 'text', sortable: false },
   { field: 'fullName', header: 'Full Name', width: '200px', type: 'text', sortable: false },
-  { field: 'reservationNumber', header: 'Reservation No.', width: '120px', maxWidth: '150px', type: 'text', sortable: false },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', width: '120px', maxWidth: '150px', type: 'text', sortable: false },
   // { field: 'invoiceNumber', header: 'Invoice No', width: '150px', type: 'text', sortable: false },
   { field: 'couponNumber', header: 'Coupon No.', width: '120px', type: 'text', sortable: false },
   // { field: 'adult', header: 'Adult', width: '120px', type: 'text', sortable: false },
@@ -698,7 +863,7 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
   { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', width: '90px', maxWidth: '120px', sortable: true, showFilter: true },
   { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: true, showFilter: true },
   { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: true, showFilter: true },
@@ -839,7 +1004,7 @@ function handleShareFilesDialogOpen() {
 
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
-    case 'PROCECSED': return '#FF8D00'
+    case 'PROCESSED': return '#FF8D00'
     case 'RECONCILED': return '#005FB7'
     case 'SENT': return '#006400'
     case 'CANCELED': return '#888888'
@@ -852,7 +1017,7 @@ function getStatusBadgeBackgroundColor(code: string) {
 
 function getStatusName(code: string) {
   switch (code) {
-    case 'PROCECSED': return 'Processed'
+    case 'PROCESSED': return 'Processed'
 
     case 'RECONCILED': return 'Reconciled'
     case 'SENT': return 'Sent'
@@ -926,7 +1091,6 @@ async function getList() {
     }
     localStorage.setItem('payloadOfPaymentList', JSON.stringify(payloadOfPaymentList))
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -1256,7 +1420,7 @@ async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
-  await getAgencyByClient()
+  await getAgencyByClient() // objClientFormChangeAgency.value.id
 }
 
 function onSortFieldForChangeAgency(event: any) {
@@ -1342,8 +1506,10 @@ async function getClientList(moduleApi: string, uriApi: string, queryObj: { quer
     objLoading.value.loadingClient = true
     let clientTemp: any[] = []
     clientItemsList.value = []
+    listClientFormChangeAgency.value = []
     clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
     clientItemsList.value = [...clientItemsList.value, ...clientTemp]
+    listClientFormChangeAgency.value = [...listClientFormChangeAgency.value, ...clientTemp]
   }
   catch (error) {
     objLoading.value.loadingClient = false
@@ -1404,7 +1570,7 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   }
 }
 
-async function getAgencyByClient() {
+async function getAgencyByClient(clientId: string = '') {
   if (optionsOfTableChangeAgency.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
     return
@@ -1425,6 +1591,21 @@ async function getAgencyByClient() {
         value: currentAgencyForChangeAgency.value?.id,
         logicalOperation: 'AND',
       })
+    }
+
+    if (clientId !== '') {
+      const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
+      if (objFilterByClient) {
+        objFilterByClient.value = clientId
+      }
+      else {
+        payloadChangeAgency.value.filter.push({
+          key: 'client.id',
+          operator: 'EQUALS',
+          value: clientId,
+          logicalOperation: 'AND',
+        })
+      }
     }
 
     const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
@@ -1617,6 +1798,8 @@ async function applyPaymentGetList() {
                   )
                 }
 
+                const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+                applyPaymentPayload.value = filterTemp
                 const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
                 const { data: dataList, page, size, totalElements, totalPages } = response
@@ -1629,23 +1812,24 @@ async function applyPaymentGetList() {
                 const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
                 for (const iterator of dataList) {
-                  for (const booking of iterator.bookings) {
-                    booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-                    booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-                  }
+                  // for (const booking of iterator.bookings) {
+                  //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                  //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                  // }
                   // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                   iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
                   iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                   // iterator.paymentStatus = iterator.status
 
                   iterator.bookingsList = []
+                  iterator.bookings = []
 
                   // Verificar si el ID ya existe en la lista
                   if (!existingIds.has(iterator.id)) {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
-                  // if (iterator.status !== 'PROCECSED') {
+                  // if (iterator.status !== 'PROCESSED') {
                   // }
                 }
 
@@ -1696,7 +1880,8 @@ async function applyPaymentGetList() {
                   }
                 )
               }
-
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+              applyPaymentPayload.value = filterTemp
               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
               const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1708,23 +1893,24 @@ async function applyPaymentGetList() {
               const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
               for (const iterator of dataList) {
-                for (const booking of iterator.bookings) {
-                  booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-                  booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-                }
+                // for (const booking of iterator.bookings) {
+                //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                // }
                 // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
                 iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 iterator.bookingsList = []
+                iterator.bookings = []
 
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -1807,6 +1993,8 @@ async function applyPaymentGetList() {
                   }
                 )
               }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+              applyPaymentPayload.value = filterTemp
 
               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
 
@@ -1820,23 +2008,24 @@ async function applyPaymentGetList() {
               const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
 
               for (const iterator of dataList) {
-                for (const booking of iterator.bookings) {
-                  booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-                  booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-                }
+                // for (const booking of iterator.bookings) {
+                //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                // }
                 // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
                 iterator.invoiceAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
                 iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
                 // iterator.paymentStatus = iterator.status
 
                 iterator.bookingsList = []
+                iterator.bookings = []
 
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -1873,6 +2062,12 @@ async function applyPaymentBookingGetList(idInvoice: string = '') {
           operator: 'EQUALS',
           value: idInvoice,
           logicalOperation: 'AND'
+        },
+        {
+          key: 'dueAmount',
+          operator: 'GREATER_THAN',
+          value: '0.00',
+          logicalOperation: 'AND'
         }
       ]
 
@@ -1904,7 +2099,7 @@ async function applyPaymentBookingGetList(idInvoice: string = '') {
       }
 
       listBookingsForApplyPayment = [...listBookingsForApplyPayment, ...newListItems]
-      objInvoice.bookingsList = [...listBookingsForApplyPayment]
+      objInvoice.bookings = [...listBookingsForApplyPayment]
     }
     catch (error) {
       objInvoice.loadingBookings = false
@@ -2040,6 +2235,27 @@ async function getListPaymentDetailTypeDeposit() {
   }
 }
 
+function removeDuplicateFilters(request: IQueryRequest): IQueryRequest {
+  const uniqueFilters = request.filter.reduce((acc: IFilter[], current: IFilter) => {
+    const isDuplicate = acc.some(item =>
+      item.key === current.key
+      && item.operator === current.operator
+      && JSON.stringify(item.value) === JSON.stringify(current.value)
+      && item.logicalOperation === current.logicalOperation
+    )
+
+    if (!isDuplicate) {
+      acc.push(current)
+    }
+    return acc
+  }, [])
+
+  return {
+    ...request,
+    filter: uniqueFilters
+  }
+}
+
 async function applyPaymentGetListForOtherDeductions() {
   if (applyPaymentOptionsOtherDeduction.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -2145,7 +2361,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     logicalOperation: 'AND'
                   })
                 }
-                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
 
                 if (objFilterDueAmount) {
                   objFilterDueAmount.value = '0.00'
@@ -2196,6 +2412,9 @@ async function applyPaymentGetListForOtherDeductions() {
                   )
                 }
 
+                const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+                applyPaymentPayloadOtherDeduction.value = filterTemp
+
                 const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
                 const { data: dataList, page, size, totalElements, totalPages } = response
@@ -2235,7 +2454,7 @@ async function applyPaymentGetListForOtherDeductions() {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                   }
-                  // if (iterator.status !== 'PROCECSED') {
+                  // if (iterator.status !== 'PROCESSED') {
                   // }
                 }
 
@@ -2257,7 +2476,8 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
+              console.log('Parte 2')
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2307,6 +2527,8 @@ async function applyPaymentGetListForOtherDeductions() {
                   }
                 )
               }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+              applyPaymentPayloadOtherDeduction.value = filterTemp
 
               const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
@@ -2348,7 +2570,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -2400,8 +2622,8 @@ async function applyPaymentGetListForOtherDeductions() {
                   logicalOperation: 'AND'
                 })
               }
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
-
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
+              console.log('Parte 3')
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
               }
@@ -2450,6 +2672,8 @@ async function applyPaymentGetListForOtherDeductions() {
                   }
                 )
               }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+              applyPaymentPayloadOtherDeduction.value = filterTemp
 
               const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
 
@@ -2491,7 +2715,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
                 }
-                // if (iterator.status !== 'PROCECSED') {
+                // if (iterator.status !== 'PROCESSED') {
                 // }
               }
 
@@ -2517,6 +2741,7 @@ function closeModalApplyPayment() {
   idInvoicesSelectedToApplyPayment.value = []
   paymentDetailsTypeDepositSelected.value = []
   invoiceAmmountSelected.value = 0
+  applyPaymentPayload.value.filter = []
 }
 
 function closeModalApplyPaymentOtherDeductions() {
@@ -2527,6 +2752,7 @@ function closeModalApplyPaymentOtherDeductions() {
   loadAllInvoices.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
   applyPaymentOnChangePageOtherDeduction.value = undefined
+  applyPaymentPayloadOtherDeduction.value.filter = []
 }
 
 async function openModalApplyPayment() {
@@ -2553,7 +2779,7 @@ async function openModalApplyPaymentOtherDeduction() {
 
 async function openModalApplyChangeAgency() {
   openDialogChangeAgency.value = true
-  getAgencyByClient()
+  getAgencyByClient() // objClientFormChangeAgency.value.id
 }
 
 function closeModalChangeAgency() {
@@ -2628,7 +2854,7 @@ function onRowContextMenu(event: any) {
 
   // if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
 
-  if (event && event.data && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
+  if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -3436,14 +3662,14 @@ async function loadDefaultsConfig() {
   await searchAndFilter()
 }
 
-function showInconAttachment(objData: any) {
+function showIconAttachment(objData: any) {
   if (objData.hasAttachment) {
     return true
   }
-  else if (objData.attachmentStatus.pwaWithOutAttachment) {
+  else if (objData.attachmentStatus && objData.attachmentStatus.pwaWithOutAttachment) {
     return true
   }
-  else if (objData.attachmentStatus.patWithAttachment) {
+  else if (objData.attachmentStatus && objData.attachmentStatus.patWithAttachment) {
     return true
   }
   return false
@@ -3468,7 +3694,18 @@ async function parseDataTableFilterForApplyPayment(payloadFilter: any) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
   }
 
-  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  const objFilterInvoiceStatus = parseFilter?.find((item: IFilter) => item?.key === 'status.id')
+  if (objFilterInvoiceStatus) {
+    objFilterInvoiceStatus.key = 'manageInvoiceStatus.id'
+  }
+
+  if (parseFilter && parseFilter?.length > 0) {
+    parseFilter.forEach((filter) => {
+      filter.type = 'filterSearch'
+    })
+  }
+
+  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter, ...parseFilter || []]
   await applyPaymentGetList()
 }
@@ -3487,6 +3724,9 @@ function applyPaymentOnSortField(event: any) {
     if (event.sortField === 'invoiceAmountTemp') {
       event.sortField = 'invoiceAmount'
     }
+    if (event.sortField === 'status') {
+      event.sortField = 'manageInvoiceStatus.name'
+    }
     applyPaymentPayload.value.sortBy = event.sortField
     applyPaymentPayload.value.sortType = event.sortOrder
     parseDataTableFilterForApplyPayment(event.filter)
@@ -3502,13 +3742,22 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
   const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
   if (objFilterDueAmount) {
     objFilterDueAmount.key = 'dueAmount'
+    objFilterDueAmount.value = objFilterDueAmount.value ? Number(objFilterDueAmount.value).toFixed(2).toString() : '0.00'
+    objFilterDueAmount.type = 'filterSearch'
   }
   const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmountTemp')
   if (objFilterInvoiceAmount) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
+    objFilterInvoiceAmount.value = objFilterInvoiceAmount.value ? Number(objFilterInvoiceAmount.value).toFixed(2).toString() : '0.00'
   }
 
-  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  if (parseFilter && parseFilter?.length > 0) {
+    parseFilter.forEach((filter) => {
+      filter.type = 'filterSearch'
+    })
+  }
+
+  applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   applyPaymentPayloadOtherDeduction.value.filter = [...applyPaymentPayloadOtherDeduction.value.filter, ...parseFilter || []]
   await applyPaymentGetListForOtherDeductions()
 }
@@ -3553,7 +3802,7 @@ watch(payloadOnChangePage, (newValue) => {
 watch(payloadOnChangePageChangeAgency, (newValue) => {
   payloadChangeAgency.value.page = newValue?.page ? newValue?.page : 0
   payloadChangeAgency.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getAgencyByClient()
+  getAgencyByClient() // objClientFormChangeAgency.value.id
 })
 
 watch(applyPaymentOnChangePage, (newValue) => {
@@ -3593,10 +3842,10 @@ onMounted(async () => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
+    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 4px;">
       Payment Management
     </h5>
-    <div class="flex justify-content-end px-0">
+    <div class="flex flex-row w-full place-content-center justify-center justify-content-end -mt-2 -mb-1">
       <span v-for="(objBtnAndMenu, index) in itemMenuList" :key="index">
         <IfCan :perms="objBtnAndMenu.permission && objBtnAndMenu?.permission?.length > 0 ? objBtnAndMenu.permission : []">
           <div v-if="objBtnAndMenu.showBtn()" class="my-2 flex justify-content-end pl-2 pr-0">
@@ -3644,7 +3893,7 @@ onMounted(async () => {
   </div>
   <div>
     <div class="card p-0 m-0">
-      <Accordion id="accordion" :active-index="0">
+      <Accordion :active-index="0" class="mb-0">
         <AccordionTab content-class="p-0 m-0">
           <template #header>
             <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
@@ -3656,13 +3905,13 @@ onMounted(async () => {
               </div>
             </div>
           </template>
-          <div v-if="true" class="grid p-0 m-0" style="margin: 0 auto;">
+          <div class="flex gap-4 flex-column lg:flex-row -mt-2">
             <!-- first filter -->
             <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
               <div class="grid align-items-center justify-content-center">
                 <div class="col-12">
                   <div class="flex align-items-center mb-2">
-                    <label for="" class="mr-2 font-bold"> Client:</label>
+                    <label for="" class="mr-0 font-bold w-6rem"> Client:</label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
@@ -3741,12 +3990,13 @@ onMounted(async () => {
                   <div class="flex align-items-center">
                     <label for="" class="mr-2 font-bold"> Agency:</label>
                     <div class="w-full">
-                      <DebouncedAutoCompleteComponent
+                      <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete"
                         class="w-full h-2rem align-items-center"
                         field="name"
                         item-value="id"
+                        :max-selected-labels="3"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyItemsList]"
                         :loading="objLoading.loadingAgency"
@@ -4065,7 +4315,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="flex align-items-center">
-                    <label for="" class="w-4rem font-bold">Value:</label>
+                    <label for="" class="w-4rem font-bold mr-1">Value:</label>
                     <InputText v-model="filterToSearch.value" type="text" placeholder="" class="w-12rem" style="max-width: 12rem;" />
                   </div>
                 </div>
@@ -4149,56 +4399,58 @@ onMounted(async () => {
       </div>
     </div>
     <!-- @update:clicked-item="assingFuntionsForPrint($event)" -->
-    <DynamicTable
-      :data="listItems"
-      :columns="columns"
-      :options="options"
-      :pagination="pagination"
-      @on-confirm-create="goToCreateForm"
-      @on-change-pagination="payloadOnChangePage = $event"
-      @on-change-filter="parseDataTableFilter"
-      @on-list-item="resetListItems"
-      @on-sort-field="onSortField"
-      @on-row-double-click="goToFormInNewTab($event)"
-      @on-row-right-click="onRowContextMenu($event)"
-    >
-      <template #column-icon="{ data: objData, column }">
-        <div class="flex align-items-center justify-content-center p-0 m-0">
-          <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
-          <Button
-            v-if="showInconAttachment(objData)"
-            :icon="column.icon"
-            class="p-button-rounded p-button-text w-2rem h-2rem"
-            aria-label="Submit"
-            :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
-            :style="{ color: objData.color }"
-          />
-        </div>
+    <div class="-mt-4">
+      <DynamicTable
+        :data="listItems"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-confirm-create="goToCreateForm"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @on-change-filter="parseDataTableFilter"
+        @on-list-item="resetListItems"
+        @on-sort-field="onSortField"
+        @on-row-double-click="goToFormInNewTab($event)"
+        @on-row-right-click="onRowContextMenu($event)"
+      >
+        <template #column-icon="{ data: objData, column }">
+          <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
+            <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
+            <Button
+              v-if="showIconAttachment(objData)"
+              :icon="column.icon"
+              class="p-button-rounded p-button-text w-2rem h-2rem"
+              aria-label="Submit"
+              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
+              :style="{ color: objData.color }"
+            />
+          </div>
         <!-- style="color: #616161;" -->
         <!-- :style="{ 'background-color': '#00b816' }" -->
-      </template>
+        </template>
 
-      <template #column-paymentStatus="{ data, column }">
-        <Badge
-          v-tooltip.top="data.paymentStatus.name.toString()"
-          :value="data.paymentStatus.name"
-          :class="column.statusClassMap?.find(e => e.status === data.paymentStatus.name)?.class"
-        />
-      </template>
-      <template #datatable-footer>
-        <ColumnGroup type="footer" class="flex align-items-center">
-          <Row>
-            <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
-            <Column :colspan="0" />
-            <Column :colspan="0" />
-          </Row>
-        </ColumnGroup>
-      </template>
-    </DynamicTable>
+        <template #column-paymentStatus="{ data, column }">
+          <Badge
+            v-tooltip.top="data.paymentStatus.name.toString()"
+            :value="data.paymentStatus.name"
+            :class="column.statusClassMap?.find(e => e.status === data.paymentStatus.name)?.class"
+          />
+        </template>
+        <template #datatable-footer>
+          <ColumnGroup type="footer" class="flex align-items-center">
+            <Row>
+              <Column footer="Totals:" :colspan="options.selectionMode === 'multiple' ? 10 : 9" footer-style="text-align:right; font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.paymentAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.depositBalance + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.applied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :footer="formatNumber(Math.round((subTotals.noApplied + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
+              <Column :colspan="0" />
+              <Column :colspan="0" />
+            </Row>
+          </ColumnGroup>
+        </template>
+      </DynamicTable>
+    </div>
     <!-- Dialog change agency -->
     <Dialog
       v-model:visible="openDialogChangeAgency"
@@ -4239,22 +4491,37 @@ onMounted(async () => {
                 <label for="autocomplete" class="font-semibold"> Client: </label>
               </div>
               <div class="mr-4">
+                <!-- <pre>{{ objClientFormChangeAgency }}</pre> -->
                 <DebouncedAutoCompleteComponent
                   id="autocomplete"
                   class="w-29rem"
                   field="name"
                   item-value="id"
-                  disabled
                   :model="objClientFormChangeAgency"
                   :suggestions="[...listClientFormChangeAgency]"
-                  @change="($event) => {
+                  @change="async ($event) => {
                     objClientFormChangeAgency = $event
+                    // if ($event && $event.id) {
+                    //   await getAgencyByClient($event.id)
+                    // }
                   }"
-                  @load="async($event) => {}"
+                  @load="async($event) => {
+                    const objQueryToSearch = {
+                      query: $event,
+                      keys: ['name', 'code'],
+                    }
+                    const filter: FilterCriteria[] = [{
+                      key: 'status',
+                      logicalOperation: 'AND',
+                      operator: 'EQUALS',
+                      value: 'ACTIVE',
+                    }]
+                    await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
+                  }"
                 />
               </div>
             </div>
-            <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
+            <div v-if="true" class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
               <strong class="mr-2 w-auto">Client:</strong>
               <!-- <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.code }} - {{ objClientFormChangeAgency.name }}</span> -->
               <span class="w-auto text-white font-semibold">{{ objClientFormChangeAgency.name }}</span>
@@ -4333,7 +4600,7 @@ onMounted(async () => {
         </template>
         <template #default>
           <div class="p-fluid pt-3">
-            <BlockUI v-if="objItemSelectedForRightClickApplyPayment?.hasDetailTypeDeposit" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
+            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
               <DataTable
                 v-model:selection="paymentDetailsTypeDepositSelected"
                 :value="paymentDetailsTypeDepositList"
@@ -4399,7 +4666,7 @@ onMounted(async () => {
                     </Column>
                     <template #empty>
                       <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                        <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                        <span v-if="!item?.loadingBookings" class="flex flex-column align-items-center justify-content-center">
                           <div class="row">
                             <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
                           </div>
@@ -4917,6 +5184,18 @@ onMounted(async () => {
       </template>
     </Dialog>
   </div>
+  // <!-- Modal para Print -->
+  <template>
+    <div>
+      <Dialog
+        v-model:visible="isPrintModalOpen" modal header="Payment To Print" :style="{ width: '95vw', height: '100vh' }"
+        :closable="true"
+      >
+        <PayPrint />
+        <template #footer />
+      </Dialog>
+    </div>
+  </template>
 
   <div v-if="attachmentDialogOpen">
     <PaymentAttachmentDialog
@@ -4954,6 +5233,15 @@ onMounted(async () => {
     />
   </div>
 
+  <!--  Import Transactions From VCC -->
+  <div v-if="openDialogImportTransactionsFromVCC">
+    <PaymentImportTransactionsFromVCCDialog
+      :open-dialog="openDialogImportTransactionsFromVCC" :close-dialog="() => {
+        openDialogImportTransactionsFromVCC = false
+      }" :selected-payment="paymentSelectedForAttachment"
+    />
+  </div>
+
   <ContextMenu ref="contextMenu" :model="allMenuListItems">
     <template #itemicon="{ item }">
       <div v-if="item.iconSvg !== ''" class="w-2rem flex justify-content-center align-items-center">
@@ -4966,13 +5254,38 @@ onMounted(async () => {
       </div>
     </template>
   </ContextMenu>
+  <DynamicContentModalImport
+    :visible="PaymentExpenseToBookingDialogVisible" :component="PaymentExpenseToBookingDialog"
+    header="Expense To Booking Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportExpenseToBooking"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentDetailDialogVisible" :component="PaymentDetailDialog"
+    header="Payment Detail Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closePaymentDetail"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentAntiToIncomeDialogVisible" :component="PaymentAntiToIncomeDialog"
+    header="Anti To Income Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportAntiToIncome"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentExpenseDialogVisible" :component="PaymentExpenseDialog"
+    header="Payment of Expense Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportExpense"
+  />
+  <DynamicContentModalImport
+    :visible="PaymentBankDialogVisible" :component="PaymentBankDialog"
+    header="Payment of Bank Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
+    @close="closeImportBank"
+  />
 </template>
 
-<style lang="scss">
-.text-transit {
-  background-color: #ff002b;
-  color: #fff;
-}
+// <style lang="scss">
+// .text-transit {
+//   background-color: #ff002b;
+//   color: #fff;
+// }
 .text-cancelled {
   background-color: #888888;
   color: #fff;

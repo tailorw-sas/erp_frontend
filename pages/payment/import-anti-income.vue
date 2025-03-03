@@ -7,6 +7,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
+const emit = defineEmits(['close'])
 const { data: userData } = useAuth()
 const toast = useToast()
 const listItems = ref<any[]>([])
@@ -52,12 +53,12 @@ const idItem = ref('')
 const columns: IColumn[] = [
   { field: 'transactionId', header: 'Id', type: 'text' },
   { field: 'paymentId', header: 'Payment Id', type: 'text' },
-  { field: 'transactionCategoryName', header: 'Trans. Cat.', type: 'text' },
+  { field: 'transactionCategoryName', header: 'Trans. Cat.', tooltip: 'Transaction Category', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'text' },
   { field: 'transactionCheckDepositBalance', header: 'Deposit Balance', type: 'text' },
   { field: 'transactionCheckDepositAmount', header: 'Amount', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
-  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
+  { field: 'impSta', header: 'Imp. Status', tooltip: 'Import Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -217,7 +218,8 @@ async function importAntiIncome() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 10000 })
+        onClose()
         options.value.loading = false
         await clearForm()
       }
@@ -227,6 +229,9 @@ async function importAntiIncome() {
   options.value.loading = false
 }
 
+function onClose() {
+  emit('close')
+}
 async function validateStatusImport() {
   options.value.loading = true
   return new Promise<void>((resolve) => {
@@ -388,66 +393,64 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
-              >
-                <div>
-                  Import Anti to Income
-                </div>
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
+            <div
+              class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
+            >
+              <div>
+                Import Anti to Income
               </div>
-            </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Document: <span class="p-error">*</span></label>
-                  <div class="w-full">
-                    <!-- <Dropdown
+            </div>
+          </template> -->
+          <div class="grid p-0 m-0" style="margin: 0 auto;">
+            <div class="flex align-items-center mb-2">
+              <label class="w-17rem">Transaction Category: <span class="p-error">*</span></label>
+              <div class="w-full">
+                <!-- <Dropdown
                       v-model="importModel.transactionType"
                       class="w-full" :options="transactionStatusList" option-label="name"
                       option-value="id" placeholder="Select Document" @change="activeImport()"
                     /> -->
-                    <DebouncedAutoCompleteComponent
-                      id="autocomplete"
-                      class="w-full h-2rem align-items-center"
-                      field="name"
-                      item-value="id"
-                      :model="importModel.transactionType"
-                      :loading="objLoading.loadingTransactionType"
-                      :suggestions="[...transactionStatusList]"
-                      @change="($event) => {
-                        importModel.transactionType = $event
-                      }"
-                      @load="async($event) => {
-                        const filter: FilterCriteria[] = [
-                          {
-                            key: 'antiToIncome',
-                            operator: 'EQUALS',
-                            value: true,
-                            logicalOperation: 'AND',
-                          },
-                          {
-                            key: 'status',
-                            logicalOperation: 'AND',
-                            operator: 'EQUALS',
-                            value: 'ACTIVE',
-                          },
-                        ]
-                        const objQueryToSearch = {
-                          query: $event,
-                          keys: ['name', 'code'],
-                        }
-                        await getTransactionStatusListForSelectField(confTransactionStatusApi.moduleApi, confTransactionStatusApi.uriApi, objQueryToSearch, filter)
-                      }"
-                    />
-                  </div>
-                </div>
+                <DebouncedAutoCompleteComponent
+                  id="autocomplete"
+                  class="w-full h-2rem align-items-center"
+                  field="name"
+                  item-value="id"
+                  :model="importModel.transactionType"
+                  :loading="objLoading.loadingTransactionType"
+                  :suggestions="[...transactionStatusList]"
+                  @change="($event) => {
+                    importModel.transactionType = $event
+                  }"
+                  @load="async($event) => {
+                    const filter: FilterCriteria[] = [
+                      {
+                        key: 'antiToIncome',
+                        operator: 'EQUALS',
+                        value: true,
+                        logicalOperation: 'AND',
+                      },
+                      {
+                        key: 'status',
+                        logicalOperation: 'AND',
+                        operator: 'EQUALS',
+                        value: 'ACTIVE',
+                      },
+                    ]
+                    const objQueryToSearch = {
+                      query: $event,
+                      keys: ['name', 'code'],
+                    }
+                    await getTransactionStatusListForSelectField(confTransactionStatusApi.moduleApi, confTransactionStatusApi.uriApi, objQueryToSearch, filter)
+                  }"
+                />
               </div>
+            </div>
 
-              <!-- <div class="col-12 md:col-3 align-items-center my-0 py-0">
+            <!-- <div class="col-12 md:col-3 align-items-center my-0 py-0">
                 <div class="flex align-items-center mb-2">
                   <label class="w-7rem">Total Amount: </label>
                   <div class="w-full">
@@ -456,53 +459,52 @@ onMounted(async () => {
                 </div>
               </div> -->
 
-              <div class="col-12 md:col-4 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-8rem">Import Data: <span class="p-error">*</span> </label>
-                  <div class="w-full">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
-                        class="w-full" show-clear aria-describedby="inputtext-help"
-                      />
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input
-                      ref="fileUpload" type="file" style="display: none;"
-                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile($event)"
-                    >
+            <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-19rem">Import Data (XLS or XLSX): <span class="p-error">*</span></label>
+                <div class="w-full">
+                  <div class="p-inputgroup w-full">
+                    <InputText
+                      ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                      class="w-full" show-clear aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                    </span>
                   </div>
-                </div>
-              </div>
 
-              <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Attach File: <span class="p-error">*</span> </label>
-                  <div class="w-full">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
-                        class="w-full" show-clear aria-describedby="inputtext-help"
-                      />
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()" />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type PDF</small>
-                    <input
-                      ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
-                      @change="onChangeAttachFile($event)"
-                    >
-                  </div>
+                  <input
+                    ref="fileUpload" type="file" style="display: none;"
+                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    @change="onChangeFile($event)"
+                  >
                 </div>
               </div>
             </div>
-          </accordionTab>
-        </accordion>
+
+            <div class="col-12 md:col-4 xs:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-11rem">Attach File ( PDF): <span class="p-error">*</span> </label>
+                <div class="w-full">
+                  <div class="p-inputgroup w-full">
+                    <InputText
+                      ref="attachUpload" v-model="importModel.attachFile" placeholder="Choose file"
+                      class="w-full" show-clear aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()" />
+                    </span>
+                  </div>
+
+                  <input
+                    ref="attachUpload" type="file" style="display: none;" accept="application/pdf"
+                    @change="onChangeAttachFile($event)"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </accordionTab>
       </div>
 
       <DynamicTable
@@ -523,10 +525,6 @@ onMounted(async () => {
           :disabled="uploadComplete || !importModel.transactionType || !inputFile || !attachFile"
           :loading="options.loading"
           @click="importAntiIncome"
-        />
-        <Button
-          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
-          @click="clearForm"
         />
       </div>
     </div>

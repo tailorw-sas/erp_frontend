@@ -23,6 +23,7 @@ const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
+const maxSelectedLabels = ref(3)
 
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
@@ -45,6 +46,8 @@ const paymentSelectedForShareFiles = ref<GenericObject>({})
 
 const contextMenu = ref()
 const contextMenuInvoice = ref()
+const dynamicTable = ref(0)
+const dynamicTableInv = ref(0)
 
 const allMenuListItems = ref([
   // {
@@ -373,32 +376,81 @@ const ENUM_FILTER = [
   { id: 'code', name: 'Code' },
   { id: 'name', name: 'Name' },
 ]
-
-const columns: IColumn[] = [
-  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
-  { field: 'paymentId', header: 'Id', type: 'text' },
-  { field: 'transactionDate', header: 'Trans. Date', type: 'text' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'paymentAmount', header: 'P.Amount', type: 'number' },
-  { field: 'depositBalance', header: 'D.Balance', type: 'number' },
+const columns = ref<IColumn[]>([
+  {
+    field: 'icon',
+    header: '',
+    width: '20px', // Establece un tamaño fijo para la columna del icono
+    minWidth: '20px', // Evita que se haga más pequeña
+    maxWidth: '30px', // Evita que se haga más grande
+    type: 'slot-icon',
+    icon: 'pi pi-paperclip',
+    sortable: false,
+    showFilter: false,
+    hidden: false
+  },
+  { field: 'paymentInternalId', header: 'Id', type: 'text' },
+  {
+    field: 'transactionDate',
+    header: 'Trans. D',
+    tooltip: 'Transaction Date',
+    type: 'date',
+    width: '90px', // Establece un ancho fijo
+    minWidth: '70px', // Previene que la columna se haga demasiado pequeña
+    maxWidth: '90px', // Previene que la columna se expanda demasiado
+    columnClass: 'truncate-text' // Aplica truncamiento si es necesario
+  },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '80px',
+    minWidth: '80px', // Mantiene un tamaño mínimo
+    maxWidth: '120px', // Controla el tamaño máximo
+    widthTruncate: '80px', // Personalizado para truncar correctamente
+    columnClass: 'truncate-text', // Clase CSS para aplicar truncado
+    type: 'select',
+    isSingleSelect: true,
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    width: '80px', // Establece un ancho base
+    minWidth: '80px', // Asegura un tamaño mínimo
+    maxWidth: '120px', // Limita el tamaño máximo para evitar expansión excesiva
+    widthTruncate: '80px', // Propiedad personalizada para truncar
+    columnClass: 'truncate-text', // Clase CSS para truncar el texto
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }
+  },
+  { field: 'paymentAmount', header: 'P.Amount', tooltip: 'Payment Amount', type: 'number' },
+  { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', type: 'number' },
   { field: 'applied', header: 'Applied', type: 'number' },
   { field: 'notApplied', header: 'Not Applied', type: 'number' },
-
-]
-const columnsInvoice: IColumn[] = [
+])
+const columnsInvoice = ref<IColumn[]>([
   // { field: 'icon', header: '', type: 'text', showFilter: false, icon: 'pi pi-paperclip', sortable: false, width: '30px' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '80px',
+    minWidth: '80px',
+    maxWidth: '80px',
+    widthTruncate: '80px',
+    type: 'select',
+    columnClass: 'truncate-text', // ⬅️ Agregar esta clase
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
   { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'invoiceNumber', header: 'Inv.No', type: 'text' },
-  { field: 'invoiceDate', header: 'Gen.Date', type: 'date' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
-  { field: 'paymentAmount', header: 'P.Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
+  { field: 'invoiceNumber', header: 'I.No', tooltip: 'Invoice No', type: 'text' },
+  { field: 'invoiceDate', header: 'I.Date', tooltip: 'Invoice Date', type: 'date' },
+  { field: 'invoiceAmount', header: 'I. Amnt', tooltip: 'Invoice Amount', type: 'number' },
+  { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
+  { field: 'dueAmount', header: 'I. Balance', tooltip: 'Invoice Balance', type: 'number' },
   { field: 'aging', header: 'Aging', type: 'text' },
   { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
+])
 
-]
 const columnsAgency: IColumn[] = [
   { field: 'manageAgency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
   { field: 'manageRegion', header: 'Region', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-region' } },
@@ -411,10 +463,11 @@ const columnsAgency: IColumn[] = [
 const options = ref({
   tableName: 'Payment',
   moduleApi: 'payment',
-  uriApi: 'payment',
+  uriApi: 'payment/search-collection',
   loading: false,
   // selectionMode: 'single' as 'multiple' | 'single',
   scrollHeight: '70vh',
+  showPagination: false,
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
@@ -427,6 +480,7 @@ const optionsInv = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   showEdit: false,
   showAcctions: false,
   scrollHeight: '70vh',
@@ -460,7 +514,7 @@ const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 10,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -468,7 +522,7 @@ const payload = ref<IQueryRequest>({
 const payloadInv = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -517,6 +571,157 @@ function clearForm() {
   fields[0].disabled = false
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
+}
+
+function extractPaymentStatus(originalObject: any) {
+  return {
+    paymentStatus: {
+      id: originalObject.paymentStatusId,
+      code: originalObject.paymentStatusCode,
+      name: originalObject.paymentStatusName,
+      confirmed: originalObject.paymentStatusConfirmed,
+      applied: originalObject.paymentStatusApplied,
+      cancelled: originalObject.paymentStatusCancelled,
+      transit: originalObject.paymentStatusTransit,
+      status: originalObject.paymentStatusStatus ? originalObject.paymentStatusStatus : null
+    },
+    hotel: {
+      id: originalObject.hotelId,
+      code: originalObject.hotelCode,
+      name: originalObject.hotelName
+    },
+    agency: {
+      id: originalObject.agencyId,
+      code: originalObject.agencyCode,
+      name: originalObject.agencyName
+    },
+    attachmentStatus: {
+      id: originalObject.paymentAttachmentStatusId,
+      code: originalObject.paymentAttachmentStatusCode,
+      name: originalObject.paymentAttachmentStatusName,
+      nonNone: originalObject.paymentAttachmentStatusNonNone,
+      patWithAttachment: originalObject.paymentAttachmentStatusPatWithAttachment,
+      pwaWithOutAttachment: originalObject.paymentAttachmentStatusPwAWithoutAttachment,
+      supported: originalObject.paymentAttachmentStatusSupported,
+      status: originalObject.paymentAttachmentStatusStatus ? originalObject.paymentAttachmentStatusStatus : null
+    }
+  }
+}
+
+async function getPaymentData() {
+  if (options.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
+  try {
+    const count: SubTotals = { paymentAmount: 0, depositBalance: 0, applied: 0, noApplied: 0, noAppliedPorcentage: 0, appliedPorcentage: 0, depositBalancePorcentage: 0 }
+    options.value.loading = true
+    listItems.value = []
+    const newListItems = []
+    const response = await GenericService.search('payment', 'payments-view', payload.value)
+    const { data: dataList, page, size, totalElements, totalPages } = response
+    pagination.value.page = page
+    pagination.value.limit = size
+    pagination.value.totalElements = totalElements
+    pagination.value.totalPages = totalPages
+
+    const existingIds = new Set(listItems.value.map(item => item.id))
+
+    interface ListColor {
+      NONE: string
+      ATTACHMENT_WITH_ERROR: string
+      ATTACHMENT_WITHOUT_ERROR: string
+    }
+
+    const listColor: ListColor = {
+      NONE: '#616161',
+      ATTACHMENT_WITH_ERROR: '#ff002b',
+      ATTACHMENT_WITHOUT_ERROR: '#00b816',
+    }
+    let color = listColor.NONE
+
+    for (const iterator of dataList) {
+      const transformedObject = extractPaymentStatus(iterator)
+      iterator.paymentStatus = transformedObject.paymentStatus
+      iterator.hotel = transformedObject.hotel
+      iterator.agency = transformedObject.agency
+      iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
+      iterator.attachmentStatus = transformedObject.attachmentStatus
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'hotel')) {
+        iterator.hotel = {
+          ...iterator.hotel,
+          name: `${iterator.hotel.code} - ${iterator.hotel.name}`
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
+        iterator.agencyType = iterator.agency.agencyTypeResponse
+        iterator.agency = {
+          ...iterator.agency,
+          name: `${iterator.agency.code} - ${iterator.agency.name}`
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'paymentId')) {
+        iterator.paymentId = String(iterator.paymentId)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'paymentAmount')) {
+        count.paymentAmount = count.paymentAmount + iterator.paymentAmount
+        iterator.paymentAmount = iterator.paymentAmount || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'depositBalance')) {
+        count.depositBalance += iterator.depositBalance
+        iterator.depositBalance = iterator.depositBalance || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'applied')) {
+        count.applied += iterator.applied
+        iterator.applied = iterator.applied || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'notApplied')) {
+        count.noApplied += iterator.notApplied
+        iterator.notApplied = iterator.notApplied || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'depositAmount')) {
+        iterator.depositAmount = iterator.depositAmount || 0
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'otherDeductions')) {
+        iterator.otherDeductions = String(iterator.otherDeductions)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+        iterator.status = statusToBoolean(iterator.status)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
+        if (iterator.attachmentStatus?.patWithAttachment) {
+          color = listColor.ATTACHMENT_WITHOUT_ERROR
+        }
+        else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
+          color = listColor.ATTACHMENT_WITH_ERROR
+        }
+        else if (iterator.attachmentStatus?.nonNone) {
+          color = listColor.NONE
+        }
+        else {
+          color = listColor.NONE
+        }
+      }
+
+      // Verificar si el ID ya existe en la lista
+      if (!existingIds.has(iterator.id)) {
+        newListItems.push({ ...iterator, color, loadingEdit: false, loadingDelete: false })
+        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      }
+    }
+
+    listItems.value = [...listItems.value, ...newListItems]
+  }
+  catch (error) {
+    console.log(error)
+  }
+  finally {
+    options.value.loading = false
+  }
 }
 
 async function getListContactByAgency(agencyIds: string[] = []) {
@@ -592,21 +797,20 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
-    const filterPaymentSource = payload.value.filter.find((item: IFilter) => item.key === 'paymentSource.code')
-    if (filterPaymentSource) {
-      filterPaymentSource.value = ['EXP', 'BK']
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentSource.code',
-        operator: 'IN',
-        value: ['EXP', 'BK'],
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      })
-    }
+    // const filterPaymentSource = payload.value.filter.find((item: IFilter) => item.key === 'paymentSource.code')
+    // if (filterPaymentSource) {
+    //   filterPaymentSource.value = ['EXP', 'BK']
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentSource.code',
+    //     operator: 'IN',
+    //     value: ['EXP', 'BK'],
+    //     logicalOperation: 'AND',
+    //   })
+    // }
 
-    const filterDepositAmount = payload.value.filter.find((item: IFilter) => item.key === 'depositAmount')
+    /* const filterDepositAmount = payload.value.filter.find((item: IFilter) => item.key === 'depositAmount')
     if (filterDepositAmount) {
       filterDepositAmount.value = 0
     }
@@ -616,39 +820,62 @@ async function getList() {
         operator: 'GREATER_THAN',
         value: 0,
         logicalOperation: 'AND',
-        type: 'filterSearch'
       })
-    }
+    } */
 
-    const filterStatusCanceled = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.cancelled')
-    if (filterStatusCanceled) {
-      filterStatusCanceled.value = false
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentStatus.cancelled',
-        operator: 'EQUALS',
-        value: false,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      })
-    }
+    // const filterStatusCanceled = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.cancelled')
+    // if (filterStatusCanceled) {
+    //   filterStatusCanceled.value = false
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentStatus.cancelled',
+    //     operator: 'EQUALS',
+    //     value: false,
+    //     logicalOperation: 'AND',
+    //   })
+    // }
 
-    const filterStatusApplied = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.applied')
-    if (filterStatusApplied) {
-      filterStatusApplied.value = false
-    }
-    else {
-      payload.value.filter.push({
-        key: 'paymentStatus.applied',
-        operator: 'EQUALS',
-        value: false,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      })
-    }
+    // const filterStatusApplied = payload.value.filter.find((item: IFilter) => item.key === 'paymentStatus.applied')
+    // if (filterStatusApplied) {
+    //   filterStatusApplied.value = false
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentStatus.applied',
+    //     operator: 'EQUALS',
+    //     value: false,
+    //     logicalOperation: 'AND',
+    //   })
+    // }
+    // const filterDepositBalance = payload.value.filter.find((item: IFilter) => item.key === 'depositBalance' && item.type === 'filterTable')
+    // if (filterDepositBalance) {
+    //   filterDepositBalance.value = 0
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'depositBalance',
+    //     operator: 'GREATER_THAN',
+    //     value: 0,
+    //     logicalOperation: 'OR',
+    //     type: 'filterTable'
+    //   })
+    // }
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    // const filterPaymentBalance = payload.value.filter.find((item: IFilter) => item.key === 'paymentBalance' && item.type === 'filterTable')
+    // if (filterPaymentBalance) {
+    //   filterPaymentBalance.value = 0
+    // }
+    // else {
+    //   payload.value.filter.push({
+    //     key: 'paymentBalance',
+    //     operator: 'GREATER_THAN',
+    //     value: 0,
+    //     logicalOperation: 'OR',
+    //     type: 'filterTable'
+    //   })
+    // }
+    const response = await GenericService.searchWithoutSearch(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -827,25 +1054,25 @@ async function getListInvoice() {
 
     // Filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
 
-    // const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
-    // if (objFilterByInvoiceType) {
-    //   objFilterByInvoiceType.value = true
-    // }
-    // else {
-    //   payloadInv.value.filter.push({
-    //     key: 'manageInvoiceType.enabledToPolicy',
-    //     operator: 'EQUALS',
-    //     value: true,
-    //     logicalOperation: 'AND',
-    //     type: 'filterSearch'
-    //   })
-    // }
+    const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
+    if (objFilterByInvoiceType) {
+      objFilterByInvoiceType.value = true
+    }
+    else {
+      payloadInv.value.filter.push({
+        key: 'manageInvoiceType.enabledToPolicy',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      })
+    }
     // Aqui termina el filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
 
     // Filtro por el dueAmount ----------------------------------------------------------------------------------------------
     const objFilterByDueAmount = payloadInv.value.filter.find((item: IFilter) => item.key === 'dueAmount')
     if (objFilterByDueAmount) {
-      objFilterByDueAmount.value = "0"
+      objFilterByDueAmount.value = '0'
     }
     else {
       payloadInv.value.filter.push({
@@ -971,6 +1198,13 @@ function searchAndFilter() {
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
+        key: 'agency.client.id',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
     }
   }
   // Agency
@@ -979,12 +1213,42 @@ function searchAndFilter() {
     if (filteredItems.length > 0) {
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
+        key: 'agencyId',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
         key: 'agency.id',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+
+      const objColumnInvAgency = columnsInvoice.value.find(item => item.field === 'agency')
+      if (objColumnInvAgency && objColumnInvAgency.objApi) {
+        objColumnInvAgency.objApi = { ...objColumnInvAgency.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
+      const objColumnAgency = columns.value.find(item => item.field === 'agency')
+      if (objColumnAgency && objColumnAgency.objApi) {
+        objColumnAgency.objApi = { ...objColumnAgency.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
     }
   }
   // Hotel
@@ -993,33 +1257,92 @@ function searchAndFilter() {
     if (filteredItems.length > 0) {
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
+        key: 'hotelId',
+        operator: 'IN',
+        value: itemIds,
+        logicalOperation: 'AND',
+        type: 'filterSearch'
+      }]
+      payloadInv.value.filter = [...payloadInv.value.filter, {
         key: 'hotel.id',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
       }]
+      const objColumnInvHotel = columnsInvoice.value.find(item => item.field === 'hotel')
+      if (objColumnInvHotel && objColumnInvHotel.objApi) {
+        objColumnInvHotel.objApi = { ...objColumnInvHotel.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
+
+      const objColumnHotel = columns.value.find(item => item.field === 'hotel')
+      if (objColumnHotel && objColumnHotel.objApi) {
+        objColumnHotel.objApi = { ...objColumnHotel.objApi, filter: [
+          {
+            key: 'id',
+            operator: 'IN',
+            value: itemIds,
+            logicalOperation: 'AND',
+          }
+        ] }
+      }
     }
   }
   options.value.selectAllItemByDefault = false
-  getList()
+  dynamicTable.value = dynamicTable.value + 1
+  dynamicTableInv.value = dynamicTableInv.value + 1
+
+  // getList()
+  getListInvoice()
+  getPaymentData()
 }
 
 function clearFilterToSearch() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
   filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp))
+
+  const objColumnAgency = columns.value.find(item => item.field === 'agency')
+  if (objColumnAgency && objColumnAgency.objApi) {
+    objColumnAgency.objApi = { ...objColumnAgency.objApi, filter: [] }
+  }
+  const objColumnHotel = columns.value.find(item => item.field === 'hotel')
+  if (objColumnHotel && objColumnHotel.objApi) {
+    objColumnHotel.objApi = { ...objColumnHotel.objApi, filter: [] }
+  }
+
+  const objColumnInvAgency = columnsInvoice.value.find(item => item.field === 'agency')
+  if (objColumnInvAgency && objColumnInvAgency.objApi) {
+    objColumnInvAgency.objApi = { ...objColumnInvAgency.objApi, filter: [] }
+  }
+  const objColumnInvHotel = columnsInvoice.value.find(item => item.field === 'hotel')
+  if (objColumnInvHotel && objColumnInvHotel.objApi) {
+    objColumnInvHotel.objApi = { ...objColumnInvHotel.objApi, filter: [] }
+  }
+  dynamicTable.value = dynamicTable.value + 1
+  dynamicTableInv.value = dynamicTableInv.value + 1
+
   getList()
+  getListInvoice()
 }
 
 async function resetListItems() {
   payload.value.page = 0
-  getList()
+  // getList()
+  getPaymentData()
 }
 function goToInvoice() {
-  navigateTo('/invoice')
+  window.open('/invoice', '_blank')
 }
 function goToPayment() {
-  navigateTo('/payment')
+  window.open('/payment', '_blank')
 }
 async function getItemById(id: string) {
   if (id) {
@@ -1071,7 +1394,8 @@ async function deleteItem(id: string) {
     await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     clearForm()
-    getList()
+    // getList()
+    getPaymentData()
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 3000 })
@@ -1109,7 +1433,8 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
-    getList()
+    // getList()
+    getPaymentData()
   }
 }
 
@@ -1157,10 +1482,11 @@ function requireConfirmationToDelete(event: any) {
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns.value)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  getList()
+  // getList()
+  getPaymentData()
 }
 
 async function parseDataTableFilterForContactAgency(payloadFilter: any) {
@@ -1179,7 +1505,7 @@ async function parseDataTableFilterForContactAgency(payloadFilter: any) {
 }
 
 async function parseDataTableFilterInvoice(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsInvoice)
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsInvoice.value)
 
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
@@ -1197,7 +1523,8 @@ async function parseDataTableFilterInvoice(payloadFilter: any) {
     }
   }
 
-  payloadInv.value.filter = [...parseFilter || []]
+  payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payloadInv.value.filter = [...payloadInv.value.filter, ...parseFilter || []]
   getListInvoice()
 }
 
@@ -1318,10 +1645,82 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
     let agencyTemp: any[] = []
     agencyList.value = []
     agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+
     agencyList.value = [...agencyList.value, ...agencyTemp]
   }
   catch (error) {
     objLoading.value.loadingAgency = false
+  }
+  finally {
+    objLoading.value.loadingAgency = false
+  }
+}
+
+async function getAgencyList2(query: string) {
+  try {
+    objLoading.value.loadingAgency = true
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'client.id',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: filterToSearch.value.client?.id ? filterToSearch.value.client?.id : '',
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND',
+        },
+        {
+          key: 'autoReconcile',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND',
+        }
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+    const { data: dataList } = response
+    agencyList.value = []
+    for (const iterator of dataList) {
+      agencyList.value = [
+        ...agencyList.value,
+        {
+          id: iterator.id,
+          name: iterator.name,
+          code: iterator.code,
+          status: iterator.status,
+          description: iterator.description,
+          creditDay: iterator.creditDay,
+          primaryPhone: iterator?.phone,
+          alternativePhone: iterator?.alternativePhone,
+          email: iterator?.email
+        }
+      ]
+    }
+  }
+  catch (error) {
+    console.error('Error loading agency list:', error)
   }
   finally {
     objLoading.value.loadingAgency = false
@@ -1351,6 +1750,62 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
   }
   catch (error) {
     objLoading.value.loadingHotel = false
+  }
+  finally {
+    objLoading.value.loadingHotel = false
+  }
+}
+
+async function getHotelList2(query: string) {
+  try {
+    objLoading.value.loadingHotel = true
+    const payload = {
+      filter: [
+        {
+          key: 'name',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'code',
+          operator: 'LIKE',
+          value: query,
+          logicalOperation: 'OR'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND',
+        },
+      ],
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+    }
+
+    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+    const { data: dataList } = response
+    hotelList.value = []
+    for (const iterator of dataList) {
+      hotelList.value = [
+        ...hotelList.value,
+        {
+          id: iterator.id,
+          name: `${iterator.code} - ${iterator.name}`,
+          // name: iterator.name,
+          code: iterator.code,
+          status: iterator.status,
+          description: iterator.description
+        }
+      ]
+    }
+  }
+  catch (error) {
+    console.error('Error loading hotel list:', error)
   }
   finally {
     objLoading.value.loadingHotel = false
@@ -1414,7 +1869,8 @@ async function checkAttachment(code: string) {
   try {
     await GenericService.create('payment', 'payment/change-attachment-status', payload)
     toast.add({ severity: 'success', summary: 'Success', detail: `The payment with id ${objItemSelectedForRightClickPaymentWithOrNotAttachment.value?.paymentId} was updated successfully`, life: 3000 })
-    await getList()
+    // await getList()
+    await getPaymentData()
   }
   catch (error) {
     console.log(error)
@@ -1461,7 +1917,8 @@ function onRowContextMenu(event: any) {
     }
   }
 
-  if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.nonNone) {
+  console.log('event', event.data.attachmentStatus.pwaWithOutAttachment)
+  if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
       menuItemPaymentWithAttachment.disabled = false
@@ -1474,7 +1931,7 @@ function onRowContextMenu(event: any) {
     }
   }
   else {
-    if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
+    if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.pwaWithOutAttachment) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = false
@@ -1483,10 +1940,10 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === false && event.data.attachmentStatus.patWithAttachment) {
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = false
@@ -1495,19 +1952,19 @@ function onRowContextMenu(event: any) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
     }
-    else if (event && event.data && event.data?.hasAttachment && event.data?.attachmentStatus?.supported === true) {
+    else if (event && event.data && event.data?.attachmentStatus?.supported === true) {
       const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
       if (menuItemPaymentWithAttachment) {
         menuItemPaymentWithAttachment.disabled = true
-        menuItemPaymentWithAttachment.visible = true
+        menuItemPaymentWithAttachment.visible = false
       }
       const menuItemPaymentWithOutAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithoutAttachment')
       if (menuItemPaymentWithOutAttachment) {
         menuItemPaymentWithOutAttachment.disabled = true
-        menuItemPaymentWithOutAttachment.visible = true
+        menuItemPaymentWithOutAttachment.visible = false
       }
     }
   }
@@ -1706,13 +2163,27 @@ async function paymentExportToExcel(event: any) {
   }
 }
 
+function showIconAttachment(objData: any) {
+  if (objData.hasAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus && objData.attachmentStatus.pwaWithOutAttachment) {
+    return true
+  }
+  else if (objData.attachmentStatus && objData.attachmentStatus.patWithAttachment) {
+    return true
+  }
+  return false
+}
+
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  getList()
+  // getList()
+  getPaymentData()
 })
 watch(payloadOnChangePageInv, (newValue) => {
   payloadInv.value.page = newValue?.page ? newValue?.page : 0
@@ -1734,18 +2205,19 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
-    getList()
-    getListInvoice()
+    // getList()
+    getPaymentData()
+    // getListInvoice()
   }
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
 
 <template>
-  <div class="grid p-0 m-0 my-0 py-0 px-0 mx-0">
+  <div class="grid p-0 m-0 my-0 py-0 px-0 -mx-3">
     <div class="col-12 py-0 px-1">
       <div class="font-bold p-0 m-0">
-        <h5 class="mb-0 p-0 ">
+        <h5 class="-mb-2 w-6 mt-0" style="line-height: 1; position: relative; top: -7px;">
           Collection Management
         </h5>
       </div>
@@ -1755,7 +2227,7 @@ onMounted(() => {
 
       <div v-if="showClientView" class="card p-0 m-0">
         <!-- Encabezado Completo -->
-        <div class="font-bold text-lg bg-primary custom-card-header px-4">
+        <div class="font-bold text-lg bg-primary custom-card-header px-2">
           Search View
         </div>
 
@@ -1767,8 +2239,8 @@ onMounted(() => {
               <!-- Selector de Cliente -->
               <div class="col-12 md:col-12 lg:col-12 xl:col-12 flex pb-0  w-full">
                 <div class="flex flex-column gap-2 py-0 w-full">
-                  <div class="flex align-items-center gap-2 px-0 py-0 ">
-                    <label class="filter-label font-bold ml-3" for="client">Client<span
+                  <div class="flex align-items-center gap-2 px-0 py-0 -mb-2 -mt-2">
+                    <label class="filter-label font-bold -ml-2" for="client">Client<span
                       class="text-red"
                     >*</span></label>
                     <div class="w-full">
@@ -1784,6 +2256,74 @@ onMounted(() => {
                         placeholder=""
                         @load="($event) => getClientList($event)"
                         @change="async ($event) => {
+                          filterToSearch.client = $event
+                          filterToSearch.agency = []
+                          filterToSearch.clientName = $event?.onlyName ? $event?.onlyName : ''
+                          filterToSearch.clientStatus = $event?.status ? $event?.status : ''
+                          const filter: FilterCriteria[] = [
+                            {
+                              key: 'client.id',
+                              logicalOperation: 'AND',
+                              operator: 'EQUALS',
+                              value: filterToSearch.client?.id ? filterToSearch.client?.id : '',
+                            },
+                            {
+                              key: 'status',
+                              operator: 'EQUALS',
+                              value: 'ACTIVE',
+                              logicalOperation: 'AND',
+                            },
+                          ]
+                          const listAgencyTemp = await getAgencyListForLoadAll(objApis.agency.moduleApi, objApis.agency.uriApi, {
+                            query: '',
+                            keys: ['name', 'code'],
+                          }, filter)
+
+                          if (listAgencyTemp && listAgencyTemp?.length > 0) {
+                            const totalCreditDays = Math.max(...listAgencyTemp.map((item: any) => {
+                              const credit = Number(item.creditDay)
+                              return isNaN(credit) ? 0 : credit
+                            }))
+                            filterToSearch.agency = [...listAgencyTemp]
+                            filterToSearch.creditDays = totalCreditDays
+                          }
+                          if (filterToSearch.agency?.length > 0) {
+                            getListContactByAgency(filterToSearch.agency.map((item: any) => item.id))
+                          }
+                        }"
+                      >
+                        <!-- <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template> -->
+                        <template #chip="{ value }">
+                          <div>{{ value?.code }}</div>
+                        </template>
+                      </DebouncedAutoCompleteComponent>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Selector de Agencia -->
+              <div class="col-12 pb-0">
+                <div class="flex flex-column gap-2 w-full">
+                  <div class="flex align-items-center gap-2 px-0 py-0 -mb-2 -mt-1,5">
+                    <label class="filter-label font-bold -ml-3 -mr-1" for="agency">Agency<span
+                      class="text-red"
+                    >*</span></label>
+                    <div class="w-full ">
+                      <!--                      <DebouncedAutoCompleteComponent
+                          v-if="!loadingSaveAll"
+                          id="autocomplete"
+                          :multiple="false"
+                          field="name"
+                          item-value="id"
+                          class="w-full custom-input"
+                          :model="filterToSearch.client"
+                          :suggestions="clientList"
+                          placeholder=""
+                          @load="($event) => getClientList($event)"
+                          @change="async ($event) => {
                           filterToSearch.client = $event
                           filterToSearch.agency = []
                           filterToSearch.clientName = $event?.onlyName ? $event?.onlyName : ''
@@ -1821,79 +2361,52 @@ onMounted(() => {
                           }
                         }"
                       >
-                        <template #option="props">
+                        &lt;!&ndash; <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
+                        </template> &ndash;&gt;
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
                         </template>
-                      </DebouncedAutoCompleteComponent>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Selector de Agencia -->
-              <div class="col-12 pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 px-0 py-0">
-                    <label class="filter-label font-bold " for="agency">Agency<span
-                      class="text-red"
-                    >*</span></label>
-                    <div class="w-full ">
+                      </DebouncedAutoCompleteComponent> -->
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
-                        id="autocomplete-agency"
-                        field="code"
+                        id="autocomplete"
+                        field="name"
                         item-value="id"
-                        :max-selected-labels="4"
-                        class="w-full agency-input"
+                        class="w-full hotel-input"
+                        :max-selected-labels="maxSelectedLabels"
                         :model="filterToSearch.agency"
                         :loading="objLoading.loadingAgency"
                         :suggestions="agencyList"
                         placeholder=""
                         @change="($event) => {
                           filterToSearch.agency = $event;
-                          const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0);
-                          filterToSearch.creditDays = totalCreditDays
+                          // const totalCreditDays = $event.reduce((sum, item) => sum + item.creditDay, 0); // total credit days
+                          // const totalCreditDays = Math.max(...filterToSearch.agency.map((item: any) => {
+                          //   const credit = Number(item.creditDay)
+                          //   return isNaN(credit) ? 0 : credit
+                          // }))
+                          // filterToSearch.creditDays = totalCreditDays
                           filterToSearch.primaryPhone = $event[0]?.primaryPhone ? $event[0]?.primaryPhone : ''
                           filterToSearch.alternativePhone = $event[0]?.alternativePhone ? $event[0]?.alternativePhone : ''
                           filterToSearch.email = $event[0]?.email ? $event[0]?.email : ''
                           const listIds: string[] = $event.map((item: any) => item.id)
                           getListContactByAgency(listIds)
                         }"
-                        @load="async ($event) => {
-                          const filter: FilterCriteria[] = [
-                            {
-                              key: 'client.id',
-                              logicalOperation: 'AND',
-                              operator: 'EQUALS',
-                              value: filterToSearch.client?.id ? filterToSearch.client?.id : '',
-                            },
-                            {
-                              key: 'status',
-                              operator: 'EQUALS',
-                              value: 'ACTIVE',
-                              logicalOperation: 'AND',
-                            },
-                            {
-                              key: 'autoReconcile',
-                              operator: 'EQUALS',
-                              value: true,
-                              logicalOperation: 'AND',
-                            },
-                          ]
-                          await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
-                            query: $event,
-                            keys: ['name', 'code'],
-                          }, filter)
-                        }"
+                        @load="($event) => getAgencyList2($event)"
                       >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels}` }}</span>
+                          </span>
+                        </template>
                         <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
-                        </template>
-                        <template #chip="{ value }">
-                          <div>{{ value?.code }}</div>
                         </template>
                       </DebouncedMultiSelectComponent>
                     </div>
@@ -1904,18 +2417,18 @@ onMounted(() => {
               <!-- Selector de Hotel -->
               <div class="col-12 pb-0">
                 <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 px-0 py-0">
-                    <label class="filter-label font-bold ml-3" for="hotel">Hotel<span
+                  <div class="flex align-items-center gap-2 px-0 py-0 -mb-1 -mt-1,5">
+                    <label class="filter-label font-bold -ml-0 -mr-1" for="hotel">Hotel<span
                       class="text-red"
                     >*</span></label>
                     <div class="w-full">
                       <DebouncedMultiSelectComponent
                         v-if="!loadingSaveAll"
                         id="autocomplete-hotel"
-                        field="code"
+                        field="name"
                         item-value="id"
                         class="w-full hotel-input"
-                        :max-selected-labels="4"
+                        :max-selected-labels="maxSelectedLabels"
                         :model="filterToSearch.hotel"
                         :loading="objLoading.loadingHotel"
                         :suggestions="hotelList"
@@ -1923,7 +2436,9 @@ onMounted(() => {
                         @change="($event) => {
                           filterToSearch.hotel = $event;
                         }"
-                        @load="async($event) => {
+                        @load="($event) => getHotelList2($event)"
+                      >
+                        <!-- @load="async($event) => {
                           const filter: FilterCriteria[] = [
                             {
                               key: 'status',
@@ -1936,14 +2451,24 @@ onMounted(() => {
                             query: $event,
                             keys: ['name', 'code'],
                           }
-                          await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
-                        }"
-                      >
-                        <template #option="props">
+                          // await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
+                          await getHotelList2($event)
+                        }" -->
+                        <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                         <template #chip="{ value }">
                           <div>{{ value?.code }}</div>
+                        </template> -->
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels}` }}</span>
+                          </span>
                         </template>
                       </DebouncedMultiSelectComponent>
                     </div>
@@ -1952,11 +2477,16 @@ onMounted(() => {
               </div>
               <div class="flex col-12 justify-content-end mt-2 py-2 xl:mt-0 py-2 pb-3">
                 <Button
-                  v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search"
+                  v-tooltip.top="'Search'" class="w-2,5rem mx-1" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
+
+                <!-- <Button
+                  v-tooltip.top="'Test'" class="w-3rem mx-1" icon="pi pi-search"
+                  :loading="loadingSearch" @click="getPaymentData"
+                /> -->
                 <Button
-                  v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                  v-tooltip.top="'Clear'" outlined class="w-2,5rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
                 />
               </div>
@@ -1964,17 +2494,17 @@ onMounted(() => {
           </div>
 
           <!-- Divisor Vertical -->
-          <div style="width: 4px; background-color: #d3d3d3; height: auto; margin: 0;" />
+          <div style="width: 2px; background-color: #d3d3d3; height: auto; margin: 0;" />
 
           <!-- Sección Derecha -->
           <div class="px-2 py-0 m-0 my-0 mt-0" style="flex: 1; padding: 16px;">
-            <div class="grid py-0 my-0 px-0" style="max-width: 1200px; margin: auto;">
+            <div class="grid py-0 my-0 px-1 -mx-3" style="max-width: 1200px; margin: auto;">
               <!-- Fila para Cliente y Agencia -->
-              <div class="col-12 mb-0 ">
+              <div class="col-12 -mb-2 -mt-3 pt-4">
                 <div class="flex items-center w-full" style="flex-wrap: nowrap;">
                   <!-- Usar flex para alinear en una fila -->
                   <label
-                    for="client" class="font-bold mb-0 mt-2 required"
+                    for="client" class="font-bold mb-0 mt-1 required"
                     style="margin-right: 8px; flex: 0 0 auto;"
                   >Client Name</label>
                   <InputText
@@ -1984,7 +2514,7 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="col-12 mb-0 py-0">
+              <div class="col-12 mb-0 py-0 -mb-2 -mt-1,5">
                 <div class="flex items-center w-full" style="flex-wrap: nowrap;">
                   <!-- Usar flex para alinear en una fila -->
                   <label
@@ -1997,7 +2527,7 @@ onMounted(() => {
                   />
                 </div>
               </div>
-              <div class="col-12 mb-0 ">
+              <div class="col-12 -mb-2 -mt-1,5">
                 <div class="flex items-center w-full" style="flex-wrap: nowrap;">
                   <!-- Usar flex para alinear en una fila -->
                   <label
@@ -2029,16 +2559,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="flex justify-content-between mt-0">
-        <div class="flex align-items-center gap-2">
-          <div class="p-2 font-bold">
+      <div class="flex justify-content-between -mt-6 pb-2">
+        <div class="flex align-items-center gap-2 pt-2">
+          <div class="p-1 font-bold -mb-5">
             Payment View
           </div>
         </div>
-        <div class="flex align-items-center gap-2">
+        <div class="flex align-items-center gap-0 mt-5">
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-3 -mx-2"
           >
             <Button
               v-tooltip.left="'Share File'" text label="Share File" icon="pi pi-share-alt"
@@ -2047,20 +2577,23 @@ onMounted(() => {
           </div>
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-3 mx-1"
           >
             <Button
               v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
               severity="primary" @click="openDialogExportToExcel"
             />
           </div>
-          <Button
-            v-tooltip.left="'More'" label="+More"
-            severity="primary" text class="" @click="goToPayment()"
-          />
+          <div class="-mb-3 -mx-2">
+            <Button
+              v-tooltip.left="'More'" label="+More"
+              severity="primary" text class="" @click="goToPayment()"
+            />
+          </div>
         </div>
       </div>
       <DynamicTable
+        :key="dynamicTable"
         :data="listItems"
         :columns="columns"
         :options="options"
@@ -2076,11 +2609,11 @@ onMounted(() => {
         <template #column-icon="{ data: objData, column }">
           <div class="flex align-items-center justify-content-center p-0 m-0">
             <Button
-              v-if="objData.hasAttachment"
+              v-if="showIconAttachment(objData)"
               :icon="column.icon"
               class="p-button-rounded p-button-text w-2rem h-2rem"
               aria-label="Submit"
-              :disabled="objData?.attachmentStatus?.nonNone"
+              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
               :style="{ color: objData.color }"
             />
           </div>
@@ -2155,7 +2688,7 @@ onMounted(() => {
     </div>
     <!-- Section Invoice -->
     <div class="col-12 md:order-0 md:col-12 xl:col-6 lg:col-12 px-1 py-0">
-      <div v-if="showClientDetail" class="card px-1 m-0 py-0">
+      <div v-if="showClientDetail" class="card px-0 m-0 py-0">
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
           Agency Contact
         </div>
@@ -2192,16 +2725,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="flex justify-content-between mt-0">
-        <div class="flex align-items-center gap-2">
-          <div class="p-2 font-bold">
+      <div class="flex justify-content-between -mt-7">
+        <div class="flex align-items-center gap-2 pt-2">
+          <div class="p-1 font-bold -mb-4">
             Invoice View
           </div>
         </div>
-        <div class="flex align-items-center gap-2">
+        <div class="flex align-items-center gap-2 mt-4">
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="flex justify-content-end px-0"
+            class="flex justify-content-end px-0 -mb-2"
           >
             <Button
               v-tooltip.left="'Email'" text label="Email" icon="pi pi-envelope" class="w-6rem"
@@ -2210,7 +2743,7 @@ onMounted(() => {
           </div>
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-2 -mx-3"
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
@@ -2219,28 +2752,29 @@ onMounted(() => {
           </div>
           <div
             v-if="options?.hasOwnProperty('showCreate') ? options?.showCreate : true"
-            class="ml-2 flex justify-content-end px-0"
+            class="ml-2 flex justify-content-end px-0 -mb-2"
           >
             <Button
               v-tooltip.left="'Export'" text label="Export" icon="pi pi-download" class="w-6rem"
               severity="primary" @click="() => { exportDialogOpen = true }"
             />
           </div>
-          <Button
-            v-tooltip.left="'More'" label="+More"
-            severity="primary" text class="" @click="goToInvoice()"
-          />
+          <div class="-mb-2">
+            <Button
+              v-tooltip.left="'More'" label="+More"
+              severity="primary" text class="" @click="goToInvoice()"
+            />
+          </div>
         </div>
       </div>
 
       <DynamicTable
+        :key="dynamicTableInv"
         :data="listItemsInvoice"
         :columns="columnsInvoice"
         :options="optionsInv"
         :pagination="paginationInvoice"
         @on-confirm-create="clearForm"
-        @open-edit-dialog="getItemById($event)"
-        @update:clicked-item="getItemById($event)"
         @on-change-pagination="payloadOnChangePageInv = $event"
         @on-change-filter="parseDataTableFilterInvoice"
         @on-list-item="resetListItems"
@@ -2257,7 +2791,7 @@ onMounted(() => {
           <ColumnGroup type="footer" class="flex align-items-center ">
             <Row>
               <Column
-                :footer="`Total #: ${listItemsInvoice.length}`" :colspan="2"
+                :footer="`Total #: ${paginationInvoice.totalElements}`" :colspan="2"
                 footer-style="text-align:left; font-weight: bold; color:#ffffff; background-color:#0F8BFD;"
               />
               <Column
@@ -2359,7 +2893,8 @@ onMounted(() => {
       :add-item="addAttachment"
       :close-dialog="() => {
         attachmentDialogOpen = false
-        getList()
+        // getList()
+        getPaymentData()
       }"
       :is-creation-dialog="true"
       header="Manage Payment Attachment"
@@ -2377,7 +2912,8 @@ onMounted(() => {
       :add-item="addAttachment"
       :close-dialog="() => {
         shareFilesDialogOpen = false
-        getList()
+        // getList()
+        getPaymentData()
       }"
       :is-creation-dialog="true"
       header="Share Files"

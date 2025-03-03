@@ -98,7 +98,7 @@ watch(() => props.suggestions, (newSuggestions) => {
     }"
   >
     <template #value>
-      <slot name="custom-value" :value="props.model" class="custom-chip">
+      <slot name="custom-value" :value="props.model" :remove-item="removeItem" class="custom-chip">
         <span v-for="(item, index) in (props.model || []).slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
           <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item[props.field] }}</span>
           <button class="remove-button" aria-label="Remove" @click.stop="removeItem(item)"><i class="pi pi-times-circle" /></button>
@@ -146,9 +146,9 @@ watch(() => props.suggestions, (newSuggestions) => {
   justify-content: center;
 }
 
-.p-multiselect .p-multiselect-label {
+/* .p-multiselect .p-multiselect-label {
   padding: 0.2145rem 0.571rem !important;
-}
+} */
 
 .remove-button:hover {
   color: #2d2d3a; /* Color más oscuro al hacer hover */

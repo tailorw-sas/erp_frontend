@@ -35,7 +35,6 @@ const refForm: Ref = ref(null)
 const formReload = ref(0)
 const subTotals: any = ref({ amount: 0, commission: 0, net: 0 })
 const paymentAmount = ref(0)
-const selectedElements = ref<any[]>([])
 const idItem = ref('')
 const selectedTransactionId = ref('')
 const newAdjustmentTransactionDialogVisible = ref(false)
@@ -192,25 +191,6 @@ async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
   if (!isCancel) {
     // guardar en memoria la transaccion de ajuste
   }
-}
-
-async function onMultipleSelect(data: any) {
-  // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
-  const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
-  const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
-
-  // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
-  const selectedPreviously = selectedElements.value.filter((item: any) =>
-    currentPageSelectedIds.has(item.id) || !BindTransactionList.value.some((pageItem: any) => pageItem.id === item.id)
-  )
-  // Agregar nuevos elementos seleccionados en la página actual
-  const newElements = data.filter((item: any) => !selectedIds.has(item.id))
-  // Crear un nuevo array que contenga la selección global optimizada
-  // Actualizar selectedElements solo una vez
-  selectedElements.value = [
-    ...selectedPreviously,
-    ...newElements
-  ]
 }
 
 function clearForm() {
@@ -543,7 +523,6 @@ async function unbindTransactions() {
 
     await GenericService.create(confApi.moduleApi, 'hotel-payment/unbind', payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Transaction ${transactionsIds.join(', ')} was unbounded successfully`, life: 10000 })
-    selectedElements.value = selectedElements.value.filter((item: any) => item.id !== String(contextMenuTransaction.value.id))
     getList()
   }
   catch (error: any) {
@@ -694,9 +673,6 @@ onMounted(async () => {
 
 <template>
   <div style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-      Edit Hotel Payment
-    </div>
     <div class="card p-4 mb-0">
       <EditFormV2
         :key="formReload"
@@ -770,11 +746,9 @@ onMounted(async () => {
       :columns="columns"
       :options="options"
       :pagination="pagination"
-      :selected-items="selectedElements"
       @on-change-pagination="payloadOnChangePage = $event"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @update:selected-items="onMultipleSelect($event)"
       @on-row-right-click="onRowRightClick"
       @on-row-double-click="onDoubleClick($event)"
     >
@@ -796,7 +770,7 @@ onMounted(async () => {
           <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" :disabled="computedDisabledItemsByStatus" @click="openNewAdjustmentTransactionDialog()" />
           <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" :disabled="computedDisabledItemsByStatus" @click="forceSave = true" />
         </IfCan>
-        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" />
+        <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/hotel-payment') }" /> -->
       </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">

@@ -20,6 +20,17 @@ import { ENUM_INVOICE_STATUS } from '~/utils/Enums'
 import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
 import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 import type { UndoImportInvoiceResponse } from './undo-import.vue'
+import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
+import ImportManualDialog from '~/pages/invoice/import.vue'
+import ImportInssistDialog from '~/pages/invoice/import-innsist.vue'
+import InvoiceToPrintDialog from '~/pages/invoice/print.vue'
+import ReconcileManualDialog from '~/pages/invoice/reconcile-manual.vue'
+import ReconcileAutomaticDialog from '~/pages/invoice/reconcile-automatic.vue'
+import ReconcileFilesDialog from '~/pages/invoice/reconcile-from-files.vue'
+import SendByFtpDialog from '~/pages/invoice/sendInvoice-ftp.vue'
+import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
+import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
+import UndoImportDialog from '~/pages/invoice/undo-import.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -64,7 +75,17 @@ const paymentsDialogOpen = ref<boolean>(false)
 const attachmentInvoice = <any>ref(null)
 
 const active = ref(0)
-
+const ImportVirtualDialogVisible =ref(false)
+const ImportManualDialogVisible =ref(false)
+const ImportInssistDialogVisible =ref(false)
+const InvoiceToPrintDialogVisible =ref(false)
+const ReconcileManualDialogVisible =ref(false)
+const ReconcileAutomaticDialogVisible =ref(false)
+const ReconcileFilesDialogVisible =ref(false)
+const SendByFtpDialogVisible =ref(false)
+const SendByEmailDialogVisible =ref(false)
+const SendByBavelDialogVisible =ref(false)
+const UndoImportDialogVisible =ref(false)
 
 const itemSend = ref<GenericObject>({
   employee:userData?.value?.user?.userId,
@@ -125,6 +146,7 @@ const hotelList = ref<any[]>([])
 const statusList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
+const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 3, client: 3, hotel: 3})
 
 const confclientListApi = reactive({
   moduleApi: 'settings',
@@ -437,10 +459,11 @@ function openDialogToPrint() {
   getPrintList()
 }
 function Print() {
-  navigateTo('/invoice/print',{ open: { target: '_blank' } })
+  InvoiceToPrintDialogVisible.value = true
 }
 
-////
+
+
 
 async function SendInvoiceByType() {
   loadingSaveAll.value = true
@@ -467,7 +490,7 @@ async function SendInvoiceByType() {
   finally {
     options.value.loading = false
     if (completed) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Invoice sent successfully', life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `Invoice ${selectedInvoiceObj.value.invoiceNumberTemp}  was ReSend successfully`, life: 10000 })
         await getList()
       }
   }
@@ -615,17 +638,20 @@ const createItems = ref([
 const createReconcile = ref([
   {
     label: 'Automatic',
-    command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
+    command:()=> ReconcileAutomaticDialogVisible.value=true, 
+    //command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
    // disabled: computedShowMenuItemReconcile
   },
    {
     label: 'Manual',
-     command: () => navigateTo('invoice/reconcile-manual',{open:{target:'blank'}}),
+    command:()=> ReconcileManualDialogVisible.value=true, 
+    //command: () => navigateTo('invoice/reconcile-manual',{open:{target:'blank'}}),
   //   disabled: computedShowMenuItemCredit
    },
   {
     label: 'Reconcile from Files',
-    command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
+    command:()=> ReconcileFilesDialogVisible.value=true, 
+    //command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
     
   },
 ])
@@ -694,40 +720,91 @@ const computedShowMenuItemUndoImport = computed(() => {
 const itemsMenuImport = ref([
   {
     label: 'Booking From File',
-    command: () => navigateTo('invoice/import', { open: { target: '_blank' } }),
+    command:()=> ImportManualDialogVisible.value=true,
     disabled: computedShowMenuItemImportBookingFromFile
   },
   {
     label: 'Booking From File (Virtual Hotels)',
-    command: () => navigateTo('invoice/import-virtual'),
+    command:()=> ImportVirtualDialogVisible.value=true,
     disabled: computedShowMenuItemImportBookingFromVirtual
+  }, 
+  {
+    label: 'Import From Innsist',
+    command:()=> ImportInssistDialogVisible.value=true,
+    // command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
+    //disabled: computedShowMenuItemUndoImport
   },
   {
     label: 'Undo Import',
-    command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
-    //disabled: computedShowMenuItemUndoImport
-  },
-  {
-    label: 'Import From Innsist',
-    command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
+    command:()=> UndoImportDialogVisible.value=true,
+    //command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
     //disabled: computedShowMenuItemUndoImport
   }
+  
 ])
+
+// Asegurar que el modal se cierre cuando se emita @close
+const closeBookingFromFileVirtual = () => {
+  ImportVirtualDialogVisible.value = false
+}
+
+const closeBookingFromFileManual = () => {
+  ImportManualDialogVisible.value = false
+}
+
+const closeImportFromInssist = () => {
+  ImportInssistDialogVisible.value = false
+}
+
+const closeReconcileManual = () => {
+  ReconcileManualDialogVisible.value = false
+}
+
+const closeReconcileAutomatic = () => {
+  ReconcileAutomaticDialogVisible.value = false
+}
+
+const closeReconcileFiles = () => {
+  ReconcileFilesDialogVisible.value = false
+}
+
+
+const closeSendByBavel = () => {
+  SendByFtpDialogVisible.value = false
+}
+const closeSendByEmail = () => {
+  SendByEmailDialogVisible.value = false
+}
+const closeSendByFtp = () => {
+  SendByFtpDialogVisible.value = false
+}
+const closeUndoImport = () => {
+  UndoImportDialogVisible.value = false
+}
+
+const closeInvoiceToPrint = () => {
+  InvoiceToPrintDialogVisible.value = false
+}
+
+
 
 const itemsMenuSend = ref([
   {
     label: 'By FTP',
-    command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
+    command:()=> SendByFtpDialogVisible.value=true, 
+    //command: () => navigateTo(`invoice/sendInvoice-ftp?type=${ENUM_INVOICE_SEND_TYPE.FTP}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromFile
   },
   {
     label: 'By Email',
-    command: () => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
+    command:()=> SendByEmailDialogVisible.value=true, 
+    //command: () => navigateTo(`invoice/sendInvoice-email?type=${ENUM_INVOICE_SEND_TYPE.EMAIL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   },
   {
     label: 'By Bavel',
-    command: () => navigateTo(`invoice/sendInvoice-bavel?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
+    command:()=> SendByBavelDialogVisible.value=true, 
+    //command: () => navigateTo(`invoice/sendInvoice-bavel?type=${ENUM_INVOICE_SEND_TYPE.BAVEL}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemImportBookingFromVirtual
   }
 ])
@@ -754,10 +831,10 @@ const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
    //{ field: 'invoiceType', header: 'Type', type: 'select' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
-  { field: 'agencyCd', header: 'Agency CD', type: 'text' },
+  { field: 'agencyCd', header: 'Agency Cd',tooltip: 'Agency Code', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
-  { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
-  { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
+  { field: 'invoiceNumber', header: 'Inv. No',tooltip: 'Invoice Number', type: 'text' },
+  { field: 'invoiceDate', header: 'Inv. Date',tooltip: 'Invoice Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
@@ -956,6 +1033,7 @@ async function getList() {
           // dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
           // invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
+          invoiceNumberTemp: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
           agency: { ...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}` }
         })
@@ -1475,6 +1553,16 @@ function mapFunction(data: DataListItem): ListItem {
   }
 }
 
+function mapFunction2(data: DataListItem): ListItem {
+  return {
+    id: data.id,
+    name: data.name,
+    status: data.status,
+    code: data.code,
+    description: data.description
+  }
+}
+
 interface DataListItemForStatus {
   id: string
   name: string
@@ -1528,14 +1616,14 @@ function mapFunctionForType(data: DataListItem): ListItem {
 async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   let clientTemp: any[] = []
   clientList.value = []
-  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   clientTemp = [...new Set(clientTemp)];
   clientList.value = [...clientTemp]
 }
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyList.value = []
-  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
   agencyTemp = [...new Set(agencyTemp)];
   agencyList.value = [...agencyTemp]
 }
@@ -1957,13 +2045,13 @@ function onRowRightClick(event: any) {
 
   if (event.data?.invoiceType === InvoiceType.INVOICE) {
     // Mostrar Clone solo si es de tipo Invoice y esta como showClone el status en el nomenclador Invoice Status
-    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status) &&
+    if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status) &&
       event.data?.invoiceStatus?.showClone && !event.data?.hotel?.virtual) {
       findMenuItemByLabelSetShow('Clone', invoiceContextMenuItems.value, true)
     }
 
     // Mostrar undo import solo para Processed y no sea manual (Solo para invoice)
-    if (event?.data?.status === InvoiceStatus.PROCECSED && !event.data.isManual) {
+    if (event?.data?.status === InvoiceStatus.PROCESSED && !event.data.isManual) {
       findMenuItemByLabelSetShow('Undo Import', invoiceContextMenuItems.value, true)
     }
     
@@ -1977,9 +2065,9 @@ function onRowRightClick(event: any) {
   }
 
   //Change Agency
-  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCECSED].includes(event?.data?.status)
+  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
     && event?.data.dueAmount === event?.data.invoiceAmount) {
-    if (event.data.status === InvoiceStatus.PROCECSED) {
+    if (event.data.status === InvoiceStatus.PROCESSED) {
       if (event.data.isInCloseOperation) {
         let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
         changeAgencyItem.showItem = true
@@ -1999,7 +2087,7 @@ function onRowRightClick(event: any) {
   }
 
   // Payments
-  if ([InvoiceStatus.SENT, InvoiceStatus.PROCECSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
+  if ([InvoiceStatus.SENT, InvoiceStatus.PROCESSED, InvoiceStatus.RECONCILED].includes(event?.data?.status) && event?.data.dueAmount !== event?.data.invoiceAmount) {
     findMenuItemByLabelSetShow('Payments Details Applied', invoiceContextMenuItems.value, true)
   }
 
@@ -2024,7 +2112,7 @@ function onRowRightClick(event: any) {
   }
 
   // Adjustment (Se comenta temporalmente, no borrar)
-  // if (event?.data?.status === InvoiceStatus.PROCECSED) {
+  // if (event?.data?.status === InvoiceStatus.PROCESSED) {
   //   findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
   // }
 
@@ -2153,11 +2241,11 @@ const legend = ref(
       color: '#686868',
       colClass: 'pr-4',
     },
-    {
-      name: 'Waiting',
-      color: '#F90303',
-      colClass: 'pr-4',
-    },
+    // {
+    //   name: 'Waiting',
+    //   color: '#F90303',
+    //   colClass: 'pr-4',
+    // },
     {
       name: 'Reconciled',
       color: '#005FB7',
@@ -2173,19 +2261,20 @@ const legend = ref(
 
 // -------------------------------------------------------------------------------------------------------
 </script>
-
 <template>
-  <div class=" col-12 align-items-center grid w-full">
+  <div class=" col-1 align-items-center grid w-full">
     <div class="flex align-items-center justify-content-between w-full">
-      <h5 class="mb-0 w-6">
+      <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 8px;">
         Invoice Management
       </h5>
-      <div class="flex flex-row w-full place-content-center justify-center justify-content-end">
+      <div class="flex flex-row w-full place-content-center justify-center justify-content-end -mt-2 -mb-3 -mx-5">
+        
         <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-NEW']))"
           v-tooltip.left="'New'" label="New" icon="pi pi-plus" severity="primary" aria-haspopup="true"
           aria-controls="overlay_menu" @click="toggle" />
-        <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
+          <Menu id="overlay_menu" ref="menu" :model="createItems" :popup="true" />
 
+        
         <PopupNavigationMenu v-if="false" :items="createItems" icon="pi pi-plus" label="New">
           <template #item="props">
             <button :disabled="props.props.label === 'Credit' && expandedInvoice === ''"
@@ -2194,7 +2283,6 @@ const legend = ref(
             </button>
           </template>
         </PopupNavigationMenu>
-
         <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))"
           v-tooltip.left="'Import'" class="ml-2" label="Import" icon="pi pi-file-import" severity="primary"
           aria-haspopup="true" aria-controls="overlay_menu_import" @click="toggleImport">
@@ -2251,17 +2339,16 @@ const legend = ref(
         <Button class="ml-2" icon="pi pi-download" label="Export" :disabled="listItems.length === 0"
           @click="() => exportList()" />
         <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
-      </div>
+      </div>   
     </div>
   </div>
-  <div class="grid w-full">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
+  <div class="grid">
+    <div class="col-12 order-0">
+      <div class="card p-0 mb-0">
+        <Accordion :active-index="0" class="mb-0">
           <AccordionTab>
             <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
+              <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
                   Search Fields
                 </div>
@@ -2270,7 +2357,7 @@ const legend = ref(
                 </div>
               </div>
             </template>
-            <div class="flex gap-4 flex-column lg:flex-row">
+            <div class="flex gap-4 flex-column lg:flex-row -mt-2">
               <div class="flex flex-row h-fit">
                 <div class="flex flex-column justify-content-around align-content-end align-items-end mr-1">
                   <label for="" class="font-bold">Client:</label>
@@ -2285,7 +2372,7 @@ const legend = ref(
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :max-selected-labels="3"
+                        :max-selected-labels="maxSelectedLabels.client"
                         :model="filterToSearch.client"
                         :suggestions="[...clientList]"
                         @change="async ($event) => {
@@ -2312,7 +2399,21 @@ const legend = ref(
                           }]
                           await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
                         }"
-                      />
+                      >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.client)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels.client" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels.client}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                     </div>
                   </div>
                   <div class="flex align-items-center gap-2">
@@ -2322,7 +2423,7 @@ const legend = ref(
                         field="name"
                         item-value="id"
                         class="w-full"
-                        :max-selected-labels="3"
+                        :max-selected-labels="maxSelectedLabels.agency"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyList]"
                         @change="($event) => {
@@ -2358,7 +2459,21 @@ const legend = ref(
                             keys: ['name', 'code'],
                           }, filter)
                         }"
-                      />
+                      >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.agency)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels.agency" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels.agency}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                     </div>
                   </div>
                 </div>
@@ -2405,7 +2520,21 @@ const legend = ref(
                             }
                             await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
                           }"
-                        />
+                        >
+                        <template #custom-value="props">
+                          <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.hotel)" :key="index" class="custom-chip">
+                            <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item.code }}</span>
+                            <button class="remove-button" aria-label="Remove" @click.stop="props.removeItem(item)"><i class="pi pi-times-circle" /></button>
+                          </span>
+                          <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+                          <span v-if="props.value && props.value.length > maxSelectedLabels.hotel" class="custom-chip">
+                            <span>{{ `+${props.value.length - maxSelectedLabels.hotel}` }}</span>
+                          </span>
+                        </template>
+                        <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template>
+                      </DebouncedMultiSelectComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">
                           <span style="color: red; margin-right: 3px; margin-left: 3px;">You must select the "Hotel"
                             field as required</span>
@@ -2578,6 +2707,7 @@ const legend = ref(
           </AccordionTab>
         </Accordion>
       </div>
+      <div class="-mt-2">
       <ExpandableTable 
         :data="listItems" 
         :columns="columns" 
@@ -2647,6 +2777,7 @@ const legend = ref(
 
 
       </ExpandableTable>
+    </div>
     </div>
     <ContextMenu ref="invoiceContextMenu" :model="invoiceContextMenuItems" >
       <template #itemicon="{ item }">
@@ -2880,7 +3011,7 @@ const legend = ref(
       <template #header>
         <div class="flex align-items-center justify-content-between w-full">
           <h5 class="m-0">
-            Invoice to Print
+            Invoices to Print
           </h5>
           <div class="flex align-items-center">
             <h5 class="m-0 mr-2">
@@ -2890,7 +3021,7 @@ const legend = ref(
         </div>
       </template>
 
-        <div class="p-fluid pt-3">
+        <div class="p-fluid t-0">
           <DynamicTable
             class="card p-0"
             :data="listPrintItems"
@@ -2963,9 +3094,63 @@ const legend = ref(
             />
             <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalPrint()" />
           </div>
-        </div>
-    
+        </div>    
     </Dialog>
+    <DynamicContentModalImport
+      :visible="ImportVirtualDialogVisible" :component="ImportVirtualDialog"
+      header="Bookings Import From File (Virtual Hotels)" @close="closeBookingFromFileVirtual"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+    />
+    <DynamicContentModalImport
+      :visible="ImportManualDialogVisible" :component="ImportManualDialog"
+      header="Bookings Import From File" @close="closeBookingFromFileManual"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="InvoiceToPrintDialogVisible" :component="InvoiceToPrintDialog"
+      header="Invoices To Print" @close="closeInvoiceToPrint"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="ReconcileManualDialogVisible" :component="ReconcileManualDialog"
+      header="Invoice To Reconcile Manual" @close="closeReconcileManual"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="ReconcileAutomaticDialogVisible" :component="ReconcileAutomaticDialog"
+      header="Invoice To Reconcile Automatic" @close="closeReconcileAutomatic"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="ReconcileFilesDialogVisible" :component="ReconcileFilesDialog"
+      header="Reconcile Invoice From files" @close="closeReconcileFiles"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="SendByBavelDialogVisible" :component="SendByBavelDialog"
+      header="Invoice to Send by Bavel" @close="closeSendByBavel"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="SendByEmailDialogVisible" :component="SendByEmailDialog"
+      header="Invoice to Send by Email" @close="closeSendByEmail"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="SendByFtpDialogVisible" :component="SendByFtpDialog"
+      header="Invoice to Send by FTP" @close="closeSendByFtp"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+      <DynamicContentModalImport
+      :visible="UndoImportDialogVisible" :component="UndoImportDialog"
+      header="Bookings To Remove" @close="closeUndoImport"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
+    <DynamicContentModalImport
+      :visible="ImportInssistDialogVisible" :component="ImportInssistDialog"
+      header="Bookings From Innsist" @close="closeImportFromInssist"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+    />
 </template>
 
 

@@ -11,6 +11,9 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import { formatCardNumber } from '~/components/vcc/vcc_utils'
 import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
+import BankReconciliation from '~/pages/vcc-management/bank-reconciliation/index.vue'// Karina
+import HotelPayment from '~/pages/vcc-management/hotel-payment/index.vue'// Karina
+
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
 const authStore = useAuthStore()
@@ -47,6 +50,9 @@ const filterToSearch = ref<IData>({
 })
 const selectedTransactionId = ref('')
 const contextMenu = ref()
+
+const isBankReconciliationOpen = ref(false)// Karina
+const isHotelPaymentOpen = ref(false)// Karina
 
 enum MenuType {
   refund, resendLink, resendPost, cancelled, document
@@ -261,8 +267,21 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-// -------------------------------------------------------------------------------------------------------
+// MODAL-Karina------------------------------------------------------------------------------------------------------
 
+function openBankReconciliation() {
+  isBankReconciliationOpen.value = true
+}
+function closeBankReconciliation() {
+  isBankReconciliationOpen.value = false
+}
+
+function openHotelPayment() {
+  isHotelPaymentOpen.value = true
+}
+function closeHotelPayment() {
+  isHotelPaymentOpen.value = false
+}
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 async function getList() {
   if (options.value.loading) {
@@ -338,22 +357,15 @@ async function resetListItems() {
 }
 
 function searchAndFilter() {
-  const newPayload: IQueryRequest = {
-    filter: [{
-      key: 'adjustment',
-      operator: 'EQUALS',
-      value: false,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    }],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
+  let newFilters: IFilter[] = [{
+    key: 'adjustment',
+    operator: 'EQUALS',
+    value: false,
+    logicalOperation: 'AND',
+    type: 'filterSearch'
+  }]
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [...newPayload.filter, {
+    newFilters = [...newFilters, {
       key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'EQUALS',
       value: filterToSearch.value.search,
@@ -362,7 +374,7 @@ function searchAndFilter() {
     }]
   }
   else {
-    newPayload.filter = [...newPayload.filter, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+    newFilters = [...newFilters, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
     // Filtro para no mostrar transacciones de ajuste
     // newPayload.filter = [...newPayload.filter, {
     //   key: 'adjustment',
@@ -372,7 +384,7 @@ function searchAndFilter() {
     // }]
     // Date
     if (filterToSearch.value.from) {
-      newPayload.filter = [...newPayload.filter, {
+      newFilters = [...newFilters, {
         key: 'checkIn',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
@@ -381,7 +393,7 @@ function searchAndFilter() {
       }]
     }
     if (filterToSearch.value.to) {
-      newPayload.filter = [...newPayload.filter, {
+      newFilters = [...newFilters, {
         key: 'checkIn',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
@@ -393,7 +405,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.merchant.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'merchant.id',
           operator: 'IN',
           value: itemIds,
@@ -406,7 +418,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'hotel.id',
           operator: 'IN',
           value: itemIds,
@@ -419,7 +431,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.ccType.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'creditCardType.id',
           operator: 'IN',
           value: itemIds,
@@ -432,7 +444,7 @@ function searchAndFilter() {
       const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
         const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
+        newFilters = [...newFilters, {
           key: 'status.id',
           operator: 'IN',
           value: itemIds,
@@ -442,7 +454,7 @@ function searchAndFilter() {
       }
     }
   }
-  payload.value = newPayload
+  payload.value.filter = newFilters
   getList()
 }
 
@@ -887,13 +899,13 @@ function setRefundAvailable(isAvailable: boolean) {
   }
 }
 
-function openBankReconciliation() {
-  window.open('/vcc-management/bank-reconciliation', '_blank')
-}
+// function openBankReconciliation() {
+//   window.open('/vcc-management/bank-reconciliation', '_blank')
+// }
 
-function openHotelPayment() {
-  window.open('/vcc-management/hotel-payment', '_blank')
-}
+// function openHotelPayment() {
+//   window.open('/vcc-management/hotel-payment', '_blank')
+// }
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -917,14 +929,14 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="mb-0">
+    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 8px;">
       Virtual Credit Card Management
     </h5>
-    <div class="my-2 flex justify-content-end px-0">
+    <div class="my-1 flex justify-content-end px-0">
       <Button class="ml-2" icon="pi pi-plus" label="New" @click="openNewManualTransactionDialog()" />
       <Button class="ml-2" icon="pi pi-building-columns" label="Bank Reconciliation" @click="openBankReconciliation()" />
       <Button class="ml-2" icon="pi pi-dollar" label="Hotel Payment" @click="openHotelPayment()" />
-      <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled />
+      <!-- <Button class="ml-2" icon="pi pi-dollar" label="Payment" disabled /> -->
       <Button class="ml-2" icon="pi pi-download" label="Export" disabled />
     </div>
   </div>
@@ -944,9 +956,9 @@ onMounted(() => {
               </div>
             </template>
             <div class="grid">
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0 -mt-2">
                 <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5">
                     <label class="filter-label font-bold" for="">Merchant:</label>
                     <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll"
@@ -965,8 +977,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getMerchantList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                   <div class="flex align-items-center gap-2">
                     <label class="filter-label font-bold" for="">Hotel:</label>
@@ -987,15 +998,14 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getHotelList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                 </div>
               </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="col-12 md:col-6 lg:col-3 flex pb-0 -mt-2">
                 <div class="flex flex-column gap-2 w-full">
                   <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">CC Type:</label>
+                    <label class="filter-label font-bold w-5rem" for="">CC Type:</label>
                     <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll"
                       id="autocomplete"
@@ -1013,11 +1023,10 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getCCTypeList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                   <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold" for="">Status:</label>
+                    <label class="filter-label font-bold w-5rem" for="">Status:</label>
                     <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll"
                       id="autocomplete"
@@ -1035,8 +1044,7 @@ onMounted(() => {
                         }
                       }"
                       @load="($event) => getStatusList($event)"
-                    >
-                    </DebouncedMultiSelectComponent>
+                    />
                   </div>
                 </div>
               </div>
@@ -1104,51 +1112,53 @@ onMounted(() => {
           Transactions
         </div>
       </div> -->
-      <DynamicTable
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-        @on-row-right-click="onRowRightClick"
-        @on-row-double-click="onDoubleClick($event)"
-      >
-        <template #column-icon="{ data: objData, column }">
-          <div class="flex align-items-center justify-content-center p-0 m-0">
-            <!-- <pre>{{ objData }}</pre> -->
-            <Button
-              v-if="objData.hasAttachments"
-              :icon="column.icon"
-              class="p-button-rounded p-button-text w-2rem h-2rem"
-              aria-label="Submit"
-              :style="{ color: '#000' }"
-            />
-          </div>
+      <div class="p-fluid -mt-3">
+        <DynamicTable
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+          @on-row-right-click="onRowRightClick"
+          @on-row-double-click="onDoubleClick($event)"
+        >
+          <template #column-icon="{ data: objData, column }">
+            <div class="flex align-items-center justify-content-center p-0 m-0">
+              <!-- <pre>{{ objData }}</pre> -->
+              <Button
+                v-if="objData.hasAttachments"
+                :icon="column.icon"
+                class="p-button-rounded p-button-text w-2rem h-2rem"
+                aria-label="Submit"
+                :style="{ color: '#000' }"
+              />
+            </div>
           <!-- style="color: #616161;" -->
           <!-- :style="{ 'background-color': '#00b816' }" -->
-        </template>
-        <template #column-status="{ data, column }">
-          <Badge
-            v-tooltip.top="data.status.name.toString()"
-            :value="data.status.name"
-            :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
-          />
-        </template>
-        <template #datatable-footer>
-          <ColumnGroup type="footer" class="flex align-items-center">
-            <Row>
-              <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
-              <Column :footer="formatNumber(subTotals.amount)" />
-              <Column :footer="formatNumber(subTotals.commission)" />
-              <Column :footer="formatNumber(subTotals.net)" />
-              <Column :colspan="2" />
-            </Row>
-          </ColumnGroup>
-        </template>
-      </DynamicTable>
+          </template>
+          <template #column-status="{ data, column }">
+            <Badge
+              v-tooltip.top="data.status.name.toString()"
+              :value="data.status.name"
+              :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+            />
+          </template>
+          <template #datatable-footer>
+            <ColumnGroup type="footer" class="flex align-items-center">
+              <Row>
+                <Column footer="Totals:" :colspan="8" footer-style="text-align:right" />
+                <Column :footer="formatNumber(subTotals.amount)" />
+                <Column :footer="formatNumber(subTotals.commission)" />
+                <Column :footer="formatNumber(subTotals.net)" />
+                <Column :colspan="2" />
+              </Row>
+            </ColumnGroup>
+          </template>
+        </DynamicTable>
+      </div>
     </div>
     <ContextMenu ref="contextMenu" :model="menuListItems" />
     <VCCNewManualTransaction :open-dialog="newManualTransactionDialogVisible" @on-close-dialog="onCloseNewManualTransactionDialog($event)" />
@@ -1168,6 +1178,30 @@ onMounted(() => {
         }" header="Manage Transaction Attachment" :open-dialog="attachmentDialogOpen" :selected-transaction="contextMenuTransaction"
       />
     </div>
+    <!-- Modal para Bank Reconciliation Management Karina -->
+    <Dialog
+      v-model:visible="isBankReconciliationOpen"
+      modal
+      header="Bank Reconciliation Management"
+      :style="{ width: '95vw', height: '95vh', overflow: 'hidden' }"
+      :closable="true"
+    >
+      <div class="p-4" style="height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <BankReconciliation style="max-height: 50vh; overflow: hidden; width: 100%;" />
+      </div>
+    </Dialog>
+    <!-- Modal para Hotel Payment Karina -->
+    <Dialog
+      v-model:visible="isHotelPaymentOpen"
+      modal
+      header="Hotel Payment Management"
+      :style="{ width: '95vw', height: '95vh', overflow: 'hidden' }"
+      :closable="true"
+    >
+      <div class="p-4" style="height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <HotelPayment style="max-height: 50vh; overflow: hidden; width: 100%;" />
+      </div>
+    </Dialog>
   </div>
 </template>
 

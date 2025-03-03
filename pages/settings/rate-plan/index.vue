@@ -41,7 +41,7 @@ const fields: Array<FieldDefinitionType> = [
     disabled: false,
     dataType: 'code',
     class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The code field is required').max(10, 'Maximum 10 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: z.string().trim().min(1, 'The code field is required').max(10, 'Maximum 10 characters').regex(/^[A-z0-9]+$/, 'Only alphanumeric characters allowed (1 to 10 characters)')
   },
   {
     field: 'name',
@@ -105,6 +105,7 @@ const ENUM_FILTER = [
 const columns: IColumn[] = [
   { field: 'code', header: 'Code', type: 'text' },
   { field: 'name', header: 'Name', type: 'text' },
+  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', keyValue: 'name' }, sortable: true },
   { field: 'description', header: 'Description', type: 'text' },
   { field: 'status', header: 'Active', type: 'bool' },
 ]
@@ -159,7 +160,6 @@ async function getList(loadFirstItem: boolean = true) {
     const newListItems = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     pagination.value.page = page
@@ -170,13 +170,23 @@ async function getList(loadFirstItem: boolean = true) {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      const obj = {
+        hotel: { id: iterator.hotel.id, name: iterator.hotel.name },
+        id: iterator.id,
+        code: iterator.code,
+        name: iterator.name,
+        description: iterator.description,
+        status: Object.prototype.hasOwnProperty.call(iterator, 'status') ? statusToBoolean(iterator.status) : ''
+      }
+
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
 
       // Verificar si el ID ya existe en la lista
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        // newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
+        newListItems.push({ ...obj, loadingEdit: false, loadingDelete: false })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
@@ -379,7 +389,7 @@ async function parseDataTableFilter(payloadFilter: any) {
 
 function onSortField(event: any) {
   if (event) {
-    payload.value.sortBy = event.sortField
+    payload.value.sortBy = event.sortField === 'hotel' ? 'hotel.name' : event.sortField
     payload.value.sortType = event.sortOrder
     parseDataTableFilter(event.filter)
   }
@@ -423,7 +433,7 @@ async function getHotelList(query: string = '') {
     }
   }
   catch (error) {
-    console.error('Error on loading languages list:', error)
+    console.error('Error loading hotel list:', error)
   }
 }
 

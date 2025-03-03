@@ -9,6 +9,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { ENUM_INVOICE_IMPORT_TYPE } from '~/utils/Enums'
 
+const emit = defineEmits(['close'])
 const toast = useToast()
 const { data: userData } = useAuth()
 const listItems = ref<any[]>([])
@@ -40,35 +41,35 @@ const idItem = ref('')
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'trendingCompany', header: 'Trading Company', type: 'text' },
+  { field: 'trendingCompany', header: 'Trad. Company', tooltip: 'Trading Company', type: 'text' },
   { field: 'manageHotelCode', header: 'Hotel', type: 'text' },
   { field: 'manageAgencyCode', header: 'Agency', type: 'text' },
-  { field: 'bookingDate', header: 'Booking Date', type: 'date' },
   { field: 'fullName', header: 'Full Name', type: 'text' },
   { field: 'hotelBookingNumber', header: 'Reserv No', type: 'text' },
+  { field: 'hotelInvoiceNumber', header: 'Hotel Inv No', tooltip: 'Hotel Invoice No', type: 'text' },
   { field: 'coupon', header: 'Coupon No', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'text' },
+  { field: 'roomType', header: 'R. Type', tooltip: 'Room Type', type: 'text' },
   { field: 'checkIn', header: 'Check In', type: 'date' },
   { field: 'checkOut', header: 'Check Out', type: 'date' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Amount', type: 'text' },
-  { field: 'impSta', header: 'Imp. Sta', type: 'slot-text', frozen: true, showFilter: false, minWidth: '150px' },
+  { field: 'ratePlan', header: 'R. Plan', tooltip: 'Rate Plan', type: 'text' },
+  { field: 'hotelInvoiceAmount', header: 'Hot. Amount', tooltip: 'Hotel Amount', type: 'text' },
+  { field: 'invoiceAmount', header: 'Inv. Amount', tooltip: 'Invoice Amount', type: 'text' },
+  { field: 'impSta', header: 'Imp. Sta', tooltip: 'Import Status', type: 'slot-text', frozen: true, showFilter: false, minWidth: '150px' },
 ]
 
-const columnsExpandable: IColumn[] = [
-  { field: 'firstName', header: 'First Name', type: 'text' },
-  { field: 'lastName', header: 'Last Name', type: 'text' },
-  { field: 'checkIn', header: 'Check In', type: 'date' },
-  { field: 'checkOut', header: 'Check Out', type: 'date' },
-  { field: 'nights', header: 'Nights', type: 'text' },
-  { field: 'adults', header: 'Adults', type: 'text' },
-  { field: 'children', header: 'Children', type: 'text' },
-  { field: 'roomType', header: 'Room Type', type: 'text' },
-  { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
-  { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-]
+// const columnsExpandable: IColumn[] = [
+//   { field: 'firstName', header: 'First Name', type: 'text' },
+//   { field: 'lastName', header: 'Last Name', type: 'text' },
+//   { field: 'checkIn', header: 'Check In', type: 'date' },
+//   { field: 'checkOut', header: 'Check Out', type: 'date' },
+//   { field: 'nights', header: 'Nights', type: 'text' },
+//   { field: 'adults', header: 'Adults', type: 'text' },
+//   { field: 'children', header: 'Children', type: 'text' },
+//   { field: 'roomType', header: 'Room Type', type: 'text' },
+//   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
+//   { field: 'hotelInvoiceAmount', header: 'Hotel Amount', type: 'text' },
+//   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
+// ]
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ const options = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
-  expandableRows: true,
+  expandableRows: false,
   messageToDelete: 'Do you want to save the change?',
   showPagination: false
 })
@@ -137,7 +138,7 @@ async function getErrorList() {
             ...iterator.row,
             id: iterator.id,
             fullName: `${iterator.row?.firstName} ${iterator.row?.lastName}`,
-            impSta: `Warning row ${iterator.rowNumber}: \n${rowError}`,
+            impSta: `Row ${iterator.rowNumber}: \n${rowError}`,
             hotelInvoiceAmount: iterator.row.hotelInvoiceAmount ? formatNumber(iterator.row.hotelInvoiceAmount) : 0.00,
             invoiceAmount: iterator.row.invoiceAmount ? formatNumber(iterator.row.invoiceAmount) : 0.00,
             rowExpandable,
@@ -212,7 +213,8 @@ async function importFile() {
         options.value.loading = false
         // messageDialog.value = `The file was upload successful!. ${totalImportedRows.value} rows imported.`
         // openSuccessDialog.value = true
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value} rows imported.`, life: 0 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value} rows imported.`, life: 5000 })
+        onClose()
         await clearForm()
       }
     }
@@ -222,6 +224,9 @@ async function importFile() {
   options.value.loading = false
 }
 
+function onClose() {
+  emit('close')
+}
 async function validateStatusImport() {
   options.value.loading = true
   return new Promise<void>((resolve) => {
@@ -288,49 +293,59 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
               <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
                 <div>
                   Bookings Import From File
                 </div>
               </div>
-            </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Import Data: </label>
+            </template> -->
+          <div class="grid p-0 m-0" style="margin: 0 auto;">
+            <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-16rem">Import Data (XLS or XLSX): </label>
 
-                  <div class="w-full ">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="fileUpload"
-                        v-model="invoiceFile"
-                        placeholder="Choose file"
-                        class="w-full"
-                        show-clear
-                        aria-describedby="inputtext-help"
-                      />
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input
+                <div class="w-full ">
+                  <div class="p-inputgroup w-full">
+                    <InputText
                       ref="fileUpload"
-                      type="file"
-                      style="display: none;"
-                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile($event)"
-                    >
+                      v-model="invoiceFile"
+                      placeholder="Choose file"
+                      class="w-full"
+                      show-clear
+                      aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                    </span>
+                    <span class="p-inputgroup-addon p-0 m-0 ml-1">
+                      <Button
+                        v-tooltip.top="'Import file'"
+                        class="w-3rem mx-2"
+                        icon="pi pi-check"
+                        :loading="options.loading"
+                        :disabled="uploadComplete || !inputFile"
+                        @click="importFile"
+                      />
+                    </span>
                   </div>
+                  <!-- <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small> -->
+                  <input
+                    ref="fileUpload"
+                    type="file"
+                    style="display: none;"
+                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    @change="onChangeFile($event)"
+                  >
                 </div>
               </div>
             </div>
-          </AccordionTab>
-        </Accordion>
+          </div>
+        </AccordionTab>
+        <!-- </Accordion> -->
       </div>
       <DynamicTable
         :data="listItems" :columns="columns" :options="options" :pagination="pagination"
@@ -344,7 +359,7 @@ onMounted(async () => {
           </div>
         </template>
 
-        <template #expansion="slotProps">
+        <!-- <template #expansion="slotProps">
           <div class="p-0 m-0">
             <DataTable :value="slotProps.data.rowExpandable" striped-rows>
               <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
@@ -363,13 +378,13 @@ onMounted(async () => {
               </template>
             </DataTable>
           </div>
-        </template>
+        </template> -->
       </DynamicTable>
 
-      <div class="flex align-items-end justify-content-end mt-2">
+      <!-- <div class="flex align-items-end justify-content-end mt-2">
         <Button v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check" :loading="options.loading" :disabled="uploadComplete || !inputFile" @click="importFile" />
         <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" />
-      </div>
+      </div> -->
     </div>
   </div>
   <Dialog

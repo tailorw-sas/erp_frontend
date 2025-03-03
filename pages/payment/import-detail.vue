@@ -8,6 +8,7 @@ import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
+const emit = defineEmits(['close'])
 const route = useRoute()
 const paymentId = route.query.paymentId
 
@@ -46,7 +47,7 @@ const columns: IColumn[] = [
   { field: 'transactionType', header: 'Trans. T', type: 'text' },
   { field: 'anti', header: 'ANTI', type: 'text' },
   { field: 'remarks', header: 'Remark', type: 'text' },
-  { field: 'impSta', header: 'Imp. Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
+  { field: 'impSta', header: 'Imp. Status', tooltip: 'Import Status', type: 'slot-text', showFilter: false, minWidth: '150px' },
 ]
 // -------------------------------------------------------------------------------------------------------
 
@@ -191,7 +192,8 @@ async function importFileDetail() {
     if (!haveErrorImportStatus.value) {
       await getErrorList()
       if (listItems.value.length === 0) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 0 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 10000 })
+        onClose()
         options.value.loading = false
         await clearForm()
       }
@@ -199,6 +201,9 @@ async function importFileDetail() {
   }
   loadingSaveAll.value = false
   options.value.loading = false
+}
+function onClose() {
+  emit('close')
 }
 
 async function validateStatusImport() {
@@ -272,47 +277,36 @@ onMounted(async () => {
 <template>
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-      <div class=" p-0">
-        <Accordion :active-index="0" class="mb-2">
-          <AccordionTab>
-            <template #header>
-              <div
-                class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center"
-              >
-                <div>
-                  Import Payment Detail
-                </div>
-              </div>
-            </template>
-            <div class="grid p-0 m-0" style="margin: 0 auto;">
-              <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
-                <div class="flex align-items-center mb-2">
-                  <label class="w-7rem">Import Data: </label>
-                  <div class="w-full">
-                    <div class="p-inputgroup w-full">
-                      <InputText
-                        ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
-                        class="w-full" show-clear aria-describedby="inputtext-help"
+      <div class="mt-3">
+        <AccordionTab>
+          <div class="grid p-0 m-0" style="margin: 0 auto;">
+            <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
+              <div class="flex align-items-center mb-2">
+                <label class="w-16rem">Import Data (XLS or XLSX): </label>
+                <div class="w-full">
+                  <div class="p-inputgroup w-full">
+                    <InputText
+                      ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
+                      class="w-full" show-clear aria-describedby="inputtext-help"
+                    />
+                    <span class="p-inputgroup-addon p-0 m-0">
+                      <Button
+                        icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
+                        @click="fileUpload.click()"
                       />
-                      <span class="p-inputgroup-addon p-0 m-0">
-                        <Button
-                          icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
-                          @click="fileUpload.click()"
-                        />
-                      </span>
-                    </div>
-                    <small id="username-help" style="color: #808080;">Select a file of type XLS or XLSX</small>
-                    <input
-                      ref="fileUpload" type="file" style="display: none;"
-                      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                      @change="onChangeFile($event)"
-                    >
+                    </span>
                   </div>
+
+                  <input
+                    ref="fileUpload" type="file" style="display: none;"
+                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    @change="onChangeFile($event)"
+                  >
                 </div>
               </div>
             </div>
-          </accordionTab>
-        </accordion>
+          </div>
+        </accordionTab>
       </div>
 
       <DynamicTable
@@ -333,10 +327,6 @@ onMounted(async () => {
           :loading="options.loading"
           :disabled="uploadComplete || !inputFile"
           @click="importFileDetail"
-        />
-        <Button
-          v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times"
-          @click="clearForm"
         />
       </div>
     </div>

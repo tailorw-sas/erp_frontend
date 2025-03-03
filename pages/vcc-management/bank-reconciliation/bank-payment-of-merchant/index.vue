@@ -182,11 +182,6 @@ const paginatedData = computed(() => {
   return LocalBindTransactionList.value.slice(start, end)
 })
 
-const computedTransactionAmountSelected = computed(() => {
-  const totalSelectedAmount = selectedElements.value.length > 0 ? selectedElements.value.reduce((sum, item) => sum + item.netAmount, 0) : 0
-  return `Transaction Amount Selected: $${formatNumber(totalSelectedAmount)}`
-})
-
 const computedLocalBindTransactionList = computed(() => {
   return LocalBindTransactionList.value.filter((item: any) => !item.adjustment)
 })
@@ -201,25 +196,6 @@ async function onCloseNewAdjustmentTransactionDialog(isCancel: boolean) {
   if (!isCancel) {
     // guardar en memoria la transaccion de ajuste
   }
-}
-
-async function onMultipleSelect(data: any) {
-  // Crear un Set de IDs para los seleccionados globalmente y los seleccionados en la página actual
-  const selectedIds = new Set(selectedElements.value.map((item: any) => item.id))
-  const currentPageSelectedIds = new Set(data.map((item: any) => item.id))
-
-  // de los que estan seleccionados globalmente, mantener los que vienen en la pagina actual, mas los seleccionados que no estan en este conjunto
-  const selectedPreviously = selectedElements.value.filter((item: any) =>
-    currentPageSelectedIds.has(item.id) || !paginatedData.value.some((pageItem: any) => pageItem.id === item.id)
-  )
-  // Agregar nuevos elementos seleccionados en la página actual
-  const newElements = data.filter((item: any) => !selectedIds.has(item.id))
-  // Crear un nuevo array que contenga la selección global optimizada
-  // Actualizar selectedElements solo una vez
-  selectedElements.value = [
-    ...selectedPreviously,
-    ...newElements
-  ]
 }
 
 function clearForm() {
@@ -589,10 +565,10 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
 </script>
 
 <template>
-  <div style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <div class="-mr-4 -ml-4" style="max-height: 100vh; height: 90vh">
+    <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
       New Bank Payment of Merchant
-    </div>
+    </div> -->
     <div class="card p-4 mb-0">
       <EditFormV2
         :key="formReload"
@@ -682,10 +658,8 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
       :options="options"
       :pagination="pagination"
       show-local-pagination
-      :selected-items="selectedElements"
       @on-change-filter="parseDataTableFilter"
       @on-sort-field="onSortField"
-      @update:selected-items="onMultipleSelect($event)"
       @on-row-right-click="onRowRightClick"
       @on-row-double-click="onDoubleClick($event)"
     >
@@ -716,7 +690,6 @@ watch(() => LocalBindTransactionList.value, async (newValue) => {
         <Button v-tooltip.top="'Bind Transaction'" class="w-3rem" :disabled="item.amount <= 0 || item.merchantBankAccount == null || item.hotel == null" icon="pi pi-link" @click="() => { transactionsToBindDialogOpen = true }" />
         <Button v-tooltip.top="'Add Adjustment'" class="w-3rem ml-1" icon="pi pi-dollar" @click="openNewAdjustmentTransactionDialog()" />
         <Button v-tooltip.top="'Save'" class="w-3rem ml-1" icon="pi pi-save" :loading="loadingSaveAll" @click="forceSave = true" />
-        <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="() => { navigateTo('/vcc-management/bank-reconciliation') }" />
       </div>
     </div>
     <div v-if="transactionsToBindDialogOpen">

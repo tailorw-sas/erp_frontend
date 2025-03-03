@@ -76,7 +76,7 @@ onMounted(async () => {
 
 <template>
   <div class="layout-sidebar" @mouseenter="onMouseEnter()" @mouseleave="onMouseLeave()">
-    <div class="sidebar-header mr-5">
+    <div class="sidebar-header mr-4 -mt-3 ml-2">
       <a class="app-logo" style="cursor: pointer" @click="navigateToHome">
         <div class="app-logo-small h-2rem">
           <NuxtImg
@@ -95,8 +95,10 @@ onMounted(async () => {
       </a>
       <Button class="layout-sidebar-anchor p-link z-2" type="button" @click="anchor()" />
     </div>
+    <!-- 🔹 Este div separa el logo del MegaMenu -->
+    <div class="mr-6 mx-6" /> <!-- Puedes probar mt-5 o py-5 -->
 
-    <div class="w-full">
+    <div class="w-full -mt-3 ml-8">
       <MegaMenu
         :model="menuItemsMegaMenu"
         disabled="disabled"

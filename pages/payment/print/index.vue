@@ -58,15 +58,68 @@ function mapFunctionForBankAccount(data: DataListItemForBankAccount): ListItemFo
 }
 const columns: IColumn[] = [
   { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false, hidden: false },
-  { field: 'paymentId', header: 'ID', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: true },
-  { field: 'paymentSource', header: 'P.Source', tooltip: 'Payment Source', width: '60px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
-  { field: 'transactionDate', header: 'Trans. Date', tooltip: 'Transaction Date', width: '60px', type: 'date' },
-  { field: 'hotel', header: 'Hotel', width: '80px', widthTruncate: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' } },
-  { field: 'client', header: 'Client', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-client' } },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
-  // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
-  { field: 'bankAccount', header: 'Bank Acc', tooltip: 'Bank Account', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-bank-account', keyValue: 'name', mapFunction: mapFunctionForBankAccount, sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC } } },
+  { field: 'paymentId', header: 'Id', tooltip: 'Payment ID', width: '40px', type: 'text', showFilter: true },
+  { field: 'paymentSource', header: 'P.S', tooltip: 'Payment Source', width: '60px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
+  { field: 'transactionDate', header: 'Trans. D', tooltip: 'Transaction Date', width: '60px', type: 'date' },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '120px', // Aumenta el ancho principal
+    minWidth: '100px', // Define un ancho mínimo mayor
+    maxWidth: '120px', // Permite un máximo de 120px antes de truncar
+    widthTruncate: '120px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text',
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
+  },
+  {
+    field: 'client',
+    header: 'Client',
+    width: '90px',
+    minWidth: '60px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '90px', // Límite máximo antes de truncar
+    widthTruncate: '90px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-client'
+    }
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    width: '120px',
+    minWidth: '100px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '120px', // Límite máximo antes de truncar
+    widthTruncate: '120px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-agency'
+    }
+  },
+  // { field: 'agencyType', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
+  // // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
+  {
+    field: 'bankAccount',
+    header: 'Bank Acc',
+    tooltip: 'Bank Account',
+    width: '100px',
+    minWidth: '80px', // Ajusta el ancho mínimo antes de truncar
+    maxWidth: '100px', // Límite máximo antes de truncar
+    widthTruncate: '100px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text', // Aplica la clase CSS para truncar
+    type: 'select',
+    objApi: {
+      moduleApi: 'settings',
+      uriApi: 'manage-bank-account',
+      keyValue: 'name',
+      mapFunction: mapFunctionForBankAccount,
+      sortOption: { sortBy: 'manageBank.name', sortType: ENUM_SHORT_TYPE.ASC }
+    }
+  },
   { field: 'paymentAmount', header: 'P. Amount', tooltip: 'Payment Amount', width: '70px', type: 'number' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', width: '60px', type: 'number' },
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
@@ -444,11 +497,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     Payments to Print
-  </div>
-  <div class="grid">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-2">
+  </div> -->
+  <div class="grid -mt-5">
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-0">
       <div class="p-fluid pt-3">
         <DynamicTable
           :data="listItems"
@@ -499,7 +552,7 @@ onMounted(async () => {
       <div class="flex justify-content-end">
         <div class="flex align-items-end justify-content-end">
           <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" :disabled="paymentSelectedForPrintList.length === 0" @click="openDialogPrint" />
-          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="closeDialogPrint" />
+          <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="closeDialogPrint" /> -->
         </div>
       </div>
     </div>
@@ -618,11 +671,6 @@ onMounted(async () => {
 
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <Button
-                v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="() => {
-                  navigateTo('/payment')
-                }"
-              />
             </template>
           </EditFormV2>
         </div>
