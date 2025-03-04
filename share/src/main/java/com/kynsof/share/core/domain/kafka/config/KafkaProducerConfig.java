@@ -33,7 +33,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = createBaseProps();
-        addSaslConfig(configProps, saslUsername, saslPassword);//Comentar esta linea si no se tiene configurado Kafka en docker con autenticacion SASL
+        addSaslConfig(configProps, saslUsername, saslPassword);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
