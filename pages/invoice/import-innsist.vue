@@ -77,17 +77,18 @@ const confInvoiceApi = reactive({
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'hotel', header: 'Hotel', type: 'text', minWidth: '25px', maxWidth: '150px' },
-  { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'agencyCode', header: 'Agency', type: 'text', minWidth: '10px', maxWidth: '75px' },
   { field: 'agencyAlias', header: 'Agency Alias', type: 'text', minWidth: '25px', maxWidth: '150px' },
   { field: 'firstName', header: 'First Name', type: 'text', minWidth: '12px', maxWidth: '75px' },
   { field: 'lastName', header: 'Last Name', type: 'text', minWidth: '12px', maxWidth: '75px' },
   { field: 'reservationCode', header: 'Reserv No', type: 'text', minWidth: '10px', maxWidth: '75px' },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '20px', maxWidth: '50px' },
-  { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '50px' },
-  { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '50px' },
-  { field: 'hotelInvoiceAmount', header: 'Hot. Amount', tooltip: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '40px' },
-  { field: 'amount', header: 'Book. Amount', tooltip: 'Booking Amount', type: 'number', minWidth: '10px', maxWidth: '40px' },
-  { field: 'status', header: 'Status', type: 'slot-text', minWidth: '10px', maxWidth: '50px' }
+  { field: 'roomType', header: 'Room Type', type: 'text', minWidth: '10px', maxWidth: '50px' },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', minWidth: '20px', maxWidth: '75px' },
+  { field: 'checkInDate', header: 'Check In', type: 'date', minWidth: '10px', maxWidth: '75px' },
+  { field: 'checkOutDate', header: 'Check Out', type: 'date', minWidth: '10px', maxWidth: '75px' },
+  { field: 'hotelInvoiceAmount', header: 'Hot. Amount', tooltip: 'Hotel Amount', type: 'number', minWidth: '10px', maxWidth: '75px' },
+  { field: 'amount', header: 'Book. Amount', tooltip: 'Booking Amount', type: 'number', minWidth: '10px', maxWidth: '75px' },
+  { field: 'status', header: 'Status', type: 'slot-text', minWidth: '50px', maxWidth: '150px' }
 ]
 
 const columnsExpandable: IColumn[] = [
@@ -1090,8 +1091,8 @@ onMounted(async () => {
       {{ options.tableName }}
     </h5>
   </div>
-  <div class="grid">
-    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-1">
+  <div class="grid -mr-4">
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
       <div class="mt-3">
         <!-- <Accordion :active-index="0" class="mb-2"> -->
         <AccordionTab>
