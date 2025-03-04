@@ -267,7 +267,7 @@ function transformAgenciesData(data: any) {
           icon: '',
           children: client.agencies.map((agency: any) => ({
             key: agency.id,
-            label: agency.name ? agency.name.trim().toUpperCase() : '',
+            label: `${agency.code} - ${agency.name}`.trim().toUpperCase(),
             data: agency.description ? agency.description.trim().toUpperCase() : '',
             icon: '',
             status: agency?.status || ''
@@ -288,8 +288,8 @@ function transformHotelsData(data: any) {
       children: item.hotels.length > 0
         ? item.hotels.map((hotel: any) => ({
           key: hotel.id,
-          label: hotel.name ? hotel.name.trim().toUpperCase() : '',
-          data: hotel.description ? hotel.description.trim().toUpperCase() : '',
+          label: `${hotel.code} - ${hotel.name}`.trim().toUpperCase(),
+          data: hotel.code ? hotel.code.trim().toUpperCase() : '',
           icon: '',
           status: hotel?.status || ''
         }))
@@ -328,7 +328,7 @@ function transformTradingCompaniesData(data: any) {
       children: item.tradingCompanies.length > 0
         ? item.tradingCompanies.map((tradingCompany: any) => ({
           key: tradingCompany.id,
-          label: tradingCompany.company ? tradingCompany.company.trim().toUpperCase() : '',
+          label: `${tradingCompany.code} - ${tradingCompany.company}`.trim().toUpperCase(),
           data: tradingCompany.description ? tradingCompany.description.trim().toUpperCase() : '',
           icon: '',
           status: tradingCompany?.status || ''

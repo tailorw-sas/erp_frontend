@@ -540,7 +540,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
           items: [
             {
               label: 'Invoice Management',
-              icon: 'pi pi-fw pi-list',
+              icon: 'pi pi-fw pi-table',
               command: () => navigateTo('/invoice'),
               items: []
             },
@@ -549,13 +549,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               icon: 'pi pi-fw pi-lock',
               command: () => navigateTo('/close-operation/invoice'),
               items: []
-            },
-            {
-              label: 'Collection Management',
-              icon: 'pi pi-fw pi-dollar',
-              command: () => navigateTo('/collection'),
-              items: []
-            },
+            }
           ]
         },
         {
@@ -589,27 +583,6 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
             },
           ],
         },
-      ],
-      [
-        {
-          label: 'VCC',
-          items: [
-            {
-              label: 'VCC Management',
-              icon: 'pi pi-fw pi-credit-card',
-              command: () => navigateTo('/vcc-management'),
-              items: []
-            },
-            {
-              label: 'VCC Close Operation',
-              icon: 'pi pi-fw pi-lock',
-              command: () => navigateTo('/close-operation/vcc'),
-              items: []
-            },
-          ]
-        }
-      ],
-      [
         {
           label: 'Administration',
           icon: 'pi pi-fw pi-folder',
@@ -651,7 +624,39 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
               items: []
             },
           ]
-        },
+        }
+      ],
+      [
+        {
+          label: 'VCC',
+          items: [
+            {
+              label: 'VCC Management',
+              icon: 'pi pi-fw pi-credit-card',
+              command: () => navigateTo('/vcc-management'),
+              items: []
+            },
+            {
+              label: 'VCC Close Operation',
+              icon: 'pi pi-fw pi-lock',
+              command: () => navigateTo('/close-operation/vcc'),
+              items: []
+            },
+          ]
+        }
+      ],
+      [
+        {
+          label: 'Collection',
+          items: [
+            {
+              label: 'Collection Management',
+              icon: 'pi pi-fw pi-dollar',
+              command: () => navigateTo('/collection'),
+              items: []
+            },
+          ]
+        }
       ]
 
     ]

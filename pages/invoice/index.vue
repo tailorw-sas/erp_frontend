@@ -2532,7 +2532,8 @@ const legend = ref(
                           </span>
                         </template>
                         <template #option="props">
-                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                          <!--<span>{{ props.item.code }} - {{ props.item.name }}</span>-->
+                          <span>{{ props.item.name }}</span>
                         </template>
                       </DebouncedMultiSelectComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">
