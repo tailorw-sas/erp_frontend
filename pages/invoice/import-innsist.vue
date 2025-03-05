@@ -370,6 +370,12 @@ async function getHotelList(query: string = '') {
           logicalOperation: 'OR'
         },
         {
+          key: 'isVirtual',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: false,
+        },
+        {
           key: 'status',
           operator: 'EQUALS',
           value: 'ACTIVE',
@@ -386,7 +392,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    // hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
