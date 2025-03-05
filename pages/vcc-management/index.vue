@@ -37,14 +37,14 @@ const accordionLoading = ref({
   status: false,
 })
 const contextMenuTransaction = ref()
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
-  merchant: [allDefaultItem],
-  ccType: [allDefaultItem],
-  hotel: [allDefaultItem],
-  status: [allDefaultItem],
+  merchant: [],
+  ccType: [],
+  hotel: [],
+  status: [],
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
@@ -462,10 +462,10 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: null,
     search: '',
-    merchant: [allDefaultItem],
-    ccType: [allDefaultItem],
-    hotel: [allDefaultItem],
-    status: [allDefaultItem],
+    merchant: [],
+    ccType: [],
+    hotel: [],
+    status: [],
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
@@ -537,7 +537,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confHotelListApi.moduleApi, confHotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
@@ -583,7 +583,7 @@ async function getMerchantList(query: string = '') {
 
     const response = await GenericService.search(confMerchantListApi.moduleApi, confMerchantListApi.uriApi, payload)
     const { data: dataList } = response
-    merchantList.value = [allDefaultItem]
+    merchantList.value = []
     for (const iterator of dataList) {
       merchantList.value = [...merchantList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.description}`, code: iterator.code }]
     }
@@ -629,7 +629,7 @@ async function getStatusList(query: string = '') {
 
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
-    statusList.value = [allDefaultItem]
+    statusList.value = []
     for (const iterator of dataList) {
       statusList.value = [...statusList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -675,7 +675,7 @@ async function getCCTypeList(query: string = '') {
 
     const response = await GenericService.search(confCCTypeListApi.moduleApi, confCCTypeListApi.uriApi, payload)
     const { data: dataList } = response
-    ccTypeList.value = [allDefaultItem]
+    ccTypeList.value = []
     for (const iterator of dataList) {
       ccTypeList.value = [...ccTypeList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
