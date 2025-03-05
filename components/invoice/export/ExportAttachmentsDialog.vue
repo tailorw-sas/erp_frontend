@@ -182,7 +182,7 @@ onMounted(() => {
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible" modal header="Invoice to print" class="p-4"
+    v-model:visible="dialogVisible" modal header="Invoice To Print" class="p-4"
     content-class="border-round-bottom border-top-1 surface-border h-fit" :block-scroll="true" style="width: 500px;"
     @hide="closeDialog"
   >
@@ -190,7 +190,7 @@ onMounted(() => {
       <div class="flex align-items-center justify-content-between w-full">
         <div class="flex align-items-center">
           <h5 class="m-0">
-            Invoice to print
+            Invoice To Print
           </h5>
         </div>
         <div class="flex align-items-center">

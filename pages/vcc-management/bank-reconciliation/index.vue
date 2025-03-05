@@ -16,14 +16,14 @@ const loadingSaveAll = ref(false)
 const idItemToLoadFirstTime = ref('')
 const bankReconciliationHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
-  merchantBankAccount: [allDefaultItem],
-  ccType: [allDefaultItem],
-  hotel: [allDefaultItem],
-  status: [allDefaultItem],
+  merchantBankAccount: [],
+  ccType: [],
+  hotel: [],
+  status: [],
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
@@ -347,10 +347,10 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: null,
     search: '',
-    merchantBankAccount: [allDefaultItem],
-    ccType: [allDefaultItem],
-    hotel: [allDefaultItem],
-    status: [allDefaultItem],
+    merchantBankAccount: [],
+    ccType: [],
+    hotel: [],
+    status: [],
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
@@ -397,7 +397,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confHotelListApi.moduleApi, confHotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
@@ -443,7 +443,7 @@ async function getStatusList(query: string = '') {
 
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
-    statusList.value = [allDefaultItem]
+    statusList.value = []
     for (const iterator of dataList) {
       statusList.value = [...statusList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -479,7 +479,7 @@ async function getMerchantBankAccountList(query: string) {
     }
     const response: any = await GenericService.search('creditcard', 'manage-merchant-bank-account', payload)
     const { data: dataList } = response
-    MerchantBankAccountList.value = [allDefaultItem]
+    MerchantBankAccountList.value = []
 
     for (const iterator of dataList) {
       const merchantNames = iterator.managerMerchant.map((item: any) => item.description).join(' - ')

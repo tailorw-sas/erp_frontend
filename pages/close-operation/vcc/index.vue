@@ -16,12 +16,12 @@ const selectedElements = ref<string[]>([])
 const selectedDate = ref<Date>()
 const loadingSearch = ref(false)
 const menu = ref() // Reference for the menu component
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const resultTable = ref()
 const filterToSearch = ref<IData>({
   search: '',
   active: true,
-  hotel: [allDefaultItem],
+  hotel: [],
 })
 const confApi = reactive({
   moduleApi: 'creditcard',
@@ -155,7 +155,7 @@ function clearFilterToSearch() {
     type: 'filterSearch',
   }]
   filterToSearch.value.search = ''
-  filterToSearch.value.hotel = [allDefaultItem]
+  filterToSearch.value.hotel = []
   filterToSearch.value.active = true
   getList()
 }
@@ -295,7 +295,7 @@ async function getHotelList(query: string) {
 
     const response = await GenericService.search(confHotelApi.moduleApi, confHotelApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status, code: iterator.code }]
     }
