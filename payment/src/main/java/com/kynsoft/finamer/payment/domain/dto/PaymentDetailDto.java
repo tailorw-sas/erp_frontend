@@ -22,7 +22,7 @@ public class PaymentDetailDto {
     private ManagePaymentTransactionTypeDto transactionType;
     private Double amount;
     private String remark;
-    private List<PaymentDetailDto> children;
+    private List<PaymentDetailDto> paymentDetails;
     private ManageBookingDto manageBooking;
 
     private Double bookingId;
@@ -33,26 +33,32 @@ public class PaymentDetailDto {
     private String reservation;
     private String couponNo;
     private Integer adults;
-    private Integer childrens;
+    private Integer children;
     private OffsetDateTime createdAt;
     private Long paymentDetailId;
     private Long parentId;
     private Double applyDepositValue;
-    private Boolean applayPayment;
     private Long reverseFrom;
     private Long reverseFromParentId;//Esta variable es para poder controlar el undo luego de realizar un reverse.
     private boolean reverseTransaction;
     private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
     private boolean canceledTransaction;
+    private Boolean applyPayment;
+    private OffsetDateTime appliedAt;
+    private OffsetDateTime effectiveDate;
 
-    public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType, Double amount, String remark, List<PaymentDetailDto> children, Double bookingId, String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName, String reservation, String couponNo, Integer adults, Integer childrens, Boolean applayPayment) {
+    public PaymentDetailDto(UUID id, Status status, PaymentDto payment, ManagePaymentTransactionTypeDto transactionType,
+                            Double amount, String remark, List<PaymentDetailDto> paymentDetails, Double bookingId,
+                            String invoiceId, OffsetDateTime transactionDate, String firstName, String lastName,
+                            String reservation, String couponNo, Integer adults, Integer children, Boolean applyPayment
+                            ) {
         this.id = id;
         this.status = status;
         this.payment = payment;
         this.transactionType = transactionType;
         this.amount = amount;
         this.remark = remark;
-        this.children = children;
+        this.paymentDetails = paymentDetails;
         this.bookingId = bookingId;
         this.invoiceId = invoiceId;
         this.transactionDate = transactionDate;
@@ -61,13 +67,35 @@ public class PaymentDetailDto {
         this.reservation = reservation;
         this.couponNo = couponNo;
         this.adults = adults;
-        this.childrens = childrens;
-        this.applayPayment = applayPayment;
+        this.children = children;
+        this.applyPayment = applyPayment;
     }
 
     @Override
     public String toString() {
-        return "PaymentDetailDto{" + "id=" + id + ", status=" + status + ", amount=" + amount + ", remark=" + remark + ", bookingId=" + bookingId + ", invoiceId=" + invoiceId + ", transactionDate=" + transactionDate + ", firstName=" + firstName + ", lastName=" + lastName + ", reservation=" + reservation + ", couponNo=" + couponNo + ", adults=" + adults + ", childrens=" + childrens + ", createdAt=" + createdAt + ", paymentDetailId=" + paymentDetailId + ", parentId=" + parentId + ", applyDepositValue=" + applyDepositValue + ", applayPayment=" + applayPayment + '}';
+        return new StringBuilder("PaymentDetailDto{")
+                .append("id=").append(id)
+                .append(", status=").append(status)
+                .append(", amount=").append(amount)
+                .append(", remark='").append(remark).append('\'')
+                .append(", bookingId=").append(bookingId)
+                .append(", invoiceId=").append(invoiceId)
+                .append(", transactionDate=").append(transactionDate)
+                .append(", firstName='").append(firstName).append('\'')
+                .append(", lastName='").append(lastName).append('\'')
+                .append(", reservation=").append(reservation)
+                .append(", couponNo=").append(couponNo)
+                .append(", adults=").append(adults)
+                .append(", children=").append(children)
+                .append(", createdAt=").append(createdAt)
+                .append(", paymentDetailId=").append(paymentDetailId)
+                .append(", parentId=").append(parentId)
+                .append(", applyDepositValue=").append(applyDepositValue)
+                .append(", applyPayment=").append(applyPayment)
+                .append(", appliedAt=").append(appliedAt)
+                .append(", effectiveDate=").append(effectiveDate)
+                .append('}')
+                .toString();
     }
 
 }

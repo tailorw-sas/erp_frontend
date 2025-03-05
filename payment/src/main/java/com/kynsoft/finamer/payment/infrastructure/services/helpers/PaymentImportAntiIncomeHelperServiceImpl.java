@@ -127,7 +127,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentAntiValidatorFactory paymentAntiValidatorFactory,
-            RedisTemplate<String, String> redisTemplate,
             IPaymentDetailService paymentDetailService,
             IManagePaymentTransactionTypeService transactionTypeService,
             PaymentImportAntiErrorRepository antiErrorRepository,
@@ -148,7 +147,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
             ApplicationEventPublisher applicationEventPublisher,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
-        super(redisTemplate);
         this.details = new ArrayList<>();
         this.newDetails = new ArrayList<>();
         this.uniquePayments = new ArrayList<>();
@@ -308,7 +306,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             this.updateBooking(booking);
 
             detail.setManageBooking(booking);
-            detail.setApplayPayment(Boolean.TRUE);
+            detail.setApplyPayment(Boolean.TRUE);
             detail.setTransactionDate(transactionDate(detail.getPayment().getHotel().getId()));
             this.updatePaymentNewDetails(detail);
 
@@ -404,9 +402,9 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
         //Agregando los Apply Deposit.
         List<PaymentDetail> updateChildrens = new ArrayList<>();
-        updateChildrens.addAll(paymentDetailDto.getChildren());
+        updateChildrens.addAll(paymentDetailDto.getPaymentDetails());
         updateChildrens.add(children);
-        paymentDetailDto.setChildren(updateChildrens);
+        paymentDetailDto.setPaymentDetails(updateChildrens);
         paymentDetailDto.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - amount);
 
         //Actualizando el Deposit

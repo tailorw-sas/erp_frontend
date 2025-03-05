@@ -61,7 +61,6 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     private final IManageResourceTypeService resourceTypeService;
     private final IStorageService storageService;
 
-    private final IPaymentDetailService paymentDetailService;
     private final ServiceLocator<IMediator> serviceLocator;
 
     @Value("${payment.source.expense.code}")
@@ -79,7 +78,6 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
 
     public PaymentImportExpenseBookingHelperServiceImpl(PaymentExpenseBookingImportCacheRepository cacheRepository,
             PaymentImportExpenseBookingErrorRepository errorRepository,
-            RedisTemplate<String, String> redisTemplate,
             PaymentExpenseBookingValidatorFactory expenseBookingValidatorFactory,
             IManageBookingService bookingService, IStorageService fileSystemService,
             PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
@@ -90,11 +88,10 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
             IManagePaymentAttachmentStatusService paymentAttachmentStatusService,
             IManageAttachmentTypeService attachmentTypeService,
             IManageResourceTypeService resourceTypeService,
-            IStorageService storageService, IPaymentDetailService paymentDetailService,
+            IStorageService storageService,
             ServiceLocator<IMediator> serviceLocator,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository
     ) {
-        super(redisTemplate);
         this.cacheRepository = cacheRepository;
         this.errorRepository = errorRepository;
         this.expenseBookingValidatorFactory = expenseBookingValidatorFactory;
@@ -109,7 +106,6 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
         this.storageService = storageService;
-        this.paymentDetailService = paymentDetailService;
         this.serviceLocator = serviceLocator;
         this.availableClient = new HashSet<>();
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
@@ -165,8 +161,6 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
         PaymentImportRequest request = (PaymentImportRequest) rawRequest;
         Map<String, List<PaymentExpenseBookingImportCache>> grouped = this.groupCacheByClient(request.getImportProcessId());
         for (Map.Entry<String, List<PaymentExpenseBookingImportCache>> entry : grouped.entrySet()) {
-            //PaymentExpenseBookingImportCache sampleCache = entry.getValue().get(0);
-            //List<ManageBookingDto> bookingDtosP = entry.getValue().stream().map(cache -> bookingService.findByGenId(Long.parseLong(cache.getBookingId()))).toList();
             List<Long> ids = entry.getValue().stream().map(cache -> Long.valueOf(cache.getBookingId())).toList();
             List<ManageBookingDto> bookingDtos = bookingService.findByBookingIdIn(ids);//Se puede refactorizar.
             List<PaymentExpenseBookingHelper> data = entry.getValue().stream().map(cache

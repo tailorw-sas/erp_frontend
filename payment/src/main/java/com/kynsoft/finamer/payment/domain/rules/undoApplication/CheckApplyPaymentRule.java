@@ -6,19 +6,19 @@ import com.kynsof.share.core.domain.rules.BusinessRule;
 
 public class CheckApplyPaymentRule extends BusinessRule {
 
-    private final Boolean applayPayment;
+    private final Boolean applyPayment;
 
-    public CheckApplyPaymentRule(Boolean applayPayment) {
+    public CheckApplyPaymentRule(Boolean applyPayment) {
         super(
                 DomainErrorMessage.UNDO_APPLICATION_CHECK_APPLY_PAYMENT,
                 new ErrorField("applyPayment", DomainErrorMessage.UNDO_APPLICATION_CHECK_APPLY_PAYMENT.getReasonPhrase())
         );
-        this.applayPayment = applayPayment;
+        this.applyPayment = applyPayment;
     }
 
     @Override
     public boolean isBroken() {
-        return !this.applayPayment;
+        return !this.applyPayment;
     }
 
 }

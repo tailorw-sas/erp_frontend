@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
@@ -12,6 +13,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPaymen
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeRequest;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -23,10 +25,13 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.http.PaymentTransactionTypeHttpService;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class CreatePaymentDetailCommandHandler implements ICommandHandler<CreatePaymentDetailCommand> {
@@ -36,16 +41,20 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
     private final IPaymentService paymentService;
     private final PaymentTransactionTypeHttpService paymentTransactionTypeHttpService;
     private final IManagePaymentStatusService statusService;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
     public CreatePaymentDetailCommandHandler(IPaymentDetailService paymentDetailService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService, PaymentTransactionTypeHttpService paymentTransactionTypeHttpService,
-            IManagePaymentStatusService statusService) {
+                                             IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                             IPaymentService paymentService,
+                                             PaymentTransactionTypeHttpService paymentTransactionTypeHttpService,
+                                             IManagePaymentStatusService statusService,
+                                             IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
         this.paymentTransactionTypeHttpService = paymentTransactionTypeHttpService;
         this.statusService = statusService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -56,15 +65,13 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         try {
             paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
         } catch (Exception e) {
-            //Esto es un flujo alternativo, si en algun momento kafka funciona y el proceso no encuentra el
-            //Payment Transaction Type, se busca en setting para insertar.
-            ManagePaymentTransactionTypeResponse response = paymentTransactionTypeHttpService.sendAccountStatement(new ManagePaymentTransactionTypeRequest(command.getTransactionType()));
+            ManagePaymentTransactionTypeResponse response =
+                    paymentTransactionTypeHttpService.sendAccountStatement(new ManagePaymentTransactionTypeRequest(command.getTransactionType()));
             command.getMediator().send(CreateManagePaymentTransactionTypeCommand.fromRequest(response));
             paymentTransactionTypeDto = response.createObject();
         }
 
         PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
-
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
@@ -114,7 +121,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 null,
                 null,
                 null,
-                null,
+                transactionDate(paymentDto.getHotel().getId()),
                 null,
                 null,
                 null,
@@ -123,6 +130,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 null,
                 false
         );
+
         if (paymentTransactionTypeDto.getDeposit()) {
             // Crear regla que valide que el Amount ingresado no debe de ser mayor que el valor del Payment Balance y mayor que cero.
             RulesChecker.checkRule(new CheckAmountIfGreaterThanPaymentBalanceRule(command.getAmount(), paymentDto.getPaymentBalance(), paymentDto.getDepositAmount()));
@@ -137,8 +145,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             UpdateIfNotNull.updateDouble(paymentDto::setPaymentBalance, paymentDto.getPaymentBalance() - command.getAmount(), updatePayment::setUpdate);
             newDetailDto.setAmount(command.getAmount() * -1);
             newDetailDto.setApplyDepositValue(command.getAmount());
-            //Validar el Close Operation
-            newDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         }
 
         if (!otherDeductionAndApplyPayment) {
@@ -150,7 +156,6 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 paymentDto.setPaymentStatus(this.statusService.findByApplied());
             }
             this.paymentService.update(paymentDto);
-//            createPaymentAttachmentStatusHistory(employeeDto, paymentDto, paymentDetail, msg);
         }
         if (command.getApplyPayment() && paymentTransactionTypeDto.getCash()) {
             ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(), command.getBooking(), command.getEmployee()));
@@ -173,5 +178,14 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             ));
         }
         command.setPaymentResponse(paymentDto);
+    }
+
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 }

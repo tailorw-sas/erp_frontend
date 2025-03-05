@@ -10,10 +10,8 @@ import java.util.UUID;
 
 public abstract class AbstractPaymentImportHelperService {
 
-    private final RedisTemplate<String, String> redisTemplate;
     protected int  totalProcessRow;
-    protected AbstractPaymentImportHelperService(RedisTemplate<String, String> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    protected AbstractPaymentImportHelperService() {
     }
 
     public abstract void readExcel(ReaderConfiguration readerConfiguration, Object request);
@@ -29,9 +27,6 @@ public abstract class AbstractPaymentImportHelperService {
 
     public UUID getPaymentIdStoreFromCache(String paymentId){
         return null;
-    }
-    public String getPaymentImportProcessStatus(String importProcessId) {
-        return redisTemplate.opsForValue().get(importProcessId);
     }
 
     public int getTotalProcessRow() {

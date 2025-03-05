@@ -68,7 +68,6 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
     public PaymentImportExpenseHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentImportExpenseErrorRepository expenseErrorRepository,
             PaymentValidatorFactory paymentValidatorFactory,
-            RedisTemplate<String, String> redisTemplate,
             IPaymentService paymentService,
             IManageAgencyService manageAgencyService,
             IManageHotelService manageHotelService,
@@ -80,7 +79,6 @@ public class PaymentImportExpenseHelperServiceImpl extends AbstractPaymentImport
             IManageEmployeeService employeeService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
-        super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.expenseErrorRepository = expenseErrorRepository;
         this.paymentValidatorFactory = paymentValidatorFactory;
