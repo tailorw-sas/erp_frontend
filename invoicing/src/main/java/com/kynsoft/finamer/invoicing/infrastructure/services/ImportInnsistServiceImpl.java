@@ -68,14 +68,14 @@ public class ImportInnsistServiceImpl {
             int rowNumber = 0;
             boolean stop = true;
 
-            List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
+            List<UUID> agencies = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
             List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
 
             for (BookingImportCache bookingImportCache : list) {
                 BookingRow row = bookingImportCache.toAggregateImportInsist();
                 row.setRowNumber(rowNumber);
                 row.setImportProcessId(row.getInsistImportProcessId());
-                row.setAgencies(agencys);
+                row.setAgencies(agencies);
                 row.setHotels(hotels);
                 if (validatorFactory.validate(row)) {
                     bookingImportHelperService.groupAndCachingImportBooking(row, EImportType.NO_VIRTUAL);
@@ -111,15 +111,12 @@ public class ImportInnsistServiceImpl {
         }
     }
 
-    private List<BookingRow> create(List<ImportInnsistBookingKafka> bookingRowList, UUID importInnsitProcessId, UUID insistImportProcessId) {
-        List<BookingRow> bookingRows = new ArrayList<>();
+    private void create(List<ImportInnsistBookingKafka> bookingRowList, UUID importInnsitProcessId, UUID insistImportProcessId) {
         for (ImportInnsistBookingKafka importInnsistBookingKafka : bookingRowList) {
             for (ImportInnsistRoomRateKafka roomRate : importInnsistBookingKafka.getRoomRates()) {
                 BookingRow bookingRow = new BookingRow();
-                //bookingRow.setImportProcessId(importInnsitProcessId.toString());
                 bookingRow.setImportProcessId(insistImportProcessId.toString());// este es para escribir en redis.
                 bookingRow.setInsistImportProcessBookingId(importInnsistBookingKafka.getId().toString());
-                //bookingRow.setInsistImportProcessId(insistImportProcessId.toString());
                 bookingRow.setInsistImportProcessId(importInnsitProcessId.toString());//Este es el que le tengo que dar al flujo de validacion. que viene en la request.
                 bookingRow.setTransactionDate(importInnsistBookingKafka.getInvoiceDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
                 bookingRow.setManageHotelCode(importInnsistBookingKafka.getManageHotelCode());
@@ -148,7 +145,6 @@ public class ImportInnsistServiceImpl {
                 this.bookingImportHelperService.saveCachingImportBooking(bookingRow);
             }
         }
-        return bookingRows;
     }
 
     private void clearCache() {
