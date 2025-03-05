@@ -2,20 +2,19 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyOther
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule;
 import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckBookingListRule;
-import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Component
@@ -25,15 +24,17 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
     private final IPaymentService paymentService;
     private final IManageBookingService manageBookingService;
     private final IPaymentDetailService paymentDetailService;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
     public CreateApplyOtherDeductionsCommandHandler(IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService,
-            IManageBookingService manageBookingService,
-            IPaymentDetailService paymentDetailService) {
+                                                    IPaymentService paymentService,
+                                                    IManageBookingService manageBookingService,
+                                                    IPaymentDetailService paymentDetailService, IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
         this.manageBookingService = manageBookingService;
         this.paymentDetailService = paymentDetailService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -51,7 +52,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
             paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + bookingRequest.getBookingBalance());
 
             String remark = command.getRemark();
-            if (command.getRemark().isBlank() || command.getRemark().isEmpty()) {
+            if (command.getRemark().isBlank()) {
                 remark = paymentTransactionTypeDto.getDefaultRemark();
             }
 
@@ -66,7 +67,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                     null,
                     null,
                     null,
-                    null,
+                    transactionDate(paymentDto.getHotel().getId()),
                     null,
                     null,
                     null,
@@ -84,5 +85,14 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
         this.paymentService.update(paymentDto);
 
         command.setPaymentResponse(paymentDto);
+    }
+
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 }

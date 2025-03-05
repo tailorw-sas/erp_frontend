@@ -65,16 +65,13 @@ public class PaymentDetail implements Serializable {
     private String remark;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
-    private Boolean applayPayment;
-
-    @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean reverseTransaction;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean canceledTransaction;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
-    private boolean createByCredit;//Para identificar cuando un Details fue creado por un proceso automatico de la HU154.
+    private boolean createByCredit;
 
     private Double bookingId;
     private String invoiceId;
@@ -84,7 +81,7 @@ public class PaymentDetail implements Serializable {
     private String reservation;
     private String couponNo;
     private Integer adults;
-    private Integer childrens;
+    private Integer children;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -92,7 +89,7 @@ public class PaymentDetail implements Serializable {
             joinColumns = @JoinColumn(name = "paymentdetail_id"),
             inverseJoinColumns = @JoinColumn(name = "children_id")
     )
-    private List<PaymentDetail> children = new ArrayList<>();
+    private List<PaymentDetail> paymentDetails = new ArrayList<>();
 
     //@CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -100,6 +97,15 @@ public class PaymentDetail implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private OffsetDateTime updatedAt;
+
+    @Column(columnDefinition = "boolean DEFAULT FALSE")
+    private Boolean applyPayment;
+
+    @Column(nullable = true, updatable = true)
+    private OffsetDateTime appliedAt;
+
+    @Column(nullable = true, updatable = true)
+    private OffsetDateTime effectiveDate;
 
     @PrePersist
     protected void prePersist() {
@@ -113,8 +119,8 @@ public class PaymentDetail implements Serializable {
         this.amount = ScaleAmount.scaleAmount(dto.getAmount());
         this.remark = dto.getRemark();
         this.status = dto.getStatus();
-        if (dto.getChildren() != null) {
-            this.children = dto.getChildren().stream()
+        if (dto.getPaymentDetails() != null) {
+            this.paymentDetails = dto.getPaymentDetails().stream()
                     .map(PaymentDetail::new)
                     .collect(Collectors.toList());
         }
@@ -126,16 +132,18 @@ public class PaymentDetail implements Serializable {
         this.reservation = dto.getReservation() != null ? dto.getReservation() : null;
         this.couponNo = dto.getCouponNo() != null ? dto.getCouponNo() : null;
         this.adults = dto.getAdults() != null ? dto.getAdults() : null;
-        this.childrens = dto.getChildrens() != null ? dto.getChildrens() : null;
+        //this.children = dto.getChildren().toString() != null ? dto.getChildren().toString() : null;
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
         this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
         this.manageBooking = dto.getManageBooking() != null ? new Booking(dto.getManageBooking()) : null;
-        this.applayPayment = dto.getApplayPayment();
         this.reverseFrom = dto.getReverseFrom();
         this.reverseFromParentId = dto.getReverseFromParentId();
         this.reverseTransaction = dto.isReverseTransaction();
         this.createByCredit = dto.isCreateByCredit();
         this.canceledTransaction = dto.isCanceledTransaction();
+        this.applyPayment = dto.getApplyPayment();
+        this.appliedAt = dto.getAppliedAt();
+        this.effectiveDate = dto.getEffectiveDate();
     }
 
     public PaymentDetailDto toAggregate() {
@@ -147,7 +155,7 @@ public class PaymentDetail implements Serializable {
                 transactionType.toAggregate(),
                 amount,
                 remark,
-                children != null ? children.stream().map(PaymentDetail::toAggregateSimple).toList() : null,
+                paymentDetails != null ? paymentDetails.stream().map(PaymentDetail::toAggregateSimple).toList() : null,
                 manageBooking != null ? manageBooking.toAggregate() : null,
                 bookingId,
                 invoiceId,
@@ -157,17 +165,19 @@ public class PaymentDetail implements Serializable {
                 reservation,
                 couponNo,
                 adults,
-                childrens,
+                children,
                 createdAt,
                 paymentDetailId,
                 parentId,
                 applyDepositValue,
-                applayPayment,
                 reverseFrom != null ? reverseFrom : null,
                 reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
                 createByCredit,
-                canceledTransaction
+                canceledTransaction,
+                applyPayment,
+                appliedAt,
+                effectiveDate
         );
     }
 
@@ -190,17 +200,19 @@ public class PaymentDetail implements Serializable {
                 reservation != null ? reservation : null,
                 couponNo != null ? couponNo : null,
                 adults != null ? adults : null,
-                childrens != null ? childrens : null,
+                children != null ? children : null,
                 createdAt,
                 paymentDetailId,
                 parentId,
                 applyDepositValue,
-                applayPayment,
                 null,
                 reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
                 createByCredit,
-                canceledTransaction
+                canceledTransaction,
+                applyPayment,
+                appliedAt,
+                effectiveDate
         );
     }
 
@@ -223,17 +235,19 @@ public class PaymentDetail implements Serializable {
                 reservation != null ? reservation : null,
                 couponNo != null ? couponNo : null,
                 adults != null ? adults : null,
-                childrens != null ? childrens : null,
+                children != null ? children : null,
                 createdAt,
                 paymentDetailId,
                 parentId,
                 applyDepositValue,
-                applayPayment,
                 reverseFrom != null ? reverseFrom : null,
                 reverseFromParentId != null ? reverseFromParentId : null,
                 reverseTransaction,
                 createByCredit,
-                canceledTransaction
+                canceledTransaction,
+                applyPayment,
+                appliedAt,
+                effectiveDate
         );
     }
 }

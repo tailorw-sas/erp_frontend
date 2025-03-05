@@ -82,16 +82,16 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBooking(), "id", "Booking ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentDetail(), "id", "Payment Detail ID cannot be null."));
 
-        //ManageBookingDto bookingDto = this.manageBookingService.findById(command.getBooking());
         ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
 
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
         paymentDetailDto.setManageBooking(bookingDto);
-        paymentDetailDto.setApplayPayment(Boolean.TRUE);
-        //paymentDetailDto.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
-        paymentDetailDto.setTransactionDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
+        paymentDetailDto.setApplyPayment(Boolean.TRUE);
+        paymentDetailDto.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
+        paymentDetailDto.setEffectiveDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
+
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
@@ -115,7 +115,7 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
             ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
             this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
-        paymentDto.setApplyPayment(true);
+        paymentDto.setApplyPayment(true);//TODO APF No se porque se hace esto si se esta aplicando detalles
         this.paymentService.update(paymentDto);
 
         command.setPaymentResponse(paymentDto);

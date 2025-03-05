@@ -122,13 +122,13 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
             //los valores y poniendo en inactivo el apply deposit que se trata de eliminar.
             PaymentDetailDto parent = this.service.findByPaymentDetailId(delete.getParentId());
             List<PaymentDetailDto> childrens = new ArrayList<>();
-            for (PaymentDetailDto children : parent.getChildren()) {
+            for (PaymentDetailDto children : parent.getPaymentDetails()) {
                 if (!children.getId().equals(delete.getId())) {
                     childrens.add(children);
                 }
             }
 
-            parent.setChildren(childrens);
+            parent.setPaymentDetails(childrens);
             parent.setApplyDepositValue(parent.getApplyDepositValue() + delete.getAmount());
             this.service.update(parent);
             this.service.delete(delete);

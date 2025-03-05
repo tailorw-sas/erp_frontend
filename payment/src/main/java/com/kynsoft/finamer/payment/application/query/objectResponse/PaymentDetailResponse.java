@@ -55,7 +55,7 @@ public class PaymentDetailResponse implements IResponse {
         this.remark = dto.getRemark();
 
         if (dto.getChildren() != null) {
-            for (PaymentDetailDto paymentDetailDto : dto.getChildren()) {
+            for (PaymentDetailDto paymentDetailDto : dto.getPaymentDetails()) {
                 this.childrenTotalValue += ScaleAmount.scaleAmount(paymentDetailDto.getAmount());
                 children.add(new PaymentDetailResponse(paymentDetailDto));
             }
@@ -67,7 +67,7 @@ public class PaymentDetailResponse implements IResponse {
         this.applyDepositValue = dto.getApplyDepositValue() != null ? dto.getApplyDepositValue() : null;
         this.hasApplyDeposit = !this.children.isEmpty();
         this.manageBooking = dto.getManageBooking() != null ? new ManageBookingResponse(dto.getManageBooking()) : null;
-        this.applyPayment = dto.getApplayPayment();
+        this.applyPayment = dto.getApplyPayment();
         this.reverseFrom = dto.getReverseFrom() != null ? dto.getReverseFrom() : null;
         this.createByCredit = dto.isCreateByCredit();
         this.reverseFromParentId = dto.getReverseFromParentId();

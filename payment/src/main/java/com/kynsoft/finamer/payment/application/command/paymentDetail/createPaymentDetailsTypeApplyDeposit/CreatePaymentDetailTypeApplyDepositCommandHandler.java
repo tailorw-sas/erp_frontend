@@ -52,7 +52,6 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
                 null,
                 null,
                 null,
-                //OffsetDateTime.now(ZoneId.of("UTC")),
                 transactionDate(command.getPayment().getHotel().getId()),
                 null,
                 null,
@@ -67,19 +66,17 @@ public class CreatePaymentDetailTypeApplyDepositCommandHandler implements IComma
         newDetailDto.setParentId(command.getParentDetailDto().getPaymentDetailId());
         this.paymentDetailService.create(newDetailDto);
 
-        List<PaymentDetailDto> updateChildrens = new ArrayList<>();
+        List<PaymentDetailDto> updatePaymentDetails = new ArrayList<>();
         if (command.getParentDetailDto().getChildren() != null) {
-            updateChildrens.addAll(command.getParentDetailDto().getChildren());
+            updatePaymentDetails.addAll(command.getParentDetailDto().getPaymentDetails());
         }
-        updateChildrens.add(newDetailDto);
-        command.getParentDetailDto().setChildren(updateChildrens);
+        updatePaymentDetails.add(newDetailDto);
+        command.getParentDetailDto().setPaymentDetails(updatePaymentDetails);
         if (command.getParentDetailDto().getApplyDepositValue() < 0) {
             command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount() * -1);
         } else {
             command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount());
         }
-        //command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - newDetailDto.getAmount());
-        //command.getParentDetailDto().setApplyDepositValue(command.getParentDetailDto().getApplyDepositValue() - (newDetailDto.getAmount() * -1));//*-1
         paymentDetailService.update(command.getParentDetailDto());
 
         if (command.isApplyPayment()) {

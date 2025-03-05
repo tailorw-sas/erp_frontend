@@ -46,7 +46,7 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
         boolean deposit = paymentDetailDto.getTransactionType().getApplyDeposit();
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() + paymentDetailDto.getAmount());
-        paymentDetailDto.setApplayPayment(Boolean.FALSE);
+
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
@@ -60,7 +60,6 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
             this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, deposit));
         } catch (Exception e) {
         }
-        //this.paymentService.update(paymentDto);
 
         command.setPaymentResponse(paymentDto);
     }

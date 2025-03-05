@@ -28,7 +28,8 @@ public class CreatePaymentDetailCommand implements ICommand {
     private PaymentDto paymentResponse;
     private final IMediator mediator;
 
-    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark, UUID employee, UUID booking, Boolean applyPayment, final IMediator mediator) {
+    public CreatePaymentDetailCommand(Status status, UUID payment, UUID transactionType, Double amount, String remark,
+                                      UUID employee, UUID booking, Boolean applyPayment, final IMediator mediator) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.payment = payment;

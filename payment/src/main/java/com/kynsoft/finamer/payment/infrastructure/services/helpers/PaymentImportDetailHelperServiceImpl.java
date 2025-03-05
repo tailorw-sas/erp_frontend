@@ -51,7 +51,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private final PaymentImportCacheRepository paymentImportCacheRepository;
     private final PaymentDetailValidatorFactory paymentDetailValidatorFactory;
-    private final PaymentDetailAntiValidatorFactory paymentDetailAntiValidatorFactory;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final IPaymentService paymentService;
@@ -62,18 +61,14 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentDetailValidatorFactory paymentDetailValidatorFactory,
-            RedisTemplate<String, String> redisTemplate,
-            PaymentDetailAntiValidatorFactory paymentDetailAntiValidatorFactory,
             ApplicationEventPublisher applicationEventPublisher,
             IManagePaymentTransactionTypeService transactionTypeService,
             IPaymentService paymentService, IPaymentDetailService paymentDetailService,
             PaymentImportDetailErrorRepository detailErrorRepository,
             IManageBookingService bookingService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
-        super(redisTemplate);
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
-        this.paymentDetailAntiValidatorFactory = paymentDetailAntiValidatorFactory;
         this.applicationEventPublisher = applicationEventPublisher;
         this.transactionTypeService = transactionTypeService;
         this.paymentService = paymentService;
@@ -321,7 +316,5 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 );
         ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand, false);
         applicationEventPublisher.publishEvent(applyDepositEvent);
-
     }
-
 }

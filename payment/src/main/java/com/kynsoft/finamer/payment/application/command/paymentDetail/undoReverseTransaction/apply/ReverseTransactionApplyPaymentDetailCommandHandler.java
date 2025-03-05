@@ -58,7 +58,7 @@ public class ReverseTransactionApplyPaymentDetailCommandHandler implements IComm
         ManageBookingDto bookingDto = this.manageBookingService.findById(paymentDetailDto.getManageBooking().getId());
 
         bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
-        paymentDetailDto.setApplayPayment(Boolean.TRUE);
+        paymentDetailDto.setApplyPayment(Boolean.TRUE);
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
