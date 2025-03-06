@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -67,15 +68,15 @@ public class PaymentResponse implements IResponse {
         this.hotel = dto.getHotel() != null ? new ManageHotelResponse(dto.getHotel()) : null;
         this.bankAccount = dto.getBankAccount() != null ? new ManageBankAccountResponse(dto.getBankAccount()) : null;
         this.attachmentStatus = dto.getAttachmentStatus() != null ? new ManagePaymentAttachmentStatusResponse(dto.getAttachmentStatus()) : null;
-        this.paymentAmount = ScaleAmount.scaleAmount(dto.getPaymentAmount());
-        this.paymentBalance = ScaleAmount.scaleAmount(dto.getPaymentBalance());
-        this.depositAmount = ScaleAmount.scaleAmount(dto.getDepositAmount());
-        this.depositBalance = ScaleAmount.scaleAmount(dto.getDepositBalance());
-        this.otherDeductions = ScaleAmount.scaleAmount(dto.getOtherDeductions());
-        this.identified = ScaleAmount.scaleAmount(dto.getIdentified());
-        this.notIdentified = ScaleAmount.scaleAmount(dto.getNotIdentified());
-        this.notApplied = ScaleAmount.scaleAmount(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
-        this.applied = ScaleAmount.scaleAmount(dto.getApplied() != null ? dto.getApplied() : 0.0);
+        this.paymentAmount = BankerRounding.round(dto.getPaymentAmount());
+        this.paymentBalance = BankerRounding.round(dto.getPaymentBalance());
+        this.depositAmount = BankerRounding.round(dto.getDepositAmount());
+        this.depositBalance = BankerRounding.round(dto.getDepositBalance());
+        this.otherDeductions = BankerRounding.round(dto.getOtherDeductions());
+        this.identified = BankerRounding.round(dto.getIdentified());
+        this.notIdentified = BankerRounding.round(dto.getNotIdentified());
+        this.notApplied = BankerRounding.round(dto.getNotApplied() != null ? dto.getNotApplied() : 0.0);
+        this.applied = BankerRounding.round(dto.getApplied() != null ? dto.getApplied() : 0.0);
         this.remark = dto.getRemark();
         this.eAttachment = dto.getEAttachment();
         this.paymentSupport = dto.isPaymentSupport();

@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -56,7 +57,7 @@ public class PaymentDetailResponse implements IResponse {
 
         if (dto.getChildren() != null) {
             for (PaymentDetailDto paymentDetailDto : dto.getPaymentDetails()) {
-                this.childrenTotalValue += ScaleAmount.scaleAmount(paymentDetailDto.getAmount());
+                this.childrenTotalValue += BankerRounding.round(paymentDetailDto.getAmount());
                 children.add(new PaymentDetailResponse(paymentDetailDto));
             }
         }

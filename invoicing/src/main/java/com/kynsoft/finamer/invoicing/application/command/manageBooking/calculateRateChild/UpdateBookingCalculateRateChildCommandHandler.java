@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateRateChild;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,7 @@ public class UpdateBookingCalculateRateChildCommandHandler implements ICommandHa
                 .mapToDouble(rate -> Optional.ofNullable(rate.getRateChild())
                 .orElse(0.0))
                 .sum();
-        command.getBookingDto().setRateChild(ScaleAmount.scaleAmount(total));
+        command.getBookingDto().setRateChild(BankerRounding.round(total));
     }
 
 }

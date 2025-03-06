@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.domain.excel.bean;
 
 import com.kynsof.share.core.application.excel.CustomCellType;
 import com.kynsof.share.core.application.excel.annotation.Cell;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
@@ -85,7 +86,7 @@ public class BookingRow {
         manageBookingDto.setCheckIn(DateUtil.parseDateToDateTime(this.checkIn));
         manageBookingDto.setCheckOut(DateUtil.parseDateToDateTime(this.checkOut));
         manageBookingDto.setCouponNumber(Objects.nonNull(this.coupon) ? this.coupon : "");
-        manageBookingDto.setHotelAmount(Objects.nonNull(this.hotelInvoiceAmount) ? ScaleAmount.scaleAmount(this.hotelInvoiceAmount) : 0.0);
+        manageBookingDto.setHotelAmount(Objects.nonNull(this.hotelInvoiceAmount) ? BankerRounding.round(this.hotelInvoiceAmount) : 0.0);
         manageBookingDto.setFirstName(Objects.nonNull(this.firstName) ? this.firstName : "");
         manageBookingDto.setLastName(Objects.nonNull(this.lastName) ? this.lastName : "");
         manageBookingDto.setFullName(buildFullName());
@@ -93,8 +94,8 @@ public class BookingRow {
         manageBookingDto.setHotelInvoiceNumber(Objects.nonNull(this.hotelInvoiceNumber) ? this.hotelInvoiceNumber : "");
         manageBookingDto.setDescription(Objects.nonNull(this.remarks) ? this.remarks : "");
         manageBookingDto.setRoomNumber(this.roomNumber);
-        manageBookingDto.setInvoiceAmount(ScaleAmount.scaleAmount(this.invoiceAmount));
-        manageBookingDto.setDueAmount(ScaleAmount.scaleAmount(this.invoiceAmount));
+        manageBookingDto.setInvoiceAmount(BankerRounding.round(this.invoiceAmount));
+        manageBookingDto.setDueAmount(BankerRounding.round(this.invoiceAmount));
         manageBookingDto.setNights(this.nights.longValue());
         // manageBookingDto.setAmountPax();
         manageBookingDto.setBookingDate(this.bookingDate != null ? DateUtil.parseDateToDateTime(this.bookingDate) : LocalDateTime.of(1999, 1, 1, 0, 0));
