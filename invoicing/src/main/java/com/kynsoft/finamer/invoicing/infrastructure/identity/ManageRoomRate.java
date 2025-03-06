@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
@@ -77,16 +78,16 @@ public class ManageRoomRate {
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
         this.roomRateId = dto.getRoomRateId();
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? ScaleAmount.scaleAmount(dto.getInvoiceAmount()) : null;
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? BankerRounding.round(dto.getInvoiceAmount()) : null;
         this.roomNumber = dto.getRoomNumber();
 
         this.adults = dto.getAdults();
         this.children = dto.getChildren();
-        this.rateAdult = dto.getRateAdult() != null ? ScaleAmount.scaleAmount(dto.getRateAdult()) : null;
-        this.rateChild = dto.getRateChild() != null ? ScaleAmount.scaleAmount(dto.getRateChild()) : null;
+        this.rateAdult = dto.getRateAdult() != null ? BankerRounding.round(dto.getRateAdult()) : null;
+        this.rateChild = dto.getRateChild() != null ? BankerRounding.round(dto.getRateChild()) : null;
 
         this.remark = dto.getRemark();
-        this.hotelAmount = dto.getHotelAmount() != null ? ScaleAmount.scaleAmount(dto.getHotelAmount()) : null;
+        this.hotelAmount = dto.getHotelAmount() != null ? BankerRounding.round(dto.getHotelAmount()) : null;
 
         this.booking = dto.getBooking() != null ? new Booking(dto.getBooking()) : null;
         this.adjustments = dto.getAdjustments() != null ? dto.getAdjustments().stream().map(a -> {
@@ -101,11 +102,11 @@ public class ManageRoomRate {
 
     public ManageRoomRateDto toAggregate() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut,
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null,
+                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null,
                 roomNumber, adults, children,
-                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
-                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
-                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null,
+                rateAdult != null ? BankerRounding.round(rateAdult) : null,
+                rateChild != null ? BankerRounding.round(rateChild) : null,
+                hotelAmount != null ? BankerRounding.round(hotelAmount) : null,
                 remark,
                // null,
              booking != null ? booking.toAggregate() : null,
@@ -119,11 +120,11 @@ public class ManageRoomRate {
 
     public ManageRoomRateDto toAggregateSample() {
         return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut,
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null,
+                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null,
                 roomNumber, adults, children,
-                rateAdult != null ? ScaleAmount.scaleAmount(rateAdult) : null,
-                rateChild != null ? ScaleAmount.scaleAmount(rateChild) : null,
-                hotelAmount != null ? ScaleAmount.scaleAmount(hotelAmount) : null,
+                rateAdult != null ? BankerRounding.round(rateAdult) : null,
+                rateChild != null ? BankerRounding.round(rateChild) : null,
+                hotelAmount != null ? BankerRounding.round(hotelAmount) : null,
                 remark, null,
 //                adjustments != null ? adjustments.stream().map(b -> {
 //                            return b.toAggregateSample();

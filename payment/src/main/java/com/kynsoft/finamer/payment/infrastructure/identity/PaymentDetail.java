@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.identity;
 
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -116,7 +117,7 @@ public class PaymentDetail implements Serializable {
         this.id = dto.getId();
         this.payment = dto.getPayment() != null ? new Payment(dto.getPayment()) : null;
         this.transactionType = dto.getTransactionType() != null ? new ManagePaymentTransactionType(dto.getTransactionType()) : null;
-        this.amount = ScaleAmount.scaleAmount(dto.getAmount());
+        this.amount = BankerRounding.round(dto.getAmount());
         this.remark = dto.getRemark();
         this.status = dto.getStatus();
         if (dto.getPaymentDetails() != null) {
@@ -134,7 +135,7 @@ public class PaymentDetail implements Serializable {
         this.adults = dto.getAdults() != null ? dto.getAdults() : null;
         //this.children = dto.getChildren().toString() != null ? dto.getChildren().toString() : null;
         this.parentId = dto.getParentId() != null ? dto.getParentId() : null;
-        this.applyDepositValue = dto.getApplyDepositValue() != null ? ScaleAmount.scaleAmount(dto.getApplyDepositValue()) : null;
+        this.applyDepositValue = dto.getApplyDepositValue() != null ? BankerRounding.round(dto.getApplyDepositValue()) : null;
         this.manageBooking = dto.getManageBooking() != null ? new Booking(dto.getManageBooking()) : null;
         this.reverseFrom = dto.getReverseFrom();
         this.reverseFromParentId = dto.getReverseFromParentId();

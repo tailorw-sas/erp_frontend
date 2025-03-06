@@ -35,13 +35,14 @@ public class SecurityConfig {
                 // -- Swagger UI v2
                 "/api/**",
         };
-        /*return httpSecurity
+        return httpSecurity
         		.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> exchanges
         				.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/health").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs.yaml", "/v3/api-docs/**", "/swagger-resources/**", "webjars/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs.yaml",
+                                "/v3/api-docs/**", "/swagger-resources/**", "webjars/**").permitAll()
                         .pathMatchers(AUTH_WHITELIST).permitAll()
                         .anyExchange().authenticated()
                 )
@@ -50,31 +51,12 @@ public class SecurityConfig {
                                                 .jwtDecoder(jwtDecoder())
                                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)
                                 )
-                )
-          */
-        return httpSecurity
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .authorizeExchange(exchanges -> exchanges
-                        .anyExchange().permitAll())
-                .build();
+                ).build();
     }
 
     @Bean
     public ReactiveJwtDecoder jwtDecoder() {
     	return ReactiveJwtDecoders.fromIssuerLocation(jwkSetUri);
     }
-    
-//    @Bean
-//    @ConditionalOnProperty(prefix = "http", name = "cors-enabled", matchIfMissing = false, havingValue = "true")
-//    public CorsWebFilter corsFilter() {
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        CorsConfiguration config = corsProperties.getCors();
-//        if (config.getAllowedOrigins() != null && !config.getAllowedOrigins().isEmpty()) {
-//            source.registerCorsConfiguration("/**", config);
-//        }
-//        return new CorsWebFilter(source);
-//    }
-
 }
 
