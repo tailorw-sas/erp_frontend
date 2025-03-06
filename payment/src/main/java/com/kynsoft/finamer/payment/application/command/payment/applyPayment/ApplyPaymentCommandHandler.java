@@ -170,9 +170,8 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     /**
-     * Ordena los Deposit por su Apply Deposit Value.
      *
-     * @param manageInvoiceDto
+     * @param deposits
      * @return
      */
     private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits) {
@@ -258,7 +257,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         newDetailDto.setTransactionType(transactionTypeDto);
         newDetailDto.setAmount(invoiceAmount);
         newDetailDto.setRemark(transactionTypeDto.getDefaultRemark());
-        newDetailDto.setApplayPayment(Boolean.FALSE);
+        newDetailDto.setApplyPayment(Boolean.FALSE);
         newDetailDto.setCreateByCredit(false);
 
 //        this.paymentDetailService.create(newDetailDto);
@@ -313,9 +312,9 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
         //Agregando los Apply Deposit.
         List<PaymentDetail> updateChildrens = new ArrayList<>();
-        updateChildrens.addAll(parentDetail.getChildren());
+        updateChildrens.addAll(parentDetail.getPaymentDetails());
         updateChildrens.add(children);
-        parentDetail.setChildren(updateChildrens);
+        parentDetail.setPaymentDetails(updateChildrens);
         parentDetail.setApplyDepositValue(parentDetail.getApplyDepositValue() - amount);
 
         //Actualizando el Deposit
@@ -350,8 +349,10 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         this.updateBooking(booking);
 
         paymentDetailDto.setManageBooking(booking.toAggregate());
-        paymentDetailDto.setApplayPayment(Boolean.TRUE);
-        paymentDetailDto.setTransactionDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
+        paymentDetailDto.setApplyPayment(Boolean.TRUE);
+        paymentDetailDto.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
+        paymentDetailDto.setAppliedAt(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
+
         this.paymentDetailService.create(paymentDetailDto);
 
         try {

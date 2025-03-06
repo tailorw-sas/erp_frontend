@@ -55,7 +55,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
     @Override
     public void handle(CreateReverseTransactionCommand command) {
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
-        RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplayPayment()));
+        RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplyPayment()));
         //Comprobar que la fecha sea anterior al dia actual
         //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash, pero puede ser de other deductions
         //Lo que no puede suceder es que si es other deductions cambie el estado del payment.
@@ -70,7 +70,6 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
                 null,
                 null,
                 transactionDate(paymentDetailDto.getPayment().getHotel().getId()),
-                //OffsetDateTime.now(ZoneId.of("UTC")),
                 null,
                 null,
                 null,
@@ -81,15 +80,15 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         );
 
         reverseFrom.setManageBooking(paymentDetailDto.getManageBooking());
-        reverseFrom.setApplayPayment(Boolean.TRUE);
         reverseFrom.setReverseTransaction(true);
+
         this.paymentDetailService.create(reverseFrom);
 
         if (paymentDetailDto.getTransactionType().getApplyDeposit()) {
             reverseFrom.setReverseFrom(paymentDetailDto.getPaymentDetailId());
             reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             reverseFrom.setParentId(paymentDetailDto.getParentId());
-            this.addChildren(reverseFrom, paymentDetailDto.getParentId());
+            this.addPaymentDetails(reverseFrom, paymentDetailDto.getParentId());
             this.calculateReverseApplyDeposit(reverseFrom.getPayment(), paymentDetailDto);
             this.paymentDetailService.update(reverseFrom);
 
@@ -98,20 +97,16 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
             this.calculateReverseCash(reverseFrom.getPayment(), reverseFrom.getAmount());
             reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             this.paymentDetailService.update(reverseFrom);
-            //paymentDetailDto.setTransactionDate(null);
 
             this.changeStatus(paymentDetailDto, command.getEmployee());
         } else {
             reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
             this.paymentDetailService.update(reverseFrom);
             this.calculateReverseOtherDeductions(reverseFrom.getPayment(), reverseFrom.getAmount());
-
-            //this.changeStatus(paymentDetailDto, command.getEmployee());
         }
 
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
         paymentDetailDto.setReverseTransaction(true);
-        //paymentDetailDto.setManageBooking(null);
         this.paymentDetailService.update(paymentDetailDto);
 
         command.getMediator().send(new UndoApplyPaymentDetailCommand(command.getPaymentDetail(), bookingDto.getId()));
@@ -126,12 +121,11 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
-    private void addChildren(PaymentDetailDto reverseFrom, Long parentId) {
+    private void addPaymentDetails(PaymentDetailDto reverseFrom, Long parentId) {
         PaymentDetailDto parent = this.paymentDetailService.findByPaymentDetailId(parentId);
-        List<PaymentDetailDto> updateChildrens = new ArrayList<>();
-        updateChildrens.addAll(parent.getChildren());
-        updateChildrens.add(reverseFrom);
-        parent.setChildren(updateChildrens);
+        List<PaymentDetailDto> _paymentDetails = new ArrayList<>(parent.getPaymentDetails());
+        _paymentDetails.add(reverseFrom);
+        parent.setPaymentDetails(_paymentDetails);
         parent.setApplyDepositValue(parent.getApplyDepositValue() - reverseFrom.getAmount());
 
         this.paymentDetailService.update(parent);
@@ -139,8 +133,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
 
     private void calculateReverseApplyDeposit(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
         paymentDto.setDepositBalance(paymentDto.getDepositBalance() + newDetailDto.getAmount());
-        //paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
-        paymentDto.setApplied(paymentDto.getApplied() - newDetailDto.getAmount()); // TODO: Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
+        paymentDto.setApplied(paymentDto.getApplied() - newDetailDto.getAmount());
         paymentDto.setIdentified(paymentDto.getIdentified() - newDetailDto.getAmount());
         paymentDto.setNotIdentified(paymentDto.getNotIdentified() + newDetailDto.getAmount());
 

@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -55,8 +56,8 @@ public class PaymentDetailResponse implements IResponse {
         this.remark = dto.getRemark();
 
         if (dto.getChildren() != null) {
-            for (PaymentDetailDto paymentDetailDto : dto.getChildren()) {
-                this.childrenTotalValue += ScaleAmount.scaleAmount(paymentDetailDto.getAmount());
+            for (PaymentDetailDto paymentDetailDto : dto.getPaymentDetails()) {
+                this.childrenTotalValue += BankerRounding.round(paymentDetailDto.getAmount());
                 children.add(new PaymentDetailResponse(paymentDetailDto));
             }
         }
@@ -67,7 +68,7 @@ public class PaymentDetailResponse implements IResponse {
         this.applyDepositValue = dto.getApplyDepositValue() != null ? dto.getApplyDepositValue() : null;
         this.hasApplyDeposit = !this.children.isEmpty();
         this.manageBooking = dto.getManageBooking() != null ? new ManageBookingResponse(dto.getManageBooking()) : null;
-        this.applyPayment = dto.getApplayPayment();
+        this.applyPayment = dto.getApplyPayment();
         this.reverseFrom = dto.getReverseFrom() != null ? dto.getReverseFrom() : null;
         this.createByCredit = dto.isCreateByCredit();
         this.reverseFromParentId = dto.getReverseFromParentId();

@@ -115,7 +115,8 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
         PaymentCloseOperationDto closeOperationDto = this.closeOperationService.findByHotelIds(hotelDto.getId());
-        RulesChecker.checkRule(new CheckIfTransactionDateIsWithInRangeCloseOperationRule(command.getTransactionDate(), closeOperationDto.getBeginDate(), closeOperationDto.getEndDate()));
+        RulesChecker.checkRule(new CheckIfTransactionDateIsWithInRangeCloseOperationRule(command.getTransactionDate(),
+                closeOperationDto.getBeginDate(), closeOperationDto.getEndDate()));
 
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findById(command.getPaymentStatus());
         ManageClientDto clientDto = this.clientService.findById(command.getClient());
@@ -167,10 +168,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             List<MasterPaymentAttachmentDto> list = this.createAttachment(command.getAttachments(), save);
             paymentDto.setAttachments(list);
             this.createAttachmentStatusHistory(employeeDto, save, list);
-            //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
         }
         if (command.getAttachments() == null || command.getAttachments().isEmpty()) {
-            this.createAttachmentStatusHistoryWithoutAttachmet(employeeDto, save);
+            this.createAttachmentStatusHistoryWithoutAttachment(employeeDto, save);
         }
 
         command.setPayment(save);
@@ -258,7 +258,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
     }
 
     //Este metodo es para agregar el history del Attachemnt. Aqui el estado es el del nomenclador Manage Payment Attachment Status
-    private void createAttachmentStatusHistoryWithoutAttachmet(ManageEmployeeDto employeeDto, PaymentDto payment) {
+    private void createAttachmentStatusHistoryWithoutAttachment(ManageEmployeeDto employeeDto, PaymentDto payment) {
 
         AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
         attachmentStatusHistoryDto.setId(UUID.randomUUID());

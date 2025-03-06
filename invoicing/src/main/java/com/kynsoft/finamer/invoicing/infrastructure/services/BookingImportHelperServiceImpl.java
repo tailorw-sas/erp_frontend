@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.services;
 
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
@@ -324,7 +325,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageInvoiceDto.setId(UUID.randomUUID());
         manageInvoiceDto.setStatus(EInvoiceStatus.PROCESSED);
         manageInvoiceDto.setManageInvoiceStatus(invoiceStatus);
-        double invoiceAmount = ScaleAmount.scaleAmount(calculateInvoiceAmount(bookingRowList));
+        double invoiceAmount = BankerRounding.round(calculateInvoiceAmount(bookingRowList));
         manageInvoiceDto.setInvoiceAmount(invoiceAmount);
         manageInvoiceDto.setDueAmount(invoiceAmount);
         manageInvoiceDto.setOriginalAmount(invoiceAmount);
@@ -377,8 +378,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         double bookingHotelAmount = 0;
         for (BookingRow bookingRow : bookingRowList) {
             rates.add(this.createRoomRateDto(bookingRow));
-            bookingAmount = ScaleAmount.scaleAmount(bookingRow.getInvoiceAmount() + bookingAmount);
-            bookingHotelAmount = ScaleAmount.scaleAmount(bookingRow.getHotelInvoiceAmount() + bookingHotelAmount);
+            bookingAmount = BankerRounding.round(bookingRow.getInvoiceAmount() + bookingAmount);
+            bookingHotelAmount = BankerRounding.round(bookingRow.getHotelInvoiceAmount() + bookingHotelAmount);
         }
         bookingDto.setInvoiceAmount(bookingAmount);
         bookingDto.setDueAmount(bookingAmount);
@@ -403,7 +404,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 .mapToDouble(rate -> Optional.ofNullable(rate.getRateChild())
                 .orElse(0.0))
                 .sum();
-        bookingDto.setRateChild(ScaleAmount.scaleAmount(total));
+        bookingDto.setRateChild(BankerRounding.round(total));
     }
 
     public void calculateRateAdults(ManageBookingDto bookingDto) {
@@ -411,7 +412,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                 .mapToDouble(rate -> Optional.ofNullable(rate.getRateAdult())
                 .orElse(0.0))
                 .sum();
-        bookingDto.setRateAdult(ScaleAmount.scaleAmount(total));
+        bookingDto.setRateAdult(BankerRounding.round(total));
     }
 
     public void calculateChildren(ManageBookingDto bookingDto) {
@@ -449,11 +450,35 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
-        return adults == 0 ? 0.0 : ScaleAmount.scaleAmount(rateAmount / (nights * adults));
+        if(adults == 0 && nights == 0) {
+            return rateAmount;
+        }
+        else if(adults == 0)
+        {
+            return BankerRounding.round(rateAmount / nights);
+        }
+        else if(nights == 0)
+        {
+            return BankerRounding.round(rateAmount / adults);
+        }
+
+        return BankerRounding.round(rateAmount / (nights * adults));
     }
 
     private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
-        return children == 0 ? 0.0 : ScaleAmount.scaleAmount(rateAmount / (nights * children));
+        if(children == 0 && nights == 0) {
+            return rateAmount;
+        }
+        else if(children == 0)
+        {
+            return BankerRounding.round(rateAmount / nights);
+        }
+        else if(nights == 0)
+        {
+            return BankerRounding.round(rateAmount / children);
+        }
+
+        return BankerRounding.round(rateAmount / (nights * children));
     }
 
     private List<ManageBookingDto> createBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel, String groupType) {
@@ -526,10 +551,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageRoomRateDto.setChildren(bookingDto.getChildren());
         manageRoomRateDto.setCheckIn(bookingDto.getCheckIn());
         manageRoomRateDto.setCheckOut(bookingDto.getCheckOut());
-        manageRoomRateDto.setHotelAmount(ScaleAmount.scaleAmount(bookingDto.getHotelAmount()));
+        manageRoomRateDto.setHotelAmount(BankerRounding.round(bookingDto.getHotelAmount()));
         manageRoomRateDto.setNights(bookingDto.getNights());
         manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
-        manageRoomRateDto.setInvoiceAmount(ScaleAmount.scaleAmount(bookingDto.getInvoiceAmount()));
+        manageRoomRateDto.setInvoiceAmount(BankerRounding.round(bookingDto.getInvoiceAmount()));
 
         manageRoomRateDto.setRateAdult(this.calculateRateAdult(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getAdults()));
         manageRoomRateDto.setRateChild(this.calculateRateChild(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getChildren()));

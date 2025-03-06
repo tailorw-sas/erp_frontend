@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.manageRoomRate.update;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -60,8 +61,8 @@ public class UpdateRoomRateCommandHandler implements ICommandHandler<UpdateRoomR
 
         UpdateIfNotNull.updateLong(dto::setNights, this.calculateNights(dto.getCheckIn(), dto.getCheckOut()), dto.getNights(), update::setUpdate);
 
-        UpdateIfNotNull.updateDouble(dto::setRateAdult, ScaleAmount.scaleAmount(this.calculateRateAdult(dto.getInvoiceAmount(), dto.getNights(), dto.getAdults())), dto.getRateAdult(), update::setUpdate);
-        UpdateIfNotNull.updateDouble(dto::setRateChild, ScaleAmount.scaleAmount(this.calculateRateChild(dto.getInvoiceAmount(), dto.getNights(), dto.getChildren())), dto.getRateChild(), update::setUpdate);
+        UpdateIfNotNull.updateDouble(dto::setRateAdult, BankerRounding.round(this.calculateRateAdult(dto.getInvoiceAmount(), dto.getNights(), dto.getAdults())), dto.getRateAdult(), update::setUpdate);
+        UpdateIfNotNull.updateDouble(dto::setRateChild, BankerRounding.round(this.calculateRateChild(dto.getInvoiceAmount(), dto.getNights(), dto.getChildren())), dto.getRateChild(), update::setUpdate);
 
         UpdateIfNotNull.updateDouble(dto::setHotelAmount, command.getHotelAmount(), dto.getHotelAmount(), update::setUpdate);
 
