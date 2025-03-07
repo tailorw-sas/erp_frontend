@@ -2,9 +2,11 @@ package com.kynsoft.finamer.insis.infrastructure.services;
 
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.insis.application.query.objectResponse.booking.BookingResponse;
+import com.kynsoft.finamer.insis.domain.dto.BookingDto;
 import com.kynsoft.finamer.insis.domain.dto.ImportBookingDto;
 import com.kynsoft.finamer.insis.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.insis.domain.services.IImportBookingService;
+import com.kynsoft.finamer.insis.infrastructure.model.Booking;
 import com.kynsoft.finamer.insis.infrastructure.model.ImportBooking;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageAgency;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.ImportBookingWriteDataJPARepository;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ImportBookingServiceImpl implements IImportBookingService {
@@ -75,6 +78,16 @@ public class ImportBookingServiceImpl implements IImportBookingService {
     @Override
     public List<ImportBookingDto> findByImportProcessIdAndBookingId(UUID importProcessId, UUID bookingId) {
         return readRepository.findByImportProcess_IdAndBooking_Id(importProcessId, bookingId).stream()
+                .map(ImportBooking::toAggregate)
+                .toList();
+    }
+
+    @Override
+    public List<ImportBookingDto> findByImportProcessIdAndBookings(UUID importProcessId, List<BookingDto> bookingDtoList) {
+        List<Booking> bookings = bookingDtoList.stream().
+                map(Booking::new).toList();
+
+        return readRepository.findByImportProcess_IdAndBookingIn(importProcessId, bookings).stream()
                 .map(ImportBooking::toAggregate)
                 .toList();
     }

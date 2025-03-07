@@ -27,7 +27,7 @@ public interface IBookingService {
 
     List<BookingDto> findAllByIds(List<UUID> idList);
 
-    List<BookingDto> findAllByIdsToImport(List<UUID> idList);
+    List<BookingDto> findAllAvailableByIds(List<UUID> idList);
 
     BookingDto findByTcaId(ManageHotelDto hotelDto, LocalDate invoicingDate, String reservationNumber, String couponNumber);
 
