@@ -22,14 +22,14 @@ const idItemToLoadFirstTime = ref('')
 const hotelPaymentHistoryDialogVisible = ref<boolean>(false)
 const contextMenuTransaction = ref()
 const attachmentDialogOpen = ref<boolean>(false)
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
+// const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const filterToSearch = ref<IData>({
   criteria: null,
   search: '',
-  merchantBankAccount: [allDefaultItem],
-  ccType: [allDefaultItem],
-  hotel: [allDefaultItem],
-  status: [allDefaultItem],
+  merchantBankAccount: [],
+  ccType: [],
+  hotel: [],
+  status: [],
   from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   to: new Date(),
 })
@@ -386,10 +386,10 @@ function clearFilterToSearch() {
   filterToSearch.value = {
     criteria: null,
     search: '',
-    merchantBankAccount: [allDefaultItem],
-    ccType: [allDefaultItem],
-    hotel: [allDefaultItem],
-    status: [allDefaultItem],
+    merchantBankAccount: [],
+    ccType: [],
+    hotel: [],
+    status: [],
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   }
@@ -436,7 +436,7 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confHotelListApi.moduleApi, confHotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
+    hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, code: iterator.code }]
     }
@@ -482,7 +482,7 @@ async function getStatusList(query: string = '') {
 
     const response = await GenericService.search(confStatusListApi.moduleApi, confStatusListApi.uriApi, payload)
     const { data: dataList } = response
-    statusList.value = [allDefaultItem]
+    statusList.value = []
     for (const iterator of dataList) {
       statusList.value = [...statusList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
