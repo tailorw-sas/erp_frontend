@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafk
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistRoomRateKafka;
 import com.kynsoft.finamer.insis.domain.dto.*;
 import com.kynsoft.finamer.insis.domain.rules.booking.ImportBookingSizeRule;
+import com.kynsoft.finamer.insis.domain.rules.booking.ImportBookingSizeRuleOnFail;
 import com.kynsoft.finamer.insis.domain.services.*;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
@@ -45,15 +46,16 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
     @Override
     public void handle(ImportBookingCommand command) {
         ManageEmployeeDto employee = getEmployee(command.getUserId());
-        List<BookingDto> bookings = getBookings(command.getBookings());
+        //List<BookingDto> bookingsToImport = getBookingsToImport(command.getBookings());
+        List<BookingDto> availableBookings = getAvailableBookings(command.getBookings());
 
-        RulesChecker.checkRule(new ImportBookingSizeRule(command.bookings.size(), bookings.size()));
+        ImportProcessDto importProcess = createImportProcess(command.getId(), command.getBookings().size(), employee.getId(), 0, 0);
+        saveImportBookings(importProcess, availableBookings);
 
-        ImportProcessDto importProcess = createImportProcess(command.getId(), bookings.size(), employee.getId(), 0, 0);
-        saveImportBookings(importProcess, bookings);
+        RulesChecker.checkRule(new ImportBookingSizeRule(command.bookings.size(), availableBookings.size()));
 
-        setBookingsInProcess(bookings);
-        sendBookingToProcess(importProcess, employee, bookings);
+        setBookingsInProcess(availableBookings);
+        sendBookingToProcess(importProcess, employee, availableBookings);
 
         updateImportProcessStatus(importProcess, ImportProcessStatus.IN_PROCESS);
     }
@@ -82,8 +84,12 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
         service.update(importProcess);
     }
 
-    private List<BookingDto> getBookings(List<UUID> bookingIds){
-        return bookingService.findAllByIdsToImport(bookingIds);
+    private List<BookingDto> getAvailableBookings(List<UUID> bookingIds){
+        return bookingService.findAllAvailableByIds(bookingIds);
+    }
+
+    private List<BookingDto> getBookingsToImport(List<UUID> bookingIds){
+        return bookingService.findAllByIds(bookingIds);
     }
 
     private void saveImportBookings(ImportProcessDto importProcess, List<BookingDto> bookings){

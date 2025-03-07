@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.insis.domain.services;
 
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.insis.domain.dto.BookingDto;
 import com.kynsoft.finamer.insis.domain.dto.ImportBookingDto;
 import com.kynsoft.finamer.insis.domain.dto.ManageAgencyDto;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,8 @@ public interface IImportBookingService {
     List<ImportBookingDto> findByImportProcessId(UUID importProcessId);
 
     List<ImportBookingDto> findByImportProcessIdAndBookingId(UUID importProcessId, UUID bookingId);
+
+    List<ImportBookingDto> findByImportProcessIdAndBookings(UUID importProcessId, List<BookingDto> bookingDtoList);
 
     PaginatedResponse getBookingErrorsByImportProcessId(UUID importProcessId, Pageable pageable);
 }
