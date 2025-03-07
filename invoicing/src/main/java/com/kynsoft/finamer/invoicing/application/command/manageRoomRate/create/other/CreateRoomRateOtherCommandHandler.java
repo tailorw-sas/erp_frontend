@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.other;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAdults.UpdateBookingCalculateBookingAdultsCommand;
 import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculateBookingAmount.UpdateBookingCalculateBookingAmountCommand;
@@ -53,8 +54,8 @@ public class CreateRoomRateOtherCommandHandler implements ICommandHandler<Create
         ManageBookingDto bookingDto = bookingService.findById(command.getBooking());
 
         long nights = this.calculateNights(command.getCheckIn(), command.getCheckOut());
-        double rateAdult = ScaleAmount.scaleAmount(this.calculateRateAdult(command.getInvoiceAmount(), nights, command.getAdults()));
-        double rateChild = ScaleAmount.scaleAmount(this.calculateRateChild(command.getInvoiceAmount(), nights, command.getChildren()));
+        double rateAdult = BankerRounding.round(this.calculateRateAdult(command.getInvoiceAmount(), nights, command.getAdults()));
+        double rateChild = BankerRounding.round(this.calculateRateChild(command.getInvoiceAmount(), nights, command.getChildren()));
 
         roomRateService.create(new ManageRoomRateDto(
                 command.getId(),

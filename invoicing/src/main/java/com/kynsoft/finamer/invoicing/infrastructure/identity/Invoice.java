@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -128,8 +129,8 @@ public class Invoice {
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? ScaleAmount.scaleAmount(dto.getInvoiceAmount()) : null;
-        this.originalAmount = dto.getOriginalAmount() != null ? ScaleAmount.scaleAmount(dto.getOriginalAmount()) : null;
+        this.invoiceAmount = dto.getInvoiceAmount() != null ? BankerRounding.round(dto.getInvoiceAmount()) : null;
+        this.originalAmount = dto.getOriginalAmount() != null ? BankerRounding.round(dto.getOriginalAmount()) : null;
         this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
         this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
         this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
@@ -153,7 +154,7 @@ public class Invoice {
         this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null
                 ? new ManageInvoiceStatus(dto.getManageInvoiceStatus())
                 : null;
-        this.dueAmount = dto.getDueAmount() != null ? ScaleAmount.scaleAmount(dto.getDueAmount()) : 0.0;
+        this.dueAmount = dto.getDueAmount() != null ? BankerRounding.round(dto.getDueAmount()) : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
         this.invoiceNumberPrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo();
         this.isCloned = dto.getIsCloned();
@@ -170,14 +171,14 @@ public class Invoice {
     public ManageInvoiceDto toAggregateSample() {
 
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
-                dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : null,
+                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
+                dueAmount != null ? BankerRounding.round(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 null, credits,aging);
-        manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
+        manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
         manageInvoiceDto.setCloneParent(cloneParent);
@@ -187,8 +188,8 @@ public class Invoice {
     public ManageInvoiceDto toAggregate() {
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId,
                 invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, 
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
-                dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : null,
+                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
+                dueAmount != null ? BankerRounding.round(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec,
                 bookings != null ? bookings.stream().map(Booking::toAggregate).collect(Collectors.toList()) : null,
@@ -198,7 +199,7 @@ public class Invoice {
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits,aging);
-        manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
+        manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
         manageInvoiceDto.setCloneParent(cloneParent);
@@ -208,15 +209,15 @@ public class Invoice {
     public ManageInvoiceDto toAggregateSearch() {
 
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
-                invoiceAmount != null ? ScaleAmount.scaleAmount(invoiceAmount) : null, 
-                dueAmount != null ? ScaleAmount.scaleAmount(dueAmount) : null,
+                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
+                dueAmount != null ? BankerRounding.round(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
                 autoRec, null, null, reSend, reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 parent != null ? parent.toAggregateSample() : null, credits,aging);
         manageInvoiceDto.setSendStatusError(sendStatusError);
-        manageInvoiceDto.setOriginalAmount(originalAmount != null ? ScaleAmount.scaleAmount(originalAmount) : null);
+        manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
         manageInvoiceDto.setCloneParent(cloneParent);

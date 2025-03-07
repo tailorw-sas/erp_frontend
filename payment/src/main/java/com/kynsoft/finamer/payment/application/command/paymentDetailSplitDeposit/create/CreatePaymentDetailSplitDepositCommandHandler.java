@@ -3,14 +3,22 @@ package com.kynsoft.finamer.payment.application.command.paymentDetailSplitDeposi
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.UUID;
 
 @Component
 public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHandler<CreatePaymentDetailSplitDepositCommand> {
@@ -20,41 +28,35 @@ public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHa
     private final IPaymentService paymentService;
 
     private final IManageEmployeeService manageEmployeeService;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
 
     public CreatePaymentDetailSplitDepositCommandHandler(IPaymentDetailService paymentDetailService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService,
-            IManageEmployeeService manageEmployeeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService) {
+                                                         IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                                         IPaymentService paymentService,
+                                                         IManageEmployeeService manageEmployeeService,
+                                                         IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
 
         this.manageEmployeeService = manageEmployeeService;
-        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
     public void handle(CreatePaymentDetailSplitDepositCommand command) {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getEmployee(), "id", "Employee ID cannot be null."));
 
-        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(command.getEmployee());
-
-        //El valor ingresado no debe ser cero.
         RulesChecker.checkRule(new CheckPaymentDetailAmountSplitGreaterThanZeroRule(command.getAmount()));
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
         RulesChecker.checkRule(new CheckDepositTransactionTypeRule(paymentTransactionTypeDto.getDeposit()));
 
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
-        //Valida que la trx seleccionada sea de tipo deposit
         RulesChecker.checkRule(new CheckDepositToSplitRule(paymentDetailDto.getTransactionType().getDeposit()));
-        //Valida que la trx seleccionada tenga balance al momento de aplicar el split.
         RulesChecker.checkRule(new CheckSplitAmountRule(command.getAmount(), paymentDetailDto.getAmount()));
-        //Valida que no exista un Apply Deposit asociado a dicho deposito.
-        RulesChecker.checkRule(new CheckPaymentDetailDepositTypeIsApplyRule(paymentDetailDto.getChildren()));
+        RulesChecker.checkRule(new CheckPaymentDetailDepositTypeIsApplyRule(paymentDetailDto.getPaymentDetails()));
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
         UpdateIfNotNull.updateDouble(paymentDetailDto::setAmount, paymentDetailDto.getAmount() + command.getAmount(), updatePayment::setUpdate);
@@ -69,7 +71,7 @@ public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHa
                 null,
                 null,
                 null,
-                paymentDetailDto.getTransactionDate(),
+                transactionDate(paymentDetailDto.getPayment().getHotel().getId()),
                 null,
                 null,
                 null,
@@ -83,21 +85,15 @@ public class CreatePaymentDetailSplitDepositCommandHandler implements ICommandHa
         paymentDetailService.create(split);
         paymentDetailService.update(paymentDetailDto);
 
-//        createPaymentAttachmentStatusHistory(employeeDto, paymentDetailDto.getPayment(), paymentDetailId, "Creating Split ANTI with ID: ");
         command.setPaymentResponse(this.paymentService.findById(paymentDetailDto.getPayment().getId()));
     }
 
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-//    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, Long paymentDetail, String msg) {
-//
-//        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-//        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-//        attachmentStatusHistoryDto.setDescription(msg + paymentDetail);
-//        attachmentStatusHistoryDto.setEmployee(employeeDto);
-//        attachmentStatusHistoryDto.setPayment(payment);
-//        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
-//
-//        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
-//    }
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
 
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
 }

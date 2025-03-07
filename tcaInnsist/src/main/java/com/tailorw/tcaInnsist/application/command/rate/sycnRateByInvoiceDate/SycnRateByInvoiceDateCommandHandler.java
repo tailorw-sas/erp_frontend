@@ -57,8 +57,8 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
 
         setLogProcessAsCompleted(command.getProcessId(), additionDetails.toString());
 
-        logInfo("Sync Rate Process End.");
-        logInfo("**************************************************************");
+        logError("Sync Rate Process End.", Level.INFO, null);
+        logError("**************************************************************", Level.INFO, null);
     }
 
     private ManageHotelDto validateHotel(String hotelCode){
@@ -97,10 +97,18 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
     }
 
     private Map<String, List<RateDto>> getGroupedRoomRates(ManageHotelDto hotel, ManageConnectionDto configuration, LocalDate invoiceDate){
-        List<RateDto> rateDtos = service.findByInvoiceDate(hotel, configuration, invoiceDate);
+        List<RateDto> rateDtos = new ArrayList<>();
+        try{
+            rateDtos = service.findByInvoiceDate(hotel, configuration, invoiceDate);
+
+        } catch (RuntimeException e) {
+            String message = String.format("Error while trying to get rates from %s hotel with invoiceDate: %s", hotel.getCode(), invoiceDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+            logError(message, Level.WARNING, e);
+            throw new IllegalArgumentException(message);
+        }
 
         if(rateDtos.isEmpty()){
-            throw new IllegalArgumentException(String.format("The hotel %s does not containts room rates for %s invoice date", hotel.getCode(), invoiceDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))));
+            throw new IllegalArgumentException(String.format("The hotel %s does not contain room rates for %s invoice date", hotel.getCode(), invoiceDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))));
         }
 
         return rateDtos.stream()
@@ -138,11 +146,11 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
     }
 
     private void logWarningAndAppend(StringBuilder details, String message) {
-        logInfo(message);
+        logError(message, Level.INFO, null);
         details.append(message).append("\n");
     }
 
-    private void logInfo(String message){
-        Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(Level.WARNING, message);
+    private void logError(String message, Level level, Throwable thrown){
+        Logger.getLogger(SycnRateByInvoiceDateCommandHandler.class.getName()).log(level, message, thrown);
     }
 }

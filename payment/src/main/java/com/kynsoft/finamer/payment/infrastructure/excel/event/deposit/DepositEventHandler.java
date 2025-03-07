@@ -1,13 +1,19 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.event.deposit;
 
+import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
+import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -18,14 +24,15 @@ public class DepositEventHandler implements ApplicationListener<DepositEvent> {
     private final IPaymentDetailService paymentDetailService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentService paymentService;
-
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
     public DepositEventHandler(IPaymentDetailService paymentDetailService,
                                IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                               IPaymentService paymentService) {
+                               IPaymentService paymentService, IPaymentCloseOperationService paymentCloseOperationService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
     }
 
     @Override
@@ -45,7 +52,7 @@ public class DepositEventHandler implements ApplicationListener<DepositEvent> {
                 null,
                 null,
                 null,
-                null,
+                transactionDate(paymentDto.getHotel().getId()),
                 null,
                 null,
                 null,
@@ -63,6 +70,15 @@ public class DepositEventHandler implements ApplicationListener<DepositEvent> {
         this.calculate(paymentDto, command.getAmount());
     }
 
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
+
     private void calculate(PaymentDto paymentDto, double amount) {
         paymentDto.setDepositAmount(paymentDto.getDepositAmount() + amount);
         paymentDto.setDepositBalance(paymentDto.getDepositBalance() + amount);
@@ -71,5 +87,4 @@ public class DepositEventHandler implements ApplicationListener<DepositEvent> {
 
         this.paymentService.update(paymentDto);
     }
-
 }

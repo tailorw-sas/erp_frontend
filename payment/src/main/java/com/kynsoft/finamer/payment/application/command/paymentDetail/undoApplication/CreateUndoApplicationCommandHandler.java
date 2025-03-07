@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.undoReverse
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
+import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import org.springframework.stereotype.Component;
 
@@ -23,15 +24,15 @@ public class CreateUndoApplicationCommandHandler implements ICommandHandler<Crea
     @Override
     public void handle(CreateUndoApplicationCommand command) {
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
-
-        RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplayPayment()));
+        RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplyPayment()));
         //Comprobar que la fecha sea del dia actual
         //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash
         //RulesChecker.checkRule(new CheckIsTypeCashRule(paymentDetailDto));
-        ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
-        paymentDetailDto.setManageBooking(null);
+
         this.paymentDetailService.update(paymentDetailDto);
+
         if (!paymentDetailDto.isReverseTransaction()) {
+            ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
             command.getMediator().send(new UndoApplyPaymentDetailCommand(paymentDetailDto.getId(), bookingDto.getId()));
             command.getMediator().send(new DeletePaymentDetailCommand(command.getPaymentDetail(), command.getEmployee(), true));
         } else {

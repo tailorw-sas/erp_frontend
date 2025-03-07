@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMe
 import com.kynsof.share.core.domain.http.entity.income.ajustment.CreateIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.http.entity.income.ajustment.NewIncomeAdjustmentRequest;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.ServiceLocator;
 import com.kynsof.share.utils.UpdateIfNotNull;
@@ -19,10 +20,7 @@ import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.create
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,12 +34,10 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
     private final IPaymentService paymentService;
     private final IManageEmployeeService manageEmployeeService;
     private final IManageInvoiceStatusService statusService;
-    private final ProducerCreateIncomeTransactionService producerCreateIncomeService;
-
     private final CreateIncomeHttpService createIncomeHttpService;
     private final CreateAdjustmentHttpService createAdjustmentHttpService;
-
     private final IManageInvoiceService manageInvoiceService;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
 
     @Value("${payment.relate.invoice.status.code}")
     private String RELATE_INCOME_STATUS_CODE;
@@ -49,24 +45,23 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
     private final ServiceLocator<IMediator> serviceLocator;
 
     public CreatePaymentDetailApplyDepositFromFileCommandHandler(IPaymentDetailService paymentDetailService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentService paymentService,
-            IManageEmployeeService manageEmployeeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService, IManageInvoiceStatusService statusService,
-            ProducerCreateIncomeTransactionService producerCreateIncomeService,
-            CreateIncomeHttpService createIncomeHttpService,
-            CreateAdjustmentHttpService createAdjustmentHttpService,
-            IManageInvoiceService manageInvoiceService,
-            ServiceLocator<IMediator> serviceLocator) {
+                                                                 IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                                                 IPaymentService paymentService,
+                                                                 IManageEmployeeService manageEmployeeService,
+                                                                 IManageInvoiceStatusService statusService,
+                                                                 CreateIncomeHttpService createIncomeHttpService,
+                                                                 CreateAdjustmentHttpService createAdjustmentHttpService,
+                                                                 IManageInvoiceService manageInvoiceService, IPaymentCloseOperationService paymentCloseOperationService,
+                                                                 ServiceLocator<IMediator> serviceLocator) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
         this.manageEmployeeService = manageEmployeeService;
         this.statusService = statusService;
-        this.producerCreateIncomeService = producerCreateIncomeService;
         this.createIncomeHttpService = createIncomeHttpService;
         this.createAdjustmentHttpService = createAdjustmentHttpService;
         this.manageInvoiceService = manageInvoiceService;
+        this.paymentCloseOperationService = paymentCloseOperationService;
         this.serviceLocator = serviceLocator;
     }
 
@@ -83,62 +78,49 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
 
         UpdateIfNotNull.updateDouble(paymentUpdate::setDepositBalance, paymentUpdate.getDepositBalance() - command.getAmount(), updatePayment::setUpdate);
         UpdateIfNotNull.updateDouble(paymentUpdate::setApplied, paymentUpdate.getApplied() + command.getAmount(), updatePayment::setUpdate);
-        //UpdateIfNotNull.updateDouble(paymentUpdate::setNotApplied, paymentUpdate.getNotApplied() + command.getAmount(), updatePayment::setUpdate);
         UpdateIfNotNull.updateDouble(paymentUpdate::setIdentified, paymentUpdate.getIdentified() + command.getAmount(), updatePayment::setUpdate);
         UpdateIfNotNull.updateDouble(paymentUpdate::setNotIdentified, paymentUpdate.getPaymentAmount() - paymentUpdate.getIdentified(), updatePayment::setUpdate);
 
-        //TODO: Se debe de validar esta variable para que cumpla con el Close Operation
-        OffsetDateTime transactionDate = OffsetDateTime.now(ZoneId.of("UTC"));
-        PaymentDetailDto children = new PaymentDetailDto();
-        children.setId(command.getId());
-        children.setStatus(command.getStatus());
-        children.setPayment(paymentUpdate);
-        children.setTransactionType(paymentTransactionTypeDto);
-        children.setAmount(command.getAmount());
-        children.setRemark(command.getRemark());
-        children.setTransactionDate(transactionDate);
+        PaymentDetailDto paymentDetails = new PaymentDetailDto();
+        paymentDetails.setId(command.getId());
+        paymentDetails.setStatus(command.getStatus());
+        paymentDetails.setPayment(paymentUpdate);
+        paymentDetails.setTransactionType(paymentTransactionTypeDto);
+        paymentDetails.setAmount(command.getAmount());
+        paymentDetails.setRemark(command.getRemark());
+        paymentDetails.setTransactionDate(transactionDate(paymentUpdate.getHotel().getId()));
 
-        children.setParentId(paymentDetailDto.getPaymentDetailId());
-        this.paymentDetailService.create(children);
+        paymentDetails.setParentId(paymentDetailDto.getPaymentDetailId());
+        this.paymentDetailService.create(paymentDetails);
 
-        List<PaymentDetailDto> updateChildrens = new ArrayList<>();
-        updateChildrens.addAll(paymentDetailDto.getChildren());
-        updateChildrens.add(children);
-        paymentDetailDto.setChildren(updateChildrens);
+        List<PaymentDetailDto> updatePaymentDetails = new ArrayList<>();
+        updatePaymentDetails.addAll(paymentDetailDto.getPaymentDetails());
+        updatePaymentDetails.add(paymentDetails);
+        paymentDetailDto.setPaymentDetails(updatePaymentDetails);
         paymentDetailDto.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - command.getAmount());
         paymentDetailService.update(paymentDetailDto);
 
         this.paymentService.update(paymentUpdate);
         command.setPaymentResponse(paymentUpdate);
         ManageInvoiceStatusDto manageInvoiceStatusDto = statusService.findByCode(RELATE_INCOME_STATUS_CODE);
-        System.err.println("##################################################");
-        System.err.println("Llega a la peticion http.");
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        CreateIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(sendToCreateRelatedIncome(children, employeeDto, command.getTransactionTypeForAdjustment(), manageInvoiceStatusDto.getId(), command.getAttachment()));
-        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
-        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
-        System.err.println("Obtener: " + msg);
-        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
-        System.err.println("||||||||||||||||||||||||||||||||||||||||||||||||||");
-        String response = this.createAdjustmentHttpService.sendCreateIncomeRequest(this.createAdjustmentRequest(children, employeeDto.getId(), command.getTransactionTypeForAdjustment(), msg.getId()));
-        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-        System.err.println("Crendo Ajuste: " + response);
-        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        CreateIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(
+                sendToCreateRelatedIncome(paymentDetails, employeeDto, command.getTransactionTypeForAdjustment(),
+                        command.getAttachment()));
+        this.createAdjustmentHttpService.sendCreateIncomeRequest(
+                this.createAdjustmentRequest(paymentDetails, employeeDto.getId(), command.getTransactionTypeForAdjustment(),
+                        msg.getId()));
         try {
             TimeUnit.SECONDS.sleep(1);
         } catch (Exception e) {
         }
         ManageInvoiceDto invoice = manageInvoiceService.findById(msg.getId());
-        ApplyPaymentDetailCommand applyPaymentDetailCommand = new ApplyPaymentDetailCommand(children.getId(),
+        ApplyPaymentDetailCommand applyPaymentDetailCommand = new ApplyPaymentDetailCommand(paymentDetails.getId(),
                 invoice.getBookings().get(0).getId(),employeeDto.getId());
         serviceLocator.getBean(IMediator.class).send(applyPaymentDetailCommand);
-        //this.sendToCreateRelatedIncome(children,employeeDto.getId(),employeeDto.getFirstName(), command.getTransactionTypeForAdjustment(),manageInvoiceStatusDto.getId(), command.getAttachment());
     }
 
-    private CreateIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId, UUID transactionType, UUID income) {
+    private CreateIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId,
+                                                                  UUID transactionType, UUID income) {
         CreateIncomeAdjustmentRequest request = new CreateIncomeAdjustmentRequest();
         request.setEmployee(employeeId.toString());
         request.setIncome(income);
@@ -155,7 +137,9 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         return request;
     }
 
-    private CreateAntiToIncomeRequest sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto, ManageEmployeeDto employeeDto, UUID transactionType, UUID status, String attachment) {
+    private CreateAntiToIncomeRequest sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,
+                                                                ManageEmployeeDto employeeDto,
+                                                                UUID status, String attachment) {
         CreateAntiToIncomeRequest income = new CreateAntiToIncomeRequest();
         income.setInvoiceDate(LocalDateTime.now().toString());
         income.setManual(Boolean.FALSE);
@@ -178,27 +162,12 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         return new CreateAntiToIncomeAttachmentRequest(attachment, "" + employeeDto.getFirstName() + " " + employeeDto.getLastName(), employeeDto.getId());
     }
 
-//
-//    private void sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,UUID employeeId, String employeeName, UUID transactionType,UUID status, String attachment) {
-//        PaymentDto paymentDto = paymentDetailDto.getPayment();
-//        CreateIncomeTransactionKafka createIncomeTransactionSuccessKafka = new CreateIncomeTransactionKafka();
-//        UUID incomeId = UUID.randomUUID();
-//        createIncomeTransactionSuccessKafka.setId(incomeId);
-//        createIncomeTransactionSuccessKafka.setAgency(paymentDto.getAgency().getId());
-//        createIncomeTransactionSuccessKafka.setHotel(paymentDto.getHotel().getId());
-//        createIncomeTransactionSuccessKafka.setInvoiceDate(LocalDateTime.now());
-//        createIncomeTransactionSuccessKafka.setIncomeAmount(paymentDetailDto.getAmount());
-//        createIncomeTransactionSuccessKafka.setManual(false);
-//        createIncomeTransactionSuccessKafka.setInvoiceStatus(status);
-//        createIncomeTransactionSuccessKafka.setStatus(Status.ACTIVE.name());
-//        createIncomeTransactionSuccessKafka.setTransactionTypeAdjustment(transactionType);
-//        createIncomeTransactionSuccessKafka.setEmployeeAdjustment(employeeName);
-//        createIncomeTransactionSuccessKafka.setDateAdjustment(LocalDate.now());
-//        createIncomeTransactionSuccessKafka.setRelatedPaymentDetail(paymentDetailDto.getId());
-//        createIncomeTransactionSuccessKafka.setStatusAdjustment(Status.ACTIVE.name());
-//        createIncomeTransactionSuccessKafka.setEmployeeId(employeeId);
-//        createIncomeTransactionSuccessKafka.setPaymentKafka(new ReplicatePaymentKafka(paymentDto.getId(), paymentDto.getPaymentId(), new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getParentId())));
-//        createIncomeTransactionSuccessKafka.setAttachment(attachment);
-//        producerCreateIncomeService.create(createIncomeTransactionSuccessKafka);
-//    }
+    private OffsetDateTime transactionDate(UUID hotel) {
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(ZoneId.of("UTC"));
+        }
+        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
 }

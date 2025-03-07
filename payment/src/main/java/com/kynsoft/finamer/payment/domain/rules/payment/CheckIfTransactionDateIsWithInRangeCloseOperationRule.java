@@ -13,7 +13,8 @@ public class CheckIfTransactionDateIsWithInRangeCloseOperationRule extends Busin
     private final LocalDate endDate;
 
     public CheckIfTransactionDateIsWithInRangeCloseOperationRule(LocalDate currentDate, LocalDate beginDate, LocalDate endDate) {
-        super(DomainErrorMessage.DATE_VALIDATE_CLOSE_OPERATION, new ErrorField("date", DomainErrorMessage.DATE_VALIDATE_CLOSE_OPERATION.getReasonPhrase()));
+        super(DomainErrorMessage.DATE_VALIDATE_CLOSE_OPERATION, new ErrorField("date",
+                DomainErrorMessage.DATE_VALIDATE_CLOSE_OPERATION.getReasonPhrase()));
         this.currentDate = currentDate;
         this.beginDate = beginDate;
         this.endDate = endDate;

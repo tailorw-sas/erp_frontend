@@ -60,10 +60,6 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingNameValidator.class.getName(), new ImportBookingNameValidator());
             validators.put(ImportBookingCheckInValidator.class.getName(), new ImportBookingCheckInValidator());
             validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());
-            validators.put(ImportBookingNightsValidator.class.getName(), new ImportBookingNightsValidator());
-
-//            validators.put(ImportBookingAdultsValidator.class.getName(), new ImportBookingAdultsValidator(importType));
-
             validators.put(ImportBookingInvoiceAmountValidator.class.getName(), new ImportBookingInvoiceAmountValidator(importType));
             validators.put(ImportBookingCouponValidator.class.getName(), new ImportBookingCouponValidator());
             validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
