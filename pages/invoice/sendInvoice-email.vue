@@ -105,14 +105,19 @@ const options = ref({
   showTitleBar: false
 })
 
+// const type = route.query.type || ''
+// sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
+//   ? 'Invoice to Send by FTP'
+//   : type === ENUM_INVOICE_SEND_TYPE.EMAIL
+//     ? 'Invoice to Send by Email'
+//     : type === ENUM_INVOICE_SEND_TYPE.BAVEL
+//       ? 'Invoice to Send by Bavel'
+//       : ''
+
 const type = route.query.type || ''
-sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
-  ? 'Invoice to Send by FTP'
-  : type === ENUM_INVOICE_SEND_TYPE.EMAIL
-    ? 'Invoice to Send by Email'
-    : type === ENUM_INVOICE_SEND_TYPE.BAVEL
-      ? 'Invoice to Send by Bavel'
-      : ''
+sendType.value = type === ENUM_INVOICE_SEND_TYPE.EMAIL
+  ? 'Invoice to Send by Email'
+  : ''
 
 const payload = ref<IQueryRequest>({
   filter: [
@@ -140,6 +145,7 @@ const pagination = ref<IPagination>({
 async function getList() {
   try {
     // payload.value = { ...payload.value, query: idItem.value }
+    options.value.loading = true
     const staticPayload = [
       {
         key: 'invoiceStatus',
@@ -148,9 +154,9 @@ async function getList() {
         logicalOperation: 'AND'
       },
       {
-        key: 'agency.sentB2BPartner.b2bPartnerType.code',
+        key: 'agency.sentB2BPartner.code',
         operator: 'EQUALS',
-        value: type.toString(),
+        value: 'EML',
         logicalOperation: 'AND'
       },
       {
@@ -226,6 +232,18 @@ async function getList() {
   catch (error) {
     console.error('Error loading file:', error)
   }
+  finally {
+    options.value.loading = false
+  }
+  // Verificar si no hay resultados
+  if (!listItems.value || listItems.value.length === 0) {
+    toast.add({
+      severity: 'info',
+      summary: 'Confirmed',
+      detail: `No invoices available to send`,
+      life: 2000 // Duración del toast en milisegundos
+    })
+  }
 }
 
 async function getClientList(query = '') {
@@ -253,9 +271,9 @@ async function getClientList(query = '') {
             logicalOperation: 'AND'
           },
           {
-            key: 'agencies.sentB2BPartner.b2bPartnerType.code',
-            operator: 'LIKE',
-            value: ENUM_INVOICE_SEND_TYPE.EMAIL,
+            key: 'agencies.sentB2BPartner.code',
+            operator: 'EQUALS',
+            value: 'EML',
             logicalOperation: 'AND'
           },
         ],
@@ -268,6 +286,7 @@ async function getClientList(query = '') {
 
     clientList.value = []
     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
+
     const { data: dataList } = response
 
     const existingIds = new Set(listItems.value.map(item => item.id))
@@ -282,6 +301,66 @@ async function getClientList(query = '') {
   }
   catch (error) {
     console.error('Error loading client list:', error)
+  }
+}
+
+async function getAgencyList(query: string = '') {
+  try {
+    clientIds.value = []
+    clientIds.value = filterToSearch.value.client.map((c: { id: any }) => c.id)
+    if (clientIds.value.length > 0) {
+      const payload = {
+        filter: [
+          {
+            key: 'name',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'code',
+            operator: 'LIKE',
+            value: query,
+            logicalOperation: 'OR'
+          },
+          {
+            key: 'status',
+            operator: 'EQUALS',
+            value: 'ACTIVE',
+            logicalOperation: 'AND'
+          },
+          {
+            key: 'client.id',
+            operator: 'IN',
+            value: clientIds.value,
+            logicalOperation: 'AND'
+          },
+          {
+            key: 'sentB2BPartner.code',
+            operator: 'EQUALS',
+            value: 'EML',
+            logicalOperation: 'AND'
+          }
+        ],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
+
+      const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
+      console.log('response', response)
+
+      const { data: dataList } = response
+      agencyList.value = []
+      for (const iterator of dataList) {
+        agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code }]
+      }
+    }
+  }
+  catch (error) {
+    console.error('Error loading agency list:', error)
   }
 }
 
@@ -324,64 +403,6 @@ async function getHotelList(query: string = '') {
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
-  }
-}
-
-async function getAgencyList(query: string = '') {
-  try {
-    clientIds.value = []
-    clientIds.value = filterToSearch.value.client.map((c: { id: any }) => c.id)
-    if (clientIds.value.length > 0) {
-      const payload = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          },
-          {
-            key: 'client.id',
-            operator: 'IN',
-            value: clientIds.value,
-            logicalOperation: 'AND'
-          },
-          {
-            key: 'sentB2BPartner.b2bPartnerType.code',
-            operator: 'EQUALS',
-            value: type.toString(),
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-      const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-      const { data: dataList } = response
-      agencyList.value = []
-      for (const iterator of dataList) {
-        agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code }]
-      }
-    }
-  }
-  catch (error) {
-    console.error('Error loading agency list:', error)
   }
 }
 
@@ -538,7 +559,8 @@ function clearFilterToSearch() {
   }
   filterAllDateRange.value = false
   filterToSearch.value.criteria = ENUM_FILTER[0]
-  getList()
+  listItems.value = []
+  searchAndFilter()
 }
 
 async function goToList() {
@@ -636,7 +658,7 @@ onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
   // getAgencyList()
-  await getList()
+  await searchAndFilter()
 })
 </script>
 
@@ -659,11 +681,12 @@ onMounted(async () => {
                 <div class="flex align-items-center gap-2">
                   <label class="filter-label font-bold ml-3" for="">Client:</label>
                   <div class="w-full" style=" z-index:5 ">
-                    <DebouncedAutoCompleteComponent
+                    <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll" id="autocomplete"
                       :multiple="true" class="w-full" field="name"
                       item-value="id" :model="filterToSearch.client"
                       :suggestions="clientList"
+                      :max-selected-labels="1"
                       @load="($event) => getClientList($event)"
                       @change="($event) => {
                         filterToSearch.client = $event.filter((element: any) => element?.id !== 'All')
@@ -673,17 +696,18 @@ onMounted(async () => {
                       <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template> -->
-                    </DebouncedAutoCompleteComponent>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
                 <div class="flex align-items-center gap-2">
                   <label class="filter-label font-bold" for="">Agency:</label>
                   <div class="w-full" style=" z-index:5 ">
-                    <DebouncedAutoCompleteComponent
+                    <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll" id="autocomplete"
                       :multiple="true" class="w-full" field="name"
                       item-value="id" :model="filterToSearch.agency"
                       :suggestions="agencyList"
+                      :max-selected-labels="1"
                       @load="($event) => getAgencyList($event)"
                       @change="($event) => {
                         filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
@@ -692,7 +716,7 @@ onMounted(async () => {
                       <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template> -->
-                    </DebouncedAutoCompleteComponent>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
                 <div class="flex align-items-center gap-2">
@@ -794,34 +818,34 @@ onMounted(async () => {
           </div>
         </AccordionTab>
       </div>
+      <div class="mt-1">
+        <DynamicTable
+          ref="tableRef"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @update:clicked-item="onMultipleSelect"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+        >
+          <template #column-sendStatusError="{ data }">
+            <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
+              <span style="color: red;">{{ data.sendStatusError }}</span>
+            </div>
+          </template>
 
-      <DynamicTable
-        ref="tableRef"
-        :data="listItems"
-        :columns="columns"
-        :options="options"
-        :pagination="pagination"
-        @on-confirm-create="clearForm"
-        @update:clicked-item="onMultipleSelect"
-        @on-change-pagination="payloadOnChangePage = $event"
-        @on-change-filter="parseDataTableFilter"
-        @on-list-item="resetListItems"
-        @on-sort-field="onSortField"
-      >
-        <template #column-sendStatusError="{ data }">
-          <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
-            <span style="color: red;">{{ data.sendStatusError }}</span>
-          </div>
-        </template>
-
-        <template #column-status="{ data }">
-          <Badge
-            :value="getStatusName(data?.status)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
-          />
-        </template>
-      </DynamicTable>
-
+          <template #column-status="{ data }">
+            <Badge
+              :value="getStatusName(data?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+            />
+          </template>
+        </DynamicTable>
+      </div>
       <div class="flex align-items-end justify-content-end">
         <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
       </div>
