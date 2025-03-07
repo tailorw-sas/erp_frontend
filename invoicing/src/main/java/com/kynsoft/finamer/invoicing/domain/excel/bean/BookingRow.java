@@ -92,7 +92,7 @@ public class BookingRow {
         manageBookingDto.setFullName(buildFullName());
         manageBookingDto.setHotelBookingNumber(Objects.nonNull(this.hotelBookingNumber) ? removeBlankSpaces(this.hotelBookingNumber) : "");
         manageBookingDto.setHotelInvoiceNumber(Objects.nonNull(this.hotelInvoiceNumber) ? this.hotelInvoiceNumber : "");
-        manageBookingDto.setDescription(Objects.nonNull(this.remarks) ? this.remarks : "");
+        manageBookingDto.setDescription(Objects.nonNull(this.remarks) ? this.remarks.trim() : "");
         manageBookingDto.setRoomNumber(this.roomNumber);
         manageBookingDto.setInvoiceAmount(BankerRounding.round(this.invoiceAmount));
         manageBookingDto.setDueAmount(BankerRounding.round(this.invoiceAmount));

@@ -163,7 +163,7 @@ public class Booking {
                 this.rateByAdult,
                 this.rateByChild,
                 this.remarks,
-                this.roomNumber,
+                this.roomNumber,-
                 this.hotelInvoiceAmount,
                 this.hotelInvoiceNumber,
                 this.invoiceFolioNumber,

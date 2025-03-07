@@ -26,5 +26,4 @@ public class ConsumerImportInnsistService {
             Logger.getLogger(ConsumerImportInnsistService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }

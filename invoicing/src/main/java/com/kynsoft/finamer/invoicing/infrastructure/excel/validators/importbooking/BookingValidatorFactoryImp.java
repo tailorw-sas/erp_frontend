@@ -60,7 +60,6 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingNameValidator.class.getName(), new ImportBookingNameValidator());
             validators.put(ImportBookingCheckInValidator.class.getName(), new ImportBookingCheckInValidator());
             validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());
-            validators.put(ImportBookingInvoiceAmountValidator.class.getName(), new ImportBookingInvoiceAmountValidator(importType));
             validators.put(ImportBookingCouponValidator.class.getName(), new ImportBookingCouponValidator());
             validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
             validators.put(ImportBookingRatePlanValidator.class.getName(), new ImportBookingRatePlanValidator(ratePlanService));
@@ -90,7 +89,6 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     @Override
     public boolean validateInsist(List<BookingImportCache> list) {
         ImportInsistAdultsValidator adultsValidator = new ImportInsistAdultsValidator();
-        ImportInnsistInvoiceAmountValidator invoiceAmountValidator = new ImportInnsistInvoiceAmountValidator();
         Map<String, List<BookingImportCache>> map = this.groupByInsistImportProcessBookingId(list);
 
         map.forEach((key, values) -> {
@@ -98,11 +96,6 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             bookingRow.setImportProcessId(bookingRow.getInsistImportProcessId());
             if (this.checkAdultsCount(values) == 0) {
                 adultsValidator.validate(bookingRow, errorFieldList);
-                this.sendErrorEvent(bookingRow);
-            }
-
-            if(checkInvoiceAmount(values) == 0){
-                invoiceAmountValidator.validate(bookingRow, errorFieldList);
                 this.sendErrorEvent(bookingRow);
             }
         });
