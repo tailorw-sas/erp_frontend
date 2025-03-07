@@ -450,19 +450,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
-        if(adults == 0 && nights == 0) {
-            return rateAmount;
-        }
-        else if(adults == 0)
-        {
-            return BankerRounding.round(rateAmount / nights);
-        }
-        else if(nights == 0)
-        {
-            return BankerRounding.round(rateAmount / adults);
-        }
-
-        return BankerRounding.round(rateAmount / (nights * adults));
+        Long denominate = nights == 0 ? adults : (nights * adults);
+        return BankerRounding.round(rateAmount / denominate);
     }
 
     private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
@@ -555,9 +544,15 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         manageRoomRateDto.setNights(bookingDto.getNights());
         manageRoomRateDto.setRoomNumber(bookingDto.getRoomNumber());
         manageRoomRateDto.setInvoiceAmount(BankerRounding.round(bookingDto.getInvoiceAmount()));
-
-        manageRoomRateDto.setRateAdult(this.calculateRateAdult(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getAdults()));
-        manageRoomRateDto.setRateChild(this.calculateRateChild(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getChildren()));
+        if (bookingDto.getAdults() > 0) {
+            manageRoomRateDto.setRateAdult(this.calculateRateAdult(manageRoomRateDto.getInvoiceAmount(),
+                    bookingDto.getNights(), bookingDto.getAdults()));
+            manageRoomRateDto.setRateChild(0.00);
+        }
+        else {
+            manageRoomRateDto.setRateAdult(0.00);
+            manageRoomRateDto.setRateChild(this.calculateRateChild(manageRoomRateDto.getInvoiceAmount(), bookingDto.getNights(), bookingDto.getChildren()));
+        }
         return manageRoomRateDto;
     }
 
