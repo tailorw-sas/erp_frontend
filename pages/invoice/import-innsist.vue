@@ -355,6 +355,7 @@ async function getListSearchErrors() {
 
 async function getHotelList(query: string = '') {
   try {
+    hotelList.value = []
     const payload = {
       filter: [
         {
@@ -392,7 +393,6 @@ async function getHotelList(query: string = '') {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    // hotelList.value = [allDefaultItem]
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
@@ -791,10 +791,11 @@ async function importBookings() {
   options.value.loading = true
   importProcess.value = false
 
-  try {
-    generateProcessId()
-    const elementsToImportNumber = selectedElements.value.length
+  generateProcessId()
+  const elementsToImportNumber = selectedElements.value.length
+  let processContinue = false
 
+  try {
     const payload = {
       id: processId.value,
       userId: userData?.value?.user?.userId,
@@ -803,47 +804,10 @@ async function importBookings() {
 
     selectedElements.value = []
     await GenericService.import(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
-
-    await checkProcessStatus(processId.value)
-
-    await getErrorList(processId.value)
-
-    if (listItemsErrors.value.length !== 0) {
-      showErrorsDataTable.value = true
-      showDataTable.value = false
-      toast.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: `Failed to import data. Ensure all fields are correct.`,
-        life: 5000
-      })
-      importProcess.value = false
-    }
-    else {
-      toast.add({
-        severity: 'info',
-        summary: 'Confirmed',
-        detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
-        life: 5000
-      })
-      onClose()
-      options.value.loading = false
-      await getList()
-      showErrorsDataTable.value = false
-      showDataTable.value = true
-    }
-
-    await updateBookingsStatus(processId.value)
+    processContinue = true
   }
   catch (error: any) {
     const messageError = error?.data?.data?.error?.errorMessage || 'Unexpected error. Please, try again'
-
-    // invocar al servicio de reverso de bookings
-    listItemsErrors.value = idItemsToImport.map(item => ({
-      id: item,
-      message: messageError,
-    }))
-    await updateBookingsStatus(processId.value)
 
     toast.add({
       severity: 'error',
@@ -858,8 +822,66 @@ async function importBookings() {
     showErrorsDataTable.value = false
     showDataTable.value = true
   }
-  finally {
-    options.value.loading = false
+
+  if (processContinue) {
+    try {
+      await checkProcessStatus(processId.value)
+
+      await getErrorList(processId.value)
+
+      if (listItemsErrors.value.length !== 0) {
+        showErrorsDataTable.value = true
+        showDataTable.value = false
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Failed to import data. Ensure all fields are correct.`,
+          life: 5000
+        })
+        importProcess.value = false
+      }
+      else {
+        toast.add({
+          severity: 'info',
+          summary: 'Confirmed',
+          detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
+          life: 5000
+        })
+        onClose()
+        options.value.loading = false
+        await getList()
+        showErrorsDataTable.value = false
+        showDataTable.value = true
+      }
+
+      await updateBookingsStatus(processId.value)
+    }
+    catch (error: any) {
+      const messageError = error?.data?.data?.error?.errorMessage || 'Unexpected error. Please, try again'
+
+      // invocar al servicio de reverso de bookings
+      listItemsErrors.value = idItemsToImport.map(item => ({
+        id: item,
+        message: messageError,
+      }))
+      await updateBookingsStatus(processId.value)
+
+      toast.add({
+        severity: 'error',
+        summary: 'Error importing bookings',
+        detail: messageError,
+        life: 3000
+      })
+
+      options.value.loading = false
+      await getList()
+      await searchAndFilterSearchErrors()
+      showErrorsDataTable.value = false
+      showDataTable.value = true
+    }
+    finally {
+      options.value.loading = false
+    }
   }
 }
 
