@@ -46,13 +46,13 @@ public class ImportBookingCommandHandler implements ICommandHandler<ImportBookin
     @Override
     public void handle(ImportBookingCommand command) {
         ManageEmployeeDto employee = getEmployee(command.getUserId());
-        List<BookingDto> bookingsToImport = getBookingsToImport(command.getBookings());
+        //List<BookingDto> bookingsToImport = getBookingsToImport(command.getBookings());
         List<BookingDto> availableBookings = getAvailableBookings(command.getBookings());
 
-        ImportProcessDto importProcess = createImportProcess(command.getId(), bookingsToImport.size(), employee.getId(), 0, 0);
-        saveImportBookings(importProcess, bookingsToImport);
+        ImportProcessDto importProcess = createImportProcess(command.getId(), command.getBookings().size(), employee.getId(), 0, 0);
+        saveImportBookings(importProcess, availableBookings);
 
-        RulesChecker.checkRule(new ImportBookingSizeRule(command.bookings.size(), availableBookings.size()), new ImportBookingSizeRuleOnFail(command.getId(), bookingsToImport, availableBookings, importBookingService));
+        RulesChecker.checkRule(new ImportBookingSizeRule(command.bookings.size(), availableBookings.size()));
 
         setBookingsInProcess(availableBookings);
         sendBookingToProcess(importProcess, employee, availableBookings);
