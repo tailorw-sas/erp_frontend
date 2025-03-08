@@ -770,7 +770,7 @@ const closeReconcileFiles = () => {
 
 
 const closeSendByBavel = () => {
-  SendByFtpDialogVisible.value = false
+  SendByBavelDialogVisible.value = false
 }
 const closeSendByEmail = () => {
   SendByEmailDialogVisible.value = false
