@@ -679,7 +679,9 @@ async function saveItem(item: { [key: string]: any }) {
     let response: any = null
     response = await createItem(item)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 30000 })
-    navigateTo({ path: `/invoice/edit/${response?.id}` })
+    setTimeout(() => {
+      window.close()
+    }, 1500)
   }
   catch (error: any) {
     successOperation = false
@@ -711,7 +713,14 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
   }
 }
-const goToList = async () => await navigateTo('/invoice')
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/invoice')
+  }
+}
 
 function requireConfirmationToSave(item: any) {
   saveItem(item)

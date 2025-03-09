@@ -790,6 +790,9 @@ async function saveItem(item: { [key: string]: any }) {
     try {
       await updateItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 10000 })
+      setTimeout(() => {
+      window.close()
+    }, 1500)
     }
     catch (error: any) {
       successOperation = false

@@ -36,6 +36,15 @@ function closeDialog() {
   emit('onClose', true)
 }
 
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/payment')
+  }
+}
+
 async function handleSave(event: any) {
   item.value = event
   emit('save', item.value)
@@ -248,7 +257,7 @@ watch(() => props.item, async (newValue) => {
 
     <template #footer>
       <Button v-tooltip.top="'Save'" label="Save" class="w-6rem p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-      <Button v-tooltip.top="'Cancel'" label="Cancel" class=" w-6rem p-button-color color" icon="pi pi-times" @click="closeDialog" />
+      <Button v-tooltip.top="'Cancel'" label="Cancel" class=" w-6rem p-button-color color" icon="pi pi-times" @click="goToList" />
 
       <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
     </template>
