@@ -775,11 +775,11 @@ onMounted(() => {
     v-model:visible="isBankPaymentModalOpen"
     modal
     header="New Bank Payment of Merchant"
-    :style="{ width: '80vw', height: '55vh' }"
+    :style="{ width: '95vw', height: '70vh' }"
     :closable="true"
   >
     <div class="p-4" style="height: auto; overflow: hidden;">
-      <BankPaymentOfMerchant style="max-height: 45vh; overflow: hidden;" />
+      <BankPaymentOfMerchant style="max-height: 80vh; overflow: hidden;" />
     </div>
   </Dialog>
 </template>
