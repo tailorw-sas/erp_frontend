@@ -850,6 +850,7 @@ watch(payloadOnChangePage, (newValue) => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
+  searchAndFilter()
 
   // getList()
 })

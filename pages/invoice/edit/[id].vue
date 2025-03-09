@@ -771,9 +771,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.invoiceStatus = item.invoiceStatus?.id
 
   await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
-    navigateTo(
-      '/invoice'
-    )
+    //navigateTo('/invoice')
   }
 
 async function deleteItem(id: string) {
