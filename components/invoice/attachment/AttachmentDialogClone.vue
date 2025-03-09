@@ -1135,13 +1135,13 @@ onMounted(async () => {
                       @click="requireConfirmationToDelete"
                     />
                   </IfCan>
-                  <Button
+                  <!-- <Button
                     v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
 
                       clearForm()
                       closeDialog()
                     }"
-                  />
+                  /> -->
                 </template>
               </EditFormV2>
             </div>

@@ -990,6 +990,9 @@ async function saveItem(item: { [key: string]: any }) {
       }
 
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking Id ${bookingNumberTemp.value} of Invoice Id ${invoiceNumberTemp.value} has been successfully updated.`, life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
     catch (error: any) {
       successOperation = false

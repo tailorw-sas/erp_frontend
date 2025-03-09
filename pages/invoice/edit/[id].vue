@@ -17,7 +17,6 @@ import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentH
 import { client } from 'process'
 
 
-
 const toast = useToast()
 const { data: userData } = useAuth()
 
@@ -799,7 +798,10 @@ async function saveItem(item: { [key: string]: any }) {
       console.log(item);
       
       // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${item?.invoiceNumber?.split('-')[0]}-${item?.invoiceNumber?.split('-')[2]}`} was updated successfully`, life: 10000 })
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 5000 })   
+      setTimeout(() => {
+  window.close();
+}, 1500); 
     }
     catch (error: any) {
       successOperation = false
@@ -821,7 +823,13 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
   }
 }
-const goToList = async () => await navigateTo('/invoice')
+const goToList = async () => {
+  if (window.opener) {
+    window.close();
+  } else {
+    await navigateTo('/invoice'); 
+  }
+};
 
 function requireConfirmationToSave(item: any) {
   saveItem(item)
@@ -1199,9 +1207,6 @@ onMounted(async () => {
                     :loading="loadingSaveAll" 
                     @click="props.item.submitForm($event)" 
                   />
-                    <!-- @click="() => {
-                        saveItem(props.item.fieldValues)
-                      }" -->
                 </IfCan>
 
                 <Button 
@@ -1262,7 +1267,7 @@ onMounted(async () => {
     </div>
     <div v-if="attachmentDialogOpen">
       <AttachmentDialog 
-        :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+        :close-dialog="() => { attachmentDialogOpen = false}"
         :is-creation-dialog="false" 
         header="Manage Invoice Attachment" 
         :open-dialog="attachmentDialogOpen"

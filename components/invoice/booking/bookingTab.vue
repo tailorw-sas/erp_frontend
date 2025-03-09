@@ -14,6 +14,7 @@ import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import BookingDialog from './BookingDialog.vue'
 
+
 const props = defineProps({
   isDialogOpen: {
     type: Boolean,

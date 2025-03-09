@@ -776,11 +776,14 @@ async function saveItem(item: { [key: string]: any }) {
     let response: any = null
     if (route.query.type === InvoiceType.CREDIT) {
       response = await createItemCredit(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`} was created successfully`, life: 5000 })
     }
     else {
       response = await createItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
     if (route.query.type === InvoiceType.CREDIT) { return navigateTo({ path: `/invoice` }) }
     navigateTo({ path: `/invoice/edit/${response?.id}` })
@@ -816,7 +819,14 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
   }
 }
-const goToList = async () => await navigateTo('/invoice')
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/invoice')
+  }
+}
 
 function requireConfirmationToSave(item: any) {
   saveItem(item)
