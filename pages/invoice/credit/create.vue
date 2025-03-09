@@ -594,8 +594,10 @@ async function saveItem(item: { [key: string]: any }) {
   try {
     let response: any = null
     response = await createItemCredit(item)
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`} was created successfully`, life: 10000 })
-    return navigateTo({ path: `/invoice` })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`} was created successfully`, life: 5000 })
+    setTimeout(() => {
+      window.close()
+    }, 1500)
   }
   catch (error: any) {
     successOperation = false
@@ -607,7 +609,14 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
   }
 }
-const goToList = async () => await navigateTo('/invoice')
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/invoice')
+  }
+}
 
 function requireConfirmationToSave(item: any) {
   saveItem(item)

@@ -555,7 +555,7 @@ async function saveItem(item: { [key: string]: any }) {
         severity: 'info',
         summary: 'Confirmed',
         detail: `The clonation invoice ${invoiceNo} was created successfully`,
-        life: 10000
+        life: 5000
       })
       navigateTo('/invoice')
     }
@@ -586,7 +586,7 @@ async function saveItem(item: { [key: string]: any }) {
 
 async function goToList() {
   isSaveInTotalClone.value = false
-  await navigateTo('/invoice')
+  window.close()
 }
 
 async function getRoomRateList(globalSelectedInvoicing: any) {
