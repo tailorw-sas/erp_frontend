@@ -144,6 +144,7 @@ async function getList() {
   try {
     // payload.value = { ...payload.value, query: idItem.value }
     options.value.loading = true
+    tableRef.value?.clearSelectedItems()
     const staticPayload = [
       {
         key: 'invoiceStatus',

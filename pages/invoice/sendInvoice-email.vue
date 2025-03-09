@@ -101,6 +101,7 @@ const options = ref({
   actionsAsMenu: false,
   showEdit: false,
   showAcctions: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })
@@ -145,6 +146,7 @@ const pagination = ref<IPagination>({
 async function getList() {
   try {
     // payload.value = { ...payload.value, query: idItem.value }
+    tableRef.value?.clearSelectedItems()
     options.value.loading = true
     const staticPayload = [
       {
@@ -520,18 +522,18 @@ function searchAndFilter() {
         }]
       }
     }
-    if (filterHotel.value) { // filterToSearch.value.hotel?.length > 0
-      // const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
-      // if (filteredItems.length > 0) {
-      const itemIds = [filterHotel.value.id]
-      payload.value.filter = [...payload.value.filter, {
-        key: 'hotel.id',
-        operator: 'IN',
-        value: itemIds,
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      }]
-      // }
+    if (filterToSearch.value.hotel?.length > 0) {
+      const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
+      if (filteredItems.length > 0) {
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        payload.value.filter = [...payload.value.filter, {
+          key: 'hotel.id',
+          operator: 'IN',
+          value: itemIds,
+          logicalOperation: 'AND',
+          type: 'filterSearch'
+        }]
+      }
     }
   }
   // payload.value = { ...payload.value, ...newPayload }
@@ -554,7 +556,7 @@ function clearFilterToSearch() {
     client: [],
     agency: [],
     hotel: [],
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    from: dayjs(new Date()).startOf('month').toDate(),
     to: new Date(),
   }
   filterAllDateRange.value = false
@@ -722,20 +724,21 @@ onMounted(async () => {
                 <div class="flex align-items-center gap-2">
                   <label class="filter-label font-bold ml-3" for="">Hotel:</label>
                   <div class="w-full">
-                    <DebouncedAutoCompleteComponent
+                    <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll" id="autocomplete"
                       :multiple="false" class="w-full" field="name"
+                      :max-selected-labels="1"
                       item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
                       @load="($event) => getHotelList($event)"
                       @change="($event) => {
-                        filterHotel = $event
-                        // filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                        // filterHotel = $event
+                        filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                       }"
                     >
                       <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template> -->
-                    </DebouncedAutoCompleteComponent>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
               </div>
