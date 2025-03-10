@@ -51,6 +51,13 @@ public class ImportInnsistServiceImpl {
 
     private void createCache(ImportInnsistKafka request) {
         try {
+            //Genera el log del proceso en redis al inicio de todo.
+            BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
+                    .status(EProcessStatus.RUNNING)
+                    .total(0)
+                    .build();
+            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
+
             UUID insistImportProcessId = UUID.randomUUID();
             //Construye el objeto usado en el excel y guarda en cache.
             this.create(request.getImportList(), request.getImportInnsitProcessId(), insistImportProcessId);
@@ -60,11 +67,6 @@ public class ImportInnsistServiceImpl {
             boolean validateInsist = validatorFactory.validateInsist(list);
             validatorFactory.createValidators(EImportType.INNSIST.name());
 
-            BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
-                    .status(EProcessStatus.RUNNING)
-                    .total(0)
-                    .build();
-            applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
             int rowNumber = 0;
             boolean stop = true;
 
