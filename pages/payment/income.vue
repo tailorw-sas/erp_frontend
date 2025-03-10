@@ -650,6 +650,15 @@ async function validateCloseOperation(hotelId: string, dateList: string[]) {
   await GenericService.create(confApi.moduleApi, 'check-dates', payload)
 }
 
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/payment')
+  }
+}
+
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     const payload: { [key: string]: any } = { ...item }
@@ -689,7 +698,10 @@ async function createItem(item: { [key: string]: any }) {
       // Guarda el id del elemento creado
       idItem.value = response.id
       LocalAttachmentList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Invoice ${response.invoiceNumber ?? ''} was created successfully`, life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
       // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     }
     else {
@@ -705,7 +717,10 @@ async function saveItem(item: { [key: string]: any }) {
     try {
       await updateItem(item)
       idItem.value = ''
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
     catch (error: any) {
       // successOperation = false
@@ -1451,7 +1466,7 @@ onMounted(async () => {
 
       <Button v-if="false" v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll" />
 
-      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="() => navigateTo('/payment')" />
+      <Button v-tooltip.top="'Cancel'" class="w-3rem ml-1" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
     <IncomeAdjustmentDialog
       :key="dialogPaymentDetailFormReload"

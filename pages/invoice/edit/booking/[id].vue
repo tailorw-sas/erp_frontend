@@ -923,7 +923,7 @@ async function updateItem(item: { [key: string]: any }) {
   payload.roomCategory = item.roomCategory ? item.roomCategory.id : null
 
   await GenericService.update(confBookingApi.moduleApi, confBookingApi.uriApi, idItem.value || '', payload)
-  navigateTo(`/invoice/edit/${invoiceIdForRedirect.value}`)
+  // navigateTo(`/invoice/edit/${invoiceIdForRedirect.value}`)
 }
 
 async function updateItemByRef(item: { [key: string]: any }) {
@@ -989,7 +989,10 @@ async function saveItem(item: { [key: string]: any }) {
         await updateItem(item)
       }
 
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking Id ${bookingNumberTemp.value} of Invoice Id ${invoiceNumberTemp.value} has been successfully updated.`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking Id ${bookingNumberTemp.value} of Invoice Id ${invoiceNumberTemp.value} has been successfully updated.`, life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
     catch (error: any) {
       successOperation = false

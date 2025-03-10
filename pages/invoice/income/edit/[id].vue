@@ -792,7 +792,10 @@ async function saveItem(item: { [key: string]: any }) {
   if (idItem.value) {
     try {
       await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${item.invoiceNumber} was updated successfully`, life: 5000 })
+    setTimeout(() => {
+      window.close()
+    }, 1500)
     }
     catch (error: any) {
       successOperation = false
@@ -815,7 +818,14 @@ async function saveItem(item: { [key: string]: any }) {
     clearForm()
   }
 }
-const goToList = async () => await navigateTo('/invoice')
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/invoice')
+  }
+}
 
 function requireConfirmationToSave(item: any) {
   const { event } = item
@@ -1241,7 +1251,7 @@ onMounted(async () => {
       </EditFormV2>
     </div>
     <div v-if="attachmentDialogOpen">
-      <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false; getItemById(idItem) }"
+      <AttachmentDialog :close-dialog="() => { attachmentDialogOpen = false}"
         :is-creation-dialog="false" header="Manage Invoice Attachment" :open-dialog="attachmentDialogOpen"
         :selected-invoice="selectedInvoice" :selected-invoice-obj="item" />
     </div>
