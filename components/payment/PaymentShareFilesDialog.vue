@@ -910,7 +910,6 @@ onMounted(async () => {
                   <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-SHARE-FILES']"> -->
                   <!-- <Button v-tooltip.top="'Delete'" :disabled="!idItem" outlined severity="danger" class="w-3rem ml-1 sticky" icon="pi pi-trash" @click="props.item.deleteItem($event)" /> -->
                   <!-- </IfCan> -->
-                  <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialog" />
                 </template>
                 <!-- Save, View File, Show History, Add, Delete y Cancel -->
               </EditFormV2>
