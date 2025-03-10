@@ -92,18 +92,15 @@ const options = ref({
   actionsAsMenu: false,
   showEdit: false,
   showAcctions: false,
+  showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })
 
 const type = route.query.type || ''
-sendType.value = type === ENUM_INVOICE_SEND_TYPE.FTP
-  ? 'Invoice to Send by FTP'
-  : type === ENUM_INVOICE_SEND_TYPE.EMAIL
-    ? 'Invoice to Send by Email'
-    : type === ENUM_INVOICE_SEND_TYPE.BAVEL
-      ? 'Invoice to Send by Bavel'
-      : ''
+sendType.value = type === ENUM_INVOICE_SEND_TYPE.BAVEL
+  ? 'Invoice to Send by Bavel'
+  : ''
 
 const payload = ref<IQueryRequest>({
   filter: [],
@@ -128,10 +125,9 @@ const pagination = ref<IPagination>({
 
 async function getList() {
   try {
-    if (options.value.loading) { return }
-
     options.value.loading = true
     // payload.value = { ...payload.value, query: idItem.value }
+    tableRef.value?.clearSelectedItems()
     const staticPayload = [
       {
         key: 'invoiceStatus',
@@ -140,9 +136,9 @@ async function getList() {
         logicalOperation: 'AND'
       },
       {
-        key: 'agency.sentB2BPartner.b2bPartnerType.code',
+        key: 'agency.sentB2BPartner.code',
         operator: 'EQUALS',
-        value: type.toString(),
+        value: 'BVL',
         logicalOperation: 'AND'
       },
       {
@@ -170,12 +166,13 @@ async function getList() {
     //   logicalOperation: 'AND'
     // }
     ]
-    payload.value.filter = [...payload.value.filter, ...staticPayload]
 
+    payload.value.filter = [...payload.value.filter, ...staticPayload]
     listItems.value = []
     clickedItem.value = []
     const newListItems = []
     const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
+    console.log('response', response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
@@ -203,7 +200,7 @@ async function getList() {
           manageHotelCode: `${iterator?.hotel?.code}-${iterator?.hotel?.name}`,
           manageinvoiceCode: invoiceNumber.replace('OLD', 'CRE'),
           manageAgencyCode: iterator?.agency?.code,
-          manageAgencyName: `${iterator?.agency?.code}-${iterator?.agency?.name}`,
+          manageAgencyName: `${iterator?.agency?.name}`,
           dueAmount: iterator?.dueAmount ? formatNumber(Number(iterator?.dueAmount)) : 0,
           invoiceAmount: iterator?.invoiceAmount ? formatNumber(Number(iterator?.invoiceAmount)) : 0,
           invoiceNumber: invoiceNumber.replace('OLD', 'CRE'),
@@ -218,10 +215,76 @@ async function getList() {
   }
   catch (error) {
     console.error('Error loading file:', error)
-    options.value.loading = false
   }
   finally {
     options.value.loading = false
+  }
+  // Verificar si no hay resultados
+  if (!listItems.value || listItems.value.length === 0) {
+    toast.add({
+      severity: 'info',
+      summary: 'Confirmed',
+      detail: `No invoices available to send`,
+      life: 2000 // Duración del toast en milisegundos
+    })
+  }
+}
+
+async function getAgencyList(query: string = '') {
+  try {
+    const filters = [
+      {
+        key: 'name',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      },
+      {
+        key: 'code',
+        operator: 'LIKE',
+        value: query,
+        logicalOperation: 'OR'
+      },
+      {
+        key: 'status',
+        operator: 'EQUALS',
+        value: 'ACTIVE',
+        logicalOperation: 'AND'
+      },
+      // {
+      //   key: 'autoReconcile',
+      //   operator: 'EQUALS',
+      //   value: true,
+      //   logicalOperation: 'AND'
+      // }
+      {
+        key: 'sentB2BPartner.b2bPartnerType.code',
+        operator: 'EQUALS',
+        value: 'BVL',
+        logicalOperation: 'AND'
+      }
+    ]
+    const payload = {
+      filter: filters,
+      query: '',
+      pageSize: 20,
+      page: 0,
+      sortBy: 'createdAt',
+      sortType: ENUM_SHORT_TYPE.DESC
+
+    }
+
+    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
+    const { data: dataList } = response
+
+    agencyList.value = dataList.map(iterator => ({
+      id: iterator.id,
+      name: `${iterator.code} - ${iterator.name}`,
+      code: iterator.code
+    }))
+  }
+  catch (error) {
+    console.error('Error loading agency list:', error)
   }
 }
 
@@ -260,60 +323,6 @@ async function getHotelList(query: string = '') {
     hotelList.value = []
     for (const iterator of dataList) {
       hotelList.value = [...hotelList.value, { id: iterator.id, name: `${iterator.code}- ${iterator.name}`, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-async function getAgencyList(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        },
-        // {
-        //   key: 'autoReconcile',
-        //   operator: 'EQUALS',
-        //   value: true,
-        //   logicalOperation: 'AND'
-        // }
-        {
-          key: 'sentB2BPartner.b2bPartnerType.code',
-          operator: 'EQUALS',
-          value: type.toString(),
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = []
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: `${iterator.code}-${iterator.name}`, code: iterator.code }]
     }
   }
   catch (error) {
@@ -373,7 +382,14 @@ function onSortField(event: any) {
 }
 
 async function searchAndFilter() {
-  payload.value.filter = []
+  payload.value = {
+    filter: [],
+    query: '',
+    pageSize: 50,
+    page: 0,
+    sortBy: 'createdAt',
+    sortType: ENUM_SHORT_TYPE.DESC
+  }
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
     // newPayload.filter = [{
     payload.value.filter = [...payload.value.filter, {
@@ -456,7 +472,8 @@ function clearFilterToSearch() {
   }
   filterAllDateRange.value = false
   filterToSearch.value.criteria = ENUM_FILTER[0]
-  getList()
+  listItems.value = []
+  searchAndFilter()
 }
 
 async function goToList() {
@@ -519,7 +536,7 @@ async function send() {
   finally {
     options.value.loading = false
     if (completed) {
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice send successfully, total sent: ${count}!`, life: 5000 })
       onClose()
       if (clickedItem.value.length === listItems.value.length) {
         clickedItem.value = []
@@ -543,11 +560,11 @@ const disabledSearch = computed(() => {
   return false
 })
 
-watch(payloadOnChangePage, async (newValue) => {
+watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
-  payload.value.pageSize = newValue?.rows ? newValue.rows : 50
+  payload.value.pageSize = newValue?.rows ? newValue.rows : 10
 
-  await searchAndFilter()
+  getList()
 })
 
 onMounted(async () => {
@@ -577,29 +594,39 @@ onMounted(async () => {
                 <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
                   <label class="filter-label font-bold" for="">Agency:</label>
                   <div class="w-full" style=" z-index:5 ">
-                    <DebouncedAutoCompleteComponent
+                    <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll" id="autocomplete"
                       :multiple="true" class="w-full" field="name"
                       item-value="id" :model="filterToSearch.agency"
                       :suggestions="agencyList"
+                      :max-selected-labels="1"
                       @load="($event) => getAgencyList($event)"
                       @change="($event) => {
                         filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
                       }"
-                    />
+                    >
+                      <!-- <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template> -->
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
                 <div class="flex align-items-center gap-2">
                   <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                  <div class="w-full">
-                    <DebouncedAutoCompleteComponent
+                  <div class="w-full" style=" z-index:5">
+                    <DebouncedMultiSelectComponent
                       v-if="!loadingSaveAll" id="autocomplete"
                       :multiple="true" class="w-full" field="name"
+                      :max-selected-labels="1"
                       item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
                       @load="($event) => getHotelList($event)" @change="($event) => {
                         filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                       }"
-                    />
+                    >
+                      <!-- <template #option="props">
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
+                        </template> -->
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
               </div>
@@ -657,7 +684,6 @@ onMounted(async () => {
                   binary
                   class="mr-2"
                   @change="() => {
-                    console.log(filterAllDateRange);
 
                     if (!filterAllDateRange) {
                       filterToSearch.from = startOfMonth

@@ -14,6 +14,7 @@ import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import BookingDialog from './BookingDialog.vue'
 
+
 const props = defineProps({
   isDialogOpen: {
     type: Boolean,
@@ -693,7 +694,7 @@ const item = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: null,
+  invoiceAmount: 0.00,
   roomNumber: 0,
   couponNumber: '',
   adults: 0,
@@ -702,7 +703,7 @@ const item = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: null,
+  hotelAmount: 0.00,
   description: '',
   invoice: '',
   ratePlan: null,
@@ -722,7 +723,7 @@ const itemTemp = ref<GenericObject>({
   fullName: '',
   firstName: '',
   lastName: '',
-  invoiceAmount: null,
+  invoiceAmount: 0.00,
   roomNumber: 0,
   couponNumber: '',
   adults: 0,
@@ -731,7 +732,7 @@ const itemTemp = ref<GenericObject>({
   rateChild: 0,
   hotelInvoiceNumber: '',
   folioNumber: '',
-  hotelAmount: null,
+  hotelAmount: 0.00,
   description: '',
   invoice: '',
   ratePlan: null,

@@ -297,7 +297,7 @@ onMounted(() => {
             v-tooltip.top="'Save'" class="w-3rem mx-2 sticky" icon="pi pi-save"
             @click="props.item.submitForm($event)"
           />
-          <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" />
+          <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="closeDialog" /> -->
         </template>
       </EditFormV2>
     </div>

@@ -929,7 +929,7 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-content-between align-items-center">
-    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 8px;">
+    <h5 class="-mb-1 w-6 mt-0" style="line-height: 1; position: relative; top: 6px;">
       Virtual Credit Card Management
     </h5>
     <div class="my-1 flex justify-content-end px-0">

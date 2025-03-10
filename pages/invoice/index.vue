@@ -770,7 +770,7 @@ const closeReconcileFiles = () => {
 
 
 const closeSendByBavel = () => {
-  SendByFtpDialogVisible.value = false
+  SendByBavelDialogVisible.value = false
 }
 const closeSendByEmail = () => {
   SendByEmailDialogVisible.value = false
@@ -2795,7 +2795,7 @@ const legend = ref(
   </div>
   <div v-if="attachmentDialogOpen">
     <AttachmentDialogForManagerInvoice 
-      :close-dialog="() => { attachmentDialogOpen = false, getList() }" 
+      :close-dialog="() => { attachmentDialogOpen = false }" 
       :is-creation-dialog="false"
       header="Manage Invoice Attachment" 
       :open-dialog="attachmentDialogOpen" 

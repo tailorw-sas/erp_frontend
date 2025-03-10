@@ -1125,14 +1125,12 @@ async function saveItem(item: { [key: string]: any }) {
         severity: 'info',
         summary: 'Confirmed',
         detail: `The clonation invoice ${invoiceNo} was created successfully`,
-        life: 10000
+        life: 5000
       })
-      // await new Promise(resolve => setTimeout(resolve, 5000))
-      navigateTo('/invoice')
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
-    /* else {
-      throw new Error('Response object or ID is undefined')
-    } */
   }
   catch (error: any) {
     successOperation = false
@@ -1159,7 +1157,14 @@ async function saveItem(item: { [key: string]: any }) {
     }
   }
 }
-const goToList = async () => await navigateTo('/invoice')
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/invoice')
+  }
+}
 
 async function getTransactionTypeList(query = '') {
   try {

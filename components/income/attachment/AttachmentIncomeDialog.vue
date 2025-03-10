@@ -1000,13 +1000,6 @@ onMounted(() => {
                   v-tooltip.top="'Delete'" outlined severity="danger" class="w-3rem ml-1 sticky"
                   icon="pi pi-trash" :disabled="idItem === ''" @click="requireConfirmationToDelete"
                 />
-                <Button
-                  v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times"
-                  @click="() => {
-                    clearForm()
-                    closeDialog(ListItems.length)
-                  }"
-                />
               </template>
             </EditFormV2>
           </div>
