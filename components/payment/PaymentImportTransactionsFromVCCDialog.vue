@@ -361,7 +361,6 @@ onMounted(() => {
             :loading="loadingImportFromVCC"
             @click="importData"
           />
-          <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeDialog()" />
         </div>
       </div>
     </template>

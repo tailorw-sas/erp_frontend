@@ -354,18 +354,18 @@ const allMenuListItems = ref([
     disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
-  {
-    id: 'addTask',
-    label: 'Add Task',
-    icon: 'pi pi-list-check',
-    iconSvg: '',
-    viewBox: '',
-    width: '24px',
-    height: '24px',
-    command: ($event: any) => {},
-    disabled: true,
-    visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
-  },
+  // {
+  //   id: 'addTask',
+  //   label: 'Add Task',
+  //   icon: 'pi pi-list-check',
+  //   iconSvg: '',
+  //   viewBox: '',
+  //   width: '24px',
+  //   height: '24px',
+  //   command: ($event: any) => {},
+  //   disabled: true,
+  //   visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
+  // },
   {
     id: 'importTransaction',
     label: 'Import Transaction',
@@ -562,9 +562,41 @@ const columns: IColumn[] = [
     showFilter: false,
     hidden: false
   },
-  { field: 'paymentId', header: 'Id', tooltip: 'Payment ID', width: 'auto', type: 'text', showFilter: true },
-  { field: 'paymentSource', header: 'P.S', tooltip: 'Payment Source', width: 'auto', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' } },
-  { field: 'transactionDate', header: 'Trans. D', tooltip: 'Transaction Date', width: 'auto', type: 'date' },
+  {
+    field: 'paymentId',
+    header: 'Id',
+    tooltip: 'Payment ID',
+    width: '20px', // Ancho fijo
+    minWidth: '50px', // Ancho mínimo
+    maxWidth: '50px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    type: 'text',
+    showFilter: true
+  },
+  {
+    field: 'paymentSource',
+    header: 'P.S',
+    tooltip: 'Payment Source',
+    width: '20px', // Define un ancho fijo
+    minWidth: '50px', // Define un ancho mínimo
+    maxWidth: '40px', // Evita que crezca demasiado
+    widthTruncate: '50px', // Asegura que el truncamiento respete este tamaño
+    columnClass: 'truncate-text',
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-payment-source' }
+  },
+  {
+    field: 'transactionDate',
+    header: 'Trans. D',
+    tooltip: 'Transaction Date',
+    width: '20px', // Define un ancho fijo
+    minWidth: '50px', // Define un ancho mínimo
+    maxWidth: '60px', // Evita que crezca demasiado
+    widthTruncate: '50px', // Personalización para asegurar truncamiento
+    columnClass: 'truncate-text',
+    type: 'date'
+  },
   {
     field: 'hotel',
     header: 'Hotel',
@@ -604,7 +636,18 @@ const columns: IColumn[] = [
       uriApi: 'manage-agency'
     }
   },
-  { field: 'agencyType', header: 'Agency T.', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
+  {
+    field: 'agencyType',
+    header: 'Agency T.',
+    tooltip: 'Agency Type',
+    width: '70px', // Ancho fijo
+    minWidth: '60px', // Define un ancho mínimo
+    maxWidth: '70px', // Evita que se expanda demasiado
+    widthTruncate: '70px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' }
+  },
   // { field: 'agencyTypeResponse', header: 'Agency Type', tooltip: 'Agency Type', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency-type' } },
   {
     field: 'bankAccount',
@@ -629,7 +672,20 @@ const columns: IColumn[] = [
   { field: 'applied', header: 'Applied', tooltip: 'Applied', width: '60px', type: 'number' },
   { field: 'notApplied', header: 'Not Applied', tooltip: 'Not Applied', width: '60px', type: 'number' },
   { field: 'remark', header: 'Remark', width: '100px', maxWidth: '200px', type: 'text' },
-  { field: 'paymentStatus', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' }, sortable: true },
+  {
+    field: 'paymentStatus',
+    header: 'Status',
+    width: '60px', // Define un ancho fijo
+    minWidth: '50px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '60px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    frozen: true, // Mantiene la columna fija
+    type: 'slot-select',
+    statusClassMap: sClassMap,
+    objApi: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
+    sortable: true
+  }
   // { field: 'totalAmount', header: 'T.Amount', tooltip: 'Total Amount', width: '60px', type: 'text' },
   // { field: 'attachmentStatus', header: 'Attachment Status', width: '100px', type: 'select' },
   // { field: 'paymentBalance', header: 'Payment Balance', width: '200px', type: 'text' },
@@ -676,20 +732,81 @@ const loadingSaveApplyPayment = ref(false)
 const invoiceSelectedListForApplyPayment = ref<any[]>([])
 const applyPaymentListOfInvoice = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Id', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'invoiceNumber', header: 'Invoice Number', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'agency', header: 'Agency', type: 'select', width: '90px', sortable: false, showFilter: false },
-  { field: 'hotel', header: 'Hotel', type: 'select', width: '90px', sortable: false, showFilter: false },
+  {
+    field: 'invoiceId',
+    header: 'Id',
+    type: 'text',
+    width: '70px', // Define un ancho fijo
+    minWidth: '60px', // Establece un ancho mínimo
+    maxWidth: '70px', // Evita que se expanda demasiado
+    widthTruncate: '70px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    sortable: true,
+    showFilter: true
+  },
+  {
+    field: 'invoiceNumber',
+    header: 'Invoice No.',
+    type: 'text',
+    width: '70px', // Define un ancho fijo
+    minWidth: '60px', // Establece un ancho mínimo
+    maxWidth: '70px', // Evita que se expanda demasiado
+    widthTruncate: '70px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    sortable: true,
+    showFilter: true
+  },
+  {
+    field: 'agency',
+    header: 'Agency',
+    type: 'select',
+    width: '90px', // Define un ancho fijo
+    minWidth: '80px', // Establece un ancho mínimo
+    maxWidth: '90px', // Evita que se expanda demasiado
+    widthTruncate: '90px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    sortable: false,
+    showFilter: false
+  },
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    type: 'select',
+    width: '90px', // Define un ancho fijo
+    minWidth: '80px', // Establece un ancho mínimo
+    maxWidth: '90px', // Evita que se expanda demasiado
+    widthTruncate: '90px', // Control de truncamiento
+    columnClass: 'truncate-text',
+    sortable: false,
+    showFilter: false
+  },
   { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
   { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
   // { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: true },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', statusClassMap: sClassMap, objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status', filter: [{
-    key: 'enabledToApply',
-    operator: 'EQUALS',
-    value: true,
-    logicalOperation: 'AND'
-  }] }, sortable: true },
+  {
+    field: 'status',
+    header: 'Status',
+    width: '60px', // Define el ancho de la columna
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Establece un ancho máximo
+    widthTruncate: '60px', // Controla el truncamiento dentro del ancho
+    columnClass: 'truncate-text',
+    frozen: true,
+    type: 'slot-select',
+    statusClassMap: sClassMap,
+    objApi: {
+      moduleApi: 'invoicing',
+      uriApi: 'manage-invoice-status',
+      filter: [{
+        key: 'enabledToApply',
+        operator: 'EQUALS',
+        value: true,
+        logicalOperation: 'AND'
+      }]
+    },
+    sortable: true
+  }
 ])
 
 // Table
@@ -860,13 +977,41 @@ const fieldRemark = ref('')
 const allInvoiceCheckIsChecked = ref(false)
 
 const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
-  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', width: '90px', maxWidth: '120px', sortable: true, showFilter: true },
-  { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: true, showFilter: true },
-  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '80px', // Define un ancho fijo
+    minWidth: '70px', // Establece un ancho mínimo
+    maxWidth: '90px', // Evita que se expanda demasiado
+    widthTruncate: '80px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'hotelBookingNumber', header: 'Reservation No.', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '30px', // Define un ancho fijo
+    minWidth: '20px', // Establece un ancho mínimo
+    maxWidth: '40px', // Evita que se expanda demasiado
+    widthTruncate: '30px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '30px', // Define un ancho fijo
+    minWidth: '20px', // Establece un ancho mínimo
+    maxWidth: '40px', // Evita que se expanda demasiado
+    widthTruncate: '30px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
   { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: true, showFilter: true, editable: true },
 ])
@@ -2985,7 +3130,6 @@ async function onRowDoubleClickInDataTableForChangeAgency(event: any) {
     await GenericService.update(options.value.moduleApi, options.value.uriApi, objItemSelectedForRightClickChangeAgency.value.id || '', payloadToApplyPayment)
     openDialogApplyPayment.value = false
     toast.add({ severity: 'success', summary: 'Successful', detail: 'The agency has been changed successfully', life: 3000 })
-    getList()
     openDialogChangeAgency.value = false
   }
   catch (error: any) {
@@ -3919,7 +4063,7 @@ onMounted(async () => {
                         field="name"
                         class="w-full h-2rem align-items-center"
                         item-value="id"
-                        :max-selected-labels="3"
+                        :max-selected-labels="1"
                         :model="filterToSearch.client"
                         :suggestions="[...clientItemsList]"
                         :loading="objLoading.loadingClient"
@@ -3996,7 +4140,7 @@ onMounted(async () => {
                         class="w-full h-2rem align-items-center"
                         field="name"
                         item-value="id"
-                        :max-selected-labels="3"
+                        :max-selected-labels="1"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyItemsList]"
                         :loading="objLoading.loadingAgency"
@@ -4094,7 +4238,7 @@ onMounted(async () => {
                         class="w-full h-2rem align-items-center"
                         field="name"
                         item-value="id"
-                        :max-selected-labels="3"
+                        :max-selected-labels="1"
                         :model="filterToSearch.hotel"
                         :suggestions="[...hotelItemsList]"
                         :loading="objLoading.loadingHotel"
@@ -4324,7 +4468,7 @@ onMounted(async () => {
 
             <!-- fifth filter -->
             <div class="col-12 md:col-2 align-items-center my-0 py-0 w-auto">
-              <div class="flex align-items-center h-full">
+              <div class="flex align-items-center h-full -ml-4">
                 <Checkbox
                   id="payApplied"
                   v-model="filterToSearch.payApplied"
@@ -4557,7 +4701,6 @@ onMounted(async () => {
               :loading="loadingSaveApplyPayment"
               @click="saveApplyPayment"
             />
-            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalChangeAgency()" />
           </div>
         </div>
       </template>
@@ -4570,7 +4713,7 @@ onMounted(async () => {
         modal
         class="mx-3 sm:mx-0"
         content-class="border-round-bottom border-top-1 surface-border"
-        :style="{ width: '60%' }"
+        :style="{ width: '80%', maxHeight: '100vh' }"
         :pt="{
           root: {
             class: 'custom-dialog-history',
@@ -4578,9 +4721,6 @@ onMounted(async () => {
           header: {
             style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
           },
-          // mask: {
-          //   style: 'backdrop-filter: blur(5px)',
-          // },
         }"
         @hide="closeModalApplyPayment()"
       >
@@ -4598,6 +4738,7 @@ onMounted(async () => {
             </div>
           </div>
         </template>
+
         <template #default>
           <div class="p-fluid pt-3">
             <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
@@ -4609,7 +4750,7 @@ onMounted(async () => {
                 :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
                 data-key="id"
                 selection-mode="multiple"
-                style="background-color: #F5F5F5;"
+                style="background-color: #F5F5F5; max-height: 90px"
                 @update:selection="onRowSelectAll"
               >
                 <Column selection-mode="multiple" header-style="width: 3rem" />
@@ -4635,7 +4776,7 @@ onMounted(async () => {
                 </template>
               </DataTable>
             </BlockUI>
-            <!-- @on-row-double-click="onRowDoubleClickInDataTableApplyPayment" -->
+
             <DynamicTable
               class="card p-0"
               :data="applyPaymentListOfInvoice"
@@ -4648,7 +4789,6 @@ onMounted(async () => {
               @update:clicked-item="addAmmountsToApplyPayment($event)"
               @on-sort-field="applyPaymentOnSortField"
             >
-              <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
               <template #column-status="{ data: item }">
                 <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
               </template>
@@ -4684,6 +4824,7 @@ onMounted(async () => {
               </template>
             </DynamicTable>
           </div>
+
           <div class="flex justify-content-between">
             <div class="flex align-items-center">
               <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
@@ -4713,7 +4854,6 @@ onMounted(async () => {
                 :loading="loadingSaveApplyPayment"
                 @click="saveApplyPayment"
               />
-              <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPayment()" />
             </div>
           </div>
         </template>
@@ -4726,7 +4866,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '60%' }"
+      :style="{ width: '80%', maxHeight: '100vh' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
@@ -4923,7 +5063,6 @@ onMounted(async () => {
               :loading="loadingSaveApplyPayment"
               @click="saveApplyPaymentOtherDeduction"
             />
-            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalApplyPaymentOtherDeductions()" />
           </div>
         </div>
       </template>
@@ -5203,7 +5342,6 @@ onMounted(async () => {
       :add-item="addAttachment"
       :close-dialog="() => {
         attachmentDialogOpen = false
-        getList()
       }"
       :is-creation-dialog="true"
       header="Manage Payment Attachment"
@@ -5221,7 +5359,6 @@ onMounted(async () => {
       :add-item="addAttachment"
       :close-dialog="() => {
         shareFilesDialogOpen = false
-        getList()
       }"
       :is-creation-dialog="true"
       header="Share Files"
