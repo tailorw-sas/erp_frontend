@@ -847,11 +847,10 @@ async function importBookings() {
           detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
           life: 5000
         })
-        onClose()
         options.value.loading = false
-        await getList()
         showErrorsDataTable.value = false
         showDataTable.value = true
+        onClose()
       }
 
       await updateBookingsStatus(processId.value)
