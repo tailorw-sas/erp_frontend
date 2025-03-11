@@ -441,14 +441,64 @@ const columnsInvoice = ref<IColumn[]>([
     columnClass: 'truncate-text', // ⬅️ Agregar esta clase
     objApi: { moduleApi: 'settings', uriApi: 'manage-hotel' }
   },
-  { field: 'agency', header: 'Agency', width: '80px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency' } },
-  { field: 'invoiceNumber', header: 'I.No', tooltip: 'Invoice No', type: 'text' },
-  { field: 'invoiceDate', header: 'I.Date', tooltip: 'Invoice Date', type: 'date' },
+  {
+    field: 'agency',
+    header: 'Agency',
+    width: '80px', // Ancho fijo
+    minWidth: '70px', // Ancho mínimo
+    maxWidth: '80px', // Evita que se expanda
+    widthTruncate: '80px', // Control de truncamiento
+    columnClass: 'truncate-text', // Clase CSS para truncar
+    type: 'select',
+    objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }
+  },
+  {
+    field: 'invoiceNumber',
+    header: 'I.No',
+    tooltip: 'Invoice No',
+    type: 'text',
+    width: '40px', // Define un ancho fijo
+    minWidth: '30px', // Ancho mínimo
+    maxWidth: '40px', // Evita que se expanda demasiado
+    widthTruncate: '40px', // Control de truncamiento
+    columnClass: 'truncate-text' // Clase CSS para truncar
+  },
+  {
+    field: 'invoiceDate',
+    header: 'I.Date',
+    tooltip: 'Invoice Date',
+    type: 'date',
+    width: '50px', // Define un ancho fijo
+    minWidth: '60px', // Ancho mínimo
+    maxWidth: '50px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text' // Clase CSS para truncar
+  },
   { field: 'invoiceAmount', header: 'I. Amnt', tooltip: 'Invoice Amount', type: 'number' },
   { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
   { field: 'dueAmount', header: 'I. Balance', tooltip: 'Invoice Balance', type: 'number' },
-  { field: 'aging', header: 'Aging', type: 'text' },
-  { field: 'invoiceStatus', header: 'Status', frozen: true, type: 'slot-select', objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' } },
+  {
+    field: 'aging',
+    header: 'Aging',
+    type: 'text',
+    width: '40px', // Define un ancho fijo
+    minWidth: '30px', // Ancho mínimo
+    maxWidth: '40px', // Evita que la columna se expanda
+    widthTruncate: '40px', // Control de truncamiento
+    columnClass: 'truncate-text' // Clase CSS para truncar
+  },
+  {
+    field: 'invoiceStatus',
+    header: 'Status',
+    frozen: true, // Fijar la columna
+    width: '40px', // Ancho fijo
+    minWidth: '50px', // Ancho mínimo
+    maxWidth: '40px', // Evita expansión excesiva
+    widthTruncate: '40px', // Control de truncamiento
+    columnClass: 'truncate-text', // Clase CSS para truncar
+    type: 'slot-select',
+    objApi: { moduleApi: 'invoicing', uriApi: 'manage-invoice-status' }
+  }
 ])
 
 const columnsAgency: IColumn[] = [
@@ -514,7 +564,7 @@ const payloadOnChangePageInv = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -522,7 +572,7 @@ const payload = ref<IQueryRequest>({
 const payloadInv = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100000,
+  pageSize: 1000,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -715,6 +765,8 @@ async function getPaymentData() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+
+    console.log('****List PAYMENt*****', listItems.value)
   }
   catch (error) {
     console.log(error)
@@ -2206,7 +2258,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     // getList()
-    getPaymentData()
+    // getPaymentData()
     // getListInvoice()
   }
 })
