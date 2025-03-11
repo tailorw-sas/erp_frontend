@@ -546,7 +546,10 @@ async function updateItem(item: { [key: string]: any }) {
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -673,6 +676,9 @@ onMounted(async () => {
 
 <template>
   <div style="max-height: 100vh; height: 90vh">
+    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+      Edit Hotel Payment
+    </div>
     <div class="card p-4 mb-0">
       <EditFormV2
         :key="formReload"
