@@ -15,6 +15,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
+const props = defineProps(['closeModal', 'reloadList'])
 const { data: userData } = useAuth()
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
@@ -36,7 +37,6 @@ const newAdjustmentTransactionDialogVisible = ref(false)
 const editManualTransactionDialogVisible = ref(false)
 const contextMenu = ref()
 const contextMenuTransaction = ref()
-
 const menuListItems = [
   {
     label: 'Unbind Transaction',
@@ -404,7 +404,7 @@ async function createItem(item: { [key: string]: any }) {
       // Guarda el id del elemento creado
       idItem.value = response.id
       LocalBindTransactionList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was created successfully`, life: 5000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -421,7 +421,12 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   try {
     await createItem(item)
-    await navigateTo({ path: `/vcc-management/bank-reconciliation/bank-payment-of-merchant/${idItem.value}`, params: { id: idItem.value } })
+
+    // Llamar a la función para recargar la lista
+    props.reloadList()
+
+    // Cerrar el modal
+    props.closeModal()
   }
   catch (error: any) {
     loadingSaveAll.value = false

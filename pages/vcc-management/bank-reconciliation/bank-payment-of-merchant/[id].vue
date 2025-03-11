@@ -609,7 +609,10 @@ async function updateItem(item: { [key: string]: any }) {
     if (response && response.id) {
       // Guarda el id del elemento creado
       idItem.value = response.id
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was updated successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Bank Payment of Merchant ${response.reconciliationId ?? ''} was updated successfully`, life: 5000 })
+      setTimeout(() => {
+        window.close()
+      }, 1500)
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
