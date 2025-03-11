@@ -1197,8 +1197,11 @@ onMounted(() => {
       header="Hotel Payment Management"
       :style="{ width: '95vw', height: '95vh', overflow: 'hidden' }"
       :closable="true"
+      :pt="{
+        content: { style: 'overflow: hidden;' }, /* Evita que el contenido interno tenga scroll */
+      }"
     >
-      <div class="p-4" style="height: 100%; overflow-y: auto; overflow-x: hidden;">
+      <div class="p-4 no-scroll">
         <HotelPayment style="max-height: 50vh; overflow: hidden; width: 100%;" />
       </div>
     </Dialog>

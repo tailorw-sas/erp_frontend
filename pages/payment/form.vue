@@ -1128,12 +1128,13 @@ function openDialogPaymentDetailsEdit(idDetail: any = null) {
 function dialogPaymentDetailSummary() {
   onOffDialogPaymentDetailSummary.value = true
 }
-function goToList() {
-  navigateTo('/payment')
-}
-
-function goToForm(item: string) {
-  navigateTo({ path: '/payment/form', query: { id: item } })
+async function goToList() {
+  if (window.opener) {
+    window.close()
+  }
+  else {
+    await navigateTo('/payment')
+  }
 }
 
 function navigateToInvoice($event: any) {
