@@ -847,11 +847,10 @@ async function importBookings() {
           detail: `Import process successful. ${elementsToImportNumber} bookings imported.`,
           life: 5000
         })
-        onClose()
         options.value.loading = false
-        await getList()
         showErrorsDataTable.value = false
         showDataTable.value = true
+        onClose()
       }
 
       await updateBookingsStatus(processId.value)
@@ -893,7 +892,7 @@ async function checkProcessStatus(id: any) {
   return new Promise<void>((resolve, reject) => {
     let status = 'RUNNING'
     let attempts = 0
-    const maxAttempts = 30
+    const maxAttempts = 150
     const interval = setInterval(async () => {
       try {
         attempts++
@@ -1134,7 +1133,7 @@ onMounted(async () => {
             </div>
           </template> -->
 
-          <div class="grid">
+          <div class="grid mr-1">
             <div class="col-12 md:col-6 lg:col-6 flex pb-0">
               <div class="flex flex-row gap-2 w-full">
                 <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">

@@ -775,11 +775,14 @@ onMounted(() => {
     v-model:visible="isBankPaymentModalOpen"
     modal
     header="New Bank Payment of Merchant"
-    :style="{ width: '95vw', height: '70vh' }"
+    :style="{ width: '95vw', height: '70vh', overflow: 'hidden' }"
     :closable="true"
+    :pt="{
+      content: { style: 'overflow: hidden;' }, /* Evita que el contenido interno tenga scroll */
+    }"
   >
-    <div class="p-4" style="height: auto; overflow: hidden;">
-      <BankPaymentOfMerchant style="max-height: 80vh; overflow: hidden;" />
+    <div class="p-4 no-scroll">
+      <BankPaymentOfMerchant :close-modal="() => isBankPaymentModalOpen = false" :reload-list="getList" />
     </div>
   </Dialog>
 </template>

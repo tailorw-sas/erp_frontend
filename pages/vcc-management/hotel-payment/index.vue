@@ -534,7 +534,7 @@ async function updateStatus(hotelPaymentId: string, statusId: string) {
   payload.employeeId = userData?.value?.user?.userId
   const response: any = await GenericService.update(confApi.moduleApi, confApi.uriApi, hotelPaymentId, payload)
   if (response && response.id) {
-    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 10000 })
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was updated successfully`, life: 5000 })
   }
   else {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -857,11 +857,17 @@ onMounted(() => {
     v-model:visible="isNewHotelPaymentModalOpen"
     modal
     header="New Hotel Payment"
-    :style="{ width: '95vw', height: '70vh' }"
+    :style="{ width: '95vw', height: '70vh', overflow: 'hidden' }"
     :closable="true"
+    :pt="{
+      content: { style: 'overflow: hidden;' }, /* Evita que el contenido interno tenga scroll */
+    }"
   >
-    <div class="p-4" style="height: auto; overflow: hidden;">
-      <NewHotelPayment style="max-height: 80vh; overflow: hidden;" />
+    <div class="p-4 no-scroll">
+      <NewHotelPayment
+        :close-modal="() => isNewHotelPaymentModalOpen = false"
+        :reload-list="getList"
+      />
     </div>
   </Dialog>
 </template>

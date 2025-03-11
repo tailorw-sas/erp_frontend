@@ -14,6 +14,7 @@ import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFie
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import type { FilterCriteria } from '~/composables/list'
 
+const props = defineProps(['closeModal', 'reloadList'])
 const { data: userData } = useAuth()
 const toast = useToast()
 const transactionsToBindDialogOpen = ref<boolean>(false)
@@ -463,7 +464,7 @@ async function createItem(item: { [key: string]: any }) {
       // Guarda el id del elemento creado
       idItem.value = response.id
       LocalBindTransactionList.value = []
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was created successfully`, life: 10000 })
+      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Hotel Payment ${response.hotelPaymentId ?? ''} was created successfully`, life: 5000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -475,8 +476,10 @@ async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   try {
     await createItem(item)
-    // await navigateTo({ path: `/vcc-management/hotel-payment/form/${idItem.value}`, params: { id: idItem.value } })
-    await navigateTo({ path: `/vcc-management/hotel-payment` })
+    props.reloadList()
+
+    // Cerrar el modal
+    props.closeModal()
   }
   catch (error: any) {
     loadingSaveAll.value = false
