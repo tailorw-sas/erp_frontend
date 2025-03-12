@@ -149,10 +149,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             }
             entity.setInvoiceNo(lastInvoiceNo);
             entity.setInvoiceNumber(invoiceNumber);
-//            Long lastInvoiceNo = this.getInvoiceNumberSequence(dto.getInvoiceNumber());
-//            String invoiceNumber = dto.getInvoiceNumber() + "-" + lastInvoiceNo;
-//            entity.setInvoiceNumber(invoiceNumber);
-//            entity.setInvoiceNo(lastInvoiceNo);
             dto.setInvoiceNo(lastInvoiceNo);
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
             entity.setInvoiceNumberPrefix(invoicePrefix);

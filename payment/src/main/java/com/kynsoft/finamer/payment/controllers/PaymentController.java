@@ -137,7 +137,6 @@ public class PaymentController {
 
         String userId = jwt.getClaim("sub");
         UUID employeeId = UUID.fromString(userId);
-        //UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
         GetSearchPaymentQuery query = new GetSearchPaymentQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
@@ -149,7 +148,6 @@ public class PaymentController {
 
         String userId = jwt.getClaim("sub");
         UUID employeeId = UUID.fromString(userId);
-//        UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
         GetSearchPaymentCollectionsQuery query = new GetSearchPaymentCollectionsQuery(pageable, request.getFilter(), request.getQuery(), employeeId);
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);
