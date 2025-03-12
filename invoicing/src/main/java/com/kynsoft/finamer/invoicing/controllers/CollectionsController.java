@@ -28,7 +28,6 @@ public class CollectionsController {
         
         String userId = jwt.getClaim("sub");
         UUID employeeId = UUID.fromString(userId);
-//        UUID employeeId = UUID.fromString("637ee5cb-1e36-4917-a0a9-5874bc8bea04");
         InvoiceCollectionsSummaryQuery query =new InvoiceCollectionsSummaryQuery(searchRequest.getFilter(), PageableUtil.createPageable(searchRequest), employeeId);
         return ResponseEntity.ok(mediator.send(query));
     }
