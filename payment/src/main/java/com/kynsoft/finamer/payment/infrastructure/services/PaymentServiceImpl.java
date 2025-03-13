@@ -147,9 +147,7 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteriaForEmployee(filterCriteria, employeeId);
-
         GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        //  Page<Payment> data = this.repositoryQuery.findAll(specifications, pageable);
         Page<PaymentSearchProjection> data = this.repositoryQuery.findAllProjected(specifications, pageable);
 
         return getPaginatedResponse(data);
@@ -158,13 +156,6 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
-//
-//        FilterCriteria fcBank = new FilterCriteria();
-//        fcBank.setKey("paymentSource.isBank");
-//        fcBank.setLogicalOperation(LogicalOperation.AND);
-//        fcBank.setOperator(SearchOperation.EQUALS);
-//        fcBank.setValue(true);
-//        filterCriteria.add(fcBank);
 
         FilterCriteria fcBankDepositBalance = new FilterCriteria();
         fcBankDepositBalance.setKey("depositBalance");
@@ -196,12 +187,6 @@ public class PaymentServiceImpl implements IPaymentService {
         fcHotel.setValue(hotelIds);
         filterCriteria.add(fcHotel);
 
-//        FilterCriteria fcExpense = new FilterCriteria();
-//        fcExpense.setKey("paymentSource.expense");
-//        fcExpense.setLogicalOperation(LogicalOperation.AND);
-//        fcExpense.setOperator(SearchOperation.EQUALS);
-//        fcExpense.setValue(true);
-//        filterCriteria.add(fcExpense);
         GenericSpecificationsBuilder<Payment> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
 
         Page<PaymentSearchProjection> data = this.repositoryQuery.findAllProjected(specifications, pageable);
