@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> exchanges
         				.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/actuator", "/actuator/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/health").permitAll()
                         .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs.yaml", "/v3/api-docs/**", "/swagger-resources/**", "webjars/**").permitAll()
                         .pathMatchers(AUTH_WHITELIST).permitAll()
