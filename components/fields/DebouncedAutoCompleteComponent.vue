@@ -59,7 +59,7 @@ watch(() => props.model, (newValue) => {
 
 const debouncedComplete = useDebounceFn((event: any) => {
   emit('load', event.query)
-}, props.debounceTimeMs, { maxWait: 5000 })
+}, props.debounceTimeMs, { maxWait: 2000 })
 
 const openDropdown = () => instance.value?.show()
 
