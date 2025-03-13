@@ -84,7 +84,7 @@ ENV TZ="America/Santo_Domingo"
 ENV JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
 
 RUN apk update && \
-    apk add --no-cache fontconfig freetype font-noto telnet lftp
+    apk add --no-cache fontconfig freetype font-noto busybox-extras lftp
 
 # Para fuentes Noto
 RUN apk add --no-cache font-noto
