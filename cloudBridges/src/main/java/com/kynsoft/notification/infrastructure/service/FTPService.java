@@ -1,9 +1,12 @@
 package com.kynsoft.notification.infrastructure.service;
 
+import com.kynsof.share.core.application.ftp.FtpService;
 import com.kynsoft.notification.domain.service.IFTPService;
 import com.kynsoft.notification.infrastructure.config.FTPConfig;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +16,7 @@ import java.io.InputStream;
 @Service
 public class FTPService implements IFTPService {
 
+    private static final Logger log = LoggerFactory.getLogger(FtpService.class);
     private final FTPConfig ftpConfig;
 
     @Value("${ftp.server.address}")
@@ -33,14 +37,15 @@ public class FTPService implements IFTPService {
 
     public void uploadFile(String remotePath, InputStream inputStream, String fileName, String server, String user,
                            String password, int port) {
-        System.out.println("Inicio FTP");
-       // remotePath = remotePath.replace("", "/");
-
         FTPClient ftpClient = new FTPClient();
         try {
+            log.info("🔗 Conectando al servidor FTP: {} en el puerto {}", server, port);
             ftpClient.connect(server, port);
-            ftpClient.login(user, password);
-            System.out.println("Conectado al FTP");
+            log.info("🔗 Logueandose con las credenciales siguientes: user {}, pass {}", user, password);
+            boolean login = ftpClient.login(user, password);
+            if (!login) {
+                throw new RuntimeException("❌ Falló la autenticación con el servidor FTP.");
+            }
 
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             ftpClient.enterLocalPassiveMode();
@@ -48,27 +53,32 @@ public class FTPService implements IFTPService {
             ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
             ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
 
-            // Crear directorio si no existe
-            if (!createDirectories(remotePath, ftpClient)) {
-                System.out.println("No se pudo crear el directorio en el FTP.");
-                return;
+            if (!ftpClient.changeWorkingDirectory(remotePath)) {
+                log.warn("⚠️ El directorio {} no existe en el servidor FTP. Creando...", remotePath);
+                if (!ftpClient.makeDirectory(remotePath)) {
+                    throw new RuntimeException("❌ No se pudo crear el directorio en el servidor FTP.");
+                }
+                ftpClient.changeWorkingDirectory(remotePath);
             }
 
-            boolean success = ftpClient.storeFile(remotePath+"/"+fileName, inputStream);
-            if (success) {
-                System.out.println("El archivo se subió exitosamente.");
+            boolean uploaded = ftpClient.storeFile(fileName, inputStream);
+            if (uploaded) {
+                log.info("✅ Archivo '{}' subido correctamente al servidor FTP en '{}'.", fileName, remotePath);
             } else {
-                System.out.println("Error al subir el archivo.");
+                throw new RuntimeException("❌ No se pudo subir el archivo al servidor FTP.");
             }
-            ftpClient.logout();
-            System.out.println("Fin FTP");
-        } catch (IOException ex) {
-            System.out.println(ex.toString());
+        } catch (IOException e) {
+            log.error("❌ Error de conexión con el servidor FTP: {}", e.getMessage(), e);
+            throw new RuntimeException("Error en la conexión FTP: " + e.getMessage(), e);
         } finally {
             try {
-                ftpClient.disconnect();
+                if (ftpClient.isConnected()) {
+                    ftpClient.logout();
+                    ftpClient.disconnect();
+                    log.info("🔌 Desconectado del servidor FTP.");
+                }
             } catch (IOException ex) {
-                System.out.println("Error al desconectar: " + ex.getMessage());
+                log.error("⚠️ Error al cerrar la conexión FTP: {}", ex.getMessage(), ex);
             }
         }
     }
@@ -107,23 +117,5 @@ public class FTPService implements IFTPService {
             }
         }
         return inputStream; // Devuelve el InputStream para que el archivo pueda ser leído
-    }
-
-    private boolean createDirectories(String remotePath, FTPClient ftpClient) throws IOException {
-        String[] folders = remotePath.split("/");
-        for (String folder : folders) {
-            if (folder.length() > 0) {
-                boolean dirExists = ftpClient.changeWorkingDirectory(folder);
-                if (!dirExists) {
-                    boolean created = ftpClient.makeDirectory(folder);
-                    if (!created) {
-                        System.out.println("No se pudo crear el directorio: " + folder);
-                        return false; // Falla si no se puede crear el directorio
-                    }
-                    ftpClient.changeWorkingDirectory(folder);
-                }
-            }
-        }
-        return true;
     }
 }
