@@ -1036,7 +1036,8 @@ async function getList() {
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           invoiceNumberTemp: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
-          agency: { ...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}` }
+          agency: { ...iterator?.agency, name: `${iterator?.agency?.name || ""}` },
+          isManual: iterator.importType !== "INSIST" ? true : iterator.isManual // Aquí se modifica isManual si importType es diferente de "INSIST"
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
@@ -1044,7 +1045,6 @@ async function getList() {
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
-
     listItems.value = [...listItems.value, ...newListItems]
     return listItems
   }
