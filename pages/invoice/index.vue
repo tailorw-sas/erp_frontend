@@ -143,6 +143,7 @@ const disableDates = ref<boolean>(false)
 const expandedInvoice = ref('')
 
 const hotelList = ref<any[]>([])
+const hotelTemp = ref<any[]>([])
 const statusList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
@@ -1035,7 +1036,8 @@ async function getList() {
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           invoiceNumberTemp: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
-          agency: { ...iterator?.agency, name: `${iterator?.agency?.code || ""}-${iterator?.agency?.name || ""}` }
+          agency: { ...iterator?.agency, name: `${iterator?.agency?.name || ""}` },
+          isManual: iterator.importType !== "INSIST" ? true : iterator.isManual // Aquí se modifica isManual si importType es diferente de "INSIST"
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
@@ -1043,7 +1045,6 @@ async function getList() {
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
-
     listItems.value = [...listItems.value, ...newListItems]
     return listItems
   }
@@ -1630,16 +1631,42 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
-async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  let hotelTemp: any[] = []
+async function getHotelList(query: string) {
   hotelList.value = []
-  hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-  hotelTemp = [...new Set(hotelTemp)];
-  hotelList.value = [...hotelTemp]
+  hotelList.value = hotelTemp.value.filter(item =>
+    item.code.toUpperCase().includes(query.toUpperCase())
+    || item.name.toUpperCase().includes(query.toUpperCase())
+  )
 }
-async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+async function getHotelListTemp() {
+  try {
+     const payload = {
+       filter: [
+         {
+           key: 'status',
+           operator: 'EQUALS',
+           value: 'ACTIVE',
+           logicalOperation: 'AND'
+         }
+       ],
+       query: '',
+       pageSize: 200,
+       page: 0,
+       sortBy: 'name',
+       sortType: ENUM_SHORT_TYPE.ASC
+     }
+     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
+     const { data: dataList } = response
+     for (const iterator of dataList) {
+      hotelTemp.value = [...hotelTemp.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+     }
+     hotelList.value = [...hotelTemp.value]
+   }
+   catch (error) {
+     console.error('Error loading hotel list:', error)
+   }
 }
+
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let statusTemp: any[] = []
   statusList.value = []
@@ -2225,7 +2252,8 @@ watch(filterToSearch, () => {
 onMounted(async () => {
   isFirstTimeInOnMounted.value = true
   filterToSearch.value.criterial = ENUM_FILTER[0]
-  await getStatusListTemp()  
+  await getStatusListTemp()
+  await getHotelListTemp()
   searchAndFilter()
 })
 
@@ -2505,21 +2533,7 @@ const legend = ref(
                               filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
                             }
                           }"
-                          @load="async($event) => {
-                            const filter: FilterCriteria[] = [
-                              {
-                                key: 'status',
-                                logicalOperation: 'AND',
-                                operator: 'EQUALS',
-                                value: 'ACTIVE',
-                              },
-                            ]
-                            const objQueryToSearch = {
-                              query: $event,
-                              keys: ['name', 'code'],
-                            }
-                            await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
-                          }"
+                          @load="async($event) => await getHotelList($event)"
                         >
                         <template #custom-value="props">
                           <span v-for="(item, index) in (props.value || []).slice(0, maxSelectedLabels.hotel)" :key="index" class="custom-chip">
@@ -2532,8 +2546,7 @@ const legend = ref(
                           </span>
                         </template>
                         <template #option="props">
-                          <!--<span>{{ props.item.code }} - {{ props.item.name }}</span>-->
-                          <span>{{ props.item.name }}</span>
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedMultiSelectComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">
