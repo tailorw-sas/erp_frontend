@@ -25,7 +25,6 @@ const resultTable = ref<InstanceType<typeof DynamicTable> | null>(null)
 const showDataTable = ref(true)
 const showErrorsDataTable = ref(false)
 const showErrorsSearchDataTable = ref(false)
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const processId = ref('')
 const totalImportedRows = ref(0)
 const totalHotelInvoiceAmount = ref(0)
@@ -42,6 +41,7 @@ const filterToSearch = ref<IData>({
 })
 
 const hotelList = ref<any[]>([])
+const hotelListTotal = ref<any[]>([])
 const agencyList = ref<any[]>([])
 
 // VARIABLES -----------------------------------------------------------------------------------------
@@ -279,8 +279,6 @@ async function getList() {
         agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
         hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
         roomType: `${iterator?.roomType?.code || ''}`,
-        // rowClass: isRowSelectable(iterator) ? 'p-selectable-row' : 'p-disabled p-text-disabled',
-        // selected: isRowSelectable(iterator)
       })
 
       totalHotelInvoiceAmount.value += iterator.hotelInvoiceAmount ? Number(iterator.hotelInvoiceAmount) : 0
@@ -352,24 +350,18 @@ async function getListSearchErrors() {
     optionsSearchErrors.value.loading = false
   }
 }
-
-async function getHotelList(query: string = '') {
+async function getHotelListFilter(query: string = '') {
+  hotelList.value = []
+  hotelList.value = hotelListTotal.value.filter(item =>
+    item.code.toUpperCase().includes(query.toUpperCase())
+    || item.name.toUpperCase().includes(query.toUpperCase())
+  )
+}
+async function getHotelList() {
   try {
-    hotelList.value = []
+    hotelListTotal.value = []
     const payload = {
       filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
         {
           key: 'isVirtual',
           logicalOperation: 'AND',
@@ -394,7 +386,8 @@ async function getHotelList(query: string = '') {
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelListTotal.value = [...hotelListTotal.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+      hotelList.value = [...hotelListTotal.value]
     }
   }
   catch (error) {
@@ -1109,6 +1102,7 @@ watch(payloadOnChangePageErrorList, (newValue) => {
 
 onMounted(async () => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
+  await getHotelList()
 })
 </script>
 
@@ -1171,7 +1165,7 @@ onMounted(async () => {
                     <DebouncedAutoCompleteComponent
                       v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
                       class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
-                      :suggestions="hotelList" @load="($event) => getHotelList($event)" @change="($event) => { filterToSearch.hotel = $event }"
+                      :suggestions="hotelList" @load="($event) => getHotelListFilter($event)" @change="($event) => { filterToSearch.hotel = $event }"
                     >
                       <template #option="props">
                         <span>{{ props.item.code }} - {{ props.item.name }}</span>
