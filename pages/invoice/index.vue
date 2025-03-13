@@ -1655,18 +1655,16 @@ async function getHotelListTemp() {
        sortBy: 'name',
        sortType: ENUM_SHORT_TYPE.ASC
      }
-
-     hotelTemp.value = [{ id: 'All', name: 'All', code: 'All' }]
      const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
      const { data: dataList } = response
      for (const iterator of dataList) {
       hotelTemp.value = [...hotelTemp.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
      }
+     hotelList.value = [...hotelTemp.value]
    }
    catch (error) {
      console.error('Error loading hotel list:', error)
    }
-  hotelList.value = [...hotelTemp.value]
 }
 
 async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
@@ -2548,8 +2546,7 @@ const legend = ref(
                           </span>
                         </template>
                         <template #option="props">
-                          <!--<span>{{ props.item.code }} - {{ props.item.name }}</span>-->
-                          <span>{{ props.item.name }}</span>
+                          <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                       </DebouncedMultiSelectComponent>
                         <div v-if="hotelError" class="flex align-items-center text-sm">

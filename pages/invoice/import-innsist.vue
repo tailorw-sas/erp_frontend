@@ -387,8 +387,8 @@ async function getHotelList() {
     const { data: dataList } = response
     for (const iterator of dataList) {
       hotelListTotal.value = [...hotelListTotal.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-      hotelList.value = [...hotelListTotal.value]
     }
+    hotelList.value = [...hotelListTotal.value]
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
