@@ -23,7 +23,7 @@ const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
-const maxSelectedLabels = ref(3)
+const maxSelectedLabels = ref(2)
 
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
@@ -765,8 +765,6 @@ async function getPaymentData() {
     }
 
     listItems.value = [...listItems.value, ...newListItems]
-
-    console.log('****List PAYMENt*****', listItems.value)
   }
   catch (error) {
     console.log(error)
@@ -1139,7 +1137,6 @@ async function getListInvoice() {
 
     const response = await GenericService.search(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
-
     paginationInvoice.value.page = page
     paginationInvoice.value.limit = size
     paginationInvoice.value.totalElements = totalElements
@@ -1782,7 +1779,7 @@ async function getAgencyList2(query: string) {
 async function getAgencyListForLoadAll(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   try {
     objLoading.value.loadingAgency = true
-    return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC, pageSize: 500 })
   }
   catch (error) {
     objLoading.value.loadingAgency = false
