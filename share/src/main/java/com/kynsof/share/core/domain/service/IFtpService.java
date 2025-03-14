@@ -1,6 +1,7 @@
 package com.kynsof.share.core.domain.service;
 
 import java.io.InputStream;
+import java.util.concurrent.CompletableFuture;
 
 public interface IFtpService {
 
@@ -14,5 +15,6 @@ public interface IFtpService {
      * @param password    La contraseña para autenticar en el servidor FTP.
      * @param port        El puerto del servidor FTP.
      */
-    void sendFile(InputStream inputStream, String fileName, String server, String user, String password, int port, String path);
+    CompletableFuture<String> sendFile(InputStream inputStream, String fileName, String server, String user, String password, int port,
+                                       String path);
 }
