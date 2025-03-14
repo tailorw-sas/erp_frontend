@@ -1,43 +1,42 @@
 package com.kynsoft.finamer.invoicing.application.command.manageInvoice.send;
 
-import com.itextpdf.text.DocumentException;
 import com.kynsof.share.core.application.ftp.FtpService;
 import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.service.IFtpService;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.invoicing.infrastructure.services.FileService;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceReportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
-import com.kynsoft.finamer.invoicing.infrastructure.services.AccountStatementService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.InvoiceXmlService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Component
 @Transactional
@@ -52,9 +51,11 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final InvoiceReportProviderFactory invoiceReportProviderFactory;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IManageAgencyContactService manageAgencyContactService;
-    private final AccountStatementService accountStatementService;
     private final IInvoiceCloseOperationService closeOperationService;
     private final FileService fileService;
+
+    private static final Logger log = LoggerFactory.getLogger(SendInvoiceCommandHandler.class);
+    private final ExecutorService executor = Executors.newFixedThreadPool(5);
 
     public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
                                      IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
@@ -62,7 +63,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                      FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory,
                                      IInvoiceStatusHistoryService invoiceStatusHistoryService,
                                      IManageAgencyContactService manageAgencyContactService,
-                                     AccountStatementService accountStatementService,
                                      IInvoiceCloseOperationService closeOperationService,
                                      FileService fileService) {
 
@@ -75,7 +75,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.invoiceReportProviderFactory = invoiceReportProviderFactory;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.manageAgencyContactService = manageAgencyContactService;
-        this.accountStatementService = accountStatementService;
         this.closeOperationService = closeOperationService;
         this.fileService = fileService;
     }
@@ -86,50 +85,76 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         ManageEmployeeDto manageEmployeeDto = manageEmployeeService.findById(UUID.fromString(command.getEmployee()));
         List<ManageInvoiceDto> invoices = this.service.findByIds(command.getInvoice());
         LocalDate today = LocalDate.now();
+
         invoices = invoices.stream()
                 .filter(invoice -> {
                     ManageAgencyDto agency = invoice.getAgency();
-
                     if (agency != null && Boolean.TRUE.equals(agency.getValidateCheckout())) {
                         List<ManageBookingDto> bookings = invoice.getBookings();
-
                         if (bookings != null && !bookings.isEmpty()) {
                             boolean hasInvalidCheckout = bookings.stream()
-                                    .anyMatch(booking ->
-                                            booking.getCheckOut() != null && booking.getCheckOut().toLocalDate().isAfter(today)
-                                    );
+                                    .anyMatch(booking -> booking.getCheckOut() != null && booking.getCheckOut().toLocalDate().isAfter(today));
 
+                            if (hasInvalidCheckout) {
+                                log.warn("⚠️ Invoice {} is skipped due to future checkout date.", invoice.getInvoiceNumber());
+                            }
                             return !hasInvalidCheckout;
                         }
                     }
-
                     return true;
                 })
                 .collect(Collectors.toList());
 
         if (invoices.isEmpty()) {
+            log.warn("⚠️ No invoices found after checkout validation.");
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.SERVICE_NOT_FOUND,
                     new ErrorField("id", DomainErrorMessage.SERVICE_NOT_FOUND.getReasonPhrase())));
         }
 
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        if (invoices.get(0).getAgency().getSentB2BPartner() == null){
+        ManageAgencyDto agency = invoices.get(0).getAgency();
+
+        if (agency.getSentB2BPartner() == null) {
+            log.info("🔹 No B2B Partner assigned. Updating status without external sending.");
             updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
+            return;
         }
-        else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("EML")) {
-            sendEmail(command, invoices.get(0).getAgency(), invoices, manageEmployeeDto, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
+
+        String partnerType = agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode();
+        List<CompletableFuture<Void>> asyncTasks = new ArrayList<>();
+
+        switch (partnerType) {
+            case "EML":
+                asyncTasks.add(sendEmailAsync(command, agency, invoices, manageEmployeeDto, manageInvoiceStatus,
+                        manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
+                break;
+            case "BVL":
+                asyncTasks.add(bavelAsync(agency, invoices, manageInvoiceStatus,
+                        manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
+                break;
+            case "FTP":
+                asyncTasks.add(sendFtpAsync(command, invoices, manageInvoiceStatus,
+                        manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
+                break;
+            default:
+                log.error("❌ Unsupported B2B partner type: {}", partnerType);
+                throw new RuntimeException("Unsupported partner type: " + partnerType);
         }
-        else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("BVL")) {
-            bavel(invoices.get(0).getAgency(), invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
-        }
-        else if (invoices.get(0).getAgency().getSentB2BPartner().getB2BPartnerTypeDto().getCode().equals("FTP")) {
-            sendFtp(command, invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
-        }
+
+        // Ensure all async tasks complete before proceeding
+        CompletableFuture.allOf(asyncTasks.toArray(new CompletableFuture[0]))
+                .exceptionally(ex -> {
+                    log.error("❌ Async processing failed: {}", ex.getMessage(), ex);
+                    return null;
+                })
+                .join();
 
         command.setResult(true);
     }
 
-    private void updateStatusAgency(List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+    private void updateStatusAgency(List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus,
+        String employee) {
+        log.info("Starting updateStatusAgency for {} invoices", invoices.size());
         for (ManageInvoiceDto manageInvoiceDto : invoices) {
             if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.RECONCILED)) {
                 manageInvoiceDto.setStatus(EInvoiceStatus.SENT);
@@ -147,195 +172,278 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 );
                 manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 this.service.update(manageInvoiceDto);
+                log.info("Invoice {} updated to status {}", manageInvoiceDto.getInvoiceNumber(), manageInvoiceDto.getStatus());
             }
             else if (manageInvoiceDto.getStatus().equals(EInvoiceStatus.SENT)){
                 manageInvoiceDto.setReSend(true);
                 manageInvoiceDto.setReSendDate(LocalDate.now());
                 manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 this.service.update(manageInvoiceDto);
+                log.info("Invoice {} marked for resend", manageInvoiceDto.getInvoiceNumber());
             }
-
         }
     }
 
-    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+    private CompletableFuture<Void> bavelAsync(ManageAgencyDto agency, List<ManageInvoiceDto> invoices,
+                                               ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        return CompletableFuture.runAsync(() -> bavel(agency, invoices, manageInvoiceStatus, employee), executor);
+    }
+
+    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus,
+                       String employee) {
+        List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
+
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
                 String nameFile = invoice.getInvoiceNumber() + ".xml";
                 InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
-                ftpService.sendFile(inputStream, nameFile, agency.getSentB2BPartner().getIp(),
-                        agency.getSentB2BPartner().getUserName(), agency.getSentB2BPartner().getPassword(), 21, invoice.getAgency().getSentB2BPartner().getUrl());
 
+                log.info("📤 Initiating async upload for invoice '{}' to Bavel FTP at '{}'", nameFile, agency.getSentB2BPartner().getUrl());
+
+                CompletableFuture<String> uploadFuture = ftpService.sendFile(inputStream, nameFile,
+                                agency.getSentB2BPartner().getIp(), agency.getSentB2BPartner().getUserName(),
+                                agency.getSentB2BPartner().getPassword(), 21, agency.getSentB2BPartner().getUrl())
+                        .handle((response, ex) -> {
+                            if (ex == null) {
+                                log.info("✅ Invoice '{}' successfully uploaded to Bavel FTP.", nameFile);
+                                invoice.setSendStatusError(null); // Clear previous errors
+                                service.update(invoice);
+                                return response;
+                            } else {
+                                log.error("❌ Upload failed for invoice '{}': {}", nameFile, ex.getMessage(), ex);
+                                invoice.setSendStatusError("Bavel FTP Upload Failed: " + ex.getMessage());
+                                service.update(invoice);
+                                return "FAILED";
+                            }
+                        });
+
+                uploadFutures.add(uploadFuture);
             } catch (Exception e) {
-                invoice.setSendStatusError(e.getMessage());
+                log.error("❌ Failed to generate XML for invoice '{}': {}", invoice.getInvoiceNumber(), e.getMessage(), e);
+                invoice.setSendStatusError("XML Generation Failed: " + e.getMessage());
                 service.update(invoice);
             }
         }
-        updateStatusAgency(invoices, manageInvoiceStatus, employee);
+
+        // Esperar todas las subidas sin interrumpir la ejecución en caso de error
+        CompletableFuture.allOf(uploadFutures.toArray(new CompletableFuture[0])).join();
+
+        // Filtrar solo las facturas que se subieron con éxito
+        List<ManageInvoiceDto> successfulInvoices = invoices.stream()
+                .filter(invoice -> invoice.getSendStatusError() == null)
+                .collect(Collectors.toList());
+
+        if (!successfulInvoices.isEmpty()) {
+            updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
+        }
     }
 
-    private void sendFtp(SendInvoiceCommand command, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
-        // Paso 2: Definir si quieres agrupar por cliente o no
-        boolean groupByClient = command.isGroupByClient(); // O false, según lo que necesites
+    private CompletableFuture<Void> sendFtpAsync(SendInvoiceCommand command, List<ManageInvoiceDto> invoices,
+                                                 ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        return CompletableFuture.runAsync(() -> sendFtp(command, invoices, manageInvoiceStatus, employee), executor);
+    }
 
-        // Paso 3: Llamar al método para generar los PDFs
+    private void sendFtp(SendInvoiceCommand command, List<ManageInvoiceDto> invoices,
+                         ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        boolean groupByClient = command.isGroupByClient();
+
+        log.info("📤 Initiating FTP process for {} invoices", invoices.size());
+
         try {
             InvoiceGrouper invoiceGrouper = new InvoiceGrouper(invoiceReportProviderFactory);
             List<GeneratedInvoice> generatedPDFs = invoiceGrouper.generateInvoicesPDFs(invoices, groupByClient, command.isWithAttachment());
 
-            // Paso 4: Procesar los PDFs generados (por ejemplo, guardarlos o enviarlos)
+            List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
+
             for (GeneratedInvoice generatedInvoice : generatedPDFs) {
-                // Aquí puedes guardar o enviar el PDF, por ejemplo, a un FTP, por correo, o guardarlo en disco
                 InputStream pdfStream = new ByteArrayInputStream(generatedInvoice.getPdfStream().toByteArray());
-                //LocalDate currentDate = LocalDate.now();
-                LocalDateTime currentDate =  generateDate(generatedInvoice.getInvoices().get(0).getHotel().getId());
-                // Desglosar los valores en separado si se necesita
+                LocalDateTime currentDate = generateDate(generatedInvoice.getInvoices().get(0).getHotel().getId());
                 String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
                 String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
 
                 String path = currentDate.getYear() + "/" + monthFormatted + "/" + dayFormatted + "/"
                         + invoices.get(0).getHotel().getCode();
-                ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(), generatedInvoice.getIp(),
-                        generatedInvoice.getUserName(), generatedInvoice.getPassword(), 21, path);
-                updateStatusAgency( generatedInvoice.getInvoices(), manageInvoiceStatus, employee);
-//                savePDF(pdf);
+
+                log.info("📤 Preparing to upload invoice '{}' to FTP at '{}'", generatedInvoice.getNameFile(), path);
+
+                CompletableFuture<String> uploadFuture = ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(),
+                                generatedInvoice.getIp(), generatedInvoice.getUserName(),
+                                generatedInvoice.getPassword(), 21, path)
+                        .handle((response, ex) -> {
+                            if (ex == null) {
+                                log.info("✅ Invoice '{}' successfully uploaded to FTP.", generatedInvoice.getNameFile());
+                                generatedInvoice.getInvoices().forEach(invoice -> {
+                                    invoice.setSendStatusError(null);
+                                    service.update(invoice);
+                                });
+                                return response;
+                            } else {
+                                log.error("❌ FTP upload failed for invoice '{}': {}", generatedInvoice.getNameFile(), ex.getMessage(), ex);
+                                generatedInvoice.getInvoices().forEach(invoice -> {
+                                    invoice.setSendStatusError("FTP Upload Failed: " + ex.getMessage());
+                                    service.update(invoice);
+                                });
+                                return "FAILED";
+                            }
+                        });
+
+                uploadFutures.add(uploadFuture);
+            }
+
+            // Esperar todas las subidas sin interrumpir la ejecución en caso de error
+            CompletableFuture.allOf(uploadFutures.toArray(new CompletableFuture[0])).join();
+
+            // Filtrar solo las facturas que se subieron con éxito
+            List<ManageInvoiceDto> successfulInvoices = invoices.stream()
+                    .filter(invoice -> invoice.getSendStatusError() == null)
+                    .collect(Collectors.toList());
+
+            if (!successfulInvoices.isEmpty()) {
+                updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("❌ Unexpected error while processing invoices for FTP: {}", e.getMessage(), e);
+            throw new RuntimeException("Error processing invoices for FTP: " + e.getMessage(), e);
         }
     }
 
-    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+    private CompletableFuture<Void> sendEmailAsync(SendInvoiceCommand command, ManageAgencyDto agency,
+                                                   List<ManageInvoiceDto> invoices, ManageEmployeeDto employeeDto,
+                                                   ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+        return CompletableFuture.runAsync(() -> sendEmail(command, agency, invoices, employeeDto, manageInvoiceStatus, employee), executor);
+    }
+    private void sendEmail(SendInvoiceCommand command, ManageAgencyDto agency, List<ManageInvoiceDto> invoices,
+       ManageEmployeeDto employeeDto, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
 
-//        // Agrupar facturas por agencia
-//        Map<UUID, List<ManageInvoiceDto>> invoicesByAgency = invoices.stream()
-//                .collect(Collectors.groupingBy(invoice -> invoice.getAgency().getId()));
-
+        log.info("Initiating email process for agency: {}", agency.getName());
         Map<UUID, Map<UUID, List<ManageInvoiceDto>>> invoicesByAgencyAndHotel = invoices.stream()
                 .collect(Collectors.groupingBy(
-                        invoice -> invoice.getAgency().getId(), // Primero agrupamos por agencia
-                        Collectors.groupingBy(invoice -> invoice.getHotel().getId()) // Luego agrupamos por hotel
+                        invoice -> invoice.getAgency().getId(), // Group by agency
+                        Collectors.groupingBy(invoice -> invoice.getHotel().getId()) // Then group by hotel
                 ));
 
         for (Map.Entry<UUID, Map<UUID, List<ManageInvoiceDto>>> agencyEntry : invoicesByAgencyAndHotel.entrySet()) {
-            UUID agencyId = agencyEntry.getKey(); // ID de la agencia
-            Map<UUID, List<ManageInvoiceDto>> invoicesByHotel = agencyEntry.getValue(); // Facturas agrupadas por hotel
+            UUID agencyId = agencyEntry.getKey();
+            Map<UUID, List<ManageInvoiceDto>> invoicesByHotel = agencyEntry.getValue();
 
-            System.out.println("Agencia ID: " + agencyId);
+            log.info("📌 Processing {} invoices for agency ID: {}", invoicesByHotel.values().stream().mapToInt(List::size).sum(), agencyId);
 
             for (Map.Entry<UUID, List<ManageInvoiceDto>> hotelEntry : invoicesByHotel.entrySet()) {
-                UUID hotelId = hotelEntry.getKey(); // ID del hotel
-                List<ManageInvoiceDto> invoicesHotel = hotelEntry.getValue(); // Lista de facturas para este hotel
+                UUID hotelId = hotelEntry.getKey();
+                List<ManageInvoiceDto> invoicesHotel = hotelEntry.getValue();
 
+                log.info("🏨 Sending invoices for hotel ID: {}", hotelId);
 
-                SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-                List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, invoicesHotel);
-                request.setRecipientEmail(recipients);
-                //Var
-                List<MailJetVar> vars = getMailJetVars(agency, request, invoicesHotel);
+                try {
+                    SendMailJetEMailRequest request = new SendMailJetEMailRequest();
+                    List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, invoicesHotel);
+                    request.setRecipientEmail(recipients);
 
-                request.setMailJetVars(vars);
+                    List<MailJetVar> vars = getMailJetVars(agency, request, invoicesHotel);
+                    request.setMailJetVars(vars);
 
-                //Adjuntos
-                List<MailJetAttachment> attachments = getMailJetAttachments(invoicesHotel, employeeDto);
+                    List<MailJetAttachment> attachments = getMailJetAttachments(invoicesHotel, employeeDto);
+                    request.setMailJetAttachments(attachments);
 
-                request.setMailJetAttachments(attachments);
-                mailService.sendMail(request);
-                updateInvoices(invoices, manageInvoiceStatus, employee);
-//                System.out.println("\tHotel ID: " + hotelId);
-//                for (ManageInvoiceDto invoice : invoicesHotel) {
-//                    // Aquí puedes procesar cada factura individualmente
-//                    System.out.println("\t\tFactura: " + invoice);
-//                }
+                    mailService.sendMail(request);
+
+                    updateInvoices(invoicesHotel, manageInvoiceStatus, employee);
+                    log.info("✅ Successfully sent invoices via email for hotel ID: {}", hotelId);
+
+                } catch (Exception e) {
+                    log.error("❌ Failed to send invoices via email for hotel ID: {}: {}", hotelId, e.getMessage(), e);
+                }
             }
         }
-//        for (Map.Entry<UUID, List<ManageInvoiceDto>> agencyEntry : invoicesByAgency.entrySet()) {
-//            List<ManageInvoiceDto> agencyInvoices = agencyEntry.getValue();
-//
-//            SendMailJetEMailRequest request = new SendMailJetEMailRequest();
-//            List<MailJetRecipient> recipients = getMailJetRecipients(agency, employeeDto, request, agencyInvoices);
-//            request.setRecipientEmail(recipients);
-//            //Var
-//            List<MailJetVar> vars = getMailJetVars(agency, request, agencyInvoices);
-//
-//            request.setMailJetVars(vars);
-//
-//            //Adjuntos
-//            List<MailJetAttachment> attachments = getMailJetAttachments(agencyInvoices);
-//
-//            request.setMailJetAttachments(attachments);
-//            mailService.sendMail(request);
-//            updateInvoices(invoices);
-//        }
     }
 
     private List<MailJetAttachment> getMailJetAttachments(List<ManageInvoiceDto> agencyInvoices, ManageEmployeeDto employeeDto) {
         List<MailJetAttachment> attachments = new ArrayList<>();
         List<UUID> ids = agencyInvoices.stream().map(ManageInvoiceDto::getId).toList();
-        //Comenta estas dos lineas y descomenta las lineas de abajo.
-//        SendAccountStatementRequest sendAccountStatementRequest = new SendAccountStatementRequest(ids);
-//        SendAccountStatementResponse sendAccountStatementResponse = accountStatementService.sendAccountStatement(sendAccountStatementRequest);
-
-        String base64 = "";
-        String fileName = "";
-        try {
-            fileName = agencyInvoices.get(0).getAgency().getName() + " " + "Account Statement.xlsx";
-        } catch (Exception e) {
-            fileName = "Account Statement.xlsx";
-        }
-        try {
-            //Se hace la llamada a lo interno para generar el excel.
-            base64 = this.fileService.convertExcelToBase64(ids, employeeDto);
-        } catch (IOException ex) {
-            Logger.getLogger(SendInvoiceCommandHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        MailJetAttachment attachment = new MailJetAttachment(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Content-Type para archivo .xlsx
-                //"AccountStatement.xlsx",  // Nombre del archivo
-                fileName,
-//                sendAccountStatementResponse.getFile()
-                base64
-        );
+    String base64 = "";
+    String fileName;
+    try {
+        fileName = agencyInvoices.get(0).getAgency().getName() + " Account Statement.xlsx";
+    } catch (Exception e) {
+        log.warn("⚠️ Failed to retrieve agency name for filename, using default: {}", e.getMessage());
+        fileName = "Account Statement.xlsx";
+    }
+    try {
+        log.info("📄 Generating Excel file for invoices...");
+        base64 = this.fileService.convertExcelToBase64(ids, employeeDto);
+        log.info("✅ Excel file successfully generated for {} invoices.", ids.size());
+    } catch (IOException ex) {
+        log.error("❌ Failed to generate Excel file: {}", ex.getMessage(), ex);
+    }
+    MailJetAttachment attachment = new MailJetAttachment(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // MIME type for .xlsx
+            fileName,
+            base64
+    );
         attachments.add(attachment);
         return attachments;
     }
 
-    private static List<MailJetVar> getMailJetVars(ManageAgencyDto agency, SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
+    private static List<MailJetVar> getMailJetVars(ManageAgencyDto agency, SendMailJetEMailRequest request,
+       List<ManageInvoiceDto> agencyInvoices) {
         request.setSubject("INVOICES for -" + agency.getCode() + "-" + agency.getName());
         double totalAmount = agencyInvoices.stream()
                 .mapToDouble(invoice -> invoice.getInvoiceAmount() != null ? invoice.getInvoiceAmount() : 0.0)
                 .sum();
-        String invoiceAmount = String.format("%.2f", totalAmount);
+        String invoiceAmount = String.format(Locale.US, "%.2f", totalAmount);
 
-        // Variables para el template de email
-        return Arrays.asList(
-                new MailJetVar("invoice_date", new Date().toString()),
-                new MailJetVar("invoice_amount", invoiceAmount)
-        );
+        log.info("📧 Preparing email variables for agency '{}' with total invoice amount: {}", agency.getName(), invoiceAmount);
+
+            // Variables para el template de email
+            return Arrays.asList(
+                    new MailJetVar("invoice_date", new Date().toString()),
+                    new MailJetVar("invoice_amount", invoiceAmount)
+            );
     }
 
-    private List<MailJetRecipient> getMailJetRecipients(ManageAgencyDto agency, ManageEmployeeDto employeeDto, SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
-        request.setTemplateId(6285030);
+    private List<MailJetRecipient> getMailJetRecipients(ManageAgencyDto agency, ManageEmployeeDto employeeDto,
+        SendMailJetEMailRequest request, List<ManageInvoiceDto> agencyInvoices) {
+        request.setTemplateId(6285030); // TODO: Move to configuration variable
         List<MailJetRecipient> recipients = new ArrayList<>();
-        recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
-        recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
-        recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));
-        recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
 
-        ManageAgencyDto manageAgencyDto = agencyInvoices.get(0).getAgency();
-        ManageHotelDto manageHotelDto = agencyInvoices.get(0).getHotel();
-        List<ManageAgencyContact> contactList = manageAgencyContactService.findContactsByHotelAndAgency(manageHotelDto.getId(), manageAgencyDto.getId());
-        if (!contactList.isEmpty()) {
-            // Dividimos la cadena en un array de correos
-            String[] emailAddresses = contactList.get(0).getEmailContact().split(";");
-            for (String email : emailAddresses) {
-                email = email.trim();
-                if (!email.isEmpty()) {
-                    recipients.add(new MailJetRecipient(email, "Contact"));
-                }
+        try {
+            log.info("📧 Adding agency and employee recipients for email.");
+
+            if (agency.getMailingAddress() != null && !agency.getMailingAddress().isBlank()) {
+                recipients.add(new MailJetRecipient(agency.getMailingAddress(), agency.getName()));
+            } else {
+                log.warn("No mailing address provided for agency: {}", agency.getName());
             }
+
+            if (employeeDto.getEmail() != null && !employeeDto.getEmail().isBlank()) {
+                recipients.add(new MailJetRecipient(employeeDto.getEmail(), employeeDto.getFirstName() + " " + employeeDto.getLastName()));
+            }
+
+            recipients.add(new MailJetRecipient("keimermo1989@gmail.com", "Keimer Montes"));//TODO cambiar esto urgente
+
+            ManageAgencyDto manageAgencyDto = agencyInvoices.get(0).getAgency();
+            ManageHotelDto manageHotelDto = agencyInvoices.get(0).getHotel();
+            List<ManageAgencyContact> contactList = manageAgencyContactService.findContactsByHotelAndAgency(manageHotelDto.getId(), manageAgencyDto.getId());
+
+            if (!contactList.isEmpty()) {
+                log.info("📌 Adding agency contacts to email recipients.");
+                String[] emailAddresses = contactList.get(0).getEmailContact().split(";");
+                for (String email : emailAddresses) {
+                    email = email.trim();
+                    if (!email.isEmpty()) {
+                        recipients.add(new MailJetRecipient(email, "Contact"));
+                    }
+                }
+            } else {
+                log.warn("⚠️ No contacts found for agency '{}' and hotel '{}'.", manageAgencyDto.getName(), manageHotelDto.getName());
+            }
+
+            log.info("✅ Total email recipients: {}", recipients.size());
+        } catch (Exception e) {
+            log.error("❌ Error while generating email recipients: {}", e.getMessage(), e);
         }
+
         return recipients;
     }
 
@@ -361,63 +469,10 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 manageInvoiceDto.setDueDate(LocalDate.now().plusDays(manageInvoiceDto.getAgency().getCreditDay().longValue()));
                 manageInvoiceDto.setReSendDate(LocalDate.now());
             }
+            log.info("Updating invoice {} with status {}", manageInvoiceDto.getInvoiceNumber(), manageInvoiceDto.getStatus());
             service.update(manageInvoiceDto);
         }
 
-    }
-
-    private Optional<ByteArrayOutputStream> getInvoicesBooking(String invoiceIds, SendInvoiceCommand command) throws DocumentException, IOException {
-        EInvoiceReportType reportType = command.isWithAttachment()
-                ? EInvoiceReportType.INVOICE_AND_BOOKING
-                : EInvoiceReportType.INVOICE_SUPPORT;
-        Map<EInvoiceReportType, IInvoiceReport> services = new HashMap<>();
-        services.put(reportType, invoiceReportProviderFactory.getInvoiceReportService(reportType));
-
-        Optional<Map<String, byte[]>> response = getReportContent(services, invoiceIds);
-
-        if (response.isPresent() && !response.get().isEmpty()) {
-            byte[] content = response.get().values().iterator().next();
-
-            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                outputStream.write(content);
-                return Optional.of(outputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return Optional.empty();
-            }
-        } else {
-            System.out.println("No se pudo obtener el contenido del reporte.");
-            return Optional.empty();
-        }
-    }
-
-    private Optional<Map<String, byte[]>> getReportContent(Map<EInvoiceReportType, IInvoiceReport> reportService, String invoiceId) throws DocumentException, IOException {
-        Map<String, byte[]> result = new HashMap<>();
-
-        Map<EInvoiceReportType, Optional<byte[]>> reportContent = reportService.entrySet().stream()
-                .filter(entry -> Objects.nonNull(entry.getValue()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().generateReport(invoiceId)
-                ));
-
-        List<InputStream> finalContent = getOrderReportContent(reportContent).stream()
-                .filter(Optional::isPresent)
-                .map(content -> new ByteArrayInputStream(content.get()))
-                .map(InputStream.class::cast)
-                .toList();
-        if (!finalContent.isEmpty()) {
-            result.put(invoiceId, PDFUtils.mergePDFtoByte(finalContent));
-        }
-
-        return result.isEmpty() ? Optional.empty() : Optional.of(result);
-    }
-
-    private List<Optional<byte[]>> getOrderReportContent(Map<EInvoiceReportType, Optional<byte[]>> content) {
-        List<Optional<byte[]>> orderedContent = new LinkedList<>();
-        orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_AND_BOOKING, Optional.empty()));
-        orderedContent.add(content.getOrDefault(EInvoiceReportType.INVOICE_SUPPORT, Optional.empty()));
-        return orderedContent;
     }
 
     private LocalDateTime generateDate(UUID hotel) {
@@ -428,5 +483,4 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
-
 }
