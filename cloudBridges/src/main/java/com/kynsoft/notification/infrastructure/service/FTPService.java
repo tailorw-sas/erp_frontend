@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 @Service
 public class FTPService implements IFTPService {
@@ -27,7 +24,6 @@ public class FTPService implements IFTPService {
     public void uploadFile(String remotePath, InputStream inputStream, String fileName, String server, String user,
                            String password, int port) {
         FTPClient ftpClient = new FTPClient();
-
         try {
             log.info("🔗 Connecting to FTP server: {} on port {}", server, port);
             ftpClient.connect(server, port);
@@ -38,74 +34,31 @@ public class FTPService implements IFTPService {
 
             log.info("✅ Successfully authenticated with the FTP server.");
 
-            // Connection settings
-            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-            ftpClient.enterLocalPassiveMode();
-            ftpClient.setBufferSize(ftpConfig.getBufferSize());
-            ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
-            ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
+            // FTP settings
+            configureFTPClient(ftpClient);
 
-            // Ensure remotePath is valid
-            if (remotePath == null || remotePath.trim().isEmpty() || "/".equals(remotePath) || "//".equals(remotePath)) {
-                log.warn("⚠️ Invalid remotePath '{}', using default FTP directory.", remotePath);
-                remotePath = ftpClient.printWorkingDirectory();
-            }
-
-            if (!remotePath.equals(ftpClient.printWorkingDirectory())) {
-                log.info("📂 Changing to directory: {}", remotePath);
-
-                if (!ftpClient.changeWorkingDirectory(remotePath)) {
-                    log.warn("⚠️ Directory '{}' does not exist. Creating it...", remotePath);
-
-                    if (!ftpClient.makeDirectory(remotePath) || !ftpClient.changeWorkingDirectory(remotePath)) {
-                        throw new RuntimeException("❌ Failed to create/access the directory.");
-                    }
-
-                    log.info("✅ Successfully created and accessed '{}'.", remotePath);
-                }
-            } else {
-                log.info("📂 Using default FTP directory.");
-            }
+            // Validate and change directory
+            remotePath = validateAndSetRemotePath(ftpClient, remotePath);
 
             // Convert InputStream properly
-            ByteArrayInputStream newInputStream;
-            if (!(inputStream instanceof ByteArrayInputStream)) {
-                log.info("🔄 Converting InputStream to ByteArrayInputStream...");
-                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-                    inputStream.transferTo(byteArrayOutputStream);
-                    newInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            try (ByteArrayInputStream newInputStream = convertInputStream(inputStream)) {
+                if (ftpClient.storeFile(fileName, newInputStream)) {
+                    log.info("✅ File '{}' successfully uploaded to '{}'.", fileName, remotePath);
+                } else {
+                    throw new RuntimeException("❌ Failed to upload the file.");
                 }
-            } else {
-                newInputStream = (ByteArrayInputStream) inputStream;
-            }
-
-            // Upload the file
-            if (ftpClient.storeFile(fileName, newInputStream)) {
-                log.info("✅ File '{}' successfully uploaded to '{}'.", fileName, remotePath);
-            } else {
-                throw new RuntimeException("❌ Failed to upload the file.");
             }
 
         } catch (IOException e) {
             log.error("❌ FTP connection error: {}", e.getMessage(), e);
             throw new RuntimeException("FTP connection error: " + e.getMessage(), e);
         } finally {
-            try {
-                if (ftpClient.isConnected()) {
-                    ftpClient.logout();
-                    ftpClient.disconnect();
-                    log.info("🔌 Disconnected from the FTP server.");
-                }
-            } catch (IOException ex) {
-                log.error("⚠️ Error while closing FTP connection: {}", ex.getMessage(), ex);
-            }
+            disconnectFTP(ftpClient);
         }
     }
 
-    // Method to download a file
     public InputStream downloadFile(String remoteFilePath, String server, String user, String password, int port) {
         FTPClient ftpClient = new FTPClient();
-
         try {
             log.info("🔗 Connecting to FTP server: {} on port {}", server, port);
             ftpClient.connect(server, port);
@@ -115,11 +68,8 @@ public class FTPService implements IFTPService {
             }
 
             log.info("✅ Successfully authenticated with the FTP server.");
-            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-            ftpClient.enterLocalPassiveMode();
-            ftpClient.setBufferSize(ftpConfig.getBufferSize());
-            ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
-            ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
+
+            configureFTPClient(ftpClient);
 
             log.info("📂 Downloading file: {}", remoteFilePath);
             InputStream inputStream = ftpClient.retrieveFileStream(remoteFilePath);
@@ -129,21 +79,66 @@ public class FTPService implements IFTPService {
             }
 
             log.info("✅ File '{}' successfully retrieved from FTP server.", remoteFilePath);
-            return inputStream;
+            return new BufferedInputStream(inputStream);
 
         } catch (IOException e) {
             log.error("❌ FTP connection error: {}", e.getMessage(), e);
             throw new RuntimeException("FTP connection error: " + e.getMessage(), e);
         } finally {
-            try {
-                if (ftpClient.isConnected()) {
-                    ftpClient.logout();
-                    ftpClient.disconnect();
-                    log.info("🔌 Disconnected from the FTP server.");
+            disconnectFTP(ftpClient);
+        }
+    }
+
+    private void configureFTPClient(FTPClient ftpClient) throws IOException {
+        ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+        ftpClient.enterLocalPassiveMode();
+        ftpClient.setBufferSize(ftpConfig.getBufferSize());
+        ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
+        ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
+    }
+
+    private String validateAndSetRemotePath(FTPClient ftpClient, String remotePath) throws IOException {
+        if (remotePath == null || remotePath.trim().isEmpty() || "/".equals(remotePath) || "//".equals(remotePath)) {
+            log.warn("⚠️ Invalid remotePath '{}', using default FTP directory.", remotePath);
+            return ftpClient.printWorkingDirectory();
+        }
+
+        if (!remotePath.equals(ftpClient.printWorkingDirectory())) {
+            log.info("📂 Changing to directory: {}", remotePath);
+            if (!ftpClient.changeWorkingDirectory(remotePath)) {
+                log.warn("⚠️ Directory '{}' does not exist. Creating it...", remotePath);
+                if (!ftpClient.makeDirectory(remotePath) || !ftpClient.changeWorkingDirectory(remotePath)) {
+                    throw new RuntimeException("❌ Failed to create/access the directory.");
                 }
-            } catch (IOException ex) {
-                log.error("⚠️ Error while closing FTP connection: {}", ex.getMessage(), ex);
+                log.info("✅ Successfully created and accessed '{}'.", remotePath);
             }
+        } else {
+            log.info("📂 Using default FTP directory.");
+        }
+        return remotePath;
+    }
+
+    private ByteArrayInputStream convertInputStream(InputStream inputStream) throws IOException {
+        if (inputStream instanceof ByteArrayInputStream) {
+            return (ByteArrayInputStream) inputStream;
+        }
+
+        log.info("🔄 Converting InputStream to ByteArrayInputStream...");
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            inputStream.transferTo(byteArrayOutputStream);
+            return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        }
+    }
+
+    private void disconnectFTP(FTPClient ftpClient) {
+        try {
+            if (ftpClient.isConnected()) {
+                ftpClient.logout();
+                ftpClient.disconnect();
+                log.info("🔌 Disconnected from the FTP server.");
+            }
+        } catch (IOException ex) {
+            log.error("⚠️ Error while closing FTP connection: {}", ex.getMessage(), ex);
         }
     }
 }
