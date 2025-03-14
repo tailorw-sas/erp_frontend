@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 
 @Component
 public class UploadFileCommandHandler implements ICommandHandler<UploadFileCommand> {
@@ -22,27 +22,18 @@ public class UploadFileCommandHandler implements ICommandHandler<UploadFileComma
 
     @Override
     public void handle(UploadFileCommand command) {
-        command.getFile().content()
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(dataBuffer -> {
-                    try (InputStream inputStream = dataBuffer.asInputStream()) {
-                        String remotePath = "/" + command.getPath();
-                        log.info("📤 Uploading file '{}' to FTP at '{}'", command.getFile().filename(), remotePath);
+        String remotePath = (command.getPath() == null || command.getPath().trim().isEmpty()) ? "" : "/" + command.getPath();
+        log.info("📤 Uploading file '{}' to FTP at '{}'", command.getFileName(), remotePath);
 
-                        return Mono.fromRunnable(() -> {
-                            try {
-                                ftpService.uploadFile(remotePath, inputStream, command.getFile().filename(),
-                                        command.getServer(), command.getUser(), command.getPassword(), command.getPort());
-                            } catch (Exception e) {
-                                log.error("❌ FTP upload failed for '{}': {}", command.getFile().filename(), e.getMessage(), e);
-                                throw new RuntimeException("FTP upload error: " + e.getMessage(), e);
-                            }
-                        }).subscribeOn(Schedulers.boundedElastic());
-                    } catch (Exception e) {
-                        log.error("❌ Error processing file '{}': {}", command.getFile().filename(), e.getMessage(), e);
-                        return Mono.error(new RuntimeException("File processing error: " + e.getMessage(), e));
-                    }
-                })
-                .subscribe();
+        Mono.fromRunnable(() -> {
+            try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(command.getFileBytes())) {
+                ftpService.uploadFile(remotePath, byteArrayInputStream, command.getFileName(),
+                        command.getServer(), command.getUser(), command.getPassword(), command.getPort());
+                log.info("✅ File '{}' successfully uploaded to FTP '{}'", command.getFileName(), remotePath);
+            } catch (Exception e) {
+                log.error("❌ FTP upload failed for '{}': {}", command.getFileName(), e.getMessage(), e);
+                throw new RuntimeException("FTP upload error: " + e.getMessage(), e);
+            }
+        }).subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
 }
