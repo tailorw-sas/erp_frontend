@@ -15,10 +15,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/api/ftp")
@@ -26,8 +25,6 @@ public class FTPController {
     private final IMediator mediator;
     private final IFTPService ftpService;
     private static final Logger log = LoggerFactory.getLogger(FTPController.class);
-
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     public FTPController(IMediator mediator, IFTPService ftpService) {
         this.mediator = mediator;
@@ -44,12 +41,30 @@ public class FTPController {
         String fileName = file.filename();
         log.info("📤 Received request to upload file '{}' to FTP '{}'", fileName, path);
 
-        return Mono.fromCallable(() -> {
-                    mediator.send(new UploadFileCommand(file, server, user, password, port, path));
-                    log.info("✅ File '{}' successfully uploaded to FTP", fileName);
-                    return ResponseEntity.ok(Map.of("message", "Upload successful", "file", fileName, "path", path));
+        return file.content()
+                .reduce(new ByteArrayOutputStream(), (outputStream, dataBuffer) -> {
+                    try {
+                        dataBuffer.asInputStream(true).transferTo(outputStream);
+                    } catch (Exception e) {
+                        log.error("❌ Error processing file '{}': {}", fileName, e.getMessage(), e);
+                        throw new RuntimeException("Error processing file: " + e.getMessage(), e);
+                    }
+                    return outputStream;
                 })
-                .publishOn(Schedulers.boundedElastic()) // Mejor ejecución asíncrona sin bloquear hilos
+                .flatMap(outputStream -> {
+                    byte[] fileBytes = outputStream.toByteArray();
+
+                    if (fileBytes.length == 0) {
+                        return Mono.error(new RuntimeException("❌ File content is empty."));
+                    }
+
+                    // Fix: Corrected parameter types for UploadFileCommand constructor
+                    UploadFileCommand command = new UploadFileCommand(fileName, fileBytes, server, user, password, Integer.parseInt(port), path);
+                    return Mono.fromCallable(() -> {
+                        mediator.send(command);
+                        return ResponseEntity.ok(Map.of("message", "Upload successful", "file", fileName, "path", path));
+                    }).subscribeOn(Schedulers.boundedElastic());
+                })
                 .onErrorResume(e -> {
                     log.error("❌ Error uploading file '{}': {}", fileName, e.getMessage(), e);
                     return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -70,16 +85,22 @@ public class FTPController {
                     String fileName = file.filename();
                     log.info("📤 Processing upload for file '{}'", fileName);
 
-                    return Mono.fromCallable(() -> {
-                                mediator.send(new UploadFileCommand(file, server, user, password, port, path));
-                                log.info("✅ File '{}' successfully uploaded to FTP", fileName);
-                                return Map.of("file", fileName, "status", "success", "path", path);
+                    return file.content()
+                            .flatMap(dataBuffer -> {
+                                try {
+                                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                                    dataBuffer.asInputStream(true).transferTo(byteArrayOutputStream);
+                                    byte[] fileBytes = byteArrayOutputStream.toByteArray();
+
+                                    mediator.send(new UploadFileCommand(fileName, fileBytes, server, user, password, Integer.parseInt(port), path));
+                                    log.info("✅ File '{}' successfully uploaded to FTP", fileName);
+                                    return Mono.just(Map.of("file", fileName, "status", "success", "path", path));
+                                } catch (Exception e) {
+                                    log.error("❌ Error processing file '{}': {}", fileName, e.getMessage(), e);
+                                    return Mono.just(Map.of("file", fileName, "status", "failed", "error", e.getMessage()));
+                                }
                             })
-                            .publishOn(Schedulers.boundedElastic()) // Manejo eficiente de concurrencia
-                            .onErrorResume(e -> {
-                                log.error("❌ Error uploading file '{}': {}", fileName, e.getMessage(), e);
-                                return Mono.just(Map.of("file", fileName, "status", "failed", "error", e.getMessage()));
-                            });
+                            .publishOn(Schedulers.boundedElastic());
                 })
                 .collectList()
                 .map(results -> ResponseEntity.ok(Map.of("message", "Batch upload completed", "results", results)));
