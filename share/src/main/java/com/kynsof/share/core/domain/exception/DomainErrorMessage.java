@@ -436,8 +436,9 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_INVOICE_NUMBER_REPEATED(2020, Series.DOMAIN_ERROR, "Hotel Invoice Number already exists."),
     HOTEL_BOOKING_NUMBER_REPEATED(2021, Series.DOMAIN_ERROR, "Hotel Booking Number already exists."),
     CANT_ADULTS_NOT_VALID(2022, Series.DOMAIN_ERROR, "Adults must be greater than 0."),
+    FTP_UPLOAD_FAILED(2023, Series.DOMAIN_ERROR,"Failed to upload to FTP. Please check and try again."),
     HOTEL_ACCESS(2100, Series.DOMAIN_ERROR,"The employee does not have access to the hotel."),
-    AGENCY_ACCESS(2101, Series.DOMAIN_ERROR,"TThe employee does not have access to the agency."),
+    AGENCY_ACCESS(2101, Series.DOMAIN_ERROR,"The employee does not have access to the agency."),
     ;
 
     private static final DomainErrorMessage[] VALUES;
