@@ -45,8 +45,12 @@ public class FTPService implements IFTPService {
             ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
             ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
 
-            // Only attempt to change directory if remotePath is provided
-            if (remotePath != null && !remotePath.trim().isEmpty() && !"/".equals(remotePath)) {
+            if (remotePath == null || remotePath.trim().isEmpty() || "/".equals(remotePath) || "//".equals(remotePath)) {
+                log.warn("⚠️ Invalid remotePath '{}', using default FTP directory.", remotePath);
+                remotePath = ftpClient.printWorkingDirectory();
+            }
+
+            if (!remotePath.equals(ftpClient.printWorkingDirectory())) {
                 log.info("📂 Changing to directory: {}", remotePath);
 
                 if (!ftpClient.changeWorkingDirectory(remotePath)) {
@@ -59,13 +63,20 @@ public class FTPService implements IFTPService {
                     log.info("✅ Successfully created and accessed '{}'.", remotePath);
                 }
             } else {
-                log.info("📂 No remotePath provided, using default FTP directory.");
+                log.info("📂 Using default FTP directory.");
             }
 
             // Convert InputStream to ByteArrayInputStream to prevent premature closing
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            inputStream.transferTo(byteArrayOutputStream);
-            InputStream newInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            ByteArrayInputStream newInputStream;
+            if (!inputStream.markSupported()) {
+                log.info("🔄 Cloning InputStream to ByteArrayInputStream...");
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                inputStream.transferTo(byteArrayOutputStream);
+                newInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                inputStream.close(); // Close the original stream after cloning
+            } else {
+                newInputStream = (ByteArrayInputStream) inputStream;
+            }
 
             // Upload the file
             if (ftpClient.storeFile(fileName, newInputStream)) {
