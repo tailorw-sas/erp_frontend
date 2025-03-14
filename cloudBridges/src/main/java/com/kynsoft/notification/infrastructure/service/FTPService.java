@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -26,7 +28,7 @@ public class FTPService implements IFTPService {
                            String password, int port) {
         FTPClient ftpClient = new FTPClient();
 
-        try (inputStream) { // Ensures InputStream is closed automatically
+        try {
             log.info("🔗 Connecting to FTP server: {} on port {}", server, port);
             ftpClient.connect(server, port);
 
@@ -43,21 +45,35 @@ public class FTPService implements IFTPService {
             ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
             ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
 
-            // Verify if the directory exists before attempting to change it
-            if (!ftpClient.changeWorkingDirectory(remotePath)) {
-                log.warn("⚠️ The directory '{}' does not exist on the FTP server. Attempting to create it...", remotePath);
-                if (!ftpClient.makeDirectory(remotePath) || !ftpClient.changeWorkingDirectory(remotePath)) {
-                    throw new RuntimeException("❌ Failed to create or access the directory on the FTP server.");
+            // Only attempt to change directory if remotePath is provided
+            if (remotePath != null && !remotePath.trim().isEmpty() && !"/".equals(remotePath)) {
+                log.info("📂 Changing to directory: {}", remotePath);
+
+                if (!ftpClient.changeWorkingDirectory(remotePath)) {
+                    log.warn("⚠️ Directory '{}' does not exist. Creating it...", remotePath);
+
+                    if (!ftpClient.makeDirectory(remotePath) || !ftpClient.changeWorkingDirectory(remotePath)) {
+                        throw new RuntimeException("❌ Failed to create/access the directory.");
+                    }
+
+                    log.info("✅ Successfully created and accessed '{}'.", remotePath);
                 }
-                log.info("✅ Successfully created directory '{}'.", remotePath);
+            } else {
+                log.info("📂 No remotePath provided, using default FTP directory.");
             }
 
+            // Convert InputStream to ByteArrayInputStream to prevent premature closing
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            inputStream.transferTo(byteArrayOutputStream);
+            InputStream newInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+
             // Upload the file
-            if (ftpClient.storeFile(fileName, inputStream)) {
+            if (ftpClient.storeFile(fileName, newInputStream)) {
                 log.info("✅ File '{}' successfully uploaded to '{}'.", fileName, remotePath);
             } else {
-                throw new RuntimeException("❌ Failed to upload the file to the FTP server.");
+                throw new RuntimeException("❌ Failed to upload the file.");
             }
+
         } catch (IOException e) {
             log.error("❌ FTP connection error: {}", e.getMessage(), e);
             throw new RuntimeException("FTP connection error: " + e.getMessage(), e);
