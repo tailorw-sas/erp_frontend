@@ -45,6 +45,7 @@ public class FTPService implements IFTPService {
             ftpClient.setConnectTimeout(ftpConfig.getConnectTimeout());
             ftpClient.setSoTimeout(ftpConfig.getSoTimeout());
 
+            // Ensure remotePath is valid
             if (remotePath == null || remotePath.trim().isEmpty() || "/".equals(remotePath) || "//".equals(remotePath)) {
                 log.warn("⚠️ Invalid remotePath '{}', using default FTP directory.", remotePath);
                 remotePath = ftpClient.printWorkingDirectory();
@@ -66,14 +67,14 @@ public class FTPService implements IFTPService {
                 log.info("📂 Using default FTP directory.");
             }
 
-            // Convert InputStream to ByteArrayInputStream to prevent premature closing
+            // Convert InputStream properly
             ByteArrayInputStream newInputStream;
-            if (!inputStream.markSupported()) {
-                log.info("🔄 Cloning InputStream to ByteArrayInputStream...");
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                inputStream.transferTo(byteArrayOutputStream);
-                newInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-                inputStream.close(); // Close the original stream after cloning
+            if (!(inputStream instanceof ByteArrayInputStream)) {
+                log.info("🔄 Converting InputStream to ByteArrayInputStream...");
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+                    inputStream.transferTo(byteArrayOutputStream);
+                    newInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                }
             } else {
                 newInputStream = (ByteArrayInputStream) inputStream;
             }
