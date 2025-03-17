@@ -64,6 +64,8 @@ public class ManageCountry implements Serializable {
     @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
     private List<ManageAgency> agencies;
 
+    private String iso3;
+
     public ManageCountry(ManagerCountryDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -72,7 +74,7 @@ public class ManageCountry implements Serializable {
         this.status = dto.getStatus();
         this.isDefault = dto.getIsDefault();
         this.managerLanguage = dto.getManagerLanguage() != null ? new ManageLanguage(dto.getManagerLanguage()) : null;
-
+        this.iso3 = dto.getIso3();
     }
 
     public ManagerCountryDto toAggregate() {
@@ -83,7 +85,8 @@ public class ManageCountry implements Serializable {
                 description,
                 isDefault,
                 status,
-                managerLanguage.toAggregate()
+                managerLanguage.toAggregate(),
+                iso3
         );
     }
 
