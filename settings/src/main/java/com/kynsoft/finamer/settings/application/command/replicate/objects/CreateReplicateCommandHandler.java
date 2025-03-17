@@ -521,6 +521,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 .code(managerCountryDto.getCode())
                                 .name(managerCountryDto.getName())
                                 .description(managerCountryDto.getDescription())
+                                .iso3(managerCountryDto.getIso3())
                                 .build()
                         );
                     }

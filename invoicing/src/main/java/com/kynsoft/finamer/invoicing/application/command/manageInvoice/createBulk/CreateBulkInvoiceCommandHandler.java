@@ -390,6 +390,7 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
                 invoiceNumber,
+                InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType()) + "-" + 0L,
                 command.getInvoiceCommand().getInvoiceDate(), dueDate,
                 true,
                 BankerRounding.round(command.getInvoiceCommand().getInvoiceAmount()),

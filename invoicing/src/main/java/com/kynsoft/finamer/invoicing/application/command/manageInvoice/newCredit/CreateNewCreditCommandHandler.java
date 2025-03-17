@@ -219,6 +219,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 0L,
                 0L,
                 invoiceNumber,
+                InvoiceType.getInvoiceTypeCode(invoiceType) + "-" + 0L,
                 command.getInvoiceDate(),
                 //this.invoiceDate(parentInvoice.getHotel().getId()),
                 dueDate,

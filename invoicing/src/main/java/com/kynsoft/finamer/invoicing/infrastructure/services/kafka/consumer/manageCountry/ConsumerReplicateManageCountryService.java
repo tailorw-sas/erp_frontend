@@ -29,7 +29,7 @@ public class ConsumerReplicateManageCountryService {
                     objKafka.getName(),
                     objKafka.getDescription(),
                     "",
-                    "",
+                    objKafka.getIso3(),
                     false,
                     objKafka.getLanguage(),
                     Status.valueOf(objKafka.getStatus())

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +33,7 @@ public class GeneralData {
     private boolean taxIncluded = true;
 
     @XmlAttribute(name = "Status")
-    private String status = "";
+    private String status = StringUtils.EMPTY;
 
     public void setDate(LocalDate date) {
         this.date = date != null ? date.format(DateTimeFormatter.ISO_DATE) : null;
