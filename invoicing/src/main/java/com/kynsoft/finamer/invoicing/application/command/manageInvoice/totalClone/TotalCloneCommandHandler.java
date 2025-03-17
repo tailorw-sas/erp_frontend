@@ -271,6 +271,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 0L,
                 0L,
                 invoiceNumber,
+                InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType()) + "-" + 0L,
                 //command.getInvoiceDate(),
                 this.invoiceDate(invoiceToClone.getHotel().getId()),
                 dueDate,

@@ -86,11 +86,15 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         } catch (Exception e) {
             employeeFullName = command.getEmployee();
         }
+
+        String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
+
         ManageInvoiceDto income = new ManageInvoiceDto(
                 command.getId(),
                 0L,
                 0L,
-                this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME)),
+                invoiceNumber,
+                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
                 command.getInvoiceDate(),
                 command.getDueDate(),
                 command.getManual(),

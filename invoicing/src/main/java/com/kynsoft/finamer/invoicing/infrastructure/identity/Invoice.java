@@ -156,7 +156,7 @@ public class Invoice {
                 : null;
         this.dueAmount = dto.getDueAmount() != null ? BankerRounding.round(dto.getDueAmount()) : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
-        this.invoiceNumberPrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getInvoiceNo();
+        this.invoiceNumberPrefix = dto.getInvoiceNumberPrefix();
         this.isCloned = dto.getIsCloned();
         this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
@@ -170,7 +170,7 @@ public class Invoice {
 
     public ManageInvoiceDto toAggregateSample() {
 
-        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceNumberPrefix, invoiceDate, dueDate, isManual,
                 invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
                 dueAmount != null ? BankerRounding.round(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
@@ -178,6 +178,7 @@ public class Invoice {
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
                 manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
                 null, credits,aging);
+
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
@@ -186,8 +187,7 @@ public class Invoice {
     }
 
     public ManageInvoiceDto toAggregate() {
-        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId,
-                invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual, 
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceNumberPrefix, invoiceDate, dueDate, isManual,
                 invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
                 dueAmount != null ? BankerRounding.round(dueAmount) : null,
                 hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
@@ -197,8 +197,13 @@ public class Invoice {
                 reSend,
                 reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregateSample() : null, credits,aging);
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null,
+                createdAt,
+                isCloned,
+                parent != null ? parent.toAggregateSample() : null,
+                credits,
+                aging);
+
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
         manageInvoiceDto.setDeleteInvoice(deleteInvoice);
@@ -208,14 +213,33 @@ public class Invoice {
 
     public ManageInvoiceDto toAggregateSearch() {
 
-        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceDate, dueDate, isManual,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id,
+                invoiceId,
+                invoiceNo,
+                invoiceNumber,
+                invoiceNumberPrefix,
+                invoiceDate,
+                dueDate,
+                isManual,
                 invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
                 dueAmount != null ? BankerRounding.round(dueAmount) : null,
-                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
-                autoRec, null, null, reSend, reSendDate,
+                hotel.toAggregate(),
+                agency.toAggregate(),
+                invoiceType,
+                invoiceStatus,
+                autoRec,
+                null,
+                null,
+                reSend,
+                reSendDate,
                 manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                parent != null ? parent.toAggregateSample() : null, credits,aging);
+                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null,
+                createdAt,
+                isCloned,
+                parent != null ? parent.toAggregateSample() : null,
+                credits,
+                aging);
+
         manageInvoiceDto.setSendStatusError(sendStatusError);
         manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
         manageInvoiceDto.setImportType(importType);
