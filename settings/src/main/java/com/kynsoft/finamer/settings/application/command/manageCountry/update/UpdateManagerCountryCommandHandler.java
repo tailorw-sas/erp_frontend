@@ -68,6 +68,7 @@ public class UpdateManagerCountryCommandHandler implements ICommandHandler<Updat
                     .name(test.getName())
                     .description(test.getDescription())
                     .code(test.getCode())
+                    .iso3(test.getIso3())
                     .build()
             );
         }

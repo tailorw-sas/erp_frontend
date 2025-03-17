@@ -22,12 +22,6 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
     @Override
     public void handle(CreateManagerCountryCommand command) {
 
-        System.err.println("#################################################");
-        System.err.println("#################################################");
-        System.err.println("#################################################");
-        System.err.println("#################################################: " + command.getManagerLanguage());
-        System.err.println("#################################################");
-        System.err.println("#################################################");
         ManageLanguageDto languageDto = this.languageService.findById(command.getManagerLanguage());
         service.create(new ManagerCountryDto(
                 command.getId(),
@@ -36,7 +30,8 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
                 command.getDescription(),
                 command.getIsDefault(),
                 command.getStatus(),
-                languageDto
+                languageDto,
+                command.getIso3()
         ));
     }
 }
