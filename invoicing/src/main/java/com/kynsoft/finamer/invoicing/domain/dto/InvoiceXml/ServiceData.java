@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -46,7 +47,7 @@ public class ServiceData {
     private String roomNumber;
 
     @XmlAttribute(name = "RoomCategory")
-    private String roomCategory;
+    private String roomCategory = StringUtils.EMPTY;
 
     public void setBeginDate(LocalDate beginDate) {
         this.beginDate = beginDate != null ? beginDate.format(DateTimeFormatter.ISO_DATE) : null;
