@@ -23,6 +23,7 @@ public class ManageInvoiceDto {
     private Long invoiceId;
     private Long invoiceNo;
     private String invoiceNumber;
+    private String invoiceNumberPrefix;
     private LocalDateTime invoiceDate;
     private LocalDate dueDate;
     private Boolean isManual;
@@ -55,7 +56,7 @@ public class ManageInvoiceDto {
 
     private Long hotelInvoiceNumber;
 
-    public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
+    public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, String invoiceNumberPrefix, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
                             Double invoiceAmount, Double dueAmount, ManageHotelDto hotel,
                             ManageAgencyDto agency, EInvoiceType invoiceType, EInvoiceStatus status,
                             Boolean autoRec, List<ManageBookingDto> bookings, List<ManageAttachmentDto> attachments,
@@ -66,6 +67,7 @@ public class ManageInvoiceDto {
         this.invoiceId = invoiceId;
         this.invoiceNo = invoiceNo;
         this.invoiceNumber = invoiceNumber;
+        this.invoiceNumberPrefix = invoiceNumberPrefix;
         this.invoiceDate = invoiceDate;
         this.dueDate = dueDate;
         this.isManual = isManual;
