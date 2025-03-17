@@ -5,66 +5,55 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 import java.util.List;
 
-@XmlRootElement(name = "Transaction")
-@XmlType(propOrder = {"generalData", "supplier", "client", "productList", "taxSummary", "totalSummary"})
+@XmlRootElement(name = "Transaction", namespace = "http://www.w3.org/2001/XMLSchema")
+@XmlType(propOrder = {"generalData", "supplier", "client", "productList", "totalSummary"})
 public class InvoiceXml {
 
     private GeneralData generalData;
     private Supplier supplier;
     private Client client;
     private List<Product> productList;
-    private Tax taxSummary;
     private TotalSummary totalSummary;
 
-    // Getters y Setters
-    @XmlElement(name = "GeneralData")
+    @XmlElement(name = "GeneralData", required = true)
     public GeneralData getGeneralData() {
-        return generalData;
+        return generalData != null ? generalData : new GeneralData();
     }
 
     public void setGeneralData(GeneralData generalData) {
         this.generalData = generalData;
     }
 
-    @XmlElement(name = "Supplier")
+    @XmlElement(name = "Supplier", required = true)
     public Supplier getSupplier() {
-        return supplier;
+        return supplier != null ? supplier : new Supplier();
     }
 
     public void setSupplier(Supplier supplier) {
         this.supplier = supplier;
     }
 
-    @XmlElement(name = "Client")
+    @XmlElement(name = "Client", required = true)
     public Client getClient() {
-        return client;
+        return client != null ? client : new Client();
     }
 
     public void setClient(Client client) {
         this.client = client;
     }
 
-    @XmlElement(name = "ProductList")
+    @XmlElement(name = "ProductList", required = true)
     public List<Product> getProductList() {
-        return productList;
+        return productList != null ? productList : List.of();
     }
 
     public void setProductList(List<Product> productList) {
         this.productList = productList;
     }
 
-    @XmlElement(name = "TaxSummary")
-    public Tax getTaxSummary() {
-        return taxSummary;
-    }
-
-    public void setTaxSummary(Tax taxSummary) {
-        this.taxSummary = taxSummary;
-    }
-
-    @XmlElement(name = "TotalSummary")
+    @XmlElement(name = "TotalSummary", required = true)
     public TotalSummary getTotalSummary() {
-        return totalSummary;
+        return totalSummary != null ? totalSummary : new TotalSummary();
     }
 
     public void setTotalSummary(TotalSummary totalSummary) {

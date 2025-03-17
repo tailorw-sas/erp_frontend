@@ -22,5 +22,6 @@ public class ManagerCountryDto implements Serializable {
     private Boolean isDefault;
     private Status status;
     private ManageLanguageDto managerLanguage;
+    private String iso3;
 
 }

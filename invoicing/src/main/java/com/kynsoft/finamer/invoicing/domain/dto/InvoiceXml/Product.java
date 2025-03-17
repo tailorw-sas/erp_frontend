@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class Product {
     private double total;
 
     @XmlAttribute(name = "Comment")
-    private String comment;
+    private String comment= StringUtils.EMPTY;
 
     @XmlElement(name = "Taxes")
     private List<Tax> taxes;

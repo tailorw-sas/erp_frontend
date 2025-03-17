@@ -59,6 +59,7 @@ public class CreateManagerCountryCommandHandler implements ICommandHandler<Creat
                 .name(command.getName())
                 .description(command.getDescription())
                 .code(command.getCode())
+                .iso3(command.getIso3())
                 .build()
         );
     }

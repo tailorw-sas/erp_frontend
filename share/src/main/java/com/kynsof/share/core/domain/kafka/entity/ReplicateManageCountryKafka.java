@@ -22,4 +22,5 @@ public class ReplicateManageCountryKafka implements Serializable {
     private String description;
     private String status;
     private boolean isDefault;
+    private String iso3;
 }

@@ -17,6 +17,7 @@ import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
 import com.kynsoft.finamer.invoicing.infrastructure.services.InvoiceXmlService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -196,7 +197,24 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
-                String nameFile = invoice.getInvoiceNumber() + ".xml";
+                String bavelCode = invoice.getHotel() != null ?
+                        Optional.ofNullable(invoice.getHotel().getBabelCode()).orElse(StringUtils.EMPTY) :
+                        StringUtils.EMPTY;
+
+                String _company = Optional.ofNullable(invoice.getAgency())
+                        .map(agencyDto -> agencyDto.getName())
+                        .orElse(StringUtils.EMPTY)
+                        .replace("/", " ");
+
+                // Formateadores de fecha
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+                DateTimeFormatter formatterWithSpaces = DateTimeFormatter.ofPattern("dd MM yyyy");
+
+                // Construcción del nombre del archivo
+                String nameFile = "Factura " + bavelCode + " " + _company + " " +
+                        invoice.getInvoiceNo().toString() + " " +
+                        invoice.getInvoiceDate().toLocalDate().format(formatter) + " " +
+                        LocalDate.now().format(formatterWithSpaces) + ".xml";
                 InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
 
                 log.info("📤 Initiating async upload for invoice '{}' to Bavel FTP at '{}'", nameFile, agency.getSentB2BPartner().getUrl());
