@@ -17,13 +17,13 @@ public class TotalSummary {
     private double grossAmount;
 
     @XmlAttribute(name = "Discounts")
-    private double discounts;
+    private double discounts = 0.0;
 
     @XmlAttribute(name = "SubTotal")
     private double subTotal;
 
     @XmlAttribute(name = "Tax")
-    private double tax;
+    private double tax = 0.0;
 
     @XmlAttribute(name = "Total")
     private double total;
