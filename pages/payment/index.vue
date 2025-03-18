@@ -780,7 +780,7 @@ const applyPaymentColumns = ref<IColumn[]>([
     sortable: false,
     showFilter: false
   },
-  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: false, showFilter: false },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: true },
   { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
   // { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: true },
