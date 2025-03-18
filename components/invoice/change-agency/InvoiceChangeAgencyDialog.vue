@@ -58,7 +58,7 @@ const optionsOfTableChangeAgency = ref({
 const payloadChangeAgency = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 50,
   page: 0,
   sortBy: 'name',
   sortType: ENUM_SHORT_TYPE.ASC
@@ -100,15 +100,15 @@ async function getAgencyByClient(clientId: string) {
     //   ]
     // }
 
-    const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
-    if (objFilterByClient) {
-      objFilterByClient.value = clientId
+    const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
+    if (objFilterByStatus) {
+      objFilterByStatus.value = 'ACTIVE'
     }
     else {
       payloadChangeAgency.value.filter.push({
-        key: 'client.id',
+        key: 'status',
         operator: 'EQUALS',
-        value: clientId,
+        value: 'ACTIVE',
         logicalOperation: 'AND',
       })
     }
@@ -312,44 +312,11 @@ onMounted(async () => {
         <!-- // Label -->
         <!--        <pre>{{ props.selectedInvoice }}</pre> -->
         <div class="flex justify-content-between mb-2">
-          <div v-if="true" class="flex align-items-center mb-3">
-            <div class="mr-2">
-              <label for="autocomplete" class="font-semibold"> Client: </label>
-            </div>
-            <div class="mr-4">
-              <!-- <pre>{{ objClientFormChangeAgency }}</pre> -->
-              <DebouncedAutoCompleteComponent
-                id="autocomplete"
-                class="w-29rem"
-                field="name"
-                item-value="id"
-                :model="objClientFormChangeAgency"
-                :suggestions="[...listClientFormChangeAgency]"
-                @change="async ($event) => {
-                  objClientFormChangeAgency = $event
-                  if ($event && $event.id) {
-                    await getAgencyByClient($event.id)
-                  }
-                }"
-                @load="async($event) => {
-                  const objQueryToSearch = {
-                    query: $event,
-                    keys: ['name', 'code'],
-                  }
-                  const filter: FilterCriteria[] = [{
-                    key: 'status',
-                    logicalOperation: 'AND',
-                    operator: 'EQUALS',
-                    value: 'ACTIVE',
-                  }]
-                  await getClientList(objApis.client.moduleApi, objApis.client.uriApi, objQueryToSearch, filter)
-                }"
-              />
-            </div>
-          </div>
-          <div v-if="false" class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
+          <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Client:</strong>
-            <span class="w-auto text-white font-semibold">{{ props.selectedInvoice.agency?.client.code ?? '' }} - {{ props.selectedInvoice.agency?.client.name ?? '' }}</span>
+            <span class="w-auto text-white font-semibold">
+              {{ props.selectedInvoice.agency?.client.code ?? '' }} - {{ props.selectedInvoice.agency?.client.name ?? '' }}
+            </span>
           </div>
           <div class="bg-primary w-auto h-2rem flex align-items-center px-2" style="border-radius: 5px">
             <strong class="mr-2 w-auto">Current Agency:</strong>
