@@ -831,7 +831,6 @@ onMounted(async () => {
                       auto
                       custom-upload
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                      accept="application/pdf"
                       @uploader="($event: any) => {
                         customBase64Uploader($event, fieldsV2, 'path');
                         onUpdate('path', $event)
@@ -852,7 +851,6 @@ onMounted(async () => {
                     :multiple="false"
                     auto
                     custom-upload
-                    accept="application/pdf,text/plain,application/octet-stream"
                     @uploader="(event: any) => {
                       //customBase64Uploader($event, fieldsV2, 'path');
                       const file = event.files[0]
@@ -941,7 +939,6 @@ onMounted(async () => {
                       auto
                       custom-upload
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                      accept="application/pdf"
                       @uploader="($event: any) => {
                         customBase64Uploader($event, fieldsV2, 'path');
                         onUpdate('path', $event)

@@ -147,12 +147,12 @@ export function validateEntitiesForSelectMultiple(fieldName: string) {
 
 // Esta funcion es para validar el campo File que usamos en los formularios,
 // el cual puede ser un string(Para que acepte la URL cuando hacemos el getBYId que ya no viene un file sino la referencia al archivo)
-// o un array
+// o un arrayOK
 export function validateFiles(size: number = 10000, acceptTypes: string[] = ['image/jpeg', 'image/png', 'application/pdf']) {
   const fileSchema = z.object({
     name: z.string().min(1, 'The file must have a name'),
     size: z.number().max(size * 1024 * 1024, `The file must be less than ${size} MB`), // Tamaño máximo 5 MB
-    type: z.string().refine(value => acceptTypes.includes(value), { message: 'The file type is not allowed' }),
+    type: z.string().refine(value => acceptTypes.includes(value), { message: '' }),
   })
   const stringSchema = z.string().trim().refine(value => typeof value === 'string' && value !== '', 'The files field is required')
   const dataSchema = z.object({
