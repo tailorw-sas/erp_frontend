@@ -39,36 +39,29 @@ public class FTPController {
                                                                 @RequestPart("port") String port,
                                                                 @RequestPart(value = "path", required = false) String path) {
         String fileName = file.filename();
-        log.info("📤 Received request to upload file '{}' to FTP '{}'", fileName, path);
 
         return file.content()
-                .reduce(new ByteArrayOutputStream(), (outputStream, dataBuffer) -> {
-                    try {
-                        dataBuffer.asInputStream(true).transferTo(outputStream);
+                .collectList()
+                .flatMap(dataBuffers -> {
+                    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                        for (var buffer : dataBuffers) {
+                            buffer.asInputStream(true).transferTo(outputStream);
+                        }
+                        byte[] fileBytes = outputStream.toByteArray();
+
+                        if (fileBytes.length == 0) {
+                            return Mono.error(new RuntimeException("❌ File content is empty."));
+                        }
+
+                        return Mono.fromCallable(() -> {
+                            ftpService.uploadFile(path, fileBytes, fileName, server, user, password, Integer.parseInt(port));
+                            return ResponseEntity.ok(Map.of("message", "Upload successful", "file", fileName, "path", path));
+                        }).subscribeOn(Schedulers.boundedElastic());
                     } catch (Exception e) {
                         log.error("❌ Error processing file '{}': {}", fileName, e.getMessage(), e);
-                        throw new RuntimeException("Error processing file: " + e.getMessage(), e);
+                        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(Map.of("error", "Upload failed", "details", e.getMessage())));
                     }
-                    return outputStream;
-                })
-                .flatMap(outputStream -> {
-                    byte[] fileBytes = outputStream.toByteArray();
-
-                    if (fileBytes.length == 0) {
-                        return Mono.error(new RuntimeException("❌ File content is empty."));
-                    }
-
-                    // Fix: Corrected parameter types for UploadFileCommand constructor
-                    UploadFileCommand command = new UploadFileCommand(fileName, fileBytes, server, user, password, Integer.parseInt(port), path);
-                    return Mono.fromCallable(() -> {
-                        mediator.send(command);
-                        return ResponseEntity.ok(Map.of("message", "Upload successful", "file", fileName, "path", path));
-                    }).subscribeOn(Schedulers.boundedElastic());
-                })
-                .onErrorResume(e -> {
-                    log.error("❌ Error uploading file '{}': {}", fileName, e.getMessage(), e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(Map.of("error", "Upload failed", "details", e.getMessage())));
                 });
     }
 
@@ -79,8 +72,6 @@ public class FTPController {
                                                                          @RequestPart("password") String password,
                                                                          @RequestPart("port") String port,
                                                                          @RequestPart(value = "path", required = false) String path) {
-        log.info("📤 Received request to upload multiple files to FTP '{}'", path);
-
         return files.flatMap(file -> {
                     String fileName = file.filename();
                     log.info("📤 Processing upload for file '{}'", fileName);
