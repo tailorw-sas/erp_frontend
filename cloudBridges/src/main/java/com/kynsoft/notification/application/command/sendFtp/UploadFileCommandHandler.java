@@ -25,15 +25,13 @@ public class UploadFileCommandHandler implements ICommandHandler<UploadFileComma
         String remotePath = (command.getPath() == null || command.getPath().trim().isEmpty()) ? "" : "/" + command.getPath();
         log.info("📤 Uploading file '{}' to FTP at '{}'", command.getFileName(), remotePath);
 
-        Mono.fromRunnable(() -> {
-            try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(command.getFileBytes())) {
-                ftpService.uploadFile(remotePath, byteArrayInputStream, command.getFileName(),
-                        command.getServer(), command.getUser(), command.getPassword(), command.getPort());
-                log.info("✅ File '{}' successfully uploaded to FTP '{}'", command.getFileName(), remotePath);
-            } catch (Exception e) {
-                log.error("❌ FTP upload failed for '{}': {}", command.getFileName(), e.getMessage(), e);
-                throw new RuntimeException("FTP upload error: " + e.getMessage(), e);
-            }
-        }).subscribeOn(Schedulers.boundedElastic()).subscribe();
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(command.getFileBytes())) {
+            ftpService.uploadFile(remotePath, byteArrayInputStream, command.getFileName(),
+                    command.getServer(), command.getUser(), command.getPassword(), command.getPort());
+            log.info("✅ File '{}' successfully uploaded to FTP '{}'", command.getFileName(), remotePath);
+        } catch (Exception e) {
+            log.error("❌ FTP upload failed for '{}': {}", command.getFileName(), e.getMessage(), e);
+            throw new RuntimeException("FTP upload error: " + e.getMessage(), e);
+        }
     }
 }
