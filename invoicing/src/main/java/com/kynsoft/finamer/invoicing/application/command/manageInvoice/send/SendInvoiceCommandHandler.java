@@ -275,7 +275,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
 
             for (GeneratedInvoice generatedInvoice : generatedPDFs) {
-                InputStream pdfStream = new ByteArrayInputStream(generatedInvoice.getPdfStream().toByteArray());
                 LocalDateTime currentDate = generateDate(generatedInvoice.getInvoices().get(0).getHotel().getId());
                 String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
                 String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
@@ -285,7 +284,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
                 log.info("📤 Preparing to upload invoice '{}' to FTP at '{}'", generatedInvoice.getNameFile(), path);
 
-                CompletableFuture<String> uploadFuture = ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(),
+                CompletableFuture<String> uploadFuture = ftpService.sendFile(generatedInvoice.getPdfStream().toByteArray(),
+                                generatedInvoice.getNameFile(),
                                 generatedInvoice.getIp(), generatedInvoice.getUserName(),
                                 generatedInvoice.getPassword(), 21, path)
                         .handle((response, ex) -> {
