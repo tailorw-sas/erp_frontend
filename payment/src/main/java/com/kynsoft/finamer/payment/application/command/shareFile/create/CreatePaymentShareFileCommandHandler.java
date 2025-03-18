@@ -62,7 +62,6 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
     @Override
     public void handle(CreatePaymentShareFileCommand command) {
         PaymentDto paymentDto = this.paymentService.findById(command.getPaymentId());
-        InputStream inputStream = new ByteArrayInputStream(command.getFileData());
         LocalDate currentDate = LocalDate.now();
 
         // Construcción del path
@@ -73,7 +72,7 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
 
         log.info("📤 Initiating async upload for payment file '{}' to FTP at '{}'", command.getFileName(), path);
 
-        CompletableFuture.supplyAsync(() -> ftpService.sendFile(inputStream, command.getFileName(),
+        CompletableFuture.supplyAsync(() -> ftpService.sendFile(command.getFileData(), command.getFileName(),
                         ftpServerAddress, ftpUsername, ftpPassword, ftpServerPort, path), executorService)
                 .thenCompose(future -> future) // Unwrap nested CompletableFuture
                 .thenAccept(response -> {
