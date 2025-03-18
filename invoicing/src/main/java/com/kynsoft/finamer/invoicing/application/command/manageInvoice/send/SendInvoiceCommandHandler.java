@@ -213,9 +213,9 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                         invoice.getInvoiceNo() + " " +
                         invoice.getInvoiceDate().toLocalDate().format(formatter) + " " +
                         LocalDate.now().format(formatterWithSpaces) + ".xml";
-                InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
+                byte[] fileBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
 
-                CompletableFuture<String> uploadFuture = ftpService.sendFile(inputStream, nameFile,
+                CompletableFuture<String> uploadFuture = ftpService.sendFile(fileBytes, nameFile,
                                 agency.getSentB2BPartner().getIp(), agency.getSentB2BPartner().getUserName(),
                                 agency.getSentB2BPartner().getPassword(), 21, agency.getSentB2BPartner().getUrl())
                         .handle((response, ex) -> {
