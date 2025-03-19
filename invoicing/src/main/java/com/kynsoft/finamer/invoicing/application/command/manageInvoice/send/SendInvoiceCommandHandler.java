@@ -197,34 +197,29 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         for (ManageInvoiceDto invoice : invoices) {
             try {
                 var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
-                String bavelCode = invoice.getHotel() != null ?
-                        Optional.ofNullable(invoice.getHotel().getBabelCode()).orElse(StringUtils.EMPTY) :
-                        StringUtils.EMPTY;
+                String bavelCode = Optional.ofNullable(invoice.getHotel())
+                        .map(ManageHotelDto::getBabelCode)
+                        .orElse(StringUtils.EMPTY);
 
                 String _company = Optional.ofNullable(invoice.getAgency())
-                        .map(agencyDto -> agencyDto.getName())
+                        .map(ManageAgencyDto::getName)
                         .orElse(StringUtils.EMPTY)
                         .replace("/", " ");
 
-                // Formateadores de fecha
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
                 DateTimeFormatter formatterWithSpaces = DateTimeFormatter.ofPattern("dd MM yyyy");
 
-                // Construcción del nombre del archivo
                 String nameFile = "Factura " + bavelCode + " " + _company + " " +
-                        invoice.getInvoiceNo().toString() + " " +
+                        invoice.getInvoiceNo() + " " +
                         invoice.getInvoiceDate().toLocalDate().format(formatter) + " " +
                         LocalDate.now().format(formatterWithSpaces) + ".xml";
-                InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8));
+                byte[] fileBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
 
-                log.info("📤 Initiating async upload for invoice '{}' to Bavel FTP at '{}'", nameFile, agency.getSentB2BPartner().getUrl());
-
-                CompletableFuture<String> uploadFuture = ftpService.sendFile(inputStream, nameFile,
+                CompletableFuture<String> uploadFuture = ftpService.sendFile(fileBytes, nameFile,
                                 agency.getSentB2BPartner().getIp(), agency.getSentB2BPartner().getUserName(),
                                 agency.getSentB2BPartner().getPassword(), 21, agency.getSentB2BPartner().getUrl())
                         .handle((response, ex) -> {
                             if (ex == null) {
-                                log.info("✅ Invoice '{}' successfully uploaded to Bavel FTP.", nameFile);
                                 invoice.setSendStatusError(null); // Clear previous errors
                                 service.update(invoice);
                                 return response;
@@ -252,9 +247,14 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                 .filter(invoice -> invoice.getSendStatusError() == null)
                 .collect(Collectors.toList());
 
-        if (!successfulInvoices.isEmpty()) {
-            updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
+        // Si ninguna factura se subió correctamente, lanzar error
+        if (successfulInvoices.isEmpty()) {
+            log.error("❌ All invoices failed to upload to Bavel FTP.");
+            throw new RuntimeException("All invoices failed to upload to Bavel FTP.");
         }
+
+        // Si al menos una factura se subió correctamente, actualizar estado
+        updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
     }
 
     private CompletableFuture<Void> sendFtpAsync(SendInvoiceCommand command, List<ManageInvoiceDto> invoices,
@@ -275,7 +275,6 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
 
             for (GeneratedInvoice generatedInvoice : generatedPDFs) {
-                InputStream pdfStream = new ByteArrayInputStream(generatedInvoice.getPdfStream().toByteArray());
                 LocalDateTime currentDate = generateDate(generatedInvoice.getInvoices().get(0).getHotel().getId());
                 String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
                 String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
@@ -285,7 +284,8 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
 
                 log.info("📤 Preparing to upload invoice '{}' to FTP at '{}'", generatedInvoice.getNameFile(), path);
 
-                CompletableFuture<String> uploadFuture = ftpService.sendFile(pdfStream, generatedInvoice.getNameFile(),
+                CompletableFuture<String> uploadFuture = ftpService.sendFile(generatedInvoice.getPdfStream().toByteArray(),
+                                generatedInvoice.getNameFile(),
                                 generatedInvoice.getIp(), generatedInvoice.getUserName(),
                                 generatedInvoice.getPassword(), 21, path)
                         .handle((response, ex) -> {
