@@ -34,8 +34,6 @@ import java.util.UUID;
 
 @Service
 public class FormPaymentServiceImpl implements IFormPaymentService {
-    @Value("${redirect.private.key}")
-    private String privateKey;
 
     @Autowired
     private final ManageTransactionsRedirectLogsWriteDataJPARepository repositoryCommand;
@@ -55,22 +53,22 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         this.merchantLanguageCodeService = merchantLanguageCodeService;
     }
 
-    public MerchantRedirectResponse redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    public MerchantRedirectResponse redirectToMerchant(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto) {
         if (transactionDto.getMethodType() == MethodType.LINK && !isValidLink(transactionDto)) {
             throw new BusinessException(DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK, DomainErrorMessage.VCC_EXPIRED_PAYMENT_LINK.getReasonPhrase());
         } else {
             if (merchantConfigDto.getMethod() == Method.AZUL) {
-                return redirectToAzul(transactionDto, merchantConfigDto);
+                return redirectToAzul(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
             } else {
-                return redirectToCardNet(transactionDto, merchantConfigDto);
+                return redirectToCardNet(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
             }
         }
     }
 
-    private MerchantRedirectResponse redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    private MerchantRedirectResponse redirectToAzul(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto) {
         // Extraer los parámetros del objeto PaymentRequest
         //TODO: aquí la idea es que la info del merchant se tome de merchant, b2bparter y merchantConfig
-        String merchantId = merchantConfigDto.getMerchantNumber(); //Campo merchantNumber de Merchant Config
+        String merchantId = merchantHotelEnrolleDto.getEnrrolle();
         String merchantName = merchantConfigDto.getName(); //Campo name de Merchant Config
         String merchantType = merchantConfigDto.getMerchantType(); //Campo merchantType de Merchant Config
         String currencyCode = transactionDto.getMerchantCurrency().getValue(); //Valor $ por ahora
@@ -91,10 +89,12 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         String customField2Label = "";//Se mantiene asi por defecto
         String customField2Value = "";//Se mantiene asi por defecto
 
+        String authKey = merchantHotelEnrolleDto.getKey();
+
         // Construir el hash de autenticación
         String data = String.join("", merchantId, merchantName, merchantType, currencyCode, orderNumber, amount, itbis, approvedUrl, declinedUrl, cancelUrl,
-                useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, privateKey);
-        String authHash = createAuthHash(data);
+                useCustomField1, customField1Label, customField1Value, useCustomField2, customField2Label, customField2Value, authKey);
+        String authHash = createAuthHash(data, authKey);
 
         //obtener el language
         String locale = this.merchantLanguageCodeService.findMerchantLanguageByMerchantIdAndLanguageId(
@@ -107,9 +107,9 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
                 "<head></head>" +
                 "<body>" +
                 "<form action=\"" + merchantConfigDto.getUrl() + "\" method=\"post\" id=\"paymentForm\">" +
-                "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantConfigDto.getMerchantNumber() + "\">" +
-                "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantConfigDto.getName() + "\">" +
-                "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantConfigDto.getMerchantType() + "\">" +
+                "<input type=\"hidden\" name=\"MerchantId\" value=\"" + merchantId + "\">" +
+                "<input type=\"hidden\" name=\"MerchantName\" value=\"" + merchantName + "\">" +
+                "<input type=\"hidden\" name=\"MerchantType\" value=\"" + merchantType + "\">" +
                 "<input type=\"hidden\" name=\"CurrencyCode\" value=\"" + currencyCode + "\">" +
                 "<input type=\"hidden\" name=\"OrderNumber\" value=\"" + orderNumber + "\">" +
                 "<input type=\"hidden\" name=\"Locale\" value=\"" + (locale.isBlank() ? "EN" : locale) + "\">" +
@@ -136,10 +136,10 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     }
 
     // Métado para crear el AuthHash
-    private String createAuthHash(String data) {
+    private String createAuthHash(String data, String authKey) {
         try {
             javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA512");
-            javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(privateKey.getBytes(), "HmacSHA512");
+            javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(authKey.getBytes(), "HmacSHA512");
             mac.init(secretKey);
             byte[] hashBytes = mac.doFinal(data.getBytes());
             StringBuilder hashString = new StringBuilder();
@@ -153,9 +153,10 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     }
 
     private MerchantRedirectResponse redirectToCardNet(TransactionDto transactionDto,
-                                                       ManagerMerchantConfigDto merchantConfigDto) {
+                                                       ManagerMerchantConfigDto merchantConfigDto,
+                                                       ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto) {
         // Construir los datos de la transacción
-        Map<String, String> requestData = buildRequestData(transactionDto, merchantConfigDto);
+        Map<String, String> requestData = buildRequestData(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
 
         // Obtener o crear una sesión de CardNet
         CardNetSessionResponse sessionResponse = createOrUpdateSession(transactionDto, merchantConfigDto, requestData);
@@ -175,7 +176,7 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
     /**
      * Construye los datos de la transacción para enviarlos a CardNet.
      */
-    private Map<String, String> buildRequestData(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto) {
+    private Map<String, String> buildRequestData(TransactionDto transactionDto, ManagerMerchantConfigDto merchantConfigDto, ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto) {
         String amountString = BigDecimal.valueOf(transactionDto.getAmount())
                 .multiply(BigDecimal.valueOf(100))
                 .stripTrailingZeros()
@@ -197,8 +198,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         requestData.put("Tax", "0");
         requestData.put("AcquiringInstitutionCode", merchantConfigDto.getInstitutionCode());
         requestData.put("MerchantType", merchantConfigDto.getMerchantType());
-        requestData.put("MerchantNumber", merchantConfigDto.getMerchantNumber());
-        requestData.put("MerchantTerminal", merchantConfigDto.getMerchantTerminal());
+        requestData.put("MerchantNumber", merchantHotelEnrolleDto.getEnrrolle());
+        requestData.put("MerchantTerminal", merchantHotelEnrolleDto.getKey());
         requestData.put("ReturnUrl", merchantConfigDto.getSuccessUrl());
         requestData.put("CancelUrl", merchantConfigDto.getErrorUrl());
         requestData.put("PageLanguaje", pageLanguage.isBlank() ? "ING" : pageLanguage);
@@ -209,8 +210,8 @@ public class FormPaymentServiceImpl implements IFormPaymentService {
         requestData.put("Amount", amountString);
 //        String keyEncryptionKey = generateMD5(
 //                merchantConfigDto.getMerchantType(),
-//                merchantConfigDto.getMerchantNumber(),
-//                merchantConfigDto.getMerchantTerminal(),
+//                merchantHotelEnrolleDto.getEnrrolle(),
+//                merchantHotelEnrolleDto.getKey(),
 //                referenceNumber,
 //                amountString,
 //                "0"

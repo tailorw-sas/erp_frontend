@@ -31,47 +31,39 @@ public class FtpService implements IFtpService {
     @Value("${ftp.api.url.maxRetries:3}")
     private int maxRetries;
 
-    public CompletableFuture<String> sendFile(InputStream inputStream, String fileName, String server, String user,
+    public CompletableFuture<String> sendFile(byte[] fileBytes, String fileName, String server, String user,
         String password, int port, String path) {
-        return uploadFile(inputStream, fileName, server, user, password, port, path)
+        return uploadFile(fileBytes, fileName, server, user, password, port, path)
             .handle((result, ex) -> {
                 if (ex == null) {
                     return CompletableFuture.completedFuture(result);
                 } else {
                     log.warn("⚠️ Initial upload attempt failed for '{}', applying retry strategy...", fileName);
-                    return retryableFuture(() -> uploadFile(inputStream, fileName, server, user, password, port, path), maxRetries);
+                    return retryableFuture(() -> uploadFile(fileBytes, fileName, server, user, password, port, path), maxRetries);
                 }
             })
             .thenCompose(result -> result); // Flatten nested CompletableFuture
     }
 
-    private CompletableFuture<String> uploadFile(InputStream inputStream, String fileName, String server, String user,
-        String password, int port, String path) {
+    private CompletableFuture<String> uploadFile(byte[] fileBytes, String fileName, String server, String user, String password, int port, String path) {
         return CompletableFuture.supplyAsync(() -> {
-            String uploadUrl = ftpApiUrl + "/upload";
-
+            String uploadUrl = this.ftpApiUrl + "/upload";
             log.info("🔗 Connecting to Cloud Bridges: {}", uploadUrl);
             log.info("📂 Uploading file '{}' to FTP server '{}' at path '{}'", fileName, server, path);
 
             try (CloseableHttpClient client = HttpClients.createDefault()) {
-                HttpPost post = createHttpPost(uploadUrl, inputStream, fileName, server, user, password, port, path);
-
-                HttpClientResponseHandler<String> responseHandler = response -> {
+                HttpPost post = this.createHttpPost(uploadUrl, fileBytes, fileName, server, user, password, port, path);
+                HttpClientResponseHandler<String> responseHandler = (response) -> {
                     int statusCode = response.getCode();
-                    String responseBody = response.getEntity() != null ?
-                            EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8) : "No response";
-
+                    String responseBody = response.getEntity() != null ? EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8) : "No response";
                     if (statusCode == 200) {
-                        log.info("✅ File '{}' successfully uploaded to Cloud Bridges. Response: {}", fileName, responseBody);
                         return responseBody;
                     } else {
                         log.error("❌ File upload failed '{}' | Status Code: {} | Response: {}", fileName, statusCode, responseBody);
                         throw new RuntimeException("Cloud Bridges error: Status " + statusCode + " - " + responseBody);
                     }
                 };
-
                 return client.execute(post, responseHandler);
-
             } catch (Exception e) {
                 log.error("❌ Communication error while uploading file '{}': {}", fileName, e.getMessage(), e);
                 throw new RuntimeException("Communication error while uploading file: " + e.getMessage(), e);
@@ -106,11 +98,10 @@ public class FtpService implements IFtpService {
         });
     }
 
-    private HttpPost createHttpPost(String url, InputStream inputStream, String fileName, String server, String user,
-                                    String password, int port, String path) {
+    private HttpPost createHttpPost(String url, byte[] fileBytes, String fileName, String server, String user, String password, int port, String path) {
         HttpPost post = new HttpPost(url);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create()
-                .addBinaryBody("file", inputStream, ContentType.DEFAULT_BINARY, fileName)
+                .addBinaryBody("file", fileBytes, ContentType.DEFAULT_BINARY, fileName)
                 .addTextBody("server", server)
                 .addTextBody("user", user)
                 .addTextBody("password", password)
