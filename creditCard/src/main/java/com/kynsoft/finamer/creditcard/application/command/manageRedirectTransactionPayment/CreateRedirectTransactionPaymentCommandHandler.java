@@ -3,13 +3,11 @@ package com.kynsoft.finamer.creditcard.application.command.manageRedirectTransac
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
-import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.creditcard.domain.dto.MerchantRedirectResponse;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantHotelEnrolleService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import com.kynsoft.finamer.creditcard.infrastructure.services.TokenService;
 import io.jsonwebtoken.Claims;
@@ -26,12 +24,18 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
     private final TokenService tokenService;
     private final ITransactionService transactionService;
     private final IManageMerchantConfigService merchantConfigService;
+    private final IManageMerchantHotelEnrolleService merchantHotelEnrolleService;
 
-    public CreateRedirectTransactionPaymentCommandHandler(IFormPaymentService formPaymentService, TokenService tokenService, ITransactionService transactionService, IManageMerchantConfigService merchantConfigService) {
+    public CreateRedirectTransactionPaymentCommandHandler(IFormPaymentService formPaymentService,
+                                                          TokenService tokenService,
+                                                          ITransactionService transactionService,
+                                                          IManageMerchantConfigService merchantConfigService,
+                                                          IManageMerchantHotelEnrolleService merchantHotelEnrolleService) {
         this.formPaymentService = formPaymentService;
         this.tokenService = tokenService;
         this.transactionService = transactionService;
         this.merchantConfigService = merchantConfigService;
+        this.merchantHotelEnrolleService = merchantHotelEnrolleService;
     }
 
     @Override
@@ -45,7 +49,9 @@ public class CreateRedirectTransactionPaymentCommandHandler implements ICommandH
             }
 
             ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
-            MerchantRedirectResponse merchantRedirectResponse = formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto);
+            ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByForeignIds(merchantConfigDto.getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getId());
+
+            MerchantRedirectResponse merchantRedirectResponse = formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
 
             TransactionPaymentLogsDto dto = this.formPaymentService.findByTransactionId(transactionDto.getTransactionUuid());
 

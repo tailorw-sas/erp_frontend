@@ -23,6 +23,10 @@ public interface ManageMerchantHotelEnrolleReadDataJPARepository extends JpaRepo
     @Query("SELECT e FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel = :manageHotel")
     Optional<ManageMerchantHotelEnrolle> findByManageMerchantAndManageHotel(@Param("manageMerchant") ManageMerchant managerMerchant, @Param("manageHotel") ManageHotel managerHotel);
 
+    @Query(value = "SELECT * FROM manage_merchant_hotel_enrolle WHERE manage_merchant_id = :manageMerchantId AND manage_hotel_id = :manageHotelId AND manager_currency_id = :managerCurrencyId", nativeQuery = true)
+    Optional<ManageMerchantHotelEnrolle> findByForeignIds(@Param("manageMerchantId") UUID manageMerchantId, @Param("manageHotelId") UUID manageHotelId, @Param("managerCurrencyId") UUID managerCurrencyId);
+
+
     @Query("SELECT e.manageHotel FROM ManageMerchantHotelEnrolle e WHERE e.manageMerchant = :manageMerchant AND e.manageHotel.isApplyByVcc = true AND e.status = 'ACTIVE' AND e.manageHotel.status = 'ACTIVE'")
     List<ManageHotel> findHotelsByManageMerchant(@Param("manageMerchant") ManageMerchant manageMerchant);
 

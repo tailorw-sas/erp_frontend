@@ -21,6 +21,8 @@ public interface IManageMerchantHotelEnrolleService {
 
     ManageMerchantHotelEnrolleDto findByManageMerchantAndManageHotel(ManageMerchantDto manageMerchantDto, ManageHotelDto manageHotelDto);
 
+    ManageMerchantHotelEnrolleDto findByForeignIds(UUID manageMerchantId, UUID manageHotelId, UUID managerCurrencyId);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     PaginatedResponse findHotelsByManageMerchant(Pageable pageable, List<FilterCriteria> filterCriteria);

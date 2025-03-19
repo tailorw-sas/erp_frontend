@@ -89,6 +89,17 @@ public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHot
     }
 
     @Override
+    public ManageMerchantHotelEnrolleDto findByForeignIds(UUID manageMerchantId, UUID manageHotelId, UUID managerCurrencyId){
+        Optional<ManageMerchantHotelEnrolle> manageMerchantHotelEnrolle = this.repositoryQuery.findByForeignIds(manageMerchantId, manageHotelId, managerCurrencyId);
+        if (manageMerchantHotelEnrolle.isPresent()){
+            return manageMerchantHotelEnrolle.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND, new ErrorField("id", "Manage Merchant Hotel Enrolle not found.")));
+    }
+
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<ManageMerchantHotelEnrolle> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageMerchantHotelEnrolle> data = this.repositoryQuery.findAll(specifications, pageable);

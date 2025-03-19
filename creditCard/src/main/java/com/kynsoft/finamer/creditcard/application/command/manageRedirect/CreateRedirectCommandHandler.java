@@ -3,13 +3,11 @@ package com.kynsoft.finamer.creditcard.application.command.manageRedirect;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
-import com.kynsoft.finamer.creditcard.domain.dto.ManagerMerchantConfigDto;
-import com.kynsoft.finamer.creditcard.domain.dto.MerchantRedirectResponse;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionDto;
-import com.kynsoft.finamer.creditcard.domain.dto.TransactionPaymentLogsDto;
+import com.kynsoft.finamer.creditcard.domain.dto.*;
 import com.kynsoft.finamer.creditcard.domain.dtoEnum.Method;
 import com.kynsoft.finamer.creditcard.domain.services.IFormPaymentService;
 import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantConfigService;
+import com.kynsoft.finamer.creditcard.domain.services.IManageMerchantHotelEnrolleService;
 import com.kynsoft.finamer.creditcard.domain.services.ITransactionService;
 import org.springframework.stereotype.Component;
 
@@ -18,15 +16,18 @@ import java.util.UUID;
 @Component
 public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedirectCommand> {
     private final ITransactionService transactionService;
-
     private final IFormPaymentService formPaymentService;
-
     private final IManageMerchantConfigService merchantConfigService;
+    private final IManageMerchantHotelEnrolleService merchantHotelEnrolleService;
 
-    public CreateRedirectCommandHandler(ITransactionService transactionService, IFormPaymentService formPaymentService, IManageMerchantConfigService merchantConfigService) {
+    public CreateRedirectCommandHandler(ITransactionService transactionService,
+                                        IFormPaymentService formPaymentService,
+                                        IManageMerchantConfigService merchantConfigService,
+                                        IManageMerchantHotelEnrolleService merchantHotelEnrolleService) {
         this.transactionService = transactionService;
         this.formPaymentService = formPaymentService;
         this.merchantConfigService = merchantConfigService;
+        this.merchantHotelEnrolleService = merchantHotelEnrolleService;
     }
 
     @Override
@@ -38,7 +39,9 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
         }
 
         ManagerMerchantConfigDto merchantConfigDto = this.merchantConfigService.findByMerchantID(command.getManageMerchantResponse().getId());
-        MerchantRedirectResponse merchantRedirectResponse = this.formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto);
+        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByForeignIds(merchantConfigDto.getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getId());
+
+        MerchantRedirectResponse merchantRedirectResponse = this.formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
 
         //Obtener la data que viene del FormServiceImpl y dividirla en merchantRequest([0]) y Map ([1])
 //        String[] dataForm = split(command.getResult());
