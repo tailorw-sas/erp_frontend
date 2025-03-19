@@ -25,7 +25,6 @@ public class ResendPostCommandHandler implements ICommandHandler<ResendPostComma
     private final IFormPaymentService formPaymentService;
 
     public ResendPostCommandHandler(ITransactionService transactionService, IManageMerchantConfigService merchantConfigService, IFormPaymentService formPaymentService) {
-
         this.transactionService = transactionService;
         this.merchantConfigService = merchantConfigService;
         this.formPaymentService = formPaymentService;
