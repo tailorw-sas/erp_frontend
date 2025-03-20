@@ -22,10 +22,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageRoomRate.create.C
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.http.getByGenId.FindBookinghttpByGenIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.getById.FindBookingByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.http.getById.FindBookingHttpByIdQuery;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingErrorRequest;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingFromFileErrorQuery;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusQuery;
-import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
+import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.*;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.search.GetSearchBookingQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBookingResponse;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
@@ -169,6 +166,14 @@ public class BookingController {
         ImportBookingErrorRequest request = new ImportBookingErrorRequest(searchRequest.getQuery(), PageRequest.of(searchRequest.getPage(), searchRequest.getPageSize()));
         ImportBookingFromFileErrorQuery importBookingFromFileErrorQuery = new ImportBookingFromFileErrorQuery(request);
         return ResponseEntity.ok(mediator.send(importBookingFromFileErrorQuery));
+    }
+
+    @PostMapping(path = "/import-search-innsist")
+    public ResponseEntity<?> getImportBookingErrorFromInnsist(@RequestBody SearchRequest searchRequest) {
+        ImportBookingListQuery query = new ImportBookingListQuery(searchRequest.getQuery(), PageableUtil.createPageable(searchRequest));
+        PaginatedResponse response = mediator.send(query);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(path = "/{importProcessId}/import-status")

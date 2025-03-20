@@ -12,6 +12,8 @@ import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingPro
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -22,7 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 
 @Service
-public class ImportInnsistServiceImpl {
+public class ImportInnsistServiceImpl implements IImportInnsistService {
 
     private final IManageAgencyService agencyService;
 
@@ -97,8 +99,8 @@ public class ImportInnsistServiceImpl {
                     .total(list.size())
                     .build();
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
-            bookingImportHelperService.removeAllImportCache(request.getImportInnsitProcessId().toString());
-            bookingImportHelperService.removeAllImportCache(insistImportProcessId.toString());
+            //bookingImportHelperService.removeAllImportCache(request.getImportInnsitProcessId().toString());
+            //bookingImportHelperService.removeAllImportCache(insistImportProcessId.toString());
             this.clearCache();
 
         } catch (Exception e) {
@@ -144,6 +146,7 @@ public class ImportInnsistServiceImpl {
                 bookingRow.setAmountPAX(roomRate.getAdults().doubleValue() + roomRate.getChildren().doubleValue());
                 bookingRow.setRoomNumber(roomRate.getRoomNumber());
                 bookingRow.setHotelInvoiceAmount(roomRate.getHotelAmount());
+
                 this.bookingImportHelperService.saveCachingImportBooking(bookingRow);
             }
         }
@@ -157,5 +160,10 @@ public class ImportInnsistServiceImpl {
     @Async
     public void createInvoiceFromGroupedBooking(ImportInnsistKafka request) {
         this.createCache(request);
+    }
+
+    @Override
+    public Page<BookingImportCache> getBookingsFromId(UUID insistImportProcessId, Pageable pageable){
+        return this.repository.findAllByImportProcessId(insistImportProcessId.toString(), pageable);
     }
 }

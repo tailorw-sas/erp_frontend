@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Data
 @RedisHash(value = "importcache", timeToLive = 18000L)
@@ -74,6 +75,8 @@ public class BookingImportCache {
     @Indexed
     private String insistImportProcessId;
     private String insistImportProcessBookingId;
+
+    private UUID invoiceId;
 
     public BookingImportCache() {
     }

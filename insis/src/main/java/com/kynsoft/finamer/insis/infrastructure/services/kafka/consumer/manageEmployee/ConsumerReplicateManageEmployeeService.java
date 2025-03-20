@@ -25,7 +25,9 @@ public class ConsumerReplicateManageEmployeeService {
                     entity.getId(),
                     entity.getFirstName(),
                     entity.getLastName(),
-                    entity.getEmail()
+                    entity.getEmail(),
+                    entity.getManageHotelList(),
+                    entity.getManageAgencyList()
             );
             mediator.send(command);
         }catch (Exception ex){

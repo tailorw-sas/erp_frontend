@@ -2,10 +2,12 @@ package com.kynsoft.finamer.insis.infrastructure.repository.query;
 
 import com.kynsoft.finamer.insis.infrastructure.model.Booking;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import com.kynsoft.finamer.insis.infrastructure.model.RoomRate;
 
@@ -27,4 +29,7 @@ public interface RoomRateReadDataJPARepository extends CrudRepository<RoomRate, 
     List<RoomRate> findByBooking_Id(UUID bookingId);
 
     Page<RoomRate> findAll(Specification specification, Pageable pageable);
+
+    @Query(value = "SELECT * FROM get_rates_count_by_invoicedate(:hotelIds, :fromInvoiceDate, :toInvoiceDate)", nativeQuery = true)
+    List<Object[]> countByHotelAndInvoiceDate(@Param("hotelIds") UUID[] hotelIds, @Param("fromInvoiceDate") LocalDate fromInvoiceDate, @Param("toInvoiceDate") LocalDate toInvoiceDate);
 }
