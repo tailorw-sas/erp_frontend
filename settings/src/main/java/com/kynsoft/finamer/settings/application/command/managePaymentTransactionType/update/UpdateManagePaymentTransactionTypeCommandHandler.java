@@ -95,7 +95,8 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
                         dto.getDefaults(),
                         dto.getPaymentInvoice(),
                         dto.getDebit(),
-                        dto.isExpenseToBooking()
+                        dto.isExpenseToBooking(),
+                        dto.getNegative()
                 ));
         }
     }

@@ -26,6 +26,8 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
         ConsumerUpdate update = new ConsumerUpdate();
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
+        dto.setNegative(command.getNegative());
+
         this.service.update(dto);
     }
 }

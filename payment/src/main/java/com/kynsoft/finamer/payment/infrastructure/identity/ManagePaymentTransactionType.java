@@ -46,6 +46,8 @@ public class ManagePaymentTransactionType implements Serializable {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean expenseToBooking;
 
+    private Boolean negative;
+
     public ManagePaymentTransactionType(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
@@ -61,6 +63,7 @@ public class ManagePaymentTransactionType implements Serializable {
         this.paymentInvoice = dto.getPaymentInvoice();
         this.debit = dto.getDebit();
         this.expenseToBooking = dto.isExpenseToBooking();
+        this.negative = dto.getNegative();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate() {
@@ -78,7 +81,8 @@ public class ManagePaymentTransactionType implements Serializable {
                 defaults, 
                 paymentInvoice, 
                 debit,
-                expenseToBooking
+                expenseToBooking,
+                negative
         );
     }
 
