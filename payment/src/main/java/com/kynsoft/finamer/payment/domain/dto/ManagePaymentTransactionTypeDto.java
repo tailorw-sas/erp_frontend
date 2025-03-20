@@ -28,4 +28,5 @@ public class ManagePaymentTransactionTypeDto implements Serializable {
     private Boolean paymentInvoice;
     private Boolean debit;
     private boolean expenseToBooking;
+    private Boolean negative;
 }

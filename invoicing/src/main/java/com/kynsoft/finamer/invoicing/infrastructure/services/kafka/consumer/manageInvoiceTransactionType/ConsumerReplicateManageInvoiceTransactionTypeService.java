@@ -28,7 +28,8 @@ public class ConsumerReplicateManageInvoiceTransactionTypeService {
                     objKafka.getCode(), 
                     objKafka.getName(), 
                     objKafka.isDefaults(), 
-                    objKafka.isCloneAdjustmentDefault()
+                    objKafka.isCloneAdjustmentDefault(),
+                    objKafka.getNegative()
             );
             mediator.send(command);
         } catch (Exception ex) {

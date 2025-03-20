@@ -20,4 +20,5 @@ public class ManageAgencyDto implements Serializable {
     private String status;
     private ManageAgencyTypeDto agencyType;
     private ManageClientDto client;
+    private ManageCountryDto country;
 }

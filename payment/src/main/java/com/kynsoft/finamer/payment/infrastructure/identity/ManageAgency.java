@@ -11,6 +11,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -37,10 +38,13 @@ public class ManageAgency {
     @JoinColumn(name = "manage_agency_type_id")
     private ManageAgencyType agencyType;
 
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_client_id")
     private ManageClient client;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "manage_country_id")
+    private ManageCountry country;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -54,23 +58,20 @@ public class ManageAgency {
         this.code = dto.getCode();
         this.name = dto.getName();
         this.status = dto.getStatus();
-        this.agencyType = dto.getAgencyType() != null ? new ManageAgencyType(dto.getAgencyType()) : null;
-        this.client = dto.getClient() != null ? new ManageClient(dto.getClient()) : null;
+        this.agencyType = Objects.nonNull(dto.getAgencyType()) ? new ManageAgencyType(dto.getAgencyType()) : null;
+        this.client = Objects.nonNull(dto.getClient()) ? new ManageClient(dto.getClient()) : null;
+        this.country = Objects.nonNull(dto.getCountry()) ? new ManageCountry(dto.getCountry()) : null;
     }
 
     public ManageAgencyDto toAggregate() {
         return new ManageAgencyDto(
-                id, code, name, status,
-                agencyType != null ? agencyType.toAggregate() : null,
-                client != null ? client.toAggregate() : null
-        );
-    }
-
-    public ManageAgencyDto toAggregateSample() {
-        return new ManageAgencyDto(
-                id, code, name, status,
-                agencyType != null ? agencyType.toAggregate() : null,
-                client != null ? client.toAggregate() : null
+                id,
+                code,
+                name,
+                status,
+                Objects.nonNull(agencyType) ? agencyType.toAggregate() : null,
+                Objects.nonNull(client) ? client.toAggregate() : null,
+                Objects.nonNull(country) ? country.toAggregate() : null
         );
     }
 }

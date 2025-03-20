@@ -19,4 +19,5 @@ public class ManageInvoiceTransactionTypeDto implements Serializable {
     private String name;
     private boolean defaults;
     private boolean cloneAdjustmentDefault;
+    private Boolean negative;
 }
