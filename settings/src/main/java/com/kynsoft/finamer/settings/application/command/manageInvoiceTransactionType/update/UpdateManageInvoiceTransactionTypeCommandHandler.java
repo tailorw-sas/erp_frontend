@@ -58,7 +58,8 @@ public class UpdateManageInvoiceTransactionTypeCommandHandler implements IComman
                     dto.getCode(), 
                     dto.getName(), 
                     dto.isDefaults(),
-                    dto.isCloneAdjustmentDefault()
+                    dto.isCloneAdjustmentDefault(),
+                    dto.getIsNegative()
             ));
         }
     }

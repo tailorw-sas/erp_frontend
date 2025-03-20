@@ -35,6 +35,7 @@ public class ManagePaymentTransactionType implements Serializable {
     private String defaultRemark;
     @Column(columnDefinition = "boolean default false")
     private boolean defaults=false;
+    private Boolean negative;
 
     public ManagePaymentTransactionType(ManagePaymentTransactionTypeDto dto) {
         this.id = dto.getId();
@@ -48,10 +49,23 @@ public class ManagePaymentTransactionType implements Serializable {
         this.minNumberOfCharacter = dto.getMinNumberOfCharacter();
         this.defaultRemark = dto.getDefaultRemark();
         this.defaults=dto.isDefaults();
+        this.negative = dto.getNegative();
     }
 
     public ManagePaymentTransactionTypeDto toAggregate() {
-        return new ManagePaymentTransactionTypeDto(id, code, name, status != null ? status.name() : null, cash, deposit, applyDeposit, remarkRequired, minNumberOfCharacter, defaultRemark,defaults);
+        return new ManagePaymentTransactionTypeDto(
+                id,
+                code,
+                name,
+                status != null ? status.name() : null,
+                cash,
+                deposit,
+                applyDeposit,
+                remarkRequired,
+                minNumberOfCharacter,
+                defaultRemark,
+                defaults,
+                negative);
     }
 
 }

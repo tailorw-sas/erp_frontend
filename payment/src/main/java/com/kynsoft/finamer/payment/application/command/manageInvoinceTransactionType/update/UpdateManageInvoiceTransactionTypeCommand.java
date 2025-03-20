@@ -12,12 +12,15 @@ import java.util.UUID;
 public class UpdateManageInvoiceTransactionTypeCommand implements ICommand {
 
     private UUID id;
-
     private String name;
+    private Boolean negative;
 
-    public UpdateManageInvoiceTransactionTypeCommand(UUID id, String name) {
+    public UpdateManageInvoiceTransactionTypeCommand(UUID id,
+                                                     String name,
+                                                     Boolean negative) {
         this.id = id;
         this.name = name;
+        this.negative = negative;
     }
 
     @Override

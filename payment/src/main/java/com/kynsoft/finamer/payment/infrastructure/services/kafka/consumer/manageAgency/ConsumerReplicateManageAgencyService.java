@@ -21,7 +21,16 @@ public class ConsumerReplicateManageAgencyService {
     @KafkaListener(topics = "finamer-replicate-manage-agency", groupId = "payment-entity-replica")
     public void listen(ReplicateManageAgencyKafka objKafka) {
         try {
-            CreateManageAgencyCommand command = new CreateManageAgencyCommand(objKafka.getId(), objKafka.getCode(), objKafka.getName(), objKafka.getStatus(), objKafka.getAgencyType(),objKafka.getClient());
+            CreateManageAgencyCommand command = new CreateManageAgencyCommand(
+                    objKafka.getId(),
+                    objKafka.getCode(),
+                    objKafka.getName(),
+                    objKafka.getStatus(),
+                    objKafka.getAgencyType(),
+                    objKafka.getClient(),
+                    objKafka.getCountry()
+            );
+
             mediator.send(command);
         } catch (Exception ex) {
             Logger.getLogger(ConsumerReplicateManageAgencyService.class.getName()).log(Level.SEVERE, null, ex);

@@ -20,7 +20,8 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
         service.create(new ManageInvoiceTransactionTypeDto(
                 command.getId(),
                 command.getCode(),
-                command.getName()
+                command.getName(),
+                command.getNegative()
         ));
     }
 }
