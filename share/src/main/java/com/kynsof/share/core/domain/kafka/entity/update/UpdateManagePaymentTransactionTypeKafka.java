@@ -25,4 +25,5 @@ public class UpdateManagePaymentTransactionTypeKafka implements Serializable {
     private Boolean defaults;
     private Boolean paymentInvoice;
     private Boolean debit;
+    private Boolean negative;
 }

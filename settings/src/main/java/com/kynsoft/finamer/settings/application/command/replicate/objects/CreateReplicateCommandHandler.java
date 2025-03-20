@@ -349,7 +349,7 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                         this.replicateManageAgencyTypeService.create(new ReplicateManageAgencyTypeKafka(agencyTypeDto.getId(), agencyTypeDto.getCode(), agencyTypeDto.getName(), agencyTypeDto.getStatus().toString()));
                     }
                 }
-                case MANAGE_AGENCY -> {//
+                case MANAGE_AGENCY -> {
                     for (ManageAgencyDto agencyDto : this.manageAgencyService.findAllToReplicate()) {
                         this.replicateManageAgencyService.create(new ReplicateManageAgencyKafka(
                                 agencyDto.getId(),
@@ -427,7 +427,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 invoiceTransactionTypeDto.getCode(), 
                                 invoiceTransactionTypeDto.getName(), 
                                 invoiceTransactionTypeDto.isDefaults(), 
-                                invoiceTransactionTypeDto.isCloneAdjustmentDefault()
+                                invoiceTransactionTypeDto.isCloneAdjustmentDefault(),
+                                invoiceTransactionTypeDto.getIsNegative()
                         ));
                     }
                 }
@@ -467,12 +468,13 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 paymentTransactionTypeDto.getDefaults(),
                                 paymentTransactionTypeDto.getPaymentInvoice(),
                                 paymentTransactionTypeDto.getDebit(),
-                                paymentTransactionTypeDto.isExpenseToBooking()
+                                paymentTransactionTypeDto.isExpenseToBooking(),
+                                paymentTransactionTypeDto.getNegative()
                         ));
                     }
                 }
 
-                case MANAGE_HOTEL -> {//
+                case MANAGE_HOTEL -> {
                     for (ManageHotelDto hotelDto : this.manageHotelService.findAllToReplicate()) {
                         this.replicateManageHotelService.create(new ReplicateManageHotelKafka(
                                 hotelDto.getId(),

@@ -29,17 +29,21 @@ public class ManageInvoiceTransactionType implements Serializable {
     private String code;
     private String name;
 
+    private Boolean negative;
+
     public ManageInvoiceTransactionType(ManageInvoiceTransactionTypeDto dto) {
         this.id = dto.getId();
         this.code = dto.getCode();
-
         this.name = dto.getName();
-
+        this.negative = dto.getNegative();
     }
 
     public ManageInvoiceTransactionTypeDto toAggregate() {
         return new ManageInvoiceTransactionTypeDto(
-                id, code, name
+                id,
+                code,
+                name,
+                negative
         );
     }
 }

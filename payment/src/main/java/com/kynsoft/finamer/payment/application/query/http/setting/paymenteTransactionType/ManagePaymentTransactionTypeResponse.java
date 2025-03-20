@@ -54,7 +54,8 @@ public class ManagePaymentTransactionTypeResponse  implements IResponse, Seriali
                 defaults, 
                 paymentInvoice, 
                 debit,
-                expenseToBooking
+                expenseToBooking,
+                negative
         );
     }
 }

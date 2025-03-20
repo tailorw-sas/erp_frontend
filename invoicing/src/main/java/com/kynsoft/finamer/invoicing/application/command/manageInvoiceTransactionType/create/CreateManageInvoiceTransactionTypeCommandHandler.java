@@ -22,7 +22,8 @@ public class CreateManageInvoiceTransactionTypeCommandHandler implements IComman
                 command.getCode(),
                 command.getName(),
                 command.isDefaults(),
-                command.isCloneAdjustmentDefault()
+                command.isCloneAdjustmentDefault(),
+                command.getNegative()
         ));
     }
 }
