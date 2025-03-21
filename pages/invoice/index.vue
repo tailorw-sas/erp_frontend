@@ -2084,28 +2084,32 @@ function onRowRightClick(event: any) {
     
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
-      && event?.data?.dueAmount === event?.data?.invoiceAmount && event.data?.isInCloseOperation) {  
+      && event?.data?.dueAmount === event?.data?.invoiceAmount) {  
       if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
         findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
       }      
     }
+    console.log(invoiceContextMenuItems.value)
   }
 
-  //Change Agency
-  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
-    && event?.data.dueAmount === event?.data.invoiceAmount) {
-    if (event.data.status === InvoiceStatus.PROCESSED) {
-      if (event.data.isInCloseOperation) {
-        let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
-        changeAgencyItem.showItem = true
-      }
-    } else {
-      if (event?.data.hotel?.virtual) {
-        let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
-        changeAgencyItem.showItem = true
-      }
+  // Change Agency
+if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
+  && event?.data.dueAmount === event?.data.invoiceAmount) {
+
+  let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency');
+
+  if (changeAgencyItem) {
+    if (event.data.status === InvoiceStatus.PROCESSED && event.data.isInCloseOperation) {
+      changeAgencyItem.showItem = true;
+    } 
+    else if (event.data.status === InvoiceStatus.RECONCILED && event.data.isInCloseOperation) {
+      changeAgencyItem.showItem = true;
+    }
+    if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+      changeAgencyItem.showItem = true;
     }
   }
+}
 
   
   const changeSelectedInvoiceTitleItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Selected Invoice:')

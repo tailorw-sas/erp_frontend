@@ -285,7 +285,9 @@ const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
+const hotelListTotal = ref<any[]>([])
 const hotelList = ref<any[]>([])
+const clientListTotal = ref<any[]>([])
 const clientList = ref<any[]>([])
 
 const exportDialogOpen = ref(false)
@@ -1169,8 +1171,10 @@ async function getListInvoice() {
           dueAmount: iterator?.dueAmount || 0,
           invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
-          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+          rowClass: iterator.aging > 30 ? 'row-aging' : '' // ✅ Asigna la clase aquí
         })
+
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
 
@@ -1235,6 +1239,7 @@ function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) {
 
 function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  payloadInv.value.filter = payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
   // Client
   if (filterToSearch.value.client?.length > 0) {
     const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
@@ -1354,8 +1359,15 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+
+  listItems.value = []
+  listItemsInvoice.value = []
+
+  payload.value.filter = []
+  payloadInv.value.filter = []
+
   filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp))
 
   const objColumnAgency = columns.value.find(item => item.field === 'agency')
@@ -1378,8 +1390,8 @@ function clearFilterToSearch() {
   dynamicTable.value = dynamicTable.value + 1
   dynamicTableInv.value = dynamicTableInv.value + 1
 
-  getList()
-  getListInvoice()
+  // getListInvoice()
+  // getPaymentData()
 }
 
 async function resetListItems() {
@@ -1577,23 +1589,19 @@ async function parseDataTableFilterInvoice(payloadFilter: any) {
   getListInvoice()
 }
 
-async function getClientList(query = '') {
+async function getClientListFilter(query: string = '') {
+  clientList.value = []
+  clientList.value = clientListTotal.value.filter(item =>
+    item.code.toUpperCase().includes(query.toUpperCase())
+    || item.name.toUpperCase().includes(query.toUpperCase())
+  )
+}
+
+async function getClientList() {
   try {
     const payload
             = {
               filter: [
-                {
-                  key: 'name',
-                  operator: 'LIKE',
-                  value: query,
-                  logicalOperation: 'OR'
-                },
-                {
-                  key: 'code',
-                  operator: 'LIKE',
-                  value: query,
-                  logicalOperation: 'OR'
-                },
                 {
                   key: 'status',
                   operator: 'EQUALS',
@@ -1602,17 +1610,17 @@ async function getClientList(query = '') {
                 }
               ],
               query: '',
-              pageSize: 200,
+              pageSize: 2000,
               page: 0,
               sortBy: 'name',
               sortType: ENUM_SHORT_TYPE.ASC
             }
 
-    clientList.value = []
+    clientListTotal.value = []
     const response = await GenericService.search(confClientApi.moduleApi, confClientApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      clientList.value = [...clientList.value, {
+      clientListTotal.value = [...clientListTotal.value, {
         id: iterator.id,
         name: `${iterator.code} - ${iterator.name}`,
         onlyName: iterator.name,
@@ -1805,23 +1813,19 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
   }
 }
 
-async function getHotelList2(query: string) {
+async function getHotelListFilter(query: string = '') {
+  hoteltList.value = []
+  hoteltList.value = hoteltListTotal.value.filter(item =>
+    item.code.toUpperCase().includes(query.toUpperCase())
+    || item.name.toUpperCase().includes(query.toUpperCase())
+  )
+}
+
+async function getHotelList2() {
   try {
     objLoading.value.loadingHotel = true
     const payload = {
       filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
         {
           key: 'status',
           operator: 'EQUALS',
@@ -1830,7 +1834,7 @@ async function getHotelList2(query: string) {
         },
       ],
       query: '',
-      pageSize: 20,
+      pageSize: 200,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -1838,20 +1842,25 @@ async function getHotelList2(query: string) {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = []
+    //   for (const iterator of dataList) {
+    //     hotelListTotal.value = [
+    //       ...hotelList.value,
+    //       {
+    //         id: iterator.id,
+    //         name: `${iterator.code} - ${iterator.name}`,
+    //         // name: iterator.name,
+    //         code: iterator.code,
+    //         status: iterator.status,
+    //         description: iterator.description
+    //       }
+    //     ]
+    //   }
+    // }
+
     for (const iterator of dataList) {
-      hotelList.value = [
-        ...hotelList.value,
-        {
-          id: iterator.id,
-          name: `${iterator.code} - ${iterator.name}`,
-          // name: iterator.name,
-          code: iterator.code,
-          status: iterator.status,
-          description: iterator.description
-        }
-      ]
+      hotelListTotal.value = [...hotelListTotal.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
+    hotelList.value = [...hotelListTotal.value]
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
@@ -2254,6 +2263,8 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
+    getClientList()
+    getHotelList2()
     // getList()
     // getPaymentData()
     // getListInvoice()
@@ -2303,7 +2314,7 @@ onMounted(() => {
                         :model="filterToSearch.client"
                         :suggestions="clientList"
                         placeholder=""
-                        @load="($event) => getClientList($event)"
+                        @load="($event) => getClientListFilter($event)"
                         @change="async ($event) => {
                           filterToSearch.client = $event
                           filterToSearch.agency = []
@@ -2485,7 +2496,7 @@ onMounted(() => {
                         @change="($event) => {
                           filterToSearch.hotel = $event;
                         }"
-                        @load="($event) => getHotelList2($event)"
+                        @load="($event) => getHotelListFilter($event)"
                       >
                         <!-- @load="async($event) => {
                           const filter: FilterCriteria[] = [
@@ -2503,7 +2514,7 @@ onMounted(() => {
                           // await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
                           await getHotelList2($event)
                         }" -->
-                        <!-- <template #option="props">
+                        <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                         <template #chip="{ value }">
@@ -2529,11 +2540,6 @@ onMounted(() => {
                   v-tooltip.top="'Search'" class="w-2,5rem mx-1" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
-
-                <!-- <Button
-                  v-tooltip.top="'Test'" class="w-3rem mx-1" icon="pi pi-search"
-                  :loading="loadingSearch" @click="getPaymentData"
-                /> -->
                 <Button
                   v-tooltip.top="'Clear'" outlined class="w-2,5rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
@@ -2823,6 +2829,8 @@ onMounted(() => {
         :columns="columnsInvoice"
         :options="optionsInv"
         :pagination="paginationInvoice"
+        :items="listItemsInvoice"
+        :row-class="rowClass"
         @on-confirm-create="clearForm"
         @on-change-pagination="payloadOnChangePageInv = $event"
         @on-change-filter="parseDataTableFilterInvoice"
@@ -3204,6 +3212,10 @@ onMounted(() => {
         /* Altura por defecto */
 
     }
+    .row-aging {
+  background-color: rgb(241, 194, 246); /* O cualquier otro estilo llamativo */
+  font-weight: bold;
+}
 
 }
 </style>
