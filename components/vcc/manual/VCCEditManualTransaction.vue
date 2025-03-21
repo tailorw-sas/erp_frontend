@@ -46,6 +46,14 @@ const toast = useToast()
 
 const fields: Array<FieldDefinitionType> = [
   {
+    field: 'parentId',
+    header: 'Parent Id',
+    dataType: 'text',
+    class: 'field col-12',
+    disabled: true,
+    hidden: true
+  },
+  {
     field: 'id',
     header: 'Id',
     dataType: 'text',
@@ -108,6 +116,7 @@ const fields: Array<FieldDefinitionType> = [
 
 const item = ref<GenericObject>({
   id: '',
+  parentId: '',
   agency: null,
   language: null,
   checkIn: '',
@@ -118,6 +127,7 @@ const item = ref<GenericObject>({
 
 const itemTemp = ref<GenericObject>({
   id: '',
+  parentId: '',
   agency: null,
   language: null,
   checkIn: '',
@@ -170,6 +180,7 @@ async function save(item: { [key: string]: any }) {
     payload.employeeId = userData?.value?.user?.userId
     payload.hotelContactEmail = Array.isArray(item.hotelContactEmail) ? item.hotelContactEmail.join(';') : item.hotelContactEmail
     delete payload.event
+    delete payload.parentId
     const response: any = await GenericService.update(confApi.moduleApi, 'transactions', idItem.value, payload)
     toast.add({ severity: 'info', summary: 'Confirmed', detail: `The transaction details id ${response.id} was updated`, life: 10000 })
     item.id = response.id
@@ -191,6 +202,10 @@ async function getItemById(id: string) {
       const response = await GenericService.getById(confApi.moduleApi, 'transactions', id)
       if (response) {
         item.value.id = String(response.id)
+        if (response.parent?.id) {
+          updateFieldProperty(fields, 'parentId', 'hidden', false)
+          item.value.parentId = String(response.parent.id)
+        }
         const objAgency = {
           id: response.agency.id,
           name: `${response.agency.code} ${response.agency.name ? `- ${response.agency.name}` : ''}`,
@@ -369,6 +384,7 @@ watch(() => item.value, async (newValue) => {
 
 watch(() => props.openDialog, async (newValue) => {
   dialogVisible.value = newValue
+  updateFieldProperty(fields, 'parentId', 'hidden', true)
   if (newValue) {
     clearForm()
     getItemById(props.transactionId)

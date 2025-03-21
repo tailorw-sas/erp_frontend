@@ -9,7 +9,6 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
-import { formatCardNumber } from '~/components/vcc/vcc_utils'
 import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
 import BankReconciliation from '~/pages/vcc-management/bank-reconciliation/index.vue'// Karina
 import HotelPayment from '~/pages/vcc-management/hotel-payment/index.vue'// Karina
@@ -181,7 +180,7 @@ const legend = ref(
     },
     {
       name: 'Cancelled',
-      color: '#888888',
+      color: '#F44336',
       colClass: 'pr-3',
     },
     {
@@ -204,7 +203,9 @@ const sClassMap: IStatusClass[] = [
   { status: 'Declined', class: 'vcc-text-declined' },
   { status: 'Paid', class: 'vcc-text-paid' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Canceled', class: 'vcc-text-cancelled' }, // Se agrega porque esta viniendo asi del backend
   { status: 'Reconciled', class: 'vcc-text-reconciled' },
+  { status: 'Reconcilied', class: 'vcc-text-reconciled' },
   { status: 'Refund', class: 'vcc-text-refund' },
 ]
 ////
@@ -221,18 +222,23 @@ const computedShowMenuItemAdjustmentTransaction = computed(() => {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
-  { field: 'id', header: 'Id', type: 'text' },
-  { field: 'parent', header: 'Parent Id', type: 'text' },
-  { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
-  { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
-  { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', maxWidth: '220px' },
-  { field: 'amount', header: 'Amount', type: 'number' },
-  { field: 'commission', header: 'Commission', type: 'number' },
-  { field: 'netAmount', header: 'T.Amount', type: 'number' },
-  { field: 'transactionDate', header: 'Trans Date', type: 'date' },
+  { field: 'icon', header: '', width: '20px', minWidth: '20px', maxWidth: '30px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
+  { field: 'id', header: 'Id', type: 'text', width: '20px', minWidth: '60px', maxWidth: '60px' },
+  // { field: 'parent', header: 'Parent Id', type: 'text' },
+  { field: 'enrolleCode', header: 'Enrollee Code', type: 'text', width: '20px', minWidth: '120px', maxWidth: '120px' },
+  { field: 'agency', header: 'Agency', type: 'select', width: '20px', minWidth: '140px', maxWidth: '150px', objApi: { moduleApi: 'settings', uriApi: 'manage-agency', filter: activeStatusFilter } },
+  { field: 'hotel', header: 'Hotel', type: 'select', width: '20px', minWidth: '140px', maxWidth: '150px', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
+  { field: 'cardNumber', header: 'Card Number', type: 'text', width: '20px', minWidth: '120px', maxWidth: '130px' },
+  { field: 'creditCardType', header: 'CC Type', type: 'select', width: '20px', minWidth: '100px', maxWidth: '100px', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
+  { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', minWidth: '120px', maxWidth: '220px' },
+  { field: 'amount', header: 'Amount', type: 'number', width: '20px', minWidth: '120px', maxWidth: '200px' },
+  { field: 'commission', header: 'Comm', type: 'number', width: '20px', minWidth: '80px', maxWidth: '80px' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number', width: '20px', minWidth: '120px', maxWidth: '200px' },
+  { field: 'transactionDate', header: 'Trans Date', type: 'date', width: '20px', minWidth: '90px', maxWidth: '100px' },
+  { field: 'methodType', header: 'Method', type: 'text', width: '20px', minWidth: '60px', maxWidth: '70px' },
+  { field: 'categoryType', header: 'Type', type: 'select', width: '20px', minWidth: '80px', maxWidth: '120px', objApi: { moduleApi: 'creditcard', uriApi: 'manage-vcc-transaction-type', filter: activeStatusFilter }, },
+  { field: 'authNo', header: 'Auth No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '100px' },
+  { field: 'couponNo', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
@@ -298,7 +304,7 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
@@ -312,8 +318,11 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'agency') && iterator.hotel) {
+        iterator.agency = { id: iterator.agency.id, name: `${iterator.agency.code} - ${iterator.agency.name}` }
+      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
-        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
@@ -321,9 +330,9 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
       }
-      // if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
-      //   iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
-      // }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType')) {
+        iterator.categoryType = { id: iterator.categoryType.id, name: `${iterator.categoryType.name}` }
+      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
       }
@@ -1153,7 +1162,7 @@ onMounted(() => {
                 <Column :footer="formatNumber(subTotals.amount)" />
                 <Column :footer="formatNumber(subTotals.commission)" />
                 <Column :footer="formatNumber(subTotals.net)" />
-                <Column :colspan="2" />
+                <Column :colspan="7" />
               </Row>
             </ColumnGroup>
           </template>
