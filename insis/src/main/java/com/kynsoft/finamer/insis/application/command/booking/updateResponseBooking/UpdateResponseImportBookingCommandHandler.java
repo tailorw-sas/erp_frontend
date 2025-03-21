@@ -33,7 +33,7 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     @Override
     public void handle(UpdateResponseImportBookingCommand command) {
         ImportProcessDto importProcess = getImportProcess(command.getImportProcessId());
-        if(command.getErrorResponses().isEmpty()){
+        /*if(command.getResponses().isEmpty()){
             saveBookingsResponseWhenSuccessfull(importProcess.getId());
         }else{
             saveBookingsResponseWhenFailed(importProcess.getId(), command.getErrorResponses());
@@ -41,6 +41,7 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
 
         int totalFailed = getTotalFailed(command.getImportProcessId());
         updateImportProcessStatus(importProcess, ImportProcessStatus.COMPLETED, totalFailed);
+         */
     }
 
     private ImportProcessDto getImportProcess(UUID id){
@@ -63,11 +64,11 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
         updateBookingsStatus(bookings, BookingStatus.PROCESSED);
     }
 
-    private void saveBookingsResponseWhenFailed(UUID importProcessId, List<ErrorResponse> errorResponses) {
+    private void saveBookingsResponseWhenFailed(UUID importProcessId, List<RoomRateResponse> errorResponses) {
         List<ImportBookingDto> importBookings = importBookingService.findByImportProcessId(importProcessId);
 
-        Map<UUID, String> errorMap = errorResponses.stream()
-                .collect(Collectors.toMap(ErrorResponse::getBookingId, ErrorResponse::getErrorMessage));
+        /*Map<UUID, String> errorMap = errorResponses.stream()
+                .collect(Collectors.toMap(RoomRateResponse::getBookingId, RoomRateResponse::getErrorMessage));
 
         importBookings.forEach(importBooking -> {
             UUID bookingId = importBooking.getBooking().getId();
@@ -92,6 +93,7 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
                 .toList();
 
         updateBookingsStatus(bookingsWithErrors, BookingStatus.FAILED);
+         */
     }
 
     private void updateBookingsStatus(List<BookingDto> bookings, BookingStatus status){

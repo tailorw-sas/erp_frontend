@@ -168,14 +168,6 @@ public class BookingController {
         return ResponseEntity.ok(mediator.send(importBookingFromFileErrorQuery));
     }
 
-    @PostMapping(path = "/import-search-innsist")
-    public ResponseEntity<?> getImportBookingErrorFromInnsist(@RequestBody SearchRequest searchRequest) {
-        ImportBookingListQuery query = new ImportBookingListQuery(searchRequest.getQuery(), PageableUtil.createPageable(searchRequest));
-        PaginatedResponse response = mediator.send(query);
-
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping(path = "/{importProcessId}/import-status")
     public ResponseEntity<?> getImportBookingProcessStatus(@PathVariable("importProcessId") String importProcessId) {
         System.out.println("*************************************Ingreso a Import Status con importProcessId: " + importProcessId);

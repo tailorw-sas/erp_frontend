@@ -5,7 +5,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.insis.application.query.objectResponse.booking.BookingResponse;
 import com.kynsoft.finamer.insis.application.query.objectResponse.roomRate.RoomRateResponse;
-import com.kynsoft.finamer.insis.domain.dto.CountRoomRateByHotelAndInvoiceDateDto;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import com.kynsoft.finamer.insis.domain.services.IRoomRateService;
 import com.kynsoft.finamer.insis.infrastructure.model.Booking;
@@ -100,21 +99,6 @@ public class RoomRateServiceImpl implements IRoomRateService {
         return readRepository.findByBooking_Id(bookingId).stream()
                 .map(RoomRate::toAggregate)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<CountRoomRateByHotelAndInvoiceDateDto> countByHotelsAndInvoiceDate(List<UUID> hotelIds, LocalDate fromInvoiceDate, LocalDate toInvoiceDate) {
-        List<Object[]> resultados = readRepository.countByHotelAndInvoiceDate(hotelIds.toArray(new UUID[0]), fromInvoiceDate, toInvoiceDate);
-
-        return readRepository.countByHotelAndInvoiceDate(hotelIds.toArray(new UUID[0]), fromInvoiceDate, toInvoiceDate).stream()
-                .map(item -> new CountRoomRateByHotelAndInvoiceDateDto(
-                        new ManageHotel(UUID.fromString((String)item[0]),
-                                (String)item[1],
-                                (String)item[2],
-                                (String)item[3]).toAggregate(),
-                        ((Date) item[4]).toLocalDate(),
-                        (Long) item[5]))
-                .toList();
     }
 
     @Override

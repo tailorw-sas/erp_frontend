@@ -9,7 +9,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ErrorResponse {
-    private UUID bookingId;
-    private String errorMessage;
+public class RoomRateResponse {
+    private UUID innsistBookingId;
+    private UUID innsistRoomRateId;
+    private UUID invoiceId;
+    private String msg;
 }

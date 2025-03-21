@@ -13,15 +13,15 @@ import java.util.UUID;
 public class UpdateResponseImportBookingCommand implements ICommand {
 
     private UUID importProcessId;
-    private List<ErrorResponse> errorResponses;
+    private List<RoomRateResponse> responses;
 
-    public UpdateResponseImportBookingCommand(UUID importProcessId, List<ErrorResponse> errorResponses){
+    public UpdateResponseImportBookingCommand(UUID importProcessId, List<RoomRateResponse> responses){
         this.importProcessId = importProcessId;
-        this.errorResponses = errorResponses;
+        this.responses = responses;
     }
 
     public static UpdateResponseImportBookingCommand fromRequest(UpdateResponseImportBookingRequest request){
-        return new UpdateResponseImportBookingCommand(request.getImportProcessId(), request.getErrorResponses());
+        return new UpdateResponseImportBookingCommand(request.getImportProcessId(), request.getResponses());
     }
 
     @Override
