@@ -73,7 +73,7 @@ const legend = ref(
     },
     {
       name: 'Cancelled',
-      color: '#888888',
+      color: '#F44336',
       colClass: 'pr-3',
     }
   ]

@@ -181,7 +181,7 @@ const legend = ref(
     },
     {
       name: 'Cancelled',
-      color: '#888888',
+      color: '#F44336',
       colClass: 'pr-3',
     },
     {
@@ -204,6 +204,7 @@ const sClassMap: IStatusClass[] = [
   { status: 'Declined', class: 'vcc-text-declined' },
   { status: 'Paid', class: 'vcc-text-paid' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Canceled', class: 'vcc-text-cancelled' }, // Se agrega porque esta viniendo asi del backend
   { status: 'Reconciled', class: 'vcc-text-reconciled' },
   { status: 'Refund', class: 'vcc-text-refund' },
 ]

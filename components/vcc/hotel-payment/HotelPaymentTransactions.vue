@@ -68,6 +68,7 @@ const sClassMap: IStatusClass[] = [
   { status: 'Declined', class: 'vcc-text-declined' },
   { status: 'Paid', class: 'vcc-text-paid' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Canceled', class: 'vcc-text-cancelled' },
   { status: 'Reconciled', class: 'vcc-text-reconciled' },
   { status: 'Refund', class: 'vcc-text-refund' },
 ]
