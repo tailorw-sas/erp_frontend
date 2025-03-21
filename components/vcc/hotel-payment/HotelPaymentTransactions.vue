@@ -6,7 +6,6 @@ import ContextMenu from 'primevue/contextmenu'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
-import { formatCardNumber } from '~/components/vcc/vcc_utils'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
 const props = defineProps({
@@ -196,9 +195,6 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
-        iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         if (iterator.subCategoryType && iterator.subCategoryType.negative) {

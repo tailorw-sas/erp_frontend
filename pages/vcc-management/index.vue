@@ -9,7 +9,6 @@ import type { IColumn, IPagination, IStatusClass } from '~/components/table/inte
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
-import { formatCardNumber } from '~/components/vcc/vcc_utils'
 import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
 import BankReconciliation from '~/pages/vcc-management/bank-reconciliation/index.vue'// Karina
 import HotelPayment from '~/pages/vcc-management/hotel-payment/index.vue'// Karina
@@ -322,7 +321,7 @@ async function getList() {
         iterator.agency = { id: iterator.agency.id, name: `${iterator.agency.code} - ${iterator.agency.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
-        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
+        iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'parent')) {
         iterator.parent = (iterator.parent) ? String(iterator.parent?.id) : null
@@ -333,9 +332,6 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType')) {
         iterator.categoryName = iterator.categoryType.name
       }
-      // if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
-      //   iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
-      // }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += iterator.amount
       }
