@@ -223,16 +223,21 @@ const computedShowMenuItemAdjustmentTransaction = computed(() => {
 const columns: IColumn[] = [
   { field: 'icon', header: '', width: '25px', type: 'slot-icon', icon: 'pi pi-paperclip', sortable: false, showFilter: false },
   { field: 'id', header: 'Id', type: 'text' },
-  { field: 'parent', header: 'Parent Id', type: 'text' },
+  // { field: 'parent', header: 'Parent Id', type: 'text' },
   { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-hotel', filter: activeStatusFilter }, sortable: true },
   { field: 'cardNumber', header: 'Card Number', type: 'text' },
   { field: 'creditCardType', header: 'CC Type', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-credit-card-type', filter: activeStatusFilter }, sortable: true },
   { field: 'referenceNumber', header: 'Reference', type: 'text', width: '220px', maxWidth: '220px' },
   { field: 'amount', header: 'Amount', type: 'number' },
-  { field: 'commission', header: 'Commission', type: 'number' },
+  { field: 'commission', header: 'Comm', type: 'number' },
   { field: 'netAmount', header: 'T.Amount', type: 'number' },
   { field: 'transactionDate', header: 'Trans Date', type: 'date' },
+  { field: 'methodType', header: 'Method', type: 'text' },
+  { field: 'categoryName', header: 'Trans Type', type: 'text' },
+  { field: 'authNo', header: 'Auth No.', type: 'text' },
+  { field: 'couponNo', header: 'Coupon No.', type: 'text' },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-agency', filter: activeStatusFilter } },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
@@ -298,7 +303,7 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
-    const { transactionSearchResponse, transactionTotalResume } = response
+    const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
     pagination.value.page = page
@@ -312,6 +317,9 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'hotel') && iterator.hotel) {
         iterator.hotel = { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` }
       }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'agency') && iterator.hotel) {
+        iterator.agency = { id: iterator.agency.id, name: `${iterator.agency.code} - ${iterator.agency.name}` }
+      }
       if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
         iterator.creditCardType = { id: iterator.creditCardType.id, name: `${iterator.creditCardType.code} - ${iterator.creditCardType.name}` }
       }
@@ -320,6 +328,9 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType')) {
+        iterator.categoryName = iterator.categoryType.name
       }
       // if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
       //   iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
@@ -1153,7 +1164,7 @@ onMounted(() => {
                 <Column :footer="formatNumber(subTotals.amount)" />
                 <Column :footer="formatNumber(subTotals.commission)" />
                 <Column :footer="formatNumber(subTotals.net)" />
-                <Column :colspan="2" />
+                <Column :colspan="7" />
               </Row>
             </ColumnGroup>
           </template>
