@@ -82,6 +82,7 @@ const legend = ref(
 const sClassMap: IStatusClass[] = [
   { status: 'Completed', class: 'vcc-text-sent' },
   { status: 'Created', class: 'vcc-text-created' },
+  { status: 'Canceled', class: 'vcc-text-cancelled' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
 ]
 
