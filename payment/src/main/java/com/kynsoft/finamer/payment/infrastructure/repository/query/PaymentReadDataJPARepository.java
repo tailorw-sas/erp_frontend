@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -54,4 +55,8 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
             + "FROM Payment p "
             + "WHERE p.id = :id")
     Optional<PaymentProjection> getPaymentByIdProjection(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"paymentBalance", "depositBalance"}, type = EntityGraph.EntityGraphType.FETCH)
+    @Query("SELECT p FROM Payment p WHERE p.id = :id")
+    Optional<Payment> findByIdWithBalancesOnly(@Param("id") UUID id);
 }
