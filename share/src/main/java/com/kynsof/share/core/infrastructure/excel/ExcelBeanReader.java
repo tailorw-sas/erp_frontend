@@ -9,6 +9,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -16,6 +18,7 @@ import java.util.Objects;
 
 public class ExcelBeanReader<T> extends AbstractReader<T> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExcelBeanReader.class);
     private int totalReadRows;
     public ExcelBeanReader(ReaderConfiguration readerConfiguration, Class<T> type) {
         super(readerConfiguration, type);
@@ -46,13 +49,15 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
                 this.hasValidHeaderOrder();
             }
             Row currentRow = sheetToRead.getRow(rowCursor);
+            LOGGER.info("Analyzing row number {}:", currentRow.getRowNum());
             DataFormatter formatter = new DataFormatter();
             DataFormat dataFormat =workbook.createDataFormat();
             if (!ExcelUtils.isRowEmpty(currentRow)) {
                 annotatedField.forEach((cellInfo, beanField) -> {
                     if (cellInfo.getPosition() != -1) {
                         Cell cell = currentRow.getCell(cellInfo.getPosition(), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-                        ExcelUtils.readCell(cell, beanField, cellInfo, bean,dataFormat ,formatter);
+                        LOGGER.info("Analyzing cell column index {}:", cell.getColumnIndex());
+                        ExcelUtils.readCell(cell, beanField, cellInfo, bean, dataFormat ,formatter);
                     } else {
                         beanField.setFieldValue(currentRow.getRowNum()+1, bean);
                     }
