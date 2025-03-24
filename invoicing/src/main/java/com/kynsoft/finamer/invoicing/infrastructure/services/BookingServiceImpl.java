@@ -109,9 +109,10 @@ public class BookingServiceImpl implements ImportBookingService {
                         InputStream inputStream = new ByteArrayInputStream(request.getFile());
                         readerConfiguration.setInputStream(inputStream);
                         readerConfiguration.setReadLastActiveSheet(true);
+                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "Start read excel");
                         ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
                         ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
-
+                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "Finish read excel");
                         //loadImportDataCache(excelBean, request.getEmployee());
 
                         validatorFactory.createValidators(request.getImportType().name());
