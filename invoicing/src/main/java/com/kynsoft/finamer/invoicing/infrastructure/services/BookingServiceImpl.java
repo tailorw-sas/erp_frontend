@@ -106,6 +106,9 @@ public class BookingServiceImpl implements ImportBookingService {
                     try {
                         ReaderConfiguration readerConfiguration = new ReaderConfiguration();
                         readerConfiguration.setIgnoreHeaders(true);
+                        if (request.getFile() == null || request.getFile().length == 0) {
+                            throw new ExcelException("El archivo de Excel está vacío o no es válido.");
+                        }
                         InputStream inputStream = new ByteArrayInputStream(request.getFile());
                         readerConfiguration.setInputStream(inputStream);
                         readerConfiguration.setReadLastActiveSheet(true);
