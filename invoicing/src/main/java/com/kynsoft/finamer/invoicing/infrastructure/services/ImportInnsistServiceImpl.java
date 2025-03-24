@@ -97,7 +97,7 @@ public class ImportInnsistServiceImpl {
                 list = this.bookingImportHelperService.findAllByImportProcess(importProcessId.toString());
                 replicateResponseOk(list, request.getImportInnsitProcessId());
             }else{
-                List<BookingRowError> errors = importBookingService.getImportError(importProcessId.toString());
+                List<BookingRowError> errors = importBookingService.getImportError(request.getImportInnsitProcessId().toString());
                 replicateResponseError(errors, request.getImportInnsitProcessId());
             }
 
@@ -147,10 +147,6 @@ public class ImportInnsistServiceImpl {
                                     .toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
                             bookingRow.setNightType(importInnsistBookingKafka.getNightTypeCode());
 
-                            Optional<ManageAgencyDto> agencyDtoOptional = agencies.stream()
-                                    .filter(manageAgencyDto -> manageAgencyDto.getCode().equals(importInnsistBookingKafka.getManageAgencyCode()))
-                                            .findFirst();
-
                             // Rate Details
                             bookingRow.setCheckIn(roomRate.getCheckIn().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
                             bookingRow.setCheckOut(roomRate.getCheckOut().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
@@ -187,7 +183,7 @@ public class ImportInnsistServiceImpl {
                 .map(this::bookingImportCacheToRoomRateKafka)
                 .toList();
         ImportInnsistResponseKafka importInnsistResponseKafka = new ImportInnsistResponseKafka(innsistImportId,
-                roomRateResponses);
+                roomRateResponses, true);
         producerResponseImportInnsistService.create(importInnsistResponseKafka);
     }
 
@@ -196,7 +192,7 @@ public class ImportInnsistServiceImpl {
                 .map(this::bookingErrorResponseToRoomRateKafka)
                 .toList();
         ImportInnsistResponseKafka importInnsistResponseKafka = new ImportInnsistResponseKafka(innsistImportId,
-                roomRateResponses);
+                roomRateResponses, false);
         producerResponseImportInnsistService.create(importInnsistResponseKafka);
     }
 

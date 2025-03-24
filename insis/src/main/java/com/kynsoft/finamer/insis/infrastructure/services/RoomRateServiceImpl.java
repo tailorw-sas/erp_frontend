@@ -3,26 +3,23 @@ package com.kynsoft.finamer.insis.infrastructure.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsoft.finamer.insis.application.query.objectResponse.booking.BookingResponse;
 import com.kynsoft.finamer.insis.application.query.objectResponse.roomRate.RoomRateResponse;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import com.kynsoft.finamer.insis.domain.services.IRoomRateService;
 import com.kynsoft.finamer.insis.infrastructure.model.Booking;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
 import com.kynsoft.finamer.insis.infrastructure.model.RoomRate;
+import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
+import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.RoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.RoomRateReadDataJPARepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -79,26 +76,33 @@ public class RoomRateServiceImpl implements IRoomRateService {
 
     @Override
     public RoomRateDto findById(UUID id) {
-        Optional<RoomRate> rate = readRepository.findById(id);
-        return rate.map(RoomRate::toAggregate).orElse(null);
+        if(Objects.nonNull(id)){
+            Optional<RoomRate> rate = readRepository.findById(id);
+            return rate.map(RoomRate::toAggregate).orElse(null);
+        }
+        throw new IllegalArgumentException("ID must be provided and cannot be null");
     }
 
     @Override
     public RoomRateDto findByTcaId(RoomRateDto dto) {
-        Optional<RoomRate> rate = readRepository.findByHotelAndInvoicingDateAndReservationCodeAndCouponNumberAndRenewalNumber(new ManageHotel(dto.getHotel()) ,
-                dto.getInvoicingDate(),
-                dto.getReservationCode(),
-                dto.getCouponNumber(),
-                dto.getRenewalNumber());
-        return rate.map(RoomRate::toAggregate).orElse(null);
-
+        if(Objects.nonNull(dto)){
+            Optional<RoomRate> rate = readRepository.findByHotelAndInvoicingDateAndReservationCodeAndCouponNumberAndRenewalNumber(new ManageHotel(dto.getHotel()) ,
+                    dto.getInvoicingDate(),
+                    dto.getReservationCode(),
+                    dto.getCouponNumber(),
+                    dto.getRenewalNumber());
+            return rate.map(RoomRate::toAggregate).orElse(null);
+        }
+        throw new IllegalArgumentException("RoomRateDto must be provided and cannot be null.");
     }
 
     @Override
-    public List<RoomRateDto> findByBooking(UUID bookingId) {
-        return readRepository.findByBooking_Id(bookingId).stream()
-                .map(RoomRate::toAggregate)
-                .collect(Collectors.toList());
+    public List<RoomRateDto> findByHotelAndInvoiceDate(UUID hotelId, LocalDate invoiceDate) {
+        if(Objects.nonNull(hotelId) && Objects.nonNull(invoiceDate)){
+            return readRepository.findByHotel_IdAndInvoicingDateAndStatusNot(hotelId, invoiceDate, RoomRateStatus.DELETED).stream()
+                    .map(RoomRate::toAggregate).toList();
+        }
+        throw new IllegalArgumentException("Both hotelId and invoiceDate must be provided and cannot be null.");
     }
 
     @Override
@@ -107,6 +111,17 @@ public class RoomRateServiceImpl implements IRoomRateService {
         Page<RoomRate> data = readRepository.findAll(specifications, pageable);
 
         return getPagintatedResponse(data);
+    }
+
+    @Override
+    public List<RoomRateDto> findAllAvailableByIds(List<UUID> idList) {
+        if(Objects.nonNull(idList)){
+            return readRepository.findByIdsAndStatuses(idList, List.of(RoomRateStatus.PENDING, RoomRateStatus.FAILED))
+                    .stream()
+                    .map(RoomRate::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("RoomRate id list must not be null");
     }
 
     public PaginatedResponse getPagintatedResponse(Page<RoomRate> data){

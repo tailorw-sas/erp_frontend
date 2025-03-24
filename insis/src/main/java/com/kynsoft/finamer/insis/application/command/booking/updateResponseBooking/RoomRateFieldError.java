@@ -5,15 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-import java.util.UUID;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateResponseImportBookingRequest {
-    private UUID importProcessId;
-    private List<RoomRateResponse> responses;
-    private Boolean processed;
+public class RoomRateFieldError {
+    private String field;
+    private String messageError;
 }

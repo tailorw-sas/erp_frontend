@@ -1,14 +1,14 @@
 package com.kynsoft.finamer.insis.application.command.booking.updateResponseBooking;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.finamer.insis.domain.dto.BookingDto;
-import com.kynsoft.finamer.insis.domain.dto.ImportBookingDto;
+import com.kynsoft.finamer.insis.domain.dto.ImportRoomRateDto;
 import com.kynsoft.finamer.insis.domain.dto.ImportProcessDto;
-import com.kynsoft.finamer.insis.domain.services.IBookingService;
-import com.kynsoft.finamer.insis.domain.services.IImportBookingService;
+import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
+import com.kynsoft.finamer.insis.domain.services.IImportRoomRateService;
 import com.kynsoft.finamer.insis.domain.services.IImportProcessService;
-import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
+import com.kynsoft.finamer.insis.domain.services.IRoomRateService;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
+import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -18,93 +18,97 @@ import java.util.stream.Collectors;
 @Component
 public class UpdateResponseImportBookingCommandHandler implements ICommandHandler<UpdateResponseImportBookingCommand> {
 
-    private final IBookingService bookingService;
+    private final IRoomRateService roomRateService;
     private final IImportProcessService importProcessService;
-    private final IImportBookingService importBookingService;
+    private final IImportRoomRateService importRoomRateService;
 
-    public UpdateResponseImportBookingCommandHandler(IBookingService bookingService,
+    public UpdateResponseImportBookingCommandHandler(IRoomRateService roomRateService,
                                                      IImportProcessService importProcessService,
-                                                     IImportBookingService importBookingService){
-        this.bookingService = bookingService;
+                                                     IImportRoomRateService importRoomRateService){
+        this.roomRateService = roomRateService;
         this.importProcessService = importProcessService;
-        this.importBookingService = importBookingService;
+        this.importRoomRateService = importRoomRateService;
     }
 
     @Override
     public void handle(UpdateResponseImportBookingCommand command) {
         ImportProcessDto importProcess = getImportProcess(command.getImportProcessId());
-        /*if(command.getResponses().isEmpty()){
-            saveBookingsResponseWhenSuccessfull(importProcess.getId());
+        if(command.getProcessed()){
+            saveBookingsResponseWhenSuccessfull(importProcess.getId(), command.getResponses());
         }else{
-            saveBookingsResponseWhenFailed(importProcess.getId(), command.getErrorResponses());
+            saveBookingsResponseWhenFailed(importProcess.getId(), command.getResponses());
         }
 
         int totalFailed = getTotalFailed(command.getImportProcessId());
         updateImportProcessStatus(importProcess, ImportProcessStatus.COMPLETED, totalFailed);
-         */
     }
 
     private ImportProcessDto getImportProcess(UUID id){
         return importProcessService.findById(id);
     }
 
-    private void saveBookingsResponseWhenSuccessfull(UUID importProcessId){
-        List<ImportBookingDto> importBookings = importBookingService.findByImportProcessId(importProcessId);
+    private void saveBookingsResponseWhenSuccessfull(UUID importProcessId, List<RoomRateResponse> roomRateResponses){
+        List<ImportRoomRateDto> importRoomRates = importRoomRateService.findByImportProcessId(importProcessId);
 
-        importBookings.forEach(importBookingDto -> {
-            importBookingDto.setUpdatedAt(LocalDateTime.now());
+        Map<UUID, UUID> responseSet = roomRateResponses.stream()
+                        .collect(Collectors.toMap(RoomRateResponse::getInnsistBookingId, RoomRateResponse::getInvoiceId));
+
+        importRoomRates.forEach(importRoomRate -> {
+            if(responseSet.containsKey(importRoomRate.getRoomRate().getId())){
+                importRoomRate.setUpdatedAt(LocalDateTime.now());
+                importRoomRate.setErrorMessage("InvoiceId: " + responseSet.get(importRoomRate.getRoomRate().getId()));
+                updateRoomRateStatus(importRoomRate.getRoomRate(), responseSet.get(importRoomRate.getRoomRate().getId()), RoomRateStatus.PROCESSED);
+            }
         });
 
-        importBookingService.updateMany(importBookings);
+        importRoomRateService.updateMany(importRoomRates);
 
-        List<BookingDto> bookings = importBookings.stream()
-                .map(ImportBookingDto::getBooking)
+        List<RoomRateDto> roomRates = importRoomRates.stream()
+                .map(ImportRoomRateDto::getRoomRate)
                 .toList();
 
-        updateBookingsStatus(bookings, BookingStatus.PROCESSED);
+        updateRoomRates(roomRates);
+    }
+
+    private void updateRoomRates(List<RoomRateDto> roomRates){
+        roomRateService.updateMany(roomRates);
     }
 
     private void saveBookingsResponseWhenFailed(UUID importProcessId, List<RoomRateResponse> errorResponses) {
-        List<ImportBookingDto> importBookings = importBookingService.findByImportProcessId(importProcessId);
+        List<ImportRoomRateDto> importRoomRates = importRoomRateService.findByImportProcessId(importProcessId);
 
-        /*Map<UUID, String> errorMap = errorResponses.stream()
-                .collect(Collectors.toMap(RoomRateResponse::getBookingId, RoomRateResponse::getErrorMessage));
+        Map<UUID, List<RoomRateFieldError>> errorMap = errorResponses.stream()
+                .collect(Collectors.toMap(RoomRateResponse::getInnsistRoomRateId, RoomRateResponse::getErrors));
 
-        importBookings.forEach(importBooking -> {
-            UUID bookingId = importBooking.getBooking().getId();
-            if (errorMap.containsKey(bookingId)) {
-                importBooking.setErrorMessage(errorMap.get(bookingId));
+        importRoomRates.forEach(importRoomRate -> {
+            importRoomRate.setUpdatedAt(LocalDateTime.now());
+            if(errorMap.containsKey(importRoomRate.getRoomRate().getId())){
+                importRoomRate.setErrorMessage(formatErrorField(errorMap.get(importRoomRate.getRoomRate().getId())));
+                updateRoomRateStatus(importRoomRate.getRoomRate(), null, RoomRateStatus.FAILED);
+            }else{
+                updateRoomRateStatus(importRoomRate.getRoomRate(), null, RoomRateStatus.PENDING);
             }
-            importBooking.setUpdatedAt(LocalDateTime.now());
         });
 
-        importBookingService.updateMany(importBookings);
+        importRoomRateService.updateMany(importRoomRates);
 
-        List<BookingDto> bookingsImported = importBookings.stream()
-                .map(ImportBookingDto::getBooking)
-                .filter(booking -> !errorMap.containsKey(booking.getId()))
+        List<RoomRateDto> roomRates = importRoomRates.stream()
+                .map(ImportRoomRateDto::getRoomRate)
                 .toList();
-
-        updateBookingsStatus(bookingsImported, BookingStatus.PENDING);
-
-        List<BookingDto> bookingsWithErrors = importBookings.stream()
-                .map(ImportBookingDto::getBooking)
-                .filter(booking -> errorMap.containsKey(booking.getId()))
-                .toList();
-
-        updateBookingsStatus(bookingsWithErrors, BookingStatus.FAILED);
-         */
+        roomRateService.updateMany(roomRates);
     }
 
-    private void updateBookingsStatus(List<BookingDto> bookings, BookingStatus status){
-        bookings.forEach(booking -> {
-            booking.setStatus(status);
-            booking.setUpdatedAt(LocalDateTime.now());
-        });
-
-        bookingService.updateMany(bookings);
+    private void updateRoomRateStatus(RoomRateDto roomRate, UUID invoiceId, RoomRateStatus status){
+        roomRate.setInvoiceId(invoiceId);
+        roomRate.setUpdatedAt(LocalDateTime.now());
+        roomRate.setStatus(status);
     }
 
+    private String formatErrorField(List<RoomRateFieldError> errorFields){
+        return errorFields.stream()
+                .map(errorField -> errorField.getField() + ": " + errorField.getMessageError())
+                .collect(Collectors.joining("|"));
+    }
     private void updateImportProcessStatus(ImportProcessDto importProcess, ImportProcessStatus status, int totalFailed){
         importProcess.setStatus(status);
         importProcess.setCompletedAt(LocalDateTime.now());
@@ -114,9 +118,9 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
     }
 
     private int getTotalFailed(UUID processId){
-        List<ImportBookingDto> bookings = importBookingService.findByImportProcessId(processId);
-        return bookings.stream()
-                .filter(importBookingDto -> Objects.nonNull(importBookingDto.getErrorMessage()))
+        List<ImportRoomRateDto> roomRates = importRoomRateService.findByImportProcessId(processId);
+        return roomRates.stream()
+                .filter(importRoomRate ->  importRoomRate.getRoomRate().getStatus().equals(RoomRateStatus.FAILED))
                 .toList().size();
     }
 }

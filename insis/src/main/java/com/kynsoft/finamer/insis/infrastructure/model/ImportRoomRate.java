@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.insis.infrastructure.model;
 
-import com.kynsoft.finamer.insis.domain.dto.ImportBookingDto;
+import com.kynsoft.finamer.insis.domain.dto.ImportRoomRateDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,12 +17,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "import_booking", indexes = {
+@Table(name = "import_roomrate", indexes = {
         @Index(name = "idx_import_process", columnList = "import_process_id"),
-        @Index(name = "idx_booking", columnList = "booking_id"),
-        @Index(name = "idx_import_process_booking", columnList = "import_process_id, booking_id")
+        @Index(name = "idx_roomrate", columnList = "roomRate_id"),
+        @Index(name = "idx_import_process_roomrate", columnList = "import_process_id, roomRate_id")
 })
-public class ImportBooking {
+public class ImportRoomRate {
 
     @Id
     private UUID Id;
@@ -32,8 +32,8 @@ public class ImportBooking {
     private ImportProcess importProcess;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "booking_id")
-    private Booking booking;
+    @JoinColumn(name = "roomRate_id")
+    private RoomRate roomRate;
 
     private String errorMessage;
 
@@ -44,19 +44,19 @@ public class ImportBooking {
     @Column(nullable = true, updatable = true)
     public LocalDateTime updatedAt;
 
-    public ImportBooking(ImportBookingDto dto){
+    public ImportRoomRate(ImportRoomRateDto dto){
         this.Id = dto.getId();
         this.importProcess = Objects.nonNull(dto.getImportProcess()) ? new ImportProcess(dto.getImportProcess()) : null;
-        this.booking = Objects.nonNull(dto.getBooking()) ? new Booking(dto.getBooking()) : null;
+        this.roomRate = Objects.nonNull(dto.getRoomRate()) ? new RoomRate(dto.getRoomRate()) : null;
         this.errorMessage = dto.getErrorMessage();
         this.updatedAt = dto.getUpdatedAt();
     }
 
-    public ImportBookingDto toAggregate(){
-        return new ImportBookingDto(
+    public ImportRoomRateDto toAggregate(){
+        return new ImportRoomRateDto(
                 this.Id,
                 Objects.nonNull(this.importProcess) ? this.importProcess.toAggregate() : null,
-                Objects.nonNull(this.booking) ? this.booking.toAggregate() : null,
+                Objects.nonNull(this.roomRate) ? this.roomRate.toAggregate() : null,
                 this.errorMessage,
                 this.updatedAt
         );

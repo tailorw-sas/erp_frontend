@@ -14,4 +14,5 @@ import lombok.Setter;
 public class ImportInnsistResponseKafka {
     private UUID importInnsitProcessId;
     private List<RoomRateResponseKafka> errors;
+    private Boolean processed;
 }

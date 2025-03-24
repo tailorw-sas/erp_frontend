@@ -14,14 +14,18 @@ public class UpdateResponseImportBookingCommand implements ICommand {
 
     private UUID importProcessId;
     private List<RoomRateResponse> responses;
+    private Boolean processed;
 
-    public UpdateResponseImportBookingCommand(UUID importProcessId, List<RoomRateResponse> responses){
+    public UpdateResponseImportBookingCommand(UUID importProcessId,
+                                              List<RoomRateResponse> responses,
+                                              Boolean processed){
         this.importProcessId = importProcessId;
         this.responses = responses;
+        this.processed = processed;
     }
 
     public static UpdateResponseImportBookingCommand fromRequest(UpdateResponseImportBookingRequest request){
-        return new UpdateResponseImportBookingCommand(request.getImportProcessId(), request.getResponses());
+        return new UpdateResponseImportBookingCommand(request.getImportProcessId(), request.getResponses(), request.getProcessed());
     }
 
     @Override

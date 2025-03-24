@@ -4,13 +4,10 @@ import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsoft.finamer.insis.application.command.roomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.insis.domain.dto.*;
 import com.kynsoft.finamer.insis.domain.services.*;
-import com.kynsoft.finamer.insis.infrastructure.model.enums.BatchStatus;
-import com.kynsoft.finamer.insis.infrastructure.model.enums.BatchType;
-import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
+import com.kynsoft.finamer.insis.infrastructure.model.ManageRoomCategory;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,29 +16,26 @@ import java.util.stream.Collectors;
 public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateGroupedRatesCommand> {
 
     private final IRoomRateService service;
-    private final IBookingService bookingService;
     private final IManageHotelService manageHotelService;
     private final IManageAgencyService manageAgencyService;
     private final IManageRoomTypeService manageRoomTypeService;
     private final IManageRatePlanService manageRatePlanService;
-    private final IManageRoomCategoryService roomCategoryService;
+    private final IManageRoomCategoryService manageRoomCategoryService;
     private final IBatchProcessLogService logService;
 
     public CreateGroupedRatesCommandHandler(IRoomRateService service,
-                                            IBookingService bookingService,
                                             IManageHotelService manageHotelService,
                                             IManageAgencyService manageAgencyService,
                                             IManageRoomTypeService manageRoomTypeService,
                                             IManageRatePlanService manageRatePlanService,
-                                            IManageRoomCategoryService roomCategoryService,
+                                            IManageRoomCategoryService manageRoomCategoryService,
                                             IBatchProcessLogService logService){
         this.service = service;
-        this.bookingService = bookingService;
         this.manageHotelService = manageHotelService;
         this.manageAgencyService = manageAgencyService;
         this.manageRoomTypeService = manageRoomTypeService;
         this.manageRatePlanService = manageRatePlanService;
-        this.roomCategoryService = roomCategoryService;
+        this.manageRoomCategoryService = manageRoomCategoryService;
         this.logService = logService;
     }
 
@@ -49,15 +43,16 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
     public void handle(CreateGroupedRatesCommand command) {
         boolean processed;
         ManageHotelDto hotelDto = manageHotelService.findByCode(command.getHotel());
-        BookingDto currentBookingDto = bookingService.findByTcaId(hotelDto, command.getInvoiceDate(), command.getReservationCode(), command.getCouponNumber());
 
-        if(Objects.isNull(currentBookingDto)) {
-            processed = processNewBooking(command, hotelDto);
+        List<RoomRateDto> currentRoomRates = service.findByHotelAndInvoiceDate(hotelDto.getId(), command.getInvoiceDate());
+
+        if(currentRoomRates.isEmpty()) {
+            processed = processNewRates(command, hotelDto);
         }else{
-            processed = processExistingBooking(command, hotelDto, currentBookingDto);
+            processed = processExistingBooking(command, currentRoomRates, hotelDto);
         }
 
-        updateLog(command.getId(), 1, processed ? 1 : 0);
+        updateLog(command.getId(), command.getRoomRateCommandList().size(), processed ? command.getRoomRateCommandList().size() : 0);
     }
 
     private void updateLog(UUID id, int totalRecordsRead, int totalRecordsProcessed){
@@ -72,45 +67,40 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
         return logService.findById(id);
     }
 
-    private boolean processNewBooking(CreateGroupedRatesCommand command, ManageHotelDto hotelDto){
-        createBookingWithRates(hotelDto, command.getRoomRateCommandList());
+    private Boolean processNewRates(CreateGroupedRatesCommand command, ManageHotelDto hotelDto){
+        createRates(hotelDto, command.getRoomRateCommandList());
         return true;
     }
 
-    private boolean processExistingBooking(CreateGroupedRatesCommand command, ManageHotelDto hotelDto, BookingDto currentBooking){
-        if(!currentBooking.getStatus().equals(BookingStatus.PROCESSED)) {
-            List<RoomRateDto> currentRoomRateDtos = service.findByBooking(currentBooking.getId());
-            if (shouldCancelBooking(currentRoomRateDtos, command.getRoomRateCommandList())) {
-                cancelBookingAndRates(currentBooking, currentRoomRateDtos);
-                createBookingWithRates(hotelDto, command.getRoomRateCommandList());
-                return true;
-            }
-
-            if(!findRecordsWithDifferentHash(currentRoomRateDtos, command.getRoomRateCommandList()).isEmpty()){
-                cancelBookingAndRates(currentBooking, currentRoomRateDtos);
-                createBookingWithRates(hotelDto, command.getRoomRateCommandList());
-                return true;
-            }
-
-            return false;
+    private boolean processExistingBooking(CreateGroupedRatesCommand command, List<RoomRateDto> currentRoomRates, ManageHotelDto hotelDto){
+        if (shouldCancelRoomRate(currentRoomRates, command.getRoomRateCommandList())) {
+            cancelRates(currentRoomRates);
+            createRates(hotelDto, command.getRoomRateCommandList());
+            return true;
         }
+
         return false;
     }
 
-    private void createBookingWithRates(ManageHotelDto hotelDto, List<CreateRoomRateCommand> rateCommands){
-        BookingDto newBookingDto = buildBooking(hotelDto, rateCommands);
-        bookingService.create(newBookingDto);
-        addRatesToBooking(rateCommands, newBookingDto, hotelDto);
-    }
+    private void createRates(ManageHotelDto hotel, List<CreateRoomRateCommand> rateCommands){
+        Map<String, ManageAgencyDto> agenciesMap = getAgencies(rateCommands);
+        Map<String, ManageRoomTypeDto> roomTypesMap = getRoomTypes(rateCommands, hotel);
+        Map<String, ManageRatePlanDto> ratePlansMap = getRatePlans(rateCommands, hotel);
+        Map<String, ManageRoomCategoryDto> roomCategoriesMap = getRoomCategories(rateCommands);
 
-    private void addRatesToBooking(List<CreateRoomRateCommand> rateCommands, BookingDto currentBooking, ManageHotelDto hotelDto){
         List<RoomRateDto> newRates = rateCommands.stream()
-                .map(rateCommand -> buildRoomRateDto(rateCommand, currentBooking, hotelDto))
-                .collect(Collectors.toList());
+                        .map(command -> buildRoomRateDto(command,
+                                hotel,
+                                agenciesMap.get(command.getAgency()),
+                                roomTypesMap.get(command.getRoomType()),
+                                ratePlansMap.get(command.getRatePlan()),
+                                roomCategoriesMap.get(command.getRoomCategory())
+                                )).toList();
+
         service.createMany(newRates);
     }
 
-    private boolean shouldCancelBooking(List<RoomRateDto> currentRates, List<CreateRoomRateCommand> newRates){
+    private boolean shouldCancelRoomRate(List<RoomRateDto> currentRates, List<CreateRoomRateCommand> newRates){
         if(currentRates.size() != newRates.size()){
             return true;
         }
@@ -123,99 +113,66 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
                 .anyMatch(hash -> !existingHashes.contains(hash));
     }
 
-    private void cancelBookingAndRates(BookingDto currentBooking, List<RoomRateDto> currentRates){
-        cancelBooking(currentBooking);
-        cancelRates(currentRates);
-    }
-
-    private void cancelBooking(BookingDto bookingDto){
-        bookingDto.setStatus(BookingStatus.DELETED);
-        bookingDto.setUpdatedAt(LocalDateTime.now());
-        bookingService.update(bookingDto);
-    }
-
     private void cancelRates(List<RoomRateDto> ratesToCancell){
-        ratesToCancell.stream().forEach(rate -> rate.setStatus(RoomRateStatus.DELETED));
+        ratesToCancell.forEach(rate -> {
+            if(!rate.getStatus().equals(RoomRateStatus.PROCESSED)){
+                rate.setStatus(RoomRateStatus.DELETED);
+                rate.setUpdatedAt(LocalDateTime.now());
+            }
+        });
         service.updateMany(ratesToCancell);
     }
 
-    public static List<CreateRoomRateCommand> findRecordsWithDifferentHash(List<RoomRateDto> roomRateDtos, List<CreateRoomRateCommand> createRoomRateCommands) {
-        Set<String> roomRateDtoHashes = roomRateDtos.stream()
-                .map(RoomRateDto::getHash)
-                .collect(Collectors.toSet());
-
-        return createRoomRateCommands.stream()
-                .filter(command -> !roomRateDtoHashes.contains(command.getHash()))
-                .collect(Collectors.toList());
+    private Map<String, ManageAgencyDto> getAgencies(List<CreateRoomRateCommand> commands){
+        List<String> agencyCodes = commands.stream()
+                        .map(command -> command.getAgency().trim())
+                        .distinct()
+                        .toList();
+        return manageAgencyService.findByCodes(agencyCodes).stream()
+                .collect(Collectors.toMap(ManageAgencyDto::getCode, agency -> agency));
     }
 
-    private BookingDto buildBooking(ManageHotelDto hotelDto, List<CreateRoomRateCommand> rateCommands){
-        return new BookingDto(
-                UUID.randomUUID(),
-                BookingStatus.PENDING,
-                hotelDto,
-                null,
-                rateCommands.get(0).getAgency().trim(),
-                manageAgencyService.findByCode(rateCommands.get(0).getAgency().trim()),
-                rateCommands.stream()
-                        .map(CreateRoomRateCommand::getCheckInDate)
-                        .max(Comparator.naturalOrder()).orElse(rateCommands.get(0).getCheckInDate()),
-                rateCommands.stream()
-                        .map(CreateRoomRateCommand::getCheckOutDate)
-                        .max(Comparator.naturalOrder()).orElse(rateCommands.get(0).getCheckOutDate()),
-                rateCommands.stream()
-                        .mapToInt(CreateRoomRateCommand::getStayDays)
-                        .sum(),
-                rateCommands.get(0).getReservationCode(),
-                rateCommands.get(0).getGuestName(),
-                rateCommands.get(0).getFirstName(),
-                rateCommands.get(0).getLastName(),
-                rateCommands.stream()
-                        .mapToDouble(CreateRoomRateCommand::getAmount)
-                        .sum(),
-                rateCommands.get(0).getRoomType(),
-                manageRoomTypeService.findByCodeAndHotel(rateCommands.get(0).getRoomType(), hotelDto.getId()),
-                rateCommands.get(0).getCouponNumber(),
-                rateCommands.get(0).getTotalNumberOfGuest(),
-                rateCommands.get(0).getAdults(),
-                rateCommands.get(0).getChildrens(),
-                rateCommands.get(0).getRatePlan(),
-                manageRatePlanService.findByCodeAndHotel(rateCommands.get(0).getRatePlan(), hotelDto.getId()),
-                rateCommands.get(0).getInvoicingDate(),
-                rateCommands.get(0).getHotelCreationDate(),
-                rateCommands.stream()
-                        .mapToDouble(CreateRoomRateCommand::getOriginalAmount)
-                        .sum(),
-                rateCommands.stream()
-                        .mapToDouble(CreateRoomRateCommand::getAmountPaymentApplied)
-                        .sum(),
-                rateCommands.get(0).getRateByAdult(),
-                rateCommands.get(0).getRateByChild(),
-                rateCommands.get(0).getRemarks(),
-                rateCommands.get(0).getRoomNumber(),
-                rateCommands.get(0).getQuote() == 0 ? 0 : rateCommands.stream()
-                        .mapToDouble(roomRate -> {
-                            return Math.round((roomRate.getHotelInvoiceAmount() / roomRate.getQuote()) * 100.0) / 100.0;
-                        }).sum(),
-                        //:Math.round((rateCommands.get(0).getHotelInvoiceAmount() / rateCommands.get(0).getQuote()) * 100.0) / 100.0,
-                rateCommands.get(0).getHotelInvoiceNumber(),
-                rateCommands.get(0).getInvoiceFolioNumber(),
-                rateCommands.get(0).getQuote(),
-                rateCommands.get(0).getRenewalNumber(),
-                rateCommands.get(0).getRoomCategory(),
-                roomCategoryService.findByCode(rateCommands.get(0).getRoomCategory()),
-                rateCommands.get(0).getHash(),
-                ""
-        );
+    private Map<String, ManageRatePlanDto> getRatePlans(List<CreateRoomRateCommand> commands, ManageHotelDto hotel){
+        List<String> ratePlanCodes = commands.stream()
+                .map(command -> command.getRatePlan().trim())
+                .distinct()
+                .toList();
+
+        return manageRatePlanService.findAllByCodesAndHotel(ratePlanCodes, hotel.getId()).stream()
+                .collect(Collectors.toMap(ManageRatePlanDto::getCode, ratePlan -> ratePlan));
     }
 
-    private RoomRateDto buildRoomRateDto(CreateRoomRateCommand createRoomRateCommand, BookingDto currentBooking, ManageHotelDto hotelDto){
+    private Map<String, ManageRoomTypeDto> getRoomTypes(List<CreateRoomRateCommand> commands, ManageHotelDto hotel){
+        List<String> roomTypesCodes = commands.stream()
+                .map(command -> command.getRoomType().trim())
+                .distinct()
+                .toList();
+        return manageRoomTypeService.findAllByCodesAndHotel(roomTypesCodes, hotel.getId()).stream()
+                .collect(Collectors.toMap(ManageRoomTypeDto::getCode, roomType -> roomType));
+    }
+
+    private Map<String, ManageRoomCategoryDto> getRoomCategories(List<CreateRoomRateCommand> commands){
+        List<String> roomCategoriesCodes = commands.stream()
+                .map(command -> command.getRoomCategory().trim())
+                .distinct()
+                .toList();
+        return manageRoomCategoryService.findAllByCodes(roomCategoriesCodes).stream()
+                .collect(Collectors.toMap(ManageRoomCategoryDto::getCode, roomCategory -> roomCategory));
+    }
+
+    private RoomRateDto buildRoomRateDto(CreateRoomRateCommand createRoomRateCommand,
+                                         ManageHotelDto hotelDto,
+                                         ManageAgencyDto agency,
+                                         ManageRoomTypeDto roomType,
+                                         ManageRatePlanDto ratePlan,
+                                         ManageRoomCategoryDto roomCategory){
         return new RoomRateDto(
                 UUID.randomUUID(),
-                createRoomRateCommand.getStatus(),
+                RoomRateStatus.PENDING,
                 hotelDto,
                 null,
                 createRoomRateCommand.getAgency(),
+                agency,
                 createRoomRateCommand.getCheckInDate(),
                 createRoomRateCommand.getCheckOutDate(),
                 createRoomRateCommand.getStayDays(),
@@ -225,11 +182,13 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
                 createRoomRateCommand.getLastName(),
                 createRoomRateCommand.getAmount(),
                 createRoomRateCommand.getRoomType(),
+                roomType,
                 createRoomRateCommand.getCouponNumber(),
                 createRoomRateCommand.getTotalNumberOfGuest(),
                 createRoomRateCommand.getAdults(),
                 createRoomRateCommand.getChildrens(),
                 createRoomRateCommand.getRatePlan(),
+                ratePlan,
                 createRoomRateCommand.getInvoicingDate(),
                 createRoomRateCommand.getHotelCreationDate(),
                 createRoomRateCommand.getOriginalAmount(),
@@ -245,7 +204,20 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
                 createRoomRateCommand.getQuote(),
                 createRoomRateCommand.getRenewalNumber(),
                 createRoomRateCommand.getHash(),
-                currentBooking
+                createRoomRateCommand.getRoomCategory(),
+                roomCategory,
+                null,
+                null
         );
+    }
+
+    public static List<CreateRoomRateCommand> findRecordsWithDifferentHash(List<RoomRateDto> roomRateDtos, List<CreateRoomRateCommand> createRoomRateCommands) {
+        Set<String> roomRateDtoHashes = roomRateDtos.stream()
+                .map(RoomRateDto::getHash)
+                .collect(Collectors.toSet());
+
+        return createRoomRateCommands.stream()
+                .filter(command -> !roomRateDtoHashes.contains(command.getHash()))
+                .collect(Collectors.toList());
     }
 }

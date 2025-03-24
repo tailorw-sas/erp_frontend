@@ -40,11 +40,6 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
-//        if(!command.getReservationNumber().isBlank()) {
-//            RulesChecker.checkRule(new AdjustmentTransactionAgencyBookingFormatRule(agencyDto.getBookingCouponFormat()));
-//            RulesChecker.checkRule(new AdjustmentTransactionReservationNumberRule(command.getReservationNumber(), agencyDto.getBookingCouponFormat()));
-//        }
-
         ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.SENT);
         ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(command.getTransactionCategory());
         ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(command.getTransactionSubCategory());

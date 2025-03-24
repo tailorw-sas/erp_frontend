@@ -12,16 +12,16 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImportBookingDto {
+public class ImportRoomRateDto {
     private UUID id;
     private ImportProcessDto importProcess;
-    private BookingDto booking;
+    private RoomRateDto roomRate;
     private String errorMessage;
     public LocalDateTime updatedAt;
 
-    public ImportBookingDto(UUID id, ImportProcessDto importProcess, BookingDto booking){
+    public ImportRoomRateDto(UUID id, ImportProcessDto importProcess, RoomRateDto roomRate){
         this.id = id;
         this.importProcess = importProcess;
-        this.booking = booking;
+        this.roomRate = roomRate;
     }
 }

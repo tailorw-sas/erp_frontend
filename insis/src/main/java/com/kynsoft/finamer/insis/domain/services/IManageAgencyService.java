@@ -29,5 +29,7 @@ public interface IManageAgencyService {
 
     Map<String, UUID> findIdsByCodes(List<String> codes);
 
+    List<ManageAgencyDto> findByCodes(List<String> codes);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

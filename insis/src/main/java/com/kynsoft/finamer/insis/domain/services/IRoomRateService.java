@@ -2,6 +2,7 @@ package com.kynsoft.finamer.insis.domain.services;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
+import com.kynsoft.finamer.insis.domain.dto.BookingDto;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import org.springframework.data.domain.Pageable;
 
@@ -24,7 +25,9 @@ public interface IRoomRateService {
 
     RoomRateDto findByTcaId(RoomRateDto dto);
 
-    List<RoomRateDto> findByBooking(UUID bookingId);
+    List<RoomRateDto> findByHotelAndInvoiceDate(UUID hotelId, LocalDate invoiceDate);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
+
+    List<RoomRateDto> findAllAvailableByIds(List<UUID> idList);
 }

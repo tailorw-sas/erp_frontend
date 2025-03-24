@@ -103,6 +103,16 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
+    public List<ManageAgencyDto> findByCodes(List<String> codes) {
+        if(Objects.nonNull(codes)){
+            return readRepository.findByCodeIn(codes).stream()
+                    .map(ManageAgency::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("Codes list must not be null");
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageAgency> data = readRepository.findAll(specifications, pageable);

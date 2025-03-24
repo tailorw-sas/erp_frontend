@@ -11,7 +11,7 @@ import com.tailorw.tcaInnsist.domain.services.IManageTradingCompanyService;
 import com.tailorw.tcaInnsist.domain.services.IRateService;
 import com.tailorw.tcaInnsist.domain.services.IManageConnectionService;
 import com.tailorw.tcaInnsist.infrastructure.model.kafka.BookingKafka;
-import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedBookingKafka;
+import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedRatesKafka;
 import com.tailorw.tcaInnsist.infrastructure.model.kafka.ManageRateKafka;
 import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerReplicateGroupedRatesService;
 import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerUpdateSchedulerLogService;
@@ -48,7 +48,7 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
                 ManageTradingCompanyDto tradingCompanyDto = validateTradingCompany(hotelDto);
                 ManageConnectionDto connection = validateConnection(tradingCompanyDto);
 
-                Map<String, List<RateDto>> groupedRates = getGroupedRoomRates(hotelDto, connection, command.getInvoiceDate());
+                List<RateDto> groupedRates = getRoomRates(hotelDto, connection, command.getInvoiceDate());
                 syncRoomRates(command.getProcessId(), command.getInvoiceDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")), hotelCode, groupedRates);
             }catch (IllegalArgumentException ex) {
                 logWarningAndAppend(additionDetails, ex.getMessage());
@@ -96,7 +96,7 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
         return connection;
     }
 
-    private Map<String, List<RateDto>> getGroupedRoomRates(ManageHotelDto hotel, ManageConnectionDto configuration, LocalDate invoiceDate){
+    private List<RateDto> getRoomRates(ManageHotelDto hotel, ManageConnectionDto configuration, LocalDate invoiceDate){
         List<RateDto> rateDtos = new ArrayList<>();
         try{
             rateDtos = service.findByInvoiceDate(hotel, configuration, invoiceDate);
@@ -111,28 +111,17 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
             throw new IllegalArgumentException(String.format("The hotel %s does not contain room rates for %s invoice date", hotel.getCode(), invoiceDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))));
         }
 
-        return rateDtos.stream()
-                .collect(Collectors.groupingBy(r -> r.getReservationCode() + "|" + r.getCouponNumber()));
+        return rateDtos;
     }
 
-    private void syncRoomRates(UUID processId, String invoiceDate, String hotelCode, Map<String, List<RateDto>> groupedRates){
+    private void syncRoomRates(UUID processId, String invoiceDate, String hotelCode, List<RateDto> rates){
         UUID idLog = UUID.randomUUID();
-        List<BookingKafka> bookingKafkaList = new ArrayList<>();
-        for(Map.Entry<String, List<RateDto>> entry : groupedRates.entrySet()){
-            BookingKafka bookingKafka = new BookingKafka(
-                    entry.getKey().split("\\|")[0],
-                    entry.getKey().split("\\|")[1],
-                    entry.getValue().stream()
-                            .map(ManageRateKafka::new)
-                            .collect(Collectors.toList())
-            );
-            bookingKafkaList.add(bookingKafka);
-        }
-        GroupedBookingKafka groupedRatesKafka = new GroupedBookingKafka(idLog,
+
+        GroupedRatesKafka groupedRatesKafka = new GroupedRatesKafka(idLog,
                 processId,
                 invoiceDate,
                 hotelCode,
-                bookingKafkaList
+                rates.stream().map(ManageRateKafka::new).toList()
         );
         producerReplicateGroupedRatesService.create(groupedRatesKafka);
     }
