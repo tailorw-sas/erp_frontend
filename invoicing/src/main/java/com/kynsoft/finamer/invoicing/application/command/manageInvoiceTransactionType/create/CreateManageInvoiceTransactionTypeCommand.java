@@ -16,13 +16,20 @@ public class CreateManageInvoiceTransactionTypeCommand implements ICommand {
     private String name;
     private boolean defaults;
     private boolean cloneAdjustmentDefault;
+    private Boolean negative;
 
-    public CreateManageInvoiceTransactionTypeCommand(UUID id, String code, String name, boolean defaults, boolean cloneAdjustmentDefault) {
+    public CreateManageInvoiceTransactionTypeCommand(UUID id,
+                                                     String code,
+                                                     String name,
+                                                     boolean defaults,
+                                                     boolean cloneAdjustmentDefault,
+                                                     Boolean negative) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.defaults = defaults;
         this.cloneAdjustmentDefault = cloneAdjustmentDefault;
+        this.negative = negative;
     }
 
     @Override

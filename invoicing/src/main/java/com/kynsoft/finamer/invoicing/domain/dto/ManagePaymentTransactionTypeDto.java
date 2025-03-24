@@ -25,4 +25,5 @@ public class ManagePaymentTransactionTypeDto implements Serializable {
     private Integer minNumberOfCharacter;
     private String defaultRemark;
     private boolean defaults;
+    private Boolean negative;
 }

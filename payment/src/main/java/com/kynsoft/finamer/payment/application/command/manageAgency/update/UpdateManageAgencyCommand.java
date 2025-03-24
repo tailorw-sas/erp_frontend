@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class UpdateManageAgencyCommand implements ICommand {
 
     private UUID id;
@@ -18,11 +17,20 @@ public class UpdateManageAgencyCommand implements ICommand {
     private String status;  
     private UUID agencyType;
     private UUID client;
+    private UUID country;
 
-    public static UpdateManageAgencyCommand fromRequest(UpdateManageAgencyRequest request, UUID id) {
-        return new UpdateManageAgencyCommand(
-                id, request.getName(), request.getStatus(), request.getAgencyType(), request.getClient()
-        );
+    public UpdateManageAgencyCommand(UUID id,
+                                     String name,
+                                     String status,
+                                     UUID agencyType,
+                                     UUID client,
+                                     UUID country){
+        this.id = id;
+        this.name = name;
+        this.status = status;
+        this.agencyType = agencyType;
+        this.client = client;
+        this.country = country;
     }
 
     @Override

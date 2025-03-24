@@ -27,13 +27,23 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
     private Boolean paymentInvoice;
     private Boolean debit;
     private boolean expenseToBooking;
+    private Boolean negative;
 
-    public CreateManagePaymentTransactionTypeCommand(UUID id, String code, String name, String status,
-            Boolean cash, Boolean deposit, Boolean applyDeposit,
-            Boolean remarkRequired, Integer minNumberOfCharacter,
-            String defaultRemark, Boolean defaults, Boolean paymentInvoice,
-            Boolean debit,
-            boolean expenseToBooking) {
+    public CreateManagePaymentTransactionTypeCommand(UUID id,
+                                                     String code,
+                                                     String name,
+                                                     String status,
+                                                     Boolean cash,
+                                                     Boolean deposit,
+                                                     Boolean applyDeposit,
+                                                     Boolean remarkRequired,
+                                                     Integer minNumberOfCharacter,
+                                                     String defaultRemark,
+                                                     Boolean defaults,
+                                                     Boolean paymentInvoice,
+                                                     Boolean debit,
+                                                     boolean expenseToBooking,
+                                                     Boolean negative) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -48,6 +58,7 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
         this.paymentInvoice = paymentInvoice;
         this.debit = debit;
         this.expenseToBooking = expenseToBooking;
+        this.negative = negative;
     }
 
     public static CreateManagePaymentTransactionTypeCommand fromRequest(ManagePaymentTransactionTypeResponse response) {
@@ -65,7 +76,8 @@ public class CreateManagePaymentTransactionTypeCommand implements ICommand {
                 response.getDefaults(),
                 response.getPaymentInvoice(),
                 response.getDebit(),
-                response.isExpenseToBooking()
+                response.isExpenseToBooking(),
+                response.getNegative()
         );
     }
 

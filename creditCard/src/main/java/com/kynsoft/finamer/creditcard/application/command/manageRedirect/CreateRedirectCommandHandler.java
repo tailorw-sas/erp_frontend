@@ -39,7 +39,7 @@ public class CreateRedirectCommandHandler implements ICommandHandler<CreateRedir
         }
 
         ManagerMerchantConfigDto merchantConfigDto = this.merchantConfigService.findByMerchantID(command.getManageMerchantResponse().getId());
-        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByForeignIds(merchantConfigDto.getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getId());
+        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByForeignIds(transactionDto.getMerchant().getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getId());
 
         MerchantRedirectResponse merchantRedirectResponse = this.formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
 

@@ -28,6 +28,7 @@ public class UpdateManagePaymentTransactionTypeCommandHandler implements IComman
         dto.setDefaults(command.getDefaults());
         dto.setPaymentInvoice(command.getPaymentInvoice());
         dto.setDebit(command.getDebit());
+        dto.setNegative(command.getNegative());
         service.update(dto);
     }
 }
