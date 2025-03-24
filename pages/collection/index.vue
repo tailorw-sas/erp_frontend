@@ -12,12 +12,14 @@ import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import { useRouter } from 'vue-router'
+
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
-
+const selectedItem = ref({});
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
@@ -48,6 +50,7 @@ const contextMenu = ref()
 const contextMenuInvoice = ref()
 const dynamicTable = ref(0)
 const dynamicTableInv = ref(0)
+const router = useRouter()
 
 const allMenuListItems = ref([
   // {
@@ -230,6 +233,16 @@ const objApis = ref({
   status: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
   transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
 })
+
+const goToPrint = () => {
+  router.push({
+    path: '/print',
+    query: { 
+      total: subTotalsInvoice.value.invoiceTotalAmount,
+      // Puedes pasar otros parámetros necesarios
+    }
+  });
+};
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
@@ -509,6 +522,8 @@ const columnsAgency: IColumn[] = [
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
 
 ]
+console.log("Último ítem a guardar:", listItemsInvoice.value[0]?.hotel);
+// Debe mostrar: { name: "DRELM-Dreams Las Mareas Costa Rica", ... }
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -597,7 +612,7 @@ const pagination = ref<IPagination>({
 const paginationInvoice = ref<IPagination>({
   page: 0,
   limit: 50,
-  totalElements: 0,
+  totalElements: 0, 
   totalPages: 0,
   search: ''
 })
@@ -623,6 +638,17 @@ function clearForm() {
   fields[0].disabled = false
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
+}
+function handlePrint() {
+  console.log("Datos a guardar:", listItemsInvoice.value);
+  const dataToStore = {
+    listItems: listItemsInvoice.value,
+    totals: subTotalsInvoice.value,
+    totalElements: paginationInvoice.value.totalElements // AÑADIR ESTA LÍNEA
+
+  };
+  localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore));
+  navigateTo('/collection/print', { open: { target: '_blank' } });
 }
 
 function extractPaymentStatus(originalObject: any) {
@@ -658,6 +684,14 @@ function extractPaymentStatus(originalObject: any) {
       status: originalObject.paymentAttachmentStatusStatus ? originalObject.paymentAttachmentStatusStatus : null
     }
   }
+}
+const loadingSavePrint = ref(false)
+
+function savePrint() {
+  loadingSavePrint.value = true
+  setTimeout(() => {
+    loadingSavePrint.value = false
+  }, 3000)
 }
 
 async function getPaymentData() {
@@ -1144,6 +1178,8 @@ async function getListInvoice() {
     paginationInvoice.value.totalElements = totalElements
     paginationInvoice.value.totalPages = totalPages
 
+    paginationInvoice.value.totalElements = totalElements
+
     const existingIds = new Set(listItemsInvoice.value.map(item => item.id))
 
     for (const iterator of dataList) {
@@ -1288,7 +1324,7 @@ function searchAndFilter() {
             key: 'id',
             operator: 'IN',
             value: itemIds,
-            logicalOperation: 'AND',
+            logicalOperation: 'AND',    type: 'filterSearch' 
           }
         ] }
       }
@@ -1299,7 +1335,7 @@ function searchAndFilter() {
             key: 'id',
             operator: 'IN',
             value: itemIds,
-            logicalOperation: 'AND',
+            logicalOperation: 'AND',    type: 'filterSearch' 
           }
         ] }
       }
@@ -1331,7 +1367,7 @@ function searchAndFilter() {
             key: 'id',
             operator: 'IN',
             value: itemIds,
-            logicalOperation: 'AND',
+            logicalOperation: 'AND',    type: 'filterSearch' 
           }
         ] }
       }
@@ -1344,6 +1380,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+                type: 'filterSearch' 
           }
         ] }
       }
@@ -1890,29 +1927,29 @@ function onSortFieldContactAgency(event: any) {
     parseDataTableFilterForContactAgency(event.filter)
   }
 }
-function onSortFieldInvoice(event: any) {
-  if (event) {
-    if (event.sortField === 'hotel') {
-      event.sortField = 'hotel.name'
+  function onSortFieldInvoice(event: any) {
+    if (event) {
+      if (event.sortField === 'hotel') {
+        event.sortField = 'hotel.name'
+      }
+      if (event.sortField === 'agencyCd') {
+        event.sortField = 'agency.code'
+      }
+      if (event.sortField === 'agency') {
+        event.sortField = 'agency.name'
+      }
+      if (event.sortField === 'status') {
+        event.sortField = 'invoiceStatus'
+      }
+      if (event.sortField === 'invoiceNumber') {
+        event.sortField = 'invoiceNumberPrefix'
+      }
+      payloadInv.value.sortBy = event.sortField
+      payloadInv.value.sortType = event.sortOrder
+      parseDataTableFilterInvoice(event.filter)
+      // getListInvoice()
     }
-    if (event.sortField === 'agencyCd') {
-      event.sortField = 'agency.code'
-    }
-    if (event.sortField === 'agency') {
-      event.sortField = 'agency.name'
-    }
-    if (event.sortField === 'status') {
-      event.sortField = 'invoiceStatus'
-    }
-    if (event.sortField === 'invoiceNumber') {
-      event.sortField = 'invoiceNumberPrefix'
-    }
-    payloadInv.value.sortBy = event.sortField
-    payloadInv.value.sortType = event.sortOrder
-    parseDataTableFilterInvoice(event.filter)
-    // getListInvoice()
   }
-}
 // || filterToSearch.value.agency || filterToSearch.value.hotel
 const disabledSearch = computed(() => {
   return filterToSearch.value.client?.id === '' || filterToSearch.value.agency.length === 0 || filterToSearch.value.hotel.length === 0
@@ -2311,7 +2348,7 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full custom-input"
-                        :model="filterToSearch.client"
+                        :model="selectedItem"
                         :suggestions="clientList"
                         placeholder=""
                         @load="($event) => getClientListFilter($event)"
@@ -2540,7 +2577,7 @@ onMounted(() => {
                   v-tooltip.top="'Search'" class="w-2,5rem mx-1" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
-                <Button
+                   <Button
                   v-tooltip.top="'Clear'" outlined class="w-2,5rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
                 />
@@ -2802,7 +2839,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
-              severity="primary" @click="navigateTo('/invoice/print', { open: { target: '_blank' } })"
+              severity="primary" @click="handlePrint"
             />
           </div>
           <div
