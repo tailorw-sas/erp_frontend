@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/import-booking")
+@RequestMapping("/api/import-room-rate")
 public class ImportRoomRateController {
 
     private final IMediator mediator;

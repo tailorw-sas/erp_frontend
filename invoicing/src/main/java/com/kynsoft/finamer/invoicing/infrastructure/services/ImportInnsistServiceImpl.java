@@ -198,8 +198,8 @@ public class ImportInnsistServiceImpl {
 
     private RoomRateResponseKafka bookingImportCacheToRoomRateKafka(BookingImportCache booking){
         return new RoomRateResponseKafka(
-                UUID.fromString(booking.getInsistImportProcessBookingId()),
                 null,
+                UUID.fromString(booking.getInsistImportProcessBookingId()),
                 booking.getInvoiceId(),
                 null
         );
@@ -207,8 +207,8 @@ public class ImportInnsistServiceImpl {
 
     private RoomRateResponseKafka bookingErrorResponseToRoomRateKafka(BookingRowError bookingRowError){
         return new RoomRateResponseKafka(
-                UUID.fromString(bookingRowError.getRow().getInsistImportProcessBookingId()),
                 null,
+                UUID.fromString(bookingRowError.getRow().getInsistImportProcessBookingId()),
                 null,
                 bookingRowError.getErrorFields()
         );

@@ -51,7 +51,7 @@ public class UpdateResponseImportBookingCommandHandler implements ICommandHandle
         List<ImportRoomRateDto> importRoomRates = importRoomRateService.findByImportProcessId(importProcessId);
 
         Map<UUID, UUID> responseSet = roomRateResponses.stream()
-                        .collect(Collectors.toMap(RoomRateResponse::getInnsistBookingId, RoomRateResponse::getInvoiceId));
+                        .collect(Collectors.toMap(RoomRateResponse::getInnsistRoomRateId, RoomRateResponse::getInvoiceId));
 
         importRoomRates.forEach(importRoomRate -> {
             if(responseSet.containsKey(importRoomRate.getRoomRate().getId())){

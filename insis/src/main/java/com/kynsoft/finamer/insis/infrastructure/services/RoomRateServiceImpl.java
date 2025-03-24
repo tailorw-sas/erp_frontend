@@ -6,12 +6,11 @@ import com.kynsof.share.core.infrastructure.specifications.GenericSpecifications
 import com.kynsoft.finamer.insis.application.query.objectResponse.roomRate.RoomRateResponse;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import com.kynsoft.finamer.insis.domain.services.IRoomRateService;
-import com.kynsoft.finamer.insis.infrastructure.model.Booking;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
 import com.kynsoft.finamer.insis.infrastructure.model.RoomRate;
-import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.RoomRateWriteDataJPARepository;
+import com.kynsoft.finamer.insis.infrastructure.repository.query.ImportRoomRateReadDataJPARepository;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.RoomRateReadDataJPARepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,10 +29,14 @@ public class RoomRateServiceImpl implements IRoomRateService {
 
     private final RoomRateWriteDataJPARepository writeRepository;
     private final RoomRateReadDataJPARepository readRepository;
+    private final ImportRoomRateReadDataJPARepository importRoomRateRepository;
 
-    public RoomRateServiceImpl(RoomRateWriteDataJPARepository writeRepository, RoomRateReadDataJPARepository readRepository){
+    public RoomRateServiceImpl(RoomRateWriteDataJPARepository writeRepository,
+                               RoomRateReadDataJPARepository readRepository,
+                               ImportRoomRateReadDataJPARepository importRoomRateRepository){
         this.writeRepository = writeRepository;
         this.readRepository = readRepository;
+        this.importRoomRateRepository = importRoomRateRepository;
     }
 
 
@@ -127,9 +131,33 @@ public class RoomRateServiceImpl implements IRoomRateService {
     public PaginatedResponse getPagintatedResponse(Page<RoomRate> data){
         List<RoomRateResponse> response = new ArrayList<>();
         for(RoomRate roomRate : data.getContent()){
-            response.add(new RoomRateResponse(roomRate.toAggregate()));
+            RoomRateResponse roomRateResponse = getRoomRateResponse(roomRate);
+            response.add(roomRateResponse);
         }
         return new PaginatedResponse(response, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
+    }
+
+    private RoomRateResponse getRoomRateResponse(RoomRate roomRate){
+        RoomRateResponse roomRateResponse = new RoomRateResponse(roomRate.toAggregate());
+        if(roomRate.getStatus().equals(RoomRateStatus.FAILED)){
+            StringBuilder messageErrors = new StringBuilder();
+            for(String message : getRoomRateErrorsHistory(roomRate.getId())){
+                messageErrors.append(message).append("\n");
+            }
+            roomRateResponse.setMessage(messageErrors.toString());
+        }
+        return roomRateResponse;
+    }
+
+    private List<String> getRoomRateErrorsHistory(UUID roomRateId){
+        return importRoomRateRepository.findByRoomRate_Id(roomRateId).stream()
+                .filter(importRoomRate -> importRoomRate.getErrorMessage() != null && !importRoomRate.getErrorMessage().isBlank())
+                .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
+                .map(importRoomRate -> {
+                    return importRoomRate.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + ":" + importRoomRate.getErrorMessage();
+                })
+                .limit(2)
+                .toList();
     }
 }
