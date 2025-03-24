@@ -23,6 +23,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.Booking
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportProcessRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.BookingRowUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Async;
@@ -122,6 +123,7 @@ public class BookingServiceImpl implements ImportBookingService {
                         List<UUID> agencies = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
                         List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
                         for (BookingRow bookingRow : excelBean) {
+                            BookingRowUtils.removeBlankSpacesInBookingRow(bookingRow);
                             bookingRow.setImportProcessId(request.getImportProcessId());
                             bookingRow.setAgencies(agencies);
                             bookingRow.setHotels(hotels);
