@@ -37,11 +37,11 @@ public class ExcelUtils {
                 } else if (cell.getCellType() == CellType.NUMERIC) {
                     return LocalDate.ofEpochDay((long) cell.getNumericCellValue()).toString();
                 } else {
-                    return formatter.formatCellValue(cell).trim();
+                    return formatter.formatCellValue(cell);
                 }
 
             case DATAFORMAT:
-                return formatter.formatCellValue(cell).trim();
+                return formatter.formatCellValue(cell);
 
             case ALFANUMERIC:
                 return switch (cell.getCellType()) {
@@ -50,14 +50,14 @@ public class ExcelUtils {
                         CellStyle cellStyle = cell.getCellStyle();
                         cellStyle.setDataFormat(format);
                         cell.setCellStyle(cellStyle);
-                        yield formatter.formatCellValue(cell).trim();
+                        yield formatter.formatCellValue(cell);
                     }
                     case STRING -> {
                         short format = dataFormatter.getFormat("@");
                         CellStyle cellStyle = cell.getCellStyle();
                         cellStyle.setDataFormat(format);
                         cell.setCellStyle(cellStyle);
-                        yield formatter.formatCellValue(cell).trim();
+                        yield formatter.formatCellValue(cell);
                     }
                     default -> null;
                 };
