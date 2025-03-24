@@ -43,7 +43,7 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
                     "       )" +
                     "   ) AS RegistroHash " +
                     " FROM hottfr tbd1_0 " +
-                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac " +
+                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac and tbd1_0.r_cod_age = tdb2_0.d_cod_age " +
                     " WHERE tbd1_0.r_fec_ini = ? " +
                     "  AND tbd1_0.r_fec_fin = ? " +
                     "  AND tbd1_0.r_res_cve = ? " +
@@ -96,7 +96,7 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
                     "       )" +
                     "   ) AS RegistroHash " +
                     " FROM hottfr tbd1_0 " +
-                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac " +
+                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac and tbd1_0.r_cod_age = tdb2_0.d_cod_age " +
                     " WHERE lower(cast(tbd1_0.r_fec_ini AS varchar(max))) = COALESCE(lower(?), lower(cast(tbd1_0.r_fec_ini AS varchar(max)))) " +
                     "  AND lower(cast(tbd1_0.r_fec_fin AS varchar(max))) = COALESCE(lower(?), lower(cast(tbd1_0.r_fec_fin AS varchar(max)))) " +
                     "  AND lower(cast(tbd1_0.r_tpo_hab AS varchar(max))) LIKE COALESCE(lower(?), lower(cast(tbd1_0.r_tpo_hab AS varchar(max)))) ";
@@ -152,7 +152,7 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
                     "       )" +
                     "   ) AS RegistroHash " +
                     " FROM hottfr tbd1_0 " +
-                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac " +
+                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac and tbd1_0.r_cod_age = tdb2_0.d_cod_age " +
                     " WHERE tbd1_0.r_fec_fac = ? ";
             if(roomType != null){
                 query += " AND tbd1_0.r_tpo_hab LIKE ? ";
@@ -201,7 +201,7 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
                     "       )" +
                     "   ) AS RegistroHash " +
                     " FROM hottfr tbd1_0 " +
-                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac " +
+                    " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac and tbd1_0.r_cod_age = tdb2_0.d_cod_age " +
                     " WHERE CONVERT(DATE, tbd1_0.r_fec_fac, 112) BETWEEN ? AND ? ";
             if(roomType != null){
                 query += " AND tbd1_0.r_tpo_hab LIKE ? ";
