@@ -20,5 +20,7 @@ public class BookingRowUtils {
         bookingRow.setRemarks(bookingRow.getRemarks() != null ? bookingRow.getRemarks().trim() : null);
         bookingRow.setRoomNumber(bookingRow.getRoomNumber() != null ? bookingRow.getRoomNumber().trim() : null);
         bookingRow.setCoupon(bookingRow.getCoupon() != null ? bookingRow.getCoupon().trim() : null);
+        bookingRow.setTransactionDate(bookingRow.getTransactionDate() != null ? bookingRow.getTransactionDate().trim() : null);
+        //transaction date, nights, adults, children, invoice amount, pax, hotelinvoiceamount,
     }
 }
