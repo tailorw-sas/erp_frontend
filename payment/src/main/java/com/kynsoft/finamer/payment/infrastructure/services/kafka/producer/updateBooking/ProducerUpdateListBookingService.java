@@ -23,11 +23,6 @@ public class ProducerUpdateListBookingService {
         try {
             for (UpdateBookingBalanceKafka entity : kafkaList) {
                 this.producer.send("finamer-update-booking-balance", entity);
-                System.err.println("##############################################");
-                System.err.println("##############################################");
-                System.err.println("Se envia a kafka");
-                System.err.println("##############################################");
-                System.err.println("##############################################");
             }
         } catch (Exception ex) {
             Logger.getLogger(ProducerUpdateListBookingService.class.getName()).log(Level.SEVERE, null, ex);

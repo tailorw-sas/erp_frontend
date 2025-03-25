@@ -8,6 +8,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
@@ -93,58 +94,54 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         List<UpdateBookingBalanceKafka> kafkaList = new ArrayList<>();
         List<Booking> bookingsList = new ArrayList<>();
         List<PaymentDetail> detailTypeDeposits = new ArrayList<>();
-        List<PaymentDetail> createPaymentdetails = new ArrayList<>();
+        List<PaymentDetail> createPaymentDetails = new ArrayList<>();
 
         Payment updatePayment = this.paymentService.findByIdWithBalancesOnly(command.getPayment());
-        ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();
-        ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();
+        ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();//AANT
+        ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();//PAGO
 
-        List<Invoice> invoiceQueue = createInvoiceQueue(command, bookingsList);// Ordenar las Invoice
+        List<Invoice> invoiceQueue = createInvoiceQueue(command, bookingsList);
         List<PaymentDetailDto> deposits = this.createPaymentDetailsTypeDepositQueue(command.getDeposits(), detailTypeDeposits);
 
-        double paymentBalance = updatePayment.getPaymentBalance();// PaymentBalance
-        double notApplied = updatePayment.getNotApplied();// notApplied
+        double paymentBalance = updatePayment.getPaymentBalance();
+        double notApplied = updatePayment.getNotApplied();
         double depositBalance = updatePayment.getDepositBalance();
 
         for (Invoice manageInvoiceDto : invoiceQueue) {
-            List<Booking> bookingDtos = getSortedBookings(manageInvoiceDto);// Ordelar los Booking de la Invoice seleccionada.
-            for (Booking bookingDto : bookingDtos) {
+            List<Booking> bookingDtoList = getSortedBookings(manageInvoiceDto);
+            for (Booking bookingDto : bookingDtoList) {
                 //TODO: almaceno el valor de Balance del Booking porque puede que no llegue a cero cuando el Payment Balance si lo haga. Y todavia
-                //tenga valor el notApplied
+                // tenga valor el notApplied
                 double amountBalance = bookingDto.getAmountBalance();
                 if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance() && amountBalance > 0) {
                     double amountToApply = Math.min(notApplied, amountBalance);
-                    //CreatePaymentDetailTypeCashMessage message = command.getMediator().send(new CreatePaymentDetailTypeCashCommand(paymentDto, bookingDto.getId(), amountToApply, true, manageInvoiceDto.getInvoiceDate(), false));
                     PaymentDetail message = createDetailsTypeCash(amountToApply, cachedPaymentInvoiceTransactionType, updatePayment);
-                    //command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId(), command.getEmployee()));
-                    this.applyPayment(command.getEmployee(), bookingDto, message, kafkaList, bookingsList, createPaymentdetails, updatePayment);
-                    //command.getMediator().send(new ApplyPaymentDetailCommand(message.getId(), bookingDto.getId(), command.getEmployee()));
-                    notApplied = notApplied - amountToApply;
-                    paymentBalance = paymentBalance - amountToApply;
-                    amountBalance = amountBalance - amountToApply;
+                    this.applyPayment(command.getEmployee(), bookingDto, message, kafkaList, bookingsList, createPaymentDetails, updatePayment);
+                    notApplied =  BankerRounding.round(notApplied - amountToApply);
+                    paymentBalance = BankerRounding.round(paymentBalance - amountToApply);
+                    amountBalance = BankerRounding.round(amountBalance - amountToApply);
                 }
                 if ((notApplied == 0 && paymentBalance == 0 && command.isApplyDeposit() && amountBalance > 0 && depositBalance > 0)
-                        || //Aqui aplica para cuando dentro del flujo se usa payment balance y deposit.
-                        (command.isApplyDeposit() && !command.isApplyPaymentBalance() && amountBalance > 0 && depositBalance > 0)) {//TODO: este aplica para cuando se quiere aplicar solo a los deposit
+                        || (command.isApplyDeposit() && !command.isApplyPaymentBalance() && amountBalance > 0 && depositBalance > 0)) {
+                    //TODO: este aplica para cuando se quiere aplicar solo a los deposit
                     if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
-
                         for (PaymentDetailDto paymentDetailTypeDeposit : deposits) {
-                            PaymentDetail parentDetail = detailTypeDeposits.stream().filter(detail -> detail.getId().equals(paymentDetailTypeDeposit.getId())).findFirst().get();
-                            //double depositAmount = paymentDetailTypeDeposit.getApplyDepositValue();
+                            PaymentDetail parentDetail = detailTypeDeposits.stream().filter(detail ->
+                                    detail.getId().equals(paymentDetailTypeDeposit.getId())).findFirst().get();
+
                             double depositAmount = parentDetail.getApplyDepositValue();
                             if (depositAmount == 0) {
                                 continue;
                             }
                             while (depositAmount > 0) {
-                                double amountToApply = Math.min(depositAmount, amountBalance);// Debe de compararse con el amountBalance, porque puede venir de haber sido rebajado en el flujo anterior.
-                                //CreatePaymentDetailTypeApplyDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeApplyDepositCommand(this.updatePayment.toAggregate(), amountToApply, paymentDetailTypeDeposit, true, manageInvoiceDto.getInvoiceDate(), false));// quite *-1
+                                double amountToApply = Math.min(depositAmount, amountBalance);
                                 this.applyPayment(command.getEmployee(), bookingDto,
-                                        this.createDetailsTypeApplyDeposit(parentDetail, amountToApply, cachedApplyDepositTransactionType, detailTypeDeposits, updatePayment),
-                                        kafkaList, bookingsList, createPaymentdetails, updatePayment);
-                                //command.getMediator().send(new ApplyPaymentDetailCommand(message.getNewDetailDto().getId(), bookingDto.getId(), command.getEmployee()));
-                                depositAmount = depositAmount - amountToApply;
-                                amountBalance = amountBalance - amountToApply;
-                                depositBalance = depositBalance - amountToApply;
+                                        this.createDetailsTypeApplyDeposit(parentDetail, amountToApply, cachedApplyDepositTransactionType,
+                                                detailTypeDeposits, updatePayment),
+                                        kafkaList, bookingsList, createPaymentDetails, updatePayment);
+                                depositAmount = BankerRounding.round(depositAmount - amountToApply);
+                                amountBalance = BankerRounding.round(amountBalance - amountToApply);
+                                depositBalance = BankerRounding.round(depositBalance - amountToApply);
                                 if (amountBalance == 0 || depositBalance == 0) {
                                     break;
                                 }
@@ -164,7 +161,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
 
         //Se crean los Payment Details que genera el flujo de aplicacion de pago.
-        this.paymentDetailService.createAll(createPaymentdetails);
+        this.paymentDetailService.createAll(createPaymentDetails);
         //Se actualizan los booking balance.
         this.manageBookingService.updateAll(bookingsList);
 
@@ -183,10 +180,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         this.paymentDetailService.createAll(detailTypeDeposits);
         this.paymentCloseOperationService.clearCache();
 
-        //Metodo Async
-        /**
-         * Este metodo no influye en el rendimiento, se ejecuta de forma asincrona.
-         **/
         this.producerUpdateListBookingService.update(kafkaList);
     }
 
@@ -200,7 +193,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             detailTypeDeposits = this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits);
             List<PaymentDetailDto> queue = this.paymentDetailService.change(detailTypeDeposits);
 
-            Collections.sort(queue, Comparator.comparingDouble(m -> m.getApplyDepositValue()));
+            queue.sort(Comparator.comparingDouble(PaymentDetailDto::getApplyDepositValue));
             return queue;
         } catch (Exception e) {
             return List.of();
@@ -214,12 +207,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      * @return
      */
     private List<Booking> getSortedBookings(Invoice manageInvoiceDto) {
-        List<Booking> bookingDtos = new ArrayList<>();
+        List<Booking> bookingDtoList = new ArrayList<>();
         if (manageInvoiceDto.getBookings() != null && !manageInvoiceDto.getBookings().isEmpty()) {
-            bookingDtos.addAll(manageInvoiceDto.getBookings());
-            Collections.sort(bookingDtos, Comparator.comparingDouble(m -> m.getAmountBalance()));
+            bookingDtoList.addAll(manageInvoiceDto.getBookings());
+            bookingDtoList.sort(Comparator.comparingDouble(Booking::getAmountBalance));
         }
-        return bookingDtos;
+        return bookingDtoList;
     }
 
     /**
@@ -246,24 +239,25 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             }
             //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
             int maxAttempts = 3;
+            int delay = 1;
             while (maxAttempts > 0) {
                 try {
-                    queue.addAll(this.manageInvoiceService.findInvoiceWithEntityGraphByIdIn(command.getInvoices()));
+                    queue.addAll(manageInvoiceService.findInvoiceWithEntityGraphByIdIn(command.getInvoices()));
                     break;
                 } catch (Exception exp) {
+                    //log.warn("Retrying invoice fetch. Attempts left: {}. Error: {}", maxAttempts, exp.getMessage());
                 }
                 maxAttempts--;
                 try {
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.SECONDS.sleep(delay);
+                    delay *= 2;
                 } catch (InterruptedException exp) {
+                    Thread.currentThread().interrupt();
                 }
             }
         }
 
-        Collections.sort(queue, Comparator.comparingDouble(m -> m.getInvoiceAmount()));
-//        List<Long> ids = queue.stream().flatMap(dto -> dto.getBookings().stream()).map(ManageBookingDto::getBookingId).collect(Collectors.toList());
-        //this.bookings = this.manageBookingService.findAllByBookingIdIn(ids);
-
+        queue.sort(Comparator.comparingDouble(Invoice::getInvoiceAmount));
         for (Invoice invoice : queue) {
             bookingsList.addAll(invoice.getBookings());
         }
@@ -271,7 +265,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     private PaymentDetail createDetailsTypeCash(double invoiceAmount, ManagePaymentTransactionType transactionTypeDto, Payment updatePayment) {
-//        ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByPaymentInvoiceCacheable();
         PaymentDetail newDetailDto = new PaymentDetail();
         newDetailDto.setId(UUID.randomUUID());
         newDetailDto.setStatus(Status.ACTIVE);
@@ -282,13 +275,11 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         newDetailDto.setApplyPayment(Boolean.FALSE);
         newDetailDto.setCreateByCredit(false);
 
-//        this.paymentDetailService.create(newDetailDto);
         this.calculateCash(invoiceAmount, updatePayment);
 
         return newDetailDto;
     }
 
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
     private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
 
         PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
@@ -303,7 +294,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
     private OffsetDateTime transactionDate(UUID hotel) {
         PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIdsCacheable(hotel);
-        //PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));
@@ -311,61 +301,52 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
-    public PaymentDetail createDetailsTypeApplyDeposit(PaymentDetail parentDetail, double amount,
-            ManagePaymentTransactionType transactionTypeDto,
-            List<PaymentDetail> detailTypeDeposits,
-            Payment updatePayment) {
+    public PaymentDetail createDetailsTypeApplyDeposit(PaymentDetail parentDetail, double amount, ManagePaymentTransactionType transactionTypeDto,
+            List<PaymentDetail> detailTypeDeposits, Payment updatePayment) {
 
-        //PaymentDetail parentDetail = this.detailTypeDeposits.stream().filter(detail -> detail.getId().equals(paymentDetailDto.getId())).findFirst().get();
         this.calculateApplyDeposit(amount, updatePayment);
         //TODO: Se debe de validar esta variable para que cumpla con el Close Operation
         OffsetDateTime transactionDate = OffsetDateTime.now(ZoneId.of("UTC"));
-//        ManagePaymentTransactionTypeDto transactionTypeDto = this.paymentTransactionTypeService.findByApplyDeposit();
 
-        //Se crea el Apply Deposit.
+        //Create detail Apply Deposit.
         PaymentDetail children = new PaymentDetail();
         children.setId(UUID.randomUUID());
         children.setStatus(Status.ACTIVE);
-        //children.setPayment(this.updatePayment);
         children.setPayment(null);
         children.setTransactionType(transactionTypeDto);
         children.setAmount(amount);
         children.setRemark(transactionTypeDto.getDefaultRemark());
         children.setTransactionDate(transactionDate);
 
-        //Se asigna el padre.
+        //Set Parent
         children.setParentId(parentDetail.getPaymentDetailId());
 
-        //Agregando los Apply Deposit.
-        List<PaymentDetail> updateChildrens = new ArrayList<>();
-        updateChildrens.addAll(parentDetail.getPaymentDetails());
-        updateChildrens.add(children);
-        parentDetail.setPaymentDetails(updateChildrens);
-        parentDetail.setApplyDepositValue(parentDetail.getApplyDepositValue() - amount);
+        //Add los Apply Deposit.
+        List<PaymentDetail> updateChildren = new ArrayList<>(parentDetail.getPaymentDetails());
+        updateChildren.add(children);
+        parentDetail.setPaymentDetails(updateChildren);
+        parentDetail.setApplyDepositValue(BankerRounding.round(parentDetail.getApplyDepositValue() - amount));
 
-        //Actualizando el Deposit
+        //Update Detail Deposit
         this.updatePaymentDetails(parentDetail, detailTypeDeposits);
-        //paymentDetailService.update(paymentDetailDto);
         return children;
     }
 
     private void calculateCash(double amount, Payment updatePayment) {
-        updatePayment.setIdentified(updatePayment.getIdentified() + amount);
-        updatePayment.setNotIdentified(updatePayment.getNotIdentified() - amount);
+        updatePayment.setIdentified(BankerRounding.round(updatePayment.getIdentified() + amount));
+        updatePayment.setNotIdentified(BankerRounding.round(updatePayment.getNotIdentified() - amount));
 
-        updatePayment.setApplied(updatePayment.getApplied() + amount);
-        updatePayment.setNotApplied(updatePayment.getNotApplied() - amount);
-        updatePayment.setPaymentBalance(updatePayment.getPaymentBalance() - amount);
-
-        //this.paymentService.update(paymentDto);
+        updatePayment.setApplied(BankerRounding.round(updatePayment.getApplied() + amount));
+        updatePayment.setNotApplied(BankerRounding.round(updatePayment.getNotApplied() - amount));
+        updatePayment.setPaymentBalance(BankerRounding.round(updatePayment.getPaymentBalance() - amount));
     }
 
     private void calculateApplyDeposit(double amount, Payment updatePayment) {
-        updatePayment.setDepositBalance(updatePayment.getDepositBalance() - amount);
-        //paymentDto.setNotApplied(paymentDto.getNotApplied() + newDetailDto.getAmount()); // TODO: al hacer un applied deposit el notApplied aumenta.
-        updatePayment.setApplied(updatePayment.getApplied() + amount); // TODO: Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
-        updatePayment.setIdentified(updatePayment.getIdentified() + amount);
-        updatePayment.setNotIdentified(updatePayment.getNotIdentified() - amount);
+        updatePayment.setDepositBalance(BankerRounding.round(updatePayment.getDepositBalance() - amount));
+        updatePayment.setApplied(BankerRounding.round(updatePayment.getApplied() + amount)); // TODO: Suma de trx tipo check Cash + Check Apply
+
+        updatePayment.setIdentified(BankerRounding.round(updatePayment.getIdentified() + amount));
+        updatePayment.setNotIdentified(BankerRounding.round(updatePayment.getNotIdentified() - amount));
 
     }
 
@@ -374,15 +355,14 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                             List<PaymentDetail> createPaymentdetails,
                             Payment updatePayment) {
         Booking booking = bookingsList.stream().filter(d -> d.getId().equals(bookingDto.getId())).findFirst().get();
-        booking.setAmountBalance(booking.getAmountBalance() - paymentDetailDto.getAmount());
+        booking.setAmountBalance(BankerRounding.round(booking.getAmountBalance() - paymentDetailDto.getAmount()));
         this.updateBooking(booking, bookingsList);
 
         paymentDetailDto.setManageBooking(booking);
         paymentDetailDto.setApplyPayment(Boolean.TRUE);
         paymentDetailDto.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
-        paymentDetailDto.setAppliedAt(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
+        paymentDetailDto.setEffectiveDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
 
-        //this.paymentDetailService.create(paymentDetailDto);
         createPaymentdetails.add(paymentDetailDto);
 
         try {
@@ -392,7 +372,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
             kafkaList.add(new UpdateBookingBalanceKafka(booking.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
-            //this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
         } catch (Exception e) {
             System.err.println("Error al enviar el evento de integracion: " + e.getMessage());
         }
