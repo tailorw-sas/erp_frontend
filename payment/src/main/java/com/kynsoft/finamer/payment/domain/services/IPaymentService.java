@@ -60,4 +60,15 @@ public interface IPaymentService {
     Long findMaxId();
 
     PaginatedResponse searchCollections(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId);
+
+    Payment findByIdWithBalancesOnly(UUID id);
+
+    void updateBalances(Double paymentBalance, 
+            Double depositBalance, 
+            Double identified, 
+            Double notIdentified, 
+            Double notApplied, 
+            Double applied, 
+            boolean applyPayment,
+            UUID id);
 }
