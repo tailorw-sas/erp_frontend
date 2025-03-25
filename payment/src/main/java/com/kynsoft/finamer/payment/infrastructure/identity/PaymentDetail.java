@@ -45,15 +45,15 @@ public class PaymentDetail implements Serializable {
 
     private Long parentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "transaction_type_id")
     private ManagePaymentTransactionType transactionType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_booking_id")
     private Booking manageBooking;
 
@@ -84,7 +84,7 @@ public class PaymentDetail implements Serializable {
     private Integer adults;
     private Integer children;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "payment_detail_payment_detail",
             joinColumns = @JoinColumn(name = "paymentdetail_id"),
