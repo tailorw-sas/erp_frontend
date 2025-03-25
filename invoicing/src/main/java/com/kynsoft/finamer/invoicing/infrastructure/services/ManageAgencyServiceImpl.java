@@ -87,7 +87,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     @CacheEvict(allEntries = true, value = "manageAgency")
     @Override
     public void clearManageHotelCache() {
-        System.out.println("Clearing manageAgency cache");
+        //System.out.println("Clearing manageAgency cache");
     }
 
     @Override

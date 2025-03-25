@@ -64,14 +64,14 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
             validators.put(ImportBookingRoomTypeValidator.class.getName(), new ImportBookingRoomTypeValidator(roomTypeService));
             validators.put(ImportBookingRatePlanValidator.class.getName(), new ImportBookingRatePlanValidator(ratePlanService));
             validators.put(ImportBookingHotelBookingNoValidator.class.getName(), new ImportBookingHotelBookingNoValidator());
-            validators.put(ImportBookingHotelInvoiceNumberValidator.class.getName(), new ImportBookingHotelInvoiceNumberValidator(manageHotelService, manageBookingService, cacheRedisRepository));
             validators.put(ImportBookingAmountPaxValidator.class.getName(), new ImportBookingAmountPaxValidator());
             validators.put(ImportBookingHotelInvoiceAmountValidator.class.getName(), new ImportBookingHotelInvoiceAmountValidator(manageHotelService));
             validators.put(ImportBookingDateValidator.class.getName(), new ImportBookingDateValidator());
             validators.put(ImportBookingTypeValidator.class.getName(), new ImportBookingTypeValidator(importType, manageHotelService));
             validators.put(ImportBookingNightTypeValidator.class.getName(), new ImportBookingNightTypeValidator(nightTypeService, manageAgencyService));
-            validators.put(ImportVirtualHotelHotelInvoiceNumberValidator.class.getName(), new ImportVirtualHotelHotelInvoiceNumberValidator(manageHotelService, manageBookingService, cacheRedisRepository));
-            validators.put(ImportHotelBookingNumberValidator.class.getName(), new ImportHotelBookingNumberValidator(manageHotelService, manageBookingService, cacheRedisRepository));
+            validators.put(ImportVirtualHotelHotelInvoiceNumberValidator.class.getName(),
+                    new ImportVirtualHotelHotelInvoiceNumberValidator(importType, manageHotelService, manageBookingService, cacheRedisRepository));
+            validators.put(ImportHotelBookingNumberValidator.class.getName(), new ImportHotelBookingNumberValidator(cacheRedisRepository));
         }
     }
 
