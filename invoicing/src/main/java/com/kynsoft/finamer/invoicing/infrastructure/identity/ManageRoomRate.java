@@ -2,9 +2,6 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
-import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
-import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
-import com.kynsof.share.utils.ScaleAmount;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.hibernate.annotations.Generated;
@@ -101,36 +99,44 @@ public class ManageRoomRate {
     }
 
     public ManageRoomRateDto toAggregate() {
-        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut,
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null,
-                roomNumber, adults, children,
-                rateAdult != null ? BankerRounding.round(rateAdult) : null,
-                rateChild != null ? BankerRounding.round(rateChild) : null,
-                hotelAmount != null ? BankerRounding.round(hotelAmount) : null,
-                remark,
-               // null,
-             booking != null ? booking.toAggregate() : null,
-//                adjustments != null ? adjustments.stream().map(b -> {
-//                            return b.toAggregateSample();
-//                        }).collect(Collectors.toList()) : null,
+        return new ManageRoomRateDto(
+                this.id,
+                this.roomRateId,
+                this.checkIn,
+                this.checkOut,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                this.roomNumber,
+                this.adults,
+                this.children,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.remark,
+                Objects.nonNull(this.booking) ? this.booking.toAggregate() : null,
                 null,
-                nights, deleteInvoice,
+                this.nights,
+                this.deleteInvoice,
                 null);
     }
 
-    public ManageRoomRateDto toAggregateSample() {
-        return new ManageRoomRateDto(id, roomRateId, checkIn, checkOut,
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null,
-                roomNumber, adults, children,
-                rateAdult != null ? BankerRounding.round(rateAdult) : null,
-                rateChild != null ? BankerRounding.round(rateChild) : null,
-                hotelAmount != null ? BankerRounding.round(hotelAmount) : null,
-                remark, null,
-//                adjustments != null ? adjustments.stream().map(b -> {
-//                            return b.toAggregateSample();
-//                        }).collect(Collectors.toList()) : null,
+    public ManageRoomRateDto toAggregateSimple() {
+        return new ManageRoomRateDto(
+                this.id,
+                this.roomRateId,
+                this.checkIn,
+                this.checkOut,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                this.roomNumber,
+                this.adults,
+                this.children,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.remark,
                 null,
-                nights, deleteInvoice,
+                null,
+                this.nights,
+                this.deleteInvoice,
                 null);
     }
 }

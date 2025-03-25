@@ -500,6 +500,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryQuery.findAllById(ids).stream().map(Invoice::toAggregate).toList();
     }
 
+    @Override
+    public List<ManageInvoiceDto> findInvoicesWithoutBookings(List<UUID> ids) {
+        return repositoryQuery.findInvoicesWithoutBookings(ids).stream().map(Invoice::toAggregateSimple).toList();
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 

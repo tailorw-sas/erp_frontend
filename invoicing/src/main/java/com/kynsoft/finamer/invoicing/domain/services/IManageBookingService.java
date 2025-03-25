@@ -34,6 +34,8 @@ public interface IManageBookingService {
 
     List<ManageBookingDto> findByIds(List<UUID> ids);
 
+    List<ManageBookingDto> findBookingsWithRoomRatesByInvoiceIds(List<UUID> invoiceIds);
+
     List<ManageBookingDto> findAllToReplicate();
 
     void deleteInvoice(ManageBookingDto dto);

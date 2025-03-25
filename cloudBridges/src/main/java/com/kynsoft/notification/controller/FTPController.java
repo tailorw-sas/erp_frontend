@@ -1,33 +1,31 @@
 package com.kynsoft.notification.controller;
 
-import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.notification.application.command.sendFtp.UploadFileCommand;
+import com.kynsof.share.core.application.FileRequest;
 import com.kynsoft.notification.domain.service.IFTPService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/ftp")
 public class FTPController {
-    private final IMediator mediator;
     private final IFTPService ftpService;
     private static final Logger log = LoggerFactory.getLogger(FTPController.class);
 
-    public FTPController(IMediator mediator, IFTPService ftpService) {
-        this.mediator = mediator;
+    public FTPController(IFTPService ftpService) {
         this.ftpService = ftpService;
     }
 
@@ -55,7 +53,11 @@ public class FTPController {
 
                         return Mono.fromCallable(() -> {
                             ftpService.uploadFile(path, fileBytes, fileName, server, user, password, Integer.parseInt(port));
-                            return ResponseEntity.ok(Map.of("message", "Upload successful", "file", fileName, "path", path));
+                            return ResponseEntity.ok(Map.of(
+                                    "message", "Upload successful",
+                                    "file", fileName,
+                                    "path", path != null ? path : ""
+                            ));
                         }).subscribeOn(Schedulers.boundedElastic());
                     } catch (Exception e) {
                         log.error("❌ Error processing file '{}': {}", fileName, e.getMessage(), e);
@@ -70,75 +72,92 @@ public class FTPController {
                                                                          @RequestPart("server") String server,
                                                                          @RequestPart("user") String user,
                                                                          @RequestPart("password") String password,
-                                                                         @RequestPart("port") String port,
+                                                                         @RequestPart("port") String portStr,
                                                                          @RequestPart(value = "path", required = false) String path) {
-        return files.flatMap(file -> {
-                    String fileName = file.filename();
-                    log.info("📤 Processing upload for file '{}'", fileName);
-
-                    return file.content()
-                            .flatMap(dataBuffer -> {
-                                try {
-                                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                                    dataBuffer.asInputStream(true).transferTo(byteArrayOutputStream);
-                                    byte[] fileBytes = byteArrayOutputStream.toByteArray();
-
-                                    mediator.send(new UploadFileCommand(fileName, fileBytes, server, user, password, Integer.parseInt(port), path));
-                                    log.info("✅ File '{}' successfully uploaded to FTP", fileName);
-                                    return Mono.just(Map.of("file", fileName, "status", "success", "path", path));
-                                } catch (Exception e) {
-                                    log.error("❌ Error processing file '{}': {}", fileName, e.getMessage(), e);
-                                    return Mono.just(Map.of("file", fileName, "status", "failed", "error", e.getMessage()));
-                                }
-                            })
-                            .publishOn(Schedulers.boundedElastic());
-                })
-                .collectList()
-                .map(results -> ResponseEntity.ok(Map.of("message", "Batch upload completed", "results", results)));
-    }
-
-    @GetMapping("/download")
-    public ResponseEntity<StreamingResponseBody> downloadFile(@RequestParam("remoteFilePath") String remoteFilePath,
-                                                              @RequestParam("server") String server,
-                                                              @RequestParam("user") String user,
-                                                              @RequestParam("password") String password,
-                                                              @RequestParam("port") int port) {
-        log.info("📥 Initiating streaming download for file '{}' from FTP server...", remoteFilePath);
-
-        InputStream inputStream;
+        // Convert port string to integer with validation
+        int portNumber;
         try {
-            inputStream = ftpService.downloadFile(remoteFilePath, server, user, password, port);
-            if (inputStream == null) {
-                log.warn("⚠️ File '{}' not found on FTP server.", remoteFilePath);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            portNumber = Integer.parseInt(portStr);
+            if (portNumber <= 0 || portNumber > 65535) {
+                return Mono.just(ResponseEntity.badRequest()
+                        .body(Map.of("message", "Invalid port number. Must be between 1-65535.")));
             }
-        } catch (Exception e) {
-            log.error("❌ Error initializing download for file '{}': {}", remoteFilePath, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (NumberFormatException e) {
+            return Mono.just(ResponseEntity.badRequest()
+                    .body(Map.of("message", "Invalid port format. Must be a valid number.")));
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + remoteFilePath);
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+        // Store the port number as final for use in lambda
+        final int validPortNumber = portNumber;
 
-        StreamingResponseBody responseBody = outputStream -> {
-            byte[] buffer = new byte[8192]; // Use 8KB buffer for efficient streaming
-            int bytesRead;
-            try {
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                    outputStream.flush(); // Flush ensures data is sent in chunks
-                }
-            } catch (Exception e) {
-                log.error("❌ Error while streaming file '{}': {}", remoteFilePath, e.getMessage(), e);
-            } finally {
-                inputStream.close();
-            }
-        };
+        return files
+                .collectList()
+                .flatMap(requests -> {
+                    if (requests.isEmpty()) {
+                        return Mono.just(ResponseEntity.badRequest()
+                                .body(Map.of("message", "No files received for upload.")));
+                    }
 
-        log.info("✅ Successfully initiated streaming for file '{}'", remoteFilePath);
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(responseBody);
+                    return Flux.fromIterable(requests)
+                            .parallel()
+                            .runOn(Schedulers.boundedElastic()) // Better for IO-bound operations than Schedulers.parallel()
+                            .flatMap(fileRequest ->
+                                    Mono.fromCallable(() -> {
+                                                try {
+                                                    // Here's the fix: ftpService returns List<Map<String, String>> but we need Map<String, Object>
+                                                    List<Map<String, String>> resultList = ftpService.uploadFilesBatch(
+                                                            path,
+                                                            List.of(fileRequest),
+                                                            server,
+                                                            user,
+                                                            password,
+                                                            validPortNumber
+                                                    );
+
+                                                    // We need to get the first result from the list and convert it to Map<String, Object>
+                                                    if (resultList == null || resultList.isEmpty() || !resultList.get(0).containsKey("status")) {
+                                                        throw new RuntimeException("FTP service did not return a valid response.");
+                                                    }
+
+                                                    // Convert Map<String, String> to Map<String, Object>
+                                                    Map<String, Object> objectMap = new HashMap<>();
+                                                    resultList.get(0).forEach(objectMap::put);
+                                                    return objectMap;
+                                                } catch (Exception e) {
+                                                    log.error("❌ Failed to upload file: {}", fileRequest.filename(), e);
+                                                    Map<String, Object> errorResult = new HashMap<>();
+                                                    errorResult.put("file", fileRequest.filename());
+                                                    errorResult.put("status", "failed");
+                                                    errorResult.put("error", e.getMessage());
+                                                    return errorResult;
+                                                }
+                                            })
+                                            .subscribeOn(Schedulers.boundedElastic())
+                                            .retryWhen(reactor.util.retry.Retry.backoff(3, Duration.ofSeconds(2))
+                                                    .maxBackoff(Duration.ofSeconds(10))
+                                                    .filter(ex -> !(ex instanceof IllegalArgumentException)) // Don't retry invalid inputs
+                                            )
+                            )
+                            .sequential()
+                            .collectList()
+                            .map(uploadResults -> {
+                                List<Map<String, Object>> successfulUploads = uploadResults.stream()
+                                        .filter(result -> "success".equals(result.get("status")))
+                                        .collect(Collectors.toList());
+
+                                List<Map<String, Object>> failedUploads = uploadResults.stream()
+                                        .filter(result -> "failed".equals(result.get("status")))
+                                        .collect(Collectors.toList());
+
+                                Map<String, Object> response = new HashMap<>();
+                                response.put("message", "Batch upload completed");
+                                response.put("successfulUploads", successfulUploads);
+                                response.put("failedUploads", failedUploads);
+                                response.put("totalSuccessful", successfulUploads.size());
+                                response.put("totalFailed", failedUploads.size());
+
+                                return ResponseEntity.ok(response);
+                            });
+                });
     }
 }

@@ -1,5 +1,6 @@
 package com.kynsof.share.core.application.ftp;
 
+import com.kynsof.share.core.application.FileRequest;
 import com.kynsof.share.core.domain.service.IFtpService;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -13,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,8 +32,7 @@ public class FtpService implements IFtpService {
     @Value("${ftp.api.url.maxRetries:3}")
     private int maxRetries;
 
-    public CompletableFuture<String> sendFile(byte[] fileBytes, String fileName, String server, String user,
-        String password, int port, String path) {
+    public CompletableFuture<String> sendFile(byte[] fileBytes, String fileName, String server, String user, String password, int port, String path) {
         return uploadFile(fileBytes, fileName, server, user, password, port, path)
             .handle((result, ex) -> {
                 if (ex == null) {
@@ -43,6 +43,48 @@ public class FtpService implements IFtpService {
                 }
             })
             .thenCompose(result -> result); // Flatten nested CompletableFuture
+    }
+
+    public CompletableFuture<String> sendFiles(List<FileRequest> files, String server, String user, String password, int port, String path) {
+        return CompletableFuture.supplyAsync(() -> {
+            String uploadUrl = this.ftpApiUrl + "/batch-upload";
+            log.info("🔗 Connecting to Cloud Bridges for batch upload: {}", uploadUrl);
+            log.info("📂 Uploading {} files to FTP server '{}' at path '{}'", files.size(), server, path);
+
+            try (CloseableHttpClient client = HttpClients.createDefault()) {
+                HttpPost post = new HttpPost(uploadUrl);
+                MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+
+                for (FileRequest fileRequest : files) {
+                    builder.addBinaryBody("files", fileRequest.getFile(), ContentType.DEFAULT_BINARY, fileRequest.getFileName());
+                    builder.addTextBody("objectId", fileRequest.getObjectId().toString());
+                }
+
+                builder.addTextBody("server", server)
+                       .addTextBody("user", user)
+                       .addTextBody("password", password)
+                       .addTextBody("path", path)
+                       .addTextBody("port", String.valueOf(port));
+
+                post.setEntity(builder.build());
+
+                HttpClientResponseHandler<String> responseHandler = (response) -> {
+                    int statusCode = response.getCode();
+                    String responseBody = response.getEntity() != null ? EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8) : "No response";
+                    if (statusCode == 200) {
+                        return responseBody;
+                    } else {
+                        log.error("❌ Batch file upload failed | Status Code: {} | Response: {}", statusCode, responseBody);
+                        throw new RuntimeException("Cloud Bridges batch upload error: Status " + statusCode + " - " + responseBody);
+                    }
+                };
+
+                return client.execute(post, responseHandler);
+            } catch (Exception e) {
+                log.error("❌ Communication error while uploading files: {}", e.getMessage(), e);
+                throw new RuntimeException("Communication error while uploading files: " + e.getMessage(), e);
+            }
+        });
     }
 
     private CompletableFuture<String> uploadFile(byte[] fileBytes, String fileName, String server, String user, String password, int port, String path) {

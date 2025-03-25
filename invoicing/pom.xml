@@ -291,6 +291,12 @@
             <artifactId>jaxb-runtime</artifactId>
             <version>4.0.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.kynsoft.finamer</groupId>
+            <artifactId>payment</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 

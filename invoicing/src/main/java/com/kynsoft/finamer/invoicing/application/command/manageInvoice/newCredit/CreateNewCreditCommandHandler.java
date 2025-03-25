@@ -36,7 +36,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
 
     private final IInvoiceCloseOperationService closeOperationService;
 
-    private final IParameterizationService parameterizationService;
     private final IManageResourceTypeService resourceTypeService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
@@ -44,7 +43,12 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
     private final IManageEmployeeService employeeService;
 
-    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService, IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService, IParameterizationService parameterizationService, IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService, IAttachmentStatusHistoryService attachmentStatusHistoryService,
+    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService,
+                                         IManageInvoiceTypeService iManageInvoiceTypeService,
+                                         IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService,
+                                         IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService,
+                                         IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                         IAttachmentStatusHistoryService attachmentStatusHistoryService,
             ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageEmployeeService employeeService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
@@ -54,7 +58,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         this.attachmentTypeService = attachmentTypeService;
         this.bookingService = bookingService;
         this.closeOperationService = closeOperationService;
-        this.parameterizationService = parameterizationService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
@@ -90,7 +93,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         for (CreateNewCreditBookingRequest bookingRequest : command.getBookings()) {
             ManageBookingDto parentBooking = this.bookingService.findById(bookingRequest.getId());
 
-            Double bookingAmount = parentBooking.getInvoiceAmount();
             Double newBookingAmount = bookingRequest.getAmount();
 
             if (newBookingAmount != 0) {
@@ -212,7 +214,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         ManageAgencyDto agencyDto = this.agencyService.findById(parentInvoice.getAgency().getId());
         //TODO: replicar el campo creditDay de Agency para calcular dueDate
         LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
-//        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
 
         ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
                 UUID.randomUUID(),
@@ -221,7 +222,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 invoiceNumber,
                 InvoiceType.getInvoiceTypeCode(invoiceType) + "-" + 0L,
                 command.getInvoiceDate(),
-                //this.invoiceDate(parentInvoice.getHotel().getId()),
                 dueDate,
                 true,
                 invoiceAmount,
@@ -281,14 +281,4 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             );
         }
     }
-
-    private LocalDateTime invoiceDate(UUID hotel) {
-        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
-
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
-            return LocalDateTime.now(ZoneId.of("UTC"));
-        }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
-    }
-
 }
