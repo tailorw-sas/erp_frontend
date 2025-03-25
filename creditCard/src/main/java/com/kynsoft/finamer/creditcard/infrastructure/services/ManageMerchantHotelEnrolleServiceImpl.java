@@ -90,7 +90,7 @@ public class ManageMerchantHotelEnrolleServiceImpl implements IManageMerchantHot
 
     @Override
     public ManageMerchantHotelEnrolleDto findByForeignIds(UUID manageMerchantId, UUID manageHotelId, UUID managerCurrencyId){
-        Optional<ManageMerchantHotelEnrolle> manageMerchantHotelEnrolle = this.repositoryQuery.findByForeignIds(manageMerchantId, manageHotelId, managerCurrencyId);
+        Optional<ManageMerchantHotelEnrolle> manageMerchantHotelEnrolle = this.repositoryQuery.findByManageMerchant_IdAndManageHotel_IdAndManagerCurrency_Id(manageMerchantId, manageHotelId, managerCurrencyId);
         if (manageMerchantHotelEnrolle.isPresent()){
             return manageMerchantHotelEnrolle.get().toAggregate();
         }
