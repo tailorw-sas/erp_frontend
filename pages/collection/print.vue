@@ -5,16 +5,19 @@ import { useToast } from 'primevue/usetoast'
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { IColumn, Pagination, IQueryRequest   } from '~/components/table/interfaces/ITableInterfaces'
+import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
+import DynamicTablePrint from '~//components/table/DynamicTablePrint.vue'
+import { formatNumber } from '~/utils/helpers'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
+
+import { useRoute } from 'vue-router'
 
 const toast = useToast()
 const totalInvoiceAmount = ref(0)
 const idItemToLoadFirstTime = ref('')
-const listPrintItems = ref<any[]>([])
-
+const listPrintItems = ref<any[]>([]);
 const totalDueAmount = ref(0)
 
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
@@ -65,26 +68,33 @@ const confagencyListApi = reactive({
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
-//
+
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
 ]
+const transformedData = listPrintItems.value.map(item => ({
+  ...item,
+  hotel: item.hotel?.name || 'N/A'
+}));
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'invoiceId', header: 'Id', type: 'text' },
+  { field: 'invoiceNo', header: 'Id', type: 'text', objApi: confagencyListApi },
   { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi },
-  { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
+  { field: 'hotel', header: 'Hotel', type: 'select' , objApi: confinvoiceApi}, 
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
   { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'text' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'text' },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   { field: 'hasAttachments', header: 'Attachment', type: 'bool' },
   { field: 'aging', header: 'Aging', type: 'text' },
-  { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
-
+  { field: 'status', header: 'Status', type: 'slot-select',localItems: ENUM_INVOICE_STATUS.map(item => ({ 
+      ...item, 
+      name: item.name.toUpperCase() // Asegura coincidencia con "RECONCILED"
+    }))
+  }
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -103,15 +113,24 @@ const options = ref({
   showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
+const initialLimit = 10
+const route = useRoute()
 
-const payload = ref<IQueryRequest>({
+const  payload = ref({
   filter: [],
   query: '',
-  pageSize: 50,
-  page: 0,
-  sortBy: 'invoiceId',
-  sortType: ENUM_SHORT_TYPE.DESC
+  pageSize: 0, 
+  page: 0,    
+  sortBy: '',
+  sortType: ''
 })
+// Ahora esto será válido
+const payloadInv = ref<IQueryRequest>({
+  filter: [],
+  page: 0,
+  size: 50,
+  sort: 'invoiceDate,desc'
+});
 
 const payloadLocalStorage = ref<IQueryRequest>({
   filter: [],
@@ -123,78 +142,97 @@ const payloadLocalStorage = ref<IQueryRequest>({
 })
 
 const payloadOnChangePage = ref<PageState>()
-const pagination = ref<IPagination>({
+
+const pagination = ref<Pagination>({
   page: 0,
   limit: 50,
-  totalElements: 0,
+  totalElements: 0,   
   totalPages: 0,
   search: ''
 })
-const selectedElements = ref<string[]>([])
+const handleSelectionChange = (items: any[]) => {
+  console.log('Selección actualizada:', items)
+  selectedElements.value = items
+}
+
+const selectedElements = ref<any[]>([])
 // -------------------------------------------------------------------------------------------------------
 
+onMounted(() => {
+  const storedData = localStorage.getItem('invoiceViewData')
+  if (storedData) {
+    const parsedData = JSON.parse(storedData)
+
+    // Mantener estas líneas (CRÍTICO)
+    listPrintItems.value = parsedData.listItems;
+    totalInvoiceAmount.value = parsedData.totals.invoiceTotalAmount
+    totalDueAmount.value = parsedData.totals.invoiceDueTotalAmount
+    
+    // Añadir esto (SOLUCIÓN CLAVE)
+    pagination.value.totalElements = parsedData.totalElements; // <- Usar el total de la paginación
+    pagination.value.totalPages = 1 // Forzar 1 página
+    pagination.value.totalPages = Math.ceil(parsedData.totalElements / pagination.value.limit);
+  }
+})
+
+
+
+function handlePaginationChange(event: any) {
+  pagination.value.page = event.page + 1
+  pagination.value.limit = event.rows
+}
+
+
+
 // FUNCTIONS ---------------------------------------------------------------------------------------------
-async function onMultipleSelect(data: any) {
-  selectedElements.value = data
-}
 
-async function getPrintList() {
-  try {
-    idItemToLoadFirstTime.value = ''
-    options.value.loading = true
-    listPrintItems.value = []
-    const newListItems = []
-    totalInvoiceAmount.value = 0
-    totalDueAmount.value = 0
+  
+// async function getPrintList(totalFromIndex: number) {
+//   try {
+//     options.value.loading = true
+//     listPrintItems.value = []
+    
+//     totalInvoiceAmount.value = totalFromIndex;
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+//     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value);
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+//     const { data: dataList, page, size, totalElements, totalPages } = response;
 
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
+//     pagination.value.page = page; // Convierte a 1-based
+//     pagination.value.limit = size;
+//     pagination.value.totalElements = listItems.length;
+//     pagination.value.totalPages = totalPages;
 
-    const existingIds = new Set(listPrintItems.value.map(item => item.id))
+//      const newListItems = dataList.map(iterator => {
+//       let invoiceNumber;
+//       if (iterator?.invoiceNumber?.split('-')?.length === 3) {
+//         invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`;
+//       } else {
+//         invoiceNumber = iterator?.invoiceNumber;
+//       }
 
-    for (const iterator of dataList) {
-      let invoiceNumber
-      if (iterator?.invoiceNumber?.split('-')?.length === 3) {
-        invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`
-      }
-      else {
-        invoiceNumber = iterator?.invoiceNumber
-      }
-      newListItems.push({
-        ...iterator,
-        loadingEdit: false,
-        loadingDelete: false,
-        //  invoiceDate: new Date(iterator?.invoiceDate),
-        agencyCd: iterator?.agency?.code,
-        hasAttachments: iterator.hasAttachments || false,
-        aging: iterator?.aging || 0,
-        dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
-        invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
-        invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
-        hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-        manageInvoiceType: { ...iterator?.manageInvoiceType, name: `${iterator?.manageInvoiceType?.code || ''}-${iterator?.manageInvoiceType?.name || ''}` }
-      })
-      existingIds.add(iterator.id)
+//       return {
+//         ...iterator,
+//         loadingEdit: false,
+//         loadingDelete: false,
+//         agencyCd: iterator?.agency?.code,
+//         hasAttachments: iterator.hasAttachments || false,
+//         aging: iterator?.aging || 0,
+//         dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
+//         invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
+//         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
+//         hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+//         manageInvoiceType: { ...iterator?.manageInvoiceType, name: `${iterator?.manageInvoiceType?.code || ''}-${iterator?.manageInvoiceType?.name || ''}` }
+//       };
+//     });
 
-      totalInvoiceAmount.value += iterator.invoiceAmount
-      totalDueAmount.value += iterator.dueAmount ? Number(iterator.dueAmount) : 0
-    }
-
-    listPrintItems.value = newListItems
-  }
-  catch (error) {
-    console.error(error)
-  }
-  finally {
-    options.value.loading = false
-  }
-}
+//     listPrintItems.value = newListItems; // Asigna los nuevos elementos a la lista
+//   } catch (error) {
+//     console.error(error);
+//   } finally {
+//     options.value.loading = false;
+//   }
+// }
 
 async function savePrint() {
   options.value.loading = true
@@ -344,7 +382,6 @@ async function resetListItems() {
     ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
     : payload.value
   payload.value.page = 0
-  getPrintList()
 }
 
 async function parseDataTableFilter(payloadFilter: any) {
@@ -370,7 +407,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   }
 
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  await getPrintList()
+  //await getPrintList()
 }
 // payload.value.filter = [...parseFilter || []]
 // getPrintList()
@@ -400,7 +437,7 @@ async function onSortField(event: any) {
     //   : payload.value
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    await getPrintList()
+    //await getPrintList()
   }
 }
 function getStatusName(code: string) {
@@ -416,6 +453,14 @@ function getStatusName(code: string) {
       return ''
   }
 }
+const getStatusSeverity = (code: string) => {
+  switch (code.toUpperCase()) {
+    case 'RECONCILED': return 'success';
+    case 'PENDING': return 'warning';
+    case 'CANCELED': return 'danger';
+    default: return 'info';
+  }
+};
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
@@ -527,16 +572,15 @@ watch(payloadOnChangePage, async (newValue) => {
     : payload.value
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 50
-  await getPrintList()
+  //await getPrintList()
 })
 
-onMounted(async () => {
-  payload.value = localStorage.getItem('payloadOfInvoiceList')
-    ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
-    : payload.value
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  await getPrintList()
-})
+const onMultipleSelect = (selectedItems: any[]) => {
+  selectedElements.value = Array.isArray(selectedItems) 
+    ? selectedItems 
+    : [selectedItems]
+}
+
 </script>
 
 <template>
@@ -546,37 +590,64 @@ onMounted(async () => {
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-0">
       <div class="p-fluid pt-3">
-        <DynamicTable
-          class="card p-0 "
+        <div class="card p-0">
+          <div v-if="pagination.totalElements === 0" class="no-data-message">
+  </div>
+        <DynamicTablePrint
           :data="listPrintItems"
           :columns="columns"
           :options="options"
           :pagination="pagination"
           @on-confirm-create="clearForm"
-          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-pagination="handlePaginationChange"
           @on-change-filter="parseDataTableFilter"
           @on-list-item="resetListItems"
           @on-sort-field="onSortField"
-          @update:clicked-item="onMultipleSelect($event)"
-        >
-          <template #column-status="{ data: item }">
-            <Badge
-              :value="getStatusName(item?.status)"
-              :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-            />
-          </template>
+          @update:clicked-item="onMultipleSelect($event)" 
+          @update:selection="onMultipleSelect"
+          @selection-change="onMultipleSelect" 
+          dataKey="id"    
+        >   
+        <template #pagination-total>
+  <span class="font-bold">
+    {{ pagination.totalElements }}
+  </span>
+</template>
+        <Paginator
+          :rows="pagination.limit"
+          :totalRecords="pagination.totalElements"
+          :rowsPerPageOptions="[10, 20, 30, 50]"
+          @page="handlePaginationChange"
+        />
 
-          <template #datatable-footer>
-            <ColumnGroup type="footer" class="flex align-items-center " style="font-weight: 700">
-              <Row>
-                <Column footer="Totals:" :colspan="9" footer-style="text-align:right; font-weight: 700" />
-                <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
+        <template #body-hotel="{ data }">
+          {{ data.hotel?.name || 'N/A' }} <!-- Muestra el nombre del hotel -->
+        </template>
+
+        <template #column-status="{ data: item }">
+          <Badge
+           :value="getStatusName(item?.status)"
+           :severity="getStatusSeverity(item.status)"
+           :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+          />
+         </template>
+
+         <template #datatable-footer>
+  <ColumnGroup type="footer" class="flex align-items-center" style="font-weight: 700">
+    <Row>
+      <Column 
+        footer="Totals:" 
+        :colspan="9" 
+        footer-style="text-align:right; font-weight: 900" 
+      />
+      <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
                 <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
                 <Column :colspan="3" footer-style="text-align:right; font-weight: 700" />
-              </Row>
-            </ColumnGroup>
-          </template>
-        </DynamicTable>
+    </Row>
+  </ColumnGroup>
+</template>
+       </DynamicTablePrint> 
+      </div>
       </div>
       <div class="flex justify-content-between">
         <div class="flex align-items-center">
@@ -623,7 +694,8 @@ onMounted(async () => {
         </div>
 
         <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Print/'" class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
+          <Button v-tooltip.top="'Print'" 
+          class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
           <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
         </div>
       </div>
@@ -646,5 +718,10 @@ onMounted(async () => {
   text-overflow: ellipsis;
   display: block;
   max-width: 150px; /* Ajusta el ancho máximo según tus necesidades */
+}
+/* Estilos personalizados para el paginador */
+.p-paginator .p-paginator-pages .p-paginator-page {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 </style>

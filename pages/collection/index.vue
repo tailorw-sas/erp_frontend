@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -17,7 +18,7 @@ import type { IData } from '~/components/table/interfaces/IModelData'
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
-
+const selectedItem = ref({})
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
@@ -48,6 +49,7 @@ const contextMenu = ref()
 const contextMenuInvoice = ref()
 const dynamicTable = ref(0)
 const dynamicTableInv = ref(0)
+const router = useRouter()
 
 const allMenuListItems = ref([
   // {
@@ -230,6 +232,16 @@ const objApis = ref({
   status: { moduleApi: 'settings', uriApi: 'manage-payment-status' },
   transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
 })
+
+function goToPrint() {
+  router.push({
+    path: '/print',
+    query: {
+      total: subTotalsInvoice.value.invoiceTotalAmount,
+      // Puedes pasar otros parámetros necesarios
+    }
+  })
+}
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
@@ -509,6 +521,8 @@ const columnsAgency: IColumn[] = [
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
 
 ]
+console.log('Último ítem a guardar:', listItemsInvoice.value[0]?.hotel)
+// Debe mostrar: { name: "DRELM-Dreams Las Mareas Costa Rica", ... }
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -624,6 +638,17 @@ function clearForm() {
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
 }
+function handlePrint() {
+  console.log('Datos a guardar:', listItemsInvoice.value)
+  const dataToStore = {
+    listItems: listItemsInvoice.value,
+    totals: subTotalsInvoice.value,
+    totalElements: paginationInvoice.value.totalElements // AÑADIR ESTA LÍNEA
+
+  }
+  localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore))
+  navigateTo('/collection/print', { open: { target: '_blank' } })
+}
 
 function extractPaymentStatus(originalObject: any) {
   return {
@@ -658,6 +683,14 @@ function extractPaymentStatus(originalObject: any) {
       status: originalObject.paymentAttachmentStatusStatus ? originalObject.paymentAttachmentStatusStatus : null
     }
   }
+}
+const loadingSavePrint = ref(false)
+
+function savePrint() {
+  loadingSavePrint.value = true
+  setTimeout(() => {
+    loadingSavePrint.value = false
+  }, 3000)
 }
 
 async function getPaymentData() {
@@ -1144,6 +1177,8 @@ async function getListInvoice() {
     paginationInvoice.value.totalElements = totalElements
     paginationInvoice.value.totalPages = totalPages
 
+    paginationInvoice.value.totalElements = totalElements
+
     const existingIds = new Set(listItemsInvoice.value.map(item => item.id))
 
     for (const iterator of dataList) {
@@ -1172,7 +1207,7 @@ async function getListInvoice() {
           invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-          rowClass: iterator.aging > 30 ? 'row-aging' : '' // ✅ Asigna la clase aquí
+          rowClass: iterator.aging > 60 ? 'row-aging' : '' // ✅ Asigna la clase aquí
         })
 
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
@@ -1289,6 +1324,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1300,6 +1336,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1332,6 +1369,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1344,6 +1382,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -2311,7 +2350,7 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full custom-input"
-                        :model="filterToSearch.client"
+                        :model="selectedItem"
                         :suggestions="clientList"
                         placeholder=""
                         @load="($event) => getClientListFilter($event)"
@@ -2802,7 +2841,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
-              severity="primary" @click="navigateTo('/invoice/print', { open: { target: '_blank' } })"
+              severity="primary" @click="handlePrint"
             />
           </div>
           <div

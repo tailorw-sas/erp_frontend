@@ -6,7 +6,6 @@ import ContextMenu from 'primevue/contextmenu'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import { GenericService } from '~/services/generic-services'
-import { formatCardNumber } from '~/components/vcc/vcc_utils'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 
 const props = defineProps({
@@ -68,22 +67,27 @@ const sClassMap: IStatusClass[] = [
   { status: 'Declined', class: 'vcc-text-declined' },
   { status: 'Paid', class: 'vcc-text-paid' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Canceled', class: 'vcc-text-cancelled' },
   { status: 'Reconciled', class: 'vcc-text-reconciled' },
+  { status: 'Reconcilied', class: 'vcc-text-reconciled' },
   { status: 'Refund', class: 'vcc-text-refund' },
 ]
 
 const columns: IColumn[] = [
-  { field: 'id', header: 'Id', type: 'text' },
-  { field: 'enrolleCode', header: 'Enrollee Code', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'text' },
-  { field: 'creditCardType', header: 'CC Type', type: 'text' },
-  { field: 'cardNumber', header: 'Card Number', type: 'text' },
-  { field: 'referenceNumber', header: 'Reference Number', type: 'text', maxWidth: '250px' },
-  { field: 'amount', header: 'Amount', type: 'number' },
-  { field: 'commission', header: 'Commission', type: 'number' },
-  { field: 'netAmount', header: 'T.Amount', type: 'number' },
-  { field: 'checkIn', header: 'Trans Date', type: 'date' },
-  { field: 'categoryType', header: 'Trans Cat Type', type: 'text' },
+  { field: 'id', header: 'Id', type: 'text', width: '20px', minWidth: '60px', maxWidth: '60px' },
+  { field: 'enrolleCode', header: 'Enrollee Code', type: 'text', width: '20px', minWidth: '120px', maxWidth: '120px' },
+  { field: 'agency', header: 'Agency', type: 'text', width: '20px', minWidth: '140px', maxWidth: '150px' },
+  { field: 'creditCardType', header: 'CC Type', type: 'text', width: '20px', minWidth: '140px', maxWidth: '150px' },
+  { field: 'cardNumber', header: 'Card Number', type: 'text', width: '20px', minWidth: '120px', maxWidth: '130px' },
+  { field: 'referenceNumber', header: 'Reference Number', type: 'text', width: '220px', minWidth: '120px', maxWidth: '220px' },
+  { field: 'amount', header: 'Amount', type: 'number', width: '20px', minWidth: '120px', maxWidth: '200px' },
+  { field: 'commission', header: 'Comm', type: 'number', width: '20px', minWidth: '80px', maxWidth: '80px' },
+  { field: 'netAmount', header: 'T.Amount', type: 'number', width: '20px', minWidth: '120px', maxWidth: '200px' },
+  { field: 'checkIn', header: 'Trans Date', type: 'date', width: '20px', minWidth: '90px', maxWidth: '100px' },
+  { field: 'methodType', header: 'Method', type: 'text', width: '20px', minWidth: '60px', maxWidth: '70px' },
+  { field: 'categoryType', header: 'Type', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
+  { field: 'authNo', header: 'Auth No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '100px' },
+  { field: 'couponNo', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, showFilter: false },
 ]
 
@@ -185,7 +189,7 @@ async function getList() {
         iterator.agency = `${iterator.agency.code} - ${iterator.agency.name}`
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'categoryType') && iterator.categoryType) {
-        iterator.categoryType = `${iterator.categoryType.code} - ${iterator.categoryType.name}`
+        iterator.categoryType = `${iterator.categoryType.name}`
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'creditCardType') && iterator.creditCardType) {
         iterator.creditCardType = `${iterator.creditCardType.code} - ${iterator.creditCardType.name}`
@@ -195,9 +199,6 @@ async function getList() {
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'id')) {
         iterator.id = String(iterator.id)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'cardNumber') && iterator.cardNumber) {
-        iterator.cardNumber = formatCardNumber(String(iterator.cardNumber))
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         if (iterator.subCategoryType && iterator.subCategoryType.negative) {
@@ -304,7 +305,7 @@ onMounted(() => {
             <Column :footer="formatNumber(subTotals.amount)" />
             <Column :footer="formatNumber(subTotals.commission)" />
             <Column :footer="formatNumber(subTotals.net)" />
-            <Column :colspan="3" />
+            <Column :colspan="6" />
           </Row>
         </ColumnGroup>
       </template>

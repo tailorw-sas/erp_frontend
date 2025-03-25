@@ -131,7 +131,7 @@ const legend = ref(
     },
     {
       name: 'Cancelled',
-      color: '#888888',
+      color: '#F44336',
       colClass: 'pr-3',
     },
     {
@@ -146,6 +146,7 @@ const sClassMap: IStatusClass[] = [
   { status: 'In Progress', class: 'vcc-text-created' },
   { status: 'Completed', class: 'vcc-text-sent' },
   { status: 'Cancelled', class: 'vcc-text-cancelled' },
+  { status: 'Canceled', class: 'vcc-text-cancelled' },
   { status: 'Applied', class: 'vcc-text-reconciled' },
 ]
 // -------------------------------------------------------------------------------------------------------

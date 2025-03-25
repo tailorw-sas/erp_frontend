@@ -988,11 +988,6 @@ async function saveItem(item: { [key: string]: any }) {
       else {
         await updateItem(item)
       }
-
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking Id ${bookingNumberTemp.value} of Invoice Id ${invoiceNumberTemp.value} has been successfully updated.`, life: 5000 })
-      setTimeout(() => {
-        window.close()
-      }, 1500)
     }
     catch (error: any) {
       successOperation = false
@@ -1004,7 +999,10 @@ async function saveItem(item: { [key: string]: any }) {
   if (successOperation) {
     await getBookingItemById(route?.params?.id as string)
 
-    // clearForm()
+    toast.add({ severity: 'info', summary: 'Confirmed', detail: `The Booking Id ${bookingNumberTemp.value} of Invoice Id ${invoiceNumberTemp.value} has been successfully updated.`, life: 5000 })
+    // setTimeout(() => {
+    //   window.close()
+    // }, 1500)
   }
 }
 const goToList = async () => await navigateTo('/invoice')
