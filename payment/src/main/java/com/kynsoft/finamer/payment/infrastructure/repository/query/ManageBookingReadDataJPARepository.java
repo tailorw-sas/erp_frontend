@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -49,4 +50,7 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     Optional<BookingProjectionControlAmountBalance> findByCouponNumber(@Param("couponNumber") String couponNumber);
 
     Long countByCouponNumber(String couponNumber);
+
+    @EntityGraph(attributePaths = {"invoice", "parent"}, type = EntityGraph.EntityGraphType.FETCH)
+    List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids);
 }
