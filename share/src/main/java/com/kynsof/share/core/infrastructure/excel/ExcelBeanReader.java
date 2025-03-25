@@ -39,7 +39,6 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
     @Override
     public T readSingleLine() {
         T bean;
-        LOGGER.error("Row Cursor {} of sheet {}:", rowCursor, sheetToRead.getSheetName());
         if (!ExcelUtils.isEndOfContent(rowCursor, sheetToRead)) {
             try {
                 bean = type.getDeclaredConstructor().newInstance();
@@ -50,14 +49,12 @@ public class ExcelBeanReader<T> extends AbstractReader<T> {
                 this.hasValidHeaderOrder();
             }
             Row currentRow = sheetToRead.getRow(rowCursor);
-            LOGGER.error("Analyzing row number {}:", currentRow.getRowNum());
             DataFormatter formatter = new DataFormatter();
             DataFormat dataFormat =workbook.createDataFormat();
             if (!ExcelUtils.isRowEmpty(currentRow)) {
                 annotatedField.forEach((cellInfo, beanField) -> {
                     if (cellInfo.getPosition() != -1) {
                         Cell cell = currentRow.getCell(cellInfo.getPosition(), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-                        LOGGER.error("Analyzing cell column index {}:", cell.getColumnIndex());
                         ExcelUtils.readCell(cell, beanField, cellInfo, bean, dataFormat ,formatter);
                     } else {
                         beanField.setFieldValue(currentRow.getRowNum()+1, bean);

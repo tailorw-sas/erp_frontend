@@ -150,7 +150,6 @@ public class BookingController {
                                                  @RequestPart("employee") String employee
                                                  ) {
 
-        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.INFO, "📂 Begin processing Excel import with ID: {}", importProcessId);
         if (filePart == null) {
             return Mono.just(ResponseEntity.badRequest().body("File is missing"));
         }
@@ -169,7 +168,6 @@ public class BookingController {
                     }catch (IllegalArgumentException e) {
                         return Mono.just(ResponseEntity.badRequest().body("Invalid import type provided."));
                     } catch (Exception e) {
-                        Logger.getLogger(BookingServiceImpl.class.getName()).log(Level.SEVERE, "❌ Error processing Excel import", e);
                         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error"));
                     }
                 } );
@@ -184,7 +182,6 @@ public class BookingController {
 
     @GetMapping(path = "/{importProcessId}/import-status")
     public ResponseEntity<?> getImportBookingProcessStatus(@PathVariable("importProcessId") String importProcessId) {
-        System.out.println("*************************************Ingreso a Import Status con importProcessId: " + importProcessId);
         ImportBookingProcessStatusRequest request = new ImportBookingProcessStatusRequest(importProcessId);
         ImportBookingProcessStatusQuery importBookingProcessStatusQuery = new ImportBookingProcessStatusQuery(request);
         return ResponseEntity.ok(mediator.send(importBookingProcessStatusQuery));
