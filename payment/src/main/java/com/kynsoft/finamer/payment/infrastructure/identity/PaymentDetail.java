@@ -84,7 +84,7 @@ public class PaymentDetail implements Serializable {
     private Integer adults;
     private Integer children;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "payment_detail_payment_detail",
             joinColumns = @JoinColumn(name = "paymentdetail_id"),
