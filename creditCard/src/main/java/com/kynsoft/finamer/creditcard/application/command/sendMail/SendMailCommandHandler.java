@@ -53,7 +53,7 @@ public class SendMailCommandHandler implements ICommandHandler<SendMailCommand> 
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
         String baseUrl = UrlGetBase.getBaseUrl(merchantConfigDto.getSuccessUrl());
         String paymentLink = baseUrl + "payment?token=" + tokenService.generateToken(transactionDto.getTransactionUuid());
-        ManageMerchantHotelEnrolleDto hotelEnrolleDto = merchantHotelEnrolleService.findByForeignIds(transactionDto.getMerchant().getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getId());
+        ManageMerchantHotelEnrolleDto hotelEnrolleDto = merchantHotelEnrolleService.findByForeignIds(transactionDto.getMerchant().getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getManagerCurrency().getId());
         try {
             transactionService.sendTransactionPaymentLinkEmail(transactionDto, paymentLink);
             command.setResult(true);
