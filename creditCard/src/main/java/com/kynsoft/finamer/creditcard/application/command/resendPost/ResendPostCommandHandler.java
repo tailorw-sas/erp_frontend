@@ -41,7 +41,7 @@ public class ResendPostCommandHandler implements ICommandHandler<ResendPostComma
             throw new BusinessException(DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED, DomainErrorMessage.MANAGE_TRANSACTION_ALREADY_PROCESSED.getReasonPhrase());
         }
         ManagerMerchantConfigDto merchantConfigDto = merchantConfigService.findByMerchantID(transactionDto.getMerchant().getId());
-        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByForeignIds(transactionDto.getMerchant().getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getId());
+        ManageMerchantHotelEnrolleDto merchantHotelEnrolleDto = this.merchantHotelEnrolleService.findByForeignIds(transactionDto.getMerchant().getId(), transactionDto.getHotel().getId(), transactionDto.getMerchantCurrency().getManagerCurrency().getId());
 
         MerchantRedirectResponse merchantRedirectResponse = formPaymentService.redirectToMerchant(transactionDto, merchantConfigDto, merchantHotelEnrolleDto);
 
