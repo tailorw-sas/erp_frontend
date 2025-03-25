@@ -30,4 +30,6 @@ public interface IRoomRateService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<RoomRateDto> findAllAvailableByIds(List<UUID> idList);
+
+    List<RoomRateDto> findAllByInvoiceId(UUID invoiceId);
 }

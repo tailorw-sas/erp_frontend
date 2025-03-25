@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 
 @Service
-public class ImportInnsistServiceImpl {
+public class ImportInnsistServiceImpl implements IImportInnsistService{
 
     private final IManageAgencyService agencyService;
     private final IManageHotelService manageHotelService;
@@ -51,11 +51,12 @@ public class ImportInnsistServiceImpl {
         this.importBookingService = importBookingService;
     }
 
-    @Async
+    @Override
     public void createInvoiceFromGroupedBooking(ImportInnsistKafka request) {
         this.createCache(request);
     }
 
+    @Async
     private void createCache(ImportInnsistKafka request) {
         try {
             UUID importProcessId = UUID.randomUUID();

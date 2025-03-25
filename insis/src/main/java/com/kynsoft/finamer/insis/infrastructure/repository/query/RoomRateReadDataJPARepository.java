@@ -36,4 +36,6 @@ public interface RoomRateReadDataJPARepository extends CrudRepository<RoomRate, 
 
     @Query("SELECT r FROM RoomRate r WHERE r.id IN :ids AND r.status IN :statuses")
     List<RoomRate> findByIdsAndStatuses(@Param("ids") List<UUID> ids, @Param("statuses") List<RoomRateStatus> statuses);
+
+    List<RoomRate> findByInvoiceId(UUID invoiceId);
 }

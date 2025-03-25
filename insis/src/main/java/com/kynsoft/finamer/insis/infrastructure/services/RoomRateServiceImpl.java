@@ -128,6 +128,16 @@ public class RoomRateServiceImpl implements IRoomRateService {
         throw new IllegalArgumentException("RoomRate id list must not be null");
     }
 
+    @Override
+    public List<RoomRateDto> findAllByInvoiceId(UUID invoiceId) {
+        if(Objects.nonNull(invoiceId)){
+            return readRepository.findByInvoiceId(invoiceId).stream()
+                    .map(RoomRate::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("The invoiceId must not be null.");
+    }
+
     public PaginatedResponse getPagintatedResponse(Page<RoomRate> data){
         List<RoomRateResponse> response = new ArrayList<>();
         for(RoomRate roomRate : data.getContent()){

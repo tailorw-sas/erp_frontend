@@ -11,6 +11,10 @@ import com.kynsoft.finamer.insis.domain.services.*;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.ImportProcessStatus;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
+import com.kynsoft.finamer.insis.infrastructure.model.http.importBooking.ImportInnsistBookingRequest;
+import com.kynsoft.finamer.insis.infrastructure.model.http.importBooking.ImportInnsistRequest;
+import com.kynsoft.finamer.insis.infrastructure.model.http.importBooking.ImportInnsistRoomRateRequest;
+import com.kynsoft.finamer.insis.infrastructure.services.http.ImportRoomRateHttpService;
 import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.booking.ProducerImportInnsistBookingService;
 import org.springframework.stereotype.Component;
 
@@ -29,16 +33,20 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
     private final IRoomRateService roomRateService;
     private final ProducerImportInnsistBookingService producerImportInnsistBookingService;
 
+    private final ImportRoomRateHttpService importHttpService;
+
     public ImportRoomRateCommandHandler(IImportProcessService service,
                                         IManageEmployeeService employeeService,
                                         IImportRoomRateService importRoomRateService,
                                         IRoomRateService roomRateService,
-                                        ProducerImportInnsistBookingService producerImportInnsistBookingService){
+                                        ProducerImportInnsistBookingService producerImportInnsistBookingService,
+                                        ImportRoomRateHttpService importHttpService){
         this.service = service;
         this.employeeService = employeeService;
         this.importRoomRateService = importRoomRateService;
         this.roomRateService = roomRateService;
         this.producerImportInnsistBookingService = producerImportInnsistBookingService;
+        this.importHttpService = importHttpService;
     }
 
     @Override
@@ -53,8 +61,10 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
         RulesChecker.checkRule(new ImportRoomRateSizeRule(command.roomRates.size(), availableRoomRates.size()));
 
         setRoomRatesInProcess(availableRoomRates);
-        sendRoomRatesToProcess(importProcess, employee, availableRoomRates);
-
+        //Llamada a Kafka
+        //sendRoomRatesToProcess(importProcess, employee, availableRoomRates);
+        //Llamada por HTTP
+        sendRoomRatesToHttpProcess(importProcess, employee, availableRoomRates);
         updateImportProcessStatus(importProcess, ImportProcessStatus.IN_PROCESS);
     }
 
@@ -121,6 +131,15 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
         producerImportInnsistBookingService.create(importInnsistKafka);
     }
 
+    private void sendRoomRatesToHttpProcess(ImportProcessDto importProcess, ManageEmployeeDto employee, List<RoomRateDto> roomRates){
+        ImportInnsistRequest request = new ImportInnsistRequest(
+                importProcess.getId(),
+                employee.getId().toString(),
+                roomRates.stream().map(this::roomRatesToBookingRequest).toList()
+        );
+        importInnsistHttp(request);
+    }
+
     private ImportInnsistBookingKafka roomRatesToKafkaBooking(RoomRateDto roomRate){
         List<ImportInnsistRoomRateKafka> roomRateKafkaList = new ArrayList<>();
         roomRateKafkaList.add(roomRateToKafkaRoomRate(roomRate));
@@ -170,5 +189,62 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
                 roomRate.getRemarks(),
                 (long)roomRate.getStayDays()
         );
+    }
+
+    private ImportInnsistBookingRequest roomRatesToBookingRequest(RoomRateDto roomRate){
+        List<ImportInnsistRoomRateRequest> roomRateKafkaList = new ArrayList<>();
+        roomRateKafkaList.add(roomRateToRoomRateRequest(roomRate));
+
+        return new ImportInnsistBookingRequest(
+                roomRate.getId(),
+                roomRate.getInvoicingDate().atStartOfDay(),
+                roomRate.getHotelCreationDate().atStartOfDay(),
+                roomRate.getInvoicingDate().atStartOfDay(),
+                roomRate.getCheckInDate().atStartOfDay(),
+                roomRate.getCheckOutDate().atStartOfDay(),
+                roomRate.getReservationCode(),
+                roomRate.getFirstName(),
+                roomRate.getLastName(),
+                roomRate.getRoomNumber(),
+                roomRate.getAdults(),
+                roomRate.getChildrens(),
+                roomRate.getStayDays(),
+                roomRate.getRateByAdult(),
+                roomRate.getRateByChild(),
+                Long.parseLong(roomRate.getHotelInvoiceNumber().trim()),
+                roomRate.getInvoiceFolioNumber(),
+                roomRate.getHotelInvoiceAmount(),
+                roomRate.getRemarks(),
+                roomRate.getRatePlan().getCode(),
+                null,
+                roomRate.getRoomType().getCode(),
+                roomRate.getRoomCategory().getCode(),
+                roomRate.getHotel().getCode(),
+                roomRate.getAgencyCode(),
+                roomRate.getCouponNumber(),
+                roomRateKafkaList,
+                null,
+                false
+        );
+    }
+
+    private ImportInnsistRoomRateRequest roomRateToRoomRateRequest(RoomRateDto roomRate){
+        return new ImportInnsistRoomRateRequest(
+                roomRate.getCheckInDate().atStartOfDay(),
+                roomRate.getCheckOutDate().atStartOfDay(),
+                roomRate.getAmount(),
+                roomRate.getRoomNumber(),
+                roomRate.getAdults(),
+                roomRate.getChildrens(),
+                roomRate.getRateByAdult(),
+                roomRate.getRateByChild(),
+                roomRate.getHotelInvoiceAmount(),
+                roomRate.getRemarks(),
+                (long)roomRate.getStayDays()
+        );
+    }
+
+    private void importInnsistHttp(ImportInnsistRequest importInnsistRequest){
+        importHttpService.sendRoomRatesToImport(importInnsistRequest);
     }
 }
