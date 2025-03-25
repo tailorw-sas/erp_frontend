@@ -70,7 +70,8 @@ public class HotelPaymentAdjustmentServiceImpl implements IHotelPaymentAdjustmen
                     request.getAmount(),
                     LocalDateTime.now(),
                     false,
-                    true
+                    true,
+                    null
             ));
             transactionList.add(transactionDto);
             ids.add(transactionDto.getId());
