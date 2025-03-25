@@ -28,7 +28,7 @@ public class ExcelUtils {
                 return cell.getBooleanCellValue();
 
             case STRING:
-                return cell.getStringCellValue().trim();
+                return upperCaseAndTrim(cell.getStringCellValue());
 
             case DATE, DATETIME:
                 if (DateUtil.isCellDateFormatted(cell)) {
@@ -41,7 +41,7 @@ public class ExcelUtils {
                 }
 
             case DATAFORMAT:
-                return formatter.formatCellValue(cell);
+                return upperCaseAndTrim(formatter.formatCellValue(cell));
 
             case ALFANUMERIC:
                 return switch (cell.getCellType()) {
@@ -57,7 +57,7 @@ public class ExcelUtils {
                         CellStyle cellStyle = cell.getCellStyle();
                         cellStyle.setDataFormat(format);
                         cell.setCellStyle(cellStyle);
-                        yield formatter.formatCellValue(cell);
+                        yield upperCaseAndTrim(formatter.formatCellValue(cell));
                     }
                     default -> null;
                 };
@@ -137,5 +137,13 @@ public class ExcelUtils {
         BeanField annotatedField = sheetIndexAnnotationProcessor.getBeanField();
         Assert.notNull(annotatedField, "Must be a field annotated as SheetIndex  ");
         return new SheetIndex((Integer) annotatedField.getFieldValue(bean));
+    }
+
+    public static String upperCaseAndTrim(String value) {
+        if (value != null) {
+            value = value.trim();
+            return value.toUpperCase();
+        }
+        return null;
     }
 }

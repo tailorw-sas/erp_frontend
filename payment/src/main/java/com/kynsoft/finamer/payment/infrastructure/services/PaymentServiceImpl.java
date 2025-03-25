@@ -370,4 +370,25 @@ public class PaymentServiceImpl implements IPaymentService {
         }
     }
 
+    @Override
+    public Payment findByIdWithBalancesOnly(UUID id) {
+        Optional<Payment> object = this.repositoryQuery.findByIdWithBalancesOnly(id);
+        if (object.isPresent()) {
+            return object.get();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public void updateBalances(Double paymentBalance, 
+            Double depositBalance, 
+            Double identified, 
+            Double notIdentified, 
+            Double notApplied, 
+            Double applied, 
+            boolean applyPayment,
+            UUID id) {
+        this.repositoryCommand.updateBalances(paymentBalance, depositBalance, identified, notIdentified, notApplied, applied, applyPayment, id);
+    }
+
 }

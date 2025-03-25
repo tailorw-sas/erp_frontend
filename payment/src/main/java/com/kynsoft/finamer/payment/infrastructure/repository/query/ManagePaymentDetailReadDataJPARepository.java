@@ -14,23 +14,33 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<PaymentDetail, UUID>,
         JpaSpecificationExecutor<PaymentDetail> {
 
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     Page<PaymentDetail> findAll(Specification specification, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
+    Optional<PaymentDetail> findById(UUID id);
+
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     Optional<PaymentDetail> findByPaymentDetailId(int id);
 
     boolean existsByPaymentDetailId(int id);
 
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     List<PaymentDetail> findByIdIn(List<UUID> ids);
 
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     List<PaymentDetail> findByPaymentDetailIdIn(List<Long> ids);
 
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("Select pd from PaymentDetail pd where pd.payment.id=:paymentId")
     Optional<List<PaymentDetail>> findAllByPayment(@Param("paymentId") UUID paymentId);
 
+    @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("Select pd from PaymentDetail pd where pd.paymentDetailId = :paymentDetailId")
     Optional<PaymentDetail> findByPaymentDetailId(@Param("paymentDetailId") Long paymentDetailId);
 

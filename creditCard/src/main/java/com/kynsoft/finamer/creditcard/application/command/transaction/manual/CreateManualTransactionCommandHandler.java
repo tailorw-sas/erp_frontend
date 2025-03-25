@@ -129,7 +129,8 @@ public class CreateManualTransactionCommandHandler implements ICommandHandler<Cr
                 command.getAmount(),
                 true,
                 merchantCurrencyDto,
-                true
+                true,
+                null
         );
         TransactionDto transactionDto = this.transactionService.create(newTransaction);
         command.setId(transactionDto.getId());

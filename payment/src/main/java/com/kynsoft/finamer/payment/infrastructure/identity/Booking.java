@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.DynamicUpdate;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,6 +21,7 @@ import java.util.UUID;
 @Table(name = "booking")
 @EntityListeners(AuditEntityListener.class)
 @RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@DynamicUpdate
 public class Booking {
 
     @Id

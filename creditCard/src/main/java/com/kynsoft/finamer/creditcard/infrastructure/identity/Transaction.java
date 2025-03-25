@@ -134,6 +134,9 @@ public class Transaction implements Serializable {
     @CreationTimestamp
     private LocalDateTime transactionDate;
 
+    @Column(name = "authorization_code")
+    private String authorizationCode;
+
     public Transaction(TransactionDto dto) {
         this.id = dto.getId();
         this.merchant = dto.getMerchant() != null ? new ManageMerchant(dto.getMerchant()) : null;
@@ -175,12 +178,13 @@ public class Transaction implements Serializable {
                 : null;
         this.hotelPayment = dto.getHotelPayment() != null ? new HotelPayment(dto.getHotelPayment()) : null;
         this.transactionDate = dto.getTransactionDate();
+        this.authorizationCode = dto.getAuthorizationCode();
     }
 
     public TransactionDto toAggregateParent() {
         return new TransactionDto(
                 id,transactionUuid, checkIn, reservationNumber, referenceNumber,
-                transactionDate);
+                transactionDate, authorizationCode);
     }
 
     public TransactionDto toAggregate(){
@@ -208,7 +212,8 @@ public class Transaction implements Serializable {
                 paymentDate,
                 reconciliation != null ? reconciliation.toAggregateSimple() : null,
                 attachments != null ? attachments.stream().map(Attachment::toAggregate).collect(Collectors.toList()) : null,
-                hotelPayment != null ? hotelPayment.toAggregateSimple() : null
+                hotelPayment != null ? hotelPayment.toAggregateSimple() : null,
+                authorizationCode
         );
     }
 
