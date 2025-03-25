@@ -43,6 +43,7 @@ public class TransactionSearchResponse implements IResponse {
     private ManageVCCTransactionTypeDto subCategoryType;
     private boolean hasAttachments;
     private LocalDateTime transactionDate;
+    private String couponNumber;
 
     public TransactionSearchResponse(TransactionDto dto, boolean hasAttachments) {
         this.id = dto.getId();
@@ -67,5 +68,6 @@ public class TransactionSearchResponse implements IResponse {
         this.subCategoryType = dto.getTransactionSubCategory();
         this.hasAttachments = hasAttachments;
         this.transactionDate = dto.getTransactionDate();
+        this.couponNumber = dto.getReservationNumber();
     }
 }

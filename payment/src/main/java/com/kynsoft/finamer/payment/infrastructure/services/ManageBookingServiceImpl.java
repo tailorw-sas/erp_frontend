@@ -130,6 +130,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids) {
+        return this.repositoryQuery.findBookingWithEntityGraphByBookingIdIn(ids);
+    }
+
+    @Override
     public List<Booking> findAllByBookingIdIn(List<Long> ids) {
         return this.repositoryQuery.findByBookingIdIn(ids);
     }

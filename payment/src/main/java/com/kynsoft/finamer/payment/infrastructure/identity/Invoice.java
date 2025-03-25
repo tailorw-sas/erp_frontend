@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.hibernate.annotations.DynamicUpdate;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Table(name = "invoice")
 @EntityListeners(AuditEntityListener.class)
 @RemoteAudit(name = "invoice",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@DynamicUpdate
 public class Invoice {
 
     @Id

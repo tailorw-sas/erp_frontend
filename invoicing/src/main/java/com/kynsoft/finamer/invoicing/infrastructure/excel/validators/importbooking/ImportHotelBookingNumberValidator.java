@@ -12,16 +12,9 @@ import java.util.List;
 
 public class ImportHotelBookingNumberValidator extends ExcelRuleValidator<BookingRow> {
 
-    private final IManageHotelService manageHotelService;
-    private final IManageBookingService manageBookingService;
-
     private final BookingImportCacheRedisRepository cacheRedisRepository;
 
-    public ImportHotelBookingNumberValidator(IManageHotelService manageHotelService,
-            IManageBookingService manageBookingService,
-            BookingImportCacheRedisRepository cacheRedisRepository) {
-        this.manageHotelService = manageHotelService;
-        this.manageBookingService = manageBookingService;
+    public ImportHotelBookingNumberValidator(BookingImportCacheRedisRepository cacheRedisRepository) {
         this.cacheRedisRepository = cacheRedisRepository;
     }
 

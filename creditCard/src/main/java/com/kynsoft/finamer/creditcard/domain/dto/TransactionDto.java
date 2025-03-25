@@ -51,11 +51,12 @@ public class TransactionDto {
     private ManageBankReconciliationDto reconciliation;
     private List<AttachmentDto> attachments = new ArrayList<>();
     private HotelPaymentDto hotelPayment;
+    private String authorizationCode;
 
     //uso -> toAggregateParent
     public TransactionDto(
             Long id, UUID transactionUuid, LocalDateTime checkIn, String reservationNumber,
-            String referenceNumber, LocalDateTime transactionDate) {
+            String referenceNumber, LocalDateTime transactionDate, String authorizationCode) {
 
         this.id = id;
         this.transactionUuid = transactionUuid;
@@ -63,6 +64,7 @@ public class TransactionDto {
         this.reservationNumber = reservationNumber;
         this.referenceNumber = referenceNumber;
         this.transactionDate = transactionDate;
+        this.authorizationCode = authorizationCode;
     }
 
     //uso -> manual transaction, refund transaction
@@ -75,7 +77,7 @@ public class TransactionDto {
             ManageTransactionStatusDto status, TransactionDto parent,
             ManageVCCTransactionTypeDto transactionCategory,
             ManageVCCTransactionTypeDto transactionSubCategory, Double netAmount, Boolean permitRefund,
-            ManagerMerchantCurrencyDto merchantCurrency, boolean manual) {
+            ManagerMerchantCurrencyDto merchantCurrency, boolean manual, String authorizationCode) {
         this.transactionUuid = transactionUuid;
         this.merchant = merchant;
         this.methodType = methodType;
@@ -101,6 +103,7 @@ public class TransactionDto {
         this.permitRefund = permitRefund;
         this.merchantCurrency = merchantCurrency;
         this.manual = manual;
+        this.authorizationCode = authorizationCode;
     }
 
     //uso -> adjustment transaction
@@ -109,7 +112,7 @@ public class TransactionDto {
             ManageVCCTransactionTypeDto transactionSubCategory, Double amount,
             String reservationNumber, String referenceNumber, ManageTransactionStatusDto status,
             Double commission, LocalDateTime checkIn, Double netAmount,
-            LocalDateTime transactionDate, Boolean permitRefund, boolean adjustment) {
+            LocalDateTime transactionDate, Boolean permitRefund, boolean adjustment, String authorizationCode) {
         this.transactionUuid = transactionUuid;
         this.agency = agency;
         this.transactionCategory = transactionCategory;
@@ -124,6 +127,7 @@ public class TransactionDto {
         this.transactionDate = transactionDate;
         this.permitRefund = permitRefund;
         this.adjustment = adjustment;
+        this.authorizationCode = authorizationCode;
     }
 
     @Override

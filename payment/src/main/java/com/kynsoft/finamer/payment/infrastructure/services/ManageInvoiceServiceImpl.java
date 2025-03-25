@@ -98,4 +98,9 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return list;
     }
 
+    @Override
+    public List<Invoice> findInvoiceWithEntityGraphByIdIn(List<UUID> ids) {
+        return this.repositoryQuery.findInvoiceWithEntityGraphByIdIn(ids);
+    }
+
 }
