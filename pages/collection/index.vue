@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -12,14 +13,12 @@ import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import { useRouter } from 'vue-router'
-
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
-const selectedItem = ref({});
+const selectedItem = ref({})
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
@@ -234,15 +233,15 @@ const objApis = ref({
   transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
 })
 
-const goToPrint = () => {
+function goToPrint() {
   router.push({
     path: '/print',
-    query: { 
+    query: {
       total: subTotalsInvoice.value.invoiceTotalAmount,
       // Puedes pasar otros parámetros necesarios
     }
-  });
-};
+  })
+}
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
@@ -522,7 +521,7 @@ const columnsAgency: IColumn[] = [
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
 
 ]
-console.log("Último ítem a guardar:", listItemsInvoice.value[0]?.hotel);
+console.log('Último ítem a guardar:', listItemsInvoice.value[0]?.hotel)
 // Debe mostrar: { name: "DRELM-Dreams Las Mareas Costa Rica", ... }
 // -------------------------------------------------------------------------------------------------------
 
@@ -612,7 +611,7 @@ const pagination = ref<IPagination>({
 const paginationInvoice = ref<IPagination>({
   page: 0,
   limit: 50,
-  totalElements: 0, 
+  totalElements: 0,
   totalPages: 0,
   search: ''
 })
@@ -640,15 +639,15 @@ function clearForm() {
   formReload.value++
 }
 function handlePrint() {
-  console.log("Datos a guardar:", listItemsInvoice.value);
+  console.log('Datos a guardar:', listItemsInvoice.value)
   const dataToStore = {
     listItems: listItemsInvoice.value,
     totals: subTotalsInvoice.value,
     totalElements: paginationInvoice.value.totalElements // AÑADIR ESTA LÍNEA
 
-  };
-  localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore));
-  navigateTo('/collection/print', { open: { target: '_blank' } });
+  }
+  localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore))
+  navigateTo('/collection/print', { open: { target: '_blank' } })
 }
 
 function extractPaymentStatus(originalObject: any) {
@@ -1208,7 +1207,7 @@ async function getListInvoice() {
           invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-          rowClass: iterator.aging > 30 ? 'row-aging' : '' // ✅ Asigna la clase aquí
+          rowClass: iterator.aging > 60 ? 'row-aging' : '' // ✅ Asigna la clase aquí
         })
 
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
@@ -1324,7 +1323,8 @@ function searchAndFilter() {
             key: 'id',
             operator: 'IN',
             value: itemIds,
-            logicalOperation: 'AND',    type: 'filterSearch' 
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1335,7 +1335,8 @@ function searchAndFilter() {
             key: 'id',
             operator: 'IN',
             value: itemIds,
-            logicalOperation: 'AND',    type: 'filterSearch' 
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1367,7 +1368,8 @@ function searchAndFilter() {
             key: 'id',
             operator: 'IN',
             value: itemIds,
-            logicalOperation: 'AND',    type: 'filterSearch' 
+            logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1380,7 +1382,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
-                type: 'filterSearch' 
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1927,29 +1929,29 @@ function onSortFieldContactAgency(event: any) {
     parseDataTableFilterForContactAgency(event.filter)
   }
 }
-  function onSortFieldInvoice(event: any) {
-    if (event) {
-      if (event.sortField === 'hotel') {
-        event.sortField = 'hotel.name'
-      }
-      if (event.sortField === 'agencyCd') {
-        event.sortField = 'agency.code'
-      }
-      if (event.sortField === 'agency') {
-        event.sortField = 'agency.name'
-      }
-      if (event.sortField === 'status') {
-        event.sortField = 'invoiceStatus'
-      }
-      if (event.sortField === 'invoiceNumber') {
-        event.sortField = 'invoiceNumberPrefix'
-      }
-      payloadInv.value.sortBy = event.sortField
-      payloadInv.value.sortType = event.sortOrder
-      parseDataTableFilterInvoice(event.filter)
-      // getListInvoice()
+function onSortFieldInvoice(event: any) {
+  if (event) {
+    if (event.sortField === 'hotel') {
+      event.sortField = 'hotel.name'
     }
+    if (event.sortField === 'agencyCd') {
+      event.sortField = 'agency.code'
+    }
+    if (event.sortField === 'agency') {
+      event.sortField = 'agency.name'
+    }
+    if (event.sortField === 'status') {
+      event.sortField = 'invoiceStatus'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
+    }
+    payloadInv.value.sortBy = event.sortField
+    payloadInv.value.sortType = event.sortOrder
+    parseDataTableFilterInvoice(event.filter)
+    // getListInvoice()
   }
+}
 // || filterToSearch.value.agency || filterToSearch.value.hotel
 const disabledSearch = computed(() => {
   return filterToSearch.value.client?.id === '' || filterToSearch.value.agency.length === 0 || filterToSearch.value.hotel.length === 0
@@ -2577,7 +2579,7 @@ onMounted(() => {
                   v-tooltip.top="'Search'" class="w-2,5rem mx-1" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
-                   <Button
+                <Button
                   v-tooltip.top="'Clear'" outlined class="w-2,5rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
                 />
