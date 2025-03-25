@@ -13,8 +13,6 @@ import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
-
-import { useRouter } from 'vue-router'
 import CollectionToPrintDialog from '~/pages/collection/print.vue'
 
 
