@@ -92,7 +92,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @CacheEvict(allEntries = true, value = "manageHotel")
     @Override
     public void clearManageHotelCache() {
-        System.out.println("Clearing manageHotel cache");
+        //System.out.println("Clearing manageHotel cache");
     }
 
     @Override
