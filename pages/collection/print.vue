@@ -175,8 +175,6 @@ onMounted(() => {
   }
 })
 
-
-
 function handlePaginationChange(event: any) {
   pagination.value.page = event.page + 1
   pagination.value.limit = event.rows
@@ -584,7 +582,7 @@ const onMultipleSelect = (selectedItems: any[]) => {
 </script>
 
 <template>
-  <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+<!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     Invoices to Print
   </div> -->
   <div class="grid">
@@ -593,6 +591,7 @@ const onMultipleSelect = (selectedItems: any[]) => {
         <div class="card p-0">
           <div v-if="pagination.totalElements === 0" class="no-data-message">
   </div>
+
         <DynamicTablePrint
           :data="listPrintItems"
           :columns="columns"
@@ -647,6 +646,7 @@ const onMultipleSelect = (selectedItems: any[]) => {
   </ColumnGroup>
 </template>
        </DynamicTablePrint> 
+       
       </div>
       </div>
       <div class="flex justify-content-between">

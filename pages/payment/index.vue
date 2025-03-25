@@ -765,8 +765,8 @@ const applyPaymentColumns = ref<IColumn[]>([
     maxWidth: '90px', // Evita que se expanda demasiado
     widthTruncate: '90px', // Control de truncamiento
     columnClass: 'truncate-text',
-    sortable: false,
-    showFilter: false
+    sortable: true,
+    showFilter: true
   },
   {
     field: 'hotel',

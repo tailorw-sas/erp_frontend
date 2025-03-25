@@ -14,6 +14,10 @@ import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 
+import { useRouter } from 'vue-router'
+import CollectionToPrintDialog from '~/pages/collection/print.vue'
+
+
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
@@ -25,6 +29,8 @@ const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as Generic
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
 const maxSelectedLabels = ref(2)
+
+const CollectionToPrintDialogVisible =ref(false)
 
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
@@ -218,6 +224,8 @@ const filterToSearchTemp = {
 // agency: [allDefaultItem],
 //   hotel: [allDefaultItem],
 
+
+
 const objLoading = ref({
   loadingAgency: false,
   loadingClient: false,
@@ -383,6 +391,9 @@ const formTitle = computed(() => {
 })
 
 // -------------------------------------------------------------------------------------------------------
+const closeCollectionToPrint = () => {
+  CollectionToPrintDialogVisible.value = false
+}
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
@@ -639,6 +650,7 @@ function clearForm() {
   formReload.value++
 }
 function handlePrint() {
+
   console.log('Datos a guardar:', listItemsInvoice.value)
   const dataToStore = {
     listItems: listItemsInvoice.value,
@@ -648,6 +660,9 @@ function handlePrint() {
   }
   localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore))
   navigateTo('/collection/print', { open: { target: '_blank' } })
+
+ // navigateTo('/collection/print', { open: { target: '_blank' } })
+  CollectionToPrintDialogVisible.value = true
 }
 
 function extractPaymentStatus(originalObject: any) {
@@ -2958,7 +2973,13 @@ onMounted(() => {
               />
             </Row>
           </ColumnGroup>
+          <DynamicContentModalImport
+      :visible="CollectionToPrintDialogVisible" :component="CollectionToPrintDialog"
+       @close="closeCollectionToPrint"
+      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      />
         </template>
+
       </DynamicTable>
     </div>
   </div>
@@ -3110,6 +3131,7 @@ onMounted(() => {
     </template>
   </Dialog>
 
+ 
   <!-- Export To Excel To Invoice -->
   <div v-if="exportDialogOpen">
     <ExportDialog
