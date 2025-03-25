@@ -87,7 +87,7 @@ const columns: IColumn[] = [
   { field: 'methodType', header: 'Method', type: 'text', width: '20px', minWidth: '60px', maxWidth: '70px' },
   { field: 'categoryType', header: 'Type', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
   { field: 'authNo', header: 'Auth No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '100px' },
-  { field: 'couponNo', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, showFilter: false },
 ]
 

@@ -238,7 +238,7 @@ const columns: IColumn[] = [
   { field: 'methodType', header: 'Method', type: 'text', width: '20px', minWidth: '60px', maxWidth: '70px' },
   { field: 'categoryType', header: 'Type', type: 'select', width: '20px', minWidth: '80px', maxWidth: '120px', objApi: { moduleApi: 'creditcard', uriApi: 'manage-vcc-transaction-type', filter: activeStatusFilter }, },
   { field: 'authNo', header: 'Auth No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '100px' },
-  { field: 'couponNo', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
+  { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
 
@@ -303,7 +303,7 @@ async function getList() {
     const newListItems = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-
+    console.log(response)
     const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
