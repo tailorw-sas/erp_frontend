@@ -765,8 +765,8 @@ const applyPaymentColumns = ref<IColumn[]>([
     maxWidth: '90px', // Evita que se expanda demasiado
     widthTruncate: '90px', // Control de truncamiento
     columnClass: 'truncate-text',
-    sortable: false,
-    showFilter: false
+    sortable: true,
+    showFilter: true
   },
   {
     field: 'hotel',
@@ -985,6 +985,10 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '50px', // Define un ancho fijo
     minWidth: '40px', // Establece un ancho mínimo
     maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'invoiceNumber', header: 'Invoice No.', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo  maxWidth: '60px', // Evita que se expanda demasiado
     widthTruncate: '50px', // Control de truncamiento
     columnClass: 'truncate-text', sortable: true, showFilter: true },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '80px', // Define un ancho fijo
@@ -2573,6 +2577,7 @@ async function applyPaymentGetListForOtherDeductions() {
 
                 for (const iterator of dataList) {
                   iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                  iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
                   iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                   iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                   // iterator.bookingAmount = iterator.invoiceAmount?.toString()
@@ -2688,6 +2693,7 @@ async function applyPaymentGetListForOtherDeductions() {
 
               for (const iterator of dataList) {
                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
@@ -2833,6 +2839,7 @@ async function applyPaymentGetListForOtherDeductions() {
 
               for (const iterator of dataList) {
                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
@@ -3883,6 +3890,10 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
   if (objFilter) {
     objFilter.key = 'invoice.invoiceId'
   }
+  const objFilterInvoiceNumber = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
+  if (objFilterInvoiceNumber) {
+    objFilterInvoiceNumber.key = 'invoiceNumberPrefix'
+  }
   const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
   if (objFilterDueAmount) {
     objFilterDueAmount.key = 'dueAmount'
@@ -3910,6 +3921,9 @@ function applyPaymentOtherDeductionOnSortField(event: any) {
   if (event) {
     if (event.sortField === 'invoiceId') {
       event.sortField = 'invoice.invoiceId'
+    }
+    if (event.sortField === 'invoiceNumber') {
+      event.sortField = 'invoiceNumberPrefix'
     }
     if (event.sortField === 'dueAmountTemp') {
       event.sortField = 'dueAmount'
