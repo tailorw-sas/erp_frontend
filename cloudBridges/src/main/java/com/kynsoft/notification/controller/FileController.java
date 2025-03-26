@@ -38,15 +38,13 @@ public class FileController {
 
                     MultipartFile multipartFile = new MockMultipartFile("file",
                             filePart.filename(), Objects.requireNonNull(filePart.headers().getContentType()).toString(), bytes);
-
                     try {
-                        SaveFileS3Message response = mediator.send(new SaveFileS3Command(multipartFile, "finamer"));
+                        SaveFileS3Message response = mediator.send(new SaveFileS3Command(multipartFile));
                         return Mono.just(ResponseEntity.ok(ApiResponse.success(response)));
                     } catch (Exception e) {
                         return Mono.error(e);
                     }
                 });
-
     }
 
     @PostMapping("/confirm")

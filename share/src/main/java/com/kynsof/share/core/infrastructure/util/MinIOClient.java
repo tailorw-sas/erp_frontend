@@ -14,12 +14,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import io.minio.MinioClient;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service("minio")
 public class MinIOClient implements IAmazonClient {
@@ -69,7 +71,7 @@ public class MinIOClient implements IAmazonClient {
     }
 
     @Override
-    public String save(MultipartFile file, String folder) throws IOException {
+    public String save(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename();
 
         String sanitizedFilename = originalFilename.replace(" ", "_");
@@ -85,6 +87,25 @@ public class MinIOClient implements IAmazonClient {
         }
 
         return endpointUrl + bucketName + "/" + name;
+    }
+
+
+    @Override
+    public List<FileDto> saveAll(List<MultipartFile> files) {
+        List<CompletableFuture<FileDto>> futures = files.stream()
+                .map(file -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        String fileUrl = save(file);
+                        return new FileDto(file.getOriginalFilename(), fileUrl);
+                    } catch (IOException e) {
+                        return new FileDto(file.getOriginalFilename(), "UPLOAD_FAILED: " + e.getMessage());
+                    }
+                }))
+                .collect(Collectors.toList());
+
+        return futures.stream()
+                .map(CompletableFuture::join)  // This ensures all files are processed even if some fail
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -125,11 +146,64 @@ public class MinIOClient implements IAmazonClient {
         }
     }
 
-    private void removeObject(String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    private void removeObject(String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException,
+            NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         RemoveObjectArgs req = RemoveObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
                 .build();
         minioClient.removeObject(req);
+    }
+
+    private MultipartFile getMultipartFile(FileDto fileDto) throws IOException {
+        MultipartFile multipartFile = new MultipartFile() {
+            @Override
+            public String getName() {
+                return fileDto.getName();
+            }
+
+            @Override
+            public String getOriginalFilename() {
+                return fileDto.getOriginalName();
+            }
+
+            @Override
+            public String getContentType() {
+                return MediaType.APPLICATION_XML_VALUE;
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return fileBytes == null || fileBytes.length == 0;
+            }
+
+            @Override
+            public long getSize() {
+                return fileBytes.length;
+            }
+
+            @Override
+            public byte[] getBytes() throws IOException {
+                return fileBytes;
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(fileBytes);
+            }
+
+            @Override
+            public void transferTo(File dest) throws IOException, IllegalStateException {
+                // Ensure the destination directory exists
+                if (dest.getParentFile() != null) {
+                    dest.getParentFile().mkdirs();
+                }
+
+                // Write the file bytes to the destination
+                try (FileOutputStream fos = new FileOutputStream(dest)) {
+                    fos.write(fileBytes);
+                }
+            }
+        };
     }
 }

@@ -5,12 +5,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public interface IAmazonClient {
 
     void uploadFile(InputStream streamToUpload, Long size, String contentType, String objectKey) throws IOException;
 
-    String save(MultipartFile file, String folder) throws IOException;
+    String save(MultipartFile file) throws IOException;
+    List<FileDto> saveAll(List<MultipartFile> files);
 
     void delete(String url);
 

@@ -264,12 +264,6 @@
             <version>5.7.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- Dependencia para Spring Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>

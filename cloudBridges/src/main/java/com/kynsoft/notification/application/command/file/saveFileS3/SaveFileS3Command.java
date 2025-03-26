@@ -12,21 +12,15 @@ import java.util.UUID;
 @Setter
 public class SaveFileS3Command implements ICommand {
     private final MultipartFile multipartFile;
-    private final String fonder;
     private UUID fileId;
     private String url;
 
-    public SaveFileS3Command(MultipartFile multipartFile, String fonder) {
-
-
+    public SaveFileS3Command(MultipartFile multipartFile) {
         this.multipartFile = multipartFile;
-        this.fonder = fonder;
     }
-
-
 
     @Override
     public ICommandMessage getMessage() {
-        return new SaveFileS3Message(url,fileId);
+        return new SaveFileS3Message(url, fileId);
     }
 }

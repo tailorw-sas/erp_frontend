@@ -41,7 +41,7 @@ public class ConsumerSaveFileEventService {
             if (eventType.equals(EventType.CREATED)) {
                 MultipartFile file = new CustomMultipartFile(eventRead.getFile(), eventRead.getFileName());
                 try {
-                    String fileUrl = amazonClient.save(file, eventRead.getFileName());
+                    String fileUrl = amazonClient.save(file);
                     this.fileService.create(new FileDto(eventRead.getId(), eventRead.getFileName(), eventRead.getMicroServiceName(), fileUrl, false));
                 } catch (IOException ex) {
                     Logger.getLogger(ConsumerSaveFileEventService.class.getName()).log(Level.SEVERE, null, ex);
