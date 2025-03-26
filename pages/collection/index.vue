@@ -13,6 +13,7 @@ import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import CollectionToPrintDialog from '~/pages/collection/print.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -25,6 +26,8 @@ const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as Generic
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
 const maxSelectedLabels = ref(2)
+
+const CollectionToPrintDialogVisible = ref(false)
 
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
@@ -383,6 +386,9 @@ const formTitle = computed(() => {
 })
 
 // -------------------------------------------------------------------------------------------------------
+function closeCollectionToPrint() {
+  CollectionToPrintDialogVisible.value = false
+}
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
@@ -639,7 +645,6 @@ function clearForm() {
   formReload.value++
 }
 function handlePrint() {
-  console.log('Datos a guardar:', listItemsInvoice.value)
   const dataToStore = {
     listItems: listItemsInvoice.value,
     totals: subTotalsInvoice.value,
@@ -647,7 +652,10 @@ function handlePrint() {
 
   }
   localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore))
-  navigateTo('/collection/print', { open: { target: '_blank' } })
+  // navigateTo('/collection/print', { open: { target: '_blank' } })
+
+  // navigateTo('/collection/print', { open: { target: '_blank' } })
+  CollectionToPrintDialogVisible.value = true
 }
 
 function extractPaymentStatus(originalObject: any) {
@@ -2841,7 +2849,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
-              severity="primary" @click="handlePrint"
+              severity="primary" @click="handlePrint()"
             />
           </div>
           <div
@@ -2958,6 +2966,11 @@ onMounted(() => {
               />
             </Row>
           </ColumnGroup>
+          <DynamicContentModalImport
+            :visible="CollectionToPrintDialogVisible" :component="CollectionToPrintDialog"
+            header="Invoice To Print" :style="{ width, height, 'min-height': '98vh', 'min-width': '50vw' }"
+            @close="closeCollectionToPrint"
+          />
         </template>
       </DynamicTable>
     </div>
