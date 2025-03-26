@@ -3,6 +3,7 @@ package com.kynsoft.finamer.insis.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.insis.domain.dto.BookingDto;
+import com.kynsoft.finamer.insis.domain.dto.CountRoomRateByHotelAndInvoiceDateDto;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import org.springframework.data.domain.Pageable;
 
@@ -32,4 +33,6 @@ public interface IRoomRateService {
     List<RoomRateDto> findAllAvailableByIds(List<UUID> idList);
 
     List<RoomRateDto> findAllByInvoiceId(UUID invoiceId);
+
+    List<CountRoomRateByHotelAndInvoiceDateDto> countByHotelsAndInvoiceDate(List<UUID> idList, LocalDate invoiceFrom, LocalDate invoiceTo);
 }

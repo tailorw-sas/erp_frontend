@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.insis.application.query.objectResponse.roomRate.RoomRateResponse;
+import com.kynsoft.finamer.insis.domain.dto.CountRoomRateByHotelAndInvoiceDateDto;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import com.kynsoft.finamer.insis.domain.services.IRoomRateService;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
@@ -136,6 +137,11 @@ public class RoomRateServiceImpl implements IRoomRateService {
                     .toList();
         }
         throw new IllegalArgumentException("The invoiceId must not be null.");
+    }
+
+    @Override
+    public List<CountRoomRateByHotelAndInvoiceDateDto> countByHotelsAndInvoiceDate(List<UUID> idList, LocalDate invoiceFrom, LocalDate invoiceTo) {
+        return List.of();
     }
 
     public PaginatedResponse getPagintatedResponse(Page<RoomRate> data){
