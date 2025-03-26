@@ -67,97 +67,62 @@ public class FTPController {
                 });
     }
 
-    @PostMapping("/upload-multiple")
-    public Mono<ResponseEntity<Map<String, Object>>> uploadMultipleFiles(@RequestPart("files") Flux<FilePart> files,
-                                                                         @RequestPart("server") String server,
-                                                                         @RequestPart("user") String user,
-                                                                         @RequestPart("password") String password,
-                                                                         @RequestPart("port") String portStr,
-                                                                         @RequestPart(value = "path", required = false) String path) {
-        // Convert port string to integer with validation
-        int portNumber;
-        try {
-            portNumber = Integer.parseInt(portStr);
-            if (portNumber <= 0 || portNumber > 65535) {
-                return Mono.just(ResponseEntity.badRequest()
-                        .body(Map.of("message", "Invalid port number. Must be between 1-65535.")));
-            }
-        } catch (NumberFormatException e) {
-            return Mono.just(ResponseEntity.badRequest()
-                    .body(Map.of("message", "Invalid port format. Must be a valid number.")));
-        }
-
-        // Store the port number as final for use in lambda
-        final int validPortNumber = portNumber;
-
-        return files
-                .collectList()
-                .flatMap(requests -> {
-                    if (requests.isEmpty()) {
-                        return Mono.just(ResponseEntity.badRequest()
-                                .body(Map.of("message", "No files received for upload.")));
-                    }
-
-                    return Flux.fromIterable(requests)
-                            .parallel()
-                            .runOn(Schedulers.boundedElastic()) // Better for IO-bound operations than Schedulers.parallel()
-                            .flatMap(fileRequest ->
-                                    Mono.fromCallable(() -> {
-                                                try {
-                                                    // Here's the fix: ftpService returns List<Map<String, String>> but we need Map<String, Object>
-                                                    List<Map<String, String>> resultList = ftpService.uploadFilesBatch(
-                                                            path,
-                                                            List.of(fileRequest),
-                                                            server,
-                                                            user,
-                                                            password,
-                                                            validPortNumber
-                                                    );
-
-                                                    // We need to get the first result from the list and convert it to Map<String, Object>
-                                                    if (resultList == null || resultList.isEmpty() || !resultList.get(0).containsKey("status")) {
-                                                        throw new RuntimeException("FTP service did not return a valid response.");
-                                                    }
-
-                                                    // Convert Map<String, String> to Map<String, Object>
-                                                    Map<String, Object> objectMap = new HashMap<>();
-                                                    resultList.get(0).forEach(objectMap::put);
-                                                    return objectMap;
-                                                } catch (Exception e) {
-                                                    log.error("❌ Failed to upload file: {}", fileRequest.filename(), e);
-                                                    Map<String, Object> errorResult = new HashMap<>();
-                                                    errorResult.put("file", fileRequest.filename());
-                                                    errorResult.put("status", "failed");
-                                                    errorResult.put("error", e.getMessage());
-                                                    return errorResult;
-                                                }
-                                            })
-                                            .subscribeOn(Schedulers.boundedElastic())
-                                            .retryWhen(reactor.util.retry.Retry.backoff(3, Duration.ofSeconds(2))
-                                                    .maxBackoff(Duration.ofSeconds(10))
-                                                    .filter(ex -> !(ex instanceof IllegalArgumentException)) // Don't retry invalid inputs
-                                            )
-                            )
-                            .sequential()
-                            .collectList()
-                            .map(uploadResults -> {
-                                List<Map<String, Object>> successfulUploads = uploadResults.stream()
-                                        .filter(result -> "success".equals(result.get("status")))
-                                        .collect(Collectors.toList());
-
-                                List<Map<String, Object>> failedUploads = uploadResults.stream()
-                                        .filter(result -> "failed".equals(result.get("status")))
-                                        .collect(Collectors.toList());
-
-                                Map<String, Object> response = new HashMap<>();
-                                response.put("message", "Batch upload completed");
-                                response.put("successfulUploads", successfulUploads);
-                                response.put("failedUploads", failedUploads);
-                                response.put("totalSuccessful", successfulUploads.size());
-                                response.put("totalFailed", failedUploads.size());
-
-                                return ResponseEntity.ok(response);
-                            });
-                });
-    }
+//    @PostMapping("/upload-multiple")
+//    public Mono<ResponseEntity<Map<String, Object>>> uploadMultipleFiles(@RequestPart("files") Flux<FilePart> files,
+//                                                                         @RequestPart("server") String server,
+//                                                                         @RequestPart("user") String user,
+//                                                                         @RequestPart("password") String password,
+//                                                                         @RequestPart("port") String portStr,
+//                                                                         @RequestPart(value = "path", required = false) String path) {
+//        // Convert port string to integer with validation
+//        int portNumber;
+//        try {
+//            portNumber = Integer.parseInt(portStr);
+//            if (portNumber <= 0 || portNumber > 65535) {
+//                return Mono.just(ResponseEntity.badRequest()
+//                        .body(Map.of("message", "Invalid port number. Must be between 1-65535.")));
+//            }
+//        } catch (NumberFormatException e) {
+//            return Mono.just(ResponseEntity.badRequest()
+//                    .body(Map.of("message", "Invalid port format. Must be a valid number.")));
+//        }
+//
+//        final int validPortNumber = portNumber;
+//
+//        return files.collectList()
+//                .flatMap(fileParts -> {
+//                    if (fileParts.isEmpty()) {
+//                        return Mono.just(ResponseEntity.badRequest()
+//                                .body(Map.of("message", "No files received for upload.")));
+//                    }
+//
+//                    // Corrección aquí: Manejo de la respuesta asíncrona
+//                    return ftpService.uploadFilesBatch(path, fileParts, server, user, password, validPortNumber)
+//                            .map(uploadResults -> {
+//                                List<Map<String, Object>> successfulUploads = uploadResults.stream()
+//                                        .filter(result -> "success".equals(result.get("status")))
+//                                        .map(HashMap::new) // Convertimos de Map<String, String> a Map<String, Object>
+//                                        .collect(Collectors.toList());
+//
+//                                List<Map<String, Object>> failedUploads = uploadResults.stream()
+//                                        .filter(result -> "failed".equals(result.get("status")))
+//                                        .map(HashMap::new)
+//                                        .collect(Collectors.toList());
+//
+//                                Map<String, Object> response = new HashMap<>();
+//                                response.put("message", "Batch upload completed");
+//                                response.put("successfulUploads", successfulUploads);
+//                                response.put("failedUploads", failedUploads);
+//                                response.put("totalSuccessful", successfulUploads.size());
+//                                response.put("totalFailed", failedUploads.size());
+//
+//                                return ResponseEntity.ok(response);
+//                            })
+//                            .onErrorResume(ex -> {
+//                                log.error("❌ Error uploading multiple files: {}", ex.getMessage(), ex);
+//                                return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                                        .body(Map.of("error", "Batch upload failed", "details", ex.getMessage())));
+//                            });
+//                });
+//    }
 }

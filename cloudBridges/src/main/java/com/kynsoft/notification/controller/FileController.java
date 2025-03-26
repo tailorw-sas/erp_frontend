@@ -7,7 +7,6 @@ import com.kynsoft.notification.application.command.file.confirm.ConfirmFileMess
 import com.kynsoft.notification.application.command.file.confirm.ConfirmFileRequest;
 import com.kynsoft.notification.application.command.file.saveFileS3.SaveFileS3Command;
 import com.kynsoft.notification.application.command.file.saveFileS3.SaveFileS3Message;
-import com.kynsoft.notification.domain.service.IAFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.ResponseEntity;
@@ -18,19 +17,15 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
     private final IMediator mediator;
 
-    private final IAFileService fileService;
-
     @Autowired
-    public FileController(IMediator mediator, IAFileService fileService) {
+    public FileController(IMediator mediator) {
         this.mediator = mediator;
-        this.fileService = fileService;
     }
 
     @PostMapping(value = "")

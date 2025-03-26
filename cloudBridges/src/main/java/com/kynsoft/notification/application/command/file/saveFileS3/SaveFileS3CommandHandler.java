@@ -1,9 +1,9 @@
 package com.kynsoft.notification.application.command.file.saveFileS3;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.notification.domain.dto.AFileDto;
+import com.kynsof.share.core.domain.service.IAmazonClient;
+import com.kynsof.share.utils.FileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
-import com.kynsoft.notification.domain.service.IAmazonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +27,7 @@ public class SaveFileS3CommandHandler implements ICommandHandler<SaveFileS3Comma
     public void handle(SaveFileS3Command command) {
         try {
             String url = amazonClient.save(command.getMultipartFile(), command.getFonder());
-            AFileDto aFileDto = new AFileDto(UUID.randomUUID(),command.getMultipartFile().getName(), "file", url, false);
+            FileDto aFileDto = new FileDto(UUID.randomUUID(),command.getMultipartFile().getName(), "file", url, false);
             UUID fileId = fileService.create(aFileDto);
             command.setFileId(fileId);
             command.setUrl(url);

@@ -152,7 +152,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     asyncTasks.add(sendEmailAsync(command, agency, invoiceList, manageEmployeeDto, manageInvoiceStatus, fullName));
                     break;
                 case "BVL":
-                    asyncTasks.add(b2bPartner, bavelAsync(invoiceList, manageInvoiceStatus, fullName));
+                    //asyncTasks.add(b2bPartner, bavelAsync(invoiceList, manageInvoiceStatus, fullName));
                     break;
                 case "FTP":
                     asyncTasks.add(sendFtpAsync(command, invoiceList, manageInvoiceStatus, fullName));
@@ -205,83 +205,83 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
     }
 
-    private CompletableFuture<Void> bavelAsync(ManageB2BPartner b2BPartner, List<ManageInvoiceDto> invoices,
-                                               ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
-        return CompletableFuture.runAsync(() -> bavel(b2BPartner, invoices, manageInvoiceStatus, employee), executor);
-    }
+//    private CompletableFuture<Void> bavelAsync(ManageB2BPartner b2BPartner, List<ManageInvoiceDto> invoices,
+//                                               ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+//        return CompletableFuture.runAsync(() -> bavel(b2BPartner, invoices, manageInvoiceStatus, employee), executor);
+//    }
 
-    private void bavel(ManageB2BPartner b2BPartner, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
-        List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
-
-        List<InvoiceToSendDto> invoiceToSent = new ArrayList<>();
-        for (ManageInvoiceDto invoice : invoices) {
-            try {
-                var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
-                String bavelCode = Optional.ofNullable(invoice.getHotel())
-                        .map(ManageHotelDto::getBabelCode)
-                        .orElse(StringUtils.EMPTY);
-
-                String _company = Optional.ofNullable(invoice.getAgency())
-                        .map(ManageAgencyDto::getName)
-                        .orElse(StringUtils.EMPTY)
-                        .replace("/", " ");
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-                DateTimeFormatter formatterWithSpaces = DateTimeFormatter.ofPattern("dd MM yyyy");
-
-                String nameFile = "Factura " + bavelCode + " " + _company + " " +
-                        invoice.getInvoiceNo() + " " +
-                        invoice.getInvoiceDate().toLocalDate().format(formatter) + " " +
-                        LocalDate.now().format(formatterWithSpaces) + ".xml";
-                byte[] fileBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
-                invoiceToSent.add(new InvoiceToSendDto(invoice, nameFile, fileBytes));
-            } catch (Exception e) {
-                log.error("❌ Failed to generate XML for invoice '{}': {}", invoice.getInvoiceNumber(), e.getMessage(), e);
-                invoice.setSendStatusError("XML Generation Failed: " + e.getMessage());
-                service.update(invoice);
-            }
-        }
-        try{
-                CompletableFuture<String> uploadFuture = ftpService.sendFile(fileBytes, nameFile,
-                                b2BPartner.getIp(), b2BPartner.getUserName(),
-                                b2BPartner.getPassword(), 21, b2BPartner.getUrl())
-                    .handle((response, ex) -> {
-                        if (ex == null) {
-                            invoice.setSendStatusError(null); // Clear previous errors
-                            service.update(invoice);
-                            return response;
-                        } else {
-                            log.error("❌ Upload failed for invoice '{}': {}", nameFile, ex.getMessage(), ex);
-                            invoice.setSendStatusError("Bavel FTP Upload Failed: " + ex.getMessage());
-                            service.update(invoice);
-                            return "FAILED";
-                        }
-                    });
-
-            uploadFutures.add(uploadFuture);
-        } catch (Exception e) {
-            log.error("❌ Failed to generate XML for invoice '{}': {}", invoice.getInvoiceNumber(), e.getMessage(), e);
-            invoice.setSendStatusError("XML Generation Failed: " + e.getMessage());
-            service.update(invoice);
-        }
-
-        // Esperar todas las subidas sin interrumpir la ejecución en caso de error
-        CompletableFuture.allOf(uploadFutures.toArray(new CompletableFuture[0])).join();
-
-        // Filtrar solo las facturas que se subieron con éxito
-        List<ManageInvoiceDto> successfulInvoices = invoices.stream()
-                .filter(invoice -> invoice.getSendStatusError() == null)
-                .collect(Collectors.toList());
-
-        // Si ninguna factura se subió correctamente, lanzar error
-        if (successfulInvoices.isEmpty()) {
-            log.error("❌ All invoices failed to upload to Bavel FTP.");
-            throw new RuntimeException("All invoices failed to upload to Bavel FTP.");
-        }
-
-        // Si al menos una factura se subió correctamente, actualizar estado
-        updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
-    }
+//    private void bavel(ManageB2BPartner b2BPartner, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
+//        List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
+//
+//        List<InvoiceToSendDto> invoiceToSent = new ArrayList<>();
+//        for (ManageInvoiceDto invoice : invoices) {
+//            try {
+//                var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
+//                String bavelCode = Optional.ofNullable(invoice.getHotel())
+//                        .map(ManageHotelDto::getBabelCode)
+//                        .orElse(StringUtils.EMPTY);
+//
+//                String _company = Optional.ofNullable(invoice.getAgency())
+//                        .map(ManageAgencyDto::getName)
+//                        .orElse(StringUtils.EMPTY)
+//                        .replace("/", " ");
+//
+//                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+//                DateTimeFormatter formatterWithSpaces = DateTimeFormatter.ofPattern("dd MM yyyy");
+//
+//                String nameFile = "Factura " + bavelCode + " " + _company + " " +
+//                        invoice.getInvoiceNo() + " " +
+//                        invoice.getInvoiceDate().toLocalDate().format(formatter) + " " +
+//                        LocalDate.now().format(formatterWithSpaces) + ".xml";
+//                byte[] fileBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
+//                invoiceToSent.add(new InvoiceToSendDto(invoice, nameFile, fileBytes));
+//            } catch (Exception e) {
+//                log.error("❌ Failed to generate XML for invoice '{}': {}", invoice.getInvoiceNumber(), e.getMessage(), e);
+//                invoice.setSendStatusError("XML Generation Failed: " + e.getMessage());
+//                service.update(invoice);
+//            }
+//        }
+//        try{
+//                CompletableFuture<String> uploadFuture = ftpService.sendFile(fileBytes, nameFile,
+//                                b2BPartner.getIp(), b2BPartner.getUserName(),
+//                                b2BPartner.getPassword(), 21, b2BPartner.getUrl())
+//                    .handle((response, ex) -> {
+//                        if (ex == null) {
+//                            invoice.setSendStatusError(null); // Clear previous errors
+//                            service.update(invoice);
+//                            return response;
+//                        } else {
+//                            log.error("❌ Upload failed for invoice '{}': {}", nameFile, ex.getMessage(), ex);
+//                            invoice.setSendStatusError("Bavel FTP Upload Failed: " + ex.getMessage());
+//                            service.update(invoice);
+//                            return "FAILED";
+//                        }
+//                    });
+//
+//            uploadFutures.add(uploadFuture);
+//        } catch (Exception e) {
+//            log.error("❌ Failed to generate XML for invoice '{}': {}", invoice.getInvoiceNumber(), e.getMessage(), e);
+//            invoice.setSendStatusError("XML Generation Failed: " + e.getMessage());
+//            service.update(invoice);
+//        }
+//
+//        // Esperar todas las subidas sin interrumpir la ejecución en caso de error
+//        CompletableFuture.allOf(uploadFutures.toArray(new CompletableFuture[0])).join();
+//
+//        // Filtrar solo las facturas que se subieron con éxito
+//        List<ManageInvoiceDto> successfulInvoices = invoices.stream()
+//                .filter(invoice -> invoice.getSendStatusError() == null)
+//                .collect(Collectors.toList());
+//
+//        // Si ninguna factura se subió correctamente, lanzar error
+//        if (successfulInvoices.isEmpty()) {
+//            log.error("❌ All invoices failed to upload to Bavel FTP.");
+//            throw new RuntimeException("All invoices failed to upload to Bavel FTP.");
+//        }
+//
+//        // Si al menos una factura se subió correctamente, actualizar estado
+//        updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
+//    }
 
     private CompletableFuture<Void> sendFtpAsync(SendInvoiceCommand command, List<ManageInvoiceDto> invoices,
                                                  ManageInvoiceStatusDto manageInvoiceStatus, String employee) {

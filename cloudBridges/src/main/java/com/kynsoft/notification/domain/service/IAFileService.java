@@ -2,17 +2,17 @@ package com.kynsoft.notification.domain.service;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.notification.domain.dto.AFileDto;
+import com.kynsof.share.utils.FileDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface IAFileService {
-    UUID create(AFileDto object);
-    void update(AFileDto object);
-    void delete(AFileDto object);
-    AFileDto findById(UUID id);
-    List<AFileDto> findByIds(List<UUID> ids);
+    UUID create(FileDto object);
+    void update(FileDto object);
+    void delete(FileDto object);
+    FileDto findById(UUID id);
+    List<FileDto> findByIds(List<UUID> ids);
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

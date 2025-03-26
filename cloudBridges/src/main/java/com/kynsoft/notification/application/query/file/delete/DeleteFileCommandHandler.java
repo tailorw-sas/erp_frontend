@@ -1,7 +1,7 @@
 package com.kynsoft.notification.application.query.file.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsoft.notification.domain.dto.AFileDto;
+import com.kynsof.share.utils.FileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +16,7 @@ public class DeleteFileCommandHandler implements ICommandHandler<DeleteFileComma
 
     @Override
     public void handle(DeleteFileCommand command) {
-        AFileDto object = this.serviceImpl.findById(command.getId());
+        FileDto object = this.serviceImpl.findById(command.getId());
 
         serviceImpl.delete(object);
     }

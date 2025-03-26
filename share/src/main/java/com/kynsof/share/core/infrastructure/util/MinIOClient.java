@@ -1,7 +1,7 @@
-package com.kynsoft.notification.infrastructure.service;
+package com.kynsof.share.core.infrastructure.util;
 
-import com.kynsoft.notification.domain.dto.AFileDto;
-import com.kynsoft.notification.domain.service.IAmazonClient;
+import com.kynsof.share.core.domain.service.IAmazonClient;
+import com.kynsof.share.utils.FileDto;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
@@ -104,25 +104,25 @@ public class MinIOClient implements IAmazonClient {
     }
 
     @Override
-    public AFileDto loadFile(String url) {
+    public FileDto loadFile(String url) {
         String filename = url.replace(this.endpointUrl, "");
 
-        return new AFileDto(filename, url);
+        return new FileDto(filename, url);
     }
 
     private String getPublicUrl(String objectName) throws IOException {
-       try{
-           return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                   .method(Method.GET)
-                   .bucket(bucketName)
-                   .object(objectName)
-                   .expiry(604800)
-                   .build());
-       }catch (ServerException | InsufficientDataException | ErrorResponseException |
-               NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException |
-               XmlParserException | InternalException e) {
-           throw new IOException(e);
-       }
+        try{
+            return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .expiry(604800)
+                    .build());
+        }catch (ServerException | InsufficientDataException | ErrorResponseException |
+                NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException |
+                XmlParserException | InternalException e) {
+            throw new IOException(e);
+        }
     }
 
     private void removeObject(String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
