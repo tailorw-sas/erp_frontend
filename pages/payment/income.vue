@@ -412,13 +412,26 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 required',
-    validation: z.number({
-      invalid_type_error: 'The amount field is required',
-      required_error: 'The amount field is required',
-    })
-      // .positive({ message: 'The amount must be a positive number' })
-      .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
-      .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
+    validation: z.preprocess(
+      (value) => {
+        if (typeof value === 'string') {
+        // Eliminar comas antes de convertir a número
+          const cleanValue = Number(value.replace(/,/g, ''))
+          return isNaN(cleanValue) ? value : cleanValue
+        }
+        return value
+      },
+      z.number({
+        invalid_type_error: 'The amount field is required',
+        required_error: 'The amount field is required',
+      })
+        .refine(value => Number.isFinite(value) && Number.isInteger(value * 100), {
+          message: 'The amount must have up to 2 decimal places'
+        })
+        .refine(value => value !== 0, {
+          message: 'The amount field must be different from zero'
+        })
+    ),
   },
 
   {
