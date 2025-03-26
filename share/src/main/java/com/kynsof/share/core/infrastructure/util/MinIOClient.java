@@ -71,16 +71,16 @@ public class MinIOClient implements IAmazonClient {
     }
 
     @Override
-    public String save(MultipartFile file) throws IOException {
-        String originalFilename = file.getOriginalFilename();
+    public String save(FileDto file) throws IOException {
 
+        MultipartFile multipartFile = getMultipartFile(file);
+        String originalFilename = multipartFile.getOriginalFilename();
         String sanitizedFilename = originalFilename.replace(" ", "_");
-
         String fileExtension = StringUtils.getFilenameExtension(sanitizedFilename);
         String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
         String name = StringUtils.stripFilenameExtension(sanitizedFilename) + "_" + timestamp + "." + fileExtension;
 
-        this.uploadFile(file.getInputStream(), file.getSize(), file.getContentType(), name);
+        this.uploadFile(multipartFile.getInputStream(), multipartFile.getSize(), multipartFile.getContentType(), name);
 
         if(isPrivateBucket){
             return getPublicUrl(name);
@@ -91,14 +91,14 @@ public class MinIOClient implements IAmazonClient {
 
 
     @Override
-    public List<FileDto> saveAll(List<MultipartFile> files) {
+    public List<FileDto> saveAll(List<FileDto> files) {
         List<CompletableFuture<FileDto>> futures = files.stream()
                 .map(file -> CompletableFuture.supplyAsync(() -> {
                     try {
                         String fileUrl = save(file);
-                        return new FileDto(file.getOriginalFilename(), fileUrl);
+                        return new FileDto(file.getOriginalName(), fileUrl);
                     } catch (IOException e) {
-                        return new FileDto(file.getOriginalFilename(), "UPLOAD_FAILED: " + e.getMessage());
+                        return new FileDto(file.getOriginalName(), "UPLOAD_FAILED: " + e.getMessage());
                     }
                 }))
                 .collect(Collectors.toList());
@@ -156,7 +156,7 @@ public class MinIOClient implements IAmazonClient {
     }
 
     private MultipartFile getMultipartFile(FileDto fileDto) throws IOException {
-        MultipartFile multipartFile = new MultipartFile() {
+        return new MultipartFile() {
             @Override
             public String getName() {
                 return fileDto.getName();
@@ -169,27 +169,27 @@ public class MinIOClient implements IAmazonClient {
 
             @Override
             public String getContentType() {
-                return MediaType.APPLICATION_XML_VALUE;
+                return fileDto.getMediaType();
             }
 
             @Override
             public boolean isEmpty() {
-                return fileBytes == null || fileBytes.length == 0;
+                return fileDto.getLength() == 0;
             }
 
             @Override
             public long getSize() {
-                return fileBytes.length;
+                return fileDto.getLength();
             }
 
             @Override
             public byte[] getBytes() throws IOException {
-                return fileBytes;
+                return fileDto.getFile();
             }
 
             @Override
             public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(fileBytes);
+                return new ByteArrayInputStream(fileDto.getFile());
             }
 
             @Override
@@ -201,7 +201,7 @@ public class MinIOClient implements IAmazonClient {
 
                 // Write the file bytes to the destination
                 try (FileOutputStream fos = new FileOutputStream(dest)) {
-                    fos.write(fileBytes);
+                    fos.write(fileDto.getFile());
                 }
             }
         };

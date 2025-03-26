@@ -12,8 +12,8 @@ public class FileDto {
     protected String originalName;
     protected byte[] file;
     protected String fileUrl;
-    protected long size;
-    protected MediaType mediaType;
+    protected long length;
+    protected String mediaType;
     protected UploadFileResponse uploadFileResponse;
 
 
@@ -25,7 +25,7 @@ public class FileDto {
     public FileDto(String originalName, byte[] file) {
         this.originalName = originalName;
         this.file = file;
-        this.size = file.length;
+        this.length = file.length;
     }
 
     public FileDto(String originalName, UploadFileResponse uploadFileResponse ) {
