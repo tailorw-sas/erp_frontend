@@ -147,7 +147,7 @@ const hotelTemp = ref<any[]>([])
 const statusList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
-const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 3, client: 3, hotel: 3})
+const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 1, client: 2, hotel: 3})
 
 const confclientListApi = reactive({
   moduleApi: 'settings',
@@ -1047,6 +1047,7 @@ async function getList() {
     }
     listItems.value = [...listItems.value, ...newListItems]
     return listItems
+    
   }
   
   catch (error) {
@@ -1624,9 +1625,10 @@ async function getClientList(moduleApi: string, uriApi: string, queryObj: { quer
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyList.value = []
-  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC, pageSize: 1600 })
   agencyTemp = [...new Set(agencyTemp)];
   agencyList.value = [...agencyTemp]
+  console.log(agencyList.value);
 }
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
@@ -2467,25 +2469,38 @@ const legend = ref(
                           }
                         }"
                         @load="async($event) => {
+                          const filter: FilterCriteria[] = [];
                           let ids = []
                           if (filterToSearch.client.length > 0) {
                             ids = filterToSearch.client.map((element: any) => element?.id)
-                          }
-
-                          const filter: FilterCriteria[] = [
-                            {
+                            filter.push({
                               key: 'client.id',
                               logicalOperation: 'AND',
                               operator: 'IN',
                               value: ids,
-                            },
-                            {
-                              key: 'status',
-                              logicalOperation: 'AND',
-                              operator: 'EQUALS',
-                              value: 'ACTIVE',
-                            },
-                          ]
+                            });
+                          }
+                          filter.push({
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          });
+
+                          // const filter: FilterCriteria[] = [
+                          //   {
+                          //     key: 'client.id',
+                          //     logicalOperation: 'AND',
+                          //     operator: 'IN',
+                          //     value: ids,
+                          //   },
+                          //   {
+                          //     key: 'status',
+                          //     logicalOperation: 'AND',
+                          //     operator: 'EQUALS',
+                          //     value: 'ACTIVE',
+                          //   },
+                          // ]
                           await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
                             query: $event,
                             keys: ['name', 'code'],

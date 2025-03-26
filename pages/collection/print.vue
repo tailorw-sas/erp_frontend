@@ -4,20 +4,21 @@ import { useToast } from 'primevue/usetoast'
 
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
+import { useRoute } from 'vue-router'
 import { GenericService } from '~/services/generic-services'
-import type { IColumn, Pagination, IQueryRequest   } from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IQueryRequest, Pagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 import DynamicTablePrint from '~//components/table/DynamicTablePrint.vue'
 import { formatNumber } from '~/utils/helpers'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
-import { useRoute } from 'vue-router'
+const emit = defineEmits(['close'])
 
 const toast = useToast()
 const totalInvoiceAmount = ref(0)
 const idItemToLoadFirstTime = ref('')
-const listPrintItems = ref<any[]>([]);
+const listPrintItems = ref<any[]>([])
 const totalDueAmount = ref(0)
 
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
@@ -68,19 +69,27 @@ const confagencyListApi = reactive({
 
 // VARIABLES -----------------------------------------------------------------------------------------
 
-
 const ENUM_FILTER = [
   { id: 'id', name: 'Id' },
 ]
 const transformedData = listPrintItems.value.map(item => ({
   ...item,
   hotel: item.hotel?.name || 'N/A'
-}));
+}))
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
   { field: 'invoiceNo', header: 'Id', type: 'text', objApi: confagencyListApi },
   { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi },
-  { field: 'hotel', header: 'Hotel', type: 'select' , objApi: confinvoiceApi}, 
+  {
+    field: 'hotel',
+    header: 'Hotel',
+    width: '80px', // Ancho estándar
+    minWidth: '80px', // Mantiene un tamaño mínimo
+    maxWidth: '120px', // Controla el tamaño máximo
+    columnClass: 'truncate-text', // Clase CSS para truncar el texto
+    type: 'select',
+    objApi: confinvoiceApi
+  },
   { field: 'agencyCd', header: 'Agency CD', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
   { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
@@ -90,11 +99,10 @@ const columns: IColumn[] = [
   { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
   { field: 'hasAttachments', header: 'Attachment', type: 'bool' },
   { field: 'aging', header: 'Aging', type: 'text' },
-  { field: 'status', header: 'Status', type: 'slot-select',localItems: ENUM_INVOICE_STATUS.map(item => ({ 
-      ...item, 
-      name: item.name.toUpperCase() // Asegura coincidencia con "RECONCILED"
-    }))
-  }
+  { field: 'status', header: 'Status', type: 'slot-select', localItems: ENUM_INVOICE_STATUS.map(item => ({
+    ...item,
+    name: item.name.toUpperCase() // Asegura coincidencia con "RECONCILED"
+  })) }
 ]
 
 // -------------------------------------------------------------------------------------------------------
@@ -116,11 +124,11 @@ const options = ref({
 const initialLimit = 10
 const route = useRoute()
 
-const  payload = ref({
+const payload = ref({
   filter: [],
   query: '',
-  pageSize: 0, 
-  page: 0,    
+  pageSize: 0,
+  page: 0,
   sortBy: '',
   sortType: ''
 })
@@ -130,7 +138,7 @@ const payloadInv = ref<IQueryRequest>({
   page: 0,
   size: 50,
   sort: 'invoiceDate,desc'
-});
+})
 
 const payloadLocalStorage = ref<IQueryRequest>({
   filter: [],
@@ -146,11 +154,11 @@ const payloadOnChangePage = ref<PageState>()
 const pagination = ref<Pagination>({
   page: 0,
   limit: 50,
-  totalElements: 0,   
+  totalElements: 0,
   totalPages: 0,
   search: ''
 })
-const handleSelectionChange = (items: any[]) => {
+function handleSelectionChange(items: any[]) {
   console.log('Selección actualizada:', items)
   selectedElements.value = items
 }
@@ -164,14 +172,14 @@ onMounted(() => {
     const parsedData = JSON.parse(storedData)
 
     // Mantener estas líneas (CRÍTICO)
-    listPrintItems.value = parsedData.listItems;
+    listPrintItems.value = parsedData.listItems
     totalInvoiceAmount.value = parsedData.totals.invoiceTotalAmount
     totalDueAmount.value = parsedData.totals.invoiceDueTotalAmount
-    
+
     // Añadir esto (SOLUCIÓN CLAVE)
-    pagination.value.totalElements = parsedData.totalElements; // <- Usar el total de la paginación
+    pagination.value.totalElements = parsedData.totalElements // <- Usar el total de la paginación
     pagination.value.totalPages = 1 // Forzar 1 página
-    pagination.value.totalPages = Math.ceil(parsedData.totalElements / pagination.value.limit);
+    pagination.value.totalPages = Math.ceil(parsedData.totalElements / pagination.value.limit)
   }
 })
 
@@ -180,16 +188,13 @@ function handlePaginationChange(event: any) {
   pagination.value.limit = event.rows
 }
 
-
-
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 
-  
 // async function getPrintList(totalFromIndex: number) {
 //   try {
 //     options.value.loading = true
 //     listPrintItems.value = []
-    
+
 //     totalInvoiceAmount.value = totalFromIndex;
 
 //     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value);
@@ -272,8 +277,9 @@ async function savePrint() {
       severity: 'info',
       summary: 'Confirmed',
       detail: `The process was executed successfully, records printed  ${totalFiles}`,
-      life: 0 // Duración del toast en milisegundos
+      life: 5000 // Duración del toast en milisegundos
     })
+    onClose()
   }
   catch (error: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.message || 'Transaction was failed', life: 3000 })
@@ -285,6 +291,9 @@ async function savePrint() {
   }
 }
 
+function onClose() {
+  emit('close')
+}
 
 async function getHotelList(query: string = '') {
   try {
@@ -405,7 +414,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   }
 
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
-  //await getPrintList()
+  // await getPrintList()
 }
 // payload.value.filter = [...parseFilter || []]
 // getPrintList()
@@ -435,7 +444,7 @@ async function onSortField(event: any) {
     //   : payload.value
     payload.value.sortBy = event.sortField
     payload.value.sortType = event.sortOrder
-    //await getPrintList()
+    // await getPrintList()
   }
 }
 function getStatusName(code: string) {
@@ -451,14 +460,14 @@ function getStatusName(code: string) {
       return ''
   }
 }
-const getStatusSeverity = (code: string) => {
+function getStatusSeverity(code: string) {
   switch (code.toUpperCase()) {
-    case 'RECONCILED': return 'success';
-    case 'PENDING': return 'warning';
-    case 'CANCELED': return 'danger';
-    default: return 'info';
+    case 'RECONCILED': return 'success'
+    case 'PENDING': return 'warning'
+    case 'CANCELED': return 'danger'
+    default: return 'info'
   }
-};
+}
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
@@ -570,84 +579,81 @@ watch(payloadOnChangePage, async (newValue) => {
     : payload.value
   payload.value.page = newValue?.page ? newValue?.page : 0
   payload.value.pageSize = newValue?.rows ? newValue.rows : 50
-  //await getPrintList()
+  // await getPrintList()
 })
 
-const onMultipleSelect = (selectedItems: any[]) => {
-  selectedElements.value = Array.isArray(selectedItems) 
-    ? selectedItems 
+function onMultipleSelect(selectedItems: any[]) {
+  selectedElements.value = Array.isArray(selectedItems)
+    ? selectedItems
     : [selectedItems]
 }
-
 </script>
 
 <template>
-<!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     Invoices to Print
   </div> -->
   <div class="grid">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-0">
       <div class="p-fluid pt-3">
         <div class="card p-0">
-          <div v-if="pagination.totalElements === 0" class="no-data-message">
-  </div>
+          <div v-if="pagination.totalElements === 0" class="no-data-message" />
 
-        <DynamicTablePrint
-          :data="listPrintItems"
-          :columns="columns"
-          :options="options"
-          :pagination="pagination"
-          @on-confirm-create="clearForm"
-          @on-change-pagination="handlePaginationChange"
-          @on-change-filter="parseDataTableFilter"
-          @on-list-item="resetListItems"
-          @on-sort-field="onSortField"
-          @update:clicked-item="onMultipleSelect($event)" 
-          @update:selection="onMultipleSelect"
-          @selection-change="onMultipleSelect" 
-          dataKey="id"    
-        >   
-        <template #pagination-total>
-  <span class="font-bold">
-    {{ pagination.totalElements }}
-  </span>
-</template>
-        <Paginator
-          :rows="pagination.limit"
-          :totalRecords="pagination.totalElements"
-          :rowsPerPageOptions="[10, 20, 30, 50]"
-          @page="handlePaginationChange"
-        />
+          <DynamicTablePrint
+            :data="listPrintItems"
+            :columns="columns"
+            :options="options"
+            :pagination="pagination"
+            data-key="id"
+            @on-confirm-create="clearForm"
+            @on-change-pagination="handlePaginationChange"
+            @on-change-filter="parseDataTableFilter"
+            @on-list-item="resetListItems"
+            @on-sort-field="onSortField"
+            @update:clicked-item="onMultipleSelect($event)"
+            @update:selection="onMultipleSelect"
+            @selection-change="onMultipleSelect"
+          >
+            <template #pagination-total>
+              <span class="font-bold">
+                {{ pagination.totalElements }}
+              </span>
+            </template>
+            <Paginator
+              :rows="pagination.limit"
+              :total-records="pagination.totalElements"
+              :rows-per-page-options="[10, 20, 30, 50]"
+              @page="handlePaginationChange"
+            />
 
-        <template #body-hotel="{ data }">
-          {{ data.hotel?.name || 'N/A' }} <!-- Muestra el nombre del hotel -->
-        </template>
+            <template #body-hotel="{ data }">
+              {{ data.hotel?.name || 'N/A' }} <!-- Muestra el nombre del hotel -->
+            </template>
 
-        <template #column-status="{ data: item }">
-          <Badge
-           :value="getStatusName(item?.status)"
-           :severity="getStatusSeverity(item.status)"
-           :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-          />
-         </template>
+            <template #column-status="{ data: item }">
+              <Badge
+                :value="getStatusName(item?.status)"
+                :severity="getStatusSeverity(item.status)"
+                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+              />
+            </template>
 
-         <template #datatable-footer>
-  <ColumnGroup type="footer" class="flex align-items-center" style="font-weight: 700">
-    <Row>
-      <Column 
-        footer="Totals:" 
-        :colspan="9" 
-        footer-style="text-align:right; font-weight: 900" 
-      />
-      <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
-                <Column :colspan="3" footer-style="text-align:right; font-weight: 700" />
-    </Row>
-  </ColumnGroup>
-</template>
-       </DynamicTablePrint> 
-       
-      </div>
+            <template #datatable-footer>
+              <ColumnGroup type="footer" class="flex align-items-center" style="font-weight: 700">
+                <Row>
+                  <Column
+                    footer="Totals:"
+                    :colspan="9"
+                    footer-style="text-align:right; font-weight: 900"
+                  />
+                  <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
+                  <Column :colspan="1" :footer="`$${formatNumber(totalDueAmount)}`" footer-style="text-align:left; font-weight: 700" />
+                  <Column :colspan="3" footer-style="text-align:right; font-weight: 700" />
+                </Row>
+              </ColumnGroup>
+            </template>
+          </DynamicTablePrint>
+        </div>
       </div>
       <div class="flex justify-content-between">
         <div class="flex align-items-center">
@@ -694,8 +700,10 @@ const onMultipleSelect = (selectedItems: any[]) => {
         </div>
 
         <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Print'" 
-          class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
+          <Button
+            v-tooltip.top="'Print'"
+            class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint"
+          />
           <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
         </div>
       </div>
