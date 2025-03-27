@@ -44,7 +44,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'code',
     class: 'field col-12 required',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(10, 'Maximum 10 characters').regex(/^[a-z]+$/i, 'Only text characters allowed')
+    validation: z.string().trim().min(1, 'The code field is required').min(3, 'Minimum 3 characters').max(10, 'Maximum 10 characters').regex(/^[a-z\s/-]+$/i, 'Only text characters, spaces, hyphens, and slashes are allowed')
   },
   {
     field: 'name',
@@ -160,7 +160,11 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12',
     headerClass: 'mb-1',
-    validation: z.string().trim().min(0, 'The default remark field is required').max(50, 'Maximum 50 characters'),
+    validation: z.string()
+      .trim()
+      .max(50, 'Maximum 50 characters')
+      .nullable()
+      .optional(),
   },
   {
     field: 'description',
