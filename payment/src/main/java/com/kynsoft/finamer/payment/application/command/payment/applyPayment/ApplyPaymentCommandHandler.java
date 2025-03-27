@@ -379,7 +379,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         if (updatePayment.getPaymentBalance() == 0 && updatePayment.getDepositBalance() == 0) {
             updatePayment.setPaymentStatus(this.statusService.findPaymentStatusByApplied());
             ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
-            this.createPaymentAttachmentStatusHistory(employeeDto, updatePayment.toAggregate());
+            this.createPaymentAttachmentStatusHistory(employeeDto, updatePayment.toAggregateBasic());
         }
         updatePayment.setApplyPayment(true);
     }
