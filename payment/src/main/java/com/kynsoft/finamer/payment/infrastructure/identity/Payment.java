@@ -21,6 +21,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.hibernate.annotations.DynamicUpdate;
@@ -302,6 +303,7 @@ public class Payment implements Serializable {
                 status,
                 reference,
                 transactionDate,
+                Objects.nonNull(paymentStatus) ? paymentStatus.toAggregate() : null,
                 paymentAmount,
                 paymentBalance,
                 depositAmount,

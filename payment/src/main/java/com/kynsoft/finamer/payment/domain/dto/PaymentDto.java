@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -134,7 +135,7 @@ public class PaymentDto {
     }
 
     public PaymentDto(UUID id, long paymentId, Status status,
-                      String reference, LocalDate transactionDate,
+                      String reference, LocalDate transactionDate, ManagePaymentStatusDto paymentStatus,
                       double paymentAmount, double paymentBalance, double depositAmount, double depositBalance,
                       double otherDeductions, double identified, double notIdentified, Double notApplied,
                       Double applied, String remark,
@@ -144,6 +145,7 @@ public class PaymentDto {
         this.status = status;
         this.reference = reference;
         this.transactionDate = transactionDate;
+        this.paymentStatus = Objects.nonNull(paymentStatus) ? paymentStatus : null;
         this.paymentAmount = paymentAmount;
         this.paymentBalance = paymentBalance;
         this.depositAmount = depositAmount;
