@@ -165,10 +165,12 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
+    loadingSaveAll.value = true
     inputFile.value = event.target.files[0]
     invoiceFile.value = inputFile.value.name
     uploadComplete.value = false
     event.target.value = ''
+    loadingSaveAll.value = false
   }
 }
 
@@ -320,6 +322,7 @@ onMounted(async () => {
                         icon="pi pi-file-import"
                         severity="secondary"
                         class="w-2rem h-2rem p-0 m-0"
+                        :disabled="loadingSaveAll"
                         @click="fileUpload.click()"
                       />
                     </span>
