@@ -28,10 +28,12 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBook
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 
+import com.kynsoft.finamer.invoicing.infrastructure.services.BookingServiceImpl;
 import org.aspectj.bridge.IMessage;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
@@ -39,6 +41,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/manage-booking")
@@ -143,21 +147,26 @@ public class BookingController {
                                                  @RequestPart("employee") String employee
                                                  ) {
 
+        if (filePart == null) {
+            return Mono.just(ResponseEntity.badRequest().body("File is missing"));
+        }
         return DataBufferUtils.join(filePart.content())
                 .flatMap(dataBuffer -> {
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
 
-                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId,bytes, EImportType.valueOf(eImportPaymentType),employee);
+                    ImportBookingRequest importRequest = new ImportBookingRequest(importProcessId, bytes, EImportType.valueOf(eImportPaymentType),
+                            employee);
                     ImportBookingFromFileCommand importBookingFromFileCommand = new ImportBookingFromFileCommand(importRequest);
                     try {
                         IMessage message = mediator.send(importBookingFromFileCommand);
                         return Mono.just(ResponseEntity.ok(message));
-                    }catch (Exception e) {
-                        return Mono.error(e);
+                    }catch (IllegalArgumentException e) {
+                        return Mono.just(ResponseEntity.badRequest().body("Invalid import type provided."));
+                    } catch (Exception e) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error"));
                     }
-
                 } );
     }
 
@@ -170,7 +179,6 @@ public class BookingController {
 
     @GetMapping(path = "/{importProcessId}/import-status")
     public ResponseEntity<?> getImportBookingProcessStatus(@PathVariable("importProcessId") String importProcessId) {
-        System.out.println("*************************************Ingreso a Import Status con importProcessId: " + importProcessId);
         ImportBookingProcessStatusRequest request = new ImportBookingProcessStatusRequest(importProcessId);
         ImportBookingProcessStatusQuery importBookingProcessStatusQuery = new ImportBookingProcessStatusQuery(request);
         return ResponseEntity.ok(mediator.send(importBookingProcessStatusQuery));
