@@ -66,7 +66,8 @@ public class CreateAdjustmentTransactionCommandHandler implements ICommandHandle
                 netAmount,
                 null,
                 false,
-                true
+                true,
+                null
         ));
         command.setId(transactionDto.getId());
         this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());

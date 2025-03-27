@@ -86,6 +86,9 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
             transactionDto.setStatus(transactionStatusDto);
             this.transactionStatusHistoryService.create(transactionDto, command.getRequest().getEmployeeId());
         }
+
+        transactionDto.setAuthorizationCode(extractFieldFromResponse(command.getRequest().getMerchantResponse(), "AzulOrderId"));
+
         this.transactionService.update(transactionDto);
 
         //3- Actualizar vcc_transaction_payment_logs columna merchant_respose en vcc_transaction
@@ -97,5 +100,16 @@ public class UpdateManageStatusTransactionBlueCommandHandler implements ICommand
         //Enviar correo (voucher) de confirmacion a las personas implicadas
         byte[] attachment = this.voucherService.createAndUploadAndAttachTransactionVoucher(transactionDto, merchantConfigDto, command.getRequest().getEmployee());
         transactionService.sendTransactionConfirmationVoucherEmail(transactionDto, merchantConfigDto, command.getRequest().getResponseCodeMessage(), attachment);
+    }
+
+    private String extractFieldFromResponse(String request, String fieldName){
+        String[] data = request.split("&");
+        for (String param : data) {
+            if (param.startsWith(fieldName + "=")) {
+                String[] keyValue = param.split("=", 2);
+                return keyValue.length > 1 ? keyValue[1] : "";
+            }
+        }
+        return null;
     }
 }

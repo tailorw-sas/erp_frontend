@@ -35,6 +35,8 @@ public interface IManageBookingService {
 
     List<Booking> findAllByBookingIdIn(List<Long> ids);
 
+    List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids);
+
     void updateAll(List<Booking> list);
 
     BookingProjectionControlAmountBalance findByCoupon(String coupon);

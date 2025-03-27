@@ -23,6 +23,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
@@ -33,6 +34,7 @@ import org.hibernate.generator.EventType;
 @Table(name = "payment")
 @EntityListeners(AuditEntityListener.class)
 @RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@DynamicUpdate
 public class Payment implements Serializable {
 
     @Id
@@ -290,6 +292,29 @@ public class Payment implements Serializable {
                 importType,
                 hasAttachment,
                 hasDetailTypeDeposit
+        );
+    }
+
+    public PaymentDto toAggregateBasic() {
+        return new PaymentDto(
+                id,
+                paymentId != null ? paymentId : null,
+                status,
+                reference,
+                transactionDate,
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
         );
     }
 

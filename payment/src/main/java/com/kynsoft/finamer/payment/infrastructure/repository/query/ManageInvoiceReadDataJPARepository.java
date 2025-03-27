@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 @Repository
 public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoice, UUID>, 
@@ -19,4 +20,7 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoic
     Page<Invoice> findAll(Specification specification, Pageable pageable);
 
     List<Invoice> findByIdIn(List<UUID> ids);
+
+    @EntityGraph(attributePaths = {"bookings"}, type = EntityGraph.EntityGraphType.FETCH)
+    List<Invoice> findInvoiceWithEntityGraphByIdIn(List<UUID> ids);
 }

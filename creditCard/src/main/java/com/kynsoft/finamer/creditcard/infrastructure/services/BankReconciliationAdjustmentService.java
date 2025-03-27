@@ -85,7 +85,8 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     request.getAmount(),
                     LocalDateTime.now(),
                     false,
-                    true
+                    true,
+                    null
             ));
             transactionList.add(transactionDto);
             ids.add(transactionDto.getId());
@@ -137,7 +138,8 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
                     request.getAmount(),
                     LocalDateTime.now(),
                     false,
-                    true
+                    true,
+                    null
             ));
             adjustmentTransactions.add(transactionDto);
             ids.add(transactionDto.getId());
