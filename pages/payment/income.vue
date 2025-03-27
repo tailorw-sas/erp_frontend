@@ -415,8 +415,8 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
     validation: z.preprocess(
       (value) => {
         if (typeof value === 'string') {
-        // Eliminar comas antes de convertir a número
-          const cleanValue = Number(value.replace(/,/g, ''))
+        // Eliminar comas y espacios antes de convertir a número
+          const cleanValue = Number(value.replace(/,/g, '').trim())
           return isNaN(cleanValue) ? value : cleanValue
         }
         return value
@@ -425,7 +425,7 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
         invalid_type_error: 'The amount field is required',
         required_error: 'The amount field is required',
       })
-        .refine(value => Number.isFinite(value) && Number.isInteger(value * 100), {
+        .refine(value => Number.isFinite(value) && Number((value).toFixed(2)) === value, {
           message: 'The amount must have up to 2 decimal places'
         })
         .refine(value => value !== 0, {
@@ -433,7 +433,6 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
         })
     ),
   },
-
   {
     field: 'date',
     header: 'Date',
