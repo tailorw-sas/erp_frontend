@@ -52,7 +52,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     private final InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl;
 
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
 
     private final IPaymentCloseOperationService paymentCloseOperationService;
     private final IManageBookingService manageBookingService;
@@ -67,7 +67,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             InvoiceHttpUUIDService invoiceHttpUUIDService,
             InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl,
             IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+            IPaymentStatusHistoryService paymentStatusHistoryService,
             IPaymentCloseOperationService paymentCloseOperationService,
             IManageBookingService manageBookingService,
             IManagePaymentStatusService statusService,
@@ -79,7 +79,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         this.manageInvoiceService = manageInvoiceService;
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
-        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
         this.paymentCloseOperationService = paymentCloseOperationService;
         this.manageBookingService = manageBookingService;
         this.statusService = statusService;
@@ -280,16 +280,16 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return newDetailDto;
     }
 
-    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+    private void createPaymentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
 
-        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-        attachmentStatusHistoryDto.setDescription("Update Payment.");
-        attachmentStatusHistoryDto.setEmployee(employeeDto);
-        attachmentStatusHistoryDto.setPayment(payment);
-        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+        PaymentStatusHistoryDto paymentStatusHistoryDto = new PaymentStatusHistoryDto();
+        paymentStatusHistoryDto.setId(UUID.randomUUID());
+        paymentStatusHistoryDto.setDescription("Update Payment.");
+        paymentStatusHistoryDto.setEmployee(employeeDto);
+        paymentStatusHistoryDto.setPayment(payment);
+        paymentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
 
-        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
+        this.paymentStatusHistoryService.create(paymentStatusHistoryDto);
     }
 
     private OffsetDateTime transactionDate(UUID hotel) {
@@ -379,7 +379,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         if (updatePayment.getPaymentBalance() == 0 && updatePayment.getDepositBalance() == 0) {
             updatePayment.setPaymentStatus(this.statusService.findPaymentStatusByApplied());
             ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
-            this.createPaymentAttachmentStatusHistory(employeeDto, updatePayment.toAggregateBasic());
+            this.createPaymentStatusHistory(employeeDto, updatePayment.toAggregateBasic());
         }
         updatePayment.setApplyPayment(true);
     }
