@@ -164,10 +164,12 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
+    loadingSaveAll.value = true
     inputFile.value = event.target.files[0]
     invoiceFile.value = inputFile.value.name
     uploadComplete.value = false
     event.target.value = ''
+    loadingSaveAll.value = false
   }
 }
 
@@ -319,7 +321,7 @@ onMounted(async () => {
                       aria-describedby="inputtext-help"
                     />
                     <span class="p-inputgroup-addon p-0 m-0">
-                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" :disabled="loadingSaveAll" @click="fileUpload.click()" />
                     </span>
                     <span class="p-inputgroup-addon p-0 m-0 ml-1">
                       <Button
