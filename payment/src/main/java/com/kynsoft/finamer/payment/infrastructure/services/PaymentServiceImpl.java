@@ -372,7 +372,8 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public Payment findByIdWithBalancesOnly(UUID id) {
-        Optional<Payment> object = this.repositoryQuery.findByIdWithBalancesOnly(id);
+        //Optional<Payment> object = this.repositoryQuery.findByIdWithBalancesOnly(id);
+        Optional<Payment> object = this.repositoryQuery.findById(id);
         if (object.isPresent()) {
             return object.get();
         }
