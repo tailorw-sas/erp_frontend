@@ -25,7 +25,7 @@ public class ManagePaymentTransactionTypeCodeSizeRule extends BusinessRule{
     }
 
     private boolean validateCode(String code) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z\\-/]{3,5}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z\\s\\-\\/]{3,20}$\n");
         Matcher matcher = pattern.matcher(code);
 
         return matcher.matches();
