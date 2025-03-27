@@ -16,8 +16,7 @@ public class ImportInnsistController {
     private final IMediator mediator;
     //private final ImportInnsistServiceImpl service;
 
-    public ImportInnsistController(ImportInnsistServiceImpl service,
-                                   IMediator mediator) {
+    public ImportInnsistController(IMediator mediator) {
         //this.service = service;
         this.mediator = mediator;
     }
