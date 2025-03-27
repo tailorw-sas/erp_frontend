@@ -988,7 +988,8 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
     widthTruncate: '50px', // Control de truncamiento
     columnClass: 'truncate-text', sortable: true, showFilter: true },
   { field: 'invoiceNumber', header: 'Invoice No.', type: 'text', width: '50px', // Define un ancho fijo
-    minWidth: '40px', // Establece un ancho mínimo  maxWidth: '60px', // Evita que se expanda demasiado
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
     widthTruncate: '50px', // Control de truncamiento
     columnClass: 'truncate-text', sortable: true, showFilter: true },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '80px', // Define un ancho fijo
@@ -2626,8 +2627,7 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
-              console.log('Parte 2')
+              const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
 
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
@@ -2643,6 +2643,8 @@ async function applyPaymentGetListForOtherDeductions() {
 
               if (loadAllInvoices.value) {
                 applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
+                console.log('LoadAllInvoices')
+                console.log(applyPaymentPayloadOtherDeduction)
               }
               else {
                 const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
@@ -2787,26 +2789,28 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
 
-              if (loadAllInvoices.value) {
-                applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
-              }
-              else {
-                const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
+              // if (loadAllInvoices.value) {
+              //   applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
+              //   console.log('LoadAllInvoices1')
+              //   console.log(applyPaymentPayloadOtherDeduction.value.filter)
+              // }
+              // else {
+              //   const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
 
-                if (objFilterForPayment) {
-                  objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
-                }
-                else {
-                  applyPaymentPayloadOtherDeduction.value.filter.push(
-                    {
-                      key: 'paymentDetails.payment.id',
-                      operator: 'EQUALS',
-                      value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
-                      logicalOperation: 'AND'
-                    }
-                  )
-                }
-              }
+              //   if (objFilterForPayment) {
+              //     objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+              //   }
+              //   else {
+              //     applyPaymentPayloadOtherDeduction.value.filter.push(
+              //       {
+              //         key: 'paymentDetails.payment.id',
+              //         operator: 'EQUALS',
+              //         value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
+              //         logicalOperation: 'AND'
+              //       }
+              //     )
+              //   }
+              // }
 
               const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
 
@@ -3307,7 +3311,7 @@ async function saveApplyPaymentOtherDeduction() {
         payment: objItemSelectedForRightClickApplyPaymentOtherDeduction.value.id || '',
         booking: [...listTemp], // este ya es un array de ids
         transactionType: transactionType.value?.id || '',
-        remark: fieldRemark.value ? fieldRemark.value : transactionType.value.defaultRemark,
+        remark: fieldRemark.value?.trim() || transactionType.value?.defaultRemark?.trim() || '',
         employee: userData?.value?.user?.userId || ''
       }
 
