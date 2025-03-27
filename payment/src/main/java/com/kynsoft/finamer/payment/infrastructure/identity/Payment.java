@@ -295,4 +295,27 @@ public class Payment implements Serializable {
         );
     }
 
+    public PaymentDto toAggregateBasic() {
+        return new PaymentDto(
+                id,
+                paymentId != null ? paymentId : null,
+                status,
+                reference,
+                transactionDate,
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
+        );
+    }
+
 }

@@ -132,4 +132,30 @@ public class PaymentDto {
         this.transactionDateTime = transactionDateTime;
         this.paymentId = paymentId;
     }
+
+    public PaymentDto(UUID id, long paymentId, Status status,
+                      String reference, LocalDate transactionDate,
+                      double paymentAmount, double paymentBalance, double depositAmount, double depositBalance,
+                      double otherDeductions, double identified, double notIdentified, Double notApplied,
+                      Double applied, String remark,
+                      OffsetDateTime createdAt, EAttachment eAttachment, LocalTime transactionDateTime) {
+        this.id = id;
+        this.paymentId = paymentId;
+        this.status = status;
+        this.reference = reference;
+        this.transactionDate = transactionDate;
+        this.paymentAmount = paymentAmount;
+        this.paymentBalance = paymentBalance;
+        this.depositAmount = depositAmount;
+        this.depositBalance = depositBalance;
+        this.otherDeductions = otherDeductions;
+        this.identified = identified;
+        this.notIdentified = notIdentified;
+        this.notApplied = notApplied;
+        this.applied = applied;
+        this.remark = remark;
+        this.createdAt = createdAt;
+        this.eAttachment = eAttachment;
+        this.transactionDateTime = transactionDateTime;
+    }
 }
