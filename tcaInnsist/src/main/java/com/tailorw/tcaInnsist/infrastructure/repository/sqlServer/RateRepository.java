@@ -25,8 +25,8 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
         List<Rate> rates = new ArrayList<>();
 
         try{
-            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, tbd1_0.r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
-                    "   tbd1_0.r_fec_fin, tbd1_0.r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
+            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, TRIM(tbd1_0.r_cod_age) r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
+                    "   tbd1_0.r_fec_fin, TRIM(tbd1_0.r_cupon_fac) r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
                     "   tbd1_0.r_monto, tbd1_0.r_fec_fac, tbd1_0.r_tfa_adulto, tbd1_0.r_tfa_menor, " +
                     "   TRIM(tbd1_0.r_tpo_plan) r_tpo_plan, tbd1_0.r_observaciones, tbd1_0.r_res_cve, tbd1_0.r_num_hab, " +
                     "   TRIM(tbd1_0.r_tpo_hab) r_tpo_hab, tbd1_0.r_estancia, tbd1_0.r_pers, " +
@@ -78,8 +78,8 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
             Object agenciesFilter = SearchUtil.getValueByKey(filterCriteria, "agencyCode", Object.class);
             String[] agencies = SearchUtil.convertToArray(agenciesFilter, String.class);
 
-            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, tbd1_0.r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
-                    "   tbd1_0.r_fec_fin, tbd1_0.r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
+            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, TRIM(tbd1_0.r_cod_age) r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
+                    "   tbd1_0.r_fec_fin, TRIM(tbd1_0.r_cupon_fac) r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
                     "   tbd1_0.r_monto, tbd1_0.r_fec_fac, tbd1_0.r_tfa_adulto, tbd1_0.r_tfa_menor, " +
                     "   TRIM(tbd1_0.r_tpo_plan) r_tpo_plan, tbd1_0.r_observaciones, tbd1_0.r_res_cve, tbd1_0.r_num_hab, " +
                     "   TRIM(tbd1_0.r_tpo_hab) r_tpo_hab, tbd1_0.r_estancia, tbd1_0.r_pers, " +
@@ -134,8 +134,8 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
         List<Rate> rates = new ArrayList<>();
 
         try{
-            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, tbd1_0.r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
-                    "   tbd1_0.r_fec_fin, tbd1_0.r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
+            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, TRIM(tbd1_0.r_cod_age) r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
+                    "   tbd1_0.r_fec_fin, TRIM(tbd1_0.r_cupon_fac) r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
                     "   tbd1_0.r_monto, tbd1_0.r_fec_fac, tbd1_0.r_tfa_adulto, tbd1_0.r_tfa_menor, " +
                     "   TRIM(tbd1_0.r_tpo_plan) r_tpo_plan, tbd1_0.r_observaciones, tbd1_0.r_res_cve, tbd1_0.r_num_hab, " +
                     "   TRIM(tbd1_0.r_tpo_hab) r_tpo_hab, tbd1_0.r_estancia, tbd1_0.r_pers, " +
@@ -183,8 +183,8 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
         List<Rate> rates = new ArrayList<>();
 
         try{
-            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, tbd1_0.r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
-                    "   tbd1_0.r_fec_fin, tbd1_0.r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
+            String query = "SELECT tbd1_0.ibuff, tbd1_0.r_pers_adu, tbd1_0.r_pers_men, TRIM(tbd1_0.r_cod_age) r_cod_age, tbd1_0.r_importe, tbd1_0.r_fec_ini, " +
+                    "   tbd1_0.r_fec_fin, TRIM(tbd1_0.r_cupon_fac) r_cupon_fac, tbd1_0.r_nom, tbd1_0.r_fecha_creacion, " +
                     "   tbd1_0.r_monto, tbd1_0.r_fec_fac, tbd1_0.r_tfa_adulto, tbd1_0.r_tfa_menor, " +
                     "   TRIM(tbd1_0.r_tpo_plan) r_tpo_plan, tbd1_0.r_observaciones, tbd1_0.r_res_cve, tbd1_0.r_num_hab, " +
                     "   TRIM(tbd1_0.r_tpo_hab) r_tpo_hab, tbd1_0.r_estancia, tbd1_0.r_pers, " +
