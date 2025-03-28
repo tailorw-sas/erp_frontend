@@ -119,9 +119,13 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
         UUID idLog = UUID.randomUUID();
         List<BookingKafka> bookingKafkaList = new ArrayList<>();
         for(Map.Entry<String, List<RateDto>> entry : groupedRates.entrySet()){
+            String[] parts = entry.getKey().split("\\|");
+            String reservationCode = parts.length > 0 ? parts[0] : "";
+            String couponNumber = parts.length > 1 ? parts[1].trim() : "";
+
             BookingKafka bookingKafka = new BookingKafka(
-                    entry.getKey().split("\\|")[0],
-                    entry.getKey().split("\\|")[1],
+                    reservationCode,
+                    couponNumber,
                     entry.getValue().stream()
                             .map(ManageRateKafka::new)
                             .collect(Collectors.toList())
