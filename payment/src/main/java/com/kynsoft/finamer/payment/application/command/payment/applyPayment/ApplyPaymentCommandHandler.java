@@ -97,6 +97,11 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         List<PaymentDetail> createPaymentDetails = new ArrayList<>();
 
         Payment updatePayment = this.paymentService.findByIdWithBalancesOnly(command.getPayment());
+        if(Objects.isNull(updatePayment.getPaymentStatus())){
+            System.out.println("Payment status is null");
+        }else{
+            System.out.println("El valor de payment status es: " + updatePayment.getPaymentStatus().getId());
+        }
         ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();//AANT
         ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();//PAGO
 
@@ -126,6 +131,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     //TODO: este aplica para cuando se quiere aplicar solo a los deposit
                     if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
                         for (PaymentDetailDto paymentDetailTypeDeposit : deposits) {
+                            //Este codigo, busca el deposits (que viene de la lista ordenada de deposits) en la lista no ordenada de deposits
                             PaymentDetail parentDetail = detailTypeDeposits.stream().filter(detail ->
                                     detail.getId().equals(paymentDetailTypeDeposit.getId())).findFirst().get();
 
@@ -190,7 +196,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      */
     private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits, List<PaymentDetail> detailTypeDeposits) {
         try {
-            detailTypeDeposits = this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits);
+            detailTypeDeposits.addAll(this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits));
             List<PaymentDetailDto> queue = this.paymentDetailService.change(detailTypeDeposits);
 
             queue.sort(Comparator.comparingDouble(PaymentDetailDto::getApplyDepositValue));
@@ -312,7 +318,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         PaymentDetail children = new PaymentDetail();
         children.setId(UUID.randomUUID());
         children.setStatus(Status.ACTIVE);
-        children.setPayment(null);
+        children.setPayment(parentDetail.getPayment());
         children.setTransactionType(transactionTypeDto);
         children.setAmount(amount);
         children.setRemark(transactionTypeDto.getDefaultRemark());
