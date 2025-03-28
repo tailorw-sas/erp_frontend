@@ -97,11 +97,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         List<PaymentDetail> createPaymentDetails = new ArrayList<>();
 
         Payment updatePayment = this.paymentService.findByIdWithBalancesOnly(command.getPayment());
-        if(Objects.isNull(updatePayment.getPaymentStatus())){
-            System.out.println("Payment status is null");
-        }else{
-            System.out.println("El valor de payment status es: " + updatePayment.getPaymentStatus().getId());
-        }
         ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();//AANT
         ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();//PAGO
 
