@@ -71,4 +71,5 @@ public interface IPaymentService {
             Double applied, 
             boolean applyPayment,
             UUID id);
+    void updateStatus(UUID paymentId, UUID paymentStatus);
 }

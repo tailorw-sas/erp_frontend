@@ -379,6 +379,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         if (updatePayment.getPaymentBalance() == 0 && updatePayment.getDepositBalance() == 0) {
             updatePayment.setPaymentStatus(this.statusService.findPaymentStatusByApplied());
             ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
+            this.updatePaymentStatus(updatePayment);
             this.createPaymentStatusHistory(employeeDto, updatePayment.toAggregateBasic());
         }
         updatePayment.setApplyPayment(true);
@@ -395,6 +396,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         int index = detailTypeDeposits.indexOf(update);
         if (index != -1) {
             detailTypeDeposits.set(index, update);
+        }
+    }
+
+    private void updatePaymentStatus(Payment updatePayment){
+        if (Objects.nonNull(updatePayment) && Objects.nonNull(updatePayment.getPaymentStatus())){
+            this.paymentService.updateStatus(updatePayment.getId(), updatePayment.getPaymentStatus().getId());
         }
     }
 
