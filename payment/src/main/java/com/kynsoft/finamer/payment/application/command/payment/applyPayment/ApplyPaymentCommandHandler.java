@@ -190,7 +190,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
      */
     private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits, List<PaymentDetail> detailTypeDeposits) {
         try {
-            detailTypeDeposits = this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits);
+            detailTypeDeposits.addAll(this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits));
             List<PaymentDetailDto> queue = this.paymentDetailService.change(detailTypeDeposits);
 
             queue.sort(Comparator.comparingDouble(PaymentDetailDto::getApplyDepositValue));
@@ -312,7 +312,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         PaymentDetail children = new PaymentDetail();
         children.setId(UUID.randomUUID());
         children.setStatus(Status.ACTIVE);
-        children.setPayment(null);
+        children.setPayment(parentDetail.getPayment());
         children.setTransactionType(transactionTypeDto);
         children.setAmount(amount);
         children.setRemark(transactionTypeDto.getDefaultRemark());
