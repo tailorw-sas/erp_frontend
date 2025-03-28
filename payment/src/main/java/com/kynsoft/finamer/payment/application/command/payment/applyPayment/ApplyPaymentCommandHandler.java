@@ -126,7 +126,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     //TODO: este aplica para cuando se quiere aplicar solo a los deposit
                     if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
                         for (PaymentDetailDto paymentDetailTypeDeposit : deposits) {
-                            //Este codigo, busca el deposits (que viene de la lista ordenada de deposits) en la lista no ordenada de deposits
                             PaymentDetail parentDetail = detailTypeDeposits.stream().filter(detail ->
                                     detail.getId().equals(paymentDetailTypeDeposit.getId())).findFirst().get();
 
