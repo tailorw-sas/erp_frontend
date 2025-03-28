@@ -391,4 +391,9 @@ public class PaymentServiceImpl implements IPaymentService {
         this.repositoryCommand.updateBalances(paymentBalance, depositBalance, identified, notIdentified, notApplied, applied, applyPayment, id);
     }
 
+    @Override
+    public void updateStatus(UUID paymentId, UUID paymentStatus) {
+        this.repositoryCommand.updateStatus(paymentStatus, paymentId);
+    }
+
 }

@@ -36,4 +36,9 @@ public interface PaymentWriteDataJPARepository extends JpaRepository<Payment, UU
             @Param("applyPayment") boolean applyPayment,
             @Param("id") UUID id
     );
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Payment p SET p.paymentStatus.id = :paymentStatus WHERE p.id = :id")
+    void updateStatus(@Param("paymentStatus") UUID paymentStatus, @Param("id") UUID id);
 }
