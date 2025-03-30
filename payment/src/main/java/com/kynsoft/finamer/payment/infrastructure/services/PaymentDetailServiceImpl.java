@@ -191,6 +191,12 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
+    public List<PaymentDetailSimpleDto> findSimpleDetailsByPaymentGenIds(List<Long> id) {
+        List<PaymentDetailSimpleDto> list = repositoryQuery.findSimpleDetailsByPaymentIds(id);
+        return list;
+    }
+
+    @Override
     public List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids) {
         return this.repositoryQuery.findByIdIn(ids);
     }

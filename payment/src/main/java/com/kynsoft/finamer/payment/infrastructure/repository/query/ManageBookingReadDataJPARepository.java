@@ -36,15 +36,21 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     Optional<BookingProjectionSimple> findSimpleDetailByGenId(@Param("id") long id);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
-            "pd.id, pd.bookingId, pd.amountBalance) " +
+            "pd.id, pd.bookingId, pd.amountBalance, pd.couponNumber) " +
             "FROM Booking pd " +
             "WHERE pd.bookingId = :id")
     Optional<BookingProjectionControlAmountBalance> findSimpleBookingByGenId(@Param("id") long id);
 
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
+            "pd.id, pd.bookingId, pd.amountBalance, pd.couponNumber) " +
+            "FROM Booking pd " +
+            "WHERE pd.bookingId IN :ids")
+    List<BookingProjectionControlAmountBalance> findBookingsControlAmountBalanceProjectionByGenId(@Param("ids") List<Long> ids);
+
     List<Booking> findByBookingIdIn(List<Long> ids);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
-            "pd.id, pd.bookingId, pd.amountBalance) " +
+            "pd.id, pd.bookingId, pd.amountBalance, pd.couponNumber) " +
             "FROM Booking pd " +
             "WHERE pd.couponNumber = :couponNumber")
     Optional<BookingProjectionControlAmountBalance> findByCouponNumber(@Param("couponNumber") String couponNumber);
@@ -53,4 +59,10 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
 
     @EntityGraph(attributePaths = {"invoice", "parent"}, type = EntityGraph.EntityGraphType.FETCH)
     List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
+            "pd.id, pd.bookingId, pd.amountBalance, pd.couponNumber) " +
+            "FROM Booking pd " +
+            "WHERE pd.couponNumber IN :couponNumbers")
+    List<BookingProjectionControlAmountBalance> findBookingControlAmountBalanceProjectionByCouponNumbers(@Param("couponNumbers") List<String> couponNumbers);
 }
