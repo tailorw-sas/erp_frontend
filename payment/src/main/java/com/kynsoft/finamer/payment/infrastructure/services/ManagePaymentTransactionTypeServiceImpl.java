@@ -19,10 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
@@ -182,6 +180,16 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public List<ManagePaymentTransactionTypeDto> findByCodes(List<String> codes) {
+        if(Objects.nonNull(codes)){
+            return repositoryQuery.findByCode_In(codes).stream()
+                    .map(ManagePaymentTransactionType::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("ManagePaymentTransactionType codes must not be null.");
     }
 
 }

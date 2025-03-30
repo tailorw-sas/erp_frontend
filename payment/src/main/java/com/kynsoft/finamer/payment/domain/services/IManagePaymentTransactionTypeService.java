@@ -37,4 +37,6 @@ public interface IManagePaymentTransactionTypeService {
     void clearCache();
 
     ManagePaymentTransactionTypeDto findByApplyDepositAndDefaults();
+
+    List<ManagePaymentTransactionTypeDto> findByCodes(List<String> codes);
 }
