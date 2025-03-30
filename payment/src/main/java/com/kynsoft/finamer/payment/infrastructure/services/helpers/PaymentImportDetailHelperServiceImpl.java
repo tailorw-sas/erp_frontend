@@ -30,6 +30,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmploye
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
+import com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.CreatePaymentDetail;
 import io.jsonwebtoken.lang.Assert;
 
 import java.time.LocalDateTime;
@@ -67,6 +68,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private Map<Long, PaymentProjection> paymentProjectionMap;
     private Map<UUID, Map<Long, PaymentDetailSimpleDto>> paymentDetailsProyectionMap;
     private Map<String, List<BookingProjectionControlAmountBalance>> bookingControlAmountBalanceByCouponMap;
+
+    private List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentDetailValidatorFactory paymentDetailValidatorFactory,
@@ -324,16 +327,21 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             String remarks,
             UUID bookId,
             boolean applyPayment) {
-        CreatePaymentDetailEvent createPaymentDetailEvent = new CreatePaymentDetailEvent(this);
-        createPaymentDetailEvent.setPayment(paymentId);
-        createPaymentDetailEvent.setAmount(amount);
-        createPaymentDetailEvent.setStatus(Status.ACTIVE);
-        createPaymentDetailEvent.setEmployee(employee);
-        createPaymentDetailEvent.setTransactionType(transactionType);
-        createPaymentDetailEvent.setRemark(remarks);
-        createPaymentDetailEvent.setBooking(bookId);
-        createPaymentDetailEvent.setApplyPayment(applyPayment);
-        applicationEventPublisher.publishEvent(createPaymentDetailEvent);
+        CreatePaymentDetail createPaymentDetailEvent = new CreatePaymentDetail(this);
+        CreatePaymentDetail.setPayment(paymentId);
+        CreatePaymentDetail.setAmount(amount);
+        CreatePaymentDetail.setStatus(Status.ACTIVE);
+        CreatePaymentDetail.setEmployee(employee);
+        CreatePaymentDetail.setTransactionType(transactionType);
+        CreatePaymentDetail.setRemark(remarks);
+        CreatePaymentDetail.setBooking(bookId);
+        CreatePaymentDetail.setApplyPayment(applyPayment);
+        //applicationEventPublisher.publishEvent(createPaymentDetailEvent);
+        this.preparePaymentDetails(createPaymentDetailEvent);
+    }
+
+    private void preparePaymentDetails(CreatePaymentDetail createPaymentDetail){
+        createPaymentDetailList.add(CreatePaymentDetail);
     }
 
     private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
