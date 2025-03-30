@@ -141,6 +141,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         printLog("Start readPaymentCacheAndSave process");
         List<PaymentImportCache> paymentCacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId());
+        paymentCacheList.sort(Comparator.comparing(PaymentImportCache::getRowNumber));
         this.createCache(paymentCacheList);
 
         paymentCacheList.forEach(paymentImportCache -> {
