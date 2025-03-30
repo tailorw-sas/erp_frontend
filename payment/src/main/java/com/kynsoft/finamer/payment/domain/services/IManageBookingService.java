@@ -33,6 +33,8 @@ public interface IManageBookingService {
 
     BookingProjectionControlAmountBalance findSimpleBookingByGenId(long id);
 
+    List<BookingProjectionControlAmountBalance> findAllSimpleBookingByGenId(List<Long> ids);
+
     List<Booking> findAllByBookingIdIn(List<Long> ids);
 
     List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids);
@@ -42,4 +44,6 @@ public interface IManageBookingService {
     BookingProjectionControlAmountBalance findByCoupon(String coupon);
 
     Long countByCoupon(String coupon);
+
+    List<BookingProjectionControlAmountBalance> findAllBookingProjectionControlAmountBalanceByCoupons(List<String> coupons);
 }
