@@ -31,10 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -394,6 +391,14 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public void updateStatus(UUID paymentId, UUID paymentStatus) {
         this.repositoryCommand.updateStatus(paymentStatus, paymentId);
+    }
+
+    @Override
+    public List<PaymentProjection> findPaymentsByPaymentId(List<Long> paymentsId) {
+        if(Objects.nonNull(paymentsId)){
+            return repositoryQuery.getPaymentsByIdProjection(paymentsId);
+        }
+        throw new IllegalArgumentException("Payments ids must not be null");
     }
 
 }

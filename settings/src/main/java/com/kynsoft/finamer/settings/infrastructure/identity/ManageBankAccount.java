@@ -32,7 +32,6 @@ public class ManageBankAccount implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(unique = true)
     private String accountNumber;
 
     @CreationTimestamp
