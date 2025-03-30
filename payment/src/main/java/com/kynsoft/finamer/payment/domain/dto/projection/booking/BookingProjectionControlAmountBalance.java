@@ -16,4 +16,5 @@ public class BookingProjectionControlAmountBalance implements Serializable {
     private UUID bookingId;
     private Long bookingGenId;
     private double bookingAmountBalance;
+    private String couponNumber;
 }

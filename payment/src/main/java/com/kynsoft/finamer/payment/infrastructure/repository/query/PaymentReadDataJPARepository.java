@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -59,4 +60,11 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
     @EntityGraph(attributePaths = {"paymentBalance", "depositBalance"}, type = EntityGraph.EntityGraphType.FETCH)
     @Query("SELECT p FROM Payment p WHERE p.id = :id")
     Optional<Payment> findByIdWithBalancesOnly(@Param("id") UUID id);
+
+    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection("
+            + "p.id, p.paymentId, p.paymentAmount, p.paymentBalance, p.depositAmount, p.depositBalance, p.otherDeductions, "
+            + "p.identified, p.notIdentified, p.notApplied, p.applied, p.agency.id, p.hotel.id) "
+            + "FROM Payment p "
+            + "WHERE p.paymentId IN :paymentIds")
+    List<PaymentProjection> getPaymentsByIdProjection(@Param("paymentIds") List<Long> paymentIds);
 }
