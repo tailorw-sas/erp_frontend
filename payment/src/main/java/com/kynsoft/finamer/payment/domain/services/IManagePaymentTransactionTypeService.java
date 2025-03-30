@@ -38,5 +38,5 @@ public interface IManagePaymentTransactionTypeService {
 
     ManagePaymentTransactionTypeDto findByApplyDepositAndDefaults();
 
-    List<ManagePaymentTransactionTypeDto> findByCodes(List<String> codes);
+    List<ManagePaymentTransactionTypeDto> findByCodesAndPaymentInvoice(List<String> codes);
 }

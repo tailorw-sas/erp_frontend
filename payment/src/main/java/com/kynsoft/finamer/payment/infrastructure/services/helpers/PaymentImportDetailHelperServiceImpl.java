@@ -6,7 +6,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositCommand;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
-import com.kynsoft.finamer.payment.application.command.paymentImport.payment.PaymentImportRequest;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
@@ -137,84 +136,20 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         } while (cacheList.hasNext());
     }
 
-    private void cachingInformation(List<PaymentImportCache> paymentImportCacheList){
-        List<String> transactionIds = paymentImportCacheList.stream()
-                .map(PaymentImportCache::getTransactionId)
-                .distinct()
-                .toList();
-        managePaymentTransactionTypeMap = getTransactionTypeMap(transactionIds);
-
-        List<Long> bookingsId = paymentImportCacheList.stream()
-                .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getBookId()))
-                .map(payment -> Long.parseLong(payment.getBookId()))
-                .distinct()
-                .toList();
-        bookingControlAmountBalanceMap = getBookingsMap(bookingsId);
-
-        List<Long> paymentIds = paymentImportCacheList.stream()
-                .map(paymentImportCache -> Long.parseLong(paymentImportCache.getPaymentId()))
-                .toList();
-        paymentProjectionMap = getPaymentsMap(paymentIds);
-
-        paymentDetailsProyectionMap = getPaymentDetailsProyectionMap(paymentIds);
-
-        List<String> couponNumbers = paymentImportCacheList.stream()
-                .map(PaymentImportCache::getCoupon)
-                .distinct()
-                .toList();
-
-        bookingControlAmountBalanceByCouponMap = getBookingByCouponMap(couponNumbers);
-    }
-
-    private Map<String, ManagePaymentTransactionTypeDto> getTransactionTypeMap(List<String> ids){
-        return transactionTypeService.findByCodes(ids).stream()
-                .collect(Collectors.toMap(ManagePaymentTransactionTypeDto::getCode, managePaymentTransactionTypeDto -> managePaymentTransactionTypeDto));
-    }
-
-    private Map<Long, BookingProjectionControlAmountBalance> getBookingsMap(List<Long> ids){
-        return bookingService.findAllSimpleBookingByGenId(ids).stream()
-                .collect(Collectors.toMap(BookingProjectionControlAmountBalance::getBookingGenId, booking -> booking));
-    }
-
-    private Map<Long, PaymentProjection> getPaymentsMap(List<Long> paymentIds){
-        return paymentService.findPaymentsByPaymentId(paymentIds).stream()
-                .collect(Collectors.toMap(PaymentProjection::getPaymentId, paymentProjection -> paymentProjection));
-    }
-
-    private Map<UUID, Map<Long, PaymentDetailSimpleDto>> getPaymentDetailsProyectionMap(List<Long> paymentsIds){
-        return paymentDetailService.findSimpleDetailsByPaymentGenIds(paymentsIds).stream()
-                .collect(Collectors.groupingBy(PaymentDetailSimpleDto::getPaymentId, Collectors.toMap(PaymentDetailSimpleDto::getPaymentDetailId, dto -> dto)));
-    }
-
-//    private Map<String, Map<UUID, BookingProjectionControlAmountBalance>> getBookingByCouponMap(List<String> couponNumbers){
-//        return bookingService.findAllBookingProjectionControlAmountBalanceByCoupons(couponNumbers).stream()
-//                .collect(Collectors.groupingBy(BookingProjectionControlAmountBalance::getCouponNumber, Collectors.toMap(BookingProjectionControlAmountBalance::getBookingId, booking -> booking)));
-//    }
-
-    private Map<String, List<BookingProjectionControlAmountBalance>> getBookingByCouponMap(List<String> couponNumbers){
-        return bookingService.findAllBookingProjectionControlAmountBalanceByCoupons(couponNumbers).stream()
-                .collect(Collectors.groupingBy(BookingProjectionControlAmountBalance::getCouponNumber));
-    }
-
-    private PaymentDetailSimpleDto findPaymentDetailInMap(UUID paymentId, Long paymentDetailGenId){
-        Map<Long, PaymentDetailSimpleDto> paymentDetails = paymentDetailsProyectionMap.get(paymentId);
-        return paymentDetails.get(paymentDetailGenId);
-    }
-
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         printLog("Start readPaymentCacheAndSave process");
         List<PaymentImportCache> paymentCacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId());
-        this.cachingInformation(paymentCacheList);
+        this.createCache(paymentCacheList);
 
         paymentCacheList.forEach(paymentImportCache -> {
-            ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = managePaymentTransactionTypeMap.get(paymentImportCache.getTransactionId());
+            ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = this.getManageTransactionTypeByCode(paymentImportCache.getTransactionId());
             Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
             PaymentProjection paymentDto = paymentProjectionMap.get(Long.parseLong(paymentImportCache.getPaymentId()));
             PaymentProjectionSimple paymentProjectionSimple = new PaymentProjectionSimple(paymentDto.getId(), paymentDto.getPaymentId());
             BookingProjectionControlAmountBalance bookingDto = paymentImportCache.getBookId() != null ? bookingControlAmountBalanceMap.get(Long.parseLong(paymentImportCache.getBookId())) : null;
-            if (bookingDto != null && bookingDto.getBookingAmountBalance() == 0) {
+            if ( Objects.nonNull(bookingDto) && bookingDto.getBookingAmountBalance() == 0) {
                 sendToDeposit(paymentImportCache, paymentDto);
                 return;
             }
@@ -223,8 +158,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 if (bookingDto == null) {
                     applyPayment = false;
                 }
-                //PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getAnti()));
+
                 PaymentDetailSimpleDto paymentDetailDto = this.findPaymentDetailInMap(paymentProjectionSimple.getId(), Long.parseLong(paymentImportCache.getAnti()));
+                //TODO: No se si validar si el paymentDetailDto es nulo, se supone que en la validacion previa se valido que exista el paymentDetail, y si se valida
+                // que es null, que se hace a continuacion
                 this.sendToCreateApplyDeposit(paymentDetailDto.getId(),
                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
                         UUID.fromString(request.getEmployeeId()),
@@ -238,10 +175,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             } else {
                 if (bookingDto == null) {
                     try {
-                        //if (this.bookingService.countByCoupon(paymentImportCache.getCoupon()) > 1) {
-                        if(bookingControlAmountBalanceByCouponMap.get(paymentImportCache.getCoupon()).size() > 1){
+                        if(couponIsDuplicated(paymentImportCache.getCoupon())){
                             //todo: implementar cuando existe mas de un booking con este coupon
-                            ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByPaymentInvoice();
+                            //ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByPaymentInvoice();
+                            ManagePaymentTransactionTypeDto transactionTypeDto = this.getPaymentInvoiceTransactionType();
                             String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
 
                             //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
@@ -254,16 +191,16 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                     Double.parseDouble(paymentImportCache.getPaymentAmount()),
                                     remarks);
                         } else {
-                            BookingProjectionControlAmountBalance bookingProjection = this.bookingService.findByCoupon(paymentImportCache.getCoupon());
-                            if (bookingProjection == null) {
+                            BookingProjectionControlAmountBalance bookingProjection = this.getBookingProjectionByCoupon(paymentImportCache.getCoupon());
+                            if(Objects.isNull(bookingProjection)){
                                 //todo: implementar cuando no existe el booking
                                 DepositEvent depositEvent = getDepositEvent(paymentImportCache,
-                                                                            paymentProjectionSimple,
-                                                                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                                                    true,
-                                                                    "#coupon not found");
+                                        paymentProjectionSimple,
+                                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                        true,
+                                        "#coupon not found");
                                 this.applicationEventPublisher.publishEvent(depositEvent);
-                            } else {
+                            }else{
                                 //todo: implementar el caso de que existe el booking
                                 //mismo flujo de cuando existe el booking por el id, en este caso el que se encuentra por el coupon
                                 if (bookingProjection.getBookingAmountBalance() == 0) {
@@ -271,13 +208,13 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                     return;
                                 }
                                 createDetailAndDeposit(paymentImportCache,
-                                                        bookingProjection,
-                                                        managePaymentTransactionTypeDto,
-                                                        paymentProjectionSimple,
-                                                        request,
-                                            true,
-                                                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
+                                        bookingProjection,
+                                        managePaymentTransactionTypeDto,
+                                        paymentProjectionSimple,
+                                        request,
+                                        true,
+                                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
                             }
                         }
                     } catch (Exception e) {
@@ -300,7 +237,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private void sendToDeposit(PaymentImportCache paymentImportCache, PaymentProjection paymentProjection) {
-        //PaymentProjection paymentProjection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());
         double rest = paymentProjection.getPaymentBalance() - Double.parseDouble(paymentImportCache.getPaymentAmount());
         if (rest >= 0) {
             DepositEvent depositEvent = getDepositEvent(paymentImportCache, new PaymentProjectionSimple(paymentProjection.getId(), paymentProjection.getPaymentId()),
@@ -422,5 +358,110 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private void printLog(String message){
         logger.info(message + " at: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    }
+
+    private void createCache(List<PaymentImportCache> paymentImportCacheList){
+        List<String> transactionIds = paymentImportCacheList.stream()
+                .map(PaymentImportCache::getTransactionId)
+                .distinct()
+                .toList();
+        managePaymentTransactionTypeMap = getTransactionTypeMap(transactionIds);
+
+        List<Long> bookingsId = paymentImportCacheList.stream()
+                .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getBookId()))
+                .map(payment -> Long.parseLong(payment.getBookId()))
+                .distinct()
+                .toList();
+        bookingControlAmountBalanceMap = getBookingsMap(bookingsId);
+
+        List<Long> paymentIds = paymentImportCacheList.stream()
+                .map(paymentImportCache -> Long.parseLong(paymentImportCache.getPaymentId()))
+                .toList();
+        paymentProjectionMap = getPaymentsMap(paymentIds);
+
+        paymentDetailsProyectionMap = getPaymentDetailsProyectionMap(paymentIds);
+
+        List<String> couponNumbers = paymentImportCacheList.stream()
+                .map(PaymentImportCache::getCoupon)
+                .distinct()
+                .toList();
+
+        bookingControlAmountBalanceByCouponMap = getBookingByCouponMap(couponNumbers);
+    }
+
+    private Map<String, ManagePaymentTransactionTypeDto> getTransactionTypeMap(List<String> ids){
+        return transactionTypeService.findByCodesAndPaymentInvoice(ids).stream()
+                .collect(Collectors.toMap(ManagePaymentTransactionTypeDto::getCode, managePaymentTransactionTypeDto -> managePaymentTransactionTypeDto));
+    }
+
+    private Map<Long, BookingProjectionControlAmountBalance> getBookingsMap(List<Long> ids){
+        return bookingService.findAllSimpleBookingByGenId(ids).stream()
+                .collect(Collectors.toMap(BookingProjectionControlAmountBalance::getBookingGenId, booking -> booking));
+    }
+
+    private Map<Long, PaymentProjection> getPaymentsMap(List<Long> paymentIds){
+        return paymentService.findPaymentsByPaymentId(paymentIds).stream()
+                .collect(Collectors.toMap(PaymentProjection::getPaymentId, paymentProjection -> paymentProjection));
+    }
+
+    private Map<UUID, Map<Long, PaymentDetailSimpleDto>> getPaymentDetailsProyectionMap(List<Long> paymentsIds){
+        return paymentDetailService.findSimpleDetailsByPaymentGenIds(paymentsIds).stream()
+                .collect(Collectors.groupingBy(PaymentDetailSimpleDto::getPaymentId, Collectors.toMap(PaymentDetailSimpleDto::getPaymentDetailId, dto -> dto)));
+    }
+
+    private Map<String, List<BookingProjectionControlAmountBalance>> getBookingByCouponMap(List<String> couponNumbers){
+        return bookingService.findAllBookingProjectionControlAmountBalanceByCoupons(couponNumbers).stream()
+                .collect(Collectors.groupingBy(BookingProjectionControlAmountBalance::getCouponNumber));
+    }
+
+    private PaymentDetailSimpleDto findPaymentDetailInMap(UUID paymentId, Long paymentDetailGenId){
+        Map<Long, PaymentDetailSimpleDto> paymentDetails = paymentDetailsProyectionMap.get(paymentId);
+        return paymentDetails.get(paymentDetailGenId);
+    }
+
+    private ManagePaymentTransactionTypeDto getManageTransactionTypeByCode(String code){
+        if(Objects.isNull(managePaymentTransactionTypeMap) || managePaymentTransactionTypeMap.isEmpty()){
+            return null;
+        }
+
+        return managePaymentTransactionTypeMap.get(code);
+    }
+
+    private Boolean couponIsDuplicated(String coupon){
+        if(Objects.isNull(bookingControlAmountBalanceByCouponMap) || bookingControlAmountBalanceByCouponMap.isEmpty()){
+            return false;
+        }
+
+        List<BookingProjectionControlAmountBalance> bookingList = bookingControlAmountBalanceByCouponMap.get(coupon);
+        if(Objects.isNull(bookingList) || bookingList.isEmpty()){
+            return false;
+        }
+
+        return bookingList.size() != 1;
+    }
+
+    private BookingProjectionControlAmountBalance getBookingProjectionByCoupon(String coupon){
+        if(Objects.isNull(bookingControlAmountBalanceByCouponMap) || bookingControlAmountBalanceByCouponMap.isEmpty()){
+            return null;
+        }
+
+        List<BookingProjectionControlAmountBalance> bookingList = bookingControlAmountBalanceByCouponMap.get(coupon);
+        if(Objects.isNull(bookingList) || bookingList.isEmpty()){
+            return null;
+        }
+
+        return bookingList.get(0);
+    }
+
+    private ManagePaymentTransactionTypeDto getPaymentInvoiceTransactionType(){
+        if(Objects.isNull(managePaymentTransactionTypeMap) || managePaymentTransactionTypeMap.isEmpty()){
+            return null;
+        }
+
+        return managePaymentTransactionTypeMap.entrySet().stream()
+                .filter(transactionType     -> transactionType.getValue().getPaymentInvoice())
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
     }
 }

@@ -183,9 +183,9 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     }
 
     @Override
-    public List<ManagePaymentTransactionTypeDto> findByCodes(List<String> codes) {
+    public List<ManagePaymentTransactionTypeDto> findByCodesAndPaymentInvoice(List<String> codes) {
         if(Objects.nonNull(codes)){
-            return repositoryQuery.findByCode_In(codes).stream()
+            return repositoryQuery.findByCodeInOrPaymentInvoiceTrue(codes).stream()
                     .map(ManagePaymentTransactionType::toAggregate)
                     .toList();
         }
