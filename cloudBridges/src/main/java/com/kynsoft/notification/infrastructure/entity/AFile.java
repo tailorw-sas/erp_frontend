@@ -1,7 +1,8 @@
 package com.kynsoft.notification.infrastructure.entity;
 
 import com.kynsof.share.core.domain.BaseEntity;
-import com.kynsof.share.utils.FileDto;
+import com.kynsof.share.core.domain.response.FileDto;
+import com.kynsof.share.core.domain.response.UploadFileResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
@@ -37,10 +38,10 @@ public class AFile extends BaseEntity {
         this.name = file.getName();
         this.microServiceName = file.getMicroServiceName();
         this.url = file.getUrl();
-        this.isConfirm = file.isConfirm();
+        this.isConfirm = file.isConfirmed();
     }
 
-    public FileDto toAggregate () {
-        return new FileDto(id, name, microServiceName, url, isConfirm);
+    public FileDto toAggregate() {
+        return new FileDto(this.id, this.name, this.microServiceName, this.url, this.isConfirm, null, null);
     }
 }

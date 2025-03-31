@@ -1,8 +1,8 @@
 package com.kynsoft.notification.infrastructure;
 
 
+import com.kynsof.share.core.domain.response.FileDto;
 import com.kynsof.share.core.infrastructure.redis.CacheConfig;
-import com.kynsof.share.utils.FileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;

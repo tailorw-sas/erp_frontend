@@ -1,9 +1,9 @@
 package com.kynsoft.notification.infrastructure.service;
 
 import com.kynsof.share.core.domain.request.FilterCriteria;
+import com.kynsof.share.core.domain.response.FileDto;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
-import com.kynsof.share.utils.FileDto;
 import com.kynsoft.notification.application.query.file.search.FileResponse;
 import com.kynsoft.notification.domain.service.IAFileService;
 import com.kynsoft.notification.infrastructure.entity.AFile;

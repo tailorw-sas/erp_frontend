@@ -1,7 +1,7 @@
 package com.kynsoft.notification.application.query.file.delete;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.utils.FileDto;
+import com.kynsof.share.core.domain.response.FileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
 import org.springframework.stereotype.Component;
 
