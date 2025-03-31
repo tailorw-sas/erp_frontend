@@ -265,7 +265,7 @@
     </dependency>
     <dependency>
       <groupId>com.kynsoft.finamer</groupId>
-      <artifactId>share</artifactId>
+      <artifactId>share-dev</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>

@@ -1,7 +1,8 @@
 package com.kynsoft.notification.infrastructure.entity;
 
 import com.kynsof.share.core.domain.BaseEntity;
-import com.kynsoft.notification.domain.dto.AFileDto;
+import com.kynsof.share.core.domain.response.FileDto;
+import com.kynsof.share.core.domain.response.UploadFileResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -33,15 +33,15 @@ public class AFile extends BaseEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public AFile(AFileDto file) {
+    public AFile(FileDto file) {
         this.id = file.getId();
         this.name = file.getName();
         this.microServiceName = file.getMicroServiceName();
         this.url = file.getUrl();
-        this.isConfirm = file.isConfirm();
+        this.isConfirm = file.isConfirmed();
     }
 
-    public AFileDto toAggregate () {
-        return new AFileDto(id, name, microServiceName, url, isConfirm);
+    public FileDto toAggregate() {
+        return new FileDto(this.id, this.name, this.microServiceName, this.url, this.isConfirm, null, null);
     }
 }
