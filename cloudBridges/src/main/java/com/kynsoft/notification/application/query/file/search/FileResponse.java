@@ -1,7 +1,7 @@
 package com.kynsoft.notification.application.query.file.search;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
-import com.kynsoft.notification.domain.dto.AFileDto;
+import com.kynsof.share.core.domain.response.FileDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +17,7 @@ public class FileResponse implements IResponse {
     private String microServiceName;
     private String url;
 
-    public FileResponse(AFileDto fileDto) {
+    public FileResponse(FileDto fileDto) {
         this.id = fileDto.getId();
         this.name = fileDto.getName();
         this.microServiceName = fileDto.getMicroServiceName();

@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -46,7 +47,7 @@ public class ManageRoomRateDto {
         this.rateChild = dto.getRateChild();
         this.hotelAmount = dto.getHotelAmount();
         this.remark = dto.getRemark();
-        this.booking = dto.getBooking() != null ? new ManageBookingDto(dto.getBooking()) : null;
+        this.booking = Objects.nonNull(dto.getBooking()) ? new ManageBookingDto(dto.getBooking()) : null;
         this.adjustments = new ArrayList<>();
         this.nights = dto.getNights();
     }

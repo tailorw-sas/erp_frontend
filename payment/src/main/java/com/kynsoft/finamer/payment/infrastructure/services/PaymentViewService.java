@@ -98,33 +98,4 @@ public class PaymentViewService {
         return new PaginatedResponse(data.getContent(), data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
-
-    private void filterCriteriaForEmployee(List<FilterCriteria> filterCriteria, UUID employeeId) {
-        for (FilterCriteria filter : filterCriteria) {
-            if ("status".equals(filter.getKey()) && filter.getValue() instanceof String) {
-                try {
-                    Status enumValue = Status.valueOf((String) filter.getValue());
-                    filter.setValue(enumValue);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
-                }
-            }
-        }
-
-        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
-        FilterCriteria fcAgency = new FilterCriteria();
-        fcAgency.setKey("agency.id");
-        fcAgency.setLogicalOperation(LogicalOperation.AND);
-        fcAgency.setOperator(SearchOperation.IN);
-        fcAgency.setValue(agencyIds);
-        filterCriteria.add(fcAgency);
-
-        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
-        FilterCriteria fcHotel = new FilterCriteria();
-        fcHotel.setKey("hotel.id");
-        fcHotel.setLogicalOperation(LogicalOperation.AND);
-        fcHotel.setOperator(SearchOperation.IN);
-        fcHotel.setValue(hotelIds);
-        filterCriteria.add(fcHotel);
-    }
 }

@@ -41,9 +41,11 @@ public class Product {
     @XmlAttribute(name = "Comment")
     private String comment= StringUtils.EMPTY;
 
-    @XmlElement(name = "Taxes")
+    @XmlElementWrapper(name="Taxes")
+    @XmlElement(name = "Tax")
     private List<Tax> taxes;
 
-    @XmlElement(name = "ServicesData")
+    @XmlElementWrapper(name="ServicesData")
+    @XmlElement(name = "ServiceData")
     private List<ServiceData> serviceDatas;
 }

@@ -174,7 +174,6 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
                 new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
-
     }
 
     @Override
@@ -187,12 +186,16 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
                 new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
-
     }
 
     @Override
     public List<ManageBookingDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(Booking::toAggregate).toList();
+    }
+
+    @Override
+    public List<ManageBookingDto> findBookingsWithRoomRatesByInvoiceIds(List<UUID> invoiceIds) {
+        return repositoryQuery.findBookingsWithRoomRatesByInvoiceIds(invoiceIds).stream().map(Booking::toAggregateWithRates).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
@@ -229,18 +232,6 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public List<ManageBookingDto> findAllToReplicate() {
         List<Booking> objects = this.repositoryQuery.findAll();
-        List<ManageBookingDto> objectDtos = new ArrayList<>();
-
-        for (Booking object : objects) {
-            objectDtos.add(object.toAggregate());
-        }
-
-        return objectDtos;
-    }
-
-
-    public List<ManageBookingDto> findByManageInvoicing(UUID id) {
-        List<Booking> objects = this.repositoryQuery.findByManageInvoicing(id);
         List<ManageBookingDto> objectDtos = new ArrayList<>();
 
         for (Booking object : objects) {
