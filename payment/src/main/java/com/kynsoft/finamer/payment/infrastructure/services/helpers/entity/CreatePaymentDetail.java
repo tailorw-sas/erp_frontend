@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.services.helpers.entity;
 
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManageEmployee;
 import lombok.AllArgsConstructor;
@@ -11,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -28,6 +26,7 @@ public class CreatePaymentDetail {
     private String remark;
     private ManageBookingDto booking;
     private Boolean applyPayment;
+    private OffsetDateTime transactionDate;
 
     public CreatePaymentDetail(ManageEmployeeDto employee,
                                Status status,
@@ -36,7 +35,8 @@ public class CreatePaymentDetail {
                                Double amount,
                                String remark,
                                ManageBookingDto booking,
-                               Boolean applyPayment){
+                               Boolean applyPayment,
+                               OffsetDateTime transactionDate){
         this.id = UUID.randomUUID();
         this.employee = employee;
         this.status = status;
@@ -46,5 +46,6 @@ public class CreatePaymentDetail {
         this.remark = remark;
         this.booking = booking;
         this.applyPayment = applyPayment;
+        this.transactionDate = transactionDate;
     }
 }

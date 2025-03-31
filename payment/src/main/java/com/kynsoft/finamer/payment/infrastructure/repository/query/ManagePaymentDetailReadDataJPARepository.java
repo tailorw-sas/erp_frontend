@@ -64,13 +64,6 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
             "WHERE pd.paymentDetailId = :id")
     Optional<PaymentDetailSimple> findPaymentDetailsSimpleCacheableByGenId(@Param("id") int id);
 
-    @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto(" +
-            "pd.id, " +
-            "CASE WHEN pd.applyDepositValue IS NULL THEN 0.0 ELSE pd.applyDepositValue END, " +
-            "tt.deposit, pp.id, pp.agency.id, pp.hotel.id, pd.paymentDetailId) " +
-            "FROM PaymentDetail pd " +
-            "JOIN pd.transactionType tt " +
-            "LEFT JOIN pd.payment pp " +
-            "WHERE pp.paymentId IN :ids")
-    List<PaymentDetailSimpleDto> findSimpleDetailsByPaymentIds(@Param("ids") List<Long> ids);
+    List<PaymentDetail> findByPayment_PaymentIdIn(List<Long> ids);
+
 }

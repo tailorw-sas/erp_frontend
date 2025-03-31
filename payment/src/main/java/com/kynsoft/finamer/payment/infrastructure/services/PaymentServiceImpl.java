@@ -394,9 +394,11 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public List<PaymentProjection> findPaymentsByPaymentId(List<Long> paymentsId) {
+    public List<PaymentDto> findPaymentsByPaymentId(List<Long> paymentsId) {
         if(Objects.nonNull(paymentsId)){
-            return repositoryQuery.getPaymentsByIdProjection(paymentsId);
+            return repositoryQuery.getByPaymentId_In(paymentsId).stream()
+                    .map(Payment::toAggregate)
+                    .toList();
         }
         throw new IllegalArgumentException("Payments ids must not be null");
     }
