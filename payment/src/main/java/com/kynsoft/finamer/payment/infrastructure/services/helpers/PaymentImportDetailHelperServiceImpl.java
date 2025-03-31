@@ -66,7 +66,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private Map<String, List<ManageBookingDto>> bookingByCouponMap;
     private Map<UUID, PaymentCloseOperationDto> closeOperationDateTimeByHotelMap;
 
-    private List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();
+    //private List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                                 PaymentDetailValidatorFactory paymentDetailValidatorFactory,
@@ -123,6 +123,12 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private void clearCache() {
         this.transactionTypeService.clearCache();
+        this.managePaymentTransactionTypeMap.clear();
+        this.bookingMap.clear();
+        this.paymentProjectionMap.clear();
+        this.paymentDetailsProyectionMap.clear();
+        this.bookingByCouponMap.clear();
+        this.closeOperationDateTimeByHotelMap.clear();
     }
 
     @Override
@@ -156,6 +162,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         printLog("Start readPaymentCacheAndSave process");
         List<PaymentImportCache> paymentCacheList = this.getPaymentImportCachedList(request.getImportProcessId());
         this.createCache(paymentCacheList);
+        List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();
 
         for(PaymentImportCache paymentImportCache : paymentCacheList ){
             ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = this.getManageTransactionTypeByCode(paymentImportCache.getTransactionId());
@@ -204,7 +211,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                     request,
                                     false,
                                     Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                    remarks);
+                                    remarks,
+                                    createPaymentDetailList);
                         } else {
                             ManageBookingDto booking = this.getBookingProjectionByCoupon(paymentImportCache.getCoupon());
                             if(Objects.isNull(booking)){
@@ -229,7 +237,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                         request,
                                         true,
                                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
+                                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                        createPaymentDetailList);
                             }
                         }
                     } catch (Exception e) {
@@ -243,14 +252,14 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                             request,
                             true,
                             Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
+                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                            createPaymentDetailList);
                 }
             }
         }
 
-        CreatePaymentDetailsRequest paymentDetailsRequest = new CreatePaymentDetailsRequest(this.createPaymentDetailList);
+        CreatePaymentDetailsRequest paymentDetailsRequest = new CreatePaymentDetailsRequest(createPaymentDetailList);
         this.paymentDetailHelperService.processPaymentDetails(paymentDetailsRequest);
-
 
         this.clearCache();
         printLog("End readPaymentCacheAndSave process");
@@ -272,7 +281,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                         PaymentImportDetailRequest request,
                                         boolean applyPayment,
                                         double amount,
-                                        String remarks) {
+                                        String remarks,
+                                        List<CreatePaymentDetail> createPaymentDetailList) {
         //cash
         if (bookingDto != null) {
             amount = Math.min(bookingDto.getAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
@@ -286,7 +296,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     managePaymentTransactionTypeDto,
                     remarks,
                     bookingDto,
-                    applyPayment);
+                    applyPayment,
+                    createPaymentDetailList);
 
             //Crear el deposit.
             double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
@@ -302,7 +313,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     managePaymentTransactionTypeDto,
                     remarks,
                     bookingDto,
-                    applyPayment);
+                    applyPayment,
+                    createPaymentDetailList);
         }
     }
 
@@ -350,7 +362,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                          ManagePaymentTransactionTypeDto transactionType,
                                          String remarks,
                                          ManageBookingDto booking,
-                                         boolean applyPayment) {
+                                         boolean applyPayment,
+                                         List<CreatePaymentDetail> createPaymentDetailList) {
         CreatePaymentDetail createPaymentDetail = new CreatePaymentDetail(
                 employee,
                 Status.ACTIVE,
@@ -502,7 +515,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private ManagePaymentTransactionTypeDto getManageTransactionTypeByCode(String code){
         if(Objects.isNull(managePaymentTransactionTypeMap) || managePaymentTransactionTypeMap.isEmpty()){
-            printLog("The map managePaymentTransactionTypeMap is null or Empty");
+            printLog("The managePaymentTransactionTypeMap map is null or Empty");
             return null;
         }
 
@@ -511,7 +524,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private PaymentDto getPaymentByPaymentId(Long paymentId){
         if(Objects.isNull(paymentProjectionMap) || paymentProjectionMap.isEmpty()){
-            printLog("The map paymentProjectionMap is null or Empty");
+            printLog("The paymentProjectionMap map is null or Empty");
             return null;
         }
 
@@ -520,7 +533,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private Boolean couponIsDuplicated(String coupon){
         if(Objects.isNull(bookingByCouponMap) || bookingByCouponMap.isEmpty()){
-            printLog("The map bookingControlAmountBalanceByCouponMap is null or Empty");
+            printLog("The bookingControlAmountBalanceByCouponMap map is null or Empty");
             return false;
         }
 
@@ -534,7 +547,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private ManageBookingDto getBookingProjectionByCoupon(String coupon){
         if(Objects.isNull(bookingByCouponMap) || bookingByCouponMap.isEmpty()){
-            printLog("The map bookingControlAmountBalanceByCouponMap is null or Empty");
+            printLog("The bookingControlAmountBalanceByCouponMap map is null or Empty");
             return null;
         }
 
@@ -548,7 +561,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private ManagePaymentTransactionTypeDto getPaymentInvoiceTransactionType(){
         if(Objects.isNull(managePaymentTransactionTypeMap) || managePaymentTransactionTypeMap.isEmpty()){
-            printLog("The map managePaymentTransactionTypeMap is null or Empty");
+            printLog("The managePaymentTransactionTypeMap map is null or Empty");
             return null;
         }
 
@@ -561,7 +574,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private OffsetDateTime getTransactionDate(UUID hotel){
         if(Objects.isNull(closeOperationDateTimeByHotelMap) || closeOperationDateTimeByHotelMap.isEmpty()){
-            printLog("The map managePaymentTransactionTypeMap is null or Empty");
+            printLog("The managePaymentTransactionTypeMap map is null or Empty");
             return null;
         }
 
