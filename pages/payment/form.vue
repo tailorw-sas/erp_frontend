@@ -1058,10 +1058,10 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount)) : 0
           }
 
-          const childrenTotalValue = itemDetails.value.childrenTotalValue
+          const childrenTotalValue = itemDetails.value.applyDepositValue
 
           // const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
-          const minValueToApply = (oldAmount - childrenTotalValue).toFixed(2)
+          const minValueToApply = (childrenTotalValue).toFixed(2)
 
           const minValueToApplyFormatted = formatNumber(minValueToApply) // Creada solo para mostrar para que el separador de miles no cause problemas
           const oldAmountFormatted = formatNumber(oldAmount) // Solo para mostrar
@@ -1320,295 +1320,545 @@ function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition
   }
 }
 
+// async function getItemById(id: string) {
+//   if (id) {
+//     idItem.value = id
+//     loadingSaveAll.value = true
+//     try {
+//       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+//       if (response) {
+//         item.value.id = id
+//         item.value.paymentId = response.paymentId
+//         item.value.reference = response.reference
+//         item.value.transactionDate = response.transactionDate
+//         const newDate = new Date(response.transactionDate)
+//         newDate.setDate(newDate.getDate() + 1)
+//         item.value.transactionDate = newDate || null
+
+//         // item.value.paymentAmount = formatToTwoDecimalPlaces(response.paymentAmount)
+//         item.value.paymentAmount = response.paymentAmount
+//         item.value.paymentBalance = formatToTwoDecimalPlaces(response.paymentBalance)
+//         item.value.depositAmount = formatToTwoDecimalPlaces(response.depositAmount)
+//         item.value.depositBalance = formatToTwoDecimalPlaces(response.depositBalance)
+//         item.value.otherDeductions = formatToTwoDecimalPlaces(response.otherDeductions)
+//         item.value.identified = formatToTwoDecimalPlaces(response.identified)
+//         item.value.notIdentified = formatToTwoDecimalPlaces(response.notIdentified)
+//         item.value.remark = response.remark
+//         isExistPaymentDetail.value = response.existDetails
+
+//         const clientTemp = response.client
+//           ? {
+//               id: response.client.id,
+//               name: `${response.client.code} - ${response.client.name}`,
+//               status: response.client.status
+//             }
+//           : null
+//         clientList.value = [clientTemp]
+//         item.value.client = clientTemp
+
+//         const agencyTemp = response.agency
+//           ? {
+//               id: response.agency.id,
+//               name: `${response.agency.code} - ${response.agency.name}`,
+//               status: response.agency.status
+//             }
+//           : null
+//         agencyList.value = [agencyTemp]
+//         item.value.agency = agencyTemp
+
+//         const hotelTemp = response.hotel
+//           ? {
+//               id: response.hotel.id,
+//               name: `${response.hotel?.code} - ${response.hotel?.name}`,
+//               status: response.hotel?.status,
+//               applyByTradingCompany: response.hotel?.applyByTradingCompany,
+//               manageTradingCompany: response.hotel?.manageTradingCompany
+
+//             }
+//           : null
+//         hotelList.value = [hotelTemp]
+//         item.value.hotel = hotelTemp
+
+//         const bankAccountTemp = response.bankAccount
+//           ? {
+//               id: response.bankAccount.id,
+//               name: `${response.bankAccount.nameOfBank} - ${response.bankAccount.accountNumber}`,
+//               status: response.bankAccount.status
+//             }
+//           : null
+//         bankAccountList.value = [bankAccountTemp]
+//         item.value.bankAccount = bankAccountTemp
+//         // bankAccountList.value = typeof response.bankAccount === 'object' ? [{ id: response.bankAccount.id, name: response.bankAccount.accountNumber, status: response.bankAccount.status }] : []
+//         // item.value.bankAccount = typeof response.bankAccount === 'object' ? { id: response.bankAccount.id, name: response.bankAccount.accountNumber, status: response.bankAccount.status } : response.bankAccount
+
+//         const attachmentStatusTemp = response.attachmentStatus
+//           ? {
+//               id: response.attachmentStatus.id,
+//               name: `${response.attachmentStatus.code} - ${response.attachmentStatus.name}`,
+//               status: response.attachmentStatus.status
+//             }
+//           : null
+//         attachmentStatusList.value = [attachmentStatusTemp]
+//         item.value.attachmentStatus = attachmentStatusTemp
+
+//         const paymentStatusTemp = response.paymentStatus
+//           ? {
+//               id: response.paymentStatus.id,
+//               name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`,
+//               code: response.paymentStatus.code,
+//               originalName: response.paymentStatus.name,
+//               status: response.paymentStatus.status,
+//               applied: response.paymentStatus.applied,
+//               confirmed: response.paymentStatus.confirmed,
+//               cancelled: response.paymentStatus.cancelled
+//             }
+//           : null
+//         paymentStatusList.value = [paymentStatusTemp]
+//         item.value.paymentStatus = paymentStatusTemp
+//         if (paymentStatusTemp) {
+//           paymentStatusOfGetById.value = paymentStatusTemp
+//         }
+
+//         if (response.paymentStatus && response.paymentStatus.cancelled === true) {
+//           isCancelledPayment.value = response.paymentStatus.cancelled
+//         }
+
+//         const paymentSourceTemp = response.paymentSource
+//           ? {
+//               id: response.paymentSource.id,
+//               name: `${response.paymentSource.code} - ${response.paymentSource.name}`,
+//               status: response.paymentSource.status
+//             }
+//           : null
+//         paymentSourceList.value = [paymentSourceTemp]
+//         item.value.paymentSource = paymentSourceTemp
+
+//         if (response?.paymentSource && response?.paymentSource?.expense) {
+//           const decimalSchema = z.object(
+//             {
+//               bankAccount: z
+//                 .object({}).nullable(),
+//             },
+//           )
+//           updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+//           updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
+//         }
+//         else {
+//           const decimalSchema = z.object(
+//             {
+//               bankAccount: validateEntityStatus('bank account'),
+//             },
+//           )
+//           updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
+//           updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
+//         }
+//       }
+//       // debugger
+//       // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
+
+//       fields[0].disabled = true
+
+//       disabledFields(item.value, fields)
+
+//       formReload.value += 1
+
+//       await getListPaymentDetail()
+//     }
+//     catch (error) {
+//       if (error) {
+//         toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
+//       }
+//     }
+//     finally {
+//       loadingSaveAll.value = false
+//     }
+//   }
+// }
 async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      if (response) {
-        item.value.id = id
-        item.value.paymentId = response.paymentId
-        item.value.reference = response.reference
-        item.value.transactionDate = response.transactionDate
-        const newDate = new Date(response.transactionDate)
-        newDate.setDate(newDate.getDate() + 1)
-        item.value.transactionDate = newDate || null
+  if (!id) { return }
 
-        // item.value.paymentAmount = formatToTwoDecimalPlaces(response.paymentAmount)
-        item.value.paymentAmount = response.paymentAmount
-        item.value.paymentBalance = formatToTwoDecimalPlaces(response.paymentBalance)
-        item.value.depositAmount = formatToTwoDecimalPlaces(response.depositAmount)
-        item.value.depositBalance = formatToTwoDecimalPlaces(response.depositBalance)
-        item.value.otherDeductions = formatToTwoDecimalPlaces(response.otherDeductions)
-        item.value.identified = formatToTwoDecimalPlaces(response.identified)
-        item.value.notIdentified = formatToTwoDecimalPlaces(response.notIdentified)
-        item.value.remark = response.remark
-        isExistPaymentDetail.value = response.existDetails
+  idItem.value = id
+  loadingSaveAll.value = true
 
-        const clientTemp = response.client
-          ? {
-              id: response.client.id,
-              name: `${response.client.code} - ${response.client.name}`,
-              status: response.client.status
-            }
-          : null
-        clientList.value = [clientTemp]
-        item.value.client = clientTemp
+  try {
+    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+    if (!response) { return }
 
-        const agencyTemp = response.agency
-          ? {
-              id: response.agency.id,
-              name: `${response.agency.code} - ${response.agency.name}`,
-              status: response.agency.status
-            }
-          : null
-        agencyList.value = [agencyTemp]
-        item.value.agency = agencyTemp
+    // Extraer solo los valores necesarios en una sola línea
+    const {
+      paymentId,
+      reference,
+      transactionDate,
+      paymentAmount,
+      paymentBalance,
+      depositAmount,
+      depositBalance,
+      otherDeductions,
+      identified,
+      notIdentified,
+      remark,
+      existDetails,
+      client,
+      agency,
+      hotel,
+      bankAccount,
+      attachmentStatus,
+      paymentStatus,
+      paymentSource
+    } = response
 
-        const hotelTemp = response.hotel
-          ? {
-              id: response.hotel.id,
-              name: `${response.hotel?.code} - ${response.hotel?.name}`,
-              status: response.hotel?.status,
-              applyByTradingCompany: response.hotel?.applyByTradingCompany,
-              manageTradingCompany: response.hotel?.manageTradingCompany
-
-            }
-          : null
-        hotelList.value = [hotelTemp]
-        item.value.hotel = hotelTemp
-
-        const bankAccountTemp = response.bankAccount
-          ? {
-              id: response.bankAccount.id,
-              name: `${response.bankAccount.nameOfBank} - ${response.bankAccount.accountNumber}`,
-              status: response.bankAccount.status
-            }
-          : null
-        bankAccountList.value = [bankAccountTemp]
-        item.value.bankAccount = bankAccountTemp
-        // bankAccountList.value = typeof response.bankAccount === 'object' ? [{ id: response.bankAccount.id, name: response.bankAccount.accountNumber, status: response.bankAccount.status }] : []
-        // item.value.bankAccount = typeof response.bankAccount === 'object' ? { id: response.bankAccount.id, name: response.bankAccount.accountNumber, status: response.bankAccount.status } : response.bankAccount
-
-        const attachmentStatusTemp = response.attachmentStatus
-          ? {
-              id: response.attachmentStatus.id,
-              name: `${response.attachmentStatus.code} - ${response.attachmentStatus.name}`,
-              status: response.attachmentStatus.status
-            }
-          : null
-        attachmentStatusList.value = [attachmentStatusTemp]
-        item.value.attachmentStatus = attachmentStatusTemp
-
-        const paymentStatusTemp = response.paymentStatus
-          ? {
-              id: response.paymentStatus.id,
-              name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`,
-              code: response.paymentStatus.code,
-              originalName: response.paymentStatus.name,
-              status: response.paymentStatus.status,
-              applied: response.paymentStatus.applied,
-              confirmed: response.paymentStatus.confirmed,
-              cancelled: response.paymentStatus.cancelled
-            }
-          : null
-        paymentStatusList.value = [paymentStatusTemp]
-        item.value.paymentStatus = paymentStatusTemp
-        if (paymentStatusTemp) {
-          paymentStatusOfGetById.value = paymentStatusTemp
-        }
-
-        if (response.paymentStatus && response.paymentStatus.cancelled === true) {
-          isCancelledPayment.value = response.paymentStatus.cancelled
-        }
-
-        const paymentSourceTemp = response.paymentSource
-          ? {
-              id: response.paymentSource.id,
-              name: `${response.paymentSource.code} - ${response.paymentSource.name}`,
-              status: response.paymentSource.status
-            }
-          : null
-        paymentSourceList.value = [paymentSourceTemp]
-        item.value.paymentSource = paymentSourceTemp
-
-        if (response?.paymentSource && response?.paymentSource?.expense) {
-          const decimalSchema = z.object(
-            {
-              bankAccount: z
-                .object({}).nullable(),
-            },
-          )
-          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
-          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
-        }
-        else {
-          const decimalSchema = z.object(
-            {
-              bankAccount: validateEntityStatus('bank account'),
-            },
-          )
-          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
-          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
-        }
-      }
-      // debugger
-      // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
-
-      fields[0].disabled = true
-
-      disabledFields(item.value, fields)
-
-      formReload.value += 1
-
-      await getListPaymentDetail()
+    // Asignaciones directas sin repetición
+    item.value = {
+      id,
+      paymentId,
+      reference,
+      transactionDate: transactionDate ? new Date(transactionDate) : null,
+      paymentAmount,
+      paymentBalance: formatToTwoDecimalPlaces(paymentBalance),
+      depositAmount: formatToTwoDecimalPlaces(depositAmount),
+      depositBalance: formatToTwoDecimalPlaces(depositBalance),
+      otherDeductions: formatToTwoDecimalPlaces(otherDeductions),
+      identified: formatToTwoDecimalPlaces(identified),
+      notIdentified: formatToTwoDecimalPlaces(notIdentified),
+      remark
     }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
+
+    // Manejo de listas optimizado (en paralelo con Promise.all)
+    const clientList = client ? [{ id: client.id, name: `${client.code} - ${client.name}`, status: client.status }] : []
+    const agencyList = agency ? [{ id: agency.id, name: `${agency.code} - ${agency.name}`, status: agency.status }] : []
+    const hotelList = hotel ? [{ id: hotel.id, name: `${hotel.code} - ${hotel.name}`, status: hotel.status }] : []
+    const bankAccountList = bankAccount ? [{ id: bankAccount.id, name: `${bankAccount.nameOfBank} - ${bankAccount.accountNumber}`, status: bankAccount.status }] : []
+    const attachmentStatusList = attachmentStatus ? [{ id: attachmentStatus.id, name: `${attachmentStatus.code} - ${attachmentStatus.name}`, status: attachmentStatus.status }] : []
+    const paymentSourceList = paymentSource ? [{ id: paymentSource.id, name: `${paymentSource.code} - ${paymentSource.name}`, status: paymentSource.status }] : []
+    const paymentStatusList = paymentStatus
+      ? [{
+          id: paymentStatus.id,
+          name: `${paymentStatus.code} - ${paymentStatus.name}`,
+          code: paymentStatus.code,
+          originalName: paymentStatus.name,
+          status: paymentStatus.status,
+          applied: paymentStatus.applied,
+          confirmed: paymentStatus.confirmed,
+          cancelled: paymentStatus.cancelled
+        }]
+      : []
+
+    // Asignar listas a sus respectivas variables
+    item.value.client = clientList[0] || null
+    item.value.agency = agencyList[0] || null
+    item.value.hotel = hotelList[0] || null
+    item.value.bankAccount = bankAccountList[0] || null
+    item.value.attachmentStatus = attachmentStatusList[0] || null
+    item.value.paymentSource = paymentSourceList[0] || null
+    item.value.paymentStatus = paymentStatusList[0] || null
+
+    if (paymentStatus?.cancelled) { isCancelledPayment.value = true }
+
+    // Si existe paymentSource.expense, aplicar validaciones
+    updateBankAccountValidation(paymentSource?.expense)
+
+    // Deshabilitar campos y actualizar el formulario
+    fields[0].disabled = true
+    disabledFields(item.value, fields)
+    formReload.value += 1
+
+    // Llamar `getListPaymentDetail()` solo si es necesario
+    if (existDetails) { getListPaymentDetail() } // Sin await
   }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
+  }
+  finally {
+    loadingSaveAll.value = false
+  }
+}
+
+function update() {
+  if (idItem.value) {
+    getItemById(idItem.value)
+  }
+  else {
+    clearForm()
+  }
+}
+
+// Función optimizada para actualizar la validación del campo 'bankAccount'
+function updateBankAccountValidation(expense: boolean) {
+  updateFieldProperty(
+    fields,
+    'bankAccount',
+    'validation',
+    expense
+      ? z.object({ bankAccount: z.object({}).nullable() }).shape.bankAccount
+      : z.object({ bankAccount: validateEntityStatus('bank account') }).shape.bankAccount
+  )
+
+  updateFieldProperty(fields, 'bankAccount', 'class', `field col-12 md:col-3 ${expense ? '' : 'required'}`)
 }
 
 const somePaymenWithApplyPayment = computed(() => {
   return paymentDetailsList.value.some(item => item.applyPayment)
 })
 
+// async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }) {
+//   const count: SubTotals = { depositAmount: 0 }
+//   if (options.value.loading) {
+//     // Si ya hay una solicitud en proceso, no hacer nada.
+//     return
+//   }
+//   try {
+//     options.value.loading = true
+//     paymentDetailsList.value = []
+//     const newListItems = []
+
+//     if (showReverseTransaction.value && showCanceledDetails.value) {
+//       const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+//       if (objFilterForReverseFalse) {
+//         objFilterForReverseFalse.value = true
+//         objFilterForReverseFalse.logicalOperation = 'OR'
+//       }
+//       else {
+//         payload.value.filter.push({
+//           key: 'reverseTransaction',
+//           operator: 'EQUALS',
+//           value: true,
+//           logicalOperation: 'OR'
+//         })
+//       }
+
+//       const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+//       if (objFilterForCanceledFalse) {
+//         objFilterForCanceledFalse.value = true
+//         objFilterForCanceledFalse.logicalOperation = 'OR'
+//       }
+//       else {
+//         payload.value.filter.push({
+//           key: 'canceledTransaction',
+//           operator: 'EQUALS',
+//           value: true,
+//           logicalOperation: 'OR'
+//         })
+//       }
+//     }
+//     else {
+//       if (showReverseTransaction.value) {
+//         // aplicar el filtro
+//         const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+//         if (objFilterForReverseFalse) {
+//           objFilterForReverseFalse.value = true
+//           objFilterForReverseFalse.logicalOperation = 'OR'
+//         }
+//         else {
+//           payload.value.filter.push({
+//             key: 'reverseTransaction',
+//             operator: 'EQUALS',
+//             value: true,
+//             logicalOperation: 'OR'
+//           })
+//         }
+//       }
+//       else {
+//         // filtrar para que no aparezca el de reversado
+//         const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
+
+//         if (objFilterForReverseTrue) {
+//           objFilterForReverseTrue.value = false
+//           objFilterForReverseTrue.logicalOperation = 'AND'
+//         }
+//         else {
+//           payload.value.filter.push({
+//             key: 'reverseTransaction',
+//             operator: 'EQUALS',
+//             value: false,
+//             logicalOperation: 'AND'
+//           })
+//         }
+//       }
+
+//       if (showCanceledDetails.value) {
+//         // aplicar el filtro
+//         const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+//         if (objFilterForCanceledFalse) {
+//           objFilterForCanceledFalse.value = true
+//           objFilterForCanceledFalse.logicalOperation = 'OR'
+//         }
+//         else {
+//           payload.value.filter.push({
+//             key: 'canceledTransaction',
+//             operator: 'EQUALS',
+//             value: true,
+//             logicalOperation: 'OR'
+//           })
+//         }
+//       }
+//       else {
+//         // filtrar para que no aparezca el de reversado
+//         const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
+
+//         if (objFilterForCanceledFalse) {
+//           objFilterForCanceledFalse.value = false
+//           objFilterForCanceledFalse.logicalOperation = 'AND'
+//         }
+//         else {
+//           payload.value.filter.push({
+//             key: 'canceledTransaction',
+//             operator: 'EQUALS',
+//             value: false,
+//             logicalOperation: 'AND'
+//           })
+//         }
+//       }
+//     }
+
+//     const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
+
+//     if (objFilter) {
+//       objFilter.value = idItem.value
+//     }
+//     else {
+//       payload.value.filter.push({
+//         key: 'payment.id',
+//         operator: 'EQUALS',
+//         value: idItem.value,
+//         logicalOperation: 'AND'
+//       })
+//     }
+
+//     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+//     // console.log(response)
+
+//     const { data: dataList, page, size, totalElements, totalPages } = response
+
+//     pagination.value.page = page
+//     pagination.value.limit = size
+//     pagination.value.totalElements = totalElements
+//     pagination.value.totalPages = totalPages
+
+//     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
+//     // reverseFromParentId
+//     for (const iterator of dataList) {
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+//         count.depositAmount += iterator.amount
+//         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
+//           ? Number.parseFloat(iterator.amount)
+//           : 0
+
+//         // iterator.amount = formatNumber(iterator.amount)
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+//         iterator.status = statusToBoolean(iterator.status)
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
+//         iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
+//         iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+//         iterator.deposit = iterator.transactionType.deposit
+//         iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
+
+//         if (iterator.deposit) {
+//           iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+//         }
+//       }
+
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
+//         iterator.adults = iterator.manageBooking?.adults?.toString()
+//         iterator.childrens = iterator.manageBooking?.children?.toString()
+//         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
+//         iterator.fullName = iterator.manageBooking?.fullName
+//         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+
+//         if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && iterator?.transactionType?.cash) {
+//           iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+//           iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+//         }
+//         else if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
+//           iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+//           iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+//           iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
+//           iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
+//         }
+//         else {
+//           iterator.bookingId = iterator.manageBooking?.bookingId
+//           iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
+//         }
+//       }
+
+//       // Verificar si el ID ya existe en la lista
+//       if (!existingIds.has(iterator.id)) {
+//         newListItems.push({ ...iterator })
+//         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+//       }
+//     }
+
+//     paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
+//     // if (paymentDetailsList.value.length === 0 && item.value?.paymentStatus?.confirmed === true) {
+//     //   updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
+//     // }
+//   }
+//   catch (error) {
+//     console.error(error)
+//   }
+//   finally {
+//     options.value.loading = false
+//     subTotals.value = { ...count }
+//   }
+// }
 async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }) {
   const count: SubTotals = { depositAmount: 0 }
+
   if (options.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
-    return
+    return // Si ya hay una solicitud en proceso, no hacer nada.
   }
+
   try {
     options.value.loading = true
     paymentDetailsList.value = []
     const newListItems = []
 
+    // Función para gestionar filtros
+    const addOrUpdateFilter = (key: string, value: boolean, logicalOperation: string) => {
+      const existingFilter = payload.value.filter.find(item => item.key === key)
+      if (existingFilter) {
+        existingFilter.value = value
+        existingFilter.logicalOperation = logicalOperation
+      }
+      else {
+        payload.value.filter.push({ key, operator: 'EQUALS', value, logicalOperation })
+      }
+    }
+
+    // Aplicación de filtros para reverso y cancelación
     if (showReverseTransaction.value && showCanceledDetails.value) {
-      const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
-
-      if (objFilterForReverseFalse) {
-        objFilterForReverseFalse.value = true
-        objFilterForReverseFalse.logicalOperation = 'OR'
-      }
-      else {
-        payload.value.filter.push({
-          key: 'reverseTransaction',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'OR'
-        })
-      }
-
-      const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
-
-      if (objFilterForCanceledFalse) {
-        objFilterForCanceledFalse.value = true
-        objFilterForCanceledFalse.logicalOperation = 'OR'
-      }
-      else {
-        payload.value.filter.push({
-          key: 'canceledTransaction',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'OR'
-        })
-      }
+      addOrUpdateFilter('reverseTransaction', true, 'OR')
+      addOrUpdateFilter('canceledTransaction', true, 'OR')
     }
     else {
       if (showReverseTransaction.value) {
-        // aplicar el filtro
-        const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
-
-        if (objFilterForReverseFalse) {
-          objFilterForReverseFalse.value = true
-          objFilterForReverseFalse.logicalOperation = 'OR'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'reverseTransaction',
-            operator: 'EQUALS',
-            value: true,
-            logicalOperation: 'OR'
-          })
-        }
+        addOrUpdateFilter('reverseTransaction', true, 'OR')
       }
       else {
-        // filtrar para que no aparezca el de reversado
-        const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
-
-        if (objFilterForReverseTrue) {
-          objFilterForReverseTrue.value = false
-          objFilterForReverseTrue.logicalOperation = 'AND'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'reverseTransaction',
-            operator: 'EQUALS',
-            value: false,
-            logicalOperation: 'AND'
-          })
-        }
+        addOrUpdateFilter('reverseTransaction', false, 'AND')
       }
 
       if (showCanceledDetails.value) {
-        // aplicar el filtro
-        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
-
-        if (objFilterForCanceledFalse) {
-          objFilterForCanceledFalse.value = true
-          objFilterForCanceledFalse.logicalOperation = 'OR'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'canceledTransaction',
-            operator: 'EQUALS',
-            value: true,
-            logicalOperation: 'OR'
-          })
-        }
+        addOrUpdateFilter('canceledTransaction', true, 'OR')
       }
       else {
-        // filtrar para que no aparezca el de reversado
-        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
-
-        if (objFilterForCanceledFalse) {
-          objFilterForCanceledFalse.value = false
-          objFilterForCanceledFalse.logicalOperation = 'AND'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'canceledTransaction',
-            operator: 'EQUALS',
-            value: false,
-            logicalOperation: 'AND'
-          })
-        }
+        addOrUpdateFilter('canceledTransaction', false, 'AND')
       }
     }
 
-    const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
-
-    if (objFilter) {
-      objFilter.value = idItem.value
-    }
-    else {
-      payload.value.filter.push({
-        key: 'payment.id',
-        operator: 'EQUALS',
-        value: idItem.value,
-        logicalOperation: 'AND'
-      })
-    }
+    // Filtro para payment.id
+    addOrUpdateFilter('payment.id', idItem.value, 'AND')
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    // console.log(response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1618,71 +1868,64 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
-    // reverseFromParentId
-    for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        count.depositAmount += iterator.amount
-        iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
-          ? Number.parseFloat(iterator.amount)
-          : 0
 
-        // iterator.amount = formatNumber(iterator.amount)
+    // Procesamiento de cada item
+    const newItems = dataList.filter((iterator) => {
+      // Filtrar solo los elementos que no están ya presentes
+      if (!existingIds.has(iterator.id)) {
+        existingIds.add(iterator.id)
+        return true
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
+      return false
+    }).map((iterator) => {
+      // Actualizar o agregar los valores necesarios a cada item
+      if (iterator.amount !== undefined) {
+        count.depositAmount += iterator.amount
+        iterator.amount = !Number.isNaN(iterator.amount) ? Number.parseFloat(iterator.amount) : 0
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
-        iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
-        iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+
+      // Asignación condicional de propiedades comunes
+      if (iterator.status !== undefined) { iterator.status = statusToBoolean(iterator.status) }
+      if (iterator.transactionDate) { iterator.transactionDate = dayjs(iterator.transactionDate).format('YYYY-MM-DD') }
+      if (iterator.parentId) { iterator.parentId = iterator.parentId.toString() }
+
+      // Manejo de transactionType
+      if (iterator.transactionType) {
         iterator.deposit = iterator.transactionType.deposit
         iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
-
-        if (iterator.deposit) {
-          iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
-        }
+        if (iterator.deposit) { iterator.rowClass = 'row-deposit' }
       }
 
-      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
+      // Manejo de manageBooking
+      if (iterator.manageBooking) {
         iterator.adults = iterator.manageBooking?.adults?.toString()
         iterator.childrens = iterator.manageBooking?.children?.toString()
         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
         iterator.fullName = iterator.manageBooking?.fullName
         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
 
-        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && iterator?.transactionType?.cash) {
-          iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
-        }
-        else if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
-          iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
-          iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
-          iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
-          iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
-        }
-        else {
-          iterator.bookingId = iterator.manageBooking?.bookingId
-          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
+        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT') {
+          if (iterator?.transactionType?.cash) {
+            iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+            iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+          }
+          else {
+            iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+            iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+          }
         }
       }
 
-      // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-      }
-    }
+      return iterator // Devolver el item modificado
+    })
 
-    paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
-    // if (paymentDetailsList.value.length === 0 && item.value?.paymentStatus?.confirmed === true) {
-    //   updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
-    // }
+    // Agregar los nuevos elementos a la lista existente
+    paymentDetailsList.value = [...paymentDetailsList.value, ...newItems]
   }
   catch (error) {
     console.error(error)
+    // Aquí podrías mostrar un mensaje de error a los usuarios
+    alert('Hubo un error al cargar los detalles del pago. Por favor, inténtelo de nuevo.')
   }
   finally {
     options.value.loading = false
@@ -2353,7 +2596,7 @@ async function applyUndoApplication(event: any) {
     }
   }
   catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
@@ -2389,7 +2632,7 @@ async function applyReverseTransaction(event: any) {
     }
   }
   catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
@@ -3364,20 +3607,30 @@ watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentGetList(amountOfDetailItem.value)
 })
 
-onMounted(async () => {
-  const filterForEmployee: FilterCriteria[] = [
-    {
-      key: 'status',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'ACTIVE',
-    },
-  ]
-  await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
-    query: '',
-    keys: ['name', 'code'],
-  }, filterForEmployee)
+// onMounted(async () => {
+//   // const filterForEmployee: FilterCriteria[] = [
+//   //   {
+//   //     key: 'status',
+//   //     logicalOperation: 'AND',
+//   //     operator: 'EQUALS',
+//   //     value: 'ACTIVE',
+//   //   },
+//   // ]
+//   // await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
+//   //   query: '',
+//   //   keys: ['name', 'code'],
+//   // }, filterForEmployee)
 
+//   if (route?.query?.id) {
+//     const id = route.query.id.toString()
+//     await getItemById(id)
+//   }
+//   else {
+//     clearForm()
+//     loadDefaultsValues()
+//   }
+// })
+onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
     await getItemById(id)
@@ -3390,11 +3643,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <div style="max-height: 100vh; height: 80vh">
+    <div class="font-bold text-lg px-4 -mt-2 bg-primary custom-card-header">
       {{ formTitle }}
     </div>
-    <div class="card px-2 pb-2 pt-4 m-0">
+    <div class="card px-2 pb-2 pt-3.5 m-0">
       <EditFormV2
         :key="formReload"
         ref="refForm"
@@ -3774,78 +4027,69 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
-    <!-- <div class="flex align-items-center mb-2">
-      <Checkbox
-        id="showReverseTransaction"
-        v-model="showReverseTransaction"
-        :binary="true"
-        @update:model-value="($event) => {
-          getListPaymentDetail($event)
+    <div class="-mt-3 card p-1">
+      <DynamicTable
+        :data="paymentDetailsList"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @update:clicked-item="rowSelected($event)"
+        @on-change-filter="parseDataTableFilter"
+        @on-sort-field="onSortField"
+        @on-row-right-click="($event) => {
+          if (isCancelledPayment) {
+            return
+          }
+          onRowContextMenu($event)
         }"
-      />
-      <label for="showReverseTransaction" class="ml-2 font-bold text-primary"> Show Reverse Transaction </label>
-    </div> -->
-    <DynamicTable
-      :data="paymentDetailsList"
-      :columns="columns"
-      :options="options"
-      :pagination="pagination"
-      @on-change-pagination="payloadOnChangePage = $event"
-      @update:clicked-item="rowSelected($event)"
-      @on-change-filter="parseDataTableFilter"
-      @on-sort-field="onSortField"
-      @on-row-right-click="($event) => {
-        if (isCancelledPayment) {
-          return
-        }
-        onRowContextMenu($event)
-      }"
-      @on-row-double-click="openDialogPaymentDetailsEdit($event)"
-    >
-      <template #datatable-footer>
-        <ColumnGroup type="footer" class="flex align-items-center">
-          <Row>
-            <Column footer="" :colspan="14" footer-style="text-align:right; font-weight: bold;">
-              <template #footer>
-                <div class="flex align-items-center gap-4">
-                  <div class="flex align-items-center">
-                    <Checkbox
-                      id="showReverseTransaction"
-                      v-model="showReverseTransaction"
-                      :disabled="route?.query?.id ? false : true"
-                      :binary="true"
-                      :pt="{ box: { class: 'custom-checkbox' } }"
-                      @update:model-value="($event) => {
-                        getListPaymentDetail($event)
-                      }"
-                    />
-                    <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
-                    <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
+        @on-row-double-click="openDialogPaymentDetailsEdit($event)"
+      >
+        <template #datatable-footer>
+          <ColumnGroup type="footer" class="flex align-items-center">
+            <Row>
+              <Column footer="" :colspan="14" footer-style="text-align:right; font-weight: bold;">
+                <template #footer>
+                  <div class="flex align-items-center gap-4">
+                    <div class="flex align-items-center">
+                      <Checkbox
+                        id="showReverseTransaction"
+                        v-model="showReverseTransaction"
+                        :disabled="route?.query?.id ? false : true"
+                        :binary="true"
+                        :pt="{ box: { class: 'custom-checkbox' } }"
+                        @update:model-value="($event) => {
+                          getListPaymentDetail($event)
+                        }"
+                      />
+                      <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
+                      <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
+                    </div>
+                    <div class="flex align-items-center">
+                      <Checkbox
+                        id="showCanceledDetails"
+                        v-model="showCanceledDetails"
+                        :disabled="route?.query?.id ? false : true"
+                        :binary="true"
+                        :pt="{ box: { class: 'custom-checkbox' } }"
+                        @update:model-value="($event) => {
+                          getListPaymentDetail($event)
+                        }"
+                      />
+                      <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>
+                    </div>
                   </div>
-                  <div class="flex align-items-center">
-                    <Checkbox
-                      id="showCanceledDetails"
-                      v-model="showCanceledDetails"
-                      :disabled="route?.query?.id ? false : true"
-                      :binary="true"
-                      :pt="{ box: { class: 'custom-checkbox' } }"
-                      @update:model-value="($event) => {
-                        getListPaymentDetail($event)
-                      }"
-                    />
-                    <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>
-                  </div>
-                </div>
-              </template>
-            </Column>
+                </template>
+              </Column>
             <!-- <Column footer="Totals:" :colspan="0" footer-style="text-align:right; font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :colspan="4" /> -->
-          </Row>
-        </ColumnGroup>
-      </template>
-    </DynamicTable>
-    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
+            </Row>
+          </ColumnGroup>
+        </template>
+      </DynamicTable>
+    </div>
+    <div class="flex justify-content-end align-items-center -mt-8 pt-1 card bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
         <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="isCancelledPayment" :loading="loadingSaveAll" @click="forceSave = true" />
       </IfCan>
@@ -3878,7 +4122,7 @@ onMounted(async () => {
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
         <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openPrint = true" />
-        <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
+      <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
       </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:ATTACHMENT']">
@@ -3910,6 +4154,10 @@ onMounted(async () => {
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
         <Button v-tooltip.top="'Annular'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-ban" @click="requireConfirmationToDelete($event)" />
       </IfCan>
+      <Button
+        v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
+        @click="update"
+      />
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
     <div v-show="onOffDialogPaymentDetail">
@@ -3996,9 +4244,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
       }"
       @hide="openDialogHistory = false"
     >
@@ -4052,9 +4300,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
       }"
       @hide="closeModalApplyPayment()"
     >
@@ -4101,9 +4349,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
       }"
       @hide="openPrint = false"
     >
@@ -4199,7 +4447,7 @@ onMounted(async () => {
             </template>
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
+            <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
             </template>
           </EditFormV2>
         </div>
