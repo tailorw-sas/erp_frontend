@@ -73,5 +73,5 @@ public interface IPaymentService {
             UUID id);
     void updateStatus(UUID paymentId, UUID paymentStatus);
 
-    List<PaymentProjection> findPaymentsByPaymentId(List<Long> paymentsId);
+    List<PaymentDto> findPaymentsByPaymentId(List<Long> paymentsId);
 }
