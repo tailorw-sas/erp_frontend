@@ -16,7 +16,9 @@ const props = defineProps({
     default: 'new-detail'
   }
 })
+
 const emit = defineEmits(['update:visible', 'save', 'applyPayment', 'update:amount'])
+const loadingSaveSpinner = ref(false)
 const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
@@ -43,8 +45,18 @@ async function handleSave(event: any) {
 }
 
 function saveSubmit(event: Event) {
+  loadingSaveSpinner.value = true
   forceSave.value = true
   submitEvent = event
+  try {
+    saveSubmit.value = event
+  }
+  catch (error) {
+    console.error('Error en el guardado:', error)
+  }
+  finally {
+    this.loadingSaveAll = false // Oculta el spinner una vez terminado el proceso
+  }
 }
 // function openDialogApplyPayment(event: Event) {
 
@@ -779,9 +791,10 @@ function processValidation($event: any, data: any) {
           </IfCan>
           <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
           </IfCan> -->
-          <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-          <!-- <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" /> -->
-          <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
+          <Button
+            v-tooltip.top="'Applyyy'" class="w-3rem ml-4 p-button" icon="pi pi-save"
+            :loading="loadingSaveSpinner" @click="saveSubmit($event)"
+          />
         </div>
       </div>
     </template>
