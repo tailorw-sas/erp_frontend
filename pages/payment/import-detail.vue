@@ -232,7 +232,7 @@ async function validateStatusImport() {
         options.value.loading = false
         resolve() // Resuelve la promesa cuando el estado es FINISHED
       }
-    }, 10000)
+    }, 5000)
   })
 }
 
