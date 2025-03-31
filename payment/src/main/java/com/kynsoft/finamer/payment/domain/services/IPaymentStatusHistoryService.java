@@ -19,4 +19,5 @@ public interface IPaymentStatusHistoryService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    List<UUID> createAll(List<PaymentStatusHistoryDto> statusHistories);
 }
