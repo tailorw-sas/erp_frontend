@@ -191,9 +191,13 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
-    public List<PaymentDetailSimpleDto> findSimpleDetailsByPaymentGenIds(List<Long> id) {
-        List<PaymentDetailSimpleDto> list = repositoryQuery.findSimpleDetailsByPaymentIds(id);
-        return list;
+    public List<PaymentDetailDto> findSimpleDetailsByPaymentGenIds(List<Long> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The Ids must not be null");
+        }
+        return repositoryQuery.findByPayment_PaymentIdIn(ids).stream()
+                .map(PaymentDetail::toAggregate)
+                .toList();
     }
 
     @Override
