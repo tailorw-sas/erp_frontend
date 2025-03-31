@@ -20,10 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class PaymentStatusHistoryServiceImpl implements IPaymentStatusHistoryService {
@@ -75,6 +72,19 @@ public class PaymentStatusHistoryServiceImpl implements IPaymentStatusHistorySer
         Page<PaymentStatusHistory> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public List<UUID> createAll(List<PaymentStatusHistoryDto> dtos) {
+        if(Objects.isNull(dtos)){
+            throw new IllegalArgumentException("The statusHistories list must not be null");
+        }
+        List<PaymentStatusHistory> statusHistories = dtos.stream()
+                .map(PaymentStatusHistory::new).toList();
+
+        return repositoryQuery.saveAll(statusHistories).stream()
+                .map(PaymentStatusHistory::getId)
+                .toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
