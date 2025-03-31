@@ -460,6 +460,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryCommand.save(entity).toAggregate();
     }
 
+    public List<ManageInvoiceDto> updateAll(List<ManageInvoiceDto> dtoList) {
+        LocalDateTime now = LocalDateTime.now();
+        List<Invoice> invoiceList = dtoList.stream().map(Invoice::new).peek((invoice) -> invoice.setUpdatedAt(now)).collect(Collectors.toList());
+        return this.repositoryCommand.saveAllAndFlush(invoiceList).stream().map(Invoice::toAggregate).toList();
+    }
+
     @Override
     public void deleteInvoice(ManageInvoiceDto dto) {
         Invoice entity = new Invoice(dto);
