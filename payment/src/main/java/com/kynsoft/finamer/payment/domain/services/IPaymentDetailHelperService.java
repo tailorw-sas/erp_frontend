@@ -4,6 +4,7 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.CreatePaymentDetailsRequest;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public interface IPaymentDetailHelperService {
 
@@ -14,5 +15,6 @@ public interface IPaymentDetailHelperService {
                             OffsetDateTime transactionDate,
                             PaymentDto payment,
                             ManageEmployeeDto employee,
-                            ManagePaymentStatusDto paymentStatus);
+                            ManagePaymentStatusDto paymentStatus,
+                            List<PaymentStatusHistoryDto> paymentStatusHistoryList);
 }

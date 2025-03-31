@@ -11,10 +11,7 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailHelperService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.CreatePaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.CreatePaymentDetailsRequest;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
@@ -36,15 +33,18 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
     private final IPaymentDetailService paymentDetailService;
     private final IPaymentService paymentService;
     private final ProducerUpdateBookingService producerUpdateBookingService;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
 
     public PaymentDetailHelperServiceImpl(IManagePaymentStatusService paymentStatusService,
                                           IPaymentDetailService paymentDetailService,
                                           IPaymentService paymentService,
-                                          ProducerUpdateBookingService producerUpdateBookingService){
+                                          ProducerUpdateBookingService producerUpdateBookingService,
+                                          IPaymentStatusHistoryService paymentStatusHistoryService){
         this.paymentStatusService = paymentStatusService;
         this.paymentDetailService = paymentDetailService;
         this.paymentService = paymentService;
         this.producerUpdateBookingService = producerUpdateBookingService;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
     }
 
     public void processPaymentDetails(CreatePaymentDetailsRequest request){
@@ -54,6 +54,8 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
 
         List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
         List<PaymentDto> paymentsToCreate = new ArrayList<>();
+        List<PaymentStatusHistoryDto> paymentStatusHistories = new ArrayList<>();
+
         ManagePaymentStatusDto paymentStatusApplied = getPaymentStatusApplied();
 
         for(CreatePaymentDetail createPaymentDetail : request.getPaymentDetails()){
@@ -132,7 +134,8 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
                         createPaymentDetail.getTransactionDate(),
                         paymentDto,
                         createPaymentDetail.getEmployee(),
-                        paymentStatusApplied);
+                        paymentStatusApplied,
+                        paymentStatusHistories);
             }
 
             if (createPaymentDetail.getApplyPayment() && !paymentTransactionType.getCash() && !paymentTransactionType.getDeposit()){
@@ -144,6 +147,7 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
 
         this.createPaymentsDetails(paymentDetailsToCreate);
         this.updatePayments(paymentsToCreate);
+        this.createPaymentStatusHistory(paymentStatusHistories);
         this.replicateBookingToKafka(paymentDetailsToCreate);
     }
 
@@ -157,7 +161,8 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
                                    OffsetDateTime transactionDate,
                                    PaymentDto payment,
                                    ManageEmployeeDto employee,
-                                   ManagePaymentStatusDto paymentStatus){
+                                   ManagePaymentStatusDto paymentStatus,
+                                   List<PaymentStatusHistoryDto> paymentStatusHistoryList){
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(booking, "id", "Booking ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(paymentDetail, "id", "Payment Detail ID cannot be null."));
@@ -171,6 +176,7 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
         if(payment.getNotApplied() == 0 && payment.getDepositBalance() == 0 && !booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)){
             payment.setPaymentStatus(paymentStatus);
             PaymentStatusHistoryDto paymentStatusHistory = createPaymentAttachmentStatusHistory(employee, payment);
+            paymentStatusHistoryList.add(paymentStatusHistory);
         }
 
         payment.setApplyPayment(true);
@@ -201,6 +207,14 @@ public class PaymentDetailHelperServiceImpl implements IPaymentDetailHelperServi
         }
 
         paymentService.createBulk(paymentList);
+    }
+
+    private void createPaymentStatusHistory(List<PaymentStatusHistoryDto> paymentStatusHistoryList){
+        if(Objects.isNull(paymentStatusHistoryList) || paymentStatusHistoryList.isEmpty()){
+            Logger.getLogger(PaymentDetailHelperServiceImpl.class.getName()).log(Level.SEVERE, null, "The payment status history list is null or empty");
+        }
+
+        paymentStatusHistoryService.createAll(paymentStatusHistoryList);
     }
 
     private void replicateBookingToKafka(List<PaymentDetailDto> details){
