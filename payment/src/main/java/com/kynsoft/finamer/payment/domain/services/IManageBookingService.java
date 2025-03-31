@@ -45,5 +45,5 @@ public interface IManageBookingService {
 
     Long countByCoupon(String coupon);
 
-    List<BookingProjectionControlAmountBalance> findAllBookingProjectionControlAmountBalanceByCoupons(List<String> coupons);
+    List<ManageBookingDto> findAllBookingByCoupons(List<String> coupons);
 }

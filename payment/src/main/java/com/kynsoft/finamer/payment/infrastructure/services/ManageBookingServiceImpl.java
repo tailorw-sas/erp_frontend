@@ -165,9 +165,9 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public List<BookingProjectionControlAmountBalance> findAllBookingProjectionControlAmountBalanceByCoupons(List<String> coupons) {
+    public List<ManageBookingDto> findAllBookingByCoupons(List<String> coupons) {
         if(Objects.nonNull(coupons)){
-            return repositoryQuery.findBookingControlAmountBalanceProjectionByCouponNumbers(coupons);
+            return repositoryQuery.findByCouponNumber_In(coupons).stream().map(Booking::toAggregate).toList();
         }
         throw new IllegalArgumentException("Coupon numbers must not be null");
 
