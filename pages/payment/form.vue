@@ -1904,16 +1904,16 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
         iterator.fullName = iterator.manageBooking?.fullName
         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
 
-        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT') {
-          if (iterator?.transactionType?.cash) {
-            iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-            iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
-          }
-          else {
-            iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
-            iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
-          }
-        }
+        // if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT') {
+        // if (iterator?.transactionType?.cash) {
+        iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+        // }
+        // else {
+        //   iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
+        //   iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
+        // }
+        // }
       }
 
       return iterator // Devolver el item modificado
@@ -1921,6 +1921,7 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
 
     // Agregar los nuevos elementos a la lista existente
     paymentDetailsList.value = [...paymentDetailsList.value, ...newItems]
+    console.log('paymentDetailsList.value', paymentDetailsList.value)
   }
   catch (error) {
     console.error(error)
