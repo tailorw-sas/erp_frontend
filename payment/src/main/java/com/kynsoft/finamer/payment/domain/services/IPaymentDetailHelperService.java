@@ -10,11 +10,11 @@ public interface IPaymentDetailHelperService {
 
     void processPaymentDetails(CreatePaymentDetailsRequest request);
 
-    void applyPaymentDetail(ManageBookingDto booking,
+    /*void applyPaymentDetail(ManageBookingDto booking,
                             PaymentDetailDto paymentDetail,
                             OffsetDateTime transactionDate,
                             PaymentDto payment,
                             ManageEmployeeDto employee,
                             ManagePaymentStatusDto paymentStatus,
-                            List<PaymentStatusHistoryDto> paymentStatusHistoryList);
+                            List<PaymentStatusHistoryDto> paymentStatusHistoryList);*/
 }
