@@ -94,6 +94,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(hotelJoin.get("code"));
         selections.add(hotelJoin.get("name"));
         selections.add(hotelJoin.get("status"));
+        selections.add(hotelJoin.get("applyByTradingCompany"));
 
         // Payment Attachment Status
         selections.add(attachmentStatusJoin.get("id"));
@@ -125,7 +126,6 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(root.get("hasAttachment"));
         selections.add(root.get("hasDetailTypeDeposit"));
         selections.add(root.get("importType"));
-        selections.add(root.get("applyByTradingCompany"));
 
         query.multiselect(selections.toArray(new Selection[0]));
 
