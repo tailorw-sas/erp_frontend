@@ -40,7 +40,7 @@ public class ManageHotelResponse implements IResponse {
         this.name = hotel.getName();
         this.status = hotel.getStatus();
         this.applyByTradingCompany = hotel.getApplyByTradingCompany();
-        this.manageTradingCompany = null;
+        this.manageTradingCompany = hotel.getManageTradingCompany();
         this.autoApplyCredit = null;
     }
 }
