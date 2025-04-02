@@ -12,14 +12,16 @@ import java.util.UUID;
 
 public class Deposit {
 
-    private final PaymentDto payment;
+    @Getter
+    private PaymentDto payment;
+
+    @Getter
+    private PaymentDetailDto paymentDetail;
+
     private final Double amount;
     private final String remark;
     private final ManagePaymentTransactionTypeDto paymentTransactionType;
     private final OffsetDateTime transactionDate;
-
-    @Getter
-    private PaymentDetailDto paymentDetail;
 
     public Deposit(PaymentDto payment,
                    Double amount,
@@ -45,8 +47,17 @@ public class Deposit {
         this.paymentDetail.setApplyPayment(false);
         this.paymentDetail.setApplyDepositValue(paymentDetail.getAmount() * -1);
         //TODO Validar si es today o el close operation
-        paymentDetail.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
-        paymentDetail.setCreateByCredit(false);
+        this.paymentDetail.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
+        this.paymentDetail.setCreateByCredit(false);
+
+        this.calculate(this.payment, this.amount);
+    }
+
+    private void calculate(PaymentDto paymentDto, double amount) {
+        paymentDto.setDepositAmount(paymentDto.getDepositAmount() + amount);
+        paymentDto.setDepositBalance(paymentDto.getDepositBalance() + amount);
+        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
+        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
     }
 
 }
