@@ -13,13 +13,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FileDto {
+
     private UUID id;
     private String name;
     private String microServiceName;
     private String url;
     private boolean isConfirmed;
+
     @JsonIgnore
     protected UploadFileResponse uploadFileResponse;
+    
     @JsonIgnore
     protected byte[] fileContent;
 }
