@@ -1921,7 +1921,6 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
 
     // Agregar los nuevos elementos a la lista existente
     paymentDetailsList.value = [...paymentDetailsList.value, ...newItems]
-    console.log('paymentDetailsList.value', paymentDetailsList.value)
   }
   catch (error) {
     console.error(error)
