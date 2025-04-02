@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
+import { useToast } from 'primevue/usetoast'
 import dayjs from 'dayjs'
 import { z } from 'zod'
 import { formatNumber } from './utils/helperFilters'
@@ -1539,6 +1540,52 @@ async function searchAndFilter() {
   options.value.selectAllItemByDefault = false
   await getList()
 }
+//COPIAR DATOS -----------------------------------------------------------------------------------------------------------
+// En tu setup o methods:
+const copyTableData = () => {
+  try {
+    // Obtener las columnas y datos
+    const columns = applyPaymentColumnsOtherDeduction.value;
+    const data = applyPaymentListOfInvoiceOtherDeduction.value;
+
+    // Crear contenido copiable
+    const headers = columns.map(col => col.header).join('\t');
+    const rows = data.map(item => 
+      columns.map(col => {
+        const value = getNestedValue(item, col.field);
+        return typeof value === 'object' ? JSON.stringify(value) : value;
+      }).join('\t')
+    ).join('\n');
+
+    const clipboardData = `${headers}\n${rows}`;
+    
+    // Copiar al portapapeles
+    navigator.clipboard.writeText(clipboardData).then(() => {
+      // Mostrar notificación
+      toast.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Datos copiados',
+        life: 3000
+      });
+    });
+  } catch (error) {
+    console.error('Error al copiar:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Error al copiar datos',
+      life: 3000
+    });
+  }
+};
+
+// Función auxiliar para acceder a propiedades anidadas
+const getNestedValue = (obj, path) => {
+  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+}
+//-------------------------------------------------
+
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
@@ -1659,7 +1706,6 @@ function mapFunctionForStatus(data: DataListItemForStatus): DataListItemForStatu
     transit: data.transit
   }
 }
-
 const objLoading = ref({
   loadingAgency: false,
   loadingClient: false,
@@ -5224,6 +5270,12 @@ onMounted(async () => {
             </label>
           </div>
           <div>
+            <Button
+      v-tooltip.top="'Copiar tabla'"
+      class="w-3rem mx-1"
+      icon="pi pi-copy"
+      @click="copyTableData"
+    />
             <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
             <Button
               v-tooltip.top="'Apply Payment'"
