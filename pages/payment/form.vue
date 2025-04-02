@@ -14,6 +14,7 @@ import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailFor
 import PaymentAttachmentDialog, { type FileObject } from '~/components/payment/PaymentAttachmentDialog.vue'
 import type { TransactionItem } from '~/components/payment/interfaces'
 import { generateStyledPDF } from '~/components/payment/utils'
+import ImportDetail from '~/pages/payment/import-detail.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -64,6 +65,8 @@ const actionOfModal = ref<'new-detail' | 'edit-detail' | 'deposit-transfer' | 's
 
 const showReverseTransaction = ref(false)
 const showCanceledDetails = ref(false)
+
+const showImportModal = ref(false)
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -264,7 +267,10 @@ const historyPagination = ref<IPagination>({
   search: ''
 })
 const histotyPayloadOnChangePage = ref<PageState>()
-// ----------------------------------
+
+// -MODAL---------------------------------
+
+
 
 // PRINT
 const openPrint = ref(false)
@@ -3082,7 +3088,7 @@ async function openModalApplyPayment($event: any) {
 
 async function openDialogImportExcel(idItem: string) {
   if (idItem) {
-    navigateTo({ path: '/payment/import-detail', query: { paymentId: idItem } })
+    showImportModal.value = true
   }
 }
 
@@ -4453,6 +4459,21 @@ onMounted(async () => {
         </div>
       </template>
     </Dialog>
+    <Dialog 
+    v-model:visible="showImportModal" 
+    header="Importar Excel" 
+    :modal="true" 
+    :style="{ 
+    width: '90vw', 
+    height: '90vh',  // Altura al 90% del viewport
+    'max-height': '800px' // Altura máxima fija
+  }"
+  >
+    <ImportDetail 
+      :payment-id="idItem" 
+      @close="showImportModal = false"
+    />
+  </Dialog>
 
     <ContextMenu ref="contextMenu" :model="allMenuListItems">
       <template #itemicon="{ item }">
