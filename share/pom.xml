@@ -21,7 +21,7 @@
         <java.version>17</java.version>
         <jsonwebtoken.version>0.11.5</jsonwebtoken.version>
     </properties>
-    
+
     <profiles>
         <profile>
             <id>dev</id>
