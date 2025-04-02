@@ -855,6 +855,21 @@ const payloadpaymentDetailForTypeDeposit = ref<IQueryRequest>({
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
 })
+const payloadpaymentDetailForTypeDepositPagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 10,
+  search: ''
+})
+
+const payloadpaymentDetailForTypeDepositPaginationTemp = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
 
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
@@ -1899,10 +1914,8 @@ async function applyPaymentGetList() {
                 query: '',
                 keys: ['name', 'code'],
               }
-
               let listHotelsForApplyPayment: any[] = []
               listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
               if (listHotelsForApplyPayment.length > 0) {
                 const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'hotel.id')
 
@@ -1917,7 +1930,6 @@ async function applyPaymentGetList() {
                     logicalOperation: 'AND'
                   })
                 }
-
                 const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
 
                 if (objFilterDueAmount) {
@@ -2264,37 +2276,162 @@ async function applyPaymentBookingGetList(idInvoice: string = '') {
   }
 }
 
+// async function getListPaymentDetailTypeDeposit() {
+//   if (paymentDetailsTypeDepositLoading.value) {
+//     // Si ya hay una solicitud en proceso, no hacer nada.
+//     return
+//   }
+//   try {
+//     paymentDetailsTypeDepositLoading.value = true
+//     paymentDetailsTypeDepositList.value = []
+//     const newListItems = []
+
+//     const objFilter = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'payment.id')
+
+//     if (objFilter) {
+//       objFilter.value = objItemSelectedForRightClickApplyPayment.value.id
+//     }
+//     else {
+//       payloadpaymentDetailForTypeDeposit.value.filter.push({
+//         key: 'payment.id',
+//         operator: 'EQUALS',
+//         value: objItemSelectedForRightClickApplyPayment.value.id,
+//         logicalOperation: 'AND'
+//       })
+//     }
+
+//     const objFilterForTransactionType = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'transactionType.deposit')
+
+//     if (objFilterForTransactionType) {
+//       objFilterForTransactionType.value = true
+//     }
+//     else {
+//       payloadpaymentDetailForTypeDeposit.value.filter.push({
+//         key: 'transactionType.deposit',
+//         operator: 'EQUALS',
+//         value: true,
+//         logicalOperation: 'AND'
+//       })
+//     }
+
+//     const objFilterForCancelTransaction = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'canceledTransaction')
+
+//     if (objFilterForCancelTransaction) {
+//       objFilterForCancelTransaction.value = false
+//     }
+//     else {
+//       payloadpaymentDetailForTypeDeposit.value.filter.push({
+//         key: 'canceledTransaction',
+//         operator: 'EQUALS',
+//         value: false,
+//         logicalOperation: 'AND'
+//       })
+//     }
+//     const response = await GenericService.search('payment', 'payment-detail', payloadpaymentDetailForTypeDeposit.value)
+
+//     const { data: dataList } = response
+//     // page, size, totalElements, totalPages
+//     // pagination.value.page = page
+//     // pagination.value.limit = size
+//     // pagination.value.totalElements = totalElements
+//     // pagination.value.totalPages = totalPages
+
+//     const existingIds = new Set(paymentDetailsTypeDepositList.value.map(item => item.id))
+
+//     for (const iterator of dataList) {
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
+//         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
+//           ? Number.parseFloat(iterator.amount).toString()
+//           : '0'
+
+//         iterator.amount = formatNumber(iterator.amount)
+//       }
+//       // if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
+//       //   iterator.applyDepositValue = (!Number.isNaN(iterator.applyDepositValue) && iterator.applyDepositValue !== null && iterator.applyDepositValue !== '')
+//       //     ? Number.parseFloat(iterator.applyDepositValue).toString()
+//       //     : '0'
+
+//       //   iterator.applyDepositValue = formatNumber(iterator.applyDepositValue)
+//       // }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+//         iterator.status = statusToBoolean(iterator.status)
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
+//         iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
+//         iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
+//       }
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+//         iterator.transactionType = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
+
+//         if (iterator.deposit) {
+//           iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+//         }
+//       }
+
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
+//         iterator.adults = iterator.manageBooking?.adults?.toString()
+//         iterator.children = iterator.manageBooking?.children?.toString()
+//         iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
+//         iterator.fullName = iterator.manageBooking?.fullName
+//         iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+//         iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
+//         iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+//       }
+
+//       // Verificar si el ID ya existe en la lista
+//       if (!existingIds.has(iterator.id)) {
+//         newListItems.push({ ...iterator })
+//         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+//       }
+//     }
+
+//     paymentDetailsTypeDepositList.value = [...paymentDetailsTypeDepositList.value, ...newListItems]
+//   }
+//   catch (error) {
+//     console.error(error)
+//   }
+//   finally {
+//     paymentDetailsTypeDepositLoading.value = false
+//   }
+// }
+
 async function getListPaymentDetailTypeDeposit() {
-  if (paymentDetailsTypeDepositLoading.value) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
-    return
-  }
+  if (paymentDetailsTypeDepositLoading.value) { return }
+
   try {
+    // Copiar paginación temporal (si la usas como en applyPaymentGetList)
+    payloadpaymentDetailForTypeDepositPagination.value = {
+      ...payloadpaymentDetailForTypeDepositPaginationTemp.value
+    }
+
     paymentDetailsTypeDepositLoading.value = true
     paymentDetailsTypeDepositList.value = []
     const newListItems = []
 
-    const objFilter = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'payment.id')
+    const filters = payloadpaymentDetailForTypeDeposit.value.filter
 
-    if (objFilter) {
-      objFilter.value = objItemSelectedForRightClickApplyPayment.value.id
+    const paymentId = objItemSelectedForRightClickApplyPayment.value?.id
+    const filterByPaymentId = filters.find(f => f.key === 'payment.id')
+    if (filterByPaymentId) {
+      filterByPaymentId.value = paymentId
     }
     else {
-      payloadpaymentDetailForTypeDeposit.value.filter.push({
+      filters.push({
         key: 'payment.id',
         operator: 'EQUALS',
-        value: objItemSelectedForRightClickApplyPayment.value.id,
+        value: paymentId,
         logicalOperation: 'AND'
       })
     }
 
-    const objFilterForTransactionType = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'transactionType.deposit')
-
-    if (objFilterForTransactionType) {
-      objFilterForTransactionType.value = true
+    const depositFilter = filters.find(f => f.key === 'transactionType.deposit')
+    if (depositFilter) {
+      depositFilter.value = true
     }
     else {
-      payloadpaymentDetailForTypeDeposit.value.filter.push({
+      filters.push({
         key: 'transactionType.deposit',
         operator: 'EQUALS',
         value: true,
@@ -2302,76 +2439,83 @@ async function getListPaymentDetailTypeDeposit() {
       })
     }
 
-    const objFilterForCancelTransaction = payloadpaymentDetailForTypeDeposit.value.filter.find(item => item.key === 'canceledTransaction')
-
-    if (objFilterForCancelTransaction) {
-      objFilterForCancelTransaction.value = false
+    const canceledFilter = filters.find(f => f.key === 'canceledTransaction')
+    if (canceledFilter) {
+      canceledFilter.value = false
     }
     else {
-      payloadpaymentDetailForTypeDeposit.value.filter.push({
+      filters.push({
         key: 'canceledTransaction',
         operator: 'EQUALS',
         value: false,
         logicalOperation: 'AND'
       })
     }
-    const response = await GenericService.search('payment', 'payment-detail', payloadpaymentDetailForTypeDeposit.value)
 
-    const { data: dataList } = response
-    // page, size, totalElements, totalPages
-    // pagination.value.page = page
-    // pagination.value.limit = size
-    // pagination.value.totalElements = totalElements
-    // pagination.value.totalPages = totalPages
+    // Agregar paginación al payload
+    const payloadWithPagination = {
+      ...payloadpaymentDetailForTypeDeposit.value,
+      page: payloadpaymentDetailForTypeDepositPagination.value.page,
+      size: payloadpaymentDetailForTypeDepositPagination.value.limit
+    }
+
+    const response = await GenericService.search('payment', 'payment-detail', payloadWithPagination)
+
+    const {
+      data: dataList,
+      page,
+      size,
+      totalElements,
+      totalPages
+    } = response
+
+    payloadpaymentDetailForTypeDepositPagination.value.page = page
+    payloadpaymentDetailForTypeDepositPagination.value.limit = size
+    payloadpaymentDetailForTypeDepositPagination.value.totalElements = totalElements
+    payloadpaymentDetailForTypeDepositPagination.value.totalPages = totalPages
 
     const existingIds = new Set(paymentDetailsTypeDepositList.value.map(item => item.id))
 
-    for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
-          ? Number.parseFloat(iterator.amount).toString()
+    for (const item of dataList) {
+      if ('amount' in item) {
+        item.amount = (!Number.isNaN(item.amount) && item.amount !== null && item.amount !== '')
+          ? Number.parseFloat(item.amount).toString()
           : '0'
+        item.amount = formatNumber(item.amount)
+      }
 
-        iterator.amount = formatNumber(iterator.amount)
+      if ('status' in item) {
+        item.status = statusToBoolean(item.status)
       }
-      // if (Object.prototype.hasOwnProperty.call(iterator, 'applyDepositValue')) {
-      //   iterator.applyDepositValue = (!Number.isNaN(iterator.applyDepositValue) && iterator.applyDepositValue !== null && iterator.applyDepositValue !== '')
-      //     ? Number.parseFloat(iterator.applyDepositValue).toString()
-      //     : '0'
 
-      //   iterator.applyDepositValue = formatNumber(iterator.applyDepositValue)
-      // }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
+      if ('transactionDate' in item) {
+        item.transactionDate = item.transactionDate ? dayjs(item.transactionDate).format('YYYY-MM-DD') : null
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
-        iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
-        iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
-        iterator.transactionType = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
 
-        if (iterator.deposit) {
-          iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+      if ('parentId' in item) {
+        item.parentId = item.parentId?.toString() || ''
+      }
+
+      if ('transactionType' in item) {
+        item.transactionType = `${item.transactionType.code} - ${item.transactionType.name}`
+        if (item.deposit) {
+          item.rowClass = 'row-deposit'
         }
       }
 
-      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
-        iterator.adults = iterator.manageBooking?.adults?.toString()
-        iterator.children = iterator.manageBooking?.children?.toString()
-        iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
-        iterator.fullName = iterator.manageBooking?.fullName
-        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
-        iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
+      if ('manageBooking' in item) {
+        item.adults = item.manageBooking?.adults?.toString()
+        item.children = item.manageBooking?.children?.toString()
+        item.couponNumber = item.manageBooking?.couponNumber?.toString()
+        item.fullName = item.manageBooking?.fullName
+        item.reservationNumber = item.manageBooking?.reservationNumber?.toString()
+        item.bookingId = item.manageBooking?.bookingId?.toString()
+        item.invoiceNumber = item.manageBooking?.invoice?.invoiceNumber?.toString()
       }
 
-      // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+      if (!existingIds.has(item.id)) {
+        newListItems.push({ ...item })
+        existingIds.add(item.id)
       }
     }
 
@@ -2643,8 +2787,6 @@ async function applyPaymentGetListForOtherDeductions() {
 
               if (loadAllInvoices.value) {
                 applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
-                console.log('LoadAllInvoices')
-                console.log(applyPaymentPayloadOtherDeduction)
               }
               else {
                 const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
@@ -4765,18 +4907,28 @@ onMounted(async () => {
                 :value="paymentDetailsTypeDepositList"
                 striped-rows
                 show-gridlines
+                scrollable
+                scroll-height="120px"
                 :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
                 data-key="id"
                 selection-mode="multiple"
-                style="background-color: #F5F5F5; max-height: 90px"
                 @update:selection="onRowSelectAll"
               >
                 <Column selection-mode="multiple" header-style="width: 3rem" />
-                <Column v-for="column of columnsPaymentDetailTypeDeposit" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
+                <Column
+                  v-for="column of columnsPaymentDetailTypeDeposit.filter(c =>
+                    ['paymentDetailId', 'transactionType', 'amount', 'applyDepositValue'].includes(c.field),
+                  )"
+                  :key="column.field"
+                  :field="column.field"
+                  :header="column.header"
+                  :sortable="column?.sortable"
+                >
                   <template v-if="column.field === 'applyDepositValue'" #body="slotProps">
                     {{ formatNumber(slotProps.data.applyDepositValue) }}
                   </template>
                 </Column>
+
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                     <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
