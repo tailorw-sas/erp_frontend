@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.settings.infrastructure.projections;
 
+import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.Getter;
 
 import java.util.UUID;
@@ -20,9 +21,9 @@ public class ManageDepartmentGroupProjection {
     private String description;
 
     @Getter
-    private String status;
+    private Status status;
 
-    public ManageDepartmentGroupProjection(UUID id, String code, String name, String descripcion, String status){
+    public ManageDepartmentGroupProjection(UUID id, String code, String name, String descripcion, Status status){
         this.id = id;
         this.code = code;
         this.name = name;

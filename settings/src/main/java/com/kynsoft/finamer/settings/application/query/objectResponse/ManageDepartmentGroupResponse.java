@@ -38,7 +38,7 @@ public class ManageDepartmentGroupResponse  implements IResponse {
     public ManageDepartmentGroupResponse(ManageDepartmentGroupProjection projection){
         this.id = projection.getId();
         this.code = projection.getCode();
-        this.status = Status.valueOf(projection.getStatus());
+        this.status = projection.getStatus();
         this.name = projection.getName();
         this.description = projection.getDescription();
     }

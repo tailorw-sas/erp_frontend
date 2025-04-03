@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.repository.query.customRepository;
 
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.domain.dtoEnum.UserType;
 import com.kynsoft.finamer.settings.infrastructure.identity.*;
 import com.kynsoft.finamer.settings.infrastructure.projections.ManageDepartmentGroupProjection;
 import com.kynsoft.finamer.settings.infrastructure.projections.ManageEmployeeProjection;
@@ -33,7 +34,7 @@ public class ManageEmployeeCustomRepositoryImpl implements ManageEmployeeCustomR
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
         Root<ManageEmployee> root = query.from(ManageEmployee.class);
-        Join<ManageEmployee, ManageDepartmentGroupProjection> departmentGroupJoin = root.join("departmentGroup", JoinType.LEFT);
+        Join<ManageEmployee, ManageDepartmentGroup> departmentGroupJoin = root.join("departmentGroup", JoinType.LEFT);
         //Join<ManageEmployee, ManagePermission> permissionListJoin = root.join("managePermissionList", JoinType.LEFT);
         //Join<ManageEmployee, ManageAgency> manageAgencyListJoin = root.join("manageAgencyList", JoinType.LEFT);
         //Join<ManageEmployee, ManageHotel> manageHotelListJoin = root.join("manageHotelList", JoinType.LEFT);
@@ -118,16 +119,16 @@ public class ManageEmployeeCustomRepositoryImpl implements ManageEmployeeCustomR
                             tuple.get(2, String.class),
                             tuple.get(3, String.class),
                             tuple.get(4, String.class),
-                            tuple.get(5, String.class)
+                            tuple.get(5, Status.class)
                     ),
+                    tuple.get(6, Status.class),
+                    tuple.get(7, String.class),
                     tuple.get(8, String.class),
                     tuple.get(9, String.class),
                     tuple.get(10, String.class),
                     tuple.get(11, String.class),
                     tuple.get(12, String.class),
-                    tuple.get(13, String.class),
-                    tuple.get(14, String.class),
-                    tuple.get(15, String.class)
+                    tuple.get(13, UserType.class)
             );
         }).collect(Collectors.toList());
 

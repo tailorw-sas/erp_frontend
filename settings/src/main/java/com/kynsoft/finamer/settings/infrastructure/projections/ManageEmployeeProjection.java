@@ -16,7 +16,7 @@ public class ManageEmployeeProjection {
     private ManageDepartmentGroupProjection departmentGroup;
 
     @Getter
-    private String status;
+    private Status status;
 
     @Getter
     private String firstName;
@@ -42,11 +42,11 @@ public class ManageEmployeeProjection {
     //private List<ManageReport> manageReportList;
 
     @Getter
-    private String userType;
+    private UserType userType;
 
     public ManageEmployeeProjection(UUID id,
                                      ManageDepartmentGroupProjection departmentGroup,
-                                     String status,
+                                    Status status,
                                      String firstName,
                                      String lastName,
                                      String loginName,
@@ -58,7 +58,7 @@ public class ManageEmployeeProjection {
                                     // List<ManageHotel> manageHotelList;
                                     // List<ManageTradingCompanies> manageTradingCompaniesList;
                                     // List<ManageReport> manageReportList;
-                                     String userType){
+                                    UserType userType){
 
         this.id = id;
         this.departmentGroup = departmentGroup;

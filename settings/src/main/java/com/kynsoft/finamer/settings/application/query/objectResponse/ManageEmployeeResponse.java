@@ -67,8 +67,8 @@ public class ManageEmployeeResponse implements IResponse {
         this.email = projection.getEmail();
         this.innsistCode = projection.getInnsistCode();
         this.phoneExtension = projection.getPhoneExtension();
-        this.status = Status.valueOf(projection.getStatus());
-        this.userType = UserType.valueOf(projection.getUserType());
+        this.status = projection.getStatus();
+        this.userType = projection.getUserType();
 
     }
 }
