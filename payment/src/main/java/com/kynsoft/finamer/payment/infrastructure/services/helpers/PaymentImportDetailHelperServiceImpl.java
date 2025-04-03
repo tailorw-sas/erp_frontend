@@ -349,10 +349,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                         ManagePaymentTransactionTypeDto paymentTransactionType) {
          //TODO Incluir en el mapa de transaction type el deposit
 
-        String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
-        String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
-        String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
-        String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
+        String invoiceNo = validateStringRemark(paymentImportCache.getInvoiceNo());
+        String firstName = validateStringRemark(paymentImportCache.getFirstName());
+        String lastName = validateStringRemark(paymentImportCache.getLastName());
+        String bookingNo = validateStringRemark(paymentImportCache.getBookingNo());
 
         if (!byCoupon) {
             remarks = ("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
@@ -374,6 +374,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             return transactionTypeDto.getDefaultRemark();
         }
         return paymentImportCache.getRemarks();
+    }
+
+    private String validateStringRemark(String value){
+        return (value != null && !"null".equals(value)) ? value : "";
     }
 
     @Override
