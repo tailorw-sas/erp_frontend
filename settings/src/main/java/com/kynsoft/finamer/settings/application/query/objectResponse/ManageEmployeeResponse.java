@@ -7,12 +7,14 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.manageTradi
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.dtoEnum.UserType;
+import com.kynsoft.finamer.settings.infrastructure.projections.ManageEmployeeProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -54,5 +56,19 @@ public class ManageEmployeeResponse implements IResponse {
         this.manageTradingCompaniesList = dto.getManageTradingCompaniesList() != null ? dto.getManageTradingCompaniesList().stream().map(ManageTradingCompaniesBasicResponse::new).collect(Collectors.toList()) : null;
         this.userType = dto.getUserType();
         this.manageReportList = dto.getManageReportList() != null ? dto.getManageReportList().stream().map(ManageReportResponse::new).collect(Collectors.toList()) : null;
+    }
+
+    public ManageEmployeeResponse(ManageEmployeeProjection projection){
+        this.id = projection.getId();
+        this.departmentGroup = Objects.nonNull(projection.getDepartmentGroup()) ? new ManageDepartmentGroupResponse(projection.getDepartmentGroup()) : null;
+        this.firstName = projection.getFirstName();
+        this.lastName = projection.getLastName();
+        this.loginName = projection.getLoginName();
+        this.email = projection.getEmail();
+        this.innsistCode = projection.getInnsistCode();
+        this.phoneExtension = projection.getPhoneExtension();
+        this.status = Status.valueOf(projection.getStatus());
+        this.userType = UserType.valueOf(projection.getUserType());
+
     }
 }

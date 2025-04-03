@@ -10,6 +10,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
@@ -138,7 +139,8 @@ public class ManageEmployeeCustomRepositoryImpl implements ManageEmployeeCustomR
             Predicate countPredicate = specification.toPredicate(countRoot, countQuery, cb);
             countQuery.where(countPredicate);
         }
-        long total = entityManager.createQuery(countQuery)
-        return null;
+        long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        return new PageImpl<>(results, pageable, total);
     }
 }

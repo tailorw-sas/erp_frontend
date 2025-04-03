@@ -13,8 +13,10 @@ import com.kynsoft.finamer.settings.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageEmployee;
+import com.kynsoft.finamer.settings.infrastructure.projections.ManageEmployeeProjection;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageEmployeeWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.customRepository.ManageEmployeeCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -76,7 +78,8 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageEmployee> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageEmployee> data = this.repositoryQuery.findAll(specifications, pageable);
+        //Page<ManageEmployee> data = this.repositoryQuery.findAll(specifications, pageable);
+        Page<ManageEmployeeProjection> data = this.repositoryQuery.findAllCustom(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -95,10 +98,19 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         }
     }
 
-    private PaginatedResponse getPaginatedResponse(Page<ManageEmployee> data) {
+//    private PaginatedResponse getPaginatedResponse(Page<ManageEmployee> data) {
+//        List<ManageEmployeeResponse> userSystemsResponses = new ArrayList<>();
+//        for (ManageEmployee p : data.getContent()) {
+//            userSystemsResponses.add(new ManageEmployeeResponse(p.toAggregate()));
+//        }
+//        return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
+//                data.getTotalElements(), data.getSize(), data.getNumber());
+//    }
+
+    private PaginatedResponse getPaginatedResponse(Page<ManageEmployeeProjection> data) {
         List<ManageEmployeeResponse> userSystemsResponses = new ArrayList<>();
-        for (ManageEmployee p : data.getContent()) {
-            userSystemsResponses.add(new ManageEmployeeResponse(p.toAggregate()));
+        for (ManageEmployeeProjection p : data.getContent()) {
+            userSystemsResponses.add(new ManageEmployeeResponse(p));
         }
         return new PaginatedResponse(userSystemsResponses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
