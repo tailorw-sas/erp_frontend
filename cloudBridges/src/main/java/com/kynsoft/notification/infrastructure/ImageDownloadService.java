@@ -1,8 +1,8 @@
 package com.kynsoft.notification.infrastructure;
 
 
+import com.kynsof.share.core.domain.response.FileDto;
 import com.kynsof.share.core.infrastructure.redis.CacheConfig;
-import com.kynsoft.notification.domain.dto.AFileDto;
 import com.kynsoft.notification.domain.service.IAFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -26,7 +26,7 @@ public class ImageDownloadService {
     }
     @Cacheable(cacheNames = CacheConfig.IMAGE_CACHE, unless = "#result == null")
     public byte[] downloadImage(UUID id) {
-        AFileDto fileSave = this.fileService.findById(id);
+        FileDto fileSave = this.fileService.findById(id);
 
         ResponseEntity<byte[]> response = restTemplate.getForEntity(fileSave.getUrl(), byte[].class);
         if (response.getStatusCode().is2xxSuccessful()) {

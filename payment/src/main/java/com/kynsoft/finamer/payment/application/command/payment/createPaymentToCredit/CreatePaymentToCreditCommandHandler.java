@@ -97,14 +97,9 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
     }
 
     //Payment creado con el deposit y apply deposit
-    private void createPaymentToCreditPositive(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto,
-            ManagePaymentSourceDto paymentSourceDto,
-            ManagePaymentStatusDto paymentStatusDto,
-            ManageClientDto clientDto,
-            ManageAgencyDto agencyDto,
-            ManagePaymentAttachmentStatusDto attachmentStatusDto,
-            CreatePaymentToCreditCommand command,
-            ManageEmployeeDto employee) {
+    private void createPaymentToCreditPositive(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto, ManagePaymentSourceDto paymentSourceDto,
+            ManagePaymentStatusDto paymentStatusDto, ManageClientDto clientDto, ManageAgencyDto agencyDto,
+            ManagePaymentAttachmentStatusDto attachmentStatusDto, CreatePaymentToCreditCommand command, ManageEmployeeDto employee) {
 
         if (!command.isAutoApplyCredit()) {
             paymentStatusDto = this.statusService.findByConfirmed();
