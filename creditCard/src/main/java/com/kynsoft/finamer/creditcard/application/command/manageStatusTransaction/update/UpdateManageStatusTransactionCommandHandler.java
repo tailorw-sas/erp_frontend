@@ -13,6 +13,7 @@ import com.kynsoft.finamer.creditcard.infrastructure.utils.CreditCardUploadAttac
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -119,7 +120,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
                 this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());
             }
 
-            transactionDto.setAuthorizationCode(command.getResult().getAuthorizationCode());
+            if(command.getResult() != null && command.getResult().getAuthorizationCode() != null){
+                transactionDto.setAuthorizationCode(command.getResult().getAuthorizationCode());
+            }
 
             // Guardar la transacción y continuar con las otras operaciones
             transactionService.update(transactionDto);
