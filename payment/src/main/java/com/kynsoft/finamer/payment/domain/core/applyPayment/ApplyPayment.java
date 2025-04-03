@@ -1,11 +1,10 @@
-package com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.applyPayment;
+package com.kynsoft.finamer.payment.domain.core.applyPayment;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.*;
-import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.paymentStatusHistory.PaymentStatusHistory;
+import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
@@ -56,7 +55,7 @@ public class ApplyPayment {
         this.paymentDetail.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
         this.paymentDetail.setEffectiveDate(this.transactionDate);
 
-        if(this.payment.getNotApplied() == 0 && this.payment.getDepositBalance() == 0 && !this.booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)){
+        if(this.payment.getPaymentBalance() == 0 && this.payment.getDepositBalance() == 0){
             this.payment.setPaymentStatus(this.paymentStatus);
             this.paymentStatusHistory = createPaymentStatusHistory();
             this.isApplied = true;

@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.Deposit;
+package com.kynsoft.finamer.payment.domain.core.Deposit;
 
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;

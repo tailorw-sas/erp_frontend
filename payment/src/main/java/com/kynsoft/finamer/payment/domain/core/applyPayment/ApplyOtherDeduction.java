@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.applyPayment;
+package com.kynsoft.finamer.payment.domain.core.applyPayment;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.utils.BankerRounding;

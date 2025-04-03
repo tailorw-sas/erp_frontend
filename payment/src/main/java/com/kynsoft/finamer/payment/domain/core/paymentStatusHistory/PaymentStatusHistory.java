@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.infrastructure.services.helpers.entity.paymentStatusHistory;
+package com.kynsoft.finamer.payment.domain.core.paymentStatusHistory;
 
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
