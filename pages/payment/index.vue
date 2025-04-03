@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
+import { useToast } from 'primevue/usetoast'
 import dayjs from 'dayjs'
 import { z } from 'zod'
 import { formatNumber } from './utils/helperFilters'
@@ -19,6 +20,8 @@ import PaymentAntiToIncomeDialog from '~/pages/payment/import-anti-income.vue'
 import PaymentExpenseToBookingDialog from '~/pages/payment/import-expense-booking.vue'
 import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
 import PayPrint from '~/pages/payment/print/index.vue'
+import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
+import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -1659,7 +1662,6 @@ function mapFunctionForStatus(data: DataListItemForStatus): DataListItemForStatu
     transit: data.transit
   }
 }
-
 const objLoading = ref({
   loadingAgency: false,
   loadingClient: false,
@@ -1733,6 +1735,14 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   finally {
     objLoading.value.loadingStatus = false
   }
+}
+
+function copiarDatosOtherDeductions() {
+  copyTableToClipboard(applyPaymentColumnsOtherDeduction.value, applyPaymentListOfInvoiceOtherDeduction.value, toast)
+}
+
+function copiarDatos() {
+  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
 }
 
 async function getAgencyByClient(clientId: string = '') {
@@ -4692,6 +4702,14 @@ onMounted(async () => {
                 icon="pi pi-filter-slash"
                 @click="loadDefaultsConfig"
               />
+
+              <Button
+                v-tooltip.top="'Copiar tabla'"
+                class="p-button-lg w-1rem h-2rem ml-2"
+                style="margin-left: 10px; margin-top: 10px"
+                icon="pi pi-copy"
+                @click="copiarDatos"
+              />
             </div>
           </div>
         </AccordionTab>
@@ -5224,6 +5242,12 @@ onMounted(async () => {
             </label>
           </div>
           <div>
+            <Button
+              v-tooltip.top="'Copiar tabla'"
+              class="w-3rem mx-1"
+              icon="pi pi-copy"
+              @click="copiarDatosOtherDeductions"
+            />
             <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
             <Button
               v-tooltip.top="'Apply Payment'"
