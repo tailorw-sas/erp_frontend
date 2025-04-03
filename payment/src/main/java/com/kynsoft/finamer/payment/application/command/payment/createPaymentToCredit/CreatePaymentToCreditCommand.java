@@ -25,7 +25,8 @@ public class CreatePaymentToCreditCommand implements ICommand {
     private boolean autoApplyCredit;
     private final IMediator mediator;
 
-    public CreatePaymentToCreditCommand(UUID client, UUID agency, UUID hotel, ManageInvoiceDto invoiceDto, List<CreateAttachmentRequest> attachments, boolean autoApplyCredit, final IMediator mediator, UUID employee) {
+    public CreatePaymentToCreditCommand(UUID client, UUID agency, UUID hotel, ManageInvoiceDto invoiceDto, List<CreateAttachmentRequest> attachments,
+                                        boolean autoApplyCredit, final IMediator mediator, UUID employee) {
         this.id = UUID.randomUUID();
         this.client = client;
         this.agency = agency;
