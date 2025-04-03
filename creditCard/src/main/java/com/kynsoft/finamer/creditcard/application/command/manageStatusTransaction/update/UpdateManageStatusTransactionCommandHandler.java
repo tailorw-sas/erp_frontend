@@ -120,9 +120,9 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
                 this.transactionStatusHistoryService.create(transactionDto, command.getEmployeeId());
             }
 
-            //Guardar el AuthorizationCode en la transaccion
-            if(command.getResult() != null && command.getResult().getAuthorizationCode() != null){
-                transactionDto.setAuthorizationCode(command.getResult().getAuthorizationCode());
+            //Guardar AuthorizationCode en la transaccion
+            if(transactionResponse.getAuthorizationCode() != null){
+                transactionDto.setAuthorizationCode(transactionResponse.getAuthorizationCode());
             }
 
             // Guardar la transacción y continuar con las otras operaciones
