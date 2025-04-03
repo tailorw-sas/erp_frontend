@@ -237,7 +237,7 @@ const columns: IColumn[] = [
   { field: 'transactionDate', header: 'Trans Date', type: 'date', width: '20px', minWidth: '90px', maxWidth: '100px' },
   { field: 'methodType', header: 'Method', type: 'text', width: '20px', minWidth: '60px', maxWidth: '70px' },
   { field: 'categoryType', header: 'Type', type: 'select', width: '20px', minWidth: '80px', maxWidth: '120px', objApi: { moduleApi: 'creditcard', uriApi: 'manage-vcc-transaction-type', filter: activeStatusFilter }, },
-  { field: 'authNo', header: 'Auth No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '100px' },
+  { field: 'authorizationNumber', header: 'Auth No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '100px' },
   { field: 'couponNumber', header: 'Coupon No.', type: 'text', width: '20px', minWidth: '80px', maxWidth: '120px' },
   { field: 'status', header: 'Status', type: 'slot-select', frozen: true, statusClassMap: sClassMap, objApi: { moduleApi: 'creditcard', uriApi: 'manage-transaction-status', filter: activeStatusFilter }, sortable: true },
 ]
