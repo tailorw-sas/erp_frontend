@@ -4702,6 +4702,7 @@ onMounted(async () => {
                 icon="pi pi-filter-slash"
                 @click="loadDefaultsConfig"
               />
+
               <Button
                 v-tooltip.top="'Copiar tabla'"
                 class="p-button-lg w-1rem h-2rem ml-2"
