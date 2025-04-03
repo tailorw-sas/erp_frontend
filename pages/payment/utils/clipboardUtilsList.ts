@@ -10,7 +10,6 @@ export function copyListFromColumns(
 
     const fields = columns.map(col => col.field)
     const headers = columns.map(col => col.header)
-
     const headerRow = headers.join('\t')
 
     const rows = list.map(item =>
@@ -19,14 +18,8 @@ export function copyListFromColumns(
 
         if (value && typeof value === 'object') {
           if (value.code && value.name) {
-            // Evita repetir el código si ya está dentro del nombre
-            if (value.name.includes(value.code)) {
-              return value.name
-            }
+            if (value.name.includes(value.code)) { return value.name }
             return `${value.code} - ${value.name}`
-          }
-          else if (value.code) {
-            return value.code
           }
           else if (value.code) {
             return value.code
@@ -45,16 +38,8 @@ export function copyListFromColumns(
 
     const clipboardData = `${headerRow}\n${rows}`
 
-    navigator.clipboard.writeText(clipboardData).then(() => {
-      toast?.add({
-        severity: 'success',
-        summary: 'Copiado',
-        detail: 'Datos copiados al portapapeles',
-        life: 3000
-      })
-    }).catch((err) => {
-      throw err
-    })
+    // Fallback para HTTP (sin navigator.clipboard)
+    copyTextFallback(clipboardData, toast)
   }
   catch (error) {
     console.error('Error al copiar:', error)
@@ -81,4 +66,39 @@ function getNestedValue(obj: any, path: string): any {
   }
 
   return value
+}
+
+function copyTextFallback(text: string, toast?: any) {
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'absolute'
+    textarea.style.left = '-9999px'
+    document.body.appendChild(textarea)
+    textarea.select()
+    const success = document.execCommand('copy')
+    document.body.removeChild(textarea)
+
+    if (success) {
+      toast?.add({
+        severity: 'success',
+        summary: 'Copiado',
+        detail: 'Datos copiados al portapapeles',
+        life: 3000
+      })
+    }
+    else {
+      throw new Error('No se pudo copiar.')
+    }
+  }
+  catch (error) {
+    console.error('Error al copiar (fallback):', error)
+    toast?.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No se pudieron copiar los datos',
+      life: 3000
+    })
+  }
 }
