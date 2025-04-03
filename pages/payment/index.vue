@@ -20,6 +20,8 @@ import PaymentAntiToIncomeDialog from '~/pages/payment/import-anti-income.vue'
 import PaymentExpenseToBookingDialog from '~/pages/payment/import-expense-booking.vue'
 import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
 import PayPrint from '~/pages/payment/print/index.vue'
+import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
+import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -1540,52 +1542,6 @@ async function searchAndFilter() {
   options.value.selectAllItemByDefault = false
   await getList()
 }
-//COPIAR DATOS -----------------------------------------------------------------------------------------------------------
-// En tu setup o methods:
-const copyTableData = () => {
-  try {
-    // Obtener las columnas y datos
-    const columns = applyPaymentColumnsOtherDeduction.value;
-    const data = applyPaymentListOfInvoiceOtherDeduction.value;
-
-    // Crear contenido copiable
-    const headers = columns.map(col => col.header).join('\t');
-    const rows = data.map(item => 
-      columns.map(col => {
-        const value = getNestedValue(item, col.field);
-        return typeof value === 'object' ? JSON.stringify(value) : value;
-      }).join('\t')
-    ).join('\n');
-
-    const clipboardData = `${headers}\n${rows}`;
-    
-    // Copiar al portapapeles
-    navigator.clipboard.writeText(clipboardData).then(() => {
-      // Mostrar notificación
-      toast.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'Datos copiados',
-        life: 3000
-      });
-    });
-  } catch (error) {
-    console.error('Error al copiar:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Error al copiar datos',
-      life: 3000
-    });
-  }
-};
-
-// Función auxiliar para acceder a propiedades anidadas
-const getNestedValue = (obj, path) => {
-  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-}
-//-------------------------------------------------
-
 
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
@@ -1779,6 +1735,14 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   finally {
     objLoading.value.loadingStatus = false
   }
+}
+
+function copiarDatosOtherDeductions() {
+  copyTableToClipboard(applyPaymentColumnsOtherDeduction.value, applyPaymentListOfInvoiceOtherDeduction.value, toast)
+}
+
+function copiarDatos() {
+  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
 }
 
 async function getAgencyByClient(clientId: string = '') {
@@ -4738,6 +4702,13 @@ onMounted(async () => {
                 icon="pi pi-filter-slash"
                 @click="loadDefaultsConfig"
               />
+              <Button
+                v-tooltip.top="'Copiar tabla'"
+                class="p-button-lg w-1rem h-2rem ml-2"
+                style="margin-left: 10px; margin-top: 10px"
+                icon="pi pi-copy"
+                @click="copiarDatos"
+              />
             </div>
           </div>
         </AccordionTab>
@@ -5271,11 +5242,11 @@ onMounted(async () => {
           </div>
           <div>
             <Button
-      v-tooltip.top="'Copiar tabla'"
-      class="w-3rem mx-1"
-      icon="pi pi-copy"
-      @click="copyTableData"
-    />
+              v-tooltip.top="'Copiar tabla'"
+              class="w-3rem mx-1"
+              icon="pi pi-copy"
+              @click="copiarDatosOtherDeductions"
+            />
             <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
             <Button
               v-tooltip.top="'Apply Payment'"
