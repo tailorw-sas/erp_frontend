@@ -16,6 +16,7 @@ import type { TransactionItem } from '~/components/payment/interfaces'
 import { generateStyledPDF } from '~/components/payment/utils'
 import ImportDetail from '~/pages/payment/import-detail.vue'
 import { copyListFromColumns } from '~/pages/payment/utils/clipboardUtilsList'
+import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
 
 const route = useRoute()
 const toast = useToast()
@@ -1940,6 +1941,10 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
 
 function copiarDatos() {
   copyListFromColumns(columns, paymentDetailsList.value, toast)
+}
+
+function copiarDatosApplyPayment() {
+  copyTableToClipboard(applyPaymentColumns.value, applyPaymentList.value, toast)
 }
 
 function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolean {
@@ -4346,6 +4351,13 @@ onMounted(async () => {
             @on-sort-field="onSortFieldApplyPayment"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
           />
+          <Button
+            v-tooltip.top="'Copiar tabla'"
+            class="p-button-lg w-1rem h-2rem"
+            style="margin-left: 1840px; margin-top: -20px"
+            icon="pi pi-copy"
+            @click="copiarDatosApplyPayment"
+          />
         </div>
       </template>
     </Dialog>
@@ -4470,13 +4482,14 @@ onMounted(async () => {
     </Dialog>
     <Dialog
       v-model:visible="showImportModal"
-      header="Importar Excel"
+      header="Import Payment Detail"
       :modal="true"
       :style="{
         'width': '90vw',
         'height': '90vh', // Altura al 90% del viewport
         'max-height': '800px', // Altura máxima fija
       }"
+      :closable="true"
     >
       <ImportDetail
         :payment-id="idItem"
