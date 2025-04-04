@@ -69,6 +69,9 @@ public class ManageEmployeeResponse implements IResponse {
         this.phoneExtension = projection.getPhoneExtension();
         this.status = projection.getStatus();
         this.userType = projection.getUserType();
-
+        this.managePermissionList = Objects.nonNull(projection.getManagePermissionList()) ? projection.getManagePermissionList().stream().map(ManagePermissionResponse::new).collect(Collectors.toList()) : null;
+        this.manageAgencyList = Objects.nonNull(projection.getManageAgencyList()) ? projection.getManageAgencyList().stream().map(ManageAgencyBasicResponse::new).collect(Collectors.toList()) : null;
+        this.manageHotelList = Objects.nonNull(projection.getManageHotelList()) ? projection.getManageHotelList().stream().map(ManageHotelBasicResponse::new).collect(Collectors.toList()) : null;
+        this.manageTradingCompaniesList = Objects.nonNull(projection.getManageTradingCompaniesList()) ? projection.getManageTradingCompaniesList().stream().map(ManageTradingCompaniesBasicResponse::new).collect(Collectors.toList()) : null;
     }
 }

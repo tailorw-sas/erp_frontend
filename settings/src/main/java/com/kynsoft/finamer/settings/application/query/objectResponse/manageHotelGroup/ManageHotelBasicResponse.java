@@ -1,7 +1,9 @@
 package com.kynsoft.finamer.settings.application.query.objectResponse.manageHotelGroup;
 
+import com.kynsoft.finamer.settings.application.query.objectResponse.ManageHotelResponse;
 import com.kynsoft.finamer.settings.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.infrastructure.projections.ManageHotelProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,5 +27,12 @@ public class ManageHotelBasicResponse {
         this.code = dto.getCode();
         this.status = dto.getStatus();
         this.name = dto.getName();
+    }
+
+    public ManageHotelBasicResponse(ManageHotelProjection projection){
+        this.id = projection.getId();
+        this.code = projection.getCode();
+        this.status = projection.getStatus();
+        this.name = projection.getName();
     }
 }
