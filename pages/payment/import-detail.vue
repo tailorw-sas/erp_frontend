@@ -195,8 +195,8 @@ async function importFileDetail() {
       await getErrorList()
       if (listItems.value.length === 0) {
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 10000 })
+        // options.value.loading = false
         onClose()
-        options.value.loading = false
         await clearForm()
       }
     }
@@ -256,12 +256,13 @@ function onSortField(event: any) {
 }
 
 async function goToList() {
-  if (paymentId && paymentId !== '') {
-    await navigateTo(`/payment/form?id=${paymentId}`)
-  }
-  else {
-    await navigateTo('/payment')
-  }
+  await navigateTo(`/payment/form?id=${paymentId}`)
+  // if (paymentId && paymentId !== '') {
+  //   await navigateTo(`/payment/form?id=${paymentId}`)
+  // }
+  // else {
+  //   await navigateTo('/payment')
+  // }
 }
 
 watch(payloadOnChangePage, (newValue) => {
