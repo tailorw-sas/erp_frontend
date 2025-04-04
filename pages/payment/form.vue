@@ -1324,6 +1324,9 @@ function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition
   else {
     updateFieldProperty(fields, 'bankAccount', 'disabled', false)
   }
+  if (!objItem.paymentStatus.applied) {
+    updateFieldProperty(fields, 'hotel', 'disabled', false)
+  }
 }
 
 // async function getItemById(id: string) {
