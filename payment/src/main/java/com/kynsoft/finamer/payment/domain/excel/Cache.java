@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.excel;
 
+import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import lombok.Getter;
@@ -16,28 +17,37 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class Cache {
+public class Cache implements ICache {
 
 
-    @Getter
     private Map<String, ManagePaymentTransactionTypeDto> managePaymentTransactionTypeMap;
-
-    @Getter
     private Map<Long, ManageBookingDto> bookingsMap;
-
-    @Getter
     private Map<Long, PaymentDto> paymentsMap;
-
-    @Getter
     private Map<UUID, Map<Long, PaymentDetailDto>> paymentDetailsByPaymentsMap;
-
-    @Getter
     private Map<String, List<ManageBookingDto>> bookingsByCouponMap;
-
-    @Getter
     private Map<UUID, PaymentCloseOperationDto> closeOperationsByHotelMap;
+    private Map<Long, ManageInvoiceDto> invoicesByInvoiceIdMap;
+    private Map<Long, PaymentDetailDto> paymentDetailsByPaymentDetailIdMap;
 
     //Constructor de Cache para PaymentImportDetails
+    public Cache(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList,
+                 List<ManageBookingDto> bookings,
+                 List<PaymentDto> paymentList,
+                 List<PaymentDetailDto> paymentDetailList,
+                 List<ManageBookingDto> bookingList,
+                 List<PaymentCloseOperationDto> closeOperationList,
+                 List<ManageInvoiceDto> invoiceList,
+                 List<PaymentDetailDto> paymentDetailListById){
+        this.setManagePaymentTransactionTypeMap(managePaymentTransactionTypeList);
+        this.setBookingsMap(bookings);
+        this.setPaymentsMap(paymentList);
+        this.setPaymentDetailsByPaymentsMap(paymentDetailList);
+        this.setBookingsByCouponMap(bookingList);
+        this.setCloseOperationsByHotelMap(closeOperationList);
+        this.setInvoicesByInvoiceIdMap(invoiceList);
+        this.setPaymentDetailsByPaymentDetailIdMap(paymentDetailListById);
+    }
+
     public Cache(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList,
                  List<ManageBookingDto> bookings,
                  List<PaymentDto> paymentList,
@@ -52,6 +62,7 @@ public class Cache {
         this.setCloseOperationsByHotelMap(closeOperationList);
     }
 
+    /// Setters de los mapas
     private void setManagePaymentTransactionTypeMap(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList){
         this.managePaymentTransactionTypeMap = managePaymentTransactionTypeList.stream()
                 .collect(Collectors.toMap(ManagePaymentTransactionTypeDto::getCode, managePaymentTransactionTypeDto -> managePaymentTransactionTypeDto));
@@ -82,6 +93,17 @@ public class Cache {
                 .collect(Collectors.toMap(closeOperation -> closeOperation.getHotel().getId(), paymentCloseOperation -> paymentCloseOperation));
     }
 
+    private void setInvoicesByInvoiceIdMap(List<ManageInvoiceDto> invoiceList){
+        this.invoicesByInvoiceIdMap = invoiceList.stream()
+                .collect(Collectors.toMap(ManageInvoiceDto::getInvoiceId, invoice -> invoice));
+    }
+
+    private void setPaymentDetailsByPaymentDetailIdMap(List<PaymentDetailDto> paymentDetailList){
+        this.paymentDetailsByPaymentDetailIdMap = paymentDetailList.stream()
+                .collect(Collectors.toMap(PaymentDetailDto::getPaymentDetailId, paymentDetail -> paymentDetail));
+    }
+    /// Metodos para consultas sobre los mapas
+
     public PaymentDto getPaymentByPaymentId(Long paymentId){
         if(Objects.isNull(this.paymentsMap) || this.paymentsMap.isEmpty()){
             //printLog("The paymentProjectionMap map is null or Empty");
@@ -91,16 +113,16 @@ public class Cache {
         return this.paymentsMap.get(paymentId);
     }
 
-    public ManageBookingDto getBooking(String bookingId){
+    public ManageBookingDto getBooking(Long bookingId){
         if(Objects.isNull(bookingId)){
             return null;
         }
 
-        return this.bookingsMap.get(Long.parseLong(bookingId));
+        return this.bookingsMap.get(bookingId);
     }
 
     public PaymentDetailDto getPaymentDetailByPaymentId(UUID paymentId, Long paymentDetailGenId){
-        Map<Long, PaymentDetailDto> paymentDetails = this.getPaymentDetailsByPaymentsMap().get(paymentId);
+        Map<Long, PaymentDetailDto> paymentDetails = this.paymentDetailsByPaymentsMap.get(paymentId);
         return paymentDetails.get(paymentDetailGenId);
     }
 
@@ -138,12 +160,12 @@ public class Cache {
     }
 
     public OffsetDateTime getTransactionDateByHotelId(UUID hotel){
-        if(Objects.isNull(this.getCloseOperationsByHotelMap()) || this.getCloseOperationsByHotelMap().isEmpty()){
+        if(Objects.isNull(this.closeOperationsByHotelMap) || this.closeOperationsByHotelMap.isEmpty()){
             //printLog("The managePaymentTransactionTypeMap map is null or Empty");
             return null;
         }
 
-        PaymentCloseOperationDto paymentCloseOperation = this.getCloseOperationsByHotelMap().get(hotel);
+        PaymentCloseOperationDto paymentCloseOperation = this.closeOperationsByHotelMap.get(hotel);
         if (DateUtil.getDateForCloseOperation(paymentCloseOperation.getBeginDate(), paymentCloseOperation.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));
         }
@@ -157,6 +179,18 @@ public class Cache {
         }
 
         return this.managePaymentTransactionTypeMap.get(code);
+    }
+
+    public ManageInvoiceDto getInvoiceByInvoiceId(Long invoiceId){
+        if(Objects.isNull(invoicesByInvoiceIdMap) || invoicesByInvoiceIdMap.isEmpty()){
+            return null;
+        }
+
+        return invoicesByInvoiceIdMap.get(invoiceId);
+    }
+
+    public PaymentDetailDto getPaymentDetailByPaymentDetailId(Long paymentDetailId){
+        return paymentDetailsByPaymentDetailIdMap.get(paymentDetailId);
     }
 
 }

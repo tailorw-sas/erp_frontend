@@ -1,8 +1,11 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 
+import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
@@ -84,17 +87,27 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     }
 
     @Override
-    public boolean validate(PaymentDetailRow toValidate) {
+    public boolean validate(PaymentDetailRow toValidate){
+        return false;
+    }
+
+    @Override
+    public boolean validate(PaymentDetailRow toValidate, ICache iCache) {
+        Cache cache = (Cache) iCache;
+
         int errors = 0;
         errors += paymentDetailExistPaymentValidator.validate(toValidate,errorFieldList) ? 0 : 1;
         errors += paymentDetailsBookingFieldValidator.validate(toValidate, errorFieldList) ? 0 : 1;
-        errors += this.validatePaymentAmount(toValidate) ? 0 : 1;
-        errors += paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList) ? 0 : 1;
-        errors += this.validateAsAntiToIncome(toValidate) ? 0 : 1;
-        errors += this.validateAsExternalPaymentId(toValidate) ? 0 : 1;
-        PaymentProjection paymentDto = this.paymentService.findByPaymentIdProjection(Long.parseLong(toValidate.getPaymentId()));
-        errors += this.securityImportValidators.validateAgency(toValidate.getAgencys(), paymentDto.getAgencyId(), errorFieldList) ? 0 : 1;
-        errors += this.securityImportValidators.validateHotel(toValidate.getHotels(), paymentDto.getHotelId(), errorFieldList) ? 0 : 1;
+        errors += this.validatePaymentAmount(toValidate, iCache) ? 0 : 1;
+        errors += paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList, iCache) ? 0 : 1;
+        errors += this.validateAsAntiToIncome(toValidate, iCache) ? 0 : 1;
+        errors += this.validateAsExternalPaymentId(toValidate, iCache) ? 0 : 1;
+
+        PaymentDto paymentDto = cache.getPaymentByPaymentId(Long.parseLong(toValidate.getPaymentId()));
+        if(Objects.nonNull(paymentDto)){
+            errors += this.securityImportValidators.validateAgency(toValidate.getAgencys(), paymentDto.getAgency().getId(), errorFieldList) ? 0 : 1;
+            errors += this.securityImportValidators.validateHotel(toValidate.getHotels(), paymentDto.getHotel().getId(), errorFieldList) ? 0 : 1;
+        }
 
         if (this.hasErrors()) {
             PaymentImportDetailErrorEvent paymentImportErrorEvent =
@@ -124,13 +137,13 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         return true;
     }
 
-    private boolean validatePaymentAmount(PaymentDetailRow toValidate){
+    private boolean validatePaymentAmount(PaymentDetailRow toValidate, ICache cache){
         if (Objects.isNull(toValidate.getAnti())){
-            return paymentImportDetailAmountValidator.validate(toValidate,errorFieldList);
+            return paymentImportDetailAmountValidator.validate(toValidate,errorFieldList, cache);
         } return true;
     }
 
-    private boolean validateAsAntiToIncome(PaymentDetailRow toValidate){
+    private boolean validateAsAntiToIncome(PaymentDetailRow toValidate, ICache icache){
         int errors = 0;
         if (Objects.nonNull(toValidate.getAnti()) && toValidate.getAnti()>0){
             AntiToIncomeRow antiToIncomeRow = new AntiToIncomeRow();
@@ -138,15 +151,15 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
             antiToIncomeRow.setAmount(toValidate.getBalance());
             antiToIncomeRow.setRemarks(toValidate.getRemarks());
             antiToIncomeRow.setImportProcessId(toValidate.getImportProcessId());
-            errors += paymentTransactionIdValidator.validate(antiToIncomeRow, errorFieldList) ? 0 : 1;
-            errors += paymentImportAmountValidator.validate(antiToIncomeRow, errorFieldList) ? 0 : 1;
+            errors += paymentTransactionIdValidator.validate(antiToIncomeRow, errorFieldList, icache) ? 0 : 1;
+            errors += paymentImportAmountValidator.validate(antiToIncomeRow, errorFieldList, icache) ? 0 : 1;
         }
         return errors == 0;
     }
 
-    private boolean validateAsExternalPaymentId(PaymentDetailRow toValidate){
+    private boolean validateAsExternalPaymentId(PaymentDetailRow toValidate, ICache iCache){
         if (Objects.nonNull(toValidate.getExternalPaymentId())){
-            return paymentDetailBelongToSamePayment.validate(toValidate,errorFieldList);
+            return paymentDetailBelongToSamePayment.validate(toValidate,errorFieldList, iCache);
         } return true;
     }
 

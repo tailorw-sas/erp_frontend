@@ -23,4 +23,6 @@ public interface IManageInvoiceService {
     List<ManageInvoiceDto> findByIdIn(List<UUID> ids);
 
     List<Invoice> findInvoiceWithEntityGraphByIdIn(List<UUID> ids);
+
+    List<ManageInvoiceDto> findInvoicesByGenId(List<Long> ids);
 }
