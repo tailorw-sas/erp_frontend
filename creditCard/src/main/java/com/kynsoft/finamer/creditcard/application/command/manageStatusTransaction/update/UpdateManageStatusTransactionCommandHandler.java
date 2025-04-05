@@ -112,7 +112,7 @@ public class UpdateManageStatusTransactionCommandHandler implements ICommandHand
 
             // 1- Actualizar data en vcc_transaction
             transactionDto.setCardNumber(transactionResponse.getCreditCardNumber());
-//            transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
+            //transactionDto.setReferenceNumber(transactionResponse.getRetrievalReferenceNumber());
             transactionDto.setCreditCardType(creditCardTypeDto);
             transactionDto.setPaymentDate(LocalDateTime.now());
             if (!transactionStatusDto.equals(transactionDto.getStatus())){

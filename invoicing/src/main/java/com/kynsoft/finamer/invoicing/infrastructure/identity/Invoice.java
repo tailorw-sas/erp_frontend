@@ -1,14 +1,10 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
-import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +18,7 @@ import org.hibernate.generator.EventType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -129,131 +126,160 @@ public class Invoice {
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceDate = dto.getInvoiceDate();
         this.isManual = dto.getIsManual();
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? BankerRounding.round(dto.getInvoiceAmount()) : null;
-        this.originalAmount = dto.getOriginalAmount() != null ? BankerRounding.round(dto.getOriginalAmount()) : null;
-        this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
-        this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
-        this.invoiceType = dto.getInvoiceType() != null ? dto.getInvoiceType() : EInvoiceType.INVOICE;
+        this.invoiceAmount = Objects.nonNull(dto.getInvoiceAmount()) ? BankerRounding.round(dto.getInvoiceAmount()) : null;
+        this.originalAmount = Objects.nonNull(dto.getOriginalAmount()) ? BankerRounding.round(dto.getOriginalAmount()) : null;
+        this.hotel = Objects.nonNull(dto.getHotel()) ? new ManageHotel(dto.getHotel()) : null;
+        this.agency = Objects.nonNull(dto.getAgency()) ? new ManageAgency(dto.getAgency()) : null;
+        this.invoiceType = Objects.nonNull(dto.getInvoiceType()) ? dto.getInvoiceType() : EInvoiceType.INVOICE;
         this.invoiceStatus = dto.getStatus();
-        this.autoRec = dto.getAutoRec() != null ? dto.getAutoRec() : false;
-        this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(_booking -> {
+        this.autoRec = Objects.nonNull(dto.getAutoRec()) ? dto.getAutoRec() : false;
+        this.bookings = Objects.nonNull(dto.getBookings()) ? dto.getBookings().stream().map(_booking -> {
             Booking booking = new Booking(_booking);
             booking.setInvoice(this);
             return booking;
         }).collect(Collectors.toList()) : null;
         this.dueDate = dto.getDueDate();
-        this.attachments = dto.getAttachments() != null ? dto.getAttachments().stream().map(_attachment -> {
+        this.attachments = Objects.nonNull(dto.getAttachments()) ? dto.getAttachments().stream().map(_attachment -> {
             ManageAttachment attachment = new ManageAttachment(_attachment);
             attachment.setInvoice(this);
             return attachment;
         }).collect(Collectors.toList()) : null;
         this.reSend = dto.getReSend();
         this.reSendDate = dto.getReSendDate();
-        this.manageInvoiceType = dto.getManageInvoiceType() != null ? new ManageInvoiceType(dto.getManageInvoiceType())
+        this.manageInvoiceType = Objects.nonNull(dto.getManageInvoiceType()) ? new ManageInvoiceType(dto.getManageInvoiceType())
                 : null;
-        this.manageInvoiceStatus = dto.getManageInvoiceStatus() != null
-                ? new ManageInvoiceStatus(dto.getManageInvoiceStatus())
+        this.manageInvoiceStatus = Objects.nonNull(dto.getManageInvoiceStatus()) ?
+                new ManageInvoiceStatus(dto.getManageInvoiceStatus())
                 : null;
-        this.dueAmount = dto.getDueAmount() != null ? BankerRounding.round(dto.getDueAmount()) : 0.0;
+        this.dueAmount = Objects.nonNull(dto.getDueAmount()) ? BankerRounding.round(dto.getDueAmount()) : 0.0;
         this.invoiceNo = dto.getInvoiceNo();
         this.invoiceNumberPrefix = dto.getInvoiceNumberPrefix();
         this.isCloned = dto.getIsCloned();
-        this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
+        this.parent = Objects.nonNull(dto.getParent()) ? new Invoice(dto.getParent()) : null;
         this.credits = dto.getCredits();
         this.sendStatusError = dto.getSendStatusError();
         this.aging = dto.getAging();
-        this.importType = dto.getImportType() != null ? dto.getImportType() : ImportType.NONE;
+        this.importType = Objects.nonNull(dto.getImportType()) ? dto.getImportType() : ImportType.NONE;
         this.deleteInvoice = dto.isDeleteInvoice();
         this.cloneParent = dto.isCloneParent();
-        this.hasAttachments = attachments != null && !attachments.isEmpty();
+        this.hasAttachments = Objects.nonNull(attachments) && !attachments.isEmpty();
     }
 
-    public ManageInvoiceDto toAggregateSample() {
+    public ManageInvoiceDto toAggregateSimple() {
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(
+                this.id,
+                this.invoiceId,
+                this.invoiceNo,
+                this.invoiceNumber,
+                this.invoiceNumberPrefix,
+                this.invoiceDate,
+                this.dueDate,
+                this.isManual,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(dueAmount) : null,
+                Objects.nonNull(this.hotel) ? this.hotel.toAggregate() : null,
+                Objects.nonNull(this.agency) ? this.agency.toAggregate() : null,
+                this.invoiceType,
+                this.invoiceStatus,
+                this.autoRec,
+                null,
+                null,
+                this.reSend,
+                this.reSendDate,
+                Objects.nonNull(this.manageInvoiceType) ? manageInvoiceType.toAggregate() : null,
+                Objects.nonNull(this.manageInvoiceStatus) ? manageInvoiceStatus.toAggregate() : null,
+                this.createdAt,
+                this.isCloned,
+                null,
+                this.credits,
+                this.aging);
 
-        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceNumberPrefix, invoiceDate, dueDate, isManual,
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
-                dueAmount != null ? BankerRounding.round(dueAmount) : null,
-                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
-                autoRec, null, null, reSend, reSendDate,
-                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null, createdAt, isCloned,
-                null, credits,aging);
-
-        manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
-        manageInvoiceDto.setImportType(importType);
-        manageInvoiceDto.setDeleteInvoice(deleteInvoice);
-        manageInvoiceDto.setCloneParent(cloneParent);
+        manageInvoiceDto.setOriginalAmount(Objects.nonNull(this.originalAmount) ? BankerRounding.round(this.originalAmount) : null);
+        manageInvoiceDto.setImportType(Objects.nonNull(this.importType) ? this.importType : ImportType.NONE);
+        manageInvoiceDto.setDeleteInvoice(Objects.nonNull(this.deleteInvoice) && this.deleteInvoice);
+        manageInvoiceDto.setCloneParent(Objects.nonNull(this.cloneParent) && this.cloneParent);
         return manageInvoiceDto;
     }
 
     public ManageInvoiceDto toAggregate() {
-        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id, invoiceId, invoiceNo, invoiceNumber, invoiceNumberPrefix, invoiceDate, dueDate, isManual,
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
-                dueAmount != null ? BankerRounding.round(dueAmount) : null,
-                hotel.toAggregate(), agency.toAggregate(), invoiceType, invoiceStatus,
-                autoRec,
-                bookings != null ? bookings.stream().map(Booking::toAggregate).collect(Collectors.toList()) : null,
-                attachments != null ? attachments.stream().map(ManageAttachment::toAggregateSample).collect(Collectors.toList()) : null,
-                reSend,
-                reSendDate,
-                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null,
-                createdAt,
-                isCloned,
-                parent != null ? parent.toAggregateSample() : null,
-                credits,
-                aging);
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(
+                this.id,
+                this.invoiceId,
+                this.invoiceNo,
+                this.invoiceNumber,
+                this.invoiceNumberPrefix,
+                this.invoiceDate,
+                this.dueDate,
+                this.isManual,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(this.dueAmount) : null,
+                Objects.nonNull(this.hotel) ? this.hotel.toAggregate() : null,
+                Objects.nonNull(this.agency) ? this.agency.toAggregate() : null,
+                this.invoiceType,
+                this.invoiceStatus,
+                this.autoRec,
+                Objects.nonNull(this.bookings) ? this.bookings.stream().map(Booking::toAggregate).collect(Collectors.toList()) : null,
+                Objects.nonNull(this.attachments) ? this.attachments.stream().map(ManageAttachment::toAggregateSimple).collect(Collectors.toList()) : null,
+                this.reSend,
+                this.reSendDate,
+                Objects.nonNull(this.manageInvoiceType) ? this.manageInvoiceType.toAggregate() : null,
+                Objects.nonNull(this.manageInvoiceStatus) ? this.manageInvoiceStatus.toAggregate() : null,
+                this.createdAt,
+                this.isCloned,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                this.credits,
+                this.aging);
 
-        manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
-        manageInvoiceDto.setImportType(importType);
-        manageInvoiceDto.setDeleteInvoice(deleteInvoice);
-        manageInvoiceDto.setCloneParent(cloneParent);
+        manageInvoiceDto.setOriginalAmount(Objects.nonNull(this.originalAmount) ? BankerRounding.round(this.originalAmount) : null);
+        manageInvoiceDto.setImportType(Objects.nonNull(this.importType) ? this.importType : ImportType.NONE);
+        manageInvoiceDto.setDeleteInvoice(Objects.nonNull(this.deleteInvoice) && this.deleteInvoice);
+        manageInvoiceDto.setCloneParent(Objects.nonNull(this.cloneParent) && this.cloneParent);
         return manageInvoiceDto;
     }
 
     public ManageInvoiceDto toAggregateSearch() {
 
-        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(id,
-                invoiceId,
-                invoiceNo,
-                invoiceNumber,
-                invoiceNumberPrefix,
-                invoiceDate,
-                dueDate,
-                isManual,
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
-                dueAmount != null ? BankerRounding.round(dueAmount) : null,
-                hotel.toAggregate(),
-                agency.toAggregate(),
-                invoiceType,
-                invoiceStatus,
-                autoRec,
+        ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto(this.id,
+                this.invoiceId,
+                this.invoiceNo,
+                this.invoiceNumber,
+                this.invoiceNumberPrefix,
+                this.invoiceDate,
+                this.dueDate,
+                this.isManual,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(this.dueAmount) : null,
+                Objects.nonNull(this.hotel) ? this.hotel.toAggregate() : null,
+                Objects.nonNull(this.agency) ? this.agency.toAggregate() : null,
+                this.invoiceType,
+                this.invoiceStatus,
+                this.autoRec,
                 null,
                 null,
-                reSend,
-                reSendDate,
-                manageInvoiceType != null ? manageInvoiceType.toAggregate() : null,
-                manageInvoiceStatus != null ? manageInvoiceStatus.toAggregate() : null,
-                createdAt,
-                isCloned,
-                parent != null ? parent.toAggregateSample() : null,
-                credits,
-                aging);
+                this.reSend,
+                this.reSendDate,
+                Objects.nonNull(this.manageInvoiceType) ? this.manageInvoiceType.toAggregate() : null,
+                Objects.nonNull(this.manageInvoiceStatus) ? this.manageInvoiceStatus.toAggregate() : null,
+                this.createdAt,
+                this.isCloned,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                this.credits,
+                this.aging);
 
-        manageInvoiceDto.setSendStatusError(sendStatusError);
-        manageInvoiceDto.setOriginalAmount(originalAmount != null ? BankerRounding.round(originalAmount) : null);
-        manageInvoiceDto.setImportType(importType);
-        manageInvoiceDto.setDeleteInvoice(deleteInvoice);
-        manageInvoiceDto.setCloneParent(cloneParent);
+        manageInvoiceDto.setSendStatusError(this.sendStatusError);
+        manageInvoiceDto.setOriginalAmount(Objects.nonNull(this.originalAmount) ? BankerRounding.round(this.originalAmount) : null);
+        manageInvoiceDto.setImportType(Objects.nonNull(this.importType) ? this.importType : ImportType.NONE);
+        manageInvoiceDto.setDeleteInvoice(Objects.nonNull(this.deleteInvoice) && this.deleteInvoice);
+        manageInvoiceDto.setCloneParent(Objects.nonNull(this.cloneParent) && this.cloneParent);
         return manageInvoiceDto;
     }
 
     @PostLoad
     public void initDefaultValue() {
-        if (dueAmount == null) {
-            dueAmount = 0.0;
+        if (Objects.isNull(this.dueAmount)) {
+            this.dueAmount = 0.0;
         }
-        hasAttachments = (attachments != null && !attachments.isEmpty());
+        this.hasAttachments = (Objects.nonNull(this.attachments) && !this.attachments.isEmpty());
     }
 
 }

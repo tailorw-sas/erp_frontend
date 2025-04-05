@@ -20,6 +20,7 @@ public interface IManageInvoiceService {
     void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream);
 
     ManageInvoiceDto update(ManageInvoiceDto dto);
+    List<ManageInvoiceDto> updateAll(List<ManageInvoiceDto> dtoList);
 
     void delete(ManageInvoiceDto dto);
 
@@ -33,6 +34,8 @@ public interface IManageInvoiceService {
     Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria>filterCriteria, UUID employeeId);
 
     List<ManageInvoiceDto> findByIds(List<UUID> ids);
+
+    List<ManageInvoiceDto> findInvoicesWithoutBookings(List<UUID> ids);
 
     List<ManageInvoiceDto> findAllToReplicate();
 
