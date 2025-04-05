@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.concurrent.*;
 
 @Component
@@ -62,17 +63,18 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
     @Override
     public void handle(CreatePaymentShareFileCommand command) {
         PaymentDto paymentDto = this.paymentService.findById(command.getPaymentId());
-        LocalDate currentDate = LocalDate.now();
+        LocalDate transactionDate = paymentDto.getTransactionDate();
 
         // Construcción del path
-        String monthFormatted = currentDate.format(DateTimeFormatter.ofPattern("MM"));
-        String dayFormatted = currentDate.format(DateTimeFormatter.ofPattern("dd"));
-        String path = ftpBasePath + "/" + currentDate.getYear() + "/" + monthFormatted + "/" + dayFormatted + "/"
+        String monthFormatted = transactionDate.format(DateTimeFormatter.ofPattern("MM"));
+        String monthNameFormatted = transactionDate.format(DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH));
+        String path = ftpBasePath + "/" + transactionDate.getYear() + "/" + monthFormatted + " " + monthNameFormatted + "/"
                 + paymentDto.getHotel().getCode() + "/" + paymentDto.getClient().getName();
 
-        log.info("📤 Initiating async upload for payment file '{}' to FTP at '{}'", command.getFileName(), path);
+        String fileName = String.valueOf(paymentDto.getPaymentAmount()) + "." + getExtension(command.getFileName());
+        log.info("📤 Initiating async upload for payment file '{}' to FTP at '{}'", fileName, path);
 
-        CompletableFuture.supplyAsync(() -> ftpService.sendFile(command.getFileData(), command.getFileName(),
+        CompletableFuture.supplyAsync(() -> ftpService.sendFile(command.getFileData(), fileName,
                         ftpServerAddress, ftpUsername, ftpPassword, ftpServerPort, path), executorService)
                 .thenCompose(future -> future) // Unwrap nested CompletableFuture
                 .thenAccept(response -> {
@@ -96,5 +98,10 @@ public class CreatePaymentShareFileCommandHandler implements ICommandHandler<Cre
                     }
                     return null;
                 });
+    }
+
+    private String getExtension(String fileName){
+        int index = fileName.lastIndexOf(".");
+        return fileName.substring(index + 1);
     }
 }
