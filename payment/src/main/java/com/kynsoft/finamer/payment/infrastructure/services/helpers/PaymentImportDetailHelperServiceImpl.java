@@ -66,6 +66,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private final IManagePaymentStatusService paymentStatusService;
     private final IPaymentStatusHistoryService paymentStatusHistoryService;
     private final ProducerUpdateBookingService producerUpdateBookingService;
+    private final IManageInvoiceService invoiceService;
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentImportDetailHelperServiceImpl.class);
 
@@ -82,7 +83,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                                 IManageEmployeeService employeeService,
                                                 IManagePaymentStatusService paymentStatusService,
                                                 IPaymentStatusHistoryService paymentStatusHistoryService,
-                                                ProducerUpdateBookingService producerUpdateBookingService) {
+                                                ProducerUpdateBookingService producerUpdateBookingService,
+                                                IManageInvoiceService invoiceService) {
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
         this.applicationEventPublisher = applicationEventPublisher;
@@ -96,6 +98,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         this.paymentStatusService = paymentStatusService;
         this.paymentStatusHistoryService = paymentStatusHistoryService;
         this.producerUpdateBookingService = producerUpdateBookingService;
+        this.invoiceService = invoiceService;
     }
 
     @Override
@@ -111,7 +114,12 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         paymentDetailValidatorFactory.createValidators();
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
         ExcelBean<PaymentDetailRow> excelBean = new ExcelBean<>(excelBeanReader);
-        for (PaymentDetailRow row : excelBean) {
+        List<PaymentDetailRow> excelRows = new ArrayList<>();
+        printLog("Antes de obtener cache");
+        Cache cache = this.createCache(excelBean, excelRows);
+        printLog("Despues de obtener cache");
+
+        for (PaymentDetailRow row : excelRows) {
             row.setImportProcessId(request.getImportProcessId());
             row.setImportType(request.getImportPaymentType().name());
             row.setAgencys(agencys);
@@ -120,7 +128,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     && !request.getPaymentId().isEmpty()) {
                 row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
             }
-            if (paymentDetailValidatorFactory.validate(row)) {
+            if (paymentDetailValidatorFactory.validate(row, cache)) {
                 cachingPaymentImport(row);
                 this.totalProcessRow++;
             }
@@ -173,7 +181,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 break;
             }
 
-            ManageBookingDto bookingDto = cache.getBooking(paymentImportCache.getBookId());
+            ManageBookingDto bookingDto = cache.getBooking(Long.parseLong(paymentImportCache.getBookId()));
             OffsetDateTime transactionDate = cache.getTransactionDateByHotelId(paymentDto.getHotel().getId());
 
             if ( Objects.nonNull(bookingDto) && bookingDto.getAmountBalance() == 0) {
@@ -535,10 +543,12 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             paymentDetailsToCreate.add(newPaymentDetailDto);
         }
 
+        printLog("Antes de guardar en BDD");
         this.updateBookings(bookingsToUpdate);
         this.createPaymentsDetails(paymentDetailsToCreate);
         this.updatePayments(paymentsToUpdate);
         this.createPaymentStatusHistory(paymentStatusHistories);
+        printLog("Despues de guardar en BDD");
         this.replicateBookingToKafka(paymentDetailsToCreate);
     }
 
@@ -595,8 +605,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         .map(PaymentDetailDto::getPayment)
                                 .toList();
 
+        printLog("Antes de guardar depositos");
         paymentDetailService.bulk(depositList);
         paymentService.createBulk(paymentsToUpdate);
+        printLog("Despues de guardar depositos");
     }
 
     //TODO: Implementar en Invoicing esta replicacion para que se haga en bloque y no de uno en uno
@@ -663,6 +675,74 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
         paymentCacheList.sort(Comparator.comparing(PaymentImportCache::getRowNumber));
         return paymentCacheList;
+    }
+
+    private Cache createCache(ExcelBean<PaymentDetailRow> excelBean, List<PaymentDetailRow> excelRows){
+        Set<String> transactionCodeSet = new HashSet<>();
+        Set<Long> bookingsIdSet = new HashSet<>();
+        Set<Long> paymentIdSet = new HashSet<>();
+        Set<Long> invoiceIdSet = new HashSet<>();
+        Set<String> couponNumberSet = new HashSet<>();
+        Set<Long> paymentDetailsAntiSet = new HashSet<>();
+
+        for(PaymentDetailRow excelRow : excelBean){
+            excelRows.add(excelRow);
+
+            if(Objects.nonNull(excelRow.getTransactionType())){
+                transactionCodeSet.add(excelRow.getTransactionType());
+            }
+
+            if(Objects.nonNull(excelRow.getBookId())){
+                bookingsIdSet.add(Long.parseLong(excelRow.getBookId()));
+            }
+
+            if(Objects.nonNull(excelRow.getPaymentId())){
+                paymentIdSet.add(Long.parseLong(excelRow.getPaymentId()));
+            }
+
+            if(Objects.nonNull(excelRow.getCoupon())){
+                couponNumberSet.add(excelRow.getCoupon());
+            }
+
+            if(Objects.nonNull(excelRow.getInvoiceNo())){
+                invoiceIdSet.add(Long.parseLong(excelRow.getInvoiceNo()));
+            }
+
+            if(excelRow.getAnti() != null){
+                paymentDetailsAntiSet.add(excelRow.getAnti().longValue());
+            }
+        }
+
+        List<String> transactionIds = new ArrayList<>(transactionCodeSet);
+        List<Long> bookingIds = new ArrayList<>(bookingsIdSet);
+        List<Long> paymentIds = new ArrayList<>(paymentIdSet);
+        List<String> couponNumbers = new ArrayList<>(couponNumberSet);
+        List<Long> invoiceIds = new ArrayList<>(invoiceIdSet);
+        List<Long> paymentDetailIdsAnti = new ArrayList<>(paymentDetailsAntiSet);
+
+        List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(transactionIds);
+        List<ManageBookingDto> bookings = getBookings(bookingIds);
+        List<PaymentDto> paymentList = getPayments(paymentIds);
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(paymentIds);
+        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(couponNumbers);
+        List<ManageInvoiceDto> invoiceList = getInvoicesByGenId(invoiceIds);
+        List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailsProyection(paymentDetailIdsAnti);
+
+        List<UUID> hotelIds = paymentList.stream()
+                .map(payment -> payment.getHotel().getId())
+                .distinct()
+                .toList();
+
+        List<PaymentCloseOperationDto> closeOperationList = getCloseOperationDateTimeByHotel(hotelIds);
+
+        return new Cache(managePaymentTransactionTypeList,
+                bookings,
+                paymentList,
+                paymentDetailList,
+                bookingsByCouponList,
+                closeOperationList,
+                invoiceList,
+                paymentDetailListAnti);
     }
 
     private Cache createCache(List<PaymentImportCache> paymentImportCacheList){
@@ -737,6 +817,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private List<ManageBookingDto> getBookingByCoupon(List<String> couponNumbers){
         return bookingService.findAllBookingByCoupons(couponNumbers);
+    }
+
+    private List<ManageInvoiceDto> getInvoicesByGenId(List<Long> invoiceIds){
+        return new ArrayList<>(invoiceService.findInvoicesByGenId(invoiceIds));
     }
 
     private List<PaymentCloseOperationDto> getCloseOperationDateTimeByHotel(List<UUID> hotelIds){

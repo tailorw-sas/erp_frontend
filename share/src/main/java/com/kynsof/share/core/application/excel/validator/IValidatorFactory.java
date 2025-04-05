@@ -22,6 +22,10 @@ public abstract class IValidatorFactory<T> {
 
     public abstract boolean validate(T toValidate);
 
+    public boolean validate(T toValidate, ICache cache){
+        return validate(toValidate);
+    }
+
     protected void clearErrors(){
         this.errorFieldList.clear();
     }
