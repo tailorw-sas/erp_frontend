@@ -7,6 +7,7 @@ import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
@@ -470,6 +471,10 @@ function onSortField(event: any) {
     payload.value.sortType = event.sortOrder
     getList()
   }
+}
+
+function copiarDatos() {
+  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
 }
 
 async function searchAndFilter() {
@@ -1210,6 +1215,12 @@ onMounted(async () => {
                     <Button
                       v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
                       :loading="loadingSearch" @click="clearFilterToSearch"
+                    />
+                    <Button
+                      v-tooltip.top="'Copiar tabla'"
+                      class="p-button-lg w-1rem h-2rem pt-2 ml-1 -mr-2"
+                      icon="pi pi-copy"
+                      @click="copiarDatos"
                     />
                   </div>
                 </div>

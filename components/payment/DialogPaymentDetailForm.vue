@@ -792,7 +792,7 @@ function processValidation($event: any, data: any) {
           <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
           </IfCan> -->
           <Button
-            v-tooltip.top="'Applyyy'" class="w-3rem ml-4 p-button" icon="pi pi-save"
+            v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save"
             :loading="loadingSaveSpinner" @click="saveSubmit($event)"
           />
         </div>
