@@ -37,11 +37,17 @@ public class SendByFtpCommandHandler implements ICommandHandler<SendByFtpCommand
             this.amazonClient.setBucketName(command.getBucketName());
 
             for(FileDto fileDto : command.getFileDtos()) {
+                try {
                 byte[] fileContent = this.amazonClient.downloadFile(fileDto.getUrl());
-                if (fileContent != null && fileContent.length > 0) {
-                    fileDto.setFileContent(fileContent);
-                    successfulDownloads.add(fileDto);
-                } else {
+                    if (fileContent != null && fileContent.length > 0) {
+                        fileDto.setFileContent(fileContent);
+                        successfulDownloads.add(fileDto);
+                    } else {
+                        fileDto.setUploadFileResponse(new UploadFileResponse(ResponseStatus.ERROR_RESPONSE,
+                                "Failed downloading file from common storage"));
+                        failedDownloads.add(fileDto);
+                    }
+                } catch (Exception e) {
                     fileDto.setUploadFileResponse(new UploadFileResponse(ResponseStatus.ERROR_RESPONSE,
                             "Failed downloading file from common storage"));
                     failedDownloads.add(fileDto);
