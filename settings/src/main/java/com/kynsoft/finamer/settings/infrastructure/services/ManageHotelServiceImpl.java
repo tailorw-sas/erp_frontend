@@ -75,7 +75,7 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Override
 //    @Cacheable(cacheNames = "manageHotel", key = "#id", unless = "#result == null")
     public ManageHotelDto findById(UUID id) {
-        Optional<ManageHotel> optionalEntity = repositoryQuery.findById(id);
+        Optional<ManageHotel> optionalEntity = repositoryQuery.findManageHotelWithAllRelationsById(id);
         return optionalEntity.map(ManageHotel::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_HOTEL_NOT_FOUND, new ErrorField("id", "Manage Hotel not found."))));
     }
@@ -91,7 +91,8 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria, employeeId);
         GenericSpecificationsBuilder<ManageHotel> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageHotel> data = repositoryQuery.findAll(specifications, pageable);
+        Page<ManageHotel> data = repositoryQuery.findAllCustom(specifications, pageable);
+        //Page<ManageHotel> data = repositoryQuery.findAll(specifications, pageable);
         return getPaginatedResponse(data);
     }
 
