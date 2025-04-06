@@ -1,4 +1,7 @@
 package com.kynsof.share.core.domain.service;
+import com.kynsof.share.core.application.FileRequest;
+
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface IFtpService {
@@ -14,4 +17,6 @@ public interface IFtpService {
      * @param port        El puerto del servidor FTP.
      */
     CompletableFuture<String> sendFile(byte[] fileBytes, String fileName, String server, String user, String password, int port, String path);
+
+    public CompletableFuture<String> sendFiles(List<FileRequest> files, String server, String user, String password, int port, String path);
 }

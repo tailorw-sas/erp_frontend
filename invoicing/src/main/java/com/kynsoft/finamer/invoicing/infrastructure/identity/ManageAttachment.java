@@ -1,7 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
-import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -94,7 +92,7 @@ public class ManageAttachment {
                 file, 
                 remark,
                 type != null ? type.toAggregate() : null,
-                invoice != null ? invoice.toAggregateSample() : null, 
+                invoice != null ? invoice.toAggregateSimple() : null,
                 employee, 
                 employeeId, 
                 createdAt, 
@@ -103,7 +101,7 @@ public class ManageAttachment {
         );
     }
 
-    public ManageAttachmentDto toAggregateSample() {
+    public ManageAttachmentDto toAggregateSimple() {
         return new ManageAttachmentDto(
                 id, 
                 attachmentId, 
