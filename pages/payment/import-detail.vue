@@ -275,6 +275,27 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   // getErrorList()
 })
+
+const isDragging = ref(false)
+
+// Drag-and-drop event handlers
+function onDragOver(event: DragEvent) {
+  isDragging.value = true
+  event.dataTransfer!.dropEffect = 'copy'
+}
+
+function onDragLeave() {
+  isDragging.value = false
+}
+
+function onDrop(event: DragEvent) {
+  isDragging.value = false
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
+    const file = files[0]
+    inputFile.value = file
+  }
+}
 </script>
 
 <template>
@@ -285,28 +306,33 @@ onMounted(async () => {
           <div class="grid p-0 m-0" style="margin: 0 auto;">
             <div class="col-12 md:col-6 lg:col-6 align-items-center my-0 py-0">
               <div class="flex align-items-center mb-2">
-                <label class="w-16rem">Import Data (XLS or XLSX): </label>
+                <label class="w-17rem">Import Data (XLS or XLSX): <span class="p-error">*</span></label>
                 <div class="w-full">
-                  <div class="p-inputgroup w-full">
-                    <InputText
-                      ref="fileUpload" v-model="importModel.importFile" placeholder="Choose file"
-                      class="w-full" show-clear aria-describedby="inputtext-help"
-                    />
-                    <span class="p-inputgroup-addon p-0 m-0">
-                      <Button
-                        icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
-                        :disabled="loadingSaveAll"
-                        @click="fileUpload.click()"
-                      />
-                    </span>
-                    <span class="p-inputgroup-addon p-0 m-0 ml-1">
+                  <div class="p-inputgroup w-30rem">
+                    <!-- Drop Zone -->
+                    <div
+                      class="drop-zone w-full "
+                      :class="{ 'drag-over': isDragging }"
+                      @dragover.prevent="onDragOver"
+                      @dragleave.prevent="onDragLeave"
+                      @drop.prevent="onDrop"
+                      @click="fileUpload.click()"
+                    >
+                      <p v-if="!inputFile">
+                        Drag and drop your file here, or click to select
+                      </p>
+                      <p v-else>
+                        {{ inputFile.name }}
+                      </p>
+                    </div>
+                    <div class="flex align-items-center -mb-1">
                       <Button
                         v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
                         :loading="options.loading"
                         :disabled="uploadComplete || !inputFile"
                         @click="importFileDetail"
                       />
-                    </span>
+                    </div>
                   </div>
 
                   <input
@@ -318,7 +344,7 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-        </accordionTab>
+        </AccordionTab>
       </div>
 
       <DynamicTable
@@ -339,9 +365,22 @@ onMounted(async () => {
 </template>
 
 <style lang="scss">
-.custom-file-upload {
-  background-color: transparent !important;
-  border: none !important;
-  text-align: left !important;
+.drop-zone {
+  border: 2px dashed #1ea1ec;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.drop-zone p {
+  margin: 0;
+  color: #666;
+}
+
+.drop-zone.drag-over {
+  background-color: #f0f8ff; /* Light blue background */
+  border-color: #007bff; /* Blue border */
 }
 </style>
