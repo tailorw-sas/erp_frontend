@@ -59,7 +59,7 @@ public class ApplyOtherDeduction {
     }
 
     private void applyPayment(){
-        ApplyPayment apply = new ApplyPayment(this.payment,
+        /*ApplyPayment apply = new ApplyPayment(this.payment,
                 this.paymentDetail,
                 this.booking,
                 this.transactionDate,
@@ -70,6 +70,6 @@ public class ApplyOtherDeduction {
         this.paymentDetail = apply.getPaymentDetail();
         if(apply.isApplied()){
             this.paymentStatusHistory = apply.getPaymentStatusHistory();
-        }
+        }*/
     }
 }
