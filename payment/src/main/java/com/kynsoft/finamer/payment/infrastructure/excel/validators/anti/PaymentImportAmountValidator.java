@@ -75,6 +75,7 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
 
                 if (Objects.isNull(paymentDetail.getApplyDepositValue()) || obj.getAmount() + amountTotal > paymentDetail.getApplyDepositValue()) {
                     errorFieldList.add(new ErrorField("Payment Amount", "Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
+                    return false;
                 }
             }else{
                 errorFieldList.add(new ErrorField("Payment Details", "Payment Details not found."));
