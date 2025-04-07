@@ -9,7 +9,7 @@ public class CheckApplyDepositRule extends BusinessRule {
     private final Boolean applyDeposit;
 
     public CheckApplyDepositRule(Boolean applyDeposit) {
-        super(DomainErrorMessage.CHECK_APPLY_DEPOSIT, new ErrorField("apply", DomainErrorMessage.CHECK_APPLY_DEPOSIT.getReasonPhrase()));
+        super(DomainErrorMessage.CHECK_APPLY_DEPOSIT, new ErrorField("applyDeposit", DomainErrorMessage.CHECK_APPLY_DEPOSIT.getReasonPhrase()));
         this.applyDeposit = applyDeposit;
     }
 
