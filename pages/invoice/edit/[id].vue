@@ -12,21 +12,10 @@ import type { FieldDefinitionType, Container } from '~/components/form/EditFormV
 import type { GenericObject } from '~/types'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import dayjs from 'dayjs'
-//import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
-//import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
+import AttachmentDialog from '~/components/invoice/attachment/AttachmentDialog.vue'
+import AttachmentHistoryDialog from '~/components/invoice/attachment/AttachmentHistoryDialog.vue'
 import { client } from 'process'
-import { debounce } from 'lodash';
-import { defineAsyncComponent } from 'vue';
 
-
-// Lazy loading de componentes
-const AttachmentDialog = defineAsyncComponent(() =>
-  import('~/components/invoice/attachment/AttachmentDialog.vue')
-);
-
-const AttachmentHistoryDialog = defineAsyncComponent(() =>
-  import('~/components/invoice/attachment/AttachmentHistoryDialog.vue')
-);
 
 const toast = useToast()
 const { data: userData } = useAuth()
@@ -389,7 +378,6 @@ function handleDialogOpen() {
 
   console.log(bookingDialogOpen);
 }
-const debouncedGetHotelList = debounce(getHotelList, 300);
 
 async function getHotelList(query = '') {
   try {
@@ -443,7 +431,7 @@ async function getHotelList(query = '') {
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
-const debouncedGetAgencyList = debounce(getAgencyList, 300);
+
 async function getAgencyList(query = '') {
   try {
     const listFilter = invoiceStatus.value !== InvoiceStatus.PROCESSED ? [
@@ -667,81 +655,83 @@ async function getInvoiceAmountById(id: string) {
 }
 
 async function getItemById(id: string) {
+
   if (id) {
-    idItem.value = id;
-    loadingSaveAll.value = true;
+    idItem.value = id
+    loadingSaveAll.value = true
     try {
-      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id);
+      const response = await GenericService.getById(options.value.moduleApi, options.value.uriApi, id)       
       if (response) {
-        propsParentId.value.id = response?.parent?.invoiceId;
-        propsParentId.value.isCloned = response?.isCloned;
-        item.value.id = response.id;
-        item.value.invoiceId = response.invoiceId;
-        item.value.dueDate = response.dueDate;
+        propsParentId.value.id = response?.parent?.invoiceId
+        propsParentId.value.isCloned = response?.isCloned
+        item.value.id = response.id
+        item.value.invoiceId = response.invoiceId
+        item.value.dueDate = response.dueDate
 
-        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`;
-        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber;
-        item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE");
+        const invoiceNumber = `${response?.invoiceNumber?.split('-')[0]}-${response?.invoiceNumber?.split('-')[2]}`
 
-        const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : '';
-        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null;
+        item.value.invoiceNumber = response?.invoiceNumber?.split('-')?.length === 3 ? invoiceNumber : response.invoiceNumber
+        item.value.invoiceNumber = item.value.invoiceNumber.replace("OLD", "CRE")
 
-        item.value.isManual = response.isManual;
-        item.value.invoiceAmount = response.invoiceAmount;
-        invoiceAmount.value = response.invoiceAmount;
-        dueAmount.value = response.dueAmount;
-        item.value.reSend = response.reSend;
-        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate;
-        item.value.hotel = response.hotel;
-        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`;
-        item.value.agency = response.agency;
-        item.value.hasAttachments = response.hasAttachments;
-        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`;
-        item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT 
-          ? ENUM_INVOICE_TYPE[0] 
-          : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType));
-        invoiceStatus.value = response.status;
-        item.value.status = response.status 
-          ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) 
-          : ENUM_INVOICE_STATUS[0];
+        // item.value.invoiceDate = dayjs(response.invoiceDate).format("YYYY-MM-DD")
+        // const newDate = new Date(response.invoiceDate)
+        // newDate.setDate(newDate.getDate() + 1)
+        // item.value.invoiceDate = newDate || null
 
-        item.value.invoiceStatus = response.manageInvoiceStatus
-          ? {
-              id: response.manageInvoiceStatus.id,
-              name: `${response.manageInvoiceStatus.code} - ${response.manageInvoiceStatus.name}`,
-              status: response.manageInvoiceStatus.status,
-              processStatus: response.manageInvoiceStatus.processStatus,
-              sentStatus: response.manageInvoiceStatus.sentStatus,
-              reconciledStatus: response.manageInvoiceStatus.reconciledStatus,
-              canceledStatus: response.manageInvoiceStatus.canceledStatus,
-            }
-          : null;
+        const date = response.invoiceDate ? dayjs(response.invoiceDate).format('YYYY-MM-DD') : ''
+        item.value.invoiceDate = date ? new Date(`${date}T00:00:00`) : null 
 
-        idClientForAgencyFilter.value = response.agency?.client?.id;
+        item.value.isManual = response.isManual
+        item.value.invoiceAmount = response.invoiceAmount
+        invoiceAmount.value = response.invoiceAmount
+        dueAmount.value = response.dueAmount
+        item.value.reSend = response.reSend
+        item.value.reSendDate = response.reSendDate ? dayjs(response.reSendDate).toDate() : response.reSendDate
+        item.value.hotel = response.hotel
+        item.value.hotel.fullName = `${response.hotel.code} - ${response.hotel.name}`
+        item.value.agency = response.agency
+        item.value.hasAttachments = response.hasAttachments
+        item.value.agency.fullName = `${response.agency.code} - ${response.agency.name}`
+        item.value.invoiceType = response.invoiceType === InvoiceType.OLD_CREDIT ? ENUM_INVOICE_TYPE[0] : ENUM_INVOICE_TYPE.find((element => element.id === response?.invoiceType))
+        invoiceStatus.value = response.status
+        item.value.status = response.status ? ENUM_INVOICE_STATUS.find((element => element.id === response?.status)) : ENUM_INVOICE_STATUS[0]
+        
+        item.value.invoiceStatus = response.manageInvoiceStatus ? {
+          id: response.manageInvoiceStatus.id,
+          name: `${response.manageInvoiceStatus.code} - ${response.manageInvoiceStatus.name}`,
+          status: response.manageInvoiceStatus.status,
+          processStatus: response.manageInvoiceStatus.processStatus,
+          sentStatus: response.manageInvoiceStatus.sentStatus,
+          reconciledStatus: response.manageInvoiceStatus.reconciledStatus,
+          canceledStatus: response.manageInvoiceStatus.canceledStatus
+        } : null
+        idClientForAgencyFilter.value = response.agency?.client?.id
+        
+        await getInvoiceAgency(response.agency?.id)
+        await getInvoiceHotel(response.hotel?.id)
+        isInCloseOperation.value = response.isInCloseOperation
 
-        await getInvoiceAgency(response.agency?.id);
-        await getInvoiceHotel(response.hotel?.id);
-        isInCloseOperation.value = response.isInCloseOperation;
-
-        // Esto se debe solucionar haciendo que en la respuesta se envíe el status del cliente
+        // Esto se debe solucionar haciendo que en la respueta se envie el status del cliente
         if (response?.agency?.client?.id) {
-          const objClient = await GenericService.getById('settings', 'manage-client', response?.agency?.client?.id);
+          const objClient = await GenericService.getById('settings', 'manage-client', response?.agency?.client?.id) 
           if (objClient) {
             item.value.agency.client = {
               ...item.value.agency?.client,
               status: objClient?.status,
-            };
+            }
           }
         }
       }
 
-      formReload.value += 1;
-    } catch (error) {
+      formReload.value += 1
+    }
+    catch (error) {
       if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invoice methods could not be loaded', life: 3000 })
       }
-    } finally {
-      loadingSaveAll.value = false;
+    }
+    finally {
+      loadingSaveAll.value = false
     }
   }
 }
@@ -1015,35 +1005,25 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
   }
 })
 
-const headerLoading = ref(true);
-
 onMounted(async () => {  
+  filterToSearch.value.criterial = ENUM_FILTER[0]
   if (route.params && 'id' in route.params && route.params.id) {
-    const id = route.params.id.toString();
-
-    // Cargar los datos de la cabecera
-    await getItemById(id);
-
-    // Marcar como cargado
-    headerLoading.value = false;
-
-    // Cargar otros valores por defecto
-    await loadDefaultsValues();
+    await getItemById(route.params.id.toString())
+    await loadDefaultsValues()
   }
-});
+})
 </script>
 
 <template>
   <div class="justify-content-center align-center ">
     <div class="font-bold text-lg px-4 bg-primary custom-card-header flex justify-content-between">
-  <div v-if="headerLoading">Loading...</div>
-  <div v-else>
-    {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
-  </div>
-  <div v-if="propsParentId.isCloned && !headerLoading">
-    {{ propsParentId?.label }} {{ propsParentId?.id }}
-  </div>
-</div>
+      <div>
+        {{ OBJ_UPDATE_INVOICE_TITLE[String(item?.invoiceType)] || "Edit Invoice" }}
+      </div>
+      <div v-if="propsParentId.isCloned">
+         {{propsParentId?.label}} {{ propsParentId?.id }}
+      </div>
+    </div>
     <div class="pt-3">
       <EditFormV2 
         :key="formReload" 
@@ -1157,9 +1137,7 @@ onMounted(async () => {
             :suggestions="hotelList" 
             @change="($event) => {
               onUpdate('hotel', $event)
-            }"
-            @load="($event) => debouncedGetHotelList($event)" 
-            >
+            }" @load="($event) => getHotelList($event)">
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
@@ -1182,9 +1160,8 @@ onMounted(async () => {
             :suggestions="agencyList" 
             @change="($event) => {
               onUpdate('agency', $event)
-            }" 
-            @load="($event) => debouncedGetAgencyList($event)"
-  >
+            }" @load="($event) => getAgencyList($event)"
+          >
             <template #option="props">
               <span>{{ props.item.fullName }}</span>
             </template>
@@ -1289,27 +1266,27 @@ onMounted(async () => {
       </EditFormV2>
     </div>
     <div v-if="attachmentDialogOpen">
-  <AttachmentDialog 
-    :close-dialog="() => { attachmentDialogOpen = false }"
-    :is-creation-dialog="false" 
-    header="Manage Invoice Attachment" 
-    :open-dialog="attachmentDialogOpen"
-    :selected-invoice="selectedInvoice" 
-    :selected-invoice-obj="item" 
-  />
-</div>
+      <AttachmentDialog 
+        :close-dialog="() => { attachmentDialogOpen = false}"
+        :is-creation-dialog="false" 
+        header="Manage Invoice Attachment" 
+        :open-dialog="attachmentDialogOpen"
+        :selected-invoice="selectedInvoice" 
+        :selected-invoice-obj="item" 
+      />
+    </div>
   </div>
   <div v-if="attachmentHistoryDialogOpen">
-  <AttachmentHistoryDialog 
-    selected-attachment="" 
-    :close-dialog="() => { attachmentHistoryDialogOpen = false }"
-    header="Attachment Status History" 
-    :open-dialog="attachmentHistoryDialogOpen" 
-    :selected-invoice="selectedInvoice"
-    :selected-invoice-obj="item" 
-    :is-creation-dialog="false"
-  />
-</div>
+    <AttachmentHistoryDialog 
+      selected-attachment="" 
+      :close-dialog="() => { attachmentHistoryDialogOpen = false }"
+      header="Attachment Status History" 
+      :open-dialog="attachmentHistoryDialogOpen" 
+      :selected-invoice="selectedInvoice"
+      :selected-invoice-obj="item" 
+      :is-creation-dialog="false"
+    />
+  </div>
   <div v-if="exportAttachmentsDialogOpen">
     <PrintInvoiceDialog 
       :close-dialog="() => { exportAttachmentsDialogOpen = false }"
