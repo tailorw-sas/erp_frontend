@@ -26,7 +26,7 @@ public class ConsumerCreateIncomeTransactionFailed {
 //        PaymentDetailDto parentDetailDto = paymentDetailService.findByGenId(paymentDetailDto.)
 //        paymentDetailService.delete(paymentDetailDto);
         //TODO hacer el roll back cuando de error, averiguar las relaciones en payment
-        logger.error("Rollback to applyDeposit ");
+        logger.error("Rollback to apply ");
 
     }
 }

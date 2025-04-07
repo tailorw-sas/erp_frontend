@@ -60,7 +60,8 @@ public class ApplyPayment {
             updateBooking(this.booking, this.amount);
             this.paymentDetail.setManageBooking(this.booking);
             this.paymentDetail.setApplyPayment(true);
-            this.paymentDetail.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
+            this.paymentDetail.setAppliedAt(OffsetDateTime.now());
+            this.payment.setApplyPayment(true);
         }
 
         this.paymentDetail.setEffectiveDate(this.transactionDate);
@@ -70,8 +71,6 @@ public class ApplyPayment {
             this.paymentStatusHistory = createPaymentStatusHistory();
             this.isApplied = true;
         }
-
-        this.payment.setApplyPayment(true);
     }
 
     private PaymentStatusHistoryDto createPaymentStatusHistory(){

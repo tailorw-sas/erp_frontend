@@ -517,7 +517,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         markAsDefault.setLogicalOperation(LogicalOperation.AND);
 
         FilterCriteria applyDeposit = new FilterCriteria();
-        applyDeposit.setKey("applyDeposit");
+        applyDeposit.setKey("apply");
         applyDeposit.setValue(true);
         applyDeposit.setOperator(SearchOperation.EQUALS);
         applyDeposit.setLogicalOperation(LogicalOperation.AND);

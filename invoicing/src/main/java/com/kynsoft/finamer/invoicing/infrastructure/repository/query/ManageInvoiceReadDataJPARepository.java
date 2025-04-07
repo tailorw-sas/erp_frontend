@@ -39,19 +39,14 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoic
 
     boolean existsByInvoiceId(long invoiceId);
 
-    @Query("""
-            SELECT i 
-            FROM Invoice i 
-            LEFT JOIN FETCH i.parent 
-            LEFT JOIN FETCH i.manageInvoiceType 
-            LEFT JOIN FETCH i.manageInvoiceStatus 
-            LEFT JOIN FETCH i.hotel 
-            LEFT JOIN FETCH i.agency 
-            LEFT JOIN FETCH i.bookings b
-            LEFT JOIN FETCH b.bookingDetails bd 
-            LEFT JOIN FETCH i.attachments 
-            WHERE i.id = :uuid
-        """)
-    Invoice findInvoiceByUUID(@Param("uuid") UUID uuid);
+    @Query("SELECT i FROM Invoice i" +
+            " LEFT JOIN FETCH i.parent " +
+            " LEFT JOIN FETCH i.manageInvoiceType " +
+            " LEFT JOIN FETCH i.manageInvoiceStatus " +
+            " LEFT JOIN FETCH i.hotel " +
+            " LEFT JOIN FETCH i.agency " +
+            " LEFT JOIN FETCH i.attachments " +
+            " WHERE i.id = :id")
+    Invoice findInvoiceByUUID(@Param("id") UUID id);
 
 }

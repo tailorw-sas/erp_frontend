@@ -7,6 +7,7 @@ import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckAmount
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public class ApplyOtherDeduction {
 
@@ -15,14 +16,11 @@ public class ApplyOtherDeduction {
 
     @Getter
     private PaymentDetailDto paymentDetail;
-    @Getter
-    private PaymentStatusHistoryDto paymentStatusHistory;
 
     private final ManageBookingDto booking;
     private final ManagePaymentTransactionTypeDto paymentTransactionType;
     private final OffsetDateTime transactionDate;
-    private final ManageEmployeeDto employee;
-    private final ManagePaymentStatusDto paymentStatus;
+    private final Double amount;
 
 
     public ApplyOtherDeduction(PaymentDto payment,
@@ -30,22 +28,21 @@ public class ApplyOtherDeduction {
                                ManageBookingDto booking,
                                ManagePaymentTransactionTypeDto paymentTransactionType,
                                OffsetDateTime transactionDate,
-                               ManageEmployeeDto employee,
-                               ManagePaymentStatusDto paymentStatus,
-                               PaymentStatusHistoryDto paymentStatusHistory){
+                               Double amount){
         this.payment = payment;
         this.paymentDetail = paymentDetail;
         this.booking = booking;
         this.paymentTransactionType = paymentTransactionType;
         this.transactionDate = transactionDate;
-        this.employee = employee;
-        this.paymentStatus = paymentStatus;
-        this.paymentStatusHistory = paymentStatusHistory;
+        this.amount = amount;
     }
 
     public void applyOtherDeduction(){
-        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule(this.paymentDetail.getAmount(), this.booking.getAmountBalance()));
-        this.payment.setOtherDeductions(BankerRounding.round(this.payment.getOtherDeductions() + this.paymentDetail.getAmount()));
+        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule(this.paymentDetail.getAmount(), this.amount));
+
+        this.booking.setAmountBalance(BankerRounding.round(this.booking.getAmountBalance() - this.amount));
+
+        this.payment.setOtherDeductions(BankerRounding.round(this.payment.getOtherDeductions() + this.amount));
 
         String remark = this.paymentDetail.getRemark();
         if(this.paymentDetail.getRemark().isBlank()){
@@ -53,23 +50,9 @@ public class ApplyOtherDeduction {
         }
 
         this.paymentDetail.setRemark(remark);
+        this.paymentDetail.setManageBooking(this.booking);
+        this.paymentDetail.setAppliedAt(OffsetDateTime.now());
+        this.paymentDetail.setEffectiveDate(this.transactionDate);
         this.payment.setApplyPayment(true);
-
-        this.applyPayment();
-    }
-
-    private void applyPayment(){
-        /*ApplyPayment apply = new ApplyPayment(this.payment,
-                this.paymentDetail,
-                this.booking,
-                this.transactionDate,
-                this.employee,
-                this.paymentStatus);
-        apply.applyPayment();
-        this.payment = apply.getPayment();
-        this.paymentDetail = apply.getPaymentDetail();
-        if(apply.isApplied()){
-            this.paymentStatusHistory = apply.getPaymentStatusHistory();
-        }*/
     }
 }

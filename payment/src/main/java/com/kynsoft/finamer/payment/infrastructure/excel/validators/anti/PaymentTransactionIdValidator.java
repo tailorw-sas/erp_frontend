@@ -24,12 +24,6 @@ public class PaymentTransactionIdValidator extends ExcelRuleValidator<AntiToInco
 
     @Override
     public boolean validate(AntiToIncomeRow obj, List<ErrorField> errorFieldList) {
-        return true;
-    }
-
-    @Override
-    public boolean validate(AntiToIncomeRow obj, List<ErrorField> errorFieldList, ICache icache) {
-        Cache cache = (Cache)icache;
         if (Objects.isNull(obj.getTransactionId())) {
             errorFieldList.add(new ErrorField("Transaction id", "Transaction id can't be empty."));
             return false;
@@ -40,14 +34,35 @@ public class PaymentTransactionIdValidator extends ExcelRuleValidator<AntiToInco
         }
 
         try {
-            //PaymentDetailSimpleDto paymentDetailDto = this.paymentDetailService.findSimpleDetailByGenId(obj.getTransactionId().intValue());
-            PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentDetailId(obj.getTransactionId().longValue());
-            if (!paymentDetailDto.getTransactionType().getDeposit()) {
+            PaymentDetailSimpleDto paymentDetailDto = this.paymentDetailService.findSimpleDetailByGenId(obj.getTransactionId().intValue());
+            if (!paymentDetailDto.isDeposit()) {
                 errorFieldList.add(new ErrorField("Transaction id", "Transaction isn't deposit type"));
                 return false;
             }
         } catch (Exception e) {
             errorFieldList.add(new ErrorField("Transaction id", "Payment Details not found: " + obj.getTransactionId().intValue()));
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean validate(AntiToIncomeRow obj, List<ErrorField> errorFieldList, ICache icache) {
+        Cache cache = (Cache)icache;
+        if (Objects.isNull(obj.getTransactionId())) {
+            errorFieldList.add(new ErrorField("Transaction id", "Transaction id can't be empty."));
+            return false;
+        }
+
+        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentDetailId(obj.getTransactionId().longValue());
+        if(Objects.isNull(paymentDetailDto)){
+            errorFieldList.add(new ErrorField("Transaction id", "Payment Details not found: " + obj.getTransactionId().intValue()));
+            return false;
+        }
+
+        if (!paymentDetailDto.getTransactionType().getDeposit()) {
+            errorFieldList.add(new ErrorField("Transaction id", "Transaction isn't deposit type"));
             return false;
         }
 
