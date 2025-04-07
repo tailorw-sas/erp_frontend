@@ -1126,41 +1126,11 @@ function mapFunctionEmployee(data: DataListItemEmployee): ListItemEmployee {
   }
 }
 
-async function getEmployeeList(
-  moduleApi: string,
-  uriApi: string,
-  queryObj: { query: string, keys: string[] },
-  filter?: FilterCriteria[]
-): Promise<void> {
-  employeeList.value = await fetchList<DataListItemEmployee, ListItemEmployee>(
-    moduleApi,
-    uriApi,
-    queryObj,
-    filter,
-    mapFunctionEmployee
-  )
-
+async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  employeeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, filter, queryObj, mapFunctionEmployee)
   const columnEmployee = historyColumns.value.find(item => item.field === 'employee')
   if (columnEmployee) {
     columnEmployee.localItems = [...JSON.parse(JSON.stringify(employeeList.value))]
-  }
-}
-
-async function fetchList<T, U>(
-  moduleApi: string,
-  uriApi: string,
-  queryObj: { query: string, keys: string[] },
-  filter: FilterCriteria[] = [],
-  mapFn: (data: T) => U,
-  sortOptions: { sortBy: string, sortType: ENUM_SHORT_TYPE } = { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC }
-): Promise<U[]> {
-  try {
-    const response = await getDataList<T, U>(moduleApi, uriApi, filter, queryObj, mapFn, sortOptions)
-    return response
-  }
-  catch (error) {
-    console.error(`Error fetching data from ${uriApi}:`, error)
-    return []
   }
 }
 
@@ -1698,32 +1668,33 @@ const objLoading = ref({
   loadingHotel: false,
   loadingStatus: false
 })
-async function getClientList() {
-  objLoading.value.loadingClient = true
+async function getClientList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[],) {
   try {
-    clientItemsList.value = await fetchList<DataListItem, ListItem>(
-      'settings',
-      'manage-client',
-      { query: '', keys: ['name', 'code'] },
-      [],
-      mapFunction
-    )
-    listClientFormChangeAgency.value = [...clientItemsList.value]
+    objLoading.value.loadingClient = true
+    let clientTemp: any[] = []
+    clientItemsList.value = []
+    listClientFormChangeAgency.value = []
+    clientTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    clientItemsList.value = [...clientItemsList.value, ...clientTemp]
+    listClientFormChangeAgency.value = [...listClientFormChangeAgency.value, ...clientTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingClient = false
   }
   finally {
     objLoading.value.loadingClient = false
   }
 }
-async function getAgencyList() {
-  objLoading.value.loadingAgency = true
+async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   try {
-    agencyItemsList.value = await fetchList<DataListItem, ListItem>(
-      'settings',
-      'manage-agency',
-      { query: '', keys: ['name', 'code'] },
-      [],
-      mapFunction
-    )
+    objLoading.value.loadingAgency = true
+    let agencyTemp: any[] = []
+    agencyItemsList.value = []
+    agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    agencyItemsList.value = [...agencyItemsList.value, ...agencyTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingAgency = false
   }
   finally {
     objLoading.value.loadingAgency = false
@@ -1732,55 +1703,34 @@ async function getAgencyList() {
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
-async function getHotelList() {
-  objLoading.value.loadingHotel = true
+async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   try {
-    hotelItemsList.value = await fetchList<DataListItem, ListItem>(
-      'settings',
-      'manage-hotel',
-      { query: '', keys: ['name', 'code'] },
-      [],
-      mapFunction
-    )
+    objLoading.value.loadingHotel = true
+    let hotelTemp: any[] = []
+    hotelItemsList.value = []
+    hotelTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    hotelItemsList.value = [...hotelItemsList.value, ...hotelTemp]
+  }
+  catch (error) {
+    objLoading.value.loadingHotel = false
   }
   finally {
     objLoading.value.loadingHotel = false
   }
 }
-async function getHotelListTemp(
-  moduleApi: string,
-  uriApi: string,
-  queryObj: { query: string, keys: string[] },
-  filter: FilterCriteria[] = []
-): Promise<ListItem[]> {
-  return await fetchList<DataListItem, ListItem>(
-    moduleApi,
-    uriApi,
-    queryObj,
-    filter,
-    mapFunction,
-    { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC }
-  )
+async function getHotelListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
+  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
-async function getStatusList(
-  moduleApi: string,
-  uriApi: string,
-  queryObj: { query: string, keys: string[] },
-  filter: FilterCriteria[] = []
-): Promise<void> {
+async function getStatusList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   try {
     objLoading.value.loadingStatus = true
-    statusItemsList.value = await fetchList<DataListItemForStatus, ListItemForStatus>(
-      moduleApi,
-      uriApi,
-      queryObj,
-      filter,
-      mapFunctionForStatus,
-      { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC }
-    )
+    let statusTemp: any[] = []
+    statusItemsList.value = []
+    statusTemp = await getDataList<DataListItemForStatus, ListItemForStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForStatus, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+    statusItemsList.value = [...statusItemsList.value, ...statusTemp]
   }
   catch (error) {
-    console.error(`Error fetching status list:`, error)
+    objLoading.value.loadingStatus = false
   }
   finally {
     objLoading.value.loadingStatus = false
@@ -3904,21 +3854,8 @@ function mapFunctionForTransactionType(data: DataListItemForOtherDeduction): Lis
   }
 }
 
-async function getTransactionTypeList(
-  moduleApi: string,
-  uriApi: string,
-  queryObj: { query: string, keys: string[] },
-  filter?: FilterCriteria[],
-  sortOptions: { sortBy: string, sortType: ENUM_SHORT_TYPE } = { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC }
-): Promise<void> {
-  transactionTypeList.value = await fetchList<DataListItemForOtherDeduction, ListItemForOtherDeduction>(
-    moduleApi,
-    uriApi,
-    queryObj,
-    filter,
-    mapFunctionForTransactionType,
-    sortOptions
-  )
+async function getTransactionTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[], short?: IQueryToSort) {
+  transactionTypeList.value = await getDataList<DataListItemForOtherDeduction, ListItemForOtherDeduction>(moduleApi, uriApi, filter, queryObj, mapFunctionForTransactionType, short)
 }
 
 function isRowSelectable(rowData: any) {

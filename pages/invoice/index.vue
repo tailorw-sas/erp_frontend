@@ -31,7 +31,6 @@ import SendByFtpDialog from '~/pages/invoice/sendInvoice-ftp.vue'
 import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
 import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
 import UndoImportDialog from '~/pages/invoice/undo-import.vue'
-import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -492,7 +491,7 @@ async function SendInvoiceByType() {
   finally {
     options.value.loading = false
     if (completed) {
-        toast.add({ severity: 'info', summary: 'Confirmed', detail: `Invoice ${selectedInvoiceObj.value.invoiceNumberTemp}  was send successfully`, life: 10000 })
+        toast.add({ severity: 'info', summary: 'Confirmed', detail: `Invoice ${selectedInvoiceObj.value.invoiceNumberTemp}  was ReSend successfully`, life: 10000 })
         await getList()
       }
   }
@@ -788,9 +787,6 @@ const closeInvoiceToPrint = () => {
   InvoiceToPrintDialogVisible.value = false
 }
 
-function copiarDatos() {
-  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
-}
 
 
 const itemsMenuSend = ref([
@@ -1166,22 +1162,26 @@ async function resetListItems() {
 const isFirstTimeInOnMounted = ref(false)
 
 async function searchAndFilter() {
-  // Limpia filtros anteriores de tipo 'filterSearch'
-  payload.value.filter = payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
+  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
 
   if (!filterToSearch.value.search) {
-    const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount')
+    // if (isFirstTimeInOnMounted.value === false) {}
+      
+    const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
 
     switch (filterToSearch.value.includeInvoicePaid) {
       case true:
+        // Elimina el filtro de 'dueAmount' si existe, para que muestre todos
         if (filterObjIncludeInvoicePaid) {
-          payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount')
+          payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
         }
-        break
+        break;
+
       case false:
+        // Solo muestra los que tienen dueAmount igual a 0
         if (filterObjIncludeInvoicePaid) {
-          filterObjIncludeInvoicePaid.operator = 'EQUALS'
-          filterObjIncludeInvoicePaid.value = 0
+          filterObjIncludeInvoicePaid.operator = 'EQUALS';
+          filterObjIncludeInvoicePaid.value = 0;
         } else {
           payload.value.filter.push({
             key: 'dueAmount',
@@ -1189,13 +1189,15 @@ async function searchAndFilter() {
             value: 0,
             logicalOperation: 'AND',
             type: 'filterSearch'
-          })
+          });
         }
-        break
+        break;
+
       default:
+        // Muestra los elementos que no son 0 (por defecto)
         if (filterObjIncludeInvoicePaid) {
-          filterObjIncludeInvoicePaid.operator = 'NOT_EQUALS'
-          filterObjIncludeInvoicePaid.value = 0
+          filterObjIncludeInvoicePaid.operator = 'NOT_EQUALS';
+          filterObjIncludeInvoicePaid.value = 0;
         } else {
           payload.value.filter.push({
             key: 'dueAmount',
@@ -1203,132 +1205,133 @@ async function searchAndFilter() {
             value: 0,
             logicalOperation: 'AND',
             type: 'filterSearch'
-          })
+          });
         }
-        break
+        break;
     }
 
+      // const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
+
+      // if (filterToSearch.value.includeInvoicePaid !== undefined && filterToSearch.value.includeInvoicePaid !== null) {
+      //   const operator = filterToSearch.value.includeInvoicePaid ? 'EQUALS' : 'NOT_EQUALS';
+      //   const filterValue = 0;
+
+      //   if (filterObjIncludeInvoicePaid) {
+      //     filterObjIncludeInvoicePaid.operator = operator;
+      //     filterObjIncludeInvoicePaid.value = filterValue;
+      //   } else {
+      //     payload.value.filter.push({
+      //       key: 'dueAmount',
+      //       operator,
+      //       value: filterValue,
+      //       logicalOperation: 'AND'
+      //     });
+      //   }
+      // } else if (filterObjIncludeInvoicePaid) {
+      //   payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
+      // }
     if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
-      const itemIds = filterToSearch.value.client.filter(item => item.id !== 'All').map(item => item.id)
-      payload.value.filter.push({
+      const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+
+      payload.value.filter = [...payload.value.filter, {
         key: 'agency.client.id',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
-      })
+      }]
     }
-
     if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find(item => item.id === 'All')) {
-      const itemIds = filterToSearch.value.agency.filter(item => item.id !== 'All').map(item => item.id)
-      payload.value.filter.push({
+      const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+      payload.value.filter = [...payload.value.filter, {
         key: 'agency.id',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
-      })
+      }]
     }
-
     if (filterToSearch.value.status?.length > 0) {
-      const filteredItems = filterToSearch.value.status.filter(item => item.id !== 'All')
+      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')      
       if (filteredItems.length > 0) {
-        const itemIds = filteredItems.map(item => item.id)
-        payload.value.filter.push({
+        const itemIds = filteredItems?.map((item: any) => item?.id)        
+        payload.value.filter = [...payload.value.filter, {
           key: 'manageInvoiceStatus.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
           type: 'filterSearch'
-        })
+        }]
       }
     }
-
     if (filterToSearch.value.invoiceType?.length > 0) {
-      const filteredItems = filterToSearch.value.invoiceType.filter(item => item.id !== 'All')
+      const filteredItems = filterToSearch.value.invoiceType.filter((item: any) => item?.id !== 'All')
       if (filteredItems.length > 0) {
-        const itemIds = filteredItems.map(item => item.id)
-        payload.value.filter.push({
+        const itemIds = filteredItems?.map((item: any) => item?.id)
+        payload.value.filter = [...payload.value.filter, {
           key: 'manageInvoiceType.id',
           operator: 'IN',
           value: itemIds,
           logicalOperation: 'AND',
           type: 'filterSearch'
-        })
+        }]
       }
     }
-
     if (filterToSearch.value.from && !disableDates.value) {
-      payload.value.filter.push({
+      payload.value.filter = [...payload.value.filter, {
         key: 'invoiceDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).startOf('day').format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
-      })
+      }]
     }
-
     if (filterToSearch.value.to && !disableDates.value) {
-      payload.value.filter.push({
+      payload.value.filter = [...payload.value.filter, {
         key: 'invoiceDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).endOf('day').format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
-      })
+      }]
     }
   }
 
-  // Este bloque aplica si hay criterio y búsqueda
   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    const criteriaKey = filterToSearch.value.criteria.id
-
-    // Si el criterio es 'couponNumber' y hay hoteles seleccionados
-    if (criteriaKey === 'couponNumber' && filterToSearch.value.hotel?.length > 0) {
-      const filteredItems = filterToSearch.value.hotel.filter((item: any) => item.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems.map(item => item.id)
-
-        const alreadyExists = payload.value.filter.find(f => f.key === 'hotel.id' && f.type === 'filterSearch')
-        if (!alreadyExists) {
-          payload.value.filter.push({
-            key: 'hotel.id',
-            operator: 'IN',
-            value: itemIds,
-            logicalOperation: 'AND',
-            type: 'filterSearch'
-          })
-        }
-      }
-    }
-
-    payload.value.filter.push({
-      key: criteriaKey,
+    payload.value.filter = [...payload.value.filter, {
+      key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
       operator: 'LIKE',
       value: filterToSearch.value.search,
       logicalOperation: 'AND',
       type: 'filterSearch'
-    })
+    }]
   }
 
-  // Si se seleccionan hoteles y no es criterio específico
+
   if (filterToSearch.value.hotel?.length > 0) {
     const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
     if (filteredItems.length > 0) {
-      const itemIds = filteredItems.map(item => item.id)
-      payload.value.filter.push({
+      const itemIds = filteredItems?.map((item: any) => item?.id)
+      payload.value.filter = [...payload.value.filter, {
         key: 'hotel.id',
         operator: 'IN',
         value: itemIds,
         logicalOperation: 'AND',
         type: 'filterSearch'
-      })
+      }]
     }
   }
-
+  // else {
+  //   const invoiceIdTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId')?.id
+  //   const invoiceNumberTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceNumberPrefix')?.id
+  //   if (filterToSearch.value.criteria?.id !== invoiceIdTemp && filterToSearch.value.criteria?.id !== invoiceNumberTemp) {
+  //     return hotelError.value = true
+  //   }
+  // }
   await getList()
 }
-
 
 async function clearFilterToSearch() {  
   payload.value = {
@@ -1769,6 +1772,115 @@ async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: {
   invoiceTypeList.value = [...invoiceTypeListTemp]
 }
 
+// async function getInvoiceTypeList(query = '') {
+//   try {
+
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ],
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
+
+//     invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
+//     const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+
+//     // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
+
+//     // if (query) {
+//     //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
+//     // }
+
+
+//   }
+//   catch (error) {
+//     console.error('Error loading invoice type list:', error)
+//   }
+// }
+
+// async function getAgencyList(query = '') {
+//   try {
+//     const payload
+//       = {
+//       filter: [
+//         {
+//           key: 'name',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'code',
+//           operator: 'LIKE',
+//           value: query,
+//           logicalOperation: 'OR'
+//         },
+//         {
+//           key: 'status',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//           logicalOperation: 'AND'
+//         }
+//       ] as any,
+//       query: '',
+//       pageSize: 200,
+//       page: 0,
+//       sortBy: 'name',
+//       sortType: ENUM_SHORT_TYPE.ASC
+//     }
+
+//     agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
+
+//     if (filterToSearch.value.client?.length === 0) {
+//       return agencyList.value = []
+//     }
+//     const clientIds: any[] = []
+
+//     filterToSearch.value?.client?.forEach((client: any) => clientIds.push(client?.id))
+
+//     payload.filter.push({
+//       key: 'client.id',
+//       operator: 'IN',
+//       value: clientIds,
+//       logicalOperation: 'AND'
+//     })
+
+//     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+//     const { data: dataList } = response
+//     for (const iterator of dataList) {
+//       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
+//     }
+//   }
+//   catch (error) {
+//     console.error('Error loading agency list:', error)
+//   }
+// }
 
 async function parseDataTableFilter(payloadFilter: any) {
   // if(payloadFilter?.agencyCd){
@@ -2603,7 +2715,7 @@ const legend = ref(
                       />
                     </div>
                   </div>
-                  <div class="flex align-items-center gap-1 w-full">
+                  <div class="flex align-items-center gap-2 w-full">
                     <TriStateCheckbox 
                       id="all-check-2" 
                       v-model="filterToSearch.includeInvoicePaid"
@@ -2611,21 +2723,15 @@ const legend = ref(
                     <!-- <label for="all-check-2" class="font-bold">Include Invoice Paid</label> -->
                     <label for="all-check-2" class="font-bold">{{checkboxLabel}}</label>
                   </div>
-                  <div class="flex align-items-center gap-1" />
+                  <div class="flex align-items-center gap-2" />
                 </div>
               </div>
-              <div class="flex align-items-center gap-1">
+              <div class="flex align-items-center gap-2">
                 <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch"
                   :loading="loadingSearch" @click="searchAndFilter" />
                 <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
-              <Button
-                v-tooltip.top="'Copiar tabla'"
-                class="p-button-lg w-1rem h-2rem pt-2 -ml-3 mt-4" 
-                icon="pi pi-copy"
-                @click="copiarDatos"
-              />
               <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
             </div> -->
               <!-- <div class="col-12 md:col-5 flex justify-content-end">
