@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.kafka.entity.FileKafka;
 import com.kynsof.share.core.domain.kafka.event.EventType;
+import com.kynsof.share.core.domain.request.FileRequest;
 import com.kynsof.share.core.domain.response.FileDto;
 import com.kynsof.share.core.domain.response.UploadFileResponse;
 import com.kynsof.share.core.domain.service.IAmazonClient;
@@ -43,7 +44,11 @@ public class ConsumerSaveFileEventService {
             EventType eventType = (EventType)objectMapper.treeToValue(rootNode.get("type"), EventType.class);
             if (eventType.equals(EventType.CREATED)) {
                 try {
-                    String fileUrl = this.amazonClient.save(eventRead.getFile(), eventRead.getFileName(), (String)null);
+                    FileRequest fileRequest = new FileRequest();
+                    fileRequest.setFileName(eventRead.getFileName());
+                    fileRequest.setFile(eventRead.getFile());
+                    fileRequest.setContentType(null);
+                    String fileUrl = this.amazonClient.save(fileRequest);
                     this.fileService.create(new FileDto(eventRead.getId(), eventRead.getFileName(), eventRead.getMicroServiceName(), fileUrl, false, (UploadFileResponse)null, (byte[])null));
                 } catch (IOException ex) {
                     Logger.getLogger(ConsumerSaveFileEventService.class.getName()).log(Level.SEVERE, (String)null, ex);

@@ -132,7 +132,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     }
                     return true;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         if (invoices.isEmpty()) {
             log.warn("⚠️ No invoices found after checkout validation.");
@@ -223,15 +223,16 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     }
 
     private void bavel(ManagerB2BPartnerDto b2BPartner, List<ManageInvoiceDto> invoices) {
-        List<FileRequest> fileRequestList = new ArrayList();
-        List<ManageInvoiceDto> failList = new ArrayList();
+        List<FileRequest> fileRequestList = new ArrayList<>();
+        List<ManageInvoiceDto> failList = new ArrayList<>();
 
         for(ManageInvoiceDto invoiceDto : invoices) {
             try {
                 String xmlContent = this.invoiceXmlService.generateInvoiceXml(invoiceDto);
                 String fileName = this.generateFileNameToBavel(invoiceDto);
                 byte[] fileBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
-                fileRequestList.add(new FileRequest(invoiceDto.getId(), fileName, fileBytes, xmlContent));
+
+                fileRequestList.add(new FileRequest(invoiceDto.getId(), fileName, fileBytes, MediaType.APPLICATION_XML_VALUE));
             } catch (Exception e) {
                 log.error("❌ Failed to generate XML for invoice '{}': {}", new Object[]{invoiceDto.getInvoiceNumber(), e.getMessage(), e});
                 invoiceDto.setSendStatusError("XML Generation Failed: " + e.getMessage());

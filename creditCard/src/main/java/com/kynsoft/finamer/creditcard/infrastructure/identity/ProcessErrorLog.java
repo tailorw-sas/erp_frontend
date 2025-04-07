@@ -40,6 +40,7 @@ public class ProcessErrorLog implements Serializable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "TEXT")
     private String error;
 
     public ProcessErrorLog(ProcessErrorLogDto dto) {
