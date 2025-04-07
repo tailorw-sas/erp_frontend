@@ -66,7 +66,7 @@ public class AntiPaymentImportExtrasFieldProcessorImpl implements IPaymentImport
         markAsDefault.setLogicalOperation(LogicalOperation.AND);
 
         FilterCriteria applyDeposit = new FilterCriteria();
-        applyDeposit.setKey("apply");
+        applyDeposit.setKey("applyDeposit");
         applyDeposit.setValue(true);
         applyDeposit.setOperator(SearchOperation.EQUALS);
         applyDeposit.setLogicalOperation(LogicalOperation.AND);
