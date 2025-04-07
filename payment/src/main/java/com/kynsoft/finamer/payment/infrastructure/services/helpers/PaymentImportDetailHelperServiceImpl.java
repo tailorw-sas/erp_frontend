@@ -168,6 +168,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         //List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();//TODO Validar una lista segura para implementar en hilos
         List<PaymentDto> paymentsToUpdateList = new ArrayList<>();
         List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
+        List<PaymentDetailDto> paymentDetailsAntiToUpdate = new ArrayList<>();
         List<ManageBookingDto> bookingsToUpdate = new ArrayList<>();
         ManagePaymentTransactionTypeDto depositPaymentTransactionType = cache.getDepositTransactionType();
         List<PaymentStatusHistoryDto> paymentStatusHistories = new ArrayList<>();
@@ -195,19 +196,21 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             }else{
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
-                    this.sendToCreateApplyDeposit(paymentDetailDto,
-                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                            employee,
-                            managePaymentTransactionTypeDto,
-                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                            bookingDto,
-                            paymentDto,
-                            transactionDate,
-                            paymentStatusApplied,
-                            paymentStatusHistories,
-                            paymentDetailsToCreate
-                    );
-
+                    if(Objects.nonNull(paymentDetailDto)){
+                        this.sendToCreateApplyDeposit(paymentDetailDto,
+                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                employee,
+                                managePaymentTransactionTypeDto,
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                bookingDto,
+                                paymentDto,
+                                transactionDate,
+                                paymentStatusApplied,
+                                paymentStatusHistories,
+                                paymentDetailsToCreate,
+                                paymentDetailsAntiToUpdate
+                        );
+                    }
                 } else {
                     if (bookingDto == null) {
                         List<ManageBookingDto> bookings = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
@@ -284,6 +287,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
         printLog("Antes de guardar en BDD");
         this.createPaymentsDetails(paymentDetailsToCreate);
+        this.createPaymentsDetails(paymentDetailsAntiToUpdate);
         this.updatePayments(paymentsToUpdateList);
         this.updateBookings(bookingsToUpdate);
         this.createPaymentStatusHistory(paymentStatusHistories);
@@ -485,7 +489,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                           OffsetDateTime transactionDate,
                                           ManagePaymentStatusDto paymentStatusApplied,
                                           List<PaymentStatusHistoryDto> paymentStatusHistories,
-                                          List<PaymentDetailDto> createDetailPaymentList) {
+                                          List<PaymentDetailDto> createPaymentDetailList,
+                                          List<PaymentDetailDto> updatePaymentDetailAntiList) {
         PaymentDetailDto newPaymentDetail = new PaymentDetailDto(
                 UUID.randomUUID(),
                 Status.ACTIVE,
@@ -520,7 +525,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 PaymentStatusHistoryDto paymentStatusHistory = applyDeposit.getPaymentStatusHistory();
                 paymentStatusHistories.add(paymentStatusHistory);
             }
-            createDetailPaymentList.add(newPaymentDetail);
+            if(!updatePaymentDetailAntiList.contains(paymentDetail)){
+                updatePaymentDetailAntiList.add(paymentDetail);
+            }
+            createPaymentDetailList.add(newPaymentDetail);
         }
     }
 
