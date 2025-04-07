@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.domain.excel;
 import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.domain.dto.*;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalTime;
@@ -26,7 +25,6 @@ public class Cache implements ICache {
     private Map<UUID, Map<Long, PaymentDetailDto>> paymentDetailsByPaymentsMap;
     private Map<String, List<ManageBookingDto>> bookingsByCouponMap;
     private Map<UUID, PaymentCloseOperationDto> closeOperationsByHotelMap;
-    private Map<Long, ManageInvoiceDto> invoicesByInvoiceIdMap;
     private Map<Long, PaymentDetailDto> paymentDetailsByPaymentDetailIdMap;
 
     //Constructor de Cache para PaymentImportDetails
@@ -36,7 +34,6 @@ public class Cache implements ICache {
                  List<PaymentDetailDto> paymentDetailList,
                  List<ManageBookingDto> bookingList,
                  List<PaymentCloseOperationDto> closeOperationList,
-                 List<ManageInvoiceDto> invoiceList,
                  List<PaymentDetailDto> paymentDetailListById){
         this.setManagePaymentTransactionTypeMap(managePaymentTransactionTypeList);
         this.setBookingsMap(bookings);
@@ -44,7 +41,6 @@ public class Cache implements ICache {
         this.setPaymentDetailsByPaymentsMap(paymentDetailList);
         this.setBookingsByCouponMap(bookingList);
         this.setCloseOperationsByHotelMap(closeOperationList);
-        this.setInvoicesByInvoiceIdMap(invoiceList);
         this.setPaymentDetailsByPaymentDetailIdMap(paymentDetailListById);
     }
 
@@ -91,11 +87,6 @@ public class Cache implements ICache {
     private void setCloseOperationsByHotelMap(List<PaymentCloseOperationDto> closeOperationList){
         this.closeOperationsByHotelMap = closeOperationList.stream()
                 .collect(Collectors.toMap(closeOperation -> closeOperation.getHotel().getId(), paymentCloseOperation -> paymentCloseOperation));
-    }
-
-    private void setInvoicesByInvoiceIdMap(List<ManageInvoiceDto> invoiceList){
-        this.invoicesByInvoiceIdMap = invoiceList.stream()
-                .collect(Collectors.toMap(ManageInvoiceDto::getInvoiceId, invoice -> invoice));
     }
 
     private void setPaymentDetailsByPaymentDetailIdMap(List<PaymentDetailDto> paymentDetailList){
@@ -179,14 +170,6 @@ public class Cache implements ICache {
         }
 
         return this.managePaymentTransactionTypeMap.get(code);
-    }
-
-    public ManageInvoiceDto getInvoiceByInvoiceId(Long invoiceId){
-        if(Objects.isNull(invoicesByInvoiceIdMap) || invoicesByInvoiceIdMap.isEmpty()){
-            return null;
-        }
-
-        return invoicesByInvoiceIdMap.get(invoiceId);
     }
 
     public PaymentDetailDto getPaymentDetailByPaymentDetailId(Long paymentDetailId){

@@ -92,12 +92,10 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
             List<ManageBookingDto> bookingByCouponList = paymentCache.getBookingsByCoupon(obj.getCoupon());
             if(Objects.isNull(bookingByCouponList)){
                 errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
-                return false;
             }
 
-            if (Objects.nonNull(obj.getCoupon()) && bookingByCouponList.size() > 1) {
+            if (Objects.nonNull(obj.getCoupon()) && Objects.nonNull(bookingByCouponList) && bookingByCouponList.size() > 1) {
                 errorFieldList.add(new ErrorField("coupon", "Payment was not applied because the coupon is duplicated."));
-                return false;
             }
         }else{
             ManageBookingDto bookingDto = paymentCache.getBooking(Long.valueOf(obj.getBookId()));
