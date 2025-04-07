@@ -18,17 +18,13 @@ public interface IAmazonClient {
 
     void setBucketName(String bucketName);
 
-    void uploadFile(InputStream streamToUpload, String contentType, String objectKey) throws IOException;
-
     String save(FileRequest fileRequest) throws IOException;
 
-    Mono<String> save(FilePart filePart);
-
-    String save(byte[] bytes, String fileName, String contentType) throws IOException;
+    String save(FilePart filePart) throws IOException;
 
     List<FileDto> saveAll(List<FileRequest> files);
 
     void delete(String url);
 
-    byte[] downloadFile(String filePath);
+    byte[] downloadFile(String filePath) throws IOException;
 }

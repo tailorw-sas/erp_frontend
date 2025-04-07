@@ -26,7 +26,7 @@ public class SaveFileS3CommandHandler implements ICommandHandler<SaveFileS3Comma
     @Override
     public void handle(SaveFileS3Command command) {
         try {
-            String url = this.amazonClient.save(command.getFilePart()).block();
+            String url = this.amazonClient.save(command.getFilePart());
             if (url != null && !url.isBlank()) {
                 FileDto aFileDto = new FileDto(UUID.randomUUID(), command.getFilePart().filename(), "file", url, false,
                         null, null);

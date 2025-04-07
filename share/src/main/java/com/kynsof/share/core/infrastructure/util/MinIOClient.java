@@ -27,19 +27,20 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Service("minio")
 public class MinIOClient implements IAmazonClient {
@@ -51,8 +52,11 @@ public class MinIOClient implements IAmazonClient {
     private String accessKey;
     @Value("${minio.secretKey}")
     private String secretKey;
+    @Setter
+    @Getter
     @Value("${minio.bucketName}")
     private String bucketName;
+
     @Value("${minio.bucket.private}")
     private Boolean isPrivateBucket;
 
@@ -66,47 +70,26 @@ public class MinIOClient implements IAmazonClient {
         logger.info("✅ MinIO connection initialized successfully.");
     }
 
-    public String getBucketName() {
-        return this.bucketName;
-    }
-
-    public void setBucketName(String bucketName) {
-        this.bucketName = bucketName;
-    }
-
-    public void uploadFile(InputStream streamToUpload, String contentType, String safeObjectKey) throws IOException {
-        try {
-            long size = streamToUpload.available();
-            logger.info("Uploading '{}' (size: {} bytes, type: '{}') to MinIO...", safeObjectKey, size, contentType);
+    private String uploadFileWithMetadata(String originalFileName, byte[] bytes, String contentType) throws IOException {
+        String objectKey = generateObjectKey(contentType);
+        try (InputStream streamToUpload = new ByteArrayInputStream(bytes)) {
+            long size = bytes.length;
+            logger.info("Uploading '{}' (size: {} bytes, type: '{}') to MinIO...", objectKey, size, contentType);
             this.ensureBucketExists();
-            try {
-                PutObjectArgs putObject = PutObjectArgs.builder()
-                        .bucket(this.bucketName)
-                        .object(safeObjectKey)
-                        .stream(streamToUpload, size, -1L)
-                        .contentType(contentType)
-                        .build();
-                this.minioClient.putObject(putObject);
-                logger.info("✅ Successfully uploaded '{}'", safeObjectKey);
-            } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | MinioException e) {
-                logger.error("❌ Error uploading file '{}': {}", safeObjectKey, e.getMessage());
-                throw new IOException("Failed to upload file: " + safeObjectKey, e);
-            }
-        } catch (Throwable var10) {
-            if (streamToUpload != null) {
-                try {
-                    streamToUpload.close();
-                } catch (Throwable var8) {
-                    var10.addSuppressed(var8);
-                }
-            }
-
-            throw var10;
+            PutObjectArgs putObject = PutObjectArgs.builder()
+                    .bucket(this.bucketName)
+                    .object(objectKey)
+                    .stream(streamToUpload, size, -1)
+                    .contentType(contentType)
+                    .userMetadata(Map.of("originalFileName", originalFileName))
+                    .build();
+            this.minioClient.putObject(putObject);
+            logger.info("✅ Successfully uploaded '{}'", objectKey);
+        } catch (Exception e) {
+            logger.error("❌ Error uploading file with metadata '{}': {}", originalFileName, e.getMessage());
+            throw new IOException("Failed to upload file: " + originalFileName, e);
         }
-
-        if (streamToUpload != null) {
-            streamToUpload.close();
-        }
+        return objectKey;
     }
 
     private void ensureBucketExists() throws IOException {
@@ -128,54 +111,33 @@ public class MinIOClient implements IAmazonClient {
     }
 
     public String save(FileRequest fileRequest) throws IOException {
-        return this.save(fileRequest.getFile(), fileRequest.getFileName(), fileRequest.getContentType());
+        String objectKey = this.uploadFileWithMetadata(fileRequest.getFileName(), fileRequest.getFile(), fileRequest.getContentType());
+        return this.isPrivateBucket
+                ? this.getPublicUrl(objectKey)
+                : this.endpointUrl + "/" + this.bucketName + "/" + objectKey;
     }
 
-    public String save(byte[] bytes, String fileName, String contentType) throws IOException {
-        String objectKey = getName(fileName);
-
-        try (InputStream fileStream = new ByteArrayInputStream(bytes)) {
-            this.uploadFile(fileStream, contentType, objectKey);
-            if (this.isPrivateBucket) {
-                return this.getPublicUrl(objectKey);
-            } else {
-                return this.endpointUrl + "/" + this.bucketName + "/" + objectKey;
+    public String save(FilePart filePart)  throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        filePart.content().toStream().forEach(dataBuffer -> {
+            byte[] bytes = new byte[dataBuffer.readableByteCount()];
+            dataBuffer.read(bytes);
+            DataBufferUtils.release(dataBuffer);
+            try {
+                outputStream.write(bytes);
+            } catch (IOException e) {
+                throw new RuntimeException("Error writing file bytes", e);
             }
-        } catch (Exception e) {
-            throw new IOException("Error saving file: " + e.getMessage(), e);
-        }
-    }
-
-    public Mono<String> save(FilePart filePart) {
-        return Mono.fromCallable(() -> {
-            String objectName = getName(filePart.filename());
-
-            try (InputStream inputStream = filePart.content().map(dataBuffer -> {
-                byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                dataBuffer.read(bytes);
-                DataBufferUtils.release(dataBuffer);
-                return bytes;
-            }).collectList().map(byteArrays -> {
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                byteArrays.forEach(bytes -> {
-                    try {
-                        outputStream.write(bytes);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error writing bytes", e);
-                    }
-                });
-                return new ByteArrayInputStream(outputStream.toByteArray());
-            }).block()) {
-                this.uploadFile(inputStream, filePart.headers().getContentType().toString(), objectName);
-                if (this.isPrivateBucket) {
-                    return this.getPublicUrl(objectName);
-                } else {
-                    return this.endpointUrl + "/" + this.bucketName + "/" + objectName;
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Error saving file: " + e.getMessage(), e);
-            }
-        }).subscribeOn(Schedulers.boundedElastic());
+        });
+        byte[] bytes = outputStream.toByteArray();
+        String contentType = filePart.headers().getContentType() != null
+                ? Objects.requireNonNull(filePart.headers().getContentType()).toString()
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String originalFileName = filePart.filename();
+        String objectKey = this.uploadFileWithMetadata(originalFileName, bytes, contentType);
+        return this.isPrivateBucket
+                ? this.getPublicUrl(objectKey)
+                : this.endpointUrl + "/" + this.bucketName + "/" + objectKey;
     }
 
     public List<FileDto> saveAll(List<FileRequest> files) {
@@ -219,26 +181,27 @@ public class MinIOClient implements IAmazonClient {
         }
     }
 
-    public byte[] downloadFile(String filePath) {
+    public byte[] downloadFile(String filePath) throws IOException {
         logger.info("📦 Downloading file from MinIO: {}", filePath);
-
-        try {
-            InputStream inputStream = this.minioClient.getObject(GetObjectArgs.builder()
-                    .bucket(this.bucketName)
-                    .object(filePath)
-                    .build());
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        String objectKey = filePath;
+        if (objectKey.startsWith("http")) {
+            objectKey = objectKey.substring(objectKey.lastIndexOf("/") + 1);
+        }
+        try (InputStream inputStream = this.minioClient.getObject(GetObjectArgs.builder()
+                .bucket(this.bucketName)
+                .object(objectKey)
+                .build());
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             inputStream.transferTo(outputStream);
-            inputStream.close();
             logger.info("✅ File downloaded successfully: {}", filePath);
             return outputStream.toByteArray();
         } catch (MinioException e) {
             logger.error("❌ MinIO error while downloading file: {}", filePath, e);
+            throw new IOException("MinIO error while downloading file: " + filePath, e);
         } catch (Exception e) {
             logger.error("❌ Unexpected error while downloading file: {}", filePath, e);
+            throw new IOException("Unexpected error while downloading file: " + filePath, e);
         }
-
-        return null;
     }
 
     private String getPublicUrl(String objectName) throws IOException {
@@ -271,10 +234,16 @@ public class MinIOClient implements IAmazonClient {
         this.minioClient.removeObject(req);
     }
 
-    public static String getName(String originalFilename) {
-        String sanitizedFilename = originalFilename.replaceAll("[()\\s]", "_");
-        String fileExtension = StringUtils.getFilenameExtension(sanitizedFilename);
-        String timestamp = (new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")).format(new Date());
-        return StringUtils.stripFilenameExtension(sanitizedFilename) + "_" + timestamp + "." + fileExtension;
+    private String generateObjectKey(String contentType) {
+        return UUID.randomUUID() + getExtensionFromContentType(contentType);
+    }
+
+    private String getExtensionFromContentType(String contentType) {
+        return switch (contentType) {
+            case MediaType.APPLICATION_XML_VALUE -> ".xml";
+            case MediaType.APPLICATION_PDF_VALUE -> ".pdf";
+            case "text/csv" -> ".csv";
+            default -> ".dat";
+        };
     }
 }
