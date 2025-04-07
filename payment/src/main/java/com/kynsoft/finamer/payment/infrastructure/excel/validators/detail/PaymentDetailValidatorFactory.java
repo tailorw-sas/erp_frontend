@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
@@ -54,6 +55,8 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     private final BookingHttpGenIdService bookingHttpGenIdService;
     private final SecurityImportValidators securityImportValidators;
 
+    private PaymentDetailAntiAmountValidator paymentDetailAntiAmountValidator;
+
     public PaymentDetailValidatorFactory(ApplicationEventPublisher paymentEventPublisher, IPaymentService paymentService,
                                          IPaymentDetailService paymentDetailService,
                                          PaymentImportCacheRepository paymentImportCacheRepository,
@@ -83,6 +86,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
         paymentTransactionIdValidator = new PaymentTransactionIdValidator(paymentDetailService, applicationEventPublisher);
         paymentDetailsBookingFieldValidator = new PaymentDetailsBookingFieldValidator(applicationEventPublisher, bookingService, bookingImportAutomaticeHelperServiceImpl, bookingHttpGenIdService);
+        paymentDetailAntiAmountValidator = new PaymentDetailAntiAmountValidator(applicationEventPublisher);
 
     }
 
@@ -101,6 +105,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         errors += this.validatePaymentAmount(toValidate, iCache) ? 0 : 1;
         errors += paymentDetailsNoApplyDepositValidator.validate(toValidate,errorFieldList, iCache) ? 0 : 1;
         errors += this.validateAsAntiToIncome(toValidate, iCache) ? 0 : 1;
+        errors += this.paymentDetailAntiAmountValidator.validate(toValidate, errorFieldList, cache) ? 0 : 1;
         errors += this.validateAsExternalPaymentId(toValidate, iCache) ? 0 : 1;
 
         PaymentDto paymentDto = cache.getPaymentByPaymentId(Long.parseLong(toValidate.getPaymentId()));
@@ -151,6 +156,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
             antiToIncomeRow.setAmount(toValidate.getBalance());
             antiToIncomeRow.setRemarks(toValidate.getRemarks());
             antiToIncomeRow.setImportProcessId(toValidate.getImportProcessId());
+            antiToIncomeRow.setPaymentId(toValidate.getPaymentId());
             errors += paymentTransactionIdValidator.validate(antiToIncomeRow, errorFieldList, icache) ? 0 : 1;
             errors += paymentImportAmountValidator.validate(antiToIncomeRow, errorFieldList, icache) ? 0 : 1;
         }
@@ -162,5 +168,4 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
             return paymentDetailBelongToSamePayment.validate(toValidate,errorFieldList, iCache);
         } return true;
     }
-
 }
