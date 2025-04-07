@@ -98,7 +98,7 @@ public class ApplyDeposit {
                                      PaymentDetailDto parentPaymentDetail,
                                      ManageBookingDto booking,
                                      OffsetDateTime transactionDate){
-        paymentDetail.setParentId(parentPaymentDetail.getParentId());
+        paymentDetail.setParentId(parentPaymentDetail.getPaymentDetailId());
         paymentDetail.setManageBooking(booking);
         paymentDetail.setApplyPayment(true);
         paymentDetail.setAppliedAt(OffsetDateTime.now());
