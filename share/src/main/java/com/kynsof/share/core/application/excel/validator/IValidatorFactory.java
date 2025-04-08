@@ -18,11 +18,11 @@ public abstract class IValidatorFactory<T> {
 
     }
 
-     public abstract void createValidators();
+    public abstract void createValidators();
 
     public abstract boolean validate(T toValidate);
 
-    public boolean validate(T toValidate, ICache cache){
+    public boolean validate(T toValidate, ICache cache, IImportControl importControl){
         return validate(toValidate);
     }
 

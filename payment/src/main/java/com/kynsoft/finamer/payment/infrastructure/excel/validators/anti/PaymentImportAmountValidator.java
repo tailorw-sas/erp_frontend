@@ -2,9 +2,11 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.application.excel.validator.ICache;
+import com.kynsof.share.core.application.excel.validator.IImportControl;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
+import com.kynsoft.finamer.payment.domain.excel.ImportControl;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
@@ -37,8 +39,9 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
     }
 
     @Override
-    public boolean validate(AntiToIncomeRow obj, List<ErrorField> errorFieldList, ICache icache) {
+    public boolean validate(AntiToIncomeRow obj, List<ErrorField> errorFieldList, ICache icache, IImportControl importControl) {
         Cache cache = (Cache)icache;
+        ImportControl control = (ImportControl) importControl;
 
         if (Objects.isNull(obj.getAmount())) {
             errorFieldList.add(new ErrorField("Payment Amount", "Payment Amount can't be empty."));
@@ -75,6 +78,7 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
 
                 if (Objects.isNull(paymentDetail.getApplyDepositValue()) || obj.getAmount() + amountTotal > paymentDetail.getApplyDepositValue()) {
                     errorFieldList.add(new ErrorField("Payment Amount", "Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
+                    control.setShouldStopProcess(true);
                     return false;
                 }
             }else{
