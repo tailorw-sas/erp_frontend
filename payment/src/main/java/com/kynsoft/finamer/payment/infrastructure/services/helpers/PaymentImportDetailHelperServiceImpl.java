@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.application.excel.validator.IImportControl;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -15,6 +16,7 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
+import com.kynsoft.finamer.payment.domain.excel.ImportControl;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
@@ -68,6 +70,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private static final Logger logger = LoggerFactory.getLogger(PaymentImportDetailHelperServiceImpl.class);
 
 
+    private boolean stopProcess;
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                                 PaymentDetailValidatorFactory paymentDetailValidatorFactory,
@@ -99,7 +102,12 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     @Override
-    public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+    public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest){
+
+    }
+
+    @Override
+    public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest, IImportControl importControl) {
         printLog("Start readExcel process");
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
@@ -125,9 +133,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     && !request.getPaymentId().isEmpty()) {
                 row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
             }
-            if (paymentDetailValidatorFactory.validate(row, cache)) {
+            if (paymentDetailValidatorFactory.validate(row, cache, importControl)) {
                 cachingPaymentImport(row);
                 this.totalProcessRow++;
+            } else if (importControl.getShouldStopProcess()) {
+                break;
             }
         }
         printLog("End readExcel process");
@@ -210,6 +220,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                 paymentDetailsToCreate,
                                 paymentDetailsAntiToUpdate
                         );
+                        bookingsToUpdate.add(bookingDto);
                     }
                 } else {
                     if (bookingDto == null) {

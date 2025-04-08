@@ -15,8 +15,12 @@ public abstract class ExcelRuleValidator<T> {
 
     public abstract boolean validate(T obj, List<ErrorField> errorFieldList);
 
-    public boolean validate(T obj, List<ErrorField> errorFieldList, ICache cache){
+    public boolean validate(T obj, List<ErrorField> errorFieldList, ICache icache){
         return validate(obj, errorFieldList);
+    }
+
+    public boolean validate(T obj, List<ErrorField> errorFieldList, ICache cache, IImportControl importControl){
+        return validate(obj, errorFieldList, cache);
     }
 
     protected void sendErrorEvent( Object rowError){

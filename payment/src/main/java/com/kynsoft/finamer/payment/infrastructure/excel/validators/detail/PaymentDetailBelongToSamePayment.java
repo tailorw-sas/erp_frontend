@@ -3,9 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
@@ -32,9 +30,8 @@ public class PaymentDetailBelongToSamePayment extends ExcelRuleValidator<Payment
         return true;
     }
 
-    @Override
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache iCache) {
-        Cache cache = (Cache) iCache;
+    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache icache) {
+        Cache cache = (Cache) icache;
 
         if (Objects.nonNull(paymentId)) {
             PaymentDto paymentDto = cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
