@@ -41,30 +41,32 @@ public class PaymentDetailAntiAmountValidator extends ExcelRuleValidator<Payment
             errorFieldList.add(new ErrorField("Booking", "The booking not found or is duplicated"));
             return false;
         }
-
-        PaymentDetailDto paymentDetail = cache.getPaymentDetailByPaymentDetailId(obj.getAnti().longValue());
-        if (Objects.nonNull(paymentDetail)) {
-            if (Objects.isNull(paymentDetail.getPayment()) || paymentDetail.getPayment().getPaymentId() != Long.parseLong(obj.getPaymentId())) {
-                errorFieldList.add(new ErrorField("Payment", "The specified Payment is not associated with the given Payment Detail."));
-                return false;
-            }
-
-            List<PaymentImportCache> pageCache = paymentImportCacheRepository.findAllByImportProcessId(obj.getImportProcessId());
-            double amountTotal = pageCache.stream().filter(Objects::nonNull)
-                    .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getAnti())
-                            && !paymentImportCache.getAnti().isEmpty()
-                            && Long.parseLong(paymentImportCache.getPaymentId()) == paymentDetail.getPayment().getPaymentId())
-                    .map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount()))
-                    .reduce(0.0, Double::sum);
-
-            if(obj.getBalance() + amountTotal >= booking.getAmountBalance()){
-                errorFieldList.add(new ErrorField("Booking Balance", "The selected transaction amount must be less or equal than the invoice balance"));
-                control.setShouldStopProcess(true);
-                return false;
-            }
-
-        }
         
+        if(Objects.nonNull(obj.getAnti())){
+            PaymentDetailDto paymentDetail = cache.getPaymentDetailByPaymentDetailId(obj.getAnti().longValue());
+            if (Objects.nonNull(paymentDetail)) {
+                if (Objects.isNull(paymentDetail.getPayment()) || paymentDetail.getPayment().getPaymentId() != Long.parseLong(obj.getPaymentId())) {
+                    errorFieldList.add(new ErrorField("Payment", "The specified Payment is not associated with the given Payment Detail."));
+                    return false;
+                }
+
+                List<PaymentImportCache> pageCache = paymentImportCacheRepository.findAllByImportProcessId(obj.getImportProcessId());
+                double amountTotal = pageCache.stream().filter(Objects::nonNull)
+                        .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getAnti())
+                                && !paymentImportCache.getAnti().isEmpty()
+                                && Long.parseLong(paymentImportCache.getPaymentId()) == paymentDetail.getPayment().getPaymentId())
+                        .map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount()))
+                        .reduce(0.0, Double::sum);
+
+                if(obj.getBalance() + amountTotal >= booking.getAmountBalance()){
+                    errorFieldList.add(new ErrorField("Booking Balance", "The selected transaction amount must be less or equal than the invoice balance"));
+                    control.setShouldStopProcess(true);
+                    return false;
+                }
+
+            }
+        }
+
         return true;
     }
 
