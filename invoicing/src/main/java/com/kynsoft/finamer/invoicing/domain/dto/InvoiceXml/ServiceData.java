@@ -1,6 +1,9 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
 import jakarta.xml.bind.annotation.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
@@ -10,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 @XmlRootElement(name = "ServiceData")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceData {
