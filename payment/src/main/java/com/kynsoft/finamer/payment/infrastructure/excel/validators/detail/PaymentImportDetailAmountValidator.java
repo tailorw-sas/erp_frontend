@@ -26,34 +26,16 @@ import java.util.concurrent.TimeUnit;
 
 public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<PaymentDetailRow> {
 
-    private final IPaymentService service;
-    private final IManagePaymentTransactionTypeService managePaymentTransactionTypeService;
-    private final IManageBookingService bookingService;
-    private final BookingHttpGenIdService bookingHttpGenIdService;
-    private final BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl;
+    private final Cache cache;
 
     protected PaymentImportDetailAmountValidator(ApplicationEventPublisher applicationEventPublisher,
-            IPaymentService service,
-            IManagePaymentTransactionTypeService managePaymentTransactionTypeService,
-            IManageBookingService bookingService,
-            BookingHttpGenIdService bookingHttpGenIdService,
-            BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl) {
+                                                 Cache cache) {
         super(applicationEventPublisher);
-        this.service = service;
-        this.managePaymentTransactionTypeService = managePaymentTransactionTypeService;
-        this.bookingService = bookingService;
-        this.bookingHttpGenIdService = bookingHttpGenIdService;
-        this.bookingImportAutomaticeHelperServiceImpl = bookingImportAutomaticeHelperServiceImpl;
+        this.cache = cache;
     }
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-        return true;
-    }
-
-    @Override
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache cache) {
-        Cache paymentCache = (Cache) cache;
         if (Objects.isNull(obj.getBalance())) {
             errorFieldList.add(new ErrorField("Balance", "Payment Amount can't be empty"));
             return false;
@@ -65,13 +47,13 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
             return false;
         }
 
-        PaymentDto paymentDto = paymentCache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
+        PaymentDto paymentDto = this.cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
         if(Objects.isNull(paymentDto)){
             errorFieldList.add(new ErrorField("Payment Id", "The Payment not found."));
             return false;
         }
 
-        ManagePaymentTransactionTypeDto transactionTypeDto = paymentCache.getManageTransactionTypeByCode(obj.getTransactionType().trim());
+        ManagePaymentTransactionTypeDto transactionTypeDto = this.cache.getManageTransactionTypeByCode(obj.getTransactionType().trim());
         if(Objects.isNull(transactionTypeDto)){
             errorFieldList.add(new ErrorField("Transaction type", "Transaction type not found."));
             return false;
@@ -84,23 +66,20 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
 
         if (transactionTypeDto.getCash() && (paymentDto.getPaymentBalance() < obj.getBalance())) {//Si es de tipo cash, el balance debe ser menor o igual que el payment balance.
             errorFieldList.add(new ErrorField("Balance", "The balance is greater than the amount balance of the payment."));
-            //errorFieldList.add(new ErrorField("Balance", "El valor del payment es menor que el balance."));
             return false;
         }
 
         if (Objects.isNull(obj.getBookId())){
-            List<ManageBookingDto> bookingByCouponList = paymentCache.getBookingsByCoupon(obj.getCoupon());
+            List<ManageBookingDto> bookingByCouponList = this.cache.getBookingsByCoupon(obj.getCoupon());
             if(Objects.isNull(bookingByCouponList)){
                 errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
-                return false;
             }
 
-            if (Objects.nonNull(obj.getCoupon()) && bookingByCouponList.size() > 1) {
+            /*if (Objects.nonNull(obj.getCoupon()) && Objects.nonNull(bookingByCouponList) && bookingByCouponList.size() > 1) {
                 errorFieldList.add(new ErrorField("coupon", "Payment was not applied because the coupon is duplicated."));
-                return false;
-            }
+            }*/
         }else{
-            ManageBookingDto bookingDto = paymentCache.getBooking(Long.valueOf(obj.getBookId()));
+            ManageBookingDto bookingDto = this.cache.getBooking(Long.valueOf(obj.getBookId()));
             if(Objects.isNull(bookingDto)){
                 errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
                 return false;
@@ -116,32 +95,4 @@ public class PaymentImportDetailAmountValidator extends ExcelRuleValidator<Payme
 
         return true;
     }
-
-    private ManageBookingDto getBookingDto(Long bookingId) {
-        try {
-            return this.bookingService.findByGenId(bookingId);
-        } catch (Exception e) {
-            try {
-                BookingHttp bookingHttp = this.bookingHttpGenIdService.sendGetBookingHttpRequest(bookingId);
-                this.bookingImportAutomaticeHelperServiceImpl.createInvoice(bookingHttp);
-                return this.bookingService.findByGenId(bookingId);
-            } catch (Exception ex) {
-                //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
-                int maxAttempts = 3;
-                while (maxAttempts > 0) {
-                    try {
-                        return this.bookingService.findByGenId(bookingId);
-                    } catch (Exception exc) {
-                    }
-                    maxAttempts--;
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException excp) {
-                    }
-                }
-                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND, new ErrorField("booking Id", DomainErrorMessage.BOOKING_NOT_FOUND.getReasonPhrase())));
-            }
-        }
-    }
-
 }

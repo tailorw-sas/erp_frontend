@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.expense;
 
-import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsoft.finamer.payment.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageClientDto;
@@ -58,10 +57,5 @@ public class PaymentValidatorFactory extends IValidatorFactory<PaymentExpenseRow
         boolean result = !this.hasErrors();
         this.clearErrors();
         return result;
-    }
-
-    @Override
-    public boolean validate(PaymentExpenseRow toValidate, ICache cache) {
-        return false;
     }
 }

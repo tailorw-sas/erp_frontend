@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.domain.services;
 
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.application.excel.validator.IImportControl;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +16,6 @@ public abstract class AbstractPaymentImportHelperService {
     }
 
     public abstract void readExcel(ReaderConfiguration readerConfiguration, Object request);
-
 
     public abstract void cachingPaymentImport(Row paymentRow);
 

@@ -2,43 +2,38 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
 import com.kynsof.share.core.application.excel.validator.ICache;
+import com.kynsof.share.core.application.excel.validator.IImportControl;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
+import com.kynsoft.finamer.payment.domain.excel.ImportControl;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 import java.util.Objects;
 
 public class PaymentDetailsNoApplyDepositValidator extends ExcelRuleValidator<PaymentDetailRow> {
 
-    private final IManagePaymentTransactionTypeService transactionTypeService;
+    private final Cache cache;
 
     protected PaymentDetailsNoApplyDepositValidator(ApplicationEventPublisher applicationEventPublisher,
-            IManagePaymentTransactionTypeService transactionTypeService) {
+                                                    Cache cache) {
         super(applicationEventPublisher);
-        this.transactionTypeService = transactionTypeService;
+        this.cache = cache;
     }
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-        return false;
-    }
-
-    @Override
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache cache) {
-        Cache paymentCache = (Cache)cache;
-
         if (Objects.isNull(obj.getTransactionType())) {
             errorFieldList.add(new ErrorField("Transaction type", "Transaction type can't be empty"));
             return false;
         }
         try {
-            //ManagePaymentTransactionTypeDto transactionTypeDto = transactionTypeService.findByCode(obj.getTransactionType().trim());
-            ManagePaymentTransactionTypeDto transactionTypeDto = paymentCache.getManageTransactionTypeByCode(obj.getTransactionType().trim());
+            ManagePaymentTransactionTypeDto transactionTypeDto = this.cache.getManageTransactionTypeByCode(obj.getTransactionType().trim());
 
             if (Objects.isNull(transactionTypeDto)) {
                 errorFieldList.add(new ErrorField("Transaction type", "Transaction type not exist"));

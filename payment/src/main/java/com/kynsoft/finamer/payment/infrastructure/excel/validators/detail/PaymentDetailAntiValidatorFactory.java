@@ -13,6 +13,8 @@ import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImport
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PaymentDetailAntiValidatorFactory extends IValidatorFactory<PaymentDetailRow> {
 
@@ -62,5 +64,10 @@ public class PaymentDetailAntiValidatorFactory extends IValidatorFactory<Payment
         boolean result = !this.hasErrors();
         this.clearErrors();
         return result;
+    }
+
+    @Override
+    public boolean validate(List<PaymentDetailRow> toValidateList) {
+        return false;
     }
 }

@@ -15,10 +15,6 @@ public abstract class ExcelRuleValidator<T> {
 
     public abstract boolean validate(T obj, List<ErrorField> errorFieldList);
 
-    public boolean validate(T obj, List<ErrorField> errorFieldList, ICache cache){
-        return validate(obj, errorFieldList);
-    }
-
     protected void sendErrorEvent( Object rowError){
         applicationEventPublisher.publishEvent(rowError);
     }

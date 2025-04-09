@@ -41,4 +41,7 @@ public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRe
     Optional<ManagePaymentTransactionType> findByApplyDepositAndDefaults();
 
     List<ManagePaymentTransactionType> findByCodeInOrPaymentInvoiceTrue(List<String> codes);
+
+    @Query("SELECT b FROM ManagePaymentTransactionType b WHERE b.cash = true")
+    Optional<ManagePaymentTransactionType> findByCashTue();
 }
