@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml.*;
@@ -18,8 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.util.Arrays.*;
 
 @Service
 public class InvoiceXmlService {
@@ -132,21 +129,6 @@ public class InvoiceXmlService {
     }
 
     private String buildXmlString(InvoiceXml invoiceXml) {
-        try{
-            if (log.isInfoEnabled()) {
-                log.info(Arrays.asList(invoiceXml).toString());
-            }
-        } catch (Exception e) {
-            log.warn(e.getMessage());
-        }
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(invoiceXml);
-            log.info(json);
-        } catch (Exception e) {
-            log.warn(e.getMessage());
-        }
         try {
             JAXBContext context = JAXBContext.newInstance(InvoiceXml.class);
             StringWriter writer = new StringWriter();
