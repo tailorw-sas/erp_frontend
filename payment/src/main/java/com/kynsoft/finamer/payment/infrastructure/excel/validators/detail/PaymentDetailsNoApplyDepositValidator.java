@@ -18,29 +18,22 @@ import java.util.Objects;
 
 public class PaymentDetailsNoApplyDepositValidator extends ExcelRuleValidator<PaymentDetailRow> {
 
-    private final IManagePaymentTransactionTypeService transactionTypeService;
+    private final Cache cache;
 
     protected PaymentDetailsNoApplyDepositValidator(ApplicationEventPublisher applicationEventPublisher,
-            IManagePaymentTransactionTypeService transactionTypeService) {
+                                                    Cache cache) {
         super(applicationEventPublisher);
-        this.transactionTypeService = transactionTypeService;
+        this.cache = cache;
     }
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-        return false;
-    }
-
-    @Override
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache cache) {
-        Cache paymentCache = (Cache)cache;
-
         if (Objects.isNull(obj.getTransactionType())) {
             errorFieldList.add(new ErrorField("Transaction type", "Transaction type can't be empty"));
             return false;
         }
         try {
-            ManagePaymentTransactionTypeDto transactionTypeDto = paymentCache.getManageTransactionTypeByCode(obj.getTransactionType().trim());
+            ManagePaymentTransactionTypeDto transactionTypeDto = this.cache.getManageTransactionTypeByCode(obj.getTransactionType().trim());
 
             if (Objects.isNull(transactionTypeDto)) {
                 errorFieldList.add(new ErrorField("Transaction type", "Transaction type not exist"));

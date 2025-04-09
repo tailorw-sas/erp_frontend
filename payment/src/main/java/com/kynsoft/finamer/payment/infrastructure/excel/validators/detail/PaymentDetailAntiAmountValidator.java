@@ -1,93 +1,82 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 
-import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
-import com.kynsof.share.core.application.excel.validator.ICache;
-import com.kynsof.share.core.application.excel.validator.IImportControl;
+import com.kynsof.share.core.application.excel.validator.ExcelListRuleValidator;
 import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsof.share.core.domain.response.RowErrorField;
+import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
-import com.kynsoft.finamer.payment.domain.excel.ImportControl;
-import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
+import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
-import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class PaymentDetailAntiAmountValidator extends ExcelRuleValidator<PaymentDetailRow> {
+public class PaymentDetailAntiAmountValidator extends ExcelListRuleValidator<PaymentDetailRow> {
 
-    private final PaymentImportCacheRepository paymentImportCacheRepository;
+    private final Cache cache;
 
     protected PaymentDetailAntiAmountValidator(ApplicationEventPublisher applicationEventPublisher,
-                                               PaymentImportCacheRepository paymentImportCacheRepository) {
+                                               Cache cache) {
         super(applicationEventPublisher);
-        this.paymentImportCacheRepository = paymentImportCacheRepository;
+        this.cache = cache;
     }
 
     @Override
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-        return true;
+    public void validate(List<PaymentDetailRow> objList, List<RowErrorField> errorFieldList) {
+        ManagePaymentTransactionTypeDto depositTransactionType = this.cache.getApplyDepositTransactionType();
+
+        Map<String, Map<Double, List<PaymentDetailRow>>> paymentByPaymentDetailMap = objList.stream()
+                .filter(paymentDetailRow -> Objects.nonNull(paymentDetailRow.getTransactionType())
+                        && !paymentDetailRow.getTransactionType().isEmpty()
+                        && paymentDetailRow.getTransactionType().equals(depositTransactionType.getCode()))
+                .collect(Collectors.groupingBy(PaymentDetailRow::getPaymentId, Collectors.groupingBy(PaymentDetailRow::getAnti, Collectors.toList())));
+
+        for(Map.Entry<String, Map<Double, List<PaymentDetailRow>>> paymentMap : paymentByPaymentDetailMap.entrySet()){
+            PaymentDto payment = this.cache.getPaymentByPaymentId(Long.parseLong(paymentMap.getKey()));
+            validatePaymentGroup(payment, paymentMap.getValue(), errorFieldList);
+        }
     }
 
-    @Override
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache icache, IImportControl importControl) {
-        Cache cache = (Cache)icache;
-        ImportControl control = (ImportControl)importControl;
-
-        ManageBookingDto booking = getBooking(obj, cache);
-        if(Objects.isNull(booking)){
-            errorFieldList.add(new ErrorField("Booking", "The booking not found or is duplicated"));
-            return false;
-        }
-        
-        if(Objects.nonNull(obj.getAnti())){
-            PaymentDetailDto paymentDetail = cache.getPaymentDetailByPaymentDetailId(obj.getAnti().longValue());
-            if (Objects.nonNull(paymentDetail)) {
-                if (Objects.isNull(paymentDetail.getPayment()) || paymentDetail.getPayment().getPaymentId() != Long.parseLong(obj.getPaymentId())) {
-                    errorFieldList.add(new ErrorField("Payment", "The specified Payment is not associated with the given Payment Detail."));
-                    return false;
-                }
-
-                List<PaymentImportCache> pageCache = paymentImportCacheRepository.findAllByImportProcessId(obj.getImportProcessId());
-                double amountTotal = pageCache.stream().filter(Objects::nonNull)
-                        .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getAnti())
-                                && !paymentImportCache.getAnti().isEmpty()
-                                && Long.parseLong(paymentImportCache.getPaymentId()) == paymentDetail.getPayment().getPaymentId())
-                        .map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount()))
-                        .reduce(0.0, Double::sum);
-
-                if(obj.getBalance() + amountTotal >= booking.getAmountBalance()){
-                    errorFieldList.add(new ErrorField("Booking Balance", "The selected transaction amount must be less or equal than the invoice balance"));
-                    control.setShouldStopProcess(true);
-                    return false;
-                }
-
+    private void validatePaymentGroup(PaymentDto payment, Map<Double, List<PaymentDetailRow>> detailRowMap, List<RowErrorField> rowErrorFieldList){
+        if(Objects.nonNull(payment)){
+            for(Map.Entry<Double, List<PaymentDetailRow>> depositPaymentDetailMap : detailRowMap.entrySet()){
+                PaymentDetailDto depositPaymentDetail = this.cache.getPaymentDetailByPaymentDetailId(depositPaymentDetailMap.getKey().longValue());
+                validateDepositBalance(payment, depositPaymentDetail, depositPaymentDetailMap.getValue(), rowErrorFieldList);
+            }
+        }else{
+            ErrorField errorField = new ErrorField("PaymentId", "Payment ID not found");
+            for(Map.Entry<Double, List<PaymentDetailRow>> depositPaymentDetailMap : detailRowMap.entrySet()){
+                List<Integer> rowNumberList = depositPaymentDetailMap.getValue().stream().map(PaymentDetailRow::getRowNumber).toList();
+                addErrorsToRowList(rowErrorFieldList, rowNumberList, errorField);
             }
         }
-
-        return true;
     }
 
-    private ManageBookingDto getBooking(PaymentDetailRow obj, Cache cache){
-        if(Objects.nonNull(obj.getBookId())){
-            return cache.getBooking(Long.parseLong(obj.getBookId()));
+    private void validateDepositBalance(PaymentDto payment, PaymentDetailDto depositPaymentDetail, List<PaymentDetailRow> paymentDetails, List<RowErrorField> rowErrorFieldList){
+        List<Integer> rowNumberList = paymentDetails.stream().map(PaymentDetailRow::getRowNumber).toList();
+
+        if(Objects.isNull(depositPaymentDetail)){
+            ErrorField errorField = new ErrorField("AntiId", "Anti ID not found");
+            addErrorsToRowList(rowErrorFieldList, rowNumberList, errorField);
+            return;
         }
 
-        if(Objects.nonNull(obj.getCoupon())){
-            List<ManageBookingDto> bookingsByCoupon = cache.getBookingsByCoupon(obj.getCoupon());
-            if(bookingsByCoupon.isEmpty()){
-                return null;
-            }
-
-            if(bookingsByCoupon.size() > 1){
-                return null;
-            }
-
-            return bookingsByCoupon.get(0);
+        if(depositPaymentDetail.getPayment().getPaymentId() != payment.getPaymentId()){
+            ErrorField errorField = new ErrorField("AntiId", "Anti ID does not belong to the payment");
+            addErrorsToRowList(rowErrorFieldList, rowNumberList, errorField);
+            return;
         }
 
-        return null;
+        double amount = paymentDetails.stream()
+                .mapToDouble(PaymentDetailRow::getBalance)
+                .sum();
+
+        if(amount > depositPaymentDetail.getApplyDepositValue()){
+            ErrorField errorField = new ErrorField("Payment Amount", "Deposit Amount must be greather than zero and less or equal than the selected transaction amount.");
+            addErrorsToRowList(rowErrorFieldList, rowNumberList, errorField);
+        }
     }
 }

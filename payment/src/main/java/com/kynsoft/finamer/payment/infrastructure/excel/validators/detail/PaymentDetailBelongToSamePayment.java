@@ -17,37 +17,25 @@ import java.util.UUID;
 @Setter
 public class PaymentDetailBelongToSamePayment extends ExcelRuleValidator<PaymentDetailRow> {
 
-    private UUID paymentId;
-    private final IPaymentService paymentService;
+    private final Cache cache;
 
-    protected PaymentDetailBelongToSamePayment(ApplicationEventPublisher applicationEventPublisher, IPaymentService paymentService) {
+    protected PaymentDetailBelongToSamePayment(ApplicationEventPublisher applicationEventPublisher,
+                                               Cache cache) {
         super(applicationEventPublisher);
-        this.paymentService = paymentService;
+        this.cache = cache;
     }
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
-        return true;
-    }
-
-    public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList, ICache icache) {
-        Cache cache = (Cache) icache;
-
-        if (Objects.nonNull(paymentId)) {
-            PaymentDto paymentDto = cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
-            if(Objects.nonNull(paymentDto)){
-                //PaymentDto paymentDto = paymentService.findById(paymentId);
-                //PaymentProjection paymentDto = this.paymentService.findByPaymentIdProjection(Long.parseLong(obj.getPaymentId()));
-                //PaymentProjectionSimple paymentDto = paymentService.findPaymentIdCacheable(Long.parseLong(obj.getPaymentId()));
-
-                if (paymentDto.getPaymentId() != Long.parseLong(obj.getPaymentId())) {
-                    errorFieldList.add(new ErrorField("Payment Id", "The paymentId of the file doesn't match with the select payment"));
-                    return false;
-                }
-            }else{
-                errorFieldList.add(new ErrorField("Payment Id", "The paymentId not found."));
+        PaymentDto paymentDto = this.cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
+        if(Objects.nonNull(paymentDto)){
+            if (paymentDto.getPaymentId() != Long.parseLong(obj.getPaymentId())) {
+                errorFieldList.add(new ErrorField("Payment Id", "The paymentId of the file doesn't match with the select payment"));
                 return false;
             }
+        }else{
+            errorFieldList.add(new ErrorField("Payment Id", "The paymentId not found."));
+            return false;
         }
         return true;
     }
