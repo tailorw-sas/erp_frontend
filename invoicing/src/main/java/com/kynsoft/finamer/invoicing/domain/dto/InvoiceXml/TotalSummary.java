@@ -1,15 +1,13 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
 
 import jakarta.xml.bind.annotation.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @XmlRootElement(name = "TotalSummary")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class TotalSummary {
