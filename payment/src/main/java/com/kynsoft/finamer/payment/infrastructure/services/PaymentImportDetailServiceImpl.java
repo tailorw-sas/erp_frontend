@@ -67,7 +67,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(EPaymentImportProcessStatus.RUNNING.name(),
                             request.getImportProcessId())));
-            paymentImportHelperService.readExcel(readerConfiguration, request, importControl);
+            paymentImportHelperService.readExcel(readerConfiguration, request);
         } catch (ExcelException e) {
             e.printStackTrace();
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
@@ -81,9 +81,9 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
             if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())) {
                 ((PaymentImportAntiIncomeHelperServiceImpl) paymentImportHelperService).createAttachment(request);
             }
-            if(!importControl.getShouldStopProcess()){
+            //if(!importControl.getShouldStopProcess()){
                 paymentImportHelperService.readPaymentCacheAndSave(request);
-            }
+            //}
         } catch (BusinessRuleValidationException e) {
             e.printStackTrace();
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());

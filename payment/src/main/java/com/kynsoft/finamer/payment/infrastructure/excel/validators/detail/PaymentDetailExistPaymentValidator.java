@@ -1,8 +1,8 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 
 import com.kynsof.share.core.application.excel.validator.ExcelRuleValidator;
-import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,7 +12,14 @@ import java.util.Objects;
 
 public class PaymentDetailExistPaymentValidator extends ExcelRuleValidator<PaymentDetailRow> {
 
-    private final IPaymentService paymentService;
+    private Cache cache;
+    private IPaymentService paymentService;
+
+    protected PaymentDetailExistPaymentValidator(ApplicationEventPublisher applicationEventPublisher, Cache cache) {
+        super(applicationEventPublisher);
+        this.cache = cache;
+    }
+
     protected PaymentDetailExistPaymentValidator(ApplicationEventPublisher applicationEventPublisher, IPaymentService paymentService) {
         super(applicationEventPublisher);
         this.paymentService = paymentService;
@@ -28,7 +35,7 @@ public class PaymentDetailExistPaymentValidator extends ExcelRuleValidator<Payme
             errorFieldList.add(new ErrorField("Payment id","Payment must be greater than 0"));
             return false;
         }
-        if (!paymentService.existPayment(Long.parseLong(obj.getPaymentId()))){
+        if(Objects.isNull(cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId())))){
             errorFieldList.add(new ErrorField("Payment id","Payment not exist"));
             return false;
         }

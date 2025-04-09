@@ -26,6 +26,8 @@ public class Cache implements ICache {
     private Map<String, List<ManageBookingDto>> bookingsByCouponMap;
     private Map<UUID, PaymentCloseOperationDto> closeOperationsByHotelMap;
     private Map<Long, PaymentDetailDto> paymentDetailsByPaymentDetailIdMap;
+    private Map<UUID, List<UUID>> agencysByEmployeeMap;
+    private Map<UUID, List<UUID>> hotelsByEmpoyeeMap;
 
     //Constructor de Cache para PaymentImportDetails
     public Cache(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList,
@@ -34,7 +36,8 @@ public class Cache implements ICache {
                  List<PaymentDetailDto> paymentDetailList,
                  List<ManageBookingDto> bookingList,
                  List<PaymentCloseOperationDto> closeOperationList,
-                 List<PaymentDetailDto> paymentDetailListById){
+                 List<PaymentDetailDto> paymentDetailListById,
+                 ManageEmployeeDto employeeDto){
         this.setManagePaymentTransactionTypeMap(managePaymentTransactionTypeList);
         this.setBookingsMap(bookings);
         this.setPaymentsMap(paymentList);
@@ -42,6 +45,8 @@ public class Cache implements ICache {
         this.setBookingsByCouponMap(bookingList);
         this.setCloseOperationsByHotelMap(closeOperationList);
         this.setPaymentDetailsByPaymentDetailIdMap(paymentDetailListById);
+        this.setAgencysByEmployeeMap(employeeDto);
+        this.setHotelsByEmployeeMap(employeeDto);
     }
 
     public Cache(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList,
@@ -92,6 +97,22 @@ public class Cache implements ICache {
     private void setPaymentDetailsByPaymentDetailIdMap(List<PaymentDetailDto> paymentDetailList){
         this.paymentDetailsByPaymentDetailIdMap = paymentDetailList.stream()
                 .collect(Collectors.toMap(PaymentDetailDto::getPaymentDetailId, paymentDetail -> paymentDetail));
+    }
+
+    private void setAgencysByEmployeeMap(ManageEmployeeDto employeeDto) {
+        this.agencysByEmployeeMap = employeeDto.getManageAgencyList().stream()
+                .collect(Collectors.groupingBy(
+                        ManageAgencyDto::getId,
+                        Collectors.mapping(ManageAgencyDto::getId, Collectors.toList())
+                ));
+    }
+
+    private void setHotelsByEmployeeMap(ManageEmployeeDto employeeDto) {
+        this.hotelsByEmpoyeeMap = employeeDto.getManageHotelList().stream()
+                .collect(Collectors.groupingBy(
+                        ManageHotelDto::getId,
+                        Collectors.mapping(ManageHotelDto::getId, Collectors.toList())
+                ));
     }
     /// Metodos para consultas sobre los mapas
 
@@ -150,6 +171,30 @@ public class Cache implements ICache {
                 .orElse(null);
     }
 
+    public ManagePaymentTransactionTypeDto getApplyDepositTransactionType(){
+        if(Objects.isNull(this.managePaymentTransactionTypeMap) || this.managePaymentTransactionTypeMap.isEmpty()){
+            //printLog("The managePaymentTransactionTypeMap map is null or Empty");
+            return null;
+        }
+
+        return this.managePaymentTransactionTypeMap.values().stream()
+                .filter(ManagePaymentTransactionTypeDto::getApplyDeposit)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public ManagePaymentTransactionTypeDto getCashTransactionType(){
+        if(Objects.isNull(this.managePaymentTransactionTypeMap) || this.managePaymentTransactionTypeMap.isEmpty()){
+            //printLog("The managePaymentTransactionTypeMap map is null or Empty");
+            return null;
+        }
+
+        return this.managePaymentTransactionTypeMap.values().stream()
+                .filter(ManagePaymentTransactionTypeDto::getCash)
+                .findFirst()
+                .orElse(null);
+    }
+
     public OffsetDateTime getTransactionDateByHotelId(UUID hotel){
         if(Objects.isNull(this.closeOperationsByHotelMap) || this.closeOperationsByHotelMap.isEmpty()){
             //printLog("The managePaymentTransactionTypeMap map is null or Empty");
@@ -176,4 +221,11 @@ public class Cache implements ICache {
         return paymentDetailsByPaymentDetailIdMap.get(paymentDetailId);
     }
 
+    public List<UUID> getAgencysByEmpoyee(UUID employeeId){
+        return this.agencysByEmployeeMap.get(employeeId);
+    }
+
+    public List<UUID> getHotelsByEmpoyee(UUID employeeId){
+        return this.hotelsByEmpoyeeMap.get(employeeId);
+    }
 }

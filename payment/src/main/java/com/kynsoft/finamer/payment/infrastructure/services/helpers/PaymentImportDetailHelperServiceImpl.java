@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.application.excel.validator.IImportControl;
+import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -25,6 +26,7 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
+import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentTransactionType;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
@@ -102,45 +104,34 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     @Override
-    public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest){
-
-    }
-
-    @Override
-    public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest, IImportControl importControl) {
+    public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
         printLog("Start readExcel process");
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-
         ManageEmployeeDto employee = this.getEmployee(UUID.fromString(request.getEmployeeId()));
-        List<UUID> agencys = this.getEmployeeAgencyList(employee);
-        List<UUID> hotels = this.getEmployeeHotelList(employee);
-
-        paymentDetailValidatorFactory.createValidators();
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
         ExcelBean<PaymentDetailRow> excelBean = new ExcelBean<>(excelBeanReader);
         List<PaymentDetailRow> excelRows = new ArrayList<>();
+
         printLog("Antes de obtener cache");
-        Cache cache = this.createCache(excelBean, excelRows);
+        Cache cache = this.createCache(excelBean, excelRows, request, employee);
         printLog("Despues de obtener cache");
 
-        for (PaymentDetailRow row : excelRows) {
-            row.setImportProcessId(request.getImportProcessId());
-            row.setImportType(request.getImportPaymentType().name());
-            row.setAgencys(agencys);
-            row.setHotels(hotels);
-            if (Objects.nonNull(request.getPaymentId())
-                    && !request.getPaymentId().isEmpty()) {
-                row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
-            }
-            if (paymentDetailValidatorFactory.validate(row, cache, importControl)) {
+        paymentDetailValidatorFactory.createValidators(cache);
+        boolean validationResult = paymentDetailValidatorFactory.validate(excelRows);
+        if(validationResult){
+            excelRows.forEach(row -> {
                 cachingPaymentImport(row);
                 this.totalProcessRow++;
-            } else if (importControl.getShouldStopProcess()) {
-                break;
-            }
-        }
+            });
+        }/*else{
+            importControl.setShouldStopProcess(true);
+        }*/
+
         printLog("End readExcel process");
+        /*if(importControl.getShouldStopProcess()){
+            throw new ExcelException("Excel has errors");
+        }*/
     }
 
     private void clearCache() {
@@ -174,7 +165,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             return;
         }
 
-        Cache cache = this.createCache(paymentCacheList);
+        Cache cache = this.createCache(paymentCacheList, employee);
         //List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();//TODO Validar una lista segura para implementar en hilos
         List<PaymentDto> paymentsToUpdateList = new ArrayList<>();
         List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
@@ -652,14 +643,21 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         return paymentCacheList;
     }
 
-    private Cache createCache(ExcelBean<PaymentDetailRow> excelBean, List<PaymentDetailRow> excelRows){
+    private Cache createCache(ExcelBean<PaymentDetailRow> excelBean, List<PaymentDetailRow> excelRows, PaymentImportDetailRequest request, ManageEmployeeDto employee){
         Set<String> transactionCodeSet = new HashSet<>();
         Set<Long> bookingsIdSet = new HashSet<>();
         Set<Long> paymentIdSet = new HashSet<>();
         Set<String> couponNumberSet = new HashSet<>();
         Set<Long> paymentDetailsAntiSet = new HashSet<>();
 
+        List<UUID> agencys = this.getEmployeeAgencyList(employee);
+        List<UUID> hotels = this.getEmployeeHotelList(employee);
+
         for(PaymentDetailRow excelRow : excelBean){
+            excelRow.setImportProcessId(request.getImportProcessId());
+            excelRow.setImportType(request.getImportPaymentType().name());
+            excelRow.setAgencys(agencys);
+            excelRow.setHotels(hotels);
             excelRows.add(excelRow);
 
             if(Objects.nonNull(excelRow.getTransactionType())){
@@ -703,10 +701,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 paymentDetailList,
                 bookingsByCouponList,
                 closeOperationList,
-                paymentDetailListAnti);
+                paymentDetailListAnti,
+                employee);
     }
 
-    private Cache createCache(List<PaymentImportCache> paymentImportCacheList){
+    private Cache createCache(List<PaymentImportCache> paymentImportCacheList, ManageEmployeeDto employeeDto){
         Set<String> transactionIdSet = new HashSet<>();
         Set<Long> bookingsIdSet = new HashSet<>();
         Set<Long> paymentIdSet = new HashSet<>();
@@ -755,14 +754,28 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 paymentDetailList,
                 bookingsByCouponList,
                 closeOperationList,
-                paymentDetailListAnti);
+                paymentDetailListAnti,
+                employeeDto);
     }
 
     private List<ManagePaymentTransactionTypeDto> getTransactionType(List<String> ids){
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = new ArrayList<>(transactionTypeService.findByCodesAndPaymentInvoice(ids));
         ManagePaymentTransactionTypeDto depositTransactionType = transactionTypeService.findByDeposit();
-        managePaymentTransactionTypeList.add(depositTransactionType);
+        addManagePaymentTransactionTypeToList(depositTransactionType, managePaymentTransactionTypeList);
+
+        ManagePaymentTransactionTypeDto cashTransactionType = transactionTypeService.findByCash();
+        addManagePaymentTransactionTypeToList(cashTransactionType, managePaymentTransactionTypeList);
+
+        ManagePaymentTransactionTypeDto antiTransactionType = transactionTypeService.findByApplyDeposit();
+        addManagePaymentTransactionTypeToList(antiTransactionType, managePaymentTransactionTypeList);
+
         return managePaymentTransactionTypeList;
+    }
+
+    private void addManagePaymentTransactionTypeToList(ManagePaymentTransactionTypeDto transactionType, List<ManagePaymentTransactionTypeDto> list){
+        if(list.stream().noneMatch(manageTransactionType -> manageTransactionType.getCode().equals(transactionType.getCode()))){
+            list.add(transactionType);
+        }
     }
 
     private List<ManageBookingDto> getBookings(List<Long> ids){

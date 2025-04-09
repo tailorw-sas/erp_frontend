@@ -17,10 +17,6 @@ public abstract class AbstractPaymentImportHelperService {
 
     public abstract void readExcel(ReaderConfiguration readerConfiguration, Object request);
 
-    public void readExcel(ReaderConfiguration readerConfiguration, Object request, IImportControl importControl){
-        readExcel(readerConfiguration, request);
-    }
-
     public abstract void cachingPaymentImport(Row paymentRow);
 
     public abstract void clearPaymentImportCache(String importProcessId);
