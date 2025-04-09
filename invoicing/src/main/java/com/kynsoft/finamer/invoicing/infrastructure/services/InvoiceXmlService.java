@@ -36,7 +36,7 @@ public class InvoiceXmlService {
         generalData.setRef(dto.getHotel().getPrefixToInvoice() + dto.getInvoiceNumberPrefix());
         generalData.setDate(dto.getInvoiceDate().toLocalDate());
         invoiceXml.setGeneralData(generalData);
-
+        log.warn("Se genero la data base");
         // Supplier
         Supplier supplier = new Supplier();
         supplier.setAddress(manageTradingCompaniesDto.getAddress() != null ? manageTradingCompaniesDto.getAddress() : StringUtils.EMPTY);
@@ -48,6 +48,7 @@ public class InvoiceXmlService {
         supplier.setZipCode(manageTradingCompaniesDto.getZipCode() != null ? manageTradingCompaniesDto.getZipCode() : StringUtils.EMPTY);
         supplier.setCode(dto.getHotel().getBabelCode() != null ? dto.getHotel().getBabelCode() : StringUtils.EMPTY);
         invoiceXml.setSupplier(supplier);
+        log.warn("Se genero la data supplier");
 
         // Client
         Client client = new Client();
@@ -60,6 +61,7 @@ public class InvoiceXmlService {
         client.setCode(dto.getAgency().getCode() != null ? dto.getAgency().getCode() : StringUtils.EMPTY);
         client.setZipCode(dto.getAgency().getZipCode() != null ? dto.getAgency().getZipCode() : StringUtils.EMPTY);
         invoiceXml.setClient(client);
+        log.warn("Se genero la data de client");
 
         // Products
         List<Product> products = Optional.ofNullable(dto.getBookings())
@@ -69,6 +71,7 @@ public class InvoiceXmlService {
                 .collect(Collectors.toList());
 
         invoiceXml.setProductList(products);
+        log.warn("Se genero la data de productos");
 
         // Total Summary
         TotalSummary totalSummary = new TotalSummary();
@@ -76,6 +79,7 @@ public class InvoiceXmlService {
         totalSummary.setSubTotal(BankerRounding.round(totalSummary.getGrossAmount() - totalSummary.getDiscounts()));
         totalSummary.setTotal(BankerRounding.round(totalSummary.getSubTotal() + totalSummary.getTax()));
         invoiceXml.setTotalSummary(totalSummary);
+        log.warn("Se genero la data de summary");
 
         return invoiceXml;
     }
