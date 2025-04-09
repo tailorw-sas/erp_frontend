@@ -1,10 +1,7 @@
 package com.kynsoft.finamer.invoicing.domain.dto.InvoiceXml;
 
 import jakarta.xml.bind.annotation.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -14,6 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @XmlRootElement(name = "Product")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Product {
