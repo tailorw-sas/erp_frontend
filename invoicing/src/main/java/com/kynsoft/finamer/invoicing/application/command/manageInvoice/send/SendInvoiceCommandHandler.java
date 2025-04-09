@@ -3,11 +3,14 @@ package com.kynsoft.finamer.invoicing.application.command.manageInvoice.send;
 import com.kynsof.share.core.application.ftp.FtpService;
 import com.kynsof.share.core.application.mailjet.*;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.request.FileRequest;
 import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.FileDto;
+import com.kynsof.share.core.domain.response.ResponseStatus;
+import com.kynsof.share.core.domain.service.IAmazonClient;
 import com.kynsof.share.core.domain.service.IFtpService;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.infrastructure.services.FileService;
@@ -16,34 +19,44 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgencyContact;
 import com.kynsoft.finamer.invoicing.infrastructure.services.InvoiceXmlService;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.sendByFtp.ProducerSendByFtp;
 import com.kynsoft.finamer.invoicing.infrastructure.services.report.factory.InvoiceReportProviderFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Component
 @Transactional
 public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCommand> {
 
+    private final IAmazonClient amazonClient;
     private final IManageInvoiceService service;
+    private final IManageBookingService bookingService;
     private final MailService mailService;
     private final IManageEmployeeService manageEmployeeService;
     private final InvoiceXmlService invoiceXmlService;
@@ -54,20 +67,20 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
     private final IManageAgencyContactService manageAgencyContactService;
     private final IInvoiceCloseOperationService closeOperationService;
     private final FileService fileService;
+    private final ProducerSendByFtp producerSendByFtp;
 
     private static final Logger log = LoggerFactory.getLogger(SendInvoiceCommandHandler.class);
     private final ExecutorService executor = Executors.newFixedThreadPool(5);
 
-    public SendInvoiceCommandHandler(IManageInvoiceService service, MailService mailService,
-                                     IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
-                                     IManageInvoiceStatusService manageInvoiceStatusService,
-                                     FtpService ftpService, InvoiceReportProviderFactory invoiceReportProviderFactory,
-                                     IInvoiceStatusHistoryService invoiceStatusHistoryService,
-                                     IManageAgencyContactService manageAgencyContactService,
-                                     IInvoiceCloseOperationService closeOperationService,
-                                     FileService fileService) {
-
+    public SendInvoiceCommandHandler(IAmazonClient amazonClient, IManageInvoiceService service, IManageBookingService bookingService,
+                                     MailService mailService, IManageEmployeeService manageEmployeeService, InvoiceXmlService invoiceXmlService,
+                                     IManageInvoiceStatusService manageInvoiceStatusService, FtpService ftpService,
+                                     InvoiceReportProviderFactory invoiceReportProviderFactory,
+                                     IInvoiceStatusHistoryService invoiceStatusHistoryService, IManageAgencyContactService manageAgencyContactService,
+                                     IInvoiceCloseOperationService closeOperationService, FileService fileService, ProducerSendByFtp producerSendByFtp) {
+        this.amazonClient = amazonClient;
         this.service = service;
+        this.bookingService = bookingService;
         this.mailService = mailService;
         this.manageEmployeeService = manageEmployeeService;
         this.invoiceXmlService = invoiceXmlService;
@@ -78,15 +91,22 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         this.manageAgencyContactService = manageAgencyContactService;
         this.closeOperationService = closeOperationService;
         this.fileService = fileService;
+        this.producerSendByFtp = producerSendByFtp;
     }
 
     @Override
     @Transactional
     public void handle(SendInvoiceCommand command) {
         ManageEmployeeDto manageEmployeeDto = manageEmployeeService.findById(UUID.fromString(command.getEmployee()));
-        List<ManageInvoiceDto> invoices = this.service.findByIds(command.getInvoice());
-        LocalDate today = LocalDate.now();
+        List<ManageInvoiceDto> invoices = this.service.findInvoicesWithoutBookings(command.getInvoice());
+        List<ManageBookingDto> tmpBookings = this.bookingService.findBookingsWithRoomRatesByInvoiceIds(command.getInvoice());
+        Map<UUID, List<ManageBookingDto>> bookingsMap = tmpBookings.stream()
+                .collect(Collectors.groupingBy(booking -> booking.getInvoice().getId()));
+        for (ManageInvoiceDto invoice : invoices) {
+            invoice.setBookings(bookingsMap.getOrDefault(invoice.getId(), Collections.emptyList()));
+        }
 
+        LocalDate today = LocalDate.now();
         invoices = invoices.stream()
                 .filter(invoice -> {
                     ManageAgencyDto agency = invoice.getAgency();
@@ -97,14 +117,22 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                                     .anyMatch(booking -> booking.getCheckOut() != null && booking.getCheckOut().toLocalDate().isAfter(today));
 
                             if (hasInvalidCheckout) {
-                                log.warn("⚠️ Invoice {} is skipped due to future checkout date.", invoice.getInvoiceNumber());
+                                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                                String errorMessage = "Checkout validation failed at " + timestamp;
+
+                                invoice.setSendStatusError(invoice.getSendStatusError() == null
+                                        ? errorMessage
+                                        : errorMessage + " | " +  invoice.getSendStatusError());
+
+                                service.update(invoice);
+
+                                return false;
                             }
-                            return !hasInvalidCheckout;
                         }
                     }
                     return true;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         if (invoices.isEmpty()) {
             log.warn("⚠️ No invoices found after checkout validation.");
@@ -112,43 +140,48 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
                     new ErrorField("id", DomainErrorMessage.SERVICE_NOT_FOUND.getReasonPhrase())));
         }
 
+        String fullName = manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName();
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        ManageAgencyDto agency = invoices.get(0).getAgency();
+        // Filtrar solo las facturas sin B2B Partner antes de actualizar su estado
+        List<ManageInvoiceDto> invoicesWithoutB2BPartner = invoices.stream()
+                .filter(invoice -> invoice.getAgency().getSentB2BPartner() == null)
+                .collect(Collectors.toList());
 
-        if (agency.getSentB2BPartner() == null) {
-            log.info("🔹 No B2B Partner assigned. Updating status without external sending.");
-            updateStatusAgency(invoices, manageInvoiceStatus, manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName());
-            return;
+        if (!invoicesWithoutB2BPartner.isEmpty()) {
+            updateStatusAgency(invoicesWithoutB2BPartner, manageInvoiceStatus, fullName);
         }
 
-        String partnerType = agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode();
-        List<CompletableFuture<Void>> asyncTasks = new ArrayList<>();
+        Map<ManagerB2BPartnerDto, List<ManageInvoiceDto>> invoicesByB2BPartner = invoices.stream()
+                .filter(invoice -> invoice.getAgency().getSentB2BPartner() != null)
+                .collect(Collectors.groupingBy(invoice -> invoice.getAgency().getSentB2BPartner()));
 
-        switch (partnerType) {
-            case "EML":
-                asyncTasks.add(sendEmailAsync(command, agency, invoices, manageEmployeeDto, manageInvoiceStatus,
-                        manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
-                break;
-            case "BVL":
-                asyncTasks.add(bavelAsync(agency, invoices, manageInvoiceStatus,
-                        manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
-                break;
-            case "FTP":
-                asyncTasks.add(sendFtpAsync(command, invoices, manageInvoiceStatus,
-                        manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
-                break;
-            default:
-                log.error("❌ Unsupported B2B partner type: {}", partnerType);
-                throw new RuntimeException("Unsupported partner type: " + partnerType);
-        }
+        invoicesByB2BPartner.forEach((b2bPartner, invoiceList) -> {
+            ManageAgencyDto agency = invoiceList.get(0).getAgency();
+            String partnerType = agency.getSentB2BPartner().getB2BPartnerTypeDto().getCode();
+            List<CompletableFuture<Void>> asyncTasks = new ArrayList<>();
 
-        // Ensure all async tasks complete before proceeding
-        CompletableFuture.allOf(asyncTasks.toArray(new CompletableFuture[0]))
-                .exceptionally(ex -> {
-                    log.error("❌ Async processing failed: {}", ex.getMessage(), ex);
-                    return null;
-                })
-                .join();
+            switch (partnerType) {
+                case "EML":
+                    asyncTasks.add(sendEmailAsync(command, agency, invoiceList, manageEmployeeDto, manageInvoiceStatus, fullName));
+                    break;
+                case "BVL":
+                    asyncTasks.add(bavelAsync(b2bPartner, invoiceList));
+                    break;
+                case "FTP":
+                    asyncTasks.add(sendFtpAsync(command, invoiceList, manageInvoiceStatus, fullName));
+                    break;
+                default:
+                    log.error("❌ Unsupported B2B partner type: {}", partnerType);
+                    throw new RuntimeException("Unsupported partner type: " + partnerType);
+            }
+
+            CompletableFuture.allOf(asyncTasks.toArray(new CompletableFuture[0]))
+                    .exceptionally(ex -> {
+                        log.error("❌ Async processing failed: {}", ex.getMessage(), ex);
+                        return null;
+                    })
+                    .join();
+        });
 
         command.setResult(true);
     }
@@ -185,77 +218,56 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
         }
     }
 
-    private CompletableFuture<Void> bavelAsync(ManageAgencyDto agency, List<ManageInvoiceDto> invoices,
-                                               ManageInvoiceStatusDto manageInvoiceStatus, String employee) {
-        return CompletableFuture.runAsync(() -> bavel(agency, invoices, manageInvoiceStatus, employee), executor);
+    private CompletableFuture<Void> bavelAsync(ManagerB2BPartnerDto b2BPartner, List<ManageInvoiceDto> invoices) {
+        return CompletableFuture.runAsync(() -> this.bavel(b2BPartner, invoices), this.executor);
     }
 
-    private void bavel(ManageAgencyDto agency, List<ManageInvoiceDto> invoices, ManageInvoiceStatusDto manageInvoiceStatus,
-                       String employee) {
-        List<CompletableFuture<String>> uploadFutures = new ArrayList<>();
+    private void bavel(ManagerB2BPartnerDto b2BPartner, List<ManageInvoiceDto> invoices) {
+        List<FileRequest> fileRequestList = new ArrayList<>();
+        List<ManageInvoiceDto> failList = new ArrayList<>();
 
-        for (ManageInvoiceDto invoice : invoices) {
+        for(ManageInvoiceDto invoiceDto : invoices) {
             try {
-                var xmlContent = invoiceXmlService.generateInvoiceXml(invoice);
-                String bavelCode = Optional.ofNullable(invoice.getHotel())
-                        .map(ManageHotelDto::getBabelCode)
-                        .orElse(StringUtils.EMPTY);
-
-                String _company = Optional.ofNullable(invoice.getAgency())
-                        .map(ManageAgencyDto::getName)
-                        .orElse(StringUtils.EMPTY)
-                        .replace("/", " ");
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-                DateTimeFormatter formatterWithSpaces = DateTimeFormatter.ofPattern("dd MM yyyy");
-
-                String nameFile = "Factura " + bavelCode + " " + _company + " " +
-                        invoice.getInvoiceNo() + " " +
-                        invoice.getInvoiceDate().toLocalDate().format(formatter) + " " +
-                        LocalDate.now().format(formatterWithSpaces) + ".xml";
+                String xmlContent = this.invoiceXmlService.generateInvoiceXml(invoiceDto);
+                String fileName = this.generateFileNameToBavel(invoiceDto);
                 byte[] fileBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
 
-                CompletableFuture<String> uploadFuture = ftpService.sendFile(fileBytes, nameFile,
-                                agency.getSentB2BPartner().getIp(), agency.getSentB2BPartner().getUserName(),
-                                agency.getSentB2BPartner().getPassword(), 21, agency.getSentB2BPartner().getUrl())
-                        .handle((response, ex) -> {
-                            if (ex == null) {
-                                invoice.setSendStatusError(null); // Clear previous errors
-                                service.update(invoice);
-                                return response;
-                            } else {
-                                log.error("❌ Upload failed for invoice '{}': {}", nameFile, ex.getMessage(), ex);
-                                invoice.setSendStatusError("Bavel FTP Upload Failed: " + ex.getMessage());
-                                service.update(invoice);
-                                return "FAILED";
-                            }
-                        });
-
-                uploadFutures.add(uploadFuture);
+                fileRequestList.add(new FileRequest(invoiceDto.getId(), fileName, fileBytes, MediaType.APPLICATION_XML_VALUE));
             } catch (Exception e) {
-                log.error("❌ Failed to generate XML for invoice '{}': {}", invoice.getInvoiceNumber(), e.getMessage(), e);
-                invoice.setSendStatusError("XML Generation Failed: " + e.getMessage());
-                service.update(invoice);
+                log.error("❌ Failed to generate XML for invoice '{}': {}", new Object[]{invoiceDto.getInvoiceNumber(), e.getMessage(), e});
+                invoiceDto.setSendStatusError("XML Generation Failed: " + e.getMessage());
+                failList.add(invoiceDto);
             }
         }
 
-        // Esperar todas las subidas sin interrumpir la ejecución en caso de error
-        CompletableFuture.allOf(uploadFutures.toArray(new CompletableFuture[0])).join();
-
-        // Filtrar solo las facturas que se subieron con éxito
-        List<ManageInvoiceDto> successfulInvoices = invoices.stream()
-                .filter(invoice -> invoice.getSendStatusError() == null)
-                .collect(Collectors.toList());
-
-        // Si ninguna factura se subió correctamente, lanzar error
-        if (successfulInvoices.isEmpty()) {
-            log.error("❌ All invoices failed to upload to Bavel FTP.");
-            throw new RuntimeException("All invoices failed to upload to Bavel FTP.");
+        if (!failList.isEmpty()) {
+            this.service.updateAll(failList);
+            failList.clear();
         }
 
-        // Si al menos una factura se subió correctamente, actualizar estado
-        updateStatusAgency(successfulInvoices, manageInvoiceStatus, employee);
+        List<FileDto> fileDtoList = this.amazonClient.saveAll(fileRequestList);
+        fileDtoList.stream().filter((fileDto) -> fileDto.getUploadFileResponse().getStatus() == ResponseStatus.ERROR_RESPONSE).forEach((fileDto) -> invoices.stream().filter((invoice) -> invoice.getId().equals(fileDto.getId())).findFirst().ifPresent((invoice) -> {
+            invoice.setSendStatusError("Error upload to common storage " + fileDto.getUploadFileResponse().getMessage());
+            failList.add(invoice);
+        }));
+        if (!failList.isEmpty()) {
+            this.service.updateAll(failList);
+            failList.clear();
+        }
+
+        List<FileDto> successfulFileDtos = fileDtoList.stream().filter((fileDto) -> fileDto.getUploadFileResponse().getStatus() == ResponseStatus.SUCCESS_RESPONSE).toList();
+        this.producerSendByFtp.create(successfulFileDtos, b2BPartner, this.amazonClient.getBucketName());
     }
+
+    private String generateFileNameToBavel(ManageInvoiceDto invoice) {
+        String bavelCode = (String)Optional.ofNullable(invoice.getHotel()).map(ManageHotelDto::getBabelCode).orElse("");
+        String _company = ((String)Optional.ofNullable(invoice.getAgency()).map(ManageAgencyDto::getName).orElse("")).replace("/", " ");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+        DateTimeFormatter formatterWithSpaces = DateTimeFormatter.ofPattern("dd MM yyyy");
+        return "Factura " + bavelCode + " " + _company + " " + invoice.getInvoiceNo() + " " + invoice.getInvoiceDate().toLocalDate().format(formatter) +
+                " " + LocalDate.now().format(formatterWithSpaces) + ".xml";
+    }
+
 
     private CompletableFuture<Void> sendFtpAsync(SendInvoiceCommand command, List<ManageInvoiceDto> invoices,
                                                  ManageInvoiceStatusDto manageInvoiceStatus, String employee) {

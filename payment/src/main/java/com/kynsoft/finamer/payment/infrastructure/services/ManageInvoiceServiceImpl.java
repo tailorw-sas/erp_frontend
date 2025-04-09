@@ -19,10 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -101,6 +99,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public List<Invoice> findInvoiceWithEntityGraphByIdIn(List<UUID> ids) {
         return this.repositoryQuery.findInvoiceWithEntityGraphByIdIn(ids);
+    }
+
+    @Override
+    public List<ManageInvoiceDto> findInvoicesByGenId(List<Long> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The invoiceId list must not be null");
+        }
+
+        return repositoryQuery.findInvoiceByInvoiceIdIn(ids).stream()
+                .map(Invoice::toAggregate)
+                .collect(Collectors.toList());
     }
 
 }
