@@ -1239,7 +1239,7 @@ async function createItem(item: { [key: string]: any }) {
       // paymentId
       idItem.value = response.payment.id
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${response.payment.paymentId} was created successfully`, life: 10000 })
-      goToForm(idItem.value)
+      // goToForm(idItem.value)
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -1271,7 +1271,8 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
-      // console.log(error)
+      console.log('Aqui error')
+      console.log(error)
 
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
     }
@@ -1484,6 +1485,7 @@ function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition
 //   }
 // }
 async function getItemById(id: string) {
+  console.log('getItemById', id)
   if (!id) { return }
 
   idItem.value = id
@@ -1584,6 +1586,7 @@ async function getItemById(id: string) {
 
 function update() {
   if (idItem.value) {
+    console.log('update', idItem.value)
     getItemById(idItem.value)
   }
   else {
@@ -3611,12 +3614,13 @@ watch(() => paymentDetailsList.value, (newValue) => {
   }
 })
 
-watch(() => route?.query?.id, async (newValue) => {
-  if (newValue) {
-    const id = newValue.toString()
-    await getItemById(id)
-  }
-})
+// watch(() => route?.query?.id, async (newValue) => {
+//   if (newValue) {
+//     console.log('newValue', newValue)
+//     const id = newValue.toString()
+//     await getItemById(id)
+//   }
+// })
 
 watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
@@ -3650,6 +3654,7 @@ watch(applyPaymentOnChangePage, (newValue) => {
 onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
+    console.log('route', route.query)
     await getItemById(id)
   }
   else {
