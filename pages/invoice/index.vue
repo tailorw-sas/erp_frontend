@@ -31,6 +31,7 @@ import SendByFtpDialog from '~/pages/invoice/sendInvoice-ftp.vue'
 import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
 import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
 import UndoImportDialog from '~/pages/invoice/undo-import.vue'
+import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -1133,6 +1134,10 @@ async function getPrintList() {
     optionsToPrint.value.loading = false;
   }
 }
+function copiarDatos() {
+  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
+}
+
 
 async function openEditDialog (item: any, type: string) {  
   switch (type) {
@@ -2732,6 +2737,12 @@ const legend = ref(
                 <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
+              <Button
+                v-tooltip.top="'Copiar tabla'"
+                class="p-button-lg w-1rem h-2rem pt-2 -ml-3 mt-4" 
+                icon="pi pi-copy"
+                @click="copiarDatos"
+              />
               <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
             </div> -->
               <!-- <div class="col-12 md:col-5 flex justify-content-end">
