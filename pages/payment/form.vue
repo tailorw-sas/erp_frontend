@@ -1271,9 +1271,6 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
-      console.log('Aqui error')
-      console.log(error)
-
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
     }
   }
@@ -1485,7 +1482,6 @@ function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition
 //   }
 // }
 async function getItemById(id: string) {
-  console.log('getItemById', id)
   if (!id) { return }
 
   idItem.value = id
@@ -1586,7 +1582,6 @@ async function getItemById(id: string) {
 
 function update() {
   if (idItem.value) {
-    console.log('update', idItem.value)
     getItemById(idItem.value)
   }
   else {
@@ -3654,7 +3649,6 @@ watch(applyPaymentOnChangePage, (newValue) => {
 onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
-    console.log('route', route.query)
     await getItemById(id)
   }
   else {
