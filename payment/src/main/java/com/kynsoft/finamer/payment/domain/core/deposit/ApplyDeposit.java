@@ -83,7 +83,7 @@ public class ApplyDeposit {
 
         if (payment.getPaymentBalance() == 0 && payment.getDepositBalance() == 0) {
             payment.setPaymentStatus(paymentStatusApplied);
-            createPaymentStatusHistory(payment, employee, paymentStatusHistory);
+            this.paymentStatusHistory = createPaymentStatusHistory(payment, employee);
             this.paymentApplied = true;
         }
 
@@ -112,9 +112,9 @@ public class ApplyDeposit {
         depositPaymentDetail.setApplyDepositValue(depositPaymentDetail.getApplyDepositValue() - amount);
     }
 
-    private void createPaymentStatusHistory(PaymentDto payment, ManageEmployeeDto employee, PaymentStatusHistoryDto paymentStatusHistory){
+    private PaymentStatusHistoryDto createPaymentStatusHistory(PaymentDto payment, ManageEmployeeDto employee){
         PaymentStatusHistory paymentAttachmentStatusHistory = new PaymentStatusHistory(employee, payment);
         paymentAttachmentStatusHistory.create();
-        paymentStatusHistory = paymentAttachmentStatusHistory.getPaymentStatusHistory();
+        return paymentAttachmentStatusHistory.getPaymentStatusHistory();
     }
 }

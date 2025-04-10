@@ -81,9 +81,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
             if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())) {
                 ((PaymentImportAntiIncomeHelperServiceImpl) paymentImportHelperService).createAttachment(request);
             }
-            //if(!importControl.getShouldStopProcess()){
-                paymentImportHelperService.readPaymentCacheAndSave(request);
-            //}
+            paymentImportHelperService.readPaymentCacheAndSave(request);
         } catch (BusinessRuleValidationException e) {
             e.printStackTrace();
             paymentImportHelperService.clearPaymentImportCache(request.getImportProcessId());
