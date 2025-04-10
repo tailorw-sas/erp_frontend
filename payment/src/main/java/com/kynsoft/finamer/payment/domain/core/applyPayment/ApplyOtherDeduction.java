@@ -52,6 +52,7 @@ public class ApplyOtherDeduction {
         this.paymentDetail.setRemark(remark);
         this.paymentDetail.setManageBooking(this.booking);
         this.paymentDetail.setAppliedAt(OffsetDateTime.now());
+        this.paymentDetail.setApplyPayment(true);
         this.paymentDetail.setEffectiveDate(this.transactionDate);
         this.payment.setApplyPayment(true);
     }
