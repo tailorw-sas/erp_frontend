@@ -117,9 +117,9 @@ public class BankReconciliationAdjustmentService implements IBankReconciliationA
         ).reduce(0.0, Double::sum);
         RulesChecker.checkRule(new BankReconciliationAmountDetailsRule(reconciliationDto.getAmount(), detailsAmount, this.parameterizationService));
 
+        ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECEIVE);
         for (UpdateBankReconciliationAdjustmentRequest request : adjustmentRequest) {
             ManageAgencyDto agencyDto = this.agencyService.findById(request.getAgency());
-            ManageTransactionStatusDto transactionStatusDto = this.transactionStatusService.findByETransactionStatus(ETransactionStatus.RECEIVE);
             ManageVCCTransactionTypeDto transactionCategory = this.transactionTypeService.findById(request.getTransactionCategory());
             ManageVCCTransactionTypeDto transactionSubCategory = this.transactionTypeService.findById(request.getTransactionSubCategory());
 

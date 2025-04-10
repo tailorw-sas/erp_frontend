@@ -460,6 +460,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryCommand.save(entity).toAggregate();
     }
 
+    public List<ManageInvoiceDto> updateAll(List<ManageInvoiceDto> dtoList) {
+        LocalDateTime now = LocalDateTime.now();
+        List<Invoice> invoiceList = dtoList.stream().map(Invoice::new).peek((invoice) -> invoice.setUpdatedAt(now)).collect(Collectors.toList());
+        return this.repositoryCommand.saveAllAndFlush(invoiceList).stream().map(Invoice::toAggregate).toList();
+    }
+
     @Override
     public void deleteInvoice(ManageInvoiceDto dto) {
         Invoice entity = new Invoice(dto);
@@ -484,20 +490,22 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public ManageInvoiceDto findById(UUID id) {
-        Optional<Invoice> optionalEntity = repositoryQuery.findById(id);
-
-        if (optionalEntity.isPresent()) {
-            return optionalEntity.get().toAggregate();
+        Invoice invoice = repositoryQuery.findInvoiceByUUID(id);
+        if(Objects.isNull(invoice)){
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
+                    new ErrorField("id", "The invoice not found.")));
         }
-
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
-                new ErrorField("id", "The invoice not found.")));
-
+        return invoice.toAggregate();
     }
 
     @Override
     public List<ManageInvoiceDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(Invoice::toAggregate).toList();
+    }
+
+    @Override
+    public List<ManageInvoiceDto> findInvoicesWithoutBookings(List<UUID> ids) {
+        return repositoryQuery.findInvoicesWithoutBookings(ids).stream().map(Invoice::toAggregateSimple).toList();
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

@@ -13,5 +13,6 @@ public class FTPConfig {
     private int bufferSize;
     private int connectTimeout;
     private int soTimeout;
-
+    private int maxConcurrentUploads;
+    private int maxFilesPerBatch;
 }

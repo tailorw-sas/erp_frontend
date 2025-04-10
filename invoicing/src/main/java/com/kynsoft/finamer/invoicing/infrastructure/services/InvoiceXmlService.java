@@ -29,17 +29,14 @@ public class InvoiceXmlService {
     }
 
     private InvoiceXml mapToInvoiceXml(ManageInvoiceDto dto) {
-        log.info("📤 Generating XML ");
         InvoiceXml invoiceXml = new InvoiceXml();
         ManageTradingCompaniesDto manageTradingCompaniesDto = dto.getHotel().getManageTradingCompanies();
-        log.info("Generating General Data");
         // General Data
         GeneralData generalData = new GeneralData();
         generalData.setRef(dto.getHotel().getPrefixToInvoice() + dto.getInvoiceNumberPrefix());
         generalData.setDate(dto.getInvoiceDate().toLocalDate());
         invoiceXml.setGeneralData(generalData);
-
-        log.info("Generating Supplier");
+        log.warn("Se genero la data base");
         // Supplier
         Supplier supplier = new Supplier();
         supplier.setAddress(manageTradingCompaniesDto.getAddress() != null ? manageTradingCompaniesDto.getAddress() : StringUtils.EMPTY);
@@ -51,8 +48,8 @@ public class InvoiceXmlService {
         supplier.setZipCode(manageTradingCompaniesDto.getZipCode() != null ? manageTradingCompaniesDto.getZipCode() : StringUtils.EMPTY);
         supplier.setCode(dto.getHotel().getBabelCode() != null ? dto.getHotel().getBabelCode() : StringUtils.EMPTY);
         invoiceXml.setSupplier(supplier);
+        log.warn("Se genero la data supplier");
 
-        log.info("Generating Client");
         // Client
         Client client = new Client();
         client.setAddress(dto.getAgency().getAddress() != null ? dto.getAgency().getAddress() : StringUtils.EMPTY);
@@ -64,8 +61,8 @@ public class InvoiceXmlService {
         client.setCode(dto.getAgency().getCode() != null ? dto.getAgency().getCode() : StringUtils.EMPTY);
         client.setZipCode(dto.getAgency().getZipCode() != null ? dto.getAgency().getZipCode() : StringUtils.EMPTY);
         invoiceXml.setClient(client);
+        log.warn("Se genero la data de client");
 
-        log.info("Generating Products");
         // Products
         List<Product> products = Optional.ofNullable(dto.getBookings())
                 .orElse(Collections.emptyList())
@@ -74,14 +71,15 @@ public class InvoiceXmlService {
                 .collect(Collectors.toList());
 
         invoiceXml.setProductList(products);
+        log.warn("Se genero la data de productos");
 
-        log.info("Generating Total Summary");
         // Total Summary
         TotalSummary totalSummary = new TotalSummary();
         totalSummary.setGrossAmount(BankerRounding.round(dto.getInvoiceAmount()));
         totalSummary.setSubTotal(BankerRounding.round(totalSummary.getGrossAmount() - totalSummary.getDiscounts()));
         totalSummary.setTotal(BankerRounding.round(totalSummary.getSubTotal() + totalSummary.getTax()));
         invoiceXml.setTotalSummary(totalSummary);
+        log.warn("Se genero la data de summary");
 
         return invoiceXml;
     }
@@ -132,14 +130,11 @@ public class InvoiceXmlService {
 
     private String buildXmlString(InvoiceXml invoiceXml) {
         try {
-            log.info("Generating buildXmlString");
             JAXBContext context = JAXBContext.newInstance(InvoiceXml.class);
             StringWriter writer = new StringWriter();
-            log.info("Generating Marshaller properties");
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             marshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
-            log.info("Writing XML into marshal");
             marshaller.marshal(invoiceXml, writer);
             return writer.toString();
         } catch (JAXBException e) {
