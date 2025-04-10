@@ -197,6 +197,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             }else{
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
+                    List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
+                    if(Objects.isNull(bookingList) || bookingList.isEmpty()){
+
+                    }
                     if(Objects.nonNull(paymentDetailDto)){
                         this.sendToCreateApplyDeposit(paymentDetailDto,
                                 Double.parseDouble(paymentImportCache.getPaymentAmount()),
