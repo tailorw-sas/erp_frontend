@@ -82,7 +82,7 @@ public class PaymentStatusHistoryServiceImpl implements IPaymentStatusHistorySer
         List<PaymentStatusHistory> statusHistories = dtos.stream()
                 .map(PaymentStatusHistory::new).toList();
 
-        return repositoryQuery.saveAll(statusHistories).stream()
+        return repositoryCommand.saveAll(statusHistories).stream()
                 .map(PaymentStatusHistory::getId)
                 .toList();
     }
