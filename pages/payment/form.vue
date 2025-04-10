@@ -1239,7 +1239,7 @@ async function createItem(item: { [key: string]: any }) {
       // paymentId
       idItem.value = response.payment.id
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${response.payment.paymentId} was created successfully`, life: 10000 })
-      goToForm(idItem.value)
+      // goToForm(idItem.value)
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -1271,8 +1271,6 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
-      // console.log(error)
-
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
     }
   }
@@ -3611,12 +3609,13 @@ watch(() => paymentDetailsList.value, (newValue) => {
   }
 })
 
-watch(() => route?.query?.id, async (newValue) => {
-  if (newValue) {
-    const id = newValue.toString()
-    await getItemById(id)
-  }
-})
+// watch(() => route?.query?.id, async (newValue) => {
+//   if (newValue) {
+//     console.log('newValue', newValue)
+//     const id = newValue.toString()
+//     await getItemById(id)
+//   }
+// })
 
 watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
