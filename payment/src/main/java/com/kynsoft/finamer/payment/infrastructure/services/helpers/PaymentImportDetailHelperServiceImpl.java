@@ -197,25 +197,42 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             }else{
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
                     PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
-                    List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
-                    if(Objects.isNull(bookingList) || bookingList.isEmpty()){
-
-                    }
-                    if(Objects.nonNull(paymentDetailDto)){
-                        this.sendToCreateApplyDeposit(paymentDetailDto,
-                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                employee,
-                                managePaymentTransactionTypeDto,
-                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                bookingDto,
-                                paymentDto,
-                                transactionDate,
-                                paymentStatusApplied,
-                                paymentStatusHistories,
-                                paymentDetailsToCreate,
-                                paymentDetailsAntiToUpdate
-                        );
-                        bookingsToUpdate.add(bookingDto);
+                    if(Objects.isNull(bookingDto)){
+                        List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
+                        if(Objects.nonNull(bookingList) && bookingList.size() == 1 && Objects.nonNull(paymentDetailDto)){
+                            ManageBookingDto booking = bookingList.get(0);
+                            this.sendToCreateApplyDeposit(paymentDetailDto,
+                                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                    employee,
+                                    managePaymentTransactionTypeDto,
+                                    getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                    booking,
+                                    paymentDto,
+                                    transactionDate,
+                                    paymentStatusApplied,
+                                    paymentStatusHistories,
+                                    paymentDetailsToCreate,
+                                    paymentDetailsAntiToUpdate
+                            );
+                            bookingsToUpdate.add(booking);
+                        }
+                    }else{
+                        if(Objects.nonNull(paymentDetailDto)){
+                            this.sendToCreateApplyDeposit(paymentDetailDto,
+                                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                    employee,
+                                    managePaymentTransactionTypeDto,
+                                    getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                    bookingDto,
+                                    paymentDto,
+                                    transactionDate,
+                                    paymentStatusApplied,
+                                    paymentStatusHistories,
+                                    paymentDetailsToCreate,
+                                    paymentDetailsAntiToUpdate
+                            );
+                            bookingsToUpdate.add(bookingDto);
+                        }
                     }
                 } else {
                     if (bookingDto == null) {
