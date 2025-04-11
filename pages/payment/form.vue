@@ -437,6 +437,10 @@ const formTitle = computed(() => {
   return idItem.value ? 'Edit Payment' : 'New Payment'
 })
 
+useHead({
+  title: computed(() => idItem.value ? 'Edit Payment' : 'New Payment')
+})
+
 const decimalSchema = z.object(
   {
     amount: z
