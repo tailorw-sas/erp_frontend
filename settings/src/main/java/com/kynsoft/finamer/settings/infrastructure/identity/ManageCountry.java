@@ -15,7 +15,10 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import org.apache.kafka.common.metrics.Stat;
 import org.hibernate.annotations.CreationTimestamp;
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
@@ -88,6 +91,26 @@ public class ManageCountry implements Serializable {
                managerLanguage != null ?  managerLanguage.toAggregate() : null,
                 status
         );
+    }
+
+    public ManageCountry(UUID id,
+                         String code,
+                         String name,
+                         String description,
+                         String dialCode,
+                         String iso3,
+                         Boolean isDefault,
+                         ManagerLanguage managerLanguage,
+                         Status status){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.dialCode = dialCode;
+        this.iso3 = iso3;
+        this.isDefault = isDefault;
+        this.managerLanguage = Objects.nonNull(managerLanguage) ? managerLanguage : null;
+        this.status = status;
     }
 
 }

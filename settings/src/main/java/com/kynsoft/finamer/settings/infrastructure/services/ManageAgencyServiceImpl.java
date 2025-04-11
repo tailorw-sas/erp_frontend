@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -83,8 +85,18 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     @Override
 //    @Cacheable(cacheNames = "manageAgency", key = "#id", unless = "#result == null")
+//    public ManageAgencyDto findById(UUID id) {
+//        Optional<ManageAgency> optionalEntity = repositoryQuery.findById(id);
+//        return optionalEntity.map(ManageAgency::toAggregate)
+//                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found."))));
+//    }
+
     public ManageAgencyDto findById(UUID id) {
-        Optional<ManageAgency> optionalEntity = repositoryQuery.findById(id);
+        long startTime = System.nanoTime();
+        Optional<ManageAgency> optionalEntity = repositoryQuery.getAgencyByIdWithAllRelations(id);
+        long endTime = System.nanoTime();
+        Logger.getLogger(ManageAgencyServiceImpl.class.getName()).log(Level.WARNING, "Tiempo:" + (endTime - startTime)/1_000_000);
+
         return optionalEntity.map(ManageAgency::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND, new ErrorField("id", "The source not found."))));
     }

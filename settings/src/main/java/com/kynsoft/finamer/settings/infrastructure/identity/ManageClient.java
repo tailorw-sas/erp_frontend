@@ -73,6 +73,17 @@ public class ManageClient implements Serializable {
         return manageClientDto;
     }
 
-
-
+    public ManageClient(UUID id,
+                        String code,
+                        String name,
+                        String description,
+                        Status status,
+                        Boolean isNightType){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.isNightType = isNightType;
+    }
 }

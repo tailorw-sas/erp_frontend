@@ -30,6 +30,7 @@ public class ManageHotelCustomRepositoryImpl implements ManageHotelCustomReposit
     public Page<ManageHotel> findAllCustom(Specification<ManageHotel> specification, Pageable pageable) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
         Root<ManageHotel> root = query.from(ManageHotel.class);
         Join<ManageHotel, ManageCountry> manageCountryJoin = root.join("manageCountry", JoinType.LEFT);
         Join<ManageCountry, ManagerLanguage> managerLanguageJoin = manageCountryJoin.join("managerLanguage", JoinType.LEFT);

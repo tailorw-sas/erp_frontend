@@ -14,6 +14,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 @JsonIdentityInfo(
@@ -72,6 +73,21 @@ public class ManageCityState implements Serializable {
                 id, code, name, description, status,
                 country != null ? country.toAggregate() : null,
                 timeZone != null ? timeZone.toAggregate() : null);
+    }
+
+    public ManageCityState(UUID id,
+                           String code,
+                           String name,
+                           String description,
+                           ManageCountry manageCountry,
+                           ManagerTimeZone managerTimeZone,
+                           Status status){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.country = Objects.nonNull(manageCountry) ? manageCountry : null;
+        this.timeZone = Objects.nonNull(managerTimeZone) ? managerTimeZone : null;
     }
 
 }
