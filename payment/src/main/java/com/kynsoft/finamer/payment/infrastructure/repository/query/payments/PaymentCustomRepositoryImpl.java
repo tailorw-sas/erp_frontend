@@ -257,7 +257,6 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         return Optional.of(payment);
     }
 
-
     @Override
     public Page<PaymentSearchProjection> findAllProjected(Specification<Payment> specification, Pageable pageable) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
