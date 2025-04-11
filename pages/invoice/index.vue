@@ -2261,6 +2261,7 @@ watch(filterToSearch, () => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
+  document.title = 'Invoice Management' 
   isFirstTimeInOnMounted.value = true
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getStatusListTemp()

@@ -328,6 +328,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   if (useRuntimeConfig().public.loadTableData) {
     await getList()
+    document.title = 'Inv Close Operation'
   }
 })
 // -------------------------------------------------------------------------------------------------------

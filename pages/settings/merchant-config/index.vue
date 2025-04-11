@@ -526,6 +526,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Merchant Config'
   }
 
   MethodEnumList.value = Object.entries(ENUM_VCC_MERCHANT_METHOD).map(

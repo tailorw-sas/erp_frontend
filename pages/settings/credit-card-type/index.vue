@@ -421,6 +421,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Manage Credit Card Type'
   }
 })
 // -------------------------------------------------------------------------------------------------------
@@ -523,9 +524,9 @@ onMounted(() => {
           >
             <template #field-firstDigit="{ item: data, onUpdate }">
               <InputNumber
-                :tabindex="0"
                 v-if="!loadingSaveAll"
                 v-model="data.firstDigit"
+                :tabindex="0"
                 :use-grouping="false"
                 @update:model-value="($event) => {
                   onUpdate('firstDigit', $event)

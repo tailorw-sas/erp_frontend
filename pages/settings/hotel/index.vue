@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue'
-import type {PageState} from 'primevue/paginator'
-import {z} from 'zod'
-import {useToast} from 'primevue/usetoast'
-import {useConfirm} from 'primevue/useconfirm'
-import type {IFilter, IQueryRequest} from '~/components/fields/interfaces/IFieldInterfaces'
-import type {IColumn, IPagination} from '~/components/table/interfaces/ITableInterfaces'
-import type {FieldDefinitionType} from '~/components/form/EditFormV2'
-import type {GenericObject} from '~/types'
-import {GenericService} from '~/services/generic-services'
-import {statusToBoolean, statusToString, updateFieldProperty} from '~/utils/helpers'
-import type {IData} from '~/components/table/interfaces/IModelData'
+import { onMounted, ref, watch } from 'vue'
+import type { PageState } from 'primevue/paginator'
+import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
+import type { FieldDefinitionType } from '~/components/form/EditFormV2'
+import type { GenericObject } from '~/types'
+import { GenericService } from '~/services/generic-services'
+import { statusToBoolean, statusToString, updateFieldProperty } from '~/utils/helpers'
+import type { IData } from '~/components/table/interfaces/IModelData'
 import ContactPage from '~/pages/settings/contact/index.vue'
-import {validateEntityStatus} from '~/utils/schemaValidations'
+import { validateEntityStatus } from '~/utils/schemaValidations'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -792,6 +792,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Manage Hotel'
   }
 })
 // -------------------------------------------------------------------------------------------------------
