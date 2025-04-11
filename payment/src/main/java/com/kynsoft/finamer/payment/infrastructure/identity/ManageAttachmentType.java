@@ -61,4 +61,20 @@ public class ManageAttachmentType implements Serializable {
         return new AttachmentTypeDto(id, code, name, description, defaults, status,antiToIncomeImport);
     }
 
+    public ManageAttachmentType(UUID id,
+                                String code,
+                                String name,
+                                String description,
+                                Boolean defaults,
+                                Boolean antiToIncomeImport,
+                                Status status){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.defaults = defaults;
+        this.antiToIncomeImport = antiToIncomeImport;
+        this.status = status;
+    }
+
 }

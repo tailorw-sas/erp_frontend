@@ -320,4 +320,78 @@ public class Payment implements Serializable {
         );
     }
 
+    public Payment(
+            UUID id,
+            Long paymentId,
+            Status status,
+            EAttachment eAttachment,
+            ManagePaymentSource paymentSource,
+            String reference,
+            LocalDate transactionDate,
+            LocalTime dateTime,
+            ManagePaymentStatus paymentStatus,
+            ManageClient client,
+            ManageAgency agency,
+            ManageHotel hotel,
+            Invoice invoice,
+            ManageBankAccount bankAccount,
+            ManagePaymentAttachmentStatus attachmentStatus,
+            List<MasterPaymentAttachment> attachments,
+            List<PaymentDetail> paymentDetails,
+            Double paymentAmount,
+            Double paymentBalance,
+            Double depositAmount,
+            Double depositBalance,
+            Double otherDeductions,
+            Double identified,
+            Double notIdentified,
+            Double notApplied,
+            Double applied,
+            String remark,
+            boolean applyPayment,
+            boolean hasAttachment,
+            boolean hasDetailTypeDeposit,
+            boolean paymentSupport,
+            boolean createByCredit,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt,
+            ImportType importType
+    ) {
+        this.id = id;
+        this.paymentId = paymentId;
+        this.status = status;
+        this.eAttachment = eAttachment;
+        this.paymentSource = paymentSource;
+        this.reference = reference;
+        this.transactionDate = transactionDate;
+        this.dateTime = dateTime;
+        this.paymentStatus = paymentStatus;
+        this.client = client;
+        this.agency = agency;
+        this.hotel = hotel;
+        this.invoice = invoice;
+        this.bankAccount = bankAccount;
+        this.attachmentStatus = attachmentStatus;
+        this.attachments = attachments;
+        this.paymentDetails = paymentDetails;
+        this.paymentAmount = paymentAmount;
+        this.paymentBalance = paymentBalance;
+        this.depositAmount = depositAmount;
+        this.depositBalance = depositBalance;
+        this.otherDeductions = otherDeductions;
+        this.identified = identified;
+        this.notIdentified = notIdentified;
+        this.notApplied = notApplied;
+        this.applied = applied;
+        this.remark = remark;
+        this.applyPayment = applyPayment;
+        this.hasAttachment = hasAttachment;
+        this.hasDetailTypeDeposit = hasDetailTypeDeposit;
+        this.paymentSupport = paymentSupport;
+        this.createByCredit = createByCredit;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.importType = importType;
+    }
+
 }

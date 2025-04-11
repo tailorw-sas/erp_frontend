@@ -23,6 +23,8 @@ public interface IPaymentService {
 
     PaymentDto findById(UUID id);
 
+    PaymentDto findByIdCustom(UUID id);
+
     Payment findPaymentById(UUID id);
     /**
      * Permite obtener los Payment con Detalles.

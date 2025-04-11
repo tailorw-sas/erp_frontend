@@ -17,7 +17,7 @@ public class FindPaymentByIdQueryHandler implements IQueryHandler<FindPaymentByI
 
     @Override
     public PaymentResponse handle(FindPaymentByIdQuery query) {
-        PaymentDto response = service.findById(query.getId());
+        PaymentDto response = service.findByIdCustom(query.getId());
 
         return new PaymentResponse(response);
     }
