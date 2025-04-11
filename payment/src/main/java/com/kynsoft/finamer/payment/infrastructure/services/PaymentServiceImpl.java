@@ -103,9 +103,22 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public PaymentDto findById(UUID id) {
-        Optional<Payment> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregateWihtDetails();
+        Optional<Payment> payment = this.repositoryQuery.findById(id);
+        if (payment.isPresent()) {
+            return payment.get().toAggregateWihtDetails();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public PaymentDto findByIdCustom(UUID id) {
+        long startTime = System.nanoTime();
+        Optional<Payment> payment = this.repositoryQuery.findByIdCustom(id);
+        long endTime = System.nanoTime();
+        System.out.println("*****************Tiempo:" + (endTime - startTime)/1_000_000);
+
+        if (payment.isPresent()) {
+            return payment.get().toAggregateBasicPayment();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
     }

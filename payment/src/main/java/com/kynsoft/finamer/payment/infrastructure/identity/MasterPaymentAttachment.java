@@ -103,4 +103,26 @@ public class MasterPaymentAttachment implements Serializable {
                 attachmentId != null ? attachmentId : null
         );
     }
+
+    public MasterPaymentAttachment(UUID id,
+                                   Status status,
+                                   Long attachmentId,
+                                   Payment resource,
+                                   MaganeResourceType resourceType,
+                                   ManageAttachmentType attachmentType,
+                                   String fileName,
+                                   String fileWeight,
+                                   String path,
+                                   String remark){
+        this.id = id;
+        this.status = status;
+        this.attachmentId = attachmentId;
+        this.resource = resource;
+        this.resourceType = resourceType;
+        this.attachmentType = attachmentType;
+        this.fileName = fileName;
+        this.fileWeight = fileWeight;
+        this.path = path;
+        this.remark = remark;
+    }
 }
