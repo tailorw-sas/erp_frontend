@@ -74,4 +74,16 @@ public class ManageAgency {
                 Objects.nonNull(country) ? country.toAggregate() : null
         );
     }
+
+    public ManageAgency(UUID id,
+                        String code,
+                        String name,
+                        String status,
+                        ManageAgencyType manageAgencyType){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.status = status;
+        this.agencyType = manageAgencyType;
+    }
 }
