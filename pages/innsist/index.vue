@@ -855,6 +855,7 @@ onMounted(() => {
   if (useRuntimeConfig().public.loadTableData) {
     // getList()
     searchAndFilter()
+    document.title = 'Innsist Parametrization'
   }
 })
 </script>

@@ -1010,6 +1010,7 @@ onMounted(async () => {
   if (route.params && 'id' in route.params && route.params.id) {
     await getItemById(route.params.id.toString())
     await loadDefaultsValues()
+    document.title = 'Edit Invoice'
   }
 })
 </script>

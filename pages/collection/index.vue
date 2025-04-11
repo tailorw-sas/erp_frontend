@@ -2312,6 +2312,7 @@ onMounted(() => {
   if (useRuntimeConfig().public.loadTableData) {
     getClientList()
     getHotelList2()
+    document.title = 'Collection Management'
     // getList()
     // getPaymentData()
     // getListInvoice()

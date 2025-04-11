@@ -4148,7 +4148,7 @@ onMounted(async () => {
   havePermissionMenu()
   assingFunctionsToExportMenuInItemMenuList()
   // assingFuntionsForPrint()
-
+  document.title = 'Payment Management'
   await loadDefaultsConfig()
 })
 // -------------------------------------------------------------------------------------------------------
