@@ -931,6 +931,7 @@ onMounted(() => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // getList()
   searchAndFilter()
+  document.title = 'VCC Management'
   getCollectionStatusList()
 })
 // -------------------------------------------------------------------------------------------------------
