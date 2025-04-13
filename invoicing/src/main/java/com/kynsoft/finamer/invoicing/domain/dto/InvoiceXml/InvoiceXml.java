@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -37,4 +38,28 @@ public class InvoiceXml {
 
     @XmlElement(name = "TotalSummary")
     private TotalSummary totalSummary;
+
+    @Override
+    public String toString() {
+        String productsXml = "";
+        if (productList != null && !productList.isEmpty()) {
+            productsXml = productList.stream()
+                    .map(Product::toString)
+                    .collect(Collectors.joining("\n", "<ProductList>\n", "\n</ProductList>"));
+        }
+
+        return String.format(
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                        "<Transaction xmlns:xsd=\"%s\" xmlns:xsi=\"%s\">\n" +
+                        "%s\n%s\n%s\n%s\n%s\n</Transaction>",
+                xmlnsXsd,
+                xmlnsXsi,
+                generalData.toString(),
+                supplier.toString(),
+                client.toString(),
+                productsXml,
+                totalSummary.toString()
+        );
+    }
+
 }
