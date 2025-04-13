@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Locale;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,4 +29,11 @@ public class TotalSummary {
 
     @XmlAttribute(name = "Total")
     private double total;
+
+    @Override
+    public String toString() {
+        return String.format(Locale.US,
+                "<TotalSummary GrossAmount=\"%.2f\" Discounts=\"%.2f\" SubTotal=\"%.2f\" Tax=\"%.2f\" Total=\"%.2f\"/>",
+                grossAmount, discounts, subTotal, tax, total);
+    }
 }

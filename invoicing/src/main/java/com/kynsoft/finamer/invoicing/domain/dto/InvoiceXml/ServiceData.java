@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @XmlRootElement(name = "ServiceData")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ServiceData {
+public class ServiceData extends BaseXml {
     @XmlAttribute(name = "SupplierClientID")
     private String supplierClientId;
 
@@ -55,5 +55,23 @@ public class ServiceData {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate != null ? endDate.format(DateTimeFormatter.ISO_DATE) : null;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "<ServiceData SupplierClientID=\"%s\" SupplierID=\"%s\" SupplierName=\"%s\" Pax=\"%s\" BeginDate=\"%s\" EndDate=\"%s\" PaxNumber=\"%d\" AdultsNumber=\"%d\" KidsNumber=\"%d\" RoomNumber=\"%s\" RoomCategory=\"%s\"/>",
+                safe(supplierClientId),
+                safe(supplierId),
+                safe(supplierName),
+                safe(pax),
+                safe(beginDate),
+                safe(endDate),
+                paxNumber,
+                adultsNumber,
+                kidsNumber,
+                safe(roomNumber),
+                safe(roomCategory)
+        );
     }
 }

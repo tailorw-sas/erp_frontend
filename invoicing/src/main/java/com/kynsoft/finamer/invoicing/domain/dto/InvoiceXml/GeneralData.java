@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @XmlRootElement(name = "GeneralData")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GeneralData {
+public class GeneralData extends BaseXml {
     @XmlAttribute(name = "Ref")
     private String ref;
 
@@ -40,5 +40,11 @@ public class GeneralData {
 
     public void setDate(LocalDate date) {
         this.date = date != null ? date.format(DateTimeFormatter.ISO_DATE) : null;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("<GeneralData Ref=\"%s\" Type=\"%s\" Date=\"%s\" Currency=\"%s\" TaxIncluded=\"%s\" Status=\"%s\"/>",
+                safe(ref), safe(type), safe(date), safe(currency), taxIncluded, safe(status));
     }
 }
