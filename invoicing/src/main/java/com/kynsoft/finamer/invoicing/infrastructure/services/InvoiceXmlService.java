@@ -25,6 +25,7 @@ public class InvoiceXmlService {
 
     public String generateInvoiceXml(ManageInvoiceDto manageInvoiceDto) {
         InvoiceXml invoiceXml = mapToInvoiceXml(manageInvoiceDto);
+        log.warn(invoiceXml.toString());
         return buildXmlString(invoiceXml);
     }
 
