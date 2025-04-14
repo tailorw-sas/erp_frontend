@@ -251,7 +251,6 @@ public class ReportPdfServiceImpl implements IReportPdfService {
 
         // Cerrar el PDF combinado
         mergedPdf.close();
-        System.out.println("El pdf es: " + outputStream.toString());
         return outputStream.toByteArray(); // Devuelve el PDF combinado como un array de bytes
     }
 }

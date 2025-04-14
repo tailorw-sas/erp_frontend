@@ -43,7 +43,6 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         Join<Payment, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
         Join<Payment, ManageHotel> hotelJoin = root.join("hotel", JoinType.LEFT);
         Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin = root.join("attachmentStatus", JoinType.LEFT);
-        Join<Payment, MasterPaymentAttachment> masterPaymentAttachmentJoin = root.join("attachments", JoinType.LEFT);
 
         query.where(cb.equal(root.get("id"), id));
 
@@ -115,6 +114,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(bankAccountHotelJoin.get("applyByTradingCompany"));
         selections.add(bankAccountHotelJoin.get("manageTradingCompany"));
         selections.add(bankAccountHotelJoin.get("autoApplyCredit"));
+
 
         // Payment Attachment Status
         selections.add(attachmentStatusJoin.get("id"));
@@ -210,15 +210,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                         tuple.get(41, String.class),
                         tuple.get(42, String.class),
                         tuple.get(43, String.class),
-                        new ManageHotel(
-                                tuple.get(44, UUID.class),
-                                tuple.get(45, String.class),
-                                tuple.get(46, String.class),
-                                tuple.get(47, String.class),
-                                tuple.get(48, Boolean.class),
-                                tuple.get(49, UUID.class),
-                                tuple.get(50, Boolean.class)
-                        )
+                        null
                 ),
                 new ManagePaymentAttachmentStatus(
                         tuple.get(51, UUID.class),
