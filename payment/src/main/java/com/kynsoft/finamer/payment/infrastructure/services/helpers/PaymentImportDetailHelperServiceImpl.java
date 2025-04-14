@@ -196,44 +196,18 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 paymentDetailsToCreate.add(paymentDetailTypeDeposit);
             }else{
                 if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
-                    PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
-                    if(Objects.isNull(bookingDto)){
-                        List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
-                        if(Objects.nonNull(bookingList) && bookingList.size() == 1 && Objects.nonNull(paymentDetailDto)){
-                            ManageBookingDto booking = bookingList.get(0);
-                            this.sendToCreateApplyDeposit(paymentDetailDto,
-                                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                    employee,
-                                    managePaymentTransactionTypeDto,
-                                    getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                    booking,
-                                    paymentDto,
-                                    transactionDate,
-                                    paymentStatusApplied,
-                                    paymentStatusHistories,
-                                    paymentDetailsToCreate,
-                                    paymentDetailsAntiToUpdate
-                            );
-                            bookingsToUpdate.add(booking);
-                        }
-                    }else{
-                        if(Objects.nonNull(paymentDetailDto)){
-                            this.sendToCreateApplyDeposit(paymentDetailDto,
-                                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                    employee,
-                                    managePaymentTransactionTypeDto,
-                                    getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                                    bookingDto,
-                                    paymentDto,
-                                    transactionDate,
-                                    paymentStatusApplied,
-                                    paymentStatusHistories,
-                                    paymentDetailsToCreate,
-                                    paymentDetailsAntiToUpdate
-                            );
-                            bookingsToUpdate.add(bookingDto);
-                        }
-                    }
+                    this.processAntiDetail(paymentImportCache,
+                            cache,
+                            paymentDto,
+                            bookingDto,
+                            employee,
+                            managePaymentTransactionTypeDto,
+                            transactionDate,
+                            paymentStatusApplied,
+                            paymentStatusHistories,
+                            paymentDetailsToCreate,
+                            paymentDetailsAntiToUpdate,
+                            bookingsToUpdate);
                 } else {
                     if (bookingDto == null) {
                         List<ManageBookingDto> bookings = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
@@ -319,6 +293,73 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
         this.clearCache();
         printLog("End readPaymentCacheAndSave process");
+    }
+
+    private void processAntiDetail(PaymentImportCache paymentImportCache,
+                                   Cache cache,
+                                   PaymentDto paymentDto,
+                                   ManageBookingDto bookingDto,
+                                   ManageEmployeeDto employee,
+                                   ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto,
+                                   OffsetDateTime transactionDate,
+                                   ManagePaymentStatusDto paymentStatusApplied,
+                                   List<PaymentStatusHistoryDto> paymentStatusHistories,
+                                   List<PaymentDetailDto> paymentDetailsToCreate,
+                                   List<PaymentDetailDto> paymentDetailsAntiToUpdate,
+                                   List<ManageBookingDto> bookingsToUpdate){
+        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
+        if(Objects.isNull(bookingDto)){
+            List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
+            if(Objects.nonNull(bookingList) && bookingList.size() == 1 && Objects.nonNull(paymentDetailDto)){
+                ManageBookingDto booking = bookingList.get(0);
+                this.sendToCreateApplyDeposit(paymentDetailDto,
+                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                        employee,
+                        managePaymentTransactionTypeDto,
+                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                        booking,
+                        paymentDto,
+                        transactionDate,
+                        paymentStatusApplied,
+                        paymentStatusHistories,
+                        paymentDetailsToCreate,
+                        paymentDetailsAntiToUpdate
+                );
+                bookingsToUpdate.add(booking);
+            }else{
+                //Cuando esta duplicado, solo crea el detalle AANT sin aplicar a la factura
+                this.sendToCreateApplyDeposit(paymentDetailDto,
+                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                        employee,
+                        managePaymentTransactionTypeDto,
+                        " #payment was not applied because the coupon is duplicated.",
+                        null,
+                        paymentDto,
+                        transactionDate,
+                        paymentStatusApplied,
+                        paymentStatusHistories,
+                        paymentDetailsToCreate,
+                        paymentDetailsAntiToUpdate
+                );
+            }
+        }else{
+            if(Objects.nonNull(paymentDetailDto)){
+                this.sendToCreateApplyDeposit(paymentDetailDto,
+                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                        employee,
+                        managePaymentTransactionTypeDto,
+                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                        bookingDto,
+                        paymentDto,
+                        transactionDate,
+                        paymentStatusApplied,
+                        paymentStatusHistories,
+                        paymentDetailsToCreate,
+                        paymentDetailsAntiToUpdate
+                );
+                bookingsToUpdate.add(bookingDto);
+            }
+        }
     }
 
     private ManageBookingDto getBookingFromCache(String bookingId, Cache cache){

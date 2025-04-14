@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class ApplyDeposit {
@@ -56,7 +57,7 @@ public class ApplyDeposit {
             this.errorMessage = "Amount must be greater than zero";
             return false;
         }
-        if (payment == null || booking == null || paymentDetail == null) {
+        if (payment == null || paymentDetail == null) {
             this.errorMessage = "Missing required data for deposit application";
             return false;
         }
@@ -91,7 +92,9 @@ public class ApplyDeposit {
     }
 
     private void updateBooking(ManageBookingDto booking, Double amount){
-        booking.setAmountBalance(booking.getAmountBalance() - amount);
+        if(Objects.nonNull(booking)){
+            booking.setAmountBalance(booking.getAmountBalance() - amount);
+        }
     }
 
     private void updatePaymentDetail(PaymentDetailDto paymentDetail,
