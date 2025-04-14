@@ -308,6 +308,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                    List<PaymentDetailDto> paymentDetailsAntiToUpdate,
                                    List<ManageBookingDto> bookingsToUpdate){
         PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
+
         if(Objects.isNull(bookingDto)){
             List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
             if(Objects.nonNull(bookingList) && bookingList.size() == 1 && Objects.nonNull(paymentDetailDto)){
