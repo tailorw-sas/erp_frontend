@@ -132,9 +132,8 @@ public class InvoiceXmlService {
 
     private String buildXmlString(InvoiceXml invoiceXml) {
         try {
-            // Cargar implementación explícita usando ServiceLoader manual
             jakarta.xml.bind.JAXBContextFactory factory = ServiceLoader
-                    .load(jakarta.xml.bind.JAXBContextFactory.class, Thread.currentThread().getContextClassLoader())
+                    .load(jakarta.xml.bind.JAXBContextFactory.class, JAXBContext.class.getClassLoader())
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("No JAXBContextFactory implementation found"));
 
