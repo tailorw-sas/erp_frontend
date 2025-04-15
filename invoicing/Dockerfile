@@ -15,7 +15,7 @@ ENV PACKAGE_TOKEN=${PACKAGE_TOKEN}
 RUN sed -i "s|GIT_TOKEN|$PACKAGE_TOKEN|g" settings.xml
 
 # Descargar el agente JMX en la imagen de construcción
-#RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+RUN wget -O jmx_prometheus_javaagent.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
 
 # Copia los archivos de proyecto
 COPY . /build
@@ -53,30 +53,21 @@ RUN mvn dependency:go-offline -f pom.xml -s settings.xml -Denv=$ENVIRONMENT
 RUN mvn clean package -DskipTests -f pom.xml -Denv=$ENVIRONMENT
 
 # Etapa final: imagen ligera de distroless
-#FROM gcr.io/distroless/java17-debian11
-FROM bellsoft/liberica-openjdk-alpine:17.0.6
+FROM gcr.io/distroless/java17-debian11
 
 # Expone el puerto que utiliza la aplicación
 EXPOSE 9909
 EXPOSE 9904
 
-#Configurar Zona Horaria
-RUN apk upgrade --no-cache
-RUN apk add --no-cache tzdata
+# Establece la zona horaria
 ENV TZ="America/Santo_Domingo"
 
 # Copia el JAR generado desde la etapa de construcción
-#COPY --from=builder /build/target/invoicing-1.0.0.jar /app/invoicing-1.0.0.jar
-#COPY src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
-
-WORKDIR /app
-COPY --from=builder /build/target/invoicing-1.0.0.jar .
+COPY --from=builder /build/target/invoicing-1.0.0.jar /app/invoicing-1.0.0.jar
 COPY src/main/resources/EstadoCuenta.xlsx /app/resources/EstadoCuenta.xlsx
 
 #Download dependencias for monitoring
-#COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
-#COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
-RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_javaagent-0.20.0.jar
 COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Comando de inicio de la aplicación
