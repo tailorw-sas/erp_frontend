@@ -13,6 +13,7 @@ import lombok.Setter;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -55,7 +56,7 @@ public class PaymentDetailResponse implements IResponse {
         this.amount = dto.getAmount();
         this.remark = dto.getRemark();
 
-        if (dto.getChildren() != null) {
+        if (dto.getChildren() != null && Objects.nonNull(dto.getPaymentDetails())) {
             for (PaymentDetailDto paymentDetailDto : dto.getPaymentDetails()) {
                 this.childrenTotalValue += BankerRounding.round(paymentDetailDto.getAmount());
                 children.add(new PaymentDetailResponse(paymentDetailDto));
