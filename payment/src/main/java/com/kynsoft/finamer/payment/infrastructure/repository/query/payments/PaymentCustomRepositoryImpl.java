@@ -43,7 +43,6 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         Join<Payment, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
         Join<Payment, ManageHotel> hotelJoin = root.join("hotel", JoinType.LEFT);
         Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin = root.join("attachmentStatus", JoinType.LEFT);
-        Join<Payment, MasterPaymentAttachment> masterPaymentAttachmentJoin = root.join("attachments", JoinType.LEFT);
 
         query.where(cb.equal(root.get("id"), id));
 
