@@ -132,12 +132,15 @@ public class InvoiceXmlService {
 
     private String buildXmlString(InvoiceXml invoiceXml) {
         try {
-            System.setProperty(
-                    "jakarta.xml.bind.context.factory",
-                    "org.glassfish.jaxb.runtime.v2.ContextFactory"
-            );
+            // Cargar implementación explícita usando ServiceLoader manual
+            jakarta.xml.bind.JAXBContextFactory factory = ServiceLoader
+                    .load(jakarta.xml.bind.JAXBContextFactory.class, Thread.currentThread().getContextClassLoader())
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No JAXBContextFactory implementation found"));
 
-            JAXBContext context = JAXBContext.newInstance(InvoiceXml.class);
+            JAXBContext context = factory.createContext(
+                    new Class[]{InvoiceXml.class}, null
+            );
 
             StringWriter writer = new StringWriter();
             Marshaller marshaller = context.createMarshaller();
@@ -145,7 +148,7 @@ public class InvoiceXmlService {
             marshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
             marshaller.marshal(invoiceXml, writer);
             return writer.toString();
-        } catch (JAXBException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Error generating XML", e);
         }
     }
