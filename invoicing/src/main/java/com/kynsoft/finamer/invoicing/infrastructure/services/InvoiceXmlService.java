@@ -25,9 +25,9 @@ public class InvoiceXmlService {
 
     public String generateInvoiceXml(ManageInvoiceDto manageInvoiceDto) {
         InvoiceXml invoiceXml = mapToInvoiceXml(manageInvoiceDto);
-        log.warn(invoiceXml.toString());
-        //return buildXmlString(invoiceXml);
-        return invoiceXml.toString();
+        //log.warn(invoiceXml.toString());
+        return buildXmlString(invoiceXml);
+        //return invoiceXml.toString();
     }
 
     private InvoiceXml mapToInvoiceXml(ManageInvoiceDto dto) {
@@ -132,7 +132,13 @@ public class InvoiceXmlService {
 
     private String buildXmlString(InvoiceXml invoiceXml) {
         try {
+            System.setProperty(
+                    "jakarta.xml.bind.context.factory",
+                    "org.glassfish.jaxb.runtime.v2.ContextFactory"
+            );
+
             JAXBContext context = JAXBContext.newInstance(InvoiceXml.class);
+
             StringWriter writer = new StringWriter();
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
