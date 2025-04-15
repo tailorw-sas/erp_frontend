@@ -57,7 +57,7 @@ public class PaymentDetailAmountBalanceValidator extends ExcelListRuleValidator<
                         && !paymentDetailRow.getTransactionType().isEmpty()
                         && Objects.nonNull(paymentDetailRow.getCoupon()) && !paymentDetailRow.getCoupon().isEmpty()
                 )
-                .collect(Collectors.groupingBy(PaymentDetailRow::getBookId));
+                .collect(Collectors.groupingBy(PaymentDetailRow::getCoupon));
 
         for(Map.Entry<String, List<PaymentDetailRow>> cuoponGroup : bookingIdGroups.entrySet()){
             List<ManageBookingDto> bookingsByCuopon = cache.getBookingsByCoupon(cuoponGroup.getKey());
