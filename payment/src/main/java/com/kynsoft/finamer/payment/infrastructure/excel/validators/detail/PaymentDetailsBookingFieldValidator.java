@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
@@ -32,10 +33,24 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
         if(Objects.nonNull(obj.getBookId())){
-            if(Objects.isNull(this.cache.getBooking(Long.parseLong(obj.getBookId())))){
+            ManageBookingDto booking = this.cache.getBooking(Long.parseLong(obj.getBookId()));
+            PaymentDto payment = this.cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
+
+            if(Objects.isNull(booking)){
                 errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
                 return false;
             }
+
+            if(Objects.nonNull(booking.getInvoice())
+                    && Objects.nonNull(booking.getInvoice().getAgency())
+                    && Objects.nonNull(booking.getInvoice().getAgency().getClient())
+            ){
+                if(!booking.getInvoice().getAgency().getClient().getCode().equals(payment.getClient().getCode())){
+                    errorFieldList.add(new ErrorField("bookingClient", "The booking is not valid because it does not belong to the same client as the payment."));
+                    return false;
+                }
+            }
+
             return true;
         }
 
