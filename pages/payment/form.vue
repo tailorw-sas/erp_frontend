@@ -19,6 +19,7 @@ import { copyListFromColumns } from '~/pages/payment/utils/clipboardUtilsList'
 import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
 
 const route = useRoute()
+const highlightBookingId = ref<string | null>(null)
 const toast = useToast()
 const confirm = useConfirm()
 const authStore = useAuthStore()
@@ -1821,121 +1822,109 @@ const somePaymenWithApplyPayment = computed(() => {
 //     subTotals.value = { ...count }
 //   }
 // }
-async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }) {
+async function getListPaymentDetail(
+  showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }
+) {
   const count: SubTotals = { depositAmount: 0 }
 
-  if (options.value.loading) {
-    return // Si ya hay una solicitud en proceso, no hacer nada.
-  }
+  if (options.value.loading) { return }
 
   try {
     options.value.loading = true
     paymentDetailsList.value = []
-    const newListItems = []
+    const newListItems: any[] = []
 
-    // Función para gestionar filtros
-    const addOrUpdateFilter = (key: string, value: boolean, logicalOperation: string) => {
-      const existingFilter = payload.value.filter.find(item => item.key === key)
-      if (existingFilter) {
-        existingFilter.value = value
-        existingFilter.logicalOperation = logicalOperation
+    // Función reutilizable para añadir o actualizar filtros
+    const addOrUpdateFilter = (key: string, value: any, logicalOperation: string) => {
+      const existing = payload.value.filter.find(item => item.key === key)
+      if (existing) {
+        existing.value = value
+        existing.logicalOperation = logicalOperation
       }
       else {
         payload.value.filter.push({ key, operator: 'EQUALS', value, logicalOperation })
       }
     }
 
-    // Aplicación de filtros para reverso y cancelación
+    // Filtros reverso y cancelado
     if (showReverseTransaction.value && showCanceledDetails.value) {
       addOrUpdateFilter('reverseTransaction', true, 'OR')
       addOrUpdateFilter('canceledTransaction', true, 'OR')
     }
     else {
-      if (showReverseTransaction.value) {
-        addOrUpdateFilter('reverseTransaction', true, 'OR')
-      }
-      else {
-        addOrUpdateFilter('reverseTransaction', false, 'AND')
-      }
-
-      if (showCanceledDetails.value) {
-        addOrUpdateFilter('canceledTransaction', true, 'OR')
-      }
-      else {
-        addOrUpdateFilter('canceledTransaction', false, 'AND')
-      }
+      addOrUpdateFilter('reverseTransaction', showReverseTransaction.value, showReverseTransaction.value ? 'OR' : 'AND')
+      addOrUpdateFilter('canceledTransaction', showCanceledDetails.value, showCanceledDetails.value ? 'OR' : 'AND')
     }
 
-    // Filtro para payment.id
+    // Filtro por id de pago
     addOrUpdateFilter('payment.id', idItem.value, 'AND')
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+    const response = await GenericService.search(
+      options.value.moduleApi,
+      options.value.uriApi,
+      payload.value
+    )
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
+    pagination.value = { page, limit: size, totalElements, totalPages }
 
     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
+    const highlightId = route?.query?.highlightBooking?.toString() || null
 
-    // Procesamiento de cada item
-    const newItems = dataList.filter((iterator) => {
-      // Filtrar solo los elementos que no están ya presentes
-      if (!existingIds.has(iterator.id)) {
-        existingIds.add(iterator.id)
-        return true
-      }
-      return false
-    }).map((iterator) => {
-      // Actualizar o agregar los valores necesarios a cada item
-      if (iterator.amount !== undefined) {
-        count.depositAmount += iterator.amount
-        iterator.amount = !Number.isNaN(iterator.amount) ? Number.parseFloat(iterator.amount) : 0
+    for (const iterator of dataList) {
+      if (existingIds.has(iterator.id)) { continue }
+
+      // Monto
+      iterator.amount = iterator.amount ? Number.parseFloat(iterator.amount) : 0
+      count.depositAmount += iterator.amount
+
+      // Estado
+      if (iterator.status !== undefined) {
+        iterator.status = statusToBoolean(iterator.status)
       }
 
-      // Asignación condicional de propiedades comunes
-      if (iterator.status !== undefined) { iterator.status = statusToBoolean(iterator.status) }
-      if (iterator.transactionDate) { iterator.transactionDate = dayjs(iterator.transactionDate).format('YYYY-MM-DD') }
-      if (iterator.parentId) { iterator.parentId = iterator.parentId.toString() }
+      // Fecha
+      iterator.transactionDate = iterator.transactionDate
+        ? dayjs(iterator.transactionDate).format('YYYY-MM-DD')
+        : null
 
-      // Manejo de transactionType
+      // ID padre
+      iterator.parentId = iterator.parentId?.toString()
+
+      // Tipo de transacción
       if (iterator.transactionType) {
         iterator.deposit = iterator.transactionType.deposit
         iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
-        if (iterator.deposit) { iterator.rowClass = 'row-deposit' }
+        if (iterator.deposit) {
+          iterator.rowClass = 'row-deposit'
+        }
       }
 
-      // Manejo de manageBooking
+      // Booking
       if (iterator.manageBooking) {
-        iterator.adults = iterator.manageBooking?.adults?.toString()
-        iterator.childrens = iterator.manageBooking?.children?.toString()
-        iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
-        iterator.fullName = iterator.manageBooking?.fullName
-        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+        iterator.adults = iterator.manageBooking.adults?.toString()
+        iterator.childrens = iterator.manageBooking.children?.toString()
+        iterator.couponNumber = iterator.manageBooking.couponNumber?.toString()
+        iterator.fullName = iterator.manageBooking.fullName
+        iterator.reservationNumber = iterator.manageBooking.reservationNumber?.toString()
+        iterator.bookingId = iterator.manageBooking.bookingId?.toString()
+        iterator.invoiceNumber = iterator.manageBooking.invoice?.invoiceNumber?.toString()
 
-        // if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT') {
-        // if (iterator?.transactionType?.cash) {
-        iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-        iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
-        // }
-        // else {
-        //   iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
-        //   iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
-        // }
-        // }
+        // 🔶 Resaltar si coincide con el ID de booking en URL
+        if (iterator.bookingId && iterator.bookingId === highlightId) {
+          iterator.rowClass = 'row-highlight'
+        }
       }
 
-      return iterator // Devolver el item modificado
-    })
+      newListItems.push({ ...iterator })
+      existingIds.add(iterator.id)
+    }
 
-    // Agregar los nuevos elementos a la lista existente
-    paymentDetailsList.value = [...paymentDetailsList.value, ...newItems]
+    paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
   }
   catch (error) {
-    console.error(error)
-    // Aquí podrías mostrar un mensaje de error a los usuarios
+    console.error('Error al obtener detalles del pago:', error)
     alert('Hubo un error al cargar los detalles del pago. Por favor, inténtelo de nuevo.')
   }
   finally {
@@ -3627,33 +3616,16 @@ watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentGetList(amountOfDetailItem.value)
 })
 
-// onMounted(async () => {
-//   // const filterForEmployee: FilterCriteria[] = [
-//   //   {
-//   //     key: 'status',
-//   //     logicalOperation: 'AND',
-//   //     operator: 'EQUALS',
-//   //     value: 'ACTIVE',
-//   //   },
-//   // ]
-//   // await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
-//   //   query: '',
-//   //   keys: ['name', 'code'],
-//   // }, filterForEmployee)
-
-//   if (route?.query?.id) {
-//     const id = route.query.id.toString()
-//     await getItemById(id)
-//   }
-//   else {
-//     clearForm()
-//     loadDefaultsValues()
-//   }
-// })
 onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
     await getItemById(id)
+
+    // 🟡 Resaltar booking si viene en la URL
+    if (route?.query?.highlightBooking) {
+      const bookingIdToHighlight = route.query.highlightBooking.toString()
+      highlightBookingId.value = bookingIdToHighlight
+    }
   }
   else {
     clearForm()
@@ -4531,6 +4503,10 @@ onMounted(async () => {
 }
 .custom-checkbox {
   border-color: white;
+}
+.row-highlight {
+  background-color: #e0d8f7 !important;
+  border-left: 4px solid #fcbf49;
 }
 // .p-checkbox.p-component > .p-checkbox-box {
 //   border-color: white;
