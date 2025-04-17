@@ -8,6 +8,7 @@ import type { FilterCriteria } from '~/composables/list'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
+import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
 
 interface SubTotals {
   depositAmount: number
@@ -33,33 +34,12 @@ defineExpose({
 const dialogVisible = ref(props.openDialog)
 const listPaymentDetails = ref<any[]>([])
 const payloadOnChangePagePayments = ref<PageState>()
-
-// const columnsPayments = ref<IColumn[]>([
-//   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
-//   { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
-//   { field: 'invoiceNumber', header: 'Invoice No.', tooltip: 'Invoice No', width: '100px', type: 'text' },
-//   { field: 'transactionDate', header: 'Transaction Date', tooltip: 'Transaction Date', width: 'auto', type: 'text' },
-//   { field: 'fullName', header: 'Full Name', tooltip: 'Full Name', width: '150px', type: 'text' },
-//   // { field: 'firstName', header: 'First Name', tooltip: 'First Name', width: '150px', type: 'text' },
-//   // { field: 'lastName', header: 'Last Name', tooltip: 'Last Name', width: '150px', type: 'text' },
-//   { field: 'reservationNumber', header: 'Reservation No.', tooltip: 'Reservation', width: 'auto', type: 'text' },
-//   { field: 'couponNumber', header: 'Coupon No.', tooltip: 'Coupon No', width: 'auto', type: 'text' },
-//   // { field: 'checkIn', header: 'Check In', tooltip: 'Check In', width: 'auto', type: 'text' },
-//   // { field: 'checkOut', header: 'Check Out', tooltip: 'Check Out', width: 'auto', type: 'text' },
-//   { field: 'adults', header: 'Adults', tooltip: 'Adults', width: 'auto', type: 'text' },
-//   { field: 'children', header: 'Children', tooltip: 'Children', width: 'auto', type: 'text' },
-//   // { field: 'deposit', header: 'Deposit', tooltip: 'Deposit', width: 'auto', type: 'bool' },
-//   { field: 'amount', header: 'D. Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
-//   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'select', objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
-//   { field: 'parentId', header: 'Parent Id', width: 'auto', type: 'text' },
-//   { field: 'reverseFrom', header: 'Reverse From', width: 'auto', type: 'text' },
-//   { field: 'remark', header: 'Remark', width: 'auto', type: 'text' },
-// ])
+const toast = useToast()
 
 const columnsPayments = ref<IColumn[]>([
-  { field: 'paymentDetailId', header: 'Detail Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
-  // { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
+  { field: 'paymentDetailId', header: 'Detail Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'transactionType', header: 'P. Trans Type', type: 'select', width: '140px', sortable: true, showFilter: true, objApi: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' } },
   { field: 'transactionDate', header: 'Transaction Date', type: 'date', width: '140px', sortable: true, showFilter: true },
@@ -212,6 +192,10 @@ async function onRowDoubleClickInDataTable(item: any) {
   }
 }
 
+function copiarDatosPaymentDetails() {
+  copyTableToClipboard(columnsPayments.value, listPaymentDetails.value, toast)
+}
+
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsPayments.value)
 
@@ -265,7 +249,7 @@ onMounted(async () => {
     modal
     class="mx-3 sm:mx-0"
     content-class="border-round-bottom border-top-1 surface-border"
-    :style="{ width: '50%', maxWidth: '98%' }"
+    :style="{ width: '80%', maxWidth: '98%' }"
     :pt="{
       root: {
         class: 'custom-dialog-history',
@@ -304,6 +288,13 @@ onMounted(async () => {
           @on-row-double-click="onRowDoubleClickInDataTable"
         />
       </div>
+      <Button
+        v-tooltip.top="'Copiar tabla'"
+        class="p-button-lg w-1rem h-2rem"
+        style="margin-left: 1450px; margin-top: 5px"
+        icon="pi pi-copy"
+        @click="copiarDatosPaymentDetails"
+      />
       <div v-if="false" class="flex justify-content-end">
         <div>
           <!-- idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0 -->
