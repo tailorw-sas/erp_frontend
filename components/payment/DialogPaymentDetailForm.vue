@@ -18,6 +18,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'save', 'applyPayment', 'update:amount'])
+const isSaving = ref(false)
 const loadingSaveSpinner = ref(false)
 const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
@@ -43,20 +44,22 @@ async function handleSave(event: any) {
   item.value = event
   emit('save', item.value)
 }
-
 function saveSubmit(event: Event) {
+  if (isSaving.value) { return } // evita múltiples clics
+
+  isSaving.value = true
   loadingSaveSpinner.value = true
   forceSave.value = true
   submitEvent = event
-  try {
-    saveSubmit.value = event
-  }
-  catch (error) {
-    console.error('Error en el guardado:', error)
-  }
-  finally {
-    this.loadingSaveAll = false // Oculta el spinner una vez terminado el proceso
-  }
+
+  // Ejecuta la lógica de guardado o emite el evento
+  props.item.submitForm(event)
+
+  // Dale un pequeño tiempo antes de permitir otro clic (por seguridad visual)
+  setTimeout(() => {
+    isSaving.value = false
+    loadingSaveSpinner.value = false
+  }, 2000) // 2 segundos o el tiempo que creas suficiente
 }
 // function openDialogApplyPayment(event: Event) {
 
@@ -792,8 +795,12 @@ function processValidation($event: any, data: any) {
           <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
           </IfCan> -->
           <Button
-            v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save"
-            :loading="loadingSaveSpinner" @click="saveSubmit($event)"
+            v-tooltip.top="'Apply'"
+            class="w-3rem ml-4 p-button"
+            icon="pi pi-save"
+            :loading="loadingSaveSpinner"
+            :disabled="isSaving"
+            @click="saveSubmit($event)"
           />
         </div>
       </div>
