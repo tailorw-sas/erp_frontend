@@ -32,9 +32,10 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
 
     @Override
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
+        PaymentDto payment = this.cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
+
         if(Objects.nonNull(obj.getBookId())){
             ManageBookingDto booking = this.cache.getBooking(Long.parseLong(obj.getBookId()));
-            PaymentDto payment = this.cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
 
             if(Objects.isNull(booking)){
                 errorFieldList.add(new ErrorField("bookingId", "The booking not exist."));
@@ -50,14 +51,23 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
                     return false;
                 }
             }
-
+            //TODO Para aplicar un pago puedo cojer una factura de un hotel del mismo trading company y no desde otro hotel
             return true;
         }
 
         if (Objects.isNull(obj.getCoupon()) || obj.getCoupon().trim().isEmpty()) {
             errorFieldList.add(new ErrorField("Cuopon", "The cuopon field must not be empty"));
             return false;
+        }else{
+            List<ManageBookingDto> bookingByCuopon = this.cache.getBookingsByCoupon(obj.getCoupon());
+            if(Objects.nonNull(bookingByCuopon) && bookingByCuopon.size() == 1){
+                if(!bookingByCuopon.get(0).getInvoice().getAgency().getClient().getCode().equals(payment.getClient().getCode())){
+                    errorFieldList.add(new ErrorField("bookingClient", "The booking is not valid because it does not belong to the same client as the payment."));
+                    return false;
+                }
+            }
         }
+
         return true;
     }
 }
