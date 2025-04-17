@@ -3616,29 +3616,6 @@ watch(applyPaymentOnChangePage, (newValue) => {
   applyPaymentGetList(amountOfDetailItem.value)
 })
 
-// onMounted(async () => {
-//   // const filterForEmployee: FilterCriteria[] = [
-//   //   {
-//   //     key: 'status',
-//   //     logicalOperation: 'AND',
-//   //     operator: 'EQUALS',
-//   //     value: 'ACTIVE',
-//   //   },
-//   // ]
-//   // await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
-//   //   query: '',
-//   //   keys: ['name', 'code'],
-//   // }, filterForEmployee)
-
-//   if (route?.query?.id) {
-//     const id = route.query.id.toString()
-//     await getItemById(id)
-//   }
-//   else {
-//     clearForm()
-//     loadDefaultsValues()
-//   }
-// })
 onMounted(async () => {
   if (route?.query?.id) {
     const id = route.query.id.toString()
