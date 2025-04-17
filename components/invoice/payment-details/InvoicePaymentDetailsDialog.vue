@@ -57,7 +57,7 @@ const payloadOnChangePagePayments = ref<PageState>()
 // ])
 
 const columnsPayments = ref<IColumn[]>([
-  { field: 'paymentDetailId', header: 'Id', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'paymentDetailId', header: 'Detail Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'paymentNo', header: 'Payment Id', type: 'text', width: '90px', sortable: true, showFilter: true },
   // { field: 'bookingId', header: 'Booking Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
@@ -206,8 +206,8 @@ async function getPaymentDetailList() {
 }
 
 async function onRowDoubleClickInDataTable(item: any) {
-  if (item.hasOwnProperty('paymentId')) {
-    const url = `/payment/form?id=${encodeURIComponent(item.paymentId)}`
+  if (item.hasOwnProperty('paymentId') && item.hasOwnProperty('bookingId')) {
+    const url = `/payment/form?id=${encodeURIComponent(item.paymentId)}&highlightBooking=${encodeURIComponent(item.bookingId)}`
     window.open(url, '_blank')
   }
 }
