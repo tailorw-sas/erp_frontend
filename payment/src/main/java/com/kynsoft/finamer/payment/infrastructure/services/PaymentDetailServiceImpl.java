@@ -148,7 +148,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public PaymentDetailDto findByPaymentDetailId(Long paymentDetailId) {
-        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailId(paymentDetailId.intValue());
+        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailIdCustom(paymentDetailId.intValue());
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
