@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.BankerRounding;
@@ -100,6 +101,7 @@ public class Payment implements Serializable {
      * pago, son quienes proporcionan la invoice.
      */
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
+    @JsonManagedReference
     private List<PaymentDetail> paymentDetails;
 
     //@Column(precision = 2)

@@ -47,8 +47,8 @@ public class ManageCountry {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deleteAt;
 
-    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
-    private List<ManageAgency> agencies;
+    //@OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
+    //private List<ManageAgency> agencies;
 
     private String iso3;
 
