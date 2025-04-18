@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -70,7 +71,7 @@ public class ManageCountry {
                 description,
                 isDefault,
                 status,
-                managerLanguage.toAggregate(),
+                Objects.nonNull(managerLanguage) ? managerLanguage.toAggregate() : null,
                 iso3
         );
     }

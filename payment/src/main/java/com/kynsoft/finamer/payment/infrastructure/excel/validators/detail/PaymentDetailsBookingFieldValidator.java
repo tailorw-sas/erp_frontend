@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
@@ -16,8 +17,10 @@ import com.kynsoft.finamer.payment.infrastructure.services.http.helper.BookingIm
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<PaymentDetailRow> {
@@ -51,7 +54,13 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
                     return false;
                 }
             }
-            //TODO Para aplicar un pago puedo cojer una factura de un hotel del mismo trading company y no desde otro hotel
+
+            //Set<ManageHotelDto> hotels = new HashSet<>();
+            //TODO Para aplicar un pago puedo coger una factura de un hotel del mismo trading company y no desde otro hotel
+            /*if(Objects.nonNull(booking.getInvoice()) && Objects.nonNull(booking.getInvoice().getHotel())
+             && booking.getInvoice().getHotel().getApplyByTradingCompany()){
+
+            }*/
             return true;
         }
 
