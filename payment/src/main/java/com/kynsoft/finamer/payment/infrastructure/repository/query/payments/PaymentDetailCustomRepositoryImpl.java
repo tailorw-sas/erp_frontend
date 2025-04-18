@@ -642,23 +642,23 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                 tuple.get(1, Status.class),
                 tuple.get(2, Long.class),
                 tuple.get(3, Long.class),
-                new Payment(
+                (tuple.get(4, UUID.class) != null) ? new Payment(
                         tuple.get(4, UUID.class),
                         tuple.get(5, Long.class),
                         tuple.get(6, Status.class),
                         tuple.get(7, EAttachment.class),
-                        new ManagePaymentSource(
+                        (tuple.get(8, UUID.class) != null) ? new ManagePaymentSource(
                                 tuple.get(8, UUID.class),
                                 tuple.get(9, String.class),
                                 tuple.get(10, String.class),
                                 tuple.get(11, String.class),
                                 tuple.get(12, Boolean.class),
                                 tuple.get(13, Boolean.class)
-                        ),
+                        ) : null,
                         tuple.get(14, String.class),
                         tuple.get(15, LocalDate.class),
                         tuple.get(16, LocalTime.class),
-                        new ManagePaymentStatus(
+                        (tuple.get(17, UUID.class) != null) ? new ManagePaymentStatus(
                                 tuple.get(17, UUID.class),
                                 tuple.get(18, String.class),
                                 tuple.get(19, String.class),
@@ -667,31 +667,31 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                 tuple.get(22, Boolean.class),
                                 tuple.get(23, Boolean.class),
                                 tuple.get(24, Boolean.class)
-                        ),
-                        new ManageClient(
+                        ) : null,
+                        (tuple.get(25, UUID.class) != null) ? new ManageClient(
                                 tuple.get(25, UUID.class),
                                 tuple.get(26, String.class),
                                 tuple.get(27, String.class),
                                 tuple.get(28, String.class)
-                        ),
-                        new ManageAgency(
+                        ) : null,
+                        (tuple.get(29, UUID.class) != null) ? new ManageAgency(
                                 tuple.get(29, UUID.class),
                                 tuple.get(30, String.class),
                                 tuple.get(31, String.class),
                                 tuple.get(32, String.class),
-                                new ManageAgencyType(
+                                (tuple.get(33, UUID.class) != null) ? new ManageAgencyType(
                                         tuple.get(33, UUID.class),
                                         tuple.get(34, String.class),
                                         tuple.get(35, String.class),
                                         tuple.get(35, String.class)
-                                ),
-                                new ManageClient(
+                                ) : null,
+                                (tuple.get(37, UUID.class) != null) ? new ManageClient(
                                         tuple.get(37, UUID.class),
                                         tuple.get(38, String.class),
                                         tuple.get(39, String.class),
                                         tuple.get(40, String.class)
-                                ),
-                                new ManageCountry(
+                                ) : null,
+                                (tuple.get(41, UUID.class) != null) ? new ManageCountry(
                                         tuple.get(41, UUID.class),
                                         tuple.get(42, String.class),
                                         tuple.get(43, String.class),
@@ -704,11 +704,11 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                         tuple.get(49, LocalDateTime.class),
                                         null,
                                         tuple.get(50, String.class)
-                                ),
+                                ) : null,
                                 tuple.get(51, LocalDateTime.class),
                                 tuple.get(52, LocalDateTime.class)
-                        ),
-                        new ManageHotel(
+                        ) : null,
+                        (tuple.get(53, UUID.class) != null) ? new ManageHotel(
                                 tuple.get(53, UUID.class),
                                 tuple.get(54, String.class),
                                 tuple.get(55, Boolean.class),
@@ -720,8 +720,8 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                 tuple.get(61, LocalDateTime.class),
                                 tuple.get(62, LocalDateTime.class),
                                 tuple.get(63, LocalDateTime.class)
-                        ),
-                        /*new Invoice(
+                        ) : null,
+                        (tuple.get(64, UUID.class) != null) ? new Invoice(
                                 tuple.get(64, UUID.class),
                                 tuple.get(65, Long.class),
                                 tuple.get(66, Long.class),
@@ -732,7 +732,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                 null,
                                 tuple.get(71, EInvoiceType.class),
                                 null,
-                                new ManageHotel(
+                                (tuple.get(72, UUID.class) != null) ? new ManageHotel(
                                         tuple.get(72, UUID.class),
                                         tuple.get(73, String.class),
                                         tuple.get(74, Boolean.class),
@@ -744,25 +744,25 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                         tuple.get(80, LocalDateTime.class),
                                         tuple.get(81, LocalDateTime.class),
                                         tuple.get(82, LocalDateTime.class)
-                                ),
-                                new ManageAgency(
+                                ) : null,
+                                (tuple.get(83, UUID.class) != null) ? new ManageAgency(
                                         tuple.get(83, UUID.class),
                                         tuple.get(84, String.class),
                                         tuple.get(85, String.class),
                                         tuple.get(86, String.class),
-                                        new ManageAgencyType(
+                                        (tuple.get(87, UUID.class) != null) ? new ManageAgencyType(
                                                 tuple.get(87, UUID.class),
                                                 tuple.get(88, String.class),
                                                 tuple.get(89, String.class),
                                                 tuple.get(90, String.class)
-                                        ),
-                                        new ManageClient(
+                                        ) : null,
+                                        (tuple.get(91, UUID.class) != null) ? new ManageClient(
                                                 tuple.get(91, UUID.class),
                                                 tuple.get(92, String.class),
                                                 tuple.get(93, String.class),
                                                 tuple.get(94, String.class)
-                                        ),
-                                        new ManageCountry(
+                                        ) : null,
+                                        (tuple.get(95, UUID.class) != null) ? new ManageCountry(
                                                 tuple.get(95, UUID.class),
                                                 tuple.get(96, String.class),
                                                 tuple.get(97, String.class),
@@ -775,21 +775,20 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                                 tuple.get(103, LocalDateTime.class),
                                                 null,
                                                 tuple.get(104, String.class)
-                                        ),
+                                        ) : null,
                                         tuple.get(105, LocalDateTime.class),
                                         tuple.get(106, LocalDateTime.class)
-                                ),
+                                ) : null,
                                 tuple.get(107, Boolean.class)
-                        )*/
-                        null,
-                        new ManageBankAccount(
+                        ) : null,
+                        (tuple.get(108, UUID.class) != null) ? new ManageBankAccount(
                                 tuple.get(108, UUID.class),
                                 tuple.get(109, String.class),
                                 tuple.get(110, String.class),
                                 tuple.get(111, String.class),
                                 null
-                        ),
-                        new ManagePaymentAttachmentStatus(
+                        ) : null,
+                        (tuple.get(112, UUID.class) != null) ? new ManagePaymentAttachmentStatus(
                                 tuple.get(112, UUID.class),
                                 tuple.get(113, String.class),
                                 tuple.get(114, String.class),
@@ -800,7 +799,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                 tuple.get(119, Boolean.class),
                                 tuple.get(120, Boolean.class),
                                 tuple.get(121, Boolean.class)
-                        ),
+                        ) : null,
                         Collections.emptyList(),
                         Collections.emptyList(),
                         tuple.get(122, Double.class),
@@ -821,8 +820,8 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                         tuple.get(137, OffsetDateTime.class),
                         tuple.get(138, OffsetDateTime.class),
                         tuple.get(139, ImportType.class)
-                ),
-                new ManagePaymentTransactionType(
+                ) : null,
+                (tuple.get(140, UUID.class) != null) ? new ManagePaymentTransactionType(
                         tuple.get(140, UUID.class),
                         tuple.get(141, String.class),
                         tuple.get(142, String.class),
@@ -838,8 +837,8 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                         tuple.get(152, Boolean.class),
                         tuple.get(153, Boolean.class),
                         tuple.get(154, Boolean.class)
-                ),
-                new Booking(
+                ) : null,
+                (tuple.get(155, UUID.class) != null) ? new Booking(
                         tuple.get(155, UUID.class),
                         tuple.get(156, Long.class),
                         tuple.get(157, String.class),
@@ -853,7 +852,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                         tuple.get(165, String.class),
                         tuple.get(166, Integer.class),
                         tuple.get(167, Integer.class),
-                        new Invoice(
+                        (tuple.get(168, UUID.class) != null) ? new Invoice(
                                 tuple.get(168, UUID.class),
                                 tuple.get(169, Long.class),
                                 tuple.get(170, Long.class),
@@ -867,10 +866,10 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                 null,
                                 null,
                                 tuple.get(176, Boolean.class)
-                        ),
+                        ) : null,
                         null,
                         tuple.get(177, LocalDateTime.class)
-                ),
+                ) : null,
                 tuple.get(178, Long.class),
                 tuple.get(179, Long.class),
                 tuple.get(180, Double.class),
