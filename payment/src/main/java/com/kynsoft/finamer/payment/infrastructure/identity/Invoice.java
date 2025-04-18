@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
@@ -47,6 +48,7 @@ public class Invoice {
     private EInvoiceType invoiceType;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Booking> bookings;
 
     @ManyToOne(fetch = FetchType.EAGER)

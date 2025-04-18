@@ -702,7 +702,6 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                         tuple.get(47, LocalDateTime.class),
                                         tuple.get(48, LocalDateTime.class),
                                         tuple.get(49, LocalDateTime.class),
-                                        null,
                                         tuple.get(50, String.class)
                                 ) : null,
                                 tuple.get(51, LocalDateTime.class),
@@ -773,7 +772,6 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
                                                 tuple.get(101, LocalDateTime.class),
                                                 tuple.get(102, LocalDateTime.class),
                                                 tuple.get(103, LocalDateTime.class),
-                                                null,
                                                 tuple.get(104, String.class)
                                         ) : null,
                                         tuple.get(105, LocalDateTime.class),

@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
@@ -43,6 +44,7 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice", nullable = true)
+    @JsonBackReference
     private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
