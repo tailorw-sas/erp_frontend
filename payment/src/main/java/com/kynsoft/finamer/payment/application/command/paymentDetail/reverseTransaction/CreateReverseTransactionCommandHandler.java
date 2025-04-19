@@ -206,12 +206,15 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
 
     private void replicateBooking(PaymentDto paymentDto, PaymentDetailDto paymentDetailDto, ManageBookingDto bookingDto){
         try {
-            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
-                    paymentDto.getId(),
-                    paymentDto.getPaymentId(),
-                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
-                    ));
-            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, paymentDetailDto.getTransactionType().getApplyDeposit()));
+            UpdateBookingBalanceKafka updateBookingBalanceKafka = new UpdateBookingBalanceKafka(bookingDto.getId(),
+                    bookingDto.getAmountBalance(),
+                    new ReplicatePaymentKafka(
+                            paymentDto.getId(),
+                            paymentDto.getPaymentId(),
+                            new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                            )),
+                    paymentDetailDto.getTransactionType().getApplyDeposit());
+            this.producerUndoApplicationUpdateBookingService.update(updateBookingBalanceKafka);
         } catch (Exception e) {
             Logger.getLogger(CreateReverseTransactionCommandHandler.class.getName()).log(Level.SEVERE, "Error trying to replicate booking", e);
         }
