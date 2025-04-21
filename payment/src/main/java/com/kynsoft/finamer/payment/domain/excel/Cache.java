@@ -138,7 +138,7 @@ public class Cache implements ICache {
     public List<ManageBookingDto> getBookingsByCoupon(String coupon){
         if(Objects.isNull(this.bookingsByCouponMap) || this.bookingsByCouponMap.isEmpty()){
             //printLog("The bookingControlAmountBalanceByCouponMap map is null or Empty");
-            return null;
+            return Collections.emptyList();
         }
 
         return this.bookingsByCouponMap.get(coupon);
@@ -147,7 +147,7 @@ public class Cache implements ICache {
     public List<ManageBookingDto> getBookingsByCuoponList(List<String> cuopons){
         if(Objects.isNull(this.bookingsByCouponMap) || this.bookingsByCouponMap.isEmpty()){
             //printLog("The bookingControlAmountBalanceByCouponMap map is null or Empty");
-            return null;
+            return Collections.emptyList();
         }
 
         List<List<ManageBookingDto>> list = this.bookingsByCouponMap.entrySet().stream()

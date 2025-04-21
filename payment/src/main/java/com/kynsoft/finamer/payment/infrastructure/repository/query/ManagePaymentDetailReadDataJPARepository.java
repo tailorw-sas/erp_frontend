@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.repository.query;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails.PaymentDetailSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.payments.PaymentDetailCustomRepository;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +18,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<PaymentDetail, UUID>,
-        JpaSpecificationExecutor<PaymentDetail> {
+        JpaSpecificationExecutor<PaymentDetail>, PaymentDetailCustomRepository {
 
     @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     Page<PaymentDetail> findAll(Specification specification, Pageable pageable);

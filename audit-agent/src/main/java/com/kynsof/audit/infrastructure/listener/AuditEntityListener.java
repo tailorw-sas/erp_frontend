@@ -63,7 +63,7 @@ public class AuditEntityListener {
             procedure.send(auditKafka);
 
         } catch (JsonProcessingException e) {
-           logger.error("Ha ocurrido un error al procesar la entidad");
+           logger.error("Ha ocurrido un error al procesar la entidad" + e);
         }
 
     }
