@@ -77,7 +77,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public PaymentDetailDto findById(UUID id) {
-        Optional<PaymentDetail> userSystem = this.repositoryQuery.findById(id);
+        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByIdCustom(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -86,7 +86,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public PaymentDetailDto findByGenId(int id) {
-        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailId(id);
+        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailIdCustom(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -100,8 +100,10 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public List<PaymentDetailDto> findByPaymentId(UUID paymentId) {
-        Optional<List<PaymentDetail>> result = repositoryQuery.findAllByPayment(paymentId);
-        return result.map(paymentDetails -> paymentDetails.stream().map(PaymentDetail::toAggregate).toList()).orElse(Collections.EMPTY_LIST);
+        List<PaymentDetail> results = repositoryQuery.findAllByPaymentIdCustom(paymentId);
+        return results.stream()
+                .map(PaymentDetail::toAggregate)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -109,7 +111,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<PaymentDetail> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<PaymentDetail> data = this.repositoryQuery.findAll(specifications, pageable);
+        Page<PaymentDetail> data = this.repositoryQuery.findAllCustom(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
@@ -146,7 +148,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public PaymentDetailDto findByPaymentDetailId(Long paymentDetailId) {
-        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailId(paymentDetailId);
+        Optional<PaymentDetail> userSystem = this.repositoryQuery.findByPaymentDetailIdCustom(paymentDetailId.intValue());
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }

@@ -115,7 +115,6 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(bankAccountHotelJoin.get("manageTradingCompany"));
         selections.add(bankAccountHotelJoin.get("autoApplyCredit"));
 
-
         // Payment Attachment Status
         selections.add(attachmentStatusJoin.get("id"));
         selections.add(attachmentStatusJoin.get("code"));
@@ -210,7 +209,15 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                         tuple.get(41, String.class),
                         tuple.get(42, String.class),
                         tuple.get(43, String.class),
-                        null
+                        new ManageHotel(
+                                tuple.get(44, UUID.class),
+                                tuple.get(45, String.class),
+                                tuple.get(46, String.class),
+                                tuple.get(47, String.class),
+                                tuple.get(48, Boolean.class),
+                                tuple.get(49, UUID.class),
+                                tuple.get(50, Boolean.class)
+                        )
                 ),
                 new ManagePaymentAttachmentStatus(
                         tuple.get(51, UUID.class),
