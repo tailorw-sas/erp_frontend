@@ -51,30 +51,33 @@ public class PaymentDetailAntiBookingValidator extends ExcelListRuleValidator<Pa
     private void validateAntiByCuopon(List<PaymentDetailRow> obj, List<RowErrorField> errorRowList, ManagePaymentTransactionTypeDto depositTransactionType){
         List<String> coupons = obj.stream()
                 .filter(paymentDetailRow -> Objects.nonNull(paymentDetailRow.getTransactionType()) && !paymentDetailRow.getTransactionType().isEmpty()
-                        && paymentDetailRow.getTransactionType().equals(depositTransactionType.getCode()))
+                        && paymentDetailRow.getTransactionType().equals(depositTransactionType.getCode())
+                && Objects.nonNull(paymentDetailRow.getCoupon()) && !paymentDetailRow.getCoupon().isEmpty())
                 .map(PaymentDetailRow::getCoupon)
                 .distinct().toList();
 
-        List<String> duplicatedCupons = cache.getBookingsByCuoponList(coupons).stream()
-                .map(ManageBookingDto::getCouponNumber)
-                .collect(Collectors.groupingBy(cuopon -> cuopon, Collectors.counting()))
-                .entrySet().stream()
-                .filter(entry -> entry.getValue() > 1)
-                .map(Map.Entry::getKey)
-                .toList();
+        if(!coupons.isEmpty()){
+            List<String> duplicatedCupons = cache.getBookingsByCuoponList(coupons).stream()
+                    .map(ManageBookingDto::getCouponNumber)
+                    .collect(Collectors.groupingBy(cuopon -> cuopon, Collectors.counting()))
+                    .entrySet().stream()
+                    .filter(entry -> entry.getValue() > 1)
+                    .map(Map.Entry::getKey)
+                    .toList();
 
-        Map<String, List<PaymentDetailRow>> paymentDetailsByBookingMap = obj.stream()
-                .filter(paymentDetailRow -> Objects.nonNull(paymentDetailRow.getTransactionType())
-                        && !paymentDetailRow.getTransactionType().isEmpty()
-                        && paymentDetailRow.getTransactionType().equals(depositTransactionType.getCode())
-                        && Objects.nonNull(paymentDetailRow.getCoupon()) && !paymentDetailRow.getCoupon().isEmpty()
-                        && !duplicatedCupons.contains(paymentDetailRow.getCoupon()))
-                .collect(Collectors.groupingBy(PaymentDetailRow::getCoupon, Collectors.toList()));
+            Map<String, List<PaymentDetailRow>> paymentDetailsByBookingMap = obj.stream()
+                    .filter(paymentDetailRow -> Objects.nonNull(paymentDetailRow.getTransactionType())
+                            && !paymentDetailRow.getTransactionType().isEmpty()
+                            && paymentDetailRow.getTransactionType().equals(depositTransactionType.getCode())
+                            && Objects.nonNull(paymentDetailRow.getCoupon()) && !paymentDetailRow.getCoupon().isEmpty()
+                            && !duplicatedCupons.contains(paymentDetailRow.getCoupon()))
+                    .collect(Collectors.groupingBy(PaymentDetailRow::getCoupon, Collectors.toList()));
 
-        for(Map.Entry<String, List<PaymentDetailRow>> bookingMap : paymentDetailsByBookingMap.entrySet()){
-            List<ManageBookingDto> bookings = this.cache.getBookingsByCoupon(bookingMap.getKey());
-            if(Objects.nonNull(bookings) && bookings.size() == 1){
-                validateBookingGroup(bookings.get(0), bookingMap.getValue(), errorRowList);
+            for(Map.Entry<String, List<PaymentDetailRow>> bookingMap : paymentDetailsByBookingMap.entrySet()){
+                List<ManageBookingDto> bookings = this.cache.getBookingsByCoupon(bookingMap.getKey());
+                if(Objects.nonNull(bookings) && bookings.size() == 1){
+                    validateBookingGroup(bookings.get(0), bookingMap.getValue(), errorRowList);
+                }
             }
         }
     }

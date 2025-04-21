@@ -124,14 +124,9 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                 cachingPaymentImport(row);
                 this.totalProcessRow++;
             });
-        }/*else{
-            importControl.setShouldStopProcess(true);
-        }*/
+        }
 
         printLog("End readExcel process");
-        /*if(importControl.getShouldStopProcess()){
-            throw new ExcelException("Excel has errors");
-        }*/
     }
 
     private void clearCache() {
