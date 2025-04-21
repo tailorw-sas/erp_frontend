@@ -22,6 +22,7 @@ import PaymentDetailDialog from '~/pages/payment/import-detail.vue'
 import PayPrint from '~/pages/payment/print/index.vue'
 import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
 import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
+import { exportDataToExcel } from '~/utils/export-to-excel'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -38,6 +39,7 @@ const statusItemsList = ref<any[]>([])
 const openDialogApplyPayment = ref(false)
 const openDialogImportTransactionsFromVCC = ref(false)
 const openDialogApplyPaymentOtherDeduction = ref(false)
+const openDialogCopyBatch = ref(false)
 const disabledBtnApplyPayment = ref(true)
 const disabledBtnApplyPaymentOtherDeduction = ref(true)
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
@@ -295,6 +297,18 @@ const allMenuListItems = ref([
     disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
   },
+  // {
+  //   id: 'CopyBatch',
+  //   label: 'Copy batch',
+  //   icon: 'pi pi-cog',
+  //   iconSvg: '',
+  //   viewBox: '',
+  //   width: '24px',
+  //   height: '24px',
+  //   command: ($event: any) => openModalCopyBatch($event),
+  //   disabled: false,
+  //   visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
+  // },
   {
     id: 'applyPayment',
     label: 'Apply Payment',
@@ -1039,12 +1053,85 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
   { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: true, showFilter: true, editable: true },
 ])
 
+const allInvoiceCheckIsChecked1 = ref(false)
+
+const applyPaymentColumnsOtherDeduction1 = ref<IColumn[]>([
+  { field: 'pay', header: 'Payment Id', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'invoiceNumber', header: 'Invoice No', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'dueAmountTemp', header: 'Balance', type: 'number', width: '70px', sortable: true, showFilter: true, editable: true },
+  { field: 'trans', header: 'Trans.Category', type: 'date', width: '30px', // Define un ancho fijo
+    minWidth: '20px', // Establece un ancho mínimo
+    maxWidth: '40px', // Evita que se expanda demasiado
+    widthTruncate: '30px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'ANTI', header: 'ANTI', type: 'date', width: '30px', // Define un ancho fijo
+    minWidth: '20px', // Establece un ancho mínimo
+    maxWidth: '40px', // Evita que se expanda demasiado
+    widthTruncate: '30px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'rema', header: 'Remark', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'firstName', header: 'First Name', type: 'text', width: '80px', // Define un ancho fijo
+    minWidth: '70px', // Establece un ancho mínimo
+    maxWidth: '90px', // Evita que se expanda demasiado
+    widthTruncate: '80px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'lastName', header: 'Last Name', type: 'text', width: '80px', // Define un ancho fijo
+    minWidth: '70px', // Establece un ancho mínimo
+    maxWidth: '90px', // Evita que se expanda demasiado
+    widthTruncate: '80px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'hotelBookingNumber', header: 'Booking No', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'bookingId', header: 'Book Id', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+  { field: 'Imp', header: 'Imp Status ', type: 'text', width: '50px', // Define un ancho fijo
+    minWidth: '40px', // Establece un ancho mínimo
+    maxWidth: '60px', // Evita que se expanda demasiado
+    widthTruncate: '50px', // Control de truncamiento
+    columnClass: 'truncate-text', sortable: true, showFilter: true },
+])
+
 const applyPaymentOptionsOtherDeduction = ref({
   tableName: 'Apply Payment',
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice/search-payment',
   expandableRows: false,
   selectionMode: 'multiple',
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const applyPaymentOptionsOtherDeduction1 = ref({
+  tableName: 'Apply Payment',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice/search-payment',
+  expandableRows: false,
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -1739,6 +1826,13 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
 
 function copiarDatosOtherDeductions() {
   copyTableToClipboard(applyPaymentColumnsOtherDeduction.value, applyPaymentListOfInvoiceOtherDeduction.value, toast)
+}
+
+function copiarDatosBatch() {
+  copyTableToClipboard(applyPaymentColumnsOtherDeduction1.value, applyPaymentListOfInvoiceOtherDeduction.value, toast)
+}
+function exportarOtherDeductions() {
+  exportDataToExcel(applyPaymentColumnsOtherDeduction1.value, applyPaymentListOfInvoiceOtherDeduction.value, 'other-deductions.xls')
 }
 
 function copiarDatos() {
@@ -2928,7 +3022,6 @@ async function applyPaymentGetListForOtherDeductions() {
                 })
               }
               const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
-              console.log('Parte 3')
               if (objFilterDueAmount) {
                 objFilterDueAmount.value = '0.00'
               }
@@ -3028,6 +3121,7 @@ async function applyPaymentGetListForOtherDeductions() {
               }
 
               applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
+              console.log('applyPaymentListOfInvoiceOtherDeduction.value')
             }
           }
         }
@@ -3063,6 +3157,17 @@ function closeModalApplyPaymentOtherDeductions() {
   applyPaymentPayloadOtherDeduction.value.filter = []
 }
 
+function closeModalCopyBatch() {
+  objItemSelectedForRightClickApplyPaymentOtherDeduction.value = {}
+  openDialogCopyBatch.value = false
+  disabledBtnApplyPaymentOtherDeduction.value = true
+  allInvoiceCheckIsChecked.value = false
+  loadAllInvoices.value = false
+  idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
+  applyPaymentOnChangePageOtherDeduction.value = undefined
+  applyPaymentPayloadOtherDeduction.value.filter = []
+}
+
 async function openModalApplyPayment() {
   paymentDetailsTypeDepositSelected.value = []
   openDialogApplyPayment.value = true
@@ -3077,6 +3182,16 @@ async function openModalApplyPayment() {
 
 async function openModalApplyPaymentOtherDeduction() {
   openDialogApplyPaymentOtherDeduction.value = true
+  paymentAmmountSelected.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
+  paymentBalance.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
+  transactionType.value = {}
+  fieldRemark.value = ''
+  loadAllInvoices.value = false
+  applyPaymentGetListForOtherDeductions()
+}
+
+async function openModalCopyBatch() {
+  openDialogCopyBatch.value = true
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value.paymentBalance
   transactionType.value = {}
@@ -5256,6 +5371,128 @@ onMounted(async () => {
               :disabled="('id' in transactionType) === false || idInvoicesSelectedToApplyPaymentForOtherDeduction.length === 0"
               :loading="loadingSaveApplyPayment"
               @click="saveApplyPaymentOtherDeduction"
+            />
+          </div>
+        </div>
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="openDialogCopyBatch"
+      modal
+      class="mx-3 sm:mx-0"
+      content-class="border-round-bottom border-top-1 surface-border"
+      :style="{ width: '80%', maxHeight: '100vh' }"
+      :pt="{
+        root: {
+          class: 'custom-dialog-history',
+        },
+        header: {
+          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+        },
+      }"
+      @hide="closeModalApplyPaymentOtherDeductions()"
+    >
+      <template #header>
+        <div class="flex justify-content-between align-items-center w-full">
+          <h5 class="m-0">
+            Colums of Batch
+          </h5>
+          <h5 class="m-0 font-bold mr-5">
+            Payment Id: {{ objItemSelectedForRightClickApplyPaymentOtherDeduction.paymentId }}
+          </h5>
+        </div>
+      </template>
+      <template #default>
+        <div class="p-fluid pt-0">
+          <div class="grid">
+            <div class="col-12 md:col-8 w-auto">
+              <div class="flex align-items-center">
+                <div class="w-30rem">
+                  <div v-if="true" class="flex">
+                    <div class="w-full">
+                      <div v-if="errors.remark" class="p-error text-xs w-full">
+                        <div v-for="error in errors.remark" :key="error" class="error-message">
+                          {{ error }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <DynamicTable
+          class="card p-0"
+          :data="applyPaymentListOfInvoiceOtherDeduction"
+          :columns="applyPaymentColumnsOtherDeduction1"
+          :options="applyPaymentOptionsOtherDeduction1"
+          :pagination="applyPaymentPaginationOtherDeduction"
+          @on-change-pagination="applyPaymentOnChangePageOtherDeduction = $event"
+          @on-change-filter="parseDataTableFilterForApplyPaymentOtherDeduction($event)"
+          @update:clicked-item="selectRowsOfInvoiceOfOtherDeduction($event)"
+          @on-table-cell-edit-complete="onCellEditCompleteApplyPaymentOtherDeduction($event)"
+          @on-sort-field="applyPaymentOtherDeductionOnSortField"
+        >
+          <template #column-status="{ data: item }">
+            <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+          </template>
+
+          <!-- <template #expansion="{ data: item }">
+              <div class="p-0 m-0">
+                <DataTable :value="item.bookings" striped-rows>
+                  <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                  <template #empty>
+                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                      <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                        <div class="row">
+                          <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                        </div>
+                        <div class="row">
+                          <p>{{ messageForEmptyTable }}</p>
+                        </div>
+                      </span>
+                      <span v-else class="flex flex-column align-items-center justify-content-center">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                      </span>
+                    </div>
+                  </template>
+                </DataTable>
+              </div>
+            </template> -->
+        </DynamicTable>
+        <div class="flex justify-content-between">
+          <div class="flex align-items-center">
+            <Checkbox
+              id="checkApplyPayment"
+              v-model="loadAllInvoices"
+              :binary="true"
+              :disabled="false"
+              @update:model-value="($event) => {
+
+                // Este check solo se activa si la lista esta vacia, pero si hace click en el check y se llene la lista (se supone que el check se deshabilite)
+                // la variable allInvoiceCheckIsChecked se usa para controlar eso
+                allInvoiceCheckIsChecked1 = true
+                applyPaymentGetListForOtherDeductions();
+              }"
+            />
+            <label for="checkApplyPayment" class="ml-2 font-bold">
+              Load All Bookings
+            </label>
+          </div>
+          <div>
+            <Button
+              v-tooltip.top="'Copiar batch'"
+              class="w-3rem mx-1"
+              icon="pi pi-copy"
+              @click="copiarDatosBatch"
+            />
+            <Button
+              v-tooltip.top="'Exportar Excel'"
+              class="w-3rem mx-1"
+              icon="pi pi-file-excel"
+              @click="exportarOtherDeductions"
             />
           </div>
         </div>

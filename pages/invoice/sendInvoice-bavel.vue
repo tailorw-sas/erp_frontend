@@ -159,12 +159,12 @@ async function getList() {
         value: '0',
         logicalOperation: 'OR'
       },
-    // {
-    //   key: 'dueAmount',
-    //   operator: 'GREATER_THAN',
-    //   value: '0',
-    //   logicalOperation: 'AND'
-    // }
+      {
+        key: 'dueAmount',
+        operator: 'GREATER_THAN',
+        value: '0',
+        logicalOperation: 'AND'
+      }
     ]
 
     payload.value.filter = [...payload.value.filter, ...staticPayload]
@@ -172,7 +172,6 @@ async function getList() {
     clickedItem.value = []
     const newListItems = []
     const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
-    console.log('response', response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
