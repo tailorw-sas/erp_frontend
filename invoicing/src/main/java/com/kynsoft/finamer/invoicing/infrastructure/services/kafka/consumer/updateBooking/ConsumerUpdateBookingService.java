@@ -47,12 +47,11 @@ public class ConsumerUpdateBookingService {
         try {
 
             ManageBookingDto bookingDto = this.bookingService.findById(objKafka.getId());
-            bookingDto.setDueAmount(bookingDto.getDueAmount() - objKafka.getAmountBalance());
+            bookingDto.setDueAmount(objKafka.getAmountBalance());
             this.bookingService.update(bookingDto);
 
-//            ManageInvoiceDto invoiceDto = bookingDto.getInvoice();
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
-            invoiceDto.setDueAmount(invoiceDto.getDueAmount() - objKafka.getAmountBalance());
+            this.getInvoiceDueAmount(invoiceDto, objKafka.getAmountBalance());
             this.invoiceService.update(invoiceDto);
 
             PaymentDto payment = new PaymentDto(objKafka.getPaymentKafka().getId(), objKafka.getPaymentKafka().getPaymentId());
@@ -83,6 +82,13 @@ public class ConsumerUpdateBookingService {
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateBookingService.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void getInvoiceDueAmount(ManageInvoiceDto invoiceDto, Double bookingDueAmount){
+        Double currentDueAmount = invoiceDto.getBookings().stream()
+                .mapToDouble(ManageBookingDto::getDueAmount)
+                .sum();
+        invoiceDto.setDueAmount(currentDueAmount);
     }
 
 }
