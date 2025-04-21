@@ -103,8 +103,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <Button v-if="false" class="layout-config-button p-link" style="cursor: pointer" @click="onConfigSidebarToggle()">
-    <i class="pi pi-cog" />
+  <Button
+    class="p-button-rounded p-button-text p-button-sm"
+    style="position: fixed; top: 1rem; right: 6rem; z-index: 1000; width: 2rem; height: 2rem; padding: 0.25rem"
+    @click="onConfigSidebarToggle()"
+  >
+    <i class="pi pi-cog" style="font-size: 1.2rem" />
   </Button>
 
   <Sidebar v-model:visible="layoutState.configSidebarVisible.value" position="right" class="layout-config-sidebar w-18rem">
