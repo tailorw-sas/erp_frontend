@@ -70,6 +70,7 @@ const showReverseTransaction = ref(false)
 const showCanceledDetails = ref(false)
 
 const showImportModal = ref(false)
+const loadingReverseTransaction = ref(false)
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -2418,12 +2419,15 @@ function reverseTransaction(event: any) {
 
 async function applyReverseTransaction(event: any) {
   try {
+    options.value.loading = true
     if (objItemSelectedForRightClickReverseTransaction.value?.id) {
       const payload = {
         paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || '',
         employee: userData?.value?.user?.userId || ''
       }
       await GenericService.create(confApiPaymentDetailReverseTransaction.moduleApi, confApiPaymentDetailReverseTransaction.uriApi, payload)
+      toast.add({ severity: 'success', summary: 'Success', detail: 'The transaction was reversed successfully', life: 3000 })
+      options.value.loading = false
       if (route?.query?.id) {
         const id = route.query.id.toString()
         await getItemById(id)
