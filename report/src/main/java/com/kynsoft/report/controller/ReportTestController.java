@@ -151,6 +151,7 @@ public class ReportTestController {
                     .body("{\"base64Report\": \"" + base64Report + "\"}");
 
         } catch (Exception e) {
+            logger.error("Report code: {}", request.getJasperReportCode(), e);
             throw new RuntimeException("Error generating report", e);
         } finally {
             // Cerrar la conexión si está abierta
