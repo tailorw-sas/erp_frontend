@@ -136,15 +136,6 @@ const fieldsTemp = [
 
 // -------------------------------------------------------------------------------------------------------
 
-// TABLE COLUMNS -----------------------------------------------------------------------------------------
-const columns = ref<IColumn[]>([
-  { field: 'code', header: 'Code', type: 'text' },
-  { field: 'name', header: 'Name', type: 'text' },
-  { field: 'description', header: 'Description', type: 'text' },
-  { field: 'type', header: 'Tipo', type: 'local-select', localItems: [...ENUM_REPORT_TYPE] },
-
-  { field: 'createdAt', header: 'Created At', type: 'date' },
-])
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -156,7 +147,7 @@ const options = ref({
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
 })
-const payloadOnChangePage = ref<PageState>()
+
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
@@ -171,10 +162,6 @@ const pagination = ref<IPagination>({
   totalElements: 0,
   totalPages: 0,
   search: ''
-})
-
-const formTitle = computed(() => {
-  return idItem.value ? 'Edit' : 'Create'
 })
 
 function searchAndFilter() {
@@ -262,11 +249,6 @@ async function getList() {
   }
 }
 
-async function resetListItems() {
-  payload.value.page = 0
-  getList()
-}
-
 async function getItemById(id: string) {
   if (id) {
     idItem.value = id
@@ -306,12 +288,13 @@ async function getItemById(id: string) {
   }
 }
 
-const isDate = value => !Number.isNaN(Date.parse(value))
+const isDate = (value: string) => !Number.isNaN(Date.parse(value))
 
-function formatToDateTimeZero(date) {
+function formatToDateTimeZero(date: string | number | Date) {
   const formattedDate = new Date(date).toISOString().split('T')[0]
   return `${formattedDate}T00:00:00.000Z`
 };
+
 async function saveItem(objItem: any) {
   if (objItem) {
     try {
@@ -325,15 +308,23 @@ async function saveItem(objItem: any) {
       payload.parameters = Object.keys(objItem.value).reduce((acc: Record<string, any>, key) => {
         const value = objItem.value[key]
 
+        // 📆 Fecha válida
         if (isDate(value) && typeof value !== 'number') {
-          acc[key] = formatToDateTimeZero(value) // Convertir a formato YYYY-MM-DDT00:00:00.000Z
+          acc[key] = dayjs(value).format('YYYY-MM-DD')
         }
-        else if (typeof value === 'object' && value !== null && value.id !== undefined) {
+        // 🔢 Multiselect (Array con objetos que tienen ID)
+        else if (Array.isArray(value) && value.every(v => v && typeof v === 'object' && 'id' in v)) {
+          acc[key] = value.map(v => v.id)
+        }
+        // ✅ Select simple
+        else if (value && typeof value === 'object' && 'id' in value) {
           acc[key] = value.id
         }
+        // 🔄 Default
         else {
           acc[key] = value
         }
+
         return acc
       }, {} as Record<string, any>)
       delete payload?.parameters?.reportFormatType
