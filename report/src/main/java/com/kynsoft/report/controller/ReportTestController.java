@@ -32,13 +32,15 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/reports-test")
 public class ReportTestController {
 
     private final IMediator mediator;
-     private final IJasperReportTemplateService reportService;
+    private final IJasperReportTemplateService reportService;
     private static final Logger logger = LoggerFactory.getLogger(ReportTestController.class);
     private final JdbcTemplate jdbcTemplate;
 
@@ -46,7 +48,7 @@ public class ReportTestController {
                             , IJasperReportTemplateService reportService, JdbcTemplate jdbcTemplate
     ) {
         this.mediator = mediator;
-         this.reportService = reportService;
+        this.reportService = reportService;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -83,6 +85,30 @@ public class ReportTestController {
             logger.info("Report code: {}", request.getJasperReportCode());
             logger.info("Report format type: {}", request.getReportFormatType());
             logger.info("Parameters: {}", request.getParameters());
+            // Convertir Strings a java.sql.Date si corresponde
+            Map<String, Object> originalParams = request.getParameters();
+            Map<String, Object> convertedParams = new HashMap<>();
+
+            for (Map.Entry<String, Object> entry : originalParams.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+
+                if (key.toLowerCase().contains("date") && value instanceof String) {
+                    try {
+                        java.sql.Date dateValue = java.sql.Date.valueOf((String) value);
+                        convertedParams.put(key, dateValue);
+                    } catch (IllegalArgumentException ex) {
+                        logger.warn("El parámetro {} con valor '{}' no pudo convertirse a java.sql.Date", key, value);
+                        convertedParams.put(key, value);
+                    }
+                } else if (value instanceof List<?>) {
+                    List<?> list = (List<?>) value;
+                    String joined = String.join(",", list.stream().map(Object::toString).toArray(String[]::new));
+                    convertedParams.put(key, joined);
+                } else {
+                    convertedParams.put(key, value);
+                }
+            }
             logger.info("URL dataBase: {}", reportTemplateDto.getDbConectionDto().getUrl());
 
             // Cargar el archivo JRXML
@@ -93,7 +119,7 @@ public class ReportTestController {
                     reportTemplateDto.getDbConectionDto().getUsername(), reportTemplateDto.getDbConectionDto().getPassword());
 
             // Llenar el reporte usando la conexión de base de datos proporcionada
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, request.getParameters(), connection);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, convertedParams, connection);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             String contentType;
