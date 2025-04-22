@@ -8,7 +8,6 @@ import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.rules.jasperReport.ManageJasperReportCodeMustBeUniqueRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportCodeMustBeNullRule;
 import com.kynsoft.report.domain.rules.jasperReport.ManageReportNameMustBeNullRule;
-import com.kynsoft.report.domain.rules.jasperReport.ManageReportParentIndexMustBeNullRule;
 import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsoft.report.domain.services.IReportParameterService;
@@ -44,7 +43,7 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         RulesChecker.checkRule(new ManageReportNameMustBeNullRule(command.getName()));
         RulesChecker.checkRule(new ManageJasperReportCodeMustBeUniqueRule(this.service, command.getCode(), command.getId()));
 
-        DBConectionDto dbConectionDto = command.getDbConection() != null ? this.connectionService.findById(command.getDbConection()) : null;
+        DBConectionDto dbConectionDto = command.getDbConnection() != null ? this.connectionService.findById(command.getDbConnection()) : null;
         JasperReportTemplateDto reportTemplateDto = new JasperReportTemplateDto(
                 command.getId(),
                 command.getCode(),
@@ -62,14 +61,13 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
         UUID id = this.service.create(reportTemplateDto);
 
         try {
-
             addParameters(command.getFile(), reportTemplateDto);
         } catch (Exception exception) {
             System.out.println("ERROR al crear los parametros de reporte");
             System.out.println(exception.getMessage());
         }
-        command.setId(id);
 
+        command.setId(id);
     }
 
     private void addParameters(String fileUrl, JasperReportTemplateDto reportTemplateDto) {

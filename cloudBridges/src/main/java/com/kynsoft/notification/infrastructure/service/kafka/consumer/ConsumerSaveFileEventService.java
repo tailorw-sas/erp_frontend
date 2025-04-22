@@ -48,7 +48,7 @@ public class ConsumerSaveFileEventService {
                     fileRequest.setFileName(eventRead.getFileName());
                     fileRequest.setFile(eventRead.getFile());
                     fileRequest.setContentType(null);
-                    String fileUrl = this.amazonClient.save(fileRequest);
+                    String fileUrl = this.amazonClient.save(fileRequest, this.amazonClient.getBucketName());
                     this.fileService.create(new FileDto(eventRead.getId(), eventRead.getFileName(), eventRead.getMicroServiceName(), fileUrl, false, (UploadFileResponse)null, (byte[])null));
                 } catch (IOException ex) {
                     Logger.getLogger(ConsumerSaveFileEventService.class.getName()).log(Level.SEVERE, (String)null, ex);
