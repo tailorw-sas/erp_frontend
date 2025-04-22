@@ -10,38 +10,32 @@ import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatu
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Objects;
 
-public class ApplyPayment {
+public class ApplyPaymentDetail {
 
-    @Getter
-    private PaymentDto payment;
-
-    @Getter
-    private PaymentDetailDto paymentDetail;
+    private final PaymentDto payment;
+    private final PaymentDetailDto paymentDetail;
+    private final ManageBookingDto booking;
 
     @Getter
     private PaymentStatusHistoryDto paymentStatusHistory;
 
     @Getter
-    private ManageBookingDto booking;
-
-    @Getter
-    private boolean isApplied;
+    private boolean isPaymentApplied;
 
     private final OffsetDateTime transactionDate;
     private final ManageEmployeeDto employee;
     private final ManagePaymentStatusDto paymentStatus;
     private final Double amount;
 
-    public ApplyPayment(PaymentDto payment,
-                        PaymentDetailDto paymentDetail,
-                        ManageBookingDto booking,
-                        OffsetDateTime transactionDate,
-                        ManageEmployeeDto employee,
-                        ManagePaymentStatusDto paymentStatus,
-                        Double amount){
+    public ApplyPaymentDetail(PaymentDto payment,
+                              PaymentDetailDto paymentDetail,
+                              ManageBookingDto booking,
+                              OffsetDateTime transactionDate,
+                              ManageEmployeeDto employee,
+                              ManagePaymentStatusDto paymentStatus,
+                              Double amount){
         this.booking = booking;
         this.payment = payment;
         this.paymentDetail = paymentDetail;
@@ -69,7 +63,7 @@ public class ApplyPayment {
         if(this.payment.getPaymentBalance() == 0 && this.payment.getDepositBalance() == 0){
             this.payment.setPaymentStatus(this.paymentStatus);
             this.paymentStatusHistory = createPaymentStatusHistory();
-            this.isApplied = true;
+            this.isPaymentApplied = true;
         }
     }
 

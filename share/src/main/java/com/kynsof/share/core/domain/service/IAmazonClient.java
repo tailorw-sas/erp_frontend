@@ -14,17 +14,15 @@ import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Mono;
 
 public interface IAmazonClient {
+
     String getBucketName();
+    String save(FileRequest fileRequest, String bucketName) throws IOException;
 
-    void setBucketName(String bucketName);
+    String save(FilePart filePart, String bucketName) throws IOException;
 
-    String save(FileRequest fileRequest) throws IOException;
-
-    String save(FilePart filePart) throws IOException;
-
-    List<FileDto> saveAll(List<FileRequest> files);
+    List<FileDto> saveAll(List<FileRequest> files, String bucketName);
 
     void delete(String url);
 
-    byte[] downloadFile(String filePath) throws IOException;
+    byte[] downloadFile(String filePath, String bucketName) throws IOException;
 }
