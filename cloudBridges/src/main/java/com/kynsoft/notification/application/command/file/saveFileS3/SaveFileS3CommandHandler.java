@@ -18,7 +18,6 @@ public class SaveFileS3CommandHandler implements ICommandHandler<SaveFileS3Comma
 
 
     public SaveFileS3CommandHandler(@Qualifier("minio") IAmazonClient amazonClient, IAFileService fileService) {
-
         this.amazonClient = amazonClient;
         this.fileService = fileService;
     }
@@ -26,7 +25,7 @@ public class SaveFileS3CommandHandler implements ICommandHandler<SaveFileS3Comma
     @Override
     public void handle(SaveFileS3Command command) {
         try {
-            String url = this.amazonClient.save(command.getFilePart());
+            String url = this.amazonClient.save(command.getFilePart(), this.amazonClient.getBucketName());
             if (url != null && !url.isBlank()) {
                 FileDto aFileDto = new FileDto(UUID.randomUUID(), command.getFilePart().filename(), "file", url, false,
                         null, null);

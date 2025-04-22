@@ -245,7 +245,7 @@ public class SendInvoiceCommandHandler implements ICommandHandler<SendInvoiceCom
             failList.clear();
         }
 
-        List<FileDto> fileDtoList = this.amazonClient.saveAll(fileRequestList);
+        List<FileDto> fileDtoList = this.amazonClient.saveAll(fileRequestList, this.amazonClient.getBucketName());
         fileDtoList.stream().filter((fileDto) -> fileDto.getUploadFileResponse().getStatus() == ResponseStatus.ERROR_RESPONSE).forEach((fileDto) -> invoices.stream().filter((invoice) -> invoice.getId().equals(fileDto.getId())).findFirst().ifPresent((invoice) -> {
             invoice.setSendStatusError("Error upload to common storage " + fileDto.getUploadFileResponse().getMessage());
             failList.add(invoice);

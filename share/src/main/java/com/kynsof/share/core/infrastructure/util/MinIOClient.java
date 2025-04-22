@@ -52,7 +52,7 @@ public class MinIOClient implements IAmazonClient {
     private String accessKey;
     @Value("${minio.secretKey}")
     private String secretKey;
-    @Setter
+
     @Getter
     @Value("${minio.bucketName}")
     private String bucketName;
@@ -70,14 +70,14 @@ public class MinIOClient implements IAmazonClient {
         logger.info("✅ MinIO connection initialized successfully.");
     }
 
-    private String uploadFileWithMetadata(String originalFileName, byte[] bytes, String contentType) throws IOException {
+    private String uploadFileWithMetadata(String originalFileName, byte[] bytes, String contentType, String bucketName) throws IOException {
         String objectKey = generateObjectKey(contentType);
         try (InputStream streamToUpload = new ByteArrayInputStream(bytes)) {
             long size = bytes.length;
             logger.info("Uploading '{}' (size: {} bytes, type: '{}') to MinIO...", objectKey, size, contentType);
-            this.ensureBucketExists();
+            this.ensureBucketExists(bucketName);
             PutObjectArgs putObject = PutObjectArgs.builder()
-                    .bucket(this.bucketName)
+                    .bucket(bucketName)
                     .object(objectKey)
                     .stream(streamToUpload, size, -1)
                     .contentType(contentType)
@@ -92,32 +92,32 @@ public class MinIOClient implements IAmazonClient {
         return objectKey;
     }
 
-    private void ensureBucketExists() throws IOException {
+    private void ensureBucketExists(String bucketName) throws IOException {
         try {
             boolean bucketExists = this.minioClient.bucketExists(BucketExistsArgs.builder()
-                    .bucket(this.bucketName)
+                    .bucket(bucketName)
                     .build());
             if (!bucketExists) {
-                logger.error("❌ Bucket '{}' does not exist in MinIO.", this.bucketName);
-                throw new IOException("Bucket does not exist: " + this.bucketName);
+                logger.error("❌ Bucket '{}' does not exist in MinIO.", bucketName);
+                throw new IOException("Bucket does not exist: " + bucketName);
             }
         } catch (MinioException e) {
-            logger.error("❌ MinIO error while checking bucket existence: {}", this.bucketName, e);
+            logger.error("❌ MinIO error while checking bucket existence: {}", bucketName, e);
             throw new IOException("Error checking bucket existence due to MinIO error", e);
         } catch (Exception e) {
-            logger.error("❌ Unexpected error while checking bucket existence: {}", this.bucketName, e);
+            logger.error("❌ Unexpected error while checking bucket existence: {}", bucketName, e);
             throw new IOException("Error checking bucket existence", e);
         }
     }
 
-    public String save(FileRequest fileRequest) throws IOException {
-        String objectKey = this.uploadFileWithMetadata(fileRequest.getFileName(), fileRequest.getFile(), fileRequest.getContentType());
+    public String save(FileRequest fileRequest, String bucketName) throws IOException {
+        String objectKey = this.uploadFileWithMetadata(fileRequest.getFileName(), fileRequest.getFile(), fileRequest.getContentType(), bucketName);
         return this.isPrivateBucket
-                ? this.getPublicUrl(objectKey)
-                : this.endpointUrl + "/" + this.bucketName + "/" + objectKey;
+                ? this.getPublicUrl(objectKey, bucketName)
+                : this.endpointUrl + "/" + bucketName + "/" + objectKey;
     }
 
-    public String save(FilePart filePart)  throws IOException {
+    public String save(FilePart filePart, String bucketName)  throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         filePart.content().toStream().forEach(dataBuffer -> {
             byte[] bytes = new byte[dataBuffer.readableByteCount()];
@@ -134,13 +134,13 @@ public class MinIOClient implements IAmazonClient {
                 ? Objects.requireNonNull(filePart.headers().getContentType()).toString()
                 : MediaType.APPLICATION_OCTET_STREAM_VALUE;
         String originalFileName = filePart.filename();
-        String objectKey = this.uploadFileWithMetadata(originalFileName, bytes, contentType);
+        String objectKey = this.uploadFileWithMetadata(originalFileName, bytes, contentType, bucketName);
         return this.isPrivateBucket
-                ? this.getPublicUrl(objectKey)
-                : this.endpointUrl + "/" + this.bucketName + "/" + objectKey;
+                ? this.getPublicUrl(objectKey, bucketName)
+                : this.endpointUrl + "/" + bucketName + "/" + objectKey;
     }
 
-    public List<FileDto> saveAll(List<FileRequest> files) {
+    public List<FileDto> saveAll(List<FileRequest> files, String bucketName) {
         logger.info("📦 Processing batch upload of {} files...", files.size());
         List<CompletableFuture<FileDto>> futures = files.stream().map(file -> CompletableFuture.supplyAsync(() -> {
             FileDto fileDto = new FileDto();
@@ -149,7 +149,7 @@ public class MinIOClient implements IAmazonClient {
             fileDto.setUploadFileResponse(new UploadFileResponse(ResponseStatus.SUCCESS_RESPONSE));
 
             try {
-                String fileUrl = this.save(file);
+                String fileUrl = this.save(file, bucketName);
                 fileDto.setUrl(fileUrl);
             } catch (IOException e) {
                 fileDto.setUploadFileResponse(new UploadFileResponse(ResponseStatus.ERROR_RESPONSE, "UPLOAD_FAILED: " + e.getMessage()));
@@ -172,7 +172,7 @@ public class MinIOClient implements IAmazonClient {
             }
 
             try {
-                this.removeObject(url);
+                this.removeObject(url, this.bucketName);
                 logger.info("✅ File '{}' deleted successfully.", url);
             } catch (Exception e) {
                 logger.error("❌ Error deleting file: {}", url, e);
@@ -181,14 +181,14 @@ public class MinIOClient implements IAmazonClient {
         }
     }
 
-    public byte[] downloadFile(String filePath) throws IOException {
+    public byte[] downloadFile(String filePath, String bucketName) throws IOException {
         logger.info("📦 Downloading file from MinIO: {}", filePath);
         String objectKey = filePath;
         if (objectKey.startsWith("http")) {
             objectKey = objectKey.substring(objectKey.lastIndexOf("/") + 1);
         }
         try (InputStream inputStream = this.minioClient.getObject(GetObjectArgs.builder()
-                .bucket(this.bucketName)
+                .bucket(bucketName)
                 .object(objectKey)
                 .build());
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -204,12 +204,12 @@ public class MinIOClient implements IAmazonClient {
         }
     }
 
-    private String getPublicUrl(String objectName) throws IOException {
+    private String getPublicUrl(String objectName, String bucketName) throws IOException {
         try {
             logger.info("📦 Generating public URL for file: {}", objectName);
             String url = this.minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
-                    .bucket(this.bucketName)
+                    .bucket(bucketName)
                     .object(objectName)
                     .expiry(604800)
                     .build());
@@ -225,10 +225,10 @@ public class MinIOClient implements IAmazonClient {
         }
     }
 
-    private void removeObject(String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException,
+    private void removeObject(String objectName, String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException,
             NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         RemoveObjectArgs req = RemoveObjectArgs.builder()
-                .bucket(this.bucketName)
+                .bucket(bucketName)
                 .object(objectName)
                 .build();
         this.minioClient.removeObject(req);

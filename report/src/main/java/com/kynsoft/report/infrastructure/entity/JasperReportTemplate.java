@@ -66,12 +66,11 @@ public class JasperReportTemplate extends BaseEntity {
         this.status = jasperReportTemplateDto.getStatus();
         this.dbConection = jasperReportTemplateDto.getDbConectionDto() != null ? new DBConection(jasperReportTemplateDto.getDbConectionDto()) : null;
         this.moduleSystems = jasperReportTemplateDto.getModuleSystems();
-
     }
 
     public JasperReportTemplateDto toAggregate() {
         String templateContentUrlS = file != null ? file : null;
-        DBConectionDto conectionDto = dbConection != null ? dbConection.toAggregate() : null;
+        DBConectionDto connectionDto = dbConection != null ? dbConection.toAggregate() : null;
         return new JasperReportTemplateDto(
                 id,
                 code,
@@ -82,7 +81,7 @@ public class JasperReportTemplate extends BaseEntity {
                 status,
                 createdAt,
                 menuPosition,
-                conectionDto,
+                connectionDto,
                 moduleSystems,
                 query
         );

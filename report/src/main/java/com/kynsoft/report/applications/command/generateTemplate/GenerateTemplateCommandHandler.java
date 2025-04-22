@@ -70,42 +70,34 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
     }
 
     public byte[] generatePdfReport(Map<String, Object> parameters, JasperReportTemplateDto reportTemplateDto) {
-        // Validar que el DTO contenga la información necesaria
         if (reportTemplateDto == null || reportTemplateDto.getDbConectionDto() == null) {
             throw new IllegalArgumentException("Database connection details are missing.");
         }
 
         try {
-            // Cargar y compilar el reporte
             JasperReport jasperReport = getJasperReport(reportTemplateDto.getFile());
             if (jasperReport == null) {
                 throw new IllegalArgumentException("Could not load JasperReport from provided URL.");
             }
 
-            // Obtener la configuración de la base de datos
             DBConectionDto dbConnection = reportTemplateDto.getDbConectionDto();
 
-            // Asegurar que el driver de PostgreSQL esté cargado
             try {
                 Class.forName("org.postgresql.Driver");
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException("PostgreSQL JDBC Driver not found. Ensure it is included in the classpath.", e);
             }
 
-            // Uso de try-with-resources para gestionar la conexión y el output stream
             try (Connection connection = DriverManager.getConnection(
                     dbConnection.getUrl(),
                     dbConnection.getUsername(),
                     dbConnection.getPassword());
                  ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-                // Llenar el reporte con los parámetros y la conexión
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, connection);
 
-                // Exportar el reporte a PDF
                 JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
 
-                // Validar que el tamaño del PDF no exceda el máximo permitido
                 if (outputStream.size() > getMaxFileSize()) {
                     throw new RuntimeException("The generated PDF report is too large. Size: " + outputStream.size() + " bytes.");
                 }
@@ -180,26 +172,16 @@ public class GenerateTemplateCommandHandler implements ICommandHandler<GenerateT
         if (reportPath.startsWith("http")) {
             logger.warn("Report path is a URL, fetching JRXML template from URL: {}", reportPath);
             byte[] jrxmlBytes = restTemplate.getForObject(reportPath, byte[].class);
-            return new ByteArrayInputStream(Objects.requireNonNull(jrxmlBytes, "No se pudo obtener el contenido del JRXML desde la URL"));
+            return new ByteArrayInputStream(Objects.requireNonNull(jrxmlBytes, "Can't get the content of JRXML from URL"));
         } else {
             Resource localResource = resourceLoader.getResource("classpath:templates/" + reportPath);
             if (localResource.exists()) {
                 logger.info("Loading JRXML template from local resources: templates/{}", reportPath);
                 return localResource.getInputStream();
             } else {
-                throw new FileNotFoundException("Template no encontrado en classpath: templates/" + reportPath);
+                throw new FileNotFoundException("Template not found on classpath: templates/" + reportPath);
             }
         }
-    }
-
-    private DataSource createDataSource(String url, String username, String password) {
-        logger.info("Connecting to database: {}", url);
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setUrl(url);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
-        return dataSource;
     }
 
     private String replaceQueryParameters(String query, Map<String, Object> parameters) {
