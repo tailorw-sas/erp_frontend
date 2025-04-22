@@ -66,7 +66,7 @@ const filterToSearch = ref<IData>({
 const confApi = reactive({
   moduleApi: 'report',
   uriApi: 'jasper-report-template',
-  uriApiReportGenerate: 'reports-test/generate/template'
+  uriApiReportGenerate: 'reports/execute-report'
 })
 const ENUM_FILTER = [
   { id: 'templateCode', name: 'Code' },
@@ -605,8 +605,6 @@ function loadPDF(base64Report: string) {
   const byteArray = new Uint8Array(byteNumbers)
 
   if (item.value?.reportFormatType?.id === 'XLS') {
-    // Crear un Blob del ArrayBuffer con tipo MIME 'application/pdf'
-  // const blob = new Blob([byteArray], { type: 'application/pdf' })
     const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
 
     // Crear una URL del Blob y asignarla a pdfUrl
@@ -616,6 +614,13 @@ function loadPDF(base64Report: string) {
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
     link.download = `report-file-${dayjs().format('YYYY-MM-DD')}.xlsx`
+    link.click()
+  }
+  else if (item.value?.reportFormatType?.id === 'CSV') {
+    const blob = new Blob([byteArray], { type: 'text/csv' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `report-file-${dayjs().format('YYYY-MM-DD')}.csv`
     link.click()
   }
   else if (item.value?.reportFormatType?.id === 'PDF') {
