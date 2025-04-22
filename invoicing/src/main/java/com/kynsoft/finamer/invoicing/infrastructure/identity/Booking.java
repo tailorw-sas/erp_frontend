@@ -146,6 +146,7 @@ public class Booking {
         this.parent = Objects.nonNull(dto.getParent()) ? new Booking(dto.getParent()) : null;
         this.contract = dto.getContract();
         this.deleteInvoice = dto.isDeleteInvoice();
+        this.updatedAt = dto.getUpdatedAt();
     }
 
     public ManageBookingDto toAggregate() {
@@ -182,7 +183,10 @@ public class Booking {
                 this.nights,
                 Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
                 this.contract,
-                this.deleteInvoice);
+                this.deleteInvoice,
+                this.updatedAt
+        );
+
     }
 
     public ManageBookingDto toAggregateWithRates() {
@@ -218,7 +222,9 @@ public class Booking {
                 this.nights,
                 Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
                 this.contract,
-                this.deleteInvoice);
+                this.deleteInvoice,
+                this.updatedAt
+        );
     }
 
     public ManageBookingDto toAggregateSimple() {
@@ -255,7 +261,9 @@ public class Booking {
                 this.nights,
                 null,
                 this.contract,
-                this.deleteInvoice);
+                this.deleteInvoice,
+                this.updatedAt
+        );
     }
 
     @PostLoad
