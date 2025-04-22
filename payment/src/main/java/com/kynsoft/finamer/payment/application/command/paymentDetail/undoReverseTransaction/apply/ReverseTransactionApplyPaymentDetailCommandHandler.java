@@ -63,13 +63,14 @@ public class ReverseTransactionApplyPaymentDetailCommandHandler implements IComm
         this.paymentDetailService.update(paymentDetailDto);
 
         PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+        //TODO: Implementar Transacional y enviar a Kafka una vez hecho el commit
         try {
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
                     paymentDto.getId(),
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, deposit));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, deposit));
         } catch (Exception e) {
         }
 

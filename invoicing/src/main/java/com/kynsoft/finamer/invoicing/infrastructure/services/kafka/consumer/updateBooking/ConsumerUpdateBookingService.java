@@ -51,7 +51,7 @@ public class ConsumerUpdateBookingService {
             this.bookingService.update(bookingDto);
 
             ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
-            this.getInvoiceDueAmount(invoiceDto, objKafka.getAmountBalance());
+            this.setInvoiceDueAmount(invoiceDto);
             this.invoiceService.update(invoiceDto);
 
             PaymentDto payment = new PaymentDto(objKafka.getPaymentKafka().getId(), objKafka.getPaymentKafka().getPaymentId());
@@ -84,7 +84,7 @@ public class ConsumerUpdateBookingService {
         }
     }
 
-    private void getInvoiceDueAmount(ManageInvoiceDto invoiceDto, Double bookingDueAmount){
+    private void setInvoiceDueAmount(ManageInvoiceDto invoiceDto){
         Double currentDueAmount = invoiceDto.getBookings().stream()
                 .mapToDouble(ManageBookingDto::getDueAmount)
                 .sum();

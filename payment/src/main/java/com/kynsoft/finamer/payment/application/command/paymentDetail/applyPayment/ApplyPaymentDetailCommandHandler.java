@@ -103,9 +103,9 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
             if (bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
-                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, false));
             } else {
-                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, false));
             }
         } catch (Exception e) {
         }

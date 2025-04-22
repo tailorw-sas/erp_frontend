@@ -2,8 +2,6 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
-import com.kynsof.share.core.application.excel.validator.IImportControl;
-import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -17,7 +15,6 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
-import com.kynsoft.finamer.payment.domain.excel.ImportControl;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
@@ -26,13 +23,12 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentTransactionType;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
 import com.kynsoft.finamer.payment.domain.core.deposit.Deposit;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPayment;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import io.jsonwebtoken.lang.Assert;
 
@@ -512,8 +508,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         boolean otherDeductionAndApplyPayment = !transactionType.getCash() && !transactionType.getDeposit();
 
         if (!otherDeductionAndApplyPayment){
-            //Apply Payment
-            ApplyPayment applyPayment = new ApplyPayment(payment,
+            //Apply Payment Detail
+            ApplyPaymentDetail applyPayment = new ApplyPaymentDetail(payment,
                     newPaymentDetailDto,
                     booking,
                     transactionDate,
@@ -521,7 +517,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     paymentStatusApplied,
                     amount);
             applyPayment.applyPayment();
-            if(applyPayment.isApplied()){
+            if(applyPayment.isPaymentApplied()){
                 PaymentStatusHistoryDto paymentStatusHistory = applyPayment.getPaymentStatusHistory();
                 paymentStatusHistories.add(paymentStatusHistory);
             }
