@@ -297,18 +297,6 @@ const allMenuListItems = ref([
     disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
   },
-  // {
-  //   id: 'CopyBatch',
-  //   label: 'Copy batch',
-  //   icon: 'pi pi-cog',
-  //   iconSvg: '',
-  //   viewBox: '',
-  //   width: '24px',
-  //   height: '24px',
-  //   command: ($event: any) => openModalCopyBatch($event),
-  //   disabled: false,
-  //   visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
-  // },
   {
     id: 'applyPayment',
     label: 'Apply Payment',
@@ -319,6 +307,18 @@ const allMenuListItems = ref([
     height: '24px',
     command: ($event: any) => openModalApplyPayment($event),
     disabled: true,
+    visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
+  },
+  {
+    id: 'CopyBatch',
+    label: 'Copy Batch',
+    icon: 'pi pi-file',
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    command: ($event: any) => openModalCopyBatch($event),
+    disabled: false,
     visible: authStore.can(['PAYMENT-MANAGEMENT:APPLY-PAYMENT']),
   },
   {
@@ -1056,7 +1056,7 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
 const allInvoiceCheckIsChecked1 = ref(false)
 
 const applyPaymentColumnsOtherDeduction1 = ref<IColumn[]>([
-  { field: 'pay', header: 'Payment Id', type: 'text', width: '50px', // Define un ancho fijo
+  { field: 'paymentId', header: 'Payment Id', type: 'text', width: '50px', // Define un ancho fijo
     minWidth: '40px', // Establece un ancho mínimo
     maxWidth: '60px', // Evita que se expanda demasiado
     widthTruncate: '50px', // Control de truncamiento
@@ -1136,20 +1136,36 @@ const applyPaymentOptionsOtherDeduction1 = ref({
   showDelete: false,
   showFilters: true,
   actionsAsMenu: false,
+  showPagination: false,
   messageToDelete: 'Do you want to save the change?'
 })
 
 const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 10000,
   page: 0,
   sortBy: 'dueAmount',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 10000,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 10000,
+  page: 0,
+  sortBy: 'dueAmount',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
+  page: 0,
+  limit: 10000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1161,6 +1177,7 @@ const confApiPaymentExportToExcel = reactive({
 })
 
 const applyPaymentOnChangePageOtherDeduction = ref<PageState>()
+const applyPaymentOnChangePageOtherDeduction1 = ref<PageState>()
 
 const loadingExportToExcel = ref(false)
 const fieldExportToExcel = ref<FieldDefinitionType[]>([
@@ -2849,6 +2866,7 @@ async function applyPaymentGetListForOtherDeductions() {
                   // iterator.bookingsList = []
 
                   // Verificar si el ID ya existe en la lista
+                  iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
                   if (!existingIds.has(iterator.id)) {
                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
@@ -2963,7 +2981,7 @@ async function applyPaymentGetListForOtherDeductions() {
                 // // iterator.paymentStatus = iterator.status
 
                 // iterator.bookingsList = []
-
+                iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
@@ -3110,7 +3128,7 @@ async function applyPaymentGetListForOtherDeductions() {
                 // // iterator.paymentStatus = iterator.status
 
                 // iterator.bookingsList = []
-
+                iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
                 // Verificar si el ID ya existe en la lista
                 if (!existingIds.has(iterator.id)) {
                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
@@ -3121,7 +3139,6 @@ async function applyPaymentGetListForOtherDeductions() {
               }
 
               applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
-              console.log('applyPaymentListOfInvoiceOtherDeduction.value')
             }
           }
         }
@@ -3164,7 +3181,7 @@ function closeModalCopyBatch() {
   allInvoiceCheckIsChecked.value = false
   loadAllInvoices.value = false
   idInvoicesSelectedToApplyPaymentForOtherDeduction.value = []
-  applyPaymentOnChangePageOtherDeduction.value = undefined
+  applyPaymentOnChangePageOtherDeduction1.value = undefined
   applyPaymentPayloadOtherDeduction.value.filter = []
 }
 
@@ -4243,6 +4260,12 @@ watch(applyPaymentOnChangePage, (newValue) => {
 watch(applyPaymentOnChangePageOtherDeduction, (newValue) => {
   applyPaymentPayloadOtherDeduction.value.page = newValue?.page ? newValue?.page : 0
   applyPaymentPayloadOtherDeduction.value.pageSize = newValue?.rows ? newValue.rows : 10
+  applyPaymentGetListForOtherDeductions()
+})
+
+watch(applyPaymentOnChangePageOtherDeduction1, (newValue) => {
+  applyPaymentPayloadOtherDeduction1.value.page = newValue?.page ? newValue?.page : 0
+  applyPaymentPayloadOtherDeduction1.value.pageSize = newValue?.rows ? newValue.rows : 10
   applyPaymentGetListForOtherDeductions()
 })
 
@@ -5428,40 +5451,40 @@ onMounted(async () => {
           :data="applyPaymentListOfInvoiceOtherDeduction"
           :columns="applyPaymentColumnsOtherDeduction1"
           :options="applyPaymentOptionsOtherDeduction1"
-          :pagination="applyPaymentPaginationOtherDeduction"
-          @on-change-pagination="applyPaymentOnChangePageOtherDeduction = $event"
+          :pagination="applyPaymentPaginationOtherDeduction1"
+          @on-change-pagination="applyPaymentOnChangePageOtherDeduction1 = $event"
           @on-change-filter="parseDataTableFilterForApplyPaymentOtherDeduction($event)"
           @update:clicked-item="selectRowsOfInvoiceOfOtherDeduction($event)"
           @on-table-cell-edit-complete="onCellEditCompleteApplyPaymentOtherDeduction($event)"
           @on-sort-field="applyPaymentOtherDeductionOnSortField"
         >
+          <!-- Slot para la columna "status" -->
           <template #column-status="{ data: item }">
-            <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+            <Badge
+              :value="getStatusName(item?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+            />
           </template>
 
-          <!-- <template #expansion="{ data: item }">
-              <div class="p-0 m-0">
-                <DataTable :value="item.bookings" striped-rows>
-                  <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
-                  <template #empty>
-                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                      <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
-                        <div class="row">
-                          <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                        </div>
-                        <div class="row">
-                          <p>{{ messageForEmptyTable }}</p>
-                        </div>
-                      </span>
-                      <span v-else class="flex flex-column align-items-center justify-content-center">
-                        <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                      </span>
+          <!-- Footer con total de registros -->
+          <template #datatable-footer>
+            <ColumnGroup type="footer">
+              <Row>
+                <Column
+                  :colspan="applyPaymentColumnsOtherDeduction1.length"
+                  footer-style="text-align:right; font-weight: bold;"
+                >
+                  <template #footer>
+                    <div class="flex justify-content-end pr-4 text-sm">
+                      Total: {{ applyPaymentListOfInvoiceOtherDeduction.length }}
                     </div>
                   </template>
-                </DataTable>
-              </div>
-            </template> -->
+                </Column>
+              </Row>
+            </ColumnGroup>
+          </template>
         </DynamicTable>
+
         <div class="flex justify-content-between">
           <div class="flex align-items-center">
             <Checkbox
@@ -5484,13 +5507,13 @@ onMounted(async () => {
           <div>
             <Button
               v-tooltip.top="'Copiar batch'"
-              class="w-3rem mx-1"
+              class="w-3rem mx-1 mt-1"
               icon="pi pi-copy"
               @click="copiarDatosBatch"
             />
             <Button
               v-tooltip.top="'Exportar Excel'"
-              class="w-3rem mx-1"
+              class="w-3rem mx-1 mt-1"
               icon="pi pi-file-excel"
               @click="exportarOtherDeductions"
             />
