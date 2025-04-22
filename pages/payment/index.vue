@@ -2678,6 +2678,7 @@ async function applyPaymentGetListForOtherDeductions() {
   }
   try {
     applyPaymentOptionsOtherDeduction.value.loading = true
+    applyPaymentOptionsOtherDeduction1.value.loading = true
     applyPaymentListOfInvoiceOtherDeduction.value = []
     const newListItems = []
 
@@ -3150,6 +3151,7 @@ async function applyPaymentGetListForOtherDeductions() {
   }
   finally {
     applyPaymentOptionsOtherDeduction.value.loading = false
+    applyPaymentOptionsOtherDeduction1.value.loading = false
   }
 }
 

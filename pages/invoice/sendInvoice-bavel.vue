@@ -105,7 +105,7 @@ sendType.value = type === ENUM_INVOICE_SEND_TYPE.BAVEL
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 500,
+  pageSize: 50,
   page: 0,
   // sortBy: 'name',
   // sortType: ENUM_SHORT_TYPE.ASC
@@ -114,7 +114,7 @@ const payload = ref<IQueryRequest>({
 const payloadOnChangePage = ref<PageState>()
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 500,
+  limit: 50,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -227,6 +227,7 @@ async function getList() {
       life: 2000 // Duración del toast en milisegundos
     })
   }
+  console.log('listItems.value', listItems.value)
 }
 
 async function getAgencyList(query: string = '') {
@@ -266,7 +267,7 @@ async function getAgencyList(query: string = '') {
     const payload = {
       filter: filters,
       query: '',
-      pageSize: 500,
+      pageSize: 50,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -311,7 +312,7 @@ async function getHotelList(query: string = '') {
         }
       ],
       query: '',
-      pageSize: 500,
+      pageSize: 50,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -384,7 +385,7 @@ async function searchAndFilter() {
   payload.value = {
     filter: [],
     query: '',
-    pageSize: 500,
+    pageSize: 50,
     page: 0,
     sortBy: 'createdAt',
     sortType: ENUM_SHORT_TYPE.DESC
@@ -569,7 +570,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
-  await searchAndFilter()
+  // await searchAndFilter()
 })
 </script>
 
