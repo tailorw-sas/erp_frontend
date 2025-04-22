@@ -52,7 +52,8 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
         try {
             this.commandRepository.deleteById(object.getId());
         } catch (Exception e) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", "Element cannot be deleted has a related element.")));
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
+                    new ErrorField("id", "Element cannot be deleted has a related element.")));
         }
     }
 
@@ -63,7 +64,8 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
             return object.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_NOT_FOUND, new ErrorField("id", "JasperReportTemplate not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_NOT_FOUND,
+                new ErrorField("id", "JasperReportTemplate not found.")));
     }
 
     @Override
@@ -73,7 +75,8 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
             return object.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_NOT_FOUND, new ErrorField("id", "JasperReportTemplate not found.")));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_NOT_FOUND,
+                new ErrorField("id", "JasperReportTemplate not found.")));
     }
 
     @Override
