@@ -69,7 +69,7 @@ public class ApplyPaymentToCreditDetailCommandHandler implements ICommandHandler
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), amount, paymentKafka, true));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, true));
             command.setPaymentResponse(paymentDto);
         } catch (Exception e) {
         }
