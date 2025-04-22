@@ -644,9 +644,9 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
                         ));
                 if (booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || booking.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
-                    this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false));
+                    this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
                 } else {
-                    this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false));
+                    this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
                 }
             } catch (Exception e) {
                 printLog("Error at sending UpdateBookingBalanceKafka to kafka");

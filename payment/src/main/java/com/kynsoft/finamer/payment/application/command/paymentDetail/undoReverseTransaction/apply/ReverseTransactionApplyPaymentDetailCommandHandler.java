@@ -17,6 +17,8 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
+
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -70,7 +72,7 @@ public class ReverseTransactionApplyPaymentDetailCommandHandler implements IComm
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, deposit));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, deposit, OffsetDateTime.now()));
         } catch (Exception e) {
         }
 

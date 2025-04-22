@@ -11,6 +11,8 @@ import com.kynsoft.finamer.invoicing.domain.services.IPaymentDetailService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,8 +38,9 @@ public class ConsumerUndoApplicationUpdateBookingService {
         try {
             ManageInvoiceDto invoice = this.invoiceService.findByBookingId(objKafka.getId());
             ManageBookingDto booking = this.getBookingById(invoice.getBookings(), objKafka.getId());
-            if(Objects.nonNull(booking)){
+            if(Objects.nonNull(booking) && objKafka.getTimestamp().isAfter(booking.getUpdatedAt().atOffset(ZoneOffset.UTC))){
                 booking.setDueAmount(objKafka.getAmountBalance());
+                booking.setUpdatedAt(LocalDateTime.now());
                 this.setInvoiceDueAmount(invoice);
 
                 this.invoiceService.update(invoice);

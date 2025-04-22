@@ -16,6 +16,10 @@ import com.kynsoft.finamer.invoicing.domain.services.IPaymentService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,22 +49,23 @@ public class ConsumerUpdateBookingService {
     @KafkaListener(topics = "finamer-update-booking-balance", groupId = "invoicing-entity-replica")
     public void listen(UpdateBookingBalanceKafka objKafka) {
         try {
+            ManageInvoiceDto invoice = this.invoiceService.findByBookingId(objKafka.getId());
+            ManageBookingDto booking = this.getBookingById(invoice.getBookings(), objKafka.getId());
+            if(Objects.nonNull(booking)){
+                booking.setDueAmount(objKafka.getAmountBalance());
+                booking.setUpdatedAt(LocalDateTime.now());
+                this.setInvoiceDueAmount(invoice);
 
-            ManageBookingDto bookingDto = this.bookingService.findById(objKafka.getId());
-            bookingDto.setDueAmount(objKafka.getAmountBalance());
-            this.bookingService.update(bookingDto);
-
-            ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
-            this.setInvoiceDueAmount(invoiceDto);
-            this.invoiceService.update(invoiceDto);
+                this.invoiceService.update(invoice);
+            }
 
             PaymentDto payment = new PaymentDto(objKafka.getPaymentKafka().getId(), objKafka.getPaymentKafka().getPaymentId());
             this.paymentService.create(payment);
-            this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, bookingDto));
+            this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, booking));
 
-            ManageHotelDto hotelDto = this.manageHotelService.findById(invoiceDto.getHotel().getId());
-            if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit() && objKafka.isDeposit()) {
-                ManageBookingDto bookingParent = this.bookingService.findById(bookingDto.getParent().getId());
+            ManageHotelDto hotelDto = this.manageHotelService.findById(invoice.getHotel().getId());
+            if (invoice.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit() && objKafka.isDeposit()) {
+                ManageBookingDto bookingParent = this.bookingService.findById(booking.getParent().getId());
                 double amountBalance = objKafka.getAmountBalance() * -1;
                 if (bookingParent.getDueAmount() >= amountBalance) {
                     bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
@@ -70,7 +75,7 @@ public class ConsumerUpdateBookingService {
                 //bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
                 this.bookingService.update(bookingParent);
 
-                ManageInvoiceDto parent = this.invoiceService.findById(invoiceDto.getParent().getId());
+                ManageInvoiceDto parent = this.invoiceService.findById(invoice.getParent().getId());
                 if (parent.getDueAmount() >= amountBalance) {
                     parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
                 } else {
@@ -82,6 +87,17 @@ public class ConsumerUpdateBookingService {
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateBookingService.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private ManageBookingDto getBookingById(List<ManageBookingDto> bookings, UUID id){
+        if(Objects.isNull(bookings)){
+            return null;
+        }
+
+        return bookings.stream()
+                .filter(booking -> booking.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     private void setInvoiceDueAmount(ManageInvoiceDto invoiceDto){

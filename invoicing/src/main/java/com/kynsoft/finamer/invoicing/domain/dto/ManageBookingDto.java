@@ -56,6 +56,8 @@ public class ManageBookingDto {
     private String contract;
     private boolean deleteInvoice;
 
+    private LocalDateTime updatedAt;
+
     public ManageBookingDto(ManageBookingDto dto) {
         this.id = UUID.randomUUID();
         //this.bookingId = dto.getBookingId();
@@ -88,5 +90,6 @@ public class ManageBookingDto {
         this.roomRates = new ArrayList<>();
         this.nights = dto.getNights();
         this.contract = dto.getContract();
+        this.updatedAt = dto.updatedAt;
     }
 }
