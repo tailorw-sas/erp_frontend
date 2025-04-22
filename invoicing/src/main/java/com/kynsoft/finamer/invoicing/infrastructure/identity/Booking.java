@@ -107,6 +107,11 @@ public class Booking {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean deleteInvoice;
 
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Booking(ManageBookingDto dto) {
         this.id = dto.getId();
         this.hotelCreationDate = dto.getHotelCreationDate();
