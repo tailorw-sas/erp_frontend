@@ -649,7 +649,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                     this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
                 }
             } catch (Exception e) {
-                printLog("Error at sending UpdateBookingBalanceKafka to kafka");
+                printLog("Error at sending UpdateBookingBalanceKafka to kafka: " + e);
             }
         });
     }
