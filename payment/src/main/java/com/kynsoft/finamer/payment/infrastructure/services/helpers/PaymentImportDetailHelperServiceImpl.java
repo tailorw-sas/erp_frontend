@@ -635,18 +635,20 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private void replicateBookingToKafka(List<PaymentDetailDto> details){
         details.forEach(paymentDetail -> {
             try {
-                PaymentDto payment = paymentDetail.getPayment();
-                ManageBookingDto booking = paymentDetail.getManageBooking();
+                if(paymentDetail.getManageBooking() != null){
+                    PaymentDto payment = paymentDetail.getPayment();
+                    ManageBookingDto booking = paymentDetail.getManageBooking();
 
-                ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
-                        payment.getId(),
-                        payment.getPaymentId(),
-                        new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
-                        ));
-                if (booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || booking.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
-                    this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
-                } else {
-                    this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                    ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                            payment.getId(),
+                            payment.getPaymentId(),
+                            new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
+                            ));
+                    if (booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || booking.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
+                        this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                    } else {
+                        this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                    }
                 }
             } catch (Exception e) {
                 printLog("Error at sending UpdateBookingBalanceKafka to kafka: " + e);
