@@ -197,7 +197,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         if(Objects.isNull(ids)){
             throw new IllegalArgumentException("The Ids must not be null");
         }
-        return repositoryQuery.findAllByPayment_PaymentIdCustom(ids).stream()
+        return repositoryQuery.findByPayment_PaymentIdIn(ids).stream()
                 .map(PaymentDetail::toAggregate)
                 .toList();
     }
