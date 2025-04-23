@@ -14,6 +14,8 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.undoApplicationUpdateBooking.ProducerUndoApplicationUpdateBookingService;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
+
 @Component
 public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<UndoApplyPaymentDetailCommand> {
 
@@ -57,7 +59,7 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, deposit));
+            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, deposit, OffsetDateTime.now()));
         } catch (Exception e) {
         }
 

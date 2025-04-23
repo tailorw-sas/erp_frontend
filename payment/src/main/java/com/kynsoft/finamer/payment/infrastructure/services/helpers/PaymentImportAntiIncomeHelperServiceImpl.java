@@ -334,9 +334,10 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                         producerUpdateBookingService.update(
                                 new UpdateBookingBalanceKafka(
                                         detail.getManageBooking().getId(),
-                                        detail.getAmount(),
+                                        detail.getManageBooking().getAmountBalance(),
                                         paymentKafka,
-                                        false
+                                        false,
+                                        OffsetDateTime.now()
                                 )
                         );
                     } catch (Exception e) {

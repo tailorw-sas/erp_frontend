@@ -106,7 +106,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         double paymentBalance = updatePayment.getPaymentBalance();
         double notApplied = updatePayment.getNotApplied();
         double depositBalance = updatePayment.getDepositBalance();
-
+        boolean applyPaymentBalance =  (updatePayment.getPaymentBalance() == 0) ? false : true;
         for (Invoice manageInvoiceDto : invoiceQueue) {
             List<Booking> bookingDtoList = getSortedBookings(manageInvoiceDto);
             for (Booking bookingDto : bookingDtoList) {
@@ -371,7 +371,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     updatePayment.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            kafkaList.add(new UpdateBookingBalanceKafka(booking.getId(), paymentDetailDto.getAmount(), paymentKafka, false));
+            kafkaList.add(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
         } catch (Exception e) {
             System.err.println("Error al enviar el evento de integracion: " + e.getMessage());
         }

@@ -49,4 +49,7 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoic
             " WHERE i.id = :id")
     Invoice findInvoiceByUUID(@Param("id") UUID id);
 
+    @Query("SELECT i FROM Invoice i JOIN FETCH i.bookings b WHERE b.id = :bookingId")
+    Optional<Invoice> findInvoiceByBookingIdWithBookings(@Param("bookingId") UUID bookingId);
+
 }
