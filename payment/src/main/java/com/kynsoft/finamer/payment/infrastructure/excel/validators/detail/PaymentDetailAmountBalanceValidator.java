@@ -28,7 +28,7 @@ public class PaymentDetailAmountBalanceValidator extends ExcelListRuleValidator<
 
     @Override
     public void validate(List<PaymentDetailRow> paymentDetailRows, List<RowErrorField> errorFieldList) {
-        this.validateBookingAmount(paymentDetailRows, errorFieldList);
+        //this.validateBookingAmount(paymentDetailRows, errorFieldList);
         this.validateCashAmount(paymentDetailRows, errorFieldList);
     }
 
