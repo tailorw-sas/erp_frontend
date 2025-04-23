@@ -195,7 +195,8 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                     roomTypeDto,
                     roomCategoryDto, new LinkedList<>(), null, null,
                     command.getBookingCommands().get(i).getContract(),
-                    false
+                    false,
+                    null
             ));
             if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
                 hotelBookingNumber.append(command.getBookingCommands().get(i).getHotelBookingNumber()+", ");

@@ -336,7 +336,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                                         detail.getManageBooking().getId(),
                                         detail.getManageBooking().getAmountBalance(),
                                         paymentKafka,
-                                        false
+                                        false,
+                                        OffsetDateTime.now()
                                 )
                         );
                     } catch (Exception e) {

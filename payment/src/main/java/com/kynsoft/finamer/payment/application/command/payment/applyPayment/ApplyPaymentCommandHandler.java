@@ -371,7 +371,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                     updatePayment.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            kafkaList.add(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false));
+            kafkaList.add(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
         } catch (Exception e) {
             System.err.println("Error al enviar el evento de integracion: " + e.getMessage());
         }

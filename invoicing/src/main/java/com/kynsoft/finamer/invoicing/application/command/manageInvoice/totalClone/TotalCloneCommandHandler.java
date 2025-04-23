@@ -224,7 +224,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     null,
                     bookingToClone,
                     bookingRequest.getContract(),
-                    false
+                    false,
+                    null
             );
             bookings.add(newBooking);
             if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
