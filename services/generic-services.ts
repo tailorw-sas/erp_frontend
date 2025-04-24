@@ -312,4 +312,14 @@ export const GenericService = {
     })
   },
 
+  async count(MODULE_NAME: string, URI_API: string, payload: any) {
+    const { $api } = useNuxtApp()
+    const serverUrl = useRequestURL()
+    const url = `${serverUrl.origin}/site/${MODULE_NAME}/${URI_API}/count`
+    return $api<SearchResponse>(url, {
+      method: 'GET',
+      body: payload
+    })
+  },
+
 }

@@ -556,7 +556,7 @@ export const menuItemsMegaMenu = ref<MenuItem[]>([
           label: 'Innsist',
           items: [
             {
-              label: 'Innsist Parametrization',
+              label: 'Innsist Management',
               icon: 'pi pi-fw pi-database',
               command: () => navigateTo('/innsist'),
               items: []
