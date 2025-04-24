@@ -410,8 +410,8 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         selections.add(paymentManagePaymentStatusJoin.get("code"));
         selections.add(paymentManagePaymentStatusJoin.get("name"));
         selections.add(paymentManagePaymentStatusJoin.get("status"));
-        selections.add(paymentManagePaymentStatusJoin.get("confirmed"));
         selections.add(paymentManagePaymentStatusJoin.get("applied"));
+        selections.add(paymentManagePaymentStatusJoin.get("confirmed"));
         selections.add(paymentManagePaymentStatusJoin.get("cancelled"));
         selections.add(paymentManagePaymentStatusJoin.get("transit"));
 
