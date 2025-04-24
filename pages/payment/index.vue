@@ -1072,7 +1072,7 @@ const applyPaymentColumnsOtherDeduction1 = ref<IColumn[]>([
     widthTruncate: '50px', // Control de truncamiento
     columnClass: 'truncate-text', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Balance', type: 'number', width: '70px', sortable: true, showFilter: true, editable: true },
-  { field: 'trans', header: 'Trans.Category', type: 'date', width: '30px', // Define un ancho fijo
+  { field: 'trans', header: 'Trans. Category', type: 'date', width: '30px', // Define un ancho fijo
     minWidth: '20px', // Establece un ancho mínimo
     maxWidth: '40px', // Evita que se expanda demasiado
     widthTruncate: '30px', // Control de truncamiento
@@ -5022,7 +5022,7 @@ onMounted(async () => {
       </template>
     </Dialog>
 
-    <!-- Dialog Apply Payment -->
+    <!-- Dialog Apply Payment Clic Derecho Payment Management -->
     <div v-if="openDialogApplyPayment">
       <Dialog
         v-model:visible="openDialogApplyPayment"
