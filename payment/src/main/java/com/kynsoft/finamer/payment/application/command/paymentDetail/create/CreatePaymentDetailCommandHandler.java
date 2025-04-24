@@ -71,7 +71,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             paymentTransactionTypeDto = response.createObject();
         }
 
-        PaymentDto paymentDto = this.paymentService.findById(command.getPayment());
+        PaymentDto paymentDto = this.paymentService.findByIdCustom(command.getPayment());
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));

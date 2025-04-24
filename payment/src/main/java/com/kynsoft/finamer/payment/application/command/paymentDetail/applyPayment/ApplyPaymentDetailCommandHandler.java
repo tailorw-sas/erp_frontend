@@ -95,7 +95,7 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.manageBookingService.update(bookingDto);
         this.paymentDetailService.update(paymentDetailDto);
 
-        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+        PaymentDto paymentDto = this.paymentService.findByIdCustom(paymentDetailDto.getPayment().getId());
         try {
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
                     paymentDto.getId(),
