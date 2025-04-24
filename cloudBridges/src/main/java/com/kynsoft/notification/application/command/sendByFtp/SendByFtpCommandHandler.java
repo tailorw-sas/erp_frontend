@@ -34,11 +34,10 @@ public class SendByFtpCommandHandler implements ICommandHandler<SendByFtpCommand
         if (command.getFileDtos() != null && !command.getFileDtos().isEmpty()) {
             List<FileDto> successfulDownloads = new ArrayList<>();
             List<FileDto> failedDownloads = new ArrayList<>();
-            this.amazonClient.setBucketName(command.getBucketName());
 
             for(FileDto fileDto : command.getFileDtos()) {
                 try {
-                byte[] fileContent = this.amazonClient.downloadFile(fileDto.getUrl());
+                byte[] fileContent = this.amazonClient.downloadFile(fileDto.getUrl(), command.getBucketName());
                     if (fileContent != null && fileContent.length > 0) {
                         fileDto.setFileContent(fileContent);
                         successfulDownloads.add(fileDto);

@@ -11,6 +11,9 @@ import com.kynsoft.finamer.invoicing.domain.services.IPaymentDetailService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,22 +36,41 @@ public class ConsumerUndoApplicationUpdateBookingService {
     @KafkaListener(topics = "finamer-undo-application-update-booking-balance", groupId = "invoicing-entity-replica")
     public void listen(UpdateBookingBalanceKafka objKafka) {
         try {
+            ManageInvoiceDto invoice = this.invoiceService.findByBookingId(objKafka.getId());
+            ManageBookingDto booking = this.getBookingById(invoice.getBookings(), objKafka.getId());
+            if(Objects.nonNull(booking) && objKafka.getTimestamp().isAfter(booking.getUpdatedAt().atOffset(ZoneOffset.UTC))){
+                booking.setDueAmount(objKafka.getAmountBalance());
+                booking.setUpdatedAt(LocalDateTime.now());
+                this.setInvoiceDueAmount(invoice);
 
-            ManageBookingDto bookingDto = this.bookingService.findById(objKafka.getId());
-            bookingDto.setDueAmount(bookingDto.getDueAmount() + objKafka.getAmountBalance());
-            this.bookingService.update(bookingDto);
+                this.invoiceService.update(invoice);
+            }
 
-            ManageInvoiceDto invoiceDto = this.invoiceService.findById(bookingDto.getInvoice().getId());
-            invoiceDto.setDueAmount(invoiceDto.getDueAmount() + objKafka.getAmountBalance());
-            this.invoiceService.update(invoiceDto);
-
-            PaymentDetailDto update = this.detailService.findById(objKafka.getPaymentKafka().getDetails().getId());
-            update.setManageBooking(null);
-            this.detailService.update(update);
+            PaymentDetailDto paymentDetail = this.detailService.findById(objKafka.getPaymentKafka().getDetails().getId());
+            paymentDetail.setManageBooking(null);
+            this.detailService.update(paymentDetail);
 
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUndoApplicationUpdateBookingService.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private ManageBookingDto getBookingById(List<ManageBookingDto> bookings, UUID id){
+        if(Objects.isNull(bookings)){
+            return null;
+        }
+
+        return bookings.stream()
+                .filter(booking -> booking.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void setInvoiceDueAmount(ManageInvoiceDto invoiceDto){
+        Double currentDueAmount = invoiceDto.getBookings().stream()
+                .mapToDouble(ManageBookingDto::getDueAmount)
+                .sum();
+        invoiceDto.setDueAmount(currentDueAmount);
     }
 
 }

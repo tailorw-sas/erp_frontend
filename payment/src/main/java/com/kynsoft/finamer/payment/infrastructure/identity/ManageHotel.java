@@ -70,4 +70,20 @@ public class ManageHotel implements Serializable {
                 id, code, name, status, applyByTradingCompany, manageTradingCompany, autoApplyCredit
         );
     }
+
+    public ManageHotel(UUID id,
+                       String code,
+                       String name,
+                       String status,
+                       Boolean applyByTradingCompany,
+                       UUID manageTradingCompany,
+                       Boolean autoApplyCredit){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.status = status;
+        this.applyByTradingCompany = applyByTradingCompany;
+        this.manageTradingCompany = manageTradingCompany;
+        this.autoApplyCredit = autoApplyCredit;
+    }
 }

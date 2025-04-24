@@ -2,183 +2,88 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTra
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplyPayment.UndoApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.domain.core.undoApplyPayment.UndoApplyPayment;
+import com.kynsoft.finamer.payment.domain.domainServices.ReverseTransactionService;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailReversedTransactionRule;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
-import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentStatusService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
+import com.kynsoft.finamer.payment.domain.services.*;
+
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+
+import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.undoApplicationUpdateBooking.ProducerUndoApplicationUpdateBookingService;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class CreateReverseTransactionCommandHandler implements ICommandHandler<CreateReverseTransactionCommand> {
 
     private final IPaymentDetailService paymentDetailService;
-    private final IPaymentService paymentService;
-    private final IManageEmployeeService employeeService;
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
-    private final IManagePaymentStatusService paymentStatusService;
-    private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final ReverseTransactionService reverseTransactionService;
+
+    private final ProducerUndoApplicationUpdateBookingService producerUndoApplicationUpdateBookingService;
 
     public CreateReverseTransactionCommandHandler(IPaymentDetailService paymentDetailService,
-                                                IPaymentService paymentService,
-                                                IManageEmployeeService employeeService,
-                                                IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
-                                                IManagePaymentStatusService paymentStatusService,
-                                                IPaymentCloseOperationService paymentCloseOperationService) {
+                                                  ReverseTransactionService reverseTransactionService,
+                                                  ProducerUndoApplicationUpdateBookingService producerUndoApplicationUpdateBookingService) {
 
         this.paymentDetailService = paymentDetailService;
-        this.paymentService = paymentService;
-        this.employeeService = employeeService;
-        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
-        this.paymentStatusService = paymentStatusService;
-        this.paymentCloseOperationService = paymentCloseOperationService;
+        this.reverseTransactionService = reverseTransactionService;
+        this.producerUndoApplicationUpdateBookingService = producerUndoApplicationUpdateBookingService;
     }
 
     @Override
     public void handle(CreateReverseTransactionCommand command) {
         PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
+        PaymentDto payment = paymentDetailDto.getPayment();
+        ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
+
         RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplyPayment()));
+        RulesChecker.checkRule(new CheckPaymentDetailReversedTransactionRule(paymentDetailDto));
         //Comprobar que la fecha sea anterior al dia actual
         //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash, pero puede ser de other deductions
         //Lo que no puede suceder es que si es other deductions cambie el estado del payment.
-        PaymentDetailDto reverseFrom = new PaymentDetailDto(
-                UUID.randomUUID(),
-                paymentDetailDto.getStatus(),
-                paymentDetailDto.getPayment(),
-                paymentDetailDto.getTransactionType(),
-                paymentDetailDto.getAmount() * -1,
-                paymentDetailDto.getRemark(),
-                null,
-                null,
-                null,
-                transactionDate(paymentDetailDto.getPayment().getHotel().getId()),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false
-        );
 
-        reverseFrom.setManageBooking(paymentDetailDto.getManageBooking());
-        reverseFrom.setReverseTransaction(true);
+        this.reverseTransactionService.reverseTransaction(paymentDetailDto, payment, command.getEmployee(), bookingDto);
+        this.replicateBooking(payment, paymentDetailDto, bookingDto);
+    }
 
-        this.paymentDetailService.create(reverseFrom);
 
-        if (paymentDetailDto.getTransactionType().getApplyDeposit()) {
-            reverseFrom.setReverseFrom(paymentDetailDto.getPaymentDetailId());
-            reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
-            reverseFrom.setParentId(paymentDetailDto.getParentId());
-            this.addPaymentDetails(reverseFrom, paymentDetailDto.getParentId());
-            this.calculateReverseApplyDeposit(reverseFrom.getPayment(), paymentDetailDto);
-            this.paymentDetailService.update(reverseFrom);
 
-            this.changeStatus(paymentDetailDto, command.getEmployee());
-        } else if (paymentDetailDto.getTransactionType().getCash()) {
-            this.calculateReverseCash(reverseFrom.getPayment(), reverseFrom.getAmount());
-            reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
-            this.paymentDetailService.update(reverseFrom);
-
-            this.changeStatus(paymentDetailDto, command.getEmployee());
-        } else {
-            reverseFrom.setReverseFromParentId(paymentDetailDto.getPaymentDetailId());
-            this.paymentDetailService.update(reverseFrom);
-            this.calculateReverseOtherDeductions(reverseFrom.getPayment(), reverseFrom.getAmount());
+    private void replicateBooking(PaymentDto paymentDto, PaymentDetailDto paymentDetailDto, ManageBookingDto bookingDto){
+        try {
+            UpdateBookingBalanceKafka updateBookingBalanceKafka = new UpdateBookingBalanceKafka(bookingDto.getId(),
+                    bookingDto.getAmountBalance(),
+                    new ReplicatePaymentKafka(
+                            paymentDto.getId(),
+                            paymentDto.getPaymentId(),
+                            new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                            )),
+                    paymentDetailDto.getTransactionType().getApplyDeposit(), OffsetDateTime.now());
+            this.producerUndoApplicationUpdateBookingService.update(updateBookingBalanceKafka);
+        } catch (Exception e) {
+            Logger.getLogger(CreateReverseTransactionCommandHandler.class.getName()).log(Level.SEVERE, "Error trying to replicate booking", e);
         }
-
-        ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
-        paymentDetailDto.setReverseTransaction(true);
-        this.paymentDetailService.update(paymentDetailDto);
-
-        command.getMediator().send(new UndoApplyPaymentDetailCommand(command.getPaymentDetail(), bookingDto.getId()));
-    }
-
-    private OffsetDateTime transactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
-
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
-            return OffsetDateTime.now(ZoneId.of("UTC"));
-        }
-        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
-    }
-
-    private void addPaymentDetails(PaymentDetailDto reverseFrom, Long parentId) {
-        PaymentDetailDto parent = this.paymentDetailService.findByPaymentDetailId(parentId);
-        List<PaymentDetailDto> _paymentDetails = new ArrayList<>(parent.getPaymentDetails());
-        _paymentDetails.add(reverseFrom);
-        parent.setPaymentDetails(_paymentDetails);
-        parent.setApplyDepositValue(parent.getApplyDepositValue() - reverseFrom.getAmount());
-
-        this.paymentDetailService.update(parent);
-    }
-
-    private void calculateReverseApplyDeposit(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
-        paymentDto.setDepositBalance(paymentDto.getDepositBalance() + newDetailDto.getAmount());
-        paymentDto.setApplied(paymentDto.getApplied() - newDetailDto.getAmount());
-        paymentDto.setIdentified(paymentDto.getIdentified() - newDetailDto.getAmount());
-        paymentDto.setNotIdentified(paymentDto.getNotIdentified() + newDetailDto.getAmount());
-
-        this.paymentService.update(paymentDto);
-    }
-
-    private void calculateReverseOtherDeductions(PaymentDto paymentDto, double amount) {
-        paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + amount);
-
-        this.paymentService.update(paymentDto);
-    }
-
-    private void calculateReverseCash(PaymentDto paymentDto, double amount) {
-        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
-        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
-
-        paymentDto.setApplied(paymentDto.getApplied() + amount);
-        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
-        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
-
-        this.paymentService.update(paymentDto);
-    }
-
-    private void changeStatus(PaymentDetailDto paymentDetailDto, UUID employee) {
-
-        if (paymentDetailDto.getPayment().getPaymentStatus().getApplied()) {
-            PaymentDto payment = this.paymentService.findById(paymentDetailDto.getPayment().getId());
-            payment.setPaymentStatus(this.paymentStatusService.findByConfirmed());
-            this.paymentService.update(payment);
-            createPaymentAttachmentStatusHistory(employee, payment);
-        }
-    }
-
-    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
-    private void createPaymentAttachmentStatusHistory(UUID employee, PaymentDto payment) {
-
-        ManageEmployeeDto employeeDto = employee != null ? this.employeeService.findById(employee) : null;
-        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
-        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-        attachmentStatusHistoryDto.setDescription("Update Payment.");
-        attachmentStatusHistoryDto.setEmployee(employeeDto);
-        attachmentStatusHistoryDto.setPayment(payment);
-        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
-
-        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
 }

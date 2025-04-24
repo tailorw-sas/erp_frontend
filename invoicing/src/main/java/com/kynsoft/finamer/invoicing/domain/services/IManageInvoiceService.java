@@ -48,4 +48,6 @@ public interface IManageInvoiceService {
     void deleteInvoice(ManageInvoiceDto dto);
 
     ManageInvoiceDto changeInvoiceStatus(ManageInvoiceDto dto, ManageInvoiceStatusDto status);
+
+    ManageInvoiceDto findByBookingId(UUID bookingId);
 }

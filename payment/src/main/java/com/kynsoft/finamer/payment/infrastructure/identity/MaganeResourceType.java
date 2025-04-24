@@ -70,4 +70,22 @@ public class MaganeResourceType {
                 invoice, vcc
         );
     }
+
+    public MaganeResourceType(UUID id,
+                              String code,
+                              String name,
+                              String description,
+                              Status status,
+                              Boolean defaults,
+                              Boolean invoice,
+                              Boolean vcc){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.defaults = defaults;
+        this.invoice = invoice;
+        this.vcc = vcc;
+    }
 }

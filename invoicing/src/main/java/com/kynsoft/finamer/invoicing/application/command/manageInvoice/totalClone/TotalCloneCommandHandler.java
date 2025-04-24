@@ -50,7 +50,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageInvoiceTransactionTypeService invoiceTransactionTypeService;
     private final IInvoiceCloseOperationService closeOperationService;
-    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IManageEmployeeService employeeService;
     private final IManageResourceTypeService resourceTypeService;
     private final IManageRoomRateService roomRateService;
@@ -68,8 +67,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                                     IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                     IManageInvoiceTransactionTypeService invoiceTransactionTypeService,
                                     IInvoiceCloseOperationService closeOperationService,
-                                    IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService, IManageRoomRateService roomRateService) {
+                                    IManageEmployeeService employeeService, IManageResourceTypeService resourceTypeService,
+                                    IManageRoomRateService roomRateService) {
         this.invoiceService = invoiceService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
@@ -85,7 +84,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.invoiceTransactionTypeService = invoiceTransactionTypeService;
         this.closeOperationService = closeOperationService;
-        this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.employeeService = employeeService;
         this.resourceTypeService = resourceTypeService;
         this.roomRateService = roomRateService;
@@ -226,7 +224,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                     null,
                     bookingToClone,
                     bookingRequest.getContract(),
-                    false
+                    false,
+                    null
             );
             bookings.add(newBooking);
             if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
@@ -276,13 +275,13 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                 this.invoiceDate(invoiceToClone.getHotel().getId()),
                 dueDate,
                 true,
-                invoiceToClone.getInvoiceAmount(), //TODO: revisar si es mejor asi o calcularlo nuevamente
+                invoiceToClone.getInvoiceAmount(),
                 invoiceToClone.getDueAmount(),
                 hotelDto,
                 agencyDto,
-                invoiceToClone.getInvoiceType(), //TODO: se queda con el invoiceType del padre?
+                invoiceToClone.getInvoiceType(),
                 status,
-                false, //TODO: de donde sale esto?
+                false,
                 bookings,
                 attachmentDtos,
                 false,
@@ -360,7 +359,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
                         UUID.randomUUID(),
                         null,
                         -roomRateDto.getInvoiceAmount(),
-                        LocalDateTime.now(),
+                        this.invoiceDate(invoiceDto.getHotel().getId()),
                         "Automatic adjustment generated to closed the invoice, because it was cloned",
                         this.invoiceTransactionTypeService.findByDefaults(),
                         null,
@@ -398,121 +397,4 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
     private Long calculateNights(LocalDateTime checkIn, LocalDateTime checkOut) {
         return ChronoUnit.DAYS.between(checkIn.toLocalDate(), checkOut.toLocalDate());
     }
-
-    //    @Override
-//    public void handle(TotalCloneCommand command){
-//        ManageInvoiceDto invoiceToCloneDto = this.invoiceService.findById(command.getInvoiceToClone());
-//        ManageHotelDto hotelDto = this.hotelService.findById(invoiceToCloneDto.getHotel().getId());
-//        ManageAgencyDto agencyDto = this.agencyService.findById(invoiceToCloneDto.getAgency().getId());
-//
-//        //todo: es necesario actualizar el invoice number???
-//        String invoiceNumber = InvoiceType.getInvoiceTypeCode(invoiceToCloneDto.getInvoiceType());
-//        if (hotelDto.getManageTradingCompanies() != null
-//                && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
-//            invoiceNumber += "-" + hotelDto.getManageTradingCompanies().getCode();
-//        } else {
-//            invoiceNumber += "-" + hotelDto.getCode();
-//        }
-//
-//        LocalDate dueDate = LocalDateTime.now().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
-//
-//        List<ManageBookingDto> clonedBookings = new ArrayList<>();
-//        if(invoiceToCloneDto.getBookings() != null) {
-//            for (ManageBookingDto bookingToClone : invoiceToCloneDto.getBookings()) {
-//                ManageBookingDto newBooking = new ManageBookingDto(bookingToClone);
-//                newBooking.setBookingDate(LocalDateTime.now());
-//                List<ManageRoomRateDto> clonedRoomRates = new ArrayList<>();
-//                if(bookingToClone.getRoomRates() != null){
-//                    for(ManageRoomRateDto roomRateToClone : bookingToClone.getRoomRates()){
-//                        ManageRoomRateDto newRoomRate = new ManageRoomRateDto(roomRateToClone);
-//                        List<ManageAdjustmentDto> newAdjustments = new ArrayList<>();
-//                        if(roomRateToClone.getAdjustments() != null){
-//                            for(ManageAdjustmentDto adjustmentToClone : roomRateToClone.getAdjustments()){
-//                                ManageAdjustmentDto newAdjustment = new ManageAdjustmentDto(adjustmentToClone);
-//                                newAdjustments.add(newAdjustment);
-//                            }
-//                            newRoomRate.setAdjustments(newAdjustments);
-//                        }
-//                        clonedRoomRates.add(newRoomRate);
-//                    }
-//                    newBooking.setRoomRates(clonedRoomRates);
-//                }
-//                clonedBookings.add(newBooking);
-//            }
-//        }
-//        List<ManageAttachmentDto> clonedAttachments = new ArrayList<>();
-//        if(invoiceToCloneDto.getAttachments() != null){
-//            for(ManageAttachmentDto attachmentToClone : invoiceToCloneDto.getAttachments()){
-//                ManageAttachmentDto newAttachment = new ManageAttachmentDto(attachmentToClone);
-//                clonedAttachments.add(newAttachment);
-//            }
-//        }
-//        ManageInvoiceStatusDto invoiceStatus = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-//
-//        ManageInvoiceDto newInvoice = new ManageInvoiceDto(
-//                command.getClonedInvoice(),
-//                0L,
-//                0L,
-//                invoiceNumber,
-//                LocalDateTime.now(),
-//                dueDate,
-//                true,
-//                invoiceToCloneDto.getInvoiceAmount(),
-//                invoiceToCloneDto.getDueAmount(),
-//                hotelDto,
-//                agencyDto,
-//                invoiceToCloneDto.getInvoiceType(),
-//                EInvoiceStatus.RECONCILED,
-//                invoiceToCloneDto.getAutoRec(),
-//                clonedBookings,
-//                clonedAttachments,
-//                invoiceToCloneDto.getReSend(),
-//                invoiceToCloneDto.getReSendDate(),
-//                invoiceToCloneDto.getManageInvoiceType(),
-//                invoiceStatus,
-//                null,
-//                true,
-//                invoiceToCloneDto,
-//                invoiceToCloneDto.getCredits()
-//        );
-//        ManageInvoiceDto created = this.invoiceService.create(newInvoice);
-//
-//        command.setClonedInvoiceId(created.getInvoiceId());
-//        command.setClonedInvoiceNo(this.deleteHotelInfo(created.getInvoiceNumber()));
-//
-//        this.setInvoiceToCloneAmounts(invoiceToCloneDto, command.getEmployeeName());
-//
-//        try {
-//            this.producerReplicateManageInvoiceService.create(created);
-//        } catch (Exception e) {
-//        }
-//
-//        //invoice status history
-//        this.invoiceStatusHistoryService.create(
-//                new InvoiceStatusHistoryDto(
-//                        UUID.randomUUID(),
-//                        created,
-//                        "The invoice data was inserted.",
-//                        null,
-//                        command.getEmployeeName(),
-//                        EInvoiceStatus.RECONCILED
-//                )
-//        );
-//
-//        //attachment status history
-//        for(ManageAttachmentDto attachment : created.getAttachments()) {
-//            this.attachmentStatusHistoryService.create(
-//                    new AttachmentStatusHistoryDto(
-//                            UUID.randomUUID(),
-//                            "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
-//                            attachment.getAttachmentId(),
-//                            created,
-//                            command.getEmployeeName(),
-//                            attachment.getEmployeeId(),
-//                            null,
-//                            null
-//                    )
-//            );
-//        }
-//    }
 }

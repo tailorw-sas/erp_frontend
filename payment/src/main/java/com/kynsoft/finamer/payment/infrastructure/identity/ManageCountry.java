@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -46,8 +47,8 @@ public class ManageCountry {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deleteAt;
 
-    @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
-    private List<ManageAgency> agencies;
+    //@OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
+    //private List<ManageAgency> agencies;
 
     private String iso3;
 
@@ -70,7 +71,7 @@ public class ManageCountry {
                 description,
                 isDefault,
                 status,
-                managerLanguage.toAggregate(),
+                Objects.nonNull(managerLanguage) ? managerLanguage.toAggregate() : null,
                 iso3
         );
     }

@@ -9,10 +9,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -141,10 +138,26 @@ public class Cache implements ICache {
     public List<ManageBookingDto> getBookingsByCoupon(String coupon){
         if(Objects.isNull(this.bookingsByCouponMap) || this.bookingsByCouponMap.isEmpty()){
             //printLog("The bookingControlAmountBalanceByCouponMap map is null or Empty");
-            return null;
+            return Collections.emptyList();
         }
 
         return this.bookingsByCouponMap.get(coupon);
+    }
+
+    public List<ManageBookingDto> getBookingsByCuoponList(List<String> cuopons){
+        if(Objects.isNull(this.bookingsByCouponMap) || this.bookingsByCouponMap.isEmpty()){
+            //printLog("The bookingControlAmountBalanceByCouponMap map is null or Empty");
+            return Collections.emptyList();
+        }
+
+        List<List<ManageBookingDto>> list = this.bookingsByCouponMap.entrySet().stream()
+                .filter(entry -> cuopons.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+
+        return list.stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     public ManagePaymentTransactionTypeDto getPaymentInvoiceTransactionType(){

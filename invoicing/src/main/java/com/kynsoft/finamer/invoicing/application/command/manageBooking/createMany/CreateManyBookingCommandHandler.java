@@ -88,7 +88,8 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                     roomCategoryDto,
                     null, null, null,
                     element.getContract(),
-                    false
+                    false,
+                    null
             );
             bookingService.create(newBookingDto);
 

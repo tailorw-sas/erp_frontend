@@ -36,6 +36,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     private PaymentDetailAmountBalanceValidator paymentDetailAmountBalanceValidator;
     private PaymentDetailAntiAmountValidator paymentDetailAntiAmountValidator;
     private PaymentDetailAntiBookingValidator paymentDetailAntiBookingValidator;
+    private PaymentDetailOtherDeductionsValidator paymentDetailOtherDeductionsValidator;
     private PaymentDetailExistPaymentValidator paymentDetailExistPaymentValidator;
     private PaymentDetailsBookingFieldValidator paymentDetailsBookingFieldValidator;
     private PaymentImportDetailAmountValidator paymentImportDetailAmountValidator;
@@ -62,6 +63,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentDetailAmountBalanceValidator = new PaymentDetailAmountBalanceValidator(applicationEventPublisher, cache);
         paymentDetailAntiAmountValidator = new PaymentDetailAntiAmountValidator(applicationEventPublisher, cache);
         paymentDetailAntiBookingValidator = new PaymentDetailAntiBookingValidator(applicationEventPublisher, cache);
+        paymentDetailOtherDeductionsValidator = new PaymentDetailOtherDeductionsValidator(applicationEventPublisher, cache);
 
         paymentDetailExistPaymentValidator= new PaymentDetailExistPaymentValidator(applicationEventPublisher, cache);
         paymentDetailsBookingFieldValidator = new PaymentDetailsBookingFieldValidator(applicationEventPublisher, cache);
@@ -85,6 +87,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentDetailAmountBalanceValidator.validate(toValidateList, rowErrorFieldList);
         paymentDetailAntiAmountValidator.validate(toValidateList, rowErrorFieldList);
         paymentDetailAntiBookingValidator.validate(toValidateList, rowErrorFieldList);
+        paymentDetailOtherDeductionsValidator.validate(toValidateList, rowErrorFieldList);
         errors += rowErrorFieldList.size();
 
         for(PaymentDetailRow toValidate : toValidateList){
