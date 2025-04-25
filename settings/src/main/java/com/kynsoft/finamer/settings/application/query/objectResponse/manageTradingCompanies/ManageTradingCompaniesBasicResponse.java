@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.query.objectResponse.manageTrad
 
 import com.kynsoft.finamer.settings.domain.dto.ManageTradingCompaniesDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.infrastructure.projections.ManageTradingCompanyProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,5 +26,12 @@ public class ManageTradingCompaniesBasicResponse {
         this.code = dto.getCode();
         this.status = dto.getStatus();
         this.company = dto.getCompany();
+    }
+
+    public ManageTradingCompaniesBasicResponse(ManageTradingCompanyProjection projection){
+        this.id = projection.getId();
+        this.code = projection.getCode();
+        this.status = projection.getStatus();
+        this.company = projection.getCompany();
     }
 }

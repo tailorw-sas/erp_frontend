@@ -7,12 +7,14 @@ import com.kynsoft.finamer.settings.application.query.objectResponse.manageTradi
 import com.kynsoft.finamer.settings.domain.dto.*;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.domain.dtoEnum.UserType;
+import com.kynsoft.finamer.settings.infrastructure.projections.ManageEmployeeProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -54,5 +56,22 @@ public class ManageEmployeeResponse implements IResponse {
         this.manageTradingCompaniesList = dto.getManageTradingCompaniesList() != null ? dto.getManageTradingCompaniesList().stream().map(ManageTradingCompaniesBasicResponse::new).collect(Collectors.toList()) : null;
         this.userType = dto.getUserType();
         this.manageReportList = dto.getManageReportList() != null ? dto.getManageReportList().stream().map(ManageReportResponse::new).collect(Collectors.toList()) : null;
+    }
+
+    public ManageEmployeeResponse(ManageEmployeeProjection projection){
+        this.id = projection.getId();
+        this.departmentGroup = Objects.nonNull(projection.getDepartmentGroup()) ? new ManageDepartmentGroupResponse(projection.getDepartmentGroup()) : null;
+        this.firstName = projection.getFirstName();
+        this.lastName = projection.getLastName();
+        this.loginName = projection.getLoginName();
+        this.email = projection.getEmail();
+        this.innsistCode = projection.getInnsistCode();
+        this.phoneExtension = projection.getPhoneExtension();
+        this.status = projection.getStatus();
+        this.userType = projection.getUserType();
+        this.managePermissionList = Objects.nonNull(projection.getManagePermissionList()) ? projection.getManagePermissionList().stream().map(ManagePermissionResponse::new).collect(Collectors.toList()) : null;
+        this.manageAgencyList = Objects.nonNull(projection.getManageAgencyList()) ? projection.getManageAgencyList().stream().map(ManageAgencyBasicResponse::new).collect(Collectors.toList()) : null;
+        this.manageHotelList = Objects.nonNull(projection.getManageHotelList()) ? projection.getManageHotelList().stream().map(ManageHotelBasicResponse::new).collect(Collectors.toList()) : null;
+        this.manageTradingCompaniesList = Objects.nonNull(projection.getManageTradingCompaniesList()) ? projection.getManageTradingCompaniesList().stream().map(ManageTradingCompaniesBasicResponse::new).collect(Collectors.toList()) : null;
     }
 }

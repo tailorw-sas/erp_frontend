@@ -58,4 +58,18 @@ public class ManagerTimeZone implements Serializable {
         return new ManagerTimeZoneDto(id, code, name, description, elapse, status);
     }
 
+    public ManagerTimeZone(UUID id,
+                           String code,
+                           String name,
+                           String description,
+                           Double elapse,
+                           Status status){
+        this.id = id;
+        this.code = code;
+        this.description = description;
+        this.name = name;
+        this.elapse = elapse;
+        this.status = status;
+    }
+
 }
