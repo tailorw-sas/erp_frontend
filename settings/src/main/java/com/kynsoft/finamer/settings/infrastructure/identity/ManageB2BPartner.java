@@ -60,6 +60,7 @@ public class ManageB2BPartner implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
+
     @OneToMany(mappedBy = "sentB2BPartner", fetch = FetchType.EAGER)
     private List<ManageAgency> agencies;
 

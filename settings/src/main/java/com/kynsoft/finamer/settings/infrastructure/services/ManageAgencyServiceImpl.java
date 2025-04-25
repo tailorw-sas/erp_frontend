@@ -93,7 +93,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
 
     public ManageAgencyDto findById(UUID id) {
         long startTime = System.nanoTime();
-        Optional<ManageAgency> optionalEntity = repositoryQuery.getAgencyByIdWithAllRelations(id);
+        Optional<ManageAgency> optionalEntity = repositoryQuery.findByIdCustom(id);
         long endTime = System.nanoTime();
         Logger.getLogger(ManageAgencyServiceImpl.class.getName()).log(Level.WARNING, "Tiempo:" + (endTime - startTime)/1_000_000);
 
@@ -112,7 +112,7 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria, employeeId);
         GenericSpecificationsBuilder<ManageAgency> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageAgency> data = repositoryQuery.findAll(specifications, pageable);
+        Page<ManageAgency> data = repositoryQuery.findAllCustom(specifications, pageable);
         return getPaginatedResponse(data);
     }
 

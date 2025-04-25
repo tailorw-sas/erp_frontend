@@ -4,10 +4,13 @@ import com.kynsoft.finamer.settings.domain.dtoEnum.EGenerationType;
 import com.kynsoft.finamer.settings.domain.dtoEnum.ESentFileFormat;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import com.kynsoft.finamer.settings.infrastructure.identity.*;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Tuple;
+import jakarta.persistence.*;
 import jakarta.persistence.criteria.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepository {
@@ -23,7 +27,7 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
     private EntityManager entityManager;
 
     @Override
-    public Optional<ManageAgency> getAgencyByIdWithAllRelations(UUID id) {
+    public Optional<ManageAgency> findByIdCustom(UUID id) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
 
@@ -41,6 +45,101 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
 
         query.where(cb.equal(root.get("id"), id));
 
+        List<Selection<?>> selections = this.getSelections(root,
+                agencyTypeJoin,
+                clientJoin,
+                sentB2BPartnerJoin,
+                b2bPartnerTypeJoin,
+                countryJoin,
+                countryManagerLanguageJoin,
+                cityStateJoin,
+                cityStateManageCountryJoin,
+                cityStateCountryLanguageJoin,
+                cityStateManagerTimeZoneJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        try {
+            Tuple tuple = entityManager.createQuery(query).getSingleResult();
+            ManageAgency agency = this.convertTupleToManageAgency(tuple);
+            return Optional.of(agency);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Page<ManageAgency> findAllCustom(Specification<ManageAgency> specification, Pageable pageable) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<ManageAgency> root = query.from(ManageAgency.class);
+        Join<ManageAgency, ManageAgencyType> agencyTypeJoin = root.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageB2BPartner> sentB2BPartnerJoin = root.join("sentB2BPartner", JoinType.LEFT);
+        Join<ManageB2BPartner, ManageB2BPartnerType> b2bPartnerTypeJoin = sentB2BPartnerJoin.join("b2bPartnerType", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> countryJoin = root.join("country", JoinType.LEFT);
+        Join<ManageCountry, ManagerLanguage> countryManagerLanguageJoin = countryJoin.join("managerLanguage", JoinType.LEFT);
+        Join<ManageAgency, ManageCityState> cityStateJoin = root.join("cityState", JoinType.LEFT);
+        Join<ManageCityState, ManageCountry> cityStateManageCountryJoin = cityStateJoin.join("country", JoinType.LEFT);
+        Join<ManageCountry, ManagerLanguage> cityStateCountryLanguageJoin = cityStateManageCountryJoin.join("managerLanguage", JoinType.LEFT);
+        Join<ManageCityState, ManagerTimeZone> cityStateManagerTimeZoneJoin = cityStateJoin.join("timeZone", JoinType.LEFT);
+
+        List<Selection<?>> selections = this.getSelections(root,
+                agencyTypeJoin,
+                clientJoin,
+                sentB2BPartnerJoin,
+                b2bPartnerTypeJoin,
+                countryJoin,
+                countryManagerLanguageJoin,
+                cityStateJoin,
+                cityStateManageCountryJoin,
+                cityStateCountryLanguageJoin,
+                cityStateManagerTimeZoneJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        if(specification != null){
+            Predicate predicate = specification.toPredicate(root, query, cb);
+            query.where(predicate);
+        }
+
+        query.orderBy(QueryUtils.toOrders(pageable.getSort(), root, cb));
+
+        TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult((int)pageable.getOffset());
+        typedQuery.setMaxResults(pageable.getPageSize());
+
+        List<Tuple> tuples = typedQuery.getResultList();
+
+        List<ManageAgency> results = tuples.stream()
+                .map(this::convertTupleToManageAgency)
+                .collect(Collectors.toList());
+
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<ManageAgency> countRoot = countQuery.from(ManageAgency.class);
+        countQuery.select(cb.count(countRoot));
+
+        if (specification != null) {
+            Predicate countPredicate = specification.toPredicate(countRoot, countQuery, cb);
+            countQuery.where(countPredicate);
+        }
+        long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        return new PageImpl<>(results, pageable, total);
+    }
+
+    private List<Selection<?>> getSelections(Root<ManageAgency> root,
+                                             Join<ManageAgency, ManageAgencyType> agencyTypeJoin,
+                                             Join<ManageAgency, ManageClient> clientJoin,
+                                             Join<ManageAgency, ManageB2BPartner> sentB2BPartnerJoin,
+                                             Join<ManageB2BPartner, ManageB2BPartnerType> b2bPartnerTypeJoin,
+                                             Join<ManageAgency, ManageCountry> countryJoin,
+                                             Join<ManageCountry, ManagerLanguage> countryManagerLanguageJoin,
+                                             Join<ManageAgency, ManageCityState> cityStateJoin,
+                                             Join<ManageCityState, ManageCountry> cityStateManageCountryJoin,
+                                             Join<ManageCountry, ManagerLanguage> cityStateCountryLanguageJoin,
+                                             Join<ManageCityState, ManagerTimeZone> cityStateManagerTimeZoneJoin){
         List<Selection<?>> selections = new ArrayList<>();
 
         selections.add(root.get("id"));
@@ -152,11 +251,11 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
         selections.add(root.get("createdAt"));
         selections.add(root.get("updatedAt"));
 
-        query.multiselect(selections.toArray(new Selection[0]));
+        return selections;
+    }
 
-        Tuple tuple = entityManager.createQuery(query).getSingleResult();
-
-        ManageAgency agency = new ManageAgency(
+    private ManageAgency convertTupleToManageAgency(Tuple tuple){
+        return new ManageAgency(
                 tuple.get(0, UUID.class),
                 tuple.get(1, String.class),
                 tuple.get(2, String.class),
@@ -180,22 +279,22 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
                 tuple.get(20, Boolean.class),
                 tuple.get(21, EGenerationType.class),
                 tuple.get(22, ESentFileFormat.class),
-                new ManageAgencyType(
+                (tuple.get(23, UUID.class) != null) ? new ManageAgencyType(
                         tuple.get(23, UUID.class),
                         tuple.get(24, String.class),
                         tuple.get(25, Status.class),
                         tuple.get(26, String.class),
                         tuple.get(27, String.class)
-                ),
-                new ManageClient(
+                ) : null,
+                (tuple.get(28, UUID.class) != null) ? new ManageClient(
                         tuple.get(28, UUID.class),
                         tuple.get(29, String.class),
                         tuple.get(30, String.class),
                         tuple.get(31, String.class),
                         tuple.get(32, Status.class),
                         tuple.get(33, Boolean.class)
-                ),
-                new ManageB2BPartner(
+                ) : null,
+                (tuple.get(34, UUID.class) != null) ? new ManageB2BPartner(
                         tuple.get(34, UUID.class),
                         tuple.get(35, String.class),
                         tuple.get(36, String.class),
@@ -206,15 +305,15 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
                         tuple.get(41, String.class),
                         tuple.get(42, String.class),
                         tuple.get(43, String.class),
-                        new ManageB2BPartnerType(
+                        (tuple.get(44, UUID.class) != null) ? new ManageB2BPartnerType(
                                 tuple.get(44, UUID.class),
                                 tuple.get(45, String.class),
                                 tuple.get(46, String.class),
                                 tuple.get(47, String.class),
                                 tuple.get(48, Status.class)
-                        )
-                ),
-                new ManageCountry(
+                        ) : null
+                ) : null,
+                (tuple.get(49, UUID.class) != null) ? new ManageCountry(
                         tuple.get(49, UUID.class),
                         tuple.get(50, String.class),
                         tuple.get(51, String.class),
@@ -222,7 +321,7 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
                         tuple.get(53, String.class),
                         tuple.get(54, String.class),
                         tuple.get(55, Boolean.class),
-                        new ManagerLanguage(
+                        (tuple.get(56, UUID.class) != null) ? new ManagerLanguage(
                                 tuple.get(56, UUID.class),
                                 tuple.get(57, String.class),
                                 tuple.get(58, Status.class),
@@ -230,15 +329,15 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
                                 tuple.get(60, String.class),
                                 tuple.get(61, Boolean.class),
                                 tuple.get(62, Boolean.class)
-                        ),
+                        ) : null,
                         tuple.get(63, Status.class)
-                ),
-                new ManageCityState(
+                ) : null,
+                (tuple.get(64, UUID.class) != null) ? new ManageCityState(
                         tuple.get(64, UUID.class),
                         tuple.get(65, String.class),
                         tuple.get(66, String.class),
                         tuple.get(67, String.class),
-                        new ManageCountry(
+                        (tuple.get(68, UUID.class) != null) ? new ManageCountry(
                                 tuple.get(68, UUID.class),
                                 tuple.get(69, String.class),
                                 tuple.get(70, String.class),
@@ -246,7 +345,7 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
                                 tuple.get(72, String.class),
                                 tuple.get(73, String.class),
                                 tuple.get(74, Boolean.class),
-                                new ManagerLanguage(
+                                (tuple.get(75, UUID.class) != null) ? new ManagerLanguage(
                                         tuple.get(75, UUID.class),
                                         tuple.get(76, String.class),
                                         tuple.get(77, Status.class),
@@ -254,26 +353,23 @@ public class ManageAgencyCustomRepositoryImpl implements ManageAgencyCustomRepos
                                         tuple.get(79, String.class),
                                         tuple.get(80, Boolean.class),
                                         tuple.get(81, Boolean.class)
-                                ),
+                                ) : null,
                                 tuple.get(82, Status.class)
-                        ),
-                        new ManagerTimeZone(
+                        ) : null,
+                        (tuple.get(83, UUID.class) != null) ? new ManagerTimeZone(
                                 tuple.get(83, UUID.class),
                                 tuple.get(84, String.class),
                                 tuple.get(85, String.class),
                                 tuple.get(86, String.class),
                                 tuple.get(87, Double.class),
                                 tuple.get(88, Status.class)
-                        ),
+                        ) : null,
                         tuple.get(89, Status.class)
-                ),
+                ) : null,
                 tuple.get(90, Status.class),
                 tuple.get(91, String.class),
                 tuple.get(92, LocalDateTime.class),
                 tuple.get(93, LocalDateTime.class)
         );
-
-        return Optional.of(agency);
     }
-
 }
