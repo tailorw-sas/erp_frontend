@@ -922,7 +922,7 @@ const applyPaymentPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
@@ -948,7 +948,7 @@ const applyPaymentBookingPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentBookingPagination = ref<IPagination>({
@@ -1145,7 +1145,7 @@ const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   query: '',
   pageSize: 10000,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
@@ -1160,7 +1160,7 @@ const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   query: '',
   pageSize: 10000,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
