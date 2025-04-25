@@ -3194,7 +3194,7 @@ async function openModalApplyPayment() {
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   applyPaymentOnChangePage.value = undefined
-  checkApplyPayment.value = true
+  checkApplyPayment.value = false
   applyPaymentGetList()
   getListPaymentDetailTypeDeposit()
 }
