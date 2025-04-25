@@ -210,9 +210,9 @@ const applyPaymentOptions = ref({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 500,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoice.invoiceNo',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
