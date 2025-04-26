@@ -2505,29 +2505,19 @@ async function historyGetList() {
 }
 
 async function applyPaymentGetList(amountComingOfForm: any = null) {
-  if (applyPaymentOptions.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
-    return
-  }
+  if (applyPaymentOptions.value.loading) { return }
+
   try {
-    // applyPaymentPayload.value.filter = []
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
-    const newListItems = []
-    let validNumber = '0'
 
-    if (typeof amountComingOfForm === 'string') {
-      validNumber = amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : '0'
-    }
-    else {
-      validNumber = amountComingOfForm
-    }
+    const validNumber = typeof amountComingOfForm === 'string'
+      ? (amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : '0')
+      : amountComingOfForm ?? '0'
 
-    // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
-    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.type !== 'filterSearch')
-
-    if (objFilter) {
-      objFilter.value = Number.parseFloat(validNumber).toFixed(2)
+    const dueAmountFilter = applyPaymentPayload.value.filter.find(f => f.key === 'dueAmount' && f.type !== 'filterSearch')
+    if (dueAmountFilter) {
+      dueAmountFilter.value = Number.parseFloat(validNumber).toFixed(2)
     }
     else {
       applyPaymentPayload.value.filter.push({
@@ -2539,313 +2529,107 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     }
 
     if (item.value?.client.status === 'ACTIVE') {
-      // Validacion para busar por por las agencias
-      const filter: FilterCriteria[] = [
-        {
-          key: 'client.id',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: item.value.client.id,
-        },
-        {
-          key: 'status',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-        },
-      ]
-      const objQueryToSearch = {
-        query: '',
-        keys: ['name', 'code'],
-      }
+      // 🔵 Filtro de agencias
+      const agencies = await getAgencyListTemp(
+        objApis.value.agency.moduleApi,
+        objApis.value.agency.uriApi,
+        { query: '', keys: ['name', 'code'] },
+        [
+          { key: 'client.id', operator: 'EQUALS', value: item.value.client.id, logicalOperation: 'AND' },
+          { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
+        ]
+      )
 
-      let listAgenciesForApplyPayment: any[] = []
-      listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
-
-      if (listAgenciesForApplyPayment.length > 0) {
-        const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.agency.id')
-
-        if (objFilter) {
-          objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
+      if (agencies.length > 0) {
+        const agencyFilter = applyPaymentPayload.value.filter.find(f => f.key === 'invoice.agency.id')
+        if (agencyFilter) {
+          agencyFilter.value = agencies.map(a => a.id)
         }
         else {
           applyPaymentPayload.value.filter.push({
             key: 'invoice.agency.id',
             operator: 'IN',
-            value: listAgenciesForApplyPayment.map(item => item.id),
+            value: agencies.map(a => a.id),
             logicalOperation: 'AND'
           })
         }
-        // Validacion para bucsar por los hoteles
-        if (item.value.hotel && item.value.hotel.id) {
-          if (item.value?.hotel.status === 'ACTIVE') {
-            // El hotel que tiene la cabecera del payment debe pertenecer a la misma trading company
-            if (item.value.hotel.applyByTradingCompany) {
-              // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
-              const filter: FilterCriteria[] = [
-                {
-                  key: 'manageTradingCompanies.id',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: item.value.hotel?.manageTradingCompany,
-                },
-                {
-                  key: 'applyByTradingCompany',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: true,
-                },
+      }
+      if (item.value?.hotel?.id) {
+        const hotelFull = await GenericService.getById(
+          objApis.value.hotel.moduleApi,
+          objApis.value.hotel.uriApi,
+          item.value.hotel.id
+        )
+
+        if (hotelFull?.status === 'ACTIVE') {
+          let hotelIds: string[] = []
+
+          if (hotelFull.applyByTradingCompany && hotelFull.manageTradingCompanies?.id) {
+            const hotels = await getHotelListTemp(
+              objApis.value.hotel.moduleApi,
+              objApis.value.hotel.uriApi,
+              { query: '', keys: ['name', 'code'] },
+              [
+                { key: 'manageTradingCompanies.id', operator: 'EQUALS', value: hotelFull.manageTradingCompanies.id, logicalOperation: 'AND' },
+                { key: 'applyByTradingCompany', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
+                { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
               ]
-              const objQueryToSearch = {
-                query: '',
-                keys: ['name', 'code'],
-              }
+            )
 
-              let listHotelsForApplyPayment: any[] = []
-              listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
-              if (listHotelsForApplyPayment.length > 0) {
-                const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-                if (objFilter) {
-                  objFilter.value = listHotelsForApplyPayment.map(item => item.id)
-                }
-                else {
-                  applyPaymentPayload.value.filter.push({
-                    key: 'invoice.hotel.id',
-                    operator: 'IN',
-                    value: listHotelsForApplyPayment.map(item => item.id),
-                    logicalOperation: 'AND'
-                  })
-                }
-
-                const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-                if (objFilterEnabledToApply) {
-                  objFilterEnabledToApply.value = true
-                }
-                else {
-                  applyPaymentPayload.value.filter.push(
-                    {
-                      key: 'invoice.manageInvoiceStatus.enabledToApply',
-                      operator: 'EQUALS',
-                      value: true,
-                      logicalOperation: 'AND'
-                    }
-                  )
-                }
-
-                const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-
-                const { data: dataList, page, size, totalElements, totalPages } = response
-
-                applyPaymentPagination.value.page = page
-                applyPaymentPagination.value.limit = size
-                applyPaymentPagination.value.totalElements = totalElements
-                applyPaymentPagination.value.totalPages = totalPages
-
-                const existingIds = new Set(applyPaymentList.value.map(item => item.id))
-
-                for (const iterator of dataList) {
-                  iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                  iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-                  iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                  iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
-                  iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
-                  // iterator.paymentStatus = iterator.status
-
-                  // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-                  //   if (iterator.employee.firstName && iterator.employee.lastName) {
-                  //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-                  //   }
-                  // }
-
-                  // Verificar si el ID ya existe en la lista
-                  if (!existingIds.has(iterator.id)) {
-                    newListItems.push({
-                      ...iterator,
-                      invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-                      loadingEdit: false,
-                      loadingDelete: false
-                    }
-                    )
-                    existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-                  }
-                }
-
-                applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
-              }
-            }
-            else {
-              const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-              if (objFilter) {
-                objFilter.value = item.value.hotel.id
-              }
-              else {
-                applyPaymentPayload.value.filter.push({
-                  key: 'invoice.hotel.id',
-                  operator: 'EQUALS',
-                  value: item.value.hotel.id,
-                  logicalOperation: 'AND'
-                })
-              }
-
-              const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-              if (objFilterEnabledToApply) {
-                objFilterEnabledToApply.value = true
-              }
-              else {
-                applyPaymentPayload.value.filter.push(
-                  {
-                    key: 'invoice.manageInvoiceStatus.enabledToApply',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                  }
-                )
-              }
-
-              const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-
-              const { data: dataList, page, size, totalElements, totalPages } = response
-
-              applyPaymentPagination.value.page = page
-              applyPaymentPagination.value.limit = size
-              applyPaymentPagination.value.totalElements = totalElements
-              applyPaymentPagination.value.totalPages = totalPages
-
-              const existingIds = new Set(applyPaymentList.value.map(item => item.id))
-
-              for (const iterator of dataList) {
-                iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-                iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
-                iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
-                // iterator.paymentStatus = iterator.status
-
-                // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-                //   if (iterator.employee.firstName && iterator.employee.lastName) {
-                //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-                //   }
-                // }
-
-                // Verificar si el ID ya existe en la lista
-                if (!existingIds.has(iterator.id)) {
-                  newListItems.push({
-                    ...iterator,
-                    invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-                    loadingEdit: false,
-                    loadingDelete: false
-                  }
-                  )
-                  existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-                }
-              }
-
-              applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
-            }
+            hotelIds = hotels.map(h => h.id)
           }
-          else {
-            // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
-            const filter: FilterCriteria[] = [
-              {
-                key: 'manageTradingCompanies.id',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: item.value.hotel?.manageTradingCompany,
-              },
-              {
-                key: 'applyByTradingCompany',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: true,
-              },
-            ]
-            const objQueryToSearch = {
-              query: '',
-              keys: ['name', 'code'],
-            }
 
-            let listHotelsForApplyPayment: any[] = []
-            listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
-            if (listHotelsForApplyPayment.length > 0) {
-              const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-              if (objFilter) {
-                objFilter.value = listHotelsForApplyPayment.map(item => item.id)
-              }
-              else {
-                applyPaymentPayload.value.filter.push({
-                  key: 'invoice.hotel.id',
-                  operator: 'IN',
-                  value: listHotelsForApplyPayment.map(item => item.id),
-                  logicalOperation: 'AND'
-                })
-              }
-
-              const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-              if (objFilterEnabledToApply) {
-                objFilterEnabledToApply.value = true
-              }
-              else {
-                applyPaymentPayload.value.filter.push(
-                  {
-                    key: 'invoice.manageInvoiceStatus.enabledToApply',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                  }
-                )
-              }
-
-              const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-
-              const { data: dataList, page, size, totalElements, totalPages } = response
-
-              applyPaymentPagination.value.page = page
-              applyPaymentPagination.value.limit = size
-              applyPaymentPagination.value.totalElements = totalElements
-              applyPaymentPagination.value.totalPages = totalPages
-
-              const existingIds = new Set(applyPaymentList.value.map(item => item.id))
-
-              for (const iterator of dataList) {
-                iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-                iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
-                iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
-                // iterator.paymentStatus = iterator.status
-
-                // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-                //   if (iterator.employee.firstName && iterator.employee.lastName) {
-                //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-                //   }
-                // }
-
-                // Verificar si el ID ya existe en la lista
-                if (!existingIds.has(iterator.id)) {
-                  newListItems.push({
-                    ...iterator,
-                    invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-                    loadingEdit: false,
-                    loadingDelete: false
-                  }
-                  )
-                  existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-                }
-              }
-
-              applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
-            }
+          if (!hotelIds.length) {
+            hotelIds = [hotelFull.id]
           }
+
+          applyPaymentPayload.value.filter.push({
+            key: 'invoice.hotel.id',
+            operator: hotelIds.length > 1 ? 'IN' : 'EQUALS',
+            value: hotelIds.length > 1 ? hotelIds : hotelIds[0],
+            logicalOperation: 'AND'
+          })
         }
       }
+
+      // 🔵 Filtro obligatorio de EnabledToApply
+      if (!applyPaymentPayload.value.filter.find(f => f.key === 'invoice.manageInvoiceStatus.enabledToApply')) {
+        applyPaymentPayload.value.filter.push({
+          key: 'invoice.manageInvoiceStatus.enabledToApply',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        })
+      }
+
+      applyPaymentPayload.value = removeDuplicateFilters(applyPaymentPayload.value)
+
+      const response = await GenericService.search(
+        applyPaymentOptions.value.moduleApi,
+        applyPaymentOptions.value.uriApi,
+        applyPaymentPayload.value
+      )
+
+      const { data: dataList, page, size, totalElements, totalPages } = response
+
+      applyPaymentPagination.value.page = page
+      applyPaymentPagination.value.limit = size
+      applyPaymentPagination.value.totalElements = totalElements
+      applyPaymentPagination.value.totalPages = totalPages
+
+      const existingIds = new Set(applyPaymentList.value.map(item => item.id))
+
+      const mappedItems = dataList.map(iterator => ({
+        ...iterator,
+        invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+        invoiceId: iterator.invoice?.invoiceId?.toString() ?? '',
+        bookingAmount: iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0,
+        bookingBalance: iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0,
+        loadingEdit: false,
+        loadingDelete: false
+      })).filter(iterator => !existingIds.has(iterator.id))
+
+      applyPaymentList.value = [...applyPaymentList.value, ...mappedItems]
     }
   }
   catch (error) {
@@ -2854,6 +2638,398 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
   finally {
     applyPaymentOptions.value.loading = false
     detailItemForApplyPayment.value = null
+  }
+}
+
+// async function applyPaymentGetList(amountComingOfForm: any = null) {
+//   if (applyPaymentOptions.value.loading) {
+//     // Si ya hay una solicitud en proceso, no hacer nada.
+//     return
+//   }
+//   try {
+//     // applyPaymentPayload.value.filter = []
+//     applyPaymentOptions.value.loading = true
+//     applyPaymentList.value = []
+//     const newListItems = []
+//     let validNumber = '0'
+
+//     if (typeof amountComingOfForm === 'string') {
+//       validNumber = amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : '0'
+//     }
+//     else {
+//       validNumber = amountComingOfForm
+//     }
+
+//     // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
+//     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.type !== 'filterSearch')
+
+//     if (objFilter) {
+//       objFilter.value = Number.parseFloat(validNumber).toFixed(2)
+//     }
+//     else {
+//       applyPaymentPayload.value.filter.push({
+//         key: 'dueAmount',
+//         operator: 'GREATER_THAN_OR_EQUAL_TO',
+//         value: Number.parseFloat(validNumber).toFixed(2),
+//         logicalOperation: 'AND'
+//       })
+//     }
+
+//     if (item.value?.client.status === 'ACTIVE') {
+//       // Validacion para busar por por las agencias
+//       const filter: FilterCriteria[] = [
+//         {
+//           key: 'client.id',
+//           logicalOperation: 'AND',
+//           operator: 'EQUALS',
+//           value: item.value.client.id,
+//         },
+//         {
+//           key: 'status',
+//           logicalOperation: 'AND',
+//           operator: 'EQUALS',
+//           value: 'ACTIVE',
+//         },
+//       ]
+//       const objQueryToSearch = {
+//         query: '',
+//         keys: ['name', 'code'],
+//       }
+
+//       let listAgenciesForApplyPayment: any[] = []
+//       listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
+
+//       if (listAgenciesForApplyPayment.length > 0) {
+//         const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.agency.id')
+
+//         if (objFilter) {
+//           objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
+//         }
+//         else {
+//           applyPaymentPayload.value.filter.push({
+//             key: 'invoice.agency.id',
+//             operator: 'IN',
+//             value: listAgenciesForApplyPayment.map(item => item.id),
+//             logicalOperation: 'AND'
+//           })
+//         }
+//         // Validacion para bucsar por los hoteles
+//         if (item.value.invoice?.hotel && item.value.invoice.hotel.id) {
+//           if (item.value.invoice.hotel.status === 'ACTIVE') {
+//             console.log('Antes', item.value.invoice.hotel.applyByTradingCompany)
+//             // El hotel que tiene la cabecera del payment debe pertenecer a la misma trading company
+//             if (item.value.invoice.hotel.applyByTradingCompany) {
+//               // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
+//               console.log('Despues', item.value.invoice.hotel.applyByTradingCompany)
+//               const filter: FilterCriteria[] = [
+//                 {
+//                   key: 'manageTradingCompanies.id',
+//                   logicalOperation: 'AND',
+//                   operator: 'EQUALS',
+//                   value: item.value.invoice.hotel?.manageTradingCompanies.id,
+//                 },
+//                 {
+//                   key: 'applyByTradingCompany',
+//                   logicalOperation: 'AND',
+//                   operator: 'EQUALS',
+//                   value: true,
+//                 },
+//               ]
+//               const objQueryToSearch = {
+//                 query: '',
+//                 keys: ['name', 'code'],
+//               }
+
+//               let listHotelsForApplyPayment: any[] = []
+//               listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
+//               if (listHotelsForApplyPayment.length > 0) {
+//                 const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+//                 if (objFilter) {
+//                   objFilter.value = listHotelsForApplyPayment.map(item => item.id)
+//                 }
+//                 else {
+//                   applyPaymentPayload.value.filter.push({
+//                     key: 'invoice.hotel.id',
+//                     operator: 'IN',
+//                     value: listHotelsForApplyPayment.map(item => item.id),
+//                     logicalOperation: 'AND'
+//                   })
+//                 }
+
+//                 const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN')
+
+//                 if (objFilterDueAmount) {
+//                   objFilterDueAmount.value = '0.00'
+//                 }
+//                 else {
+//                   applyPaymentPayload.value.filter.push({
+//                     key: 'dueAmount',
+//                     operator: 'GREATER_THAN',
+//                     value: '0.00',
+//                     logicalOperation: 'AND'
+//                   })
+//                 }
+
+//                 const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+//                 if (objFilterEnabledToApply) {
+//                   objFilterEnabledToApply.value = true
+//                 }
+//                 else {
+//                   applyPaymentPayload.value.filter.push(
+//                     {
+//                       key: 'invoice.manageInvoiceStatus.enabledToApply',
+//                       operator: 'EQUALS',
+//                       value: true,
+//                       logicalOperation: 'AND'
+//                     }
+//                   )
+//                 }
+//                 const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayload.value)
+//                 applyPaymentPayload.value = filterTemp
+//                 const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+
+//                 const { data: dataList, page, size, totalElements, totalPages } = response
+
+//                 applyPaymentPagination.value.page = page
+//                 applyPaymentPagination.value.limit = size
+//                 applyPaymentPagination.value.totalElements = totalElements
+//                 applyPaymentPagination.value.totalPages = totalPages
+
+//                 const existingIds = new Set(applyPaymentList.value.map(item => item.id))
+
+//                 for (const iterator of dataList) {
+//                   // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+//                   // iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+//                   // iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+//                   iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
+//                   iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
+//                   // iterator.paymentStatus = iterator.status
+
+//                   // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
+//                   //   if (iterator.employee.firstName && iterator.employee.lastName) {
+//                   //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
+//                   //   }
+//                   // }
+
+//                   // Verificar si el ID ya existe en la lista
+//                   if (!existingIds.has(iterator.id)) {
+//                     newListItems.push({
+//                       ...iterator,
+//                       invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+//                       loadingEdit: false,
+//                       loadingDelete: false
+//                     }
+//                     )
+//                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+//                   }
+//                 }
+
+//                 applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
+//               }
+//               console.log(applyPaymentList.value)
+//             }
+//             else {
+//               const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+//               if (objFilter) {
+//                 objFilter.value = item.value.hotel.id
+//               }
+//               else {
+//                 applyPaymentPayload.value.filter.push({
+//                   key: 'invoice.hotel.id',
+//                   operator: 'EQUALS',
+//                   value: item.value.hotel.id,
+//                   logicalOperation: 'AND'
+//                 })
+//               }
+
+//               const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+//               if (objFilterEnabledToApply) {
+//                 objFilterEnabledToApply.value = true
+//               }
+//               else {
+//                 applyPaymentPayload.value.filter.push(
+//                   {
+//                     key: 'invoice.manageInvoiceStatus.enabledToApply',
+//                     operator: 'EQUALS',
+//                     value: true,
+//                     logicalOperation: 'AND'
+//                   }
+//                 )
+//               }
+
+//               const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+
+//               const { data: dataList, page, size, totalElements, totalPages } = response
+
+//               applyPaymentPagination.value.page = page
+//               applyPaymentPagination.value.limit = size
+//               applyPaymentPagination.value.totalElements = totalElements
+//               applyPaymentPagination.value.totalPages = totalPages
+
+//               const existingIds = new Set(applyPaymentList.value.map(item => item.id))
+
+//               for (const iterator of dataList) {
+//                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+//                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+//                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+//                 iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
+//                 iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
+//                 // iterator.paymentStatus = iterator.status
+
+//                 // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
+//                 //   if (iterator.employee.firstName && iterator.employee.lastName) {
+//                 //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
+//                 //   }
+//                 // }
+
+//                 // Verificar si el ID ya existe en la lista
+//                 if (!existingIds.has(iterator.id)) {
+//                   newListItems.push({
+//                     ...iterator,
+//                     invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+//                     loadingEdit: false,
+//                     loadingDelete: false
+//                   }
+//                   )
+//                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+//                 }
+//               }
+
+//               applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
+//             }
+//             console.log(applyPaymentList.value)
+//           }
+//           // else {
+//           //   // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
+//           //   const filter: FilterCriteria[] = [
+//           //     {
+//           //       key: 'manageTradingCompanies.id',
+//           //       logicalOperation: 'AND',
+//           //       operator: 'EQUALS',
+//           //       value: item.value.hotel?.manageTradingCompany,
+//           //     },
+//           //     {
+//           //       key: 'applyByTradingCompany',
+//           //       logicalOperation: 'AND',
+//           //       operator: 'EQUALS',
+//           //       value: true,
+//           //     },
+//           //   ]
+//           //   const objQueryToSearch = {
+//           //     query: '',
+//           //     keys: ['name', 'code'],
+//           //   }
+
+//           //   let listHotelsForApplyPayment: any[] = []
+//           //   listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
+
+//           //   if (listHotelsForApplyPayment.length > 0) {
+//           //     const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+//           //     if (objFilter) {
+//           //       objFilter.value = listHotelsForApplyPayment.map(item => item.id)
+//           //     }
+//           //     else {
+//           //       applyPaymentPayload.value.filter.push({
+//           //         key: 'invoice.hotel.id',
+//           //         operator: 'IN',
+//           //         value: listHotelsForApplyPayment.map(item => item.id),
+//           //         logicalOperation: 'AND'
+//           //       })
+//           //     }
+
+//           //     const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+//           //     if (objFilterEnabledToApply) {
+//           //       objFilterEnabledToApply.value = true
+//           //     }
+//           //     else {
+//           //       applyPaymentPayload.value.filter.push(
+//           //         {
+//           //           key: 'invoice.manageInvoiceStatus.enabledToApply',
+//           //           operator: 'EQUALS',
+//           //           value: true,
+//           //           logicalOperation: 'AND'
+//           //         }
+//           //       )
+//           //     }
+
+//           //     const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
+
+//           //     const { data: dataList, page, size, totalElements, totalPages } = response
+
+//           //     applyPaymentPagination.value.page = page
+//           //     applyPaymentPagination.value.limit = size
+//           //     applyPaymentPagination.value.totalElements = totalElements
+//           //     applyPaymentPagination.value.totalPages = totalPages
+
+//           //     const existingIds = new Set(applyPaymentList.value.map(item => item.id))
+
+//           //     for (const iterator of dataList) {
+//           //       iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+//           //       iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+//           //       iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+//           //       iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
+//           //       iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
+//           //       // iterator.paymentStatus = iterator.status
+
+//           //       // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
+//           //       //   if (iterator.employee.firstName && iterator.employee.lastName) {
+//           //       //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
+//           //       //   }
+//           //       // }
+
+//           //       // Verificar si el ID ya existe en la lista
+//           //       if (!existingIds.has(iterator.id)) {
+//           //         newListItems.push({
+//           //           ...iterator,
+//           //           invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+//           //           loadingEdit: false,
+//           //           loadingDelete: false
+//           //         }
+//           //         )
+//           //         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+//           //       }
+//           //     }
+
+//           //     applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
+//           //   }
+//           // }
+//         }
+//       }
+//     }
+//   }
+//   catch (error) {
+//     console.error(error)
+//   }
+//   finally {
+//     applyPaymentOptions.value.loading = false
+//     detailItemForApplyPayment.value = null
+//   }
+// }
+
+function removeDuplicateFilters(request: IQueryRequest): IQueryRequest {
+  const uniqueFilters = request.filter.reduce((acc: IFilter[], current: IFilter) => {
+    const isDuplicate = acc.some(item =>
+      item.key === current.key
+      && item.operator === current.operator
+      && JSON.stringify(item.value) === JSON.stringify(current.value)
+      && item.logicalOperation === current.logicalOperation
+    )
+
+    if (!isDuplicate) {
+      acc.push(current)
+    }
+    return acc
+  }, [])
+
+  return {
+    ...request,
+    filter: uniqueFilters
   }
 }
 
@@ -4127,7 +4303,7 @@ onMounted(async () => {
           <Button
             v-tooltip.top="'Copiar tabla'"
             class="p-button-lg w-1rem h-2rem"
-            style="margin-left: 1840px; margin-top: -20px"
+            style="margin-left: 1450px; margin-top: -20px"
             icon="pi pi-copy"
             @click="copiarDatosApplyPayment"
           />
