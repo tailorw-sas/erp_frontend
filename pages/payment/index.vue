@@ -922,7 +922,7 @@ const applyPaymentPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
@@ -948,7 +948,7 @@ const applyPaymentBookingPayload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
-  sortBy: 'createdAt',
+  sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentBookingPagination = ref<IPagination>({
@@ -1072,7 +1072,7 @@ const applyPaymentColumnsOtherDeduction1 = ref<IColumn[]>([
     widthTruncate: '50px', // Control de truncamiento
     columnClass: 'truncate-text', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Balance', type: 'number', width: '70px', sortable: true, showFilter: true, editable: true },
-  { field: 'trans', header: 'Trans.Category', type: 'date', width: '30px', // Define un ancho fijo
+  { field: 'trans', header: 'Trans. Category', type: 'date', width: '30px', // Define un ancho fijo
     minWidth: '20px', // Establece un ancho mínimo
     maxWidth: '40px', // Evita que se expanda demasiado
     widthTruncate: '30px', // Control de truncamiento
@@ -1145,7 +1145,7 @@ const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   query: '',
   pageSize: 10000,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
@@ -1160,7 +1160,7 @@ const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   query: '',
   pageSize: 10000,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
@@ -2678,6 +2678,7 @@ async function applyPaymentGetListForOtherDeductions() {
   }
   try {
     applyPaymentOptionsOtherDeduction.value.loading = true
+    applyPaymentOptionsOtherDeduction1.value.loading = true
     applyPaymentListOfInvoiceOtherDeduction.value = []
     const newListItems = []
 
@@ -3150,6 +3151,7 @@ async function applyPaymentGetListForOtherDeductions() {
   }
   finally {
     applyPaymentOptionsOtherDeduction.value.loading = false
+    applyPaymentOptionsOtherDeduction1.value.loading = false
   }
 }
 
@@ -3192,7 +3194,7 @@ async function openModalApplyPayment() {
   paymentAmmountSelected.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   paymentBalance.value = objItemSelectedForRightClickApplyPayment.value.paymentBalance
   applyPaymentOnChangePage.value = undefined
-  checkApplyPayment.value = true
+  checkApplyPayment.value = false
   applyPaymentGetList()
   getListPaymentDetailTypeDeposit()
 }
@@ -5022,7 +5024,7 @@ onMounted(async () => {
       </template>
     </Dialog>
 
-    <!-- Dialog Apply Payment -->
+    <!-- Dialog Apply Payment Clic Derecho Payment Management -->
     <div v-if="openDialogApplyPayment">
       <Dialog
         v-model:visible="openDialogApplyPayment"

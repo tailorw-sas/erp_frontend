@@ -533,7 +533,7 @@ async function getDinamicData(query: string, moduleApi: string, uriApi: string, 
         = {
           filter: filter || [],
           query: '',
-          pageSize: 20,
+          pageSize: 2000,
           page: 0,
           sortBy: 'createdAt',
           sortType: ENUM_SHORT_TYPE.ASC
