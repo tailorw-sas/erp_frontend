@@ -120,7 +120,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         InvoiceUtils.establishDueDate(dto);
-        InvoiceUtils.calculateInvoiceAging(dto);//TODO Eliminar esto
+        InvoiceUtils.calculateInvoiceAging(dto);//TODO APF Eliminar esto si no es requerido a la hora de insertar
         Invoice entity = new Invoice(dto);
         entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
@@ -131,26 +131,23 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumberPrefix(invoicePrefix);
         } else {
-            String invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType());
-            Long lastInvoiceNo = 0L;
+            EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
+            long lastInvoiceNo;
 
             if (dto.getHotel().getManageTradingCompanies() != null && dto.getHotel().getApplyByTradingCompany()) {
-                EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
-                HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByTradingCompanyCodeAndInvoiceType(dto.getHotel().getManageTradingCompanies().getCode(), invoiceType);
-                lastInvoiceNo = sequence.getInvoiceNo() + 1;
-                this.applicationEventPublisher.publishEvent(new UpdateSequenceEvent(this, sequence));
-                invoiceNumber += "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
+                lastInvoiceNo = this.hotelInvoiceNumberSequenceService.incrementAndGetByTradingCompany(
+                        dto.getHotel().getManageTradingCompanies().getCode(), invoiceType);
             } else {
-                EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
-                HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByHotelCodeAndInvoiceType(dto.getHotel().getCode(), invoiceType);
-                lastInvoiceNo = sequence.getInvoiceNo() + 1;
-                this.applicationEventPublisher.publishEvent(new UpdateSequenceEvent(this, sequence));
-                invoiceNumber += "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
+                lastInvoiceNo = this.hotelInvoiceNumberSequenceService.incrementAndGetByHotel(
+                        dto.getHotel().getCode(), invoiceType);
             }
+
+            String invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
+            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
+
+            dto.setInvoiceNo(lastInvoiceNo);
             entity.setInvoiceNo(lastInvoiceNo);
             entity.setInvoiceNumber(invoiceNumber);
-            dto.setInvoiceNo(lastInvoiceNo);
-            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
             entity.setInvoiceNumberPrefix(invoicePrefix);
         }
 
