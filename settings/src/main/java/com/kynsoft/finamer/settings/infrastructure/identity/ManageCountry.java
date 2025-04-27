@@ -37,6 +37,7 @@ public class ManageCountry implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
     @Column(unique = true)
     private String code;
 

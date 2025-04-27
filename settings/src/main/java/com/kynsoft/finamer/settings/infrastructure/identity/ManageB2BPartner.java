@@ -35,6 +35,7 @@ public class ManageB2BPartner implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
     @Column(unique = true)
     private String code;
     
