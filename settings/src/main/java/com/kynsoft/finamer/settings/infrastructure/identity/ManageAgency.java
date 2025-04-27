@@ -77,7 +77,6 @@ public class ManageAgency {
     @JoinColumn(name = "manage_b2bpartner_id")
     private ManageB2BPartner sentB2BPartner;
 
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_country_id")
     private ManageCountry country;

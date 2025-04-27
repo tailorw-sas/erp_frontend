@@ -63,4 +63,20 @@ public class ManagerLanguage implements Serializable {
     public ManagerLanguageDto toAggregate(){
         return new ManagerLanguageDto(id, code, description, status, name, isEnabled, defaults);
     }
+
+    public ManagerLanguage(UUID id,
+                           String code,
+                           Status status,
+                           String description,
+                           String name,
+                           Boolean isEnabled,
+                           Boolean defaults){
+        this.id = id;
+        this.code = code;
+        this.status = status;
+        this.description = description;
+        this.name = name;
+        this.isEnabled = isEnabled;
+        this.defaults = defaults;
+    }
 }

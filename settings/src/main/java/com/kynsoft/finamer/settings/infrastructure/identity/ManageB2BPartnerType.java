@@ -56,4 +56,15 @@ public class ManageB2BPartnerType implements Serializable {
         return new ManageB2BPartnerTypeDto(id, code, name, description, status);
     }
 
+    public ManageB2BPartnerType(UUID id,
+                                String code,
+                                String name,
+                                String description,
+                                Status status){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+    }
 }
