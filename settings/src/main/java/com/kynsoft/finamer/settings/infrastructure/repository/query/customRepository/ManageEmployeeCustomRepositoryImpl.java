@@ -115,6 +115,90 @@ public class ManageEmployeeCustomRepositoryImpl implements ManageEmployeeCustomR
         }
     }
 
+    @Override
+    public List<ManageEmployee> findAllCustom() {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<ManageEmployee> root = query.from(ManageEmployee.class);
+        Join<ManageEmployee, ManageDepartmentGroup> departmentGroupJoin = root.join("departmentGroup", JoinType.LEFT);
+
+        List<Selection<?>> selections = this.getEmployeeSelection(root, departmentGroupJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
+
+        List<Tuple> tuples = typedQuery.getResultList();
+
+        List<ManageEmployee> results = tuples.stream()
+                .map(this::convertTupleToManageEmployee)
+                .collect(Collectors.toList());
+
+        List<UUID> employeeIds = results.stream()
+                .map(ManageEmployee::getId)
+                .collect(Collectors.toList());
+
+        Map<UUID, List<ManagePermission>> mapPermissionsByEmployeeId = this.getPermissionsByEmployeIdMap(employeeIds);
+        Map<UUID, List<ManageAgency>> mapAgencyProjectionsByEmployeeId = this.getAgenciesByEmployeeIdMap(employeeIds);
+        Map<UUID, List<ManageHotel>> mapHotelsProjectionByEmployeeId = this.getHotelsByEmployeeIdMap(employeeIds);
+        Map<UUID, List<ManageTradingCompanies>> mapTradingCompaniesByEmployeeId = this.getTradingCompaniesByEmployeeMap(employeeIds);
+        Map<UUID, List<ManageReport>> mapReportsByEmployeeId = this.getManageReportByEmployeeMap(employeeIds);
+
+        results.forEach(employee -> {
+            employee.getManagePermissionList().addAll(mapPermissionsByEmployeeId.get(employee.getId()));
+            employee.getManageAgencyList().addAll(mapAgencyProjectionsByEmployeeId.get(employee.getId()));
+            employee.getManageHotelList().addAll(mapHotelsProjectionByEmployeeId.get(employee.getId()));
+            employee.getManageTradingCompaniesList().addAll(mapTradingCompaniesByEmployeeId.get(employee.getId()));
+            employee.getManageReportList().addAll(mapReportsByEmployeeId.get(employee.getId()));
+        });
+
+        return results;
+    }
+
+    @Override
+    public List<ManageEmployee> findAllByIdCustom(List<UUID> ids) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<ManageEmployee> root = query.from(ManageEmployee.class);
+        Join<ManageEmployee, ManageDepartmentGroup> departmentGroupJoin = root.join("departmentGroup", JoinType.LEFT);
+
+        List<Selection<?>> selections = this.getEmployeeSelection(root, departmentGroupJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        query.where(root.get("id").in(ids));
+
+        TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
+
+        List<Tuple> tuples = typedQuery.getResultList();
+
+        List<ManageEmployee> results = tuples.stream()
+                .map(this::convertTupleToManageEmployee)
+                .collect(Collectors.toList());
+
+        List<UUID> employeeIds = results.stream()
+                .map(ManageEmployee::getId)
+                .collect(Collectors.toList());
+
+        Map<UUID, List<ManagePermission>> mapPermissionsByEmployeeId = this.getPermissionsByEmployeIdMap(employeeIds);
+        Map<UUID, List<ManageAgency>> mapAgencyProjectionsByEmployeeId = this.getAgenciesByEmployeeIdMap(employeeIds);
+        Map<UUID, List<ManageHotel>> mapHotelsProjectionByEmployeeId = this.getHotelsByEmployeeIdMap(employeeIds);
+        Map<UUID, List<ManageTradingCompanies>> mapTradingCompaniesByEmployeeId = this.getTradingCompaniesByEmployeeMap(employeeIds);
+        Map<UUID, List<ManageReport>> mapReportsByEmployeeId = this.getManageReportByEmployeeMap(employeeIds);
+
+        results.forEach(employee -> {
+            employee.getManagePermissionList().addAll(mapPermissionsByEmployeeId.get(employee.getId()));
+            employee.getManageAgencyList().addAll(mapAgencyProjectionsByEmployeeId.get(employee.getId()));
+            employee.getManageHotelList().addAll(mapHotelsProjectionByEmployeeId.get(employee.getId()));
+            employee.getManageTradingCompaniesList().addAll(mapTradingCompaniesByEmployeeId.get(employee.getId()));
+            employee.getManageReportList().addAll(mapReportsByEmployeeId.get(employee.getId()));
+        });
+
+        return results;
+    }
+
     private List<Selection<?>> getEmployeeSelection(Root<ManageEmployee> root,
                                                     Join<ManageEmployee, ManageDepartmentGroup> departmentGroupJoin){
         List<Selection<?>> selections = new ArrayList<>();
