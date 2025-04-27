@@ -68,17 +68,14 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.getPaymenTransactionType(command.getTransactionType(), command.getMediator());
 
+        RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
+
         PaymentDto payment = this.paymentService.findByIdCustom(command.getPayment());
         ManageEmployeeDto employee = this.employeeService.findById(command.getEmployee());
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findByApplied();
-        ManageBookingDto booking = null;
-        if(command.getApplyPayment()){
-            booking = this.bookingService.findById(command.getBooking());
-            RulesChecker.checkRule(new CheckBookingExistsApplyPayment(command.getApplyPayment(), booking));
-        }
-        OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
+        ManageBookingDto booking = this.getBookingAndValidate(command.getApplyPayment(), command.getBooking(), command.getAmount());
 
-        //TODO Crear una regla para validar que el balance del booking debe ser mayor o igual al valor del detalle de pago a crear
+        OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
         CreatePaymentDetail createPaymentDetail = new CreatePaymentDetail(payment,
                 command.getAmount(),
@@ -86,8 +83,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 employee,
                 command.getRemark(),
                 paymentTransactionTypeDto,
-                paymentStatusDto,
-                booking
+                paymentStatusDto
         );
         createPaymentDetail.createPaymentDetail();
         PaymentDetailDto paymentDetail = createPaymentDetail.getDetail();
@@ -101,19 +97,8 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             applyPaymentDetail.applyPayment();
         }
 
-        this.paymentDetailService.create(paymentDetail);
-        this.paymentService.update(payment);
+        this.saveAndReplicateBooking(payment, paymentDetail, command.getApplyPayment(), booking, createPaymentDetail);
 
-        if(command.getApplyPayment()){
-            this.bookingService.update(booking);
-        }
-
-        if(createPaymentDetail.isPaymentApplied()){
-            PaymentStatusHistoryDto paymentStatusHistoryDto = createPaymentDetail.getPaymentStatusHistory();
-            this.paymentStatusHistoryService.create(paymentStatusHistoryDto);
-        }
-
-        this.replicateBooking(payment, paymentDetail, booking);
         command.setPaymentResponse(payment);
     }
 
@@ -137,6 +122,31 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
             return OffsetDateTime.now(ZoneId.of("UTC"));
         }
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
+
+    private ManageBookingDto getBookingAndValidate(Boolean applyPayment, UUID bookingId, Double amount){
+        if(applyPayment){
+            ManageBookingDto booking = this.bookingService.findById(bookingId);
+            RulesChecker.checkRule(new CheckBookingExistsApplyPayment(applyPayment, booking));
+            return booking;
+        }
+
+        return null;
+    }
+
+    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, Boolean applyPayment, ManageBookingDto booking, CreatePaymentDetail createPaymentDetail){
+        this.paymentDetailService.create(paymentDetail);
+        this.paymentService.update(payment);
+
+        if(createPaymentDetail.isPaymentApplied()){
+            PaymentStatusHistoryDto paymentStatusHistoryDto = createPaymentDetail.getPaymentStatusHistory();
+            this.paymentStatusHistoryService.create(paymentStatusHistoryDto);
+        }
+
+        if(applyPayment){
+            this.bookingService.update(booking);
+            this.replicateBooking(payment, paymentDetail, booking);
+        }
     }
 
     private void replicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
