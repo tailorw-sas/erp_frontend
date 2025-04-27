@@ -43,8 +43,8 @@ public class ApplyPaymentDetail {
     }
 
     private void updatePayment(PaymentDto paymentDto, Double amount){
-        paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
-        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
+//        paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
+//        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
         this.payment.setApplyPayment(true);
     }
 

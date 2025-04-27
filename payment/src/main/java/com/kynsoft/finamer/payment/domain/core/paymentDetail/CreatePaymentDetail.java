@@ -141,12 +141,19 @@ public class CreatePaymentDetail {
         paymentDto.setIdentified(BankerRounding.round(paymentDto.getIdentified() + amount));
         paymentDto.setNotIdentified(BankerRounding.round(paymentDto.getNotIdentified() - amount));
         paymentDto.setPaymentBalance(BankerRounding.round(paymentDto.getPaymentBalance() - amount));
+
+        //Por definicion si se aplica con booking o no se debe afectar applied y noApplied
+        paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
+        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
         updatePaymentAsApplied();
     }
 
     private void updatePaymentTypeDeposit(PaymentDto paymentDto, Double amount){
-        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
         paymentDto.setPaymentBalance(BankerRounding.round(paymentDto.getPaymentBalance() - amount));
+        paymentDto.setDepositAmount(BankerRounding.round(paymentDto.getDepositAmount() + amount));
+        paymentDto.setDepositBalance(BankerRounding.round(paymentDto.getDepositBalance() + amount));
+        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
+
         updatePaymentAsApplied();
     }
 
