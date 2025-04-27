@@ -83,7 +83,8 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 employee,
                 command.getRemark(),
                 paymentTransactionTypeDto,
-                paymentStatusDto
+                paymentStatusDto,
+                null
         );
         createPaymentDetail.createPaymentDetail();
         PaymentDetailDto paymentDetail = createPaymentDetail.getDetail();
