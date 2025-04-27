@@ -5,15 +5,12 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfNewPaymentDetailIsApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 public class CreatePaymentDetail {
@@ -25,7 +22,6 @@ public class CreatePaymentDetail {
     private final String remark;
     private final ManagePaymentTransactionTypeDto paymentTransactionType;
     private final ManagePaymentStatusDto paymentStatus;
-    private final ManageBookingDto booking;
 
     @Getter
     private PaymentDetailDto detail;
@@ -58,8 +54,7 @@ public class CreatePaymentDetail {
                                ManageEmployeeDto employee,
                                String remark,
                                ManagePaymentTransactionTypeDto paymentTransactionType,
-                               ManagePaymentStatusDto paymentStatus,
-                               ManageBookingDto booking){
+                               ManagePaymentStatusDto paymentStatus){
         this.payment = payment;
         this.amount = amount;
         this.transactionDate = transactionDate;
@@ -67,14 +62,12 @@ public class CreatePaymentDetail {
         this.remark = remark;
         this.paymentTransactionType = paymentTransactionType;
         this.paymentStatus = paymentStatus;
-        this.booking = booking;
     }
 
     public void createPaymentDetail(){
         this.validate();
 
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(this.amount));
-        RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(this.paymentTransactionType.getApplyDeposit()));
 
         this.detail = this.createPaymentDetail(this.payment,
                 paymentTransactionType,
@@ -90,15 +83,12 @@ public class CreatePaymentDetail {
             }
             case DEPOSIT -> {
                 RulesChecker.checkRule(new CheckAmountIfGreaterThanPaymentBalanceRule(this.amount, this.payment.getPaymentBalance(), this.payment.getDepositAmount()));
-                this.updatePaymentTypeOtherDeductions(this.payment, this.amount);
+                this.updatePaymentTypeDeposit(this.payment, this.amount);
                 this.detail.setAmount(this.amount * -1);
                 this.detail.setApplyDepositValue(this.amount);
             }
             case OTHER_DEDUCTIONS -> {
-                if(Objects.nonNull(booking)){
-                    RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule(this.amount, booking.getAmountBalance()));
-                }
-                this.updatePaymentTypeDeposit(this.payment, this.amount);
+                this.updatePaymentTypeOtherDeductions(this.payment, this.amount);
             }
         }
 

@@ -6,7 +6,7 @@ import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
-import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
 import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckBookingListRule;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Component;
@@ -48,7 +48,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
         for (CreateApplyOtherDeductionsBookingRequest bookingRequest : command.getBooking()) {
             ManageBookingDto bookingDto = this.manageBookingService.findById(bookingRequest.getBookingId());
 
-            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule(bookingRequest.getBookingBalance(), bookingDto.getAmountBalance()));
+            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(bookingRequest.getBookingBalance(), bookingDto.getAmountBalance()));
             paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + bookingRequest.getBookingBalance());
 
             String remark = command.getRemark();

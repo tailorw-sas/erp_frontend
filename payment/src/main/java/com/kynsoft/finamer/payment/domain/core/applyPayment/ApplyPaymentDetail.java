@@ -7,6 +7,7 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
@@ -34,6 +35,7 @@ public class ApplyPaymentDetail {
 
     public void applyPayment(){
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentDetail, "id", "Payment Detail ID cannot be null."));
+        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.amount, this.booking.getAmountBalance()));
 
         updatePayment(this.payment, this.amount);
         updateBooking(this.booking, this.amount);
