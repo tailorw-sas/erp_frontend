@@ -2019,13 +2019,14 @@ async function applyPaymentGetList() {
     applyPaymentPagination.value.totalPages = totalPages
 
     const existingIds = new Set(applyPaymentListOfInvoice.value.map(item => item.id))
-
     for (const iterator of dataList) {
       if (!existingIds.has(iterator.id)) {
         newListItems.push({
           ...iterator,
           invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-          invoiceId: iterator.invoice?.invoiceId || '',
+          invoiceId: iterator.invoiceId || '',
+          invoiceAmountTemp: iterator.invoiceAmount || 0,
+          dueAmountTemp: iterator.dueAmount || 0,
           bookingAmount: iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : '0.00', // Monto de la factura
           bookingBalance: iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : '0.00', // Balance de la factura
           loadingEdit: false,
@@ -5131,7 +5132,7 @@ onMounted(async () => {
         modal
         class="mx-3 sm:mx-0"
         content-class="border-round-bottom border-top-1 surface-border"
-        :style="{ width: '80%', maxHeight: '100vh' }"
+        :style="{ width: '80vw', maxHeight: '100vh' }"
         :pt="{
           root: {
             class: 'custom-dialog-history',
@@ -5166,7 +5167,7 @@ onMounted(async () => {
                 striped-rows
                 show-gridlines
                 scrollable
-                scroll-height="120px"
+                scroll-height="90px"
                 :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
                 data-key="id"
                 selection-mode="multiple"
