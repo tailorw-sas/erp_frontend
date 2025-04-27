@@ -60,7 +60,7 @@ public class ManagerClientServiceImpl implements IManagerClientService {
 
     @Override
     public ManageClientDto findById(UUID id) {
-        Optional<ManageClient> userSystem = this.repositoryQuery.findById(id);
+        Optional<ManageClient> userSystem = this.repositoryQuery.findByIdCustom(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -72,7 +72,7 @@ public class ManagerClientServiceImpl implements IManagerClientService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageClient> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageClient> data = this.repositoryQuery.findAll(specifications, pageable);
+        Page<ManageClient> data = this.repositoryQuery.findAllCustom(specifications, pageable);
 
         return getPaginatedResponse(data);
     }

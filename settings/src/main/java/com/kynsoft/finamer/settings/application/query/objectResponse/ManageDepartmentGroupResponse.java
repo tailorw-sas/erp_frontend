@@ -21,7 +21,6 @@ public class ManageDepartmentGroupResponse  implements IResponse {
     private String code;
     private Status status;
     private String description;
-
     private String name;
 
 
@@ -32,5 +31,4 @@ public class ManageDepartmentGroupResponse  implements IResponse {
         this.name = dto.getName();
         this.description = dto.getDescription();
     }
-
 }

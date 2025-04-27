@@ -15,6 +15,7 @@ import com.kynsoft.finamer.settings.domain.services.IManageEmployeeService;
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageEmployee;
 import com.kynsoft.finamer.settings.infrastructure.repository.command.ManageEmployeeWriteDataJPARepository;
 import com.kynsoft.finamer.settings.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.customRepository.ManageEmployeeCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -64,7 +65,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
     @Override
     public ManageEmployeeDto findById(UUID id) {
-        Optional<ManageEmployee> userSystem = this.repositoryQuery.findById(id);
+        Optional<ManageEmployee> userSystem = this.repositoryQuery.findByIdCustom(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -76,7 +77,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageEmployee> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageEmployee> data = this.repositoryQuery.findAll(specifications, pageable);
+        Page<ManageEmployee> data = this.repositoryQuery.findAllCustom(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
