@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.application.excel.writer.ExcelWriter;
 import com.kynsof.share.core.application.excel.writer.WriterConfiguration;
 import com.kynsof.share.core.domain.EWorkbookFormat;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
@@ -15,7 +14,6 @@ import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.HotelInvoiceNumberSequenceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
@@ -53,7 +51,6 @@ import java.util.stream.Collectors;
 import static com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.services.IHotelInvoiceNumberSequenceService;
-import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.UpdateSequenceEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
@@ -120,7 +117,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         InvoiceUtils.establishDueDate(dto);
-        InvoiceUtils.calculateInvoiceAging(dto);//TODO APF Eliminar esto si no es requerido a la hora de insertar
         Invoice entity = new Invoice(dto);
         entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
