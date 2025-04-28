@@ -64,7 +64,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
     @Override
     public ManageEmployeeDto findById(UUID id) {
-        Optional<ManageEmployee> userSystem = this.repositoryQuery.findByIdCustom(id);
+        Optional<ManageEmployee> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
@@ -76,7 +76,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         filterCriteria(filterCriteria);
 
         GenericSpecificationsBuilder<ManageEmployee> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        Page<ManageEmployee> data = this.repositoryQuery.findAllCustom(specifications, pageable);
+        Page<ManageEmployee> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
     }
