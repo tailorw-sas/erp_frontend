@@ -27,6 +27,7 @@ const formReload = ref(0)
 const disabledBtnApplyPaymentByTransactionType = ref(true)
 const forceSave = ref(false)
 let submitEvent: Event = new Event('')
+const isSubmitting = ref(false)
 
 const amountLocalTemp = ref('0')
 
@@ -44,22 +45,27 @@ async function handleSave(event: any) {
   item.value = event
   emit('save', item.value)
 }
-function saveSubmit(event: Event) {
-  if (isSaving.value) { return } // evita múltiples clics
+async function saveSubmit(event: Event) {
+  // Si ya estamos procesando, salimos
+  if (isSubmitting.value) { return }
 
-  isSaving.value = true
+  // Bloqueamos futuros clics
+  isSubmitting.value = true
   loadingSaveSpinner.value = true
   forceSave.value = true
   submitEvent = event
 
-  // Ejecuta la lógica de guardado o emite el evento
-  props.item.submitForm(event)
-
-  // Dale un pequeño tiempo antes de permitir otro clic (por seguridad visual)
-  setTimeout(() => {
-    isSaving.value = false
+  try {
+    saveSubmit.value = event
+    await nextTick()
+  }
+  catch (error) {
+    console.error('Error en el guardado:', error)
+  }
+  finally {
     loadingSaveSpinner.value = false
-  }, 2000) // 2 segundos o el tiempo que creas suficiente
+    isSubmitting.value = false
+  }
 }
 // function openDialogApplyPayment(event: Event) {
 
@@ -798,9 +804,9 @@ function processValidation($event: any, data: any) {
             v-tooltip.top="'Apply'"
             class="w-3rem ml-4 p-button"
             icon="pi pi-save"
-            :loading="loadingSaveSpinner"
+            :loading="loadingSaveAll"
             :disabled="isSaving"
-            @click="saveSubmit($event)"
+            @click.once="saveSubmit"
           />
         </div>
       </div>
