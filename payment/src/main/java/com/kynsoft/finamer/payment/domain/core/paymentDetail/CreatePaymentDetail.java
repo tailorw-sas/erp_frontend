@@ -163,7 +163,6 @@ public class CreatePaymentDetail {
         paymentDto.setDepositAmount(BankerRounding.round(paymentDto.getDepositAmount() + amount));
         paymentDto.setDepositBalance(BankerRounding.round(paymentDto.getDepositBalance() + amount));
         paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
-        paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
 
         updatePaymentAsApplied();
     }
