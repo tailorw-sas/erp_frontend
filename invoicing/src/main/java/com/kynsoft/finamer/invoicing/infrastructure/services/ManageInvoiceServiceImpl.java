@@ -54,6 +54,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IHotelInvoiceNumberSequence
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -126,25 +127,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             dto.setInvoiceNo(dto.getHotelInvoiceNumber());
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumberPrefix(invoicePrefix);
-        } else {
-            EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
-            long lastInvoiceNo;
-
-            if (dto.getHotel().getManageTradingCompanies() != null && dto.getHotel().getApplyByTradingCompany()) {
-                lastInvoiceNo = this.hotelInvoiceNumberSequenceService.incrementAndGetByTradingCompany(
-                        dto.getHotel().getManageTradingCompanies().getCode(), invoiceType);
-            } else {
-                lastInvoiceNo = this.hotelInvoiceNumberSequenceService.incrementAndGetByHotel(
-                        dto.getHotel().getCode(), invoiceType);
-            }
-
-            String invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
-            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
-
-            dto.setInvoiceNo(lastInvoiceNo);
-            entity.setInvoiceNo(lastInvoiceNo);
-            entity.setInvoiceNumber(invoiceNumber);
-            entity.setInvoiceNumberPrefix(invoicePrefix);
         }
 
         Invoice invoice = this.repositoryCommand.saveAndFlush(entity);
@@ -166,21 +148,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         }
 
         Page<ManageInvoiceSearchProjection> data1 = repositoryQuery.findAllProjected(specifications, pageable);
-        //   Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
-        //getPaginatedResponseTest(example);
-        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
-
         return getPaginatedResponseProjection(data1);
-        //  return getPaginatedResponse(data);
     }
 
     private PaginatedResponse getPaginatedResponseProjection(Page<ManageInvoiceSearchProjection> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
         for (ManageInvoiceSearchProjection entity : data.getContent()) {
             try {
-//                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
-//                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
-//                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
                 ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity);
                 responseList.add(response);
             } catch (Exception e) {
@@ -197,8 +171,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
-        //getPaginatedResponseTest(example);
-        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedSendListResponse(data);
     }
