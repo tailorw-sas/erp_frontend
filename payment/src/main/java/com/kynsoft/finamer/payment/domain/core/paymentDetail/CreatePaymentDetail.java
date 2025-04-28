@@ -96,7 +96,6 @@ public class CreatePaymentDetail {
                 this.updatePaymentTypeOtherDeductions(this.payment, this.amount);
             }
             case APPLY_DEPOSIT -> {
-
                 this.updatePaymentTypeApplyDeposit(this.payment, this.amount);
                 this.updateParentDetailWhenApplyDeposit(this.detail, this.parentDetail);
                 this.updateParentDetail(this.detail, this.parentDetail, this.amount);
@@ -112,7 +111,7 @@ public class CreatePaymentDetail {
         if (employee == null) throw new IllegalArgumentException("employee must not be null");
         if (remark == null) throw new IllegalArgumentException("remark must not be null");
         if (paymentTransactionType == null) throw new IllegalArgumentException("paymentTransactionType must not be null");
-        if (paymentStatus == null) throw new IllegalArgumentException("paymentStatus must not be null");
+        if (paymentStatus == null && !paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit()) throw new IllegalArgumentException("paymentStatus must not be null");
     }
 
     private PaymentDetailDto createPaymentDetail(PaymentDto paymentDto,
@@ -164,6 +163,7 @@ public class CreatePaymentDetail {
         paymentDto.setDepositAmount(BankerRounding.round(paymentDto.getDepositAmount() + amount));
         paymentDto.setDepositBalance(BankerRounding.round(paymentDto.getDepositBalance() + amount));
         paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
+        paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
 
         updatePaymentAsApplied();
     }
