@@ -12,8 +12,6 @@ import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafk
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
@@ -39,8 +37,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Component
 public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPaymentDetailCommand> {
@@ -49,7 +45,13 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
     private final IManageBookingService manageBookingService;
     private final IPaymentService paymentService;
     private final ProducerUpdateBookingService producerUpdateBookingService;
+    private final IManagePaymentStatusService statusService;
+
+    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
+    private final IManageEmployeeService manageEmployeeService;
+
     private final IPaymentCloseOperationService paymentCloseOperationService;
+
     private final BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl;
     private final BookingHttpUUIDService bookingHttpUUIDService;
 
@@ -57,6 +59,9 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
                                             IManageBookingService manageBookingService,
                                             IPaymentService paymentService,
                                             ProducerUpdateBookingService producerUpdateBookingService,
+                                            IManagePaymentStatusService statusService,
+                                            IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
+                                            IManageEmployeeService manageEmployeeService,
                                             IPaymentCloseOperationService paymentCloseOperationService,
                                             BookingImportAutomaticeHelperServiceImpl bookingImportAutomaticeHelperServiceImpl,
                                             BookingHttpUUIDService bookingHttpUUIDService) {
@@ -64,6 +69,9 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         this.manageBookingService = manageBookingService;
         this.paymentService = paymentService;
         this.producerUpdateBookingService = producerUpdateBookingService;
+        this.statusService = statusService;
+        this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
+        this.manageEmployeeService = manageEmployeeService;
         this.paymentCloseOperationService = paymentCloseOperationService;
         this.bookingImportAutomaticeHelperServiceImpl = bookingImportAutomaticeHelperServiceImpl;
         this.bookingHttpUUIDService = bookingHttpUUIDService;
@@ -74,30 +82,65 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBooking(), "id", "Booking ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentDetail(), "id", "Payment Detail ID cannot be null."));
 
-        ManageBookingDto booking = this.getBookingDto(command.getBooking());
-        PaymentDetailDto paymentDetail = this.paymentDetailService.findById(command.getPaymentDetail());
-        PaymentDto payment = paymentDetail.getPayment();
-        OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
+        ManageBookingDto bookingDto = this.getBookingDto(command.getBooking());
 
-        ApplyPaymentDetail applyPaymentDetail = new ApplyPaymentDetail(payment,
-                paymentDetail,
-                booking,
-                transactionDate,
-                paymentDetail.getAmount());
-        applyPaymentDetail.applyPayment();
+        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
 
-        this.saveAndReplicateBooking(payment, paymentDetail, booking);
+        bookingDto.setAmountBalance(bookingDto.getAmountBalance() - paymentDetailDto.getAmount());
+        paymentDetailDto.setManageBooking(bookingDto);
+        paymentDetailDto.setApplyPayment(Boolean.TRUE);
+        paymentDetailDto.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
+        paymentDetailDto.setEffectiveDate(transactionDate(paymentDetailDto.getPayment().getHotel().getId()));
 
-        command.setPaymentResponse(payment);
+        this.manageBookingService.update(bookingDto);
+        this.paymentDetailService.update(paymentDetailDto);
+
+        PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
+        try {
+            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                    paymentDto.getId(),
+                    paymentDto.getPaymentId(),
+                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
+                    ));
+            if (bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+            } else {
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+            }
+        } catch (Exception e) {
+        }
+
+        if (paymentDto.getNotApplied() == 0 && paymentDto.getDepositBalance() == 0 && !bookingDto.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT)) {
+            paymentDto.setPaymentStatus(this.statusService.findByApplied());
+            ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.manageEmployeeService.findById(command.getEmployee()) : null;
+            this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto);
+        }
+        paymentDto.setApplyPayment(true);//TODO APF No se porque se hace esto si se esta aplicando detalles
+        this.paymentService.update(paymentDto);
+
+        command.setPaymentResponse(paymentDto);
     }
 
-    private OffsetDateTime getTransactionDate(UUID hotel) {
+    private OffsetDateTime transactionDate(UUID hotel) {
         PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));
         }
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
+
+    //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
+    private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
+
+        PaymentStatusHistoryDto attachmentStatusHistoryDto = new PaymentStatusHistoryDto();
+        attachmentStatusHistoryDto.setId(UUID.randomUUID());
+        attachmentStatusHistoryDto.setDescription("Update Payment.");
+        attachmentStatusHistoryDto.setEmployee(employeeDto);
+        attachmentStatusHistoryDto.setPayment(payment);
+        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+
+        this.paymentAttachmentStatusHistoryService.create(attachmentStatusHistoryDto);
     }
 
     private ManageBookingDto getBookingDto(UUID bookingId) {
@@ -131,24 +174,4 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         }
     }
 
-    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
-        this.manageBookingService.update(booking);
-        this.paymentDetailService.update(paymentDetail);
-        this.paymentService.update(payment);
-
-        try {
-            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
-                    payment.getId(),
-                    payment.getPaymentId(),
-                    new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
-                    ));
-            if (booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || booking.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
-                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
-            } else {
-                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(ApplyPaymentDetailCommandHandler.class.getName()).log(Level.SEVERE, "Error at replicating booking", ex);
-        }
-    }
 }

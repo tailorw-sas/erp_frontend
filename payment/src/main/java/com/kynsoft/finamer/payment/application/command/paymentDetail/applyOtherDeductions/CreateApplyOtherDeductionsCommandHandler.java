@@ -6,9 +6,8 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.CreatePaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
 import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckBookingListRule;
@@ -71,7 +70,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
             Double amountRequest = bookingRequestMap.get(bookingRequest.getId());
             RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(amountRequest, bookingRequest.getAmountBalance()));
 
-            CreatePaymentDetail createPaymentDetail = new CreatePaymentDetail(
+            ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(
                     paymentDto,
                     amountRequest,
                     transactionDate,
@@ -81,7 +80,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                     paymentStatusApplied,
                     null
             );
-            createPaymentDetail.createPaymentDetail();
+            createPaymentDetail.process();
             PaymentDetailDto otherDeductionPaymentDetail = createPaymentDetail.getDetail();
             otherDeductionPaymentDetails.add(otherDeductionPaymentDetail);
 

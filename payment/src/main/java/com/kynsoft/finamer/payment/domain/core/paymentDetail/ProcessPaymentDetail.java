@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CreatePaymentDetail {
+public class ProcessPaymentDetail {
 
     private final PaymentDto payment;
     private final Double amount;
@@ -56,14 +56,14 @@ public class CreatePaymentDetail {
         }
     }
 
-    public CreatePaymentDetail(PaymentDto payment,
-                               Double amount,
-                               OffsetDateTime transactionDate,
-                               ManageEmployeeDto employee,
-                               String remark,
-                               ManagePaymentTransactionTypeDto paymentTransactionType,
-                               ManagePaymentStatusDto paymentStatus,
-                               PaymentDetailDto parentDetail){
+    public ProcessPaymentDetail(PaymentDto payment,
+                                Double amount,
+                                OffsetDateTime transactionDate,
+                                ManageEmployeeDto employee,
+                                String remark,
+                                ManagePaymentTransactionTypeDto paymentTransactionType,
+                                ManagePaymentStatusDto paymentStatus,
+                                PaymentDetailDto parentDetail){
         this.payment = payment;
         this.amount = amount;
         this.transactionDate = transactionDate;
@@ -74,12 +74,12 @@ public class CreatePaymentDetail {
         this.parentDetail = parentDetail;
     }
 
-    public void createPaymentDetail(){
+    public void process(){
         this.validate();
 
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(this.amount));
 
-        this.detail = this.createPaymentDetail(this.payment, paymentTransactionType, this.amount, this.remark, this.transactionDate);
+        this.detail = this.createPaymentDetailEntity(this.payment, paymentTransactionType, this.amount, this.remark, this.transactionDate);
 
         switch(PaymentTransactionTypeCode.from(this.paymentTransactionType)){
             case CASH -> {
@@ -102,7 +102,7 @@ public class CreatePaymentDetail {
             }
         }
 
-        detail.setEffectiveDate(this.transactionDate);
+        detail.setEffectiveDate(this.transactionDate);//TODO Cuando se aplica
     }
 
     private void validate() {
@@ -114,7 +114,7 @@ public class CreatePaymentDetail {
         if (paymentStatus == null && !paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit()) throw new IllegalArgumentException("paymentStatus must not be null");
     }
 
-    private PaymentDetailDto createPaymentDetail(PaymentDto paymentDto,
+    private PaymentDetailDto createPaymentDetailEntity(PaymentDto paymentDto,
                                                  ManagePaymentTransactionTypeDto paymentTransactionTypeDto,
                                                  Double amount,
                                                  String remark,
