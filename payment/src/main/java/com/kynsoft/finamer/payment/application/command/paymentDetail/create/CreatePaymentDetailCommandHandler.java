@@ -11,7 +11,7 @@ import com.kynsoft.finamer.payment.application.command.managePaymentTransactionT
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeRequest;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.CreatePaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -77,7 +77,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
 
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
-        CreatePaymentDetail createPaymentDetail = new CreatePaymentDetail(payment,
+        ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(payment,
                 command.getAmount(),
                 transactionDate,
                 employee,
@@ -86,7 +86,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 paymentStatusDto,
                 null
         );
-        createPaymentDetail.createPaymentDetail();
+        createPaymentDetail.process();
         PaymentDetailDto paymentDetail = createPaymentDetail.getDetail();
 
         if (command.getApplyPayment()) {
@@ -135,7 +135,7 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         return null;
     }
 
-    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, Boolean applyPayment, ManageBookingDto booking, CreatePaymentDetail createPaymentDetail){
+    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessPaymentDetail createPaymentDetail){
         this.paymentDetailService.create(paymentDetail);
         this.paymentService.update(payment);
 
