@@ -190,10 +190,10 @@ const applyPaymentColumns = ref<IColumn[]>([
   { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: true },
   { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: true },
   { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: true, showFilter: true },
-  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: true, showFilter: true },
-  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: true, showFilter: true },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '80px', maxWidth: '90px', sortable: true, showFilter: true },
+  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '50px', sortable: true, showFilter: true },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '50px', sortable: true, showFilter: true },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '50px', sortable: true, showFilter: true },
   { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
   { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
 ])
@@ -1949,6 +1949,7 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveAndReload(item: { [key: string]: any }) {
+  toast.add({ severity: 'info', summary: 'Confirmed', detail: `The detail was created successfully`, life: 5000 })
   if (item?.amount && item?.amount !== '' && item?.amount !== undefined && typeof item?.amount === 'string') {
     item.amount = Number(item.amount.replace(/,/g, ''))
   }
@@ -1984,6 +1985,7 @@ async function saveAndReload(item: { [key: string]: any }) {
     }
     catch (error: any) {
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      loadingSaveAll.value = false
     }
   }
 }
@@ -4303,7 +4305,7 @@ onMounted(async () => {
           <Button
             v-tooltip.top="'Copiar tabla'"
             class="p-button-lg w-1rem h-2rem"
-            style="margin-left: 1450px; margin-top: -20px"
+            style="margin-left: 1150px; margin-top: -20px"
             icon="pi pi-copy"
             @click="copiarDatosApplyPayment"
           />
