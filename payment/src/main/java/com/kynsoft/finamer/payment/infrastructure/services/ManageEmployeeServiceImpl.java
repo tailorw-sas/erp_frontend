@@ -57,7 +57,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
     @Override
     //@Cacheable(cacheNames = "manageEmployee", key = "#id", unless = "#result == null")
     public ManageEmployeeDto findById(UUID id) {
-        Optional<ManageEmployee> userSystem = this.repositoryQuery.findByIdCustom(id);
+        Optional<ManageEmployee> userSystem = this.repositoryQuery.findById(id);
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
