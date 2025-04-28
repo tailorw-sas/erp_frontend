@@ -8,7 +8,7 @@ import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafk
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.CreatePaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -72,7 +72,7 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
 
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
-        CreatePaymentDetail createPaymentDetail = new CreatePaymentDetail(payment,
+        ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(payment,
                 command.getAmount(),
                 transactionDate,
                 employee,
@@ -81,7 +81,7 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
                 paymentStatusDto,
                 parentPaymentDetail
         );
-        createPaymentDetail.createPaymentDetail();
+        createPaymentDetail.process();
         PaymentDetailDto newPaymentDetail = createPaymentDetail.getDetail();
 
         ManageBookingDto booking = this.getBookingAndValidate(command.getApplyPayment(), command.getBooking(), command.getAmount());
@@ -118,7 +118,7 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         return null;
     }
 
-    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, PaymentDetailDto parentPaymentDetail, Boolean applyPayment, ManageBookingDto booking, CreatePaymentDetail createPaymentDetail){
+    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, PaymentDetailDto parentPaymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessPaymentDetail createPaymentDetail){
         this.paymentDetailService.create(paymentDetail);
         this.paymentDetailService.update(parentPaymentDetail);
         this.paymentService.update(payment);
