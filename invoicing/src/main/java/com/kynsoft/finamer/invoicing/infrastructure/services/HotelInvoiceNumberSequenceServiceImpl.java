@@ -109,39 +109,4 @@ public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumbe
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND,
                 new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
     }
-
-    @Override
-    @Transactional
-    public long incrementAndGetByHotel(String hotelCode, EInvoiceType invoiceType) {
-        Optional<HotelInvoiceNumberSequence> optionalEntity = repositoryQuery.getByHotelCodeAndInvoiceType(hotelCode, invoiceType);
-        if (optionalEntity.isEmpty()) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(
-                DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND,
-                new ErrorField("hotelCode", hotelCode)));
-        }
-
-        HotelInvoiceNumberSequence sequence = optionalEntity.get();
-        long nextInvoiceNo = sequence.getInvoiceNo() + 1;
-        sequence.setInvoiceNo(nextInvoiceNo);
-        repositoryCommand.save(sequence);
-        return nextInvoiceNo;
-    }
-
-    @Override
-    @Transactional
-    public long incrementAndGetByTradingCompany(String tradingCompanyCode, EInvoiceType invoiceType) {
-        Optional<HotelInvoiceNumberSequence> optionalEntity = repositoryQuery.getByTradingCompanyCodeAndInvoiceType(tradingCompanyCode, invoiceType);
-        if (optionalEntity.isEmpty()) {
-            throw new BusinessNotFoundException(new GlobalBusinessException(
-                DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND,
-                new ErrorField("tradingCompanyCode", tradingCompanyCode)));
-        }
-
-        HotelInvoiceNumberSequence sequence = optionalEntity.get();
-        long nextInvoiceNo = sequence.getInvoiceNo() + 1;
-        sequence.setInvoiceNo(nextInvoiceNo);
-        repositoryCommand.save(sequence);
-        return nextInvoiceNo;
-    }
-
 }
