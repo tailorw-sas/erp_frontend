@@ -1,10 +1,8 @@
 package com.kynsoft.finamer.settings.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
-import com.kynsoft.finamer.settings.domain.dto.ManagePermissionDto;
 import com.kynsoft.finamer.settings.domain.dto.PermissionDto;
 import com.kynsoft.finamer.settings.domain.dto.PermissionStatusEnm;
-import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

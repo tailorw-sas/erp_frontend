@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.settings.infrastructure.repository.query;
 
 import com.kynsoft.finamer.settings.infrastructure.identity.ManageClient;
+import com.kynsoft.finamer.settings.infrastructure.repository.query.customRepository.ManageClientCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,7 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ManageClientReadDataJPARepository extends JpaRepository<ManageClient, UUID>,
-        JpaSpecificationExecutor<ManageClient> {
+        JpaSpecificationExecutor<ManageClient>, ManageClientCustomRepository {
 
     Page<ManageClient> findAll(Specification specification, Pageable pageable);
 

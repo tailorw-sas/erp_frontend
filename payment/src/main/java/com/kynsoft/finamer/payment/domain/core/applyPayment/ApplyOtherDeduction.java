@@ -3,11 +3,10 @@ package com.kynsoft.finamer.payment.domain.core.applyPayment;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.*;
-import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
 public class ApplyOtherDeduction {
 
@@ -38,7 +37,7 @@ public class ApplyOtherDeduction {
     }
 
     public void applyOtherDeduction(){
-        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyApplyOtherDeductionsRule(this.paymentDetail.getAmount(), this.amount));
+        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.paymentDetail.getAmount(), this.amount));
         //TODO Validar que el booking exista
         //TODO Validar que el monto no sea mayor al balance del booking
         this.booking.setAmountBalance(BankerRounding.round(this.booking.getAmountBalance() - this.amount));

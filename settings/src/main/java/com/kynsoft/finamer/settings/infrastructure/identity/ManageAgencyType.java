@@ -64,4 +64,16 @@ public class ManageAgencyType {
                 id, code, status, name, description
         );
     }
+
+    public ManageAgencyType(UUID id,
+                            String code,
+                            Status status,
+                            String name,
+                            String description){
+        this.id = id;
+        this.code = code;
+        this.status = status;
+        this.name = name;
+        this.description = description;
+    }
 }

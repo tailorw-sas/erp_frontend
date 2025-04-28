@@ -2,6 +2,7 @@ package com.kynsoft.finamer.settings.application.query.objectResponse.manageAgen
 
 import com.kynsoft.finamer.settings.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.settings.domain.dtoEnum.Status;
+import com.kynsoft.finamer.settings.infrastructure.projections.ManageAgencyProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,5 +26,12 @@ public class ManageAgencyBasicResponse {
         this.code = dto.getCode();
         this.status = dto.getStatus();
         this.name = dto.getName();
+    }
+
+    public ManageAgencyBasicResponse(ManageAgencyProjection projection){
+        this.id = projection.getId();
+        this.code = projection.getCode();
+        this.status = projection.getStatus();
+        this.name = projection.getName();
     }
 }

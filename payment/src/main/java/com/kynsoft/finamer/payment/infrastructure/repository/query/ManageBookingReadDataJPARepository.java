@@ -60,5 +60,17 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
     @EntityGraph(attributePaths = {"invoice", "parent"}, type = EntityGraph.EntityGraphType.FETCH)
     List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids);
 
-    List<Booking> findByCouponNumber_In(List<String> couponNumbers);
+    @Query("SELECT DISTINCT b "+
+            "FROM Booking b "+
+            "LEFT JOIN FETCH b.invoice "+
+            "LEFT JOIN FETCH b.parent "+
+            "WHERE b.couponNumber IN :couponNumbers")
+    List<Booking> findAllByCouponNumber(@Param("couponNumbers") List<String> couponNumbers);
+
+    @Query("SELECT DISTINCT b "+
+            "FROM Booking b "+
+            "LEFT JOIN FETCH b.invoice "+
+            "LEFT JOIN FETCH b.parent "+
+            "WHERE b.id IN :ids")
+    List<Booking> findAllById(@Param("ids") List<UUID> ids);
 }

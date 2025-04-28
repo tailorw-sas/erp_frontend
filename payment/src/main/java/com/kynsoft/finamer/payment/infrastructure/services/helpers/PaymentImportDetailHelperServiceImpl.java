@@ -28,7 +28,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImport
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
 import com.kynsoft.finamer.payment.domain.core.deposit.Deposit;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPayment;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import io.jsonwebtoken.lang.Assert;
 
@@ -509,7 +509,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
         if (!otherDeductionAndApplyPayment){
             //Apply Payment Detail
-            ApplyPaymentDetail applyPayment = new ApplyPaymentDetail(payment,
+            ApplyPayment applyPayment = new ApplyPayment(payment,
                     newPaymentDetailDto,
                     booking,
                     transactionDate,
