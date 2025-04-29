@@ -555,7 +555,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         selections.add(paymentJoin.get("notApplied"));
         selections.add(paymentJoin.get("applied"));
         selections.add(paymentJoin.get("remark"));
-        selections.add(paymentJoin.get("applyPayment"));
+        selections.add(paymentJoin.get("process"));
         selections.add(paymentJoin.get("hasAttachment"));
         selections.add(paymentJoin.get("hasDetailTypeDeposit"));
         selections.add(paymentJoin.get("paymentSupport"));
@@ -629,7 +629,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         selections.add(root.get("children"));
         selections.add(root.get("createdAt"));
         selections.add(root.get("updatedAt"));
-        selections.add(root.get("applyPayment"));
+        selections.add(root.get("process"));
         selections.add(root.get("appliedAt"));
         selections.add(root.get("effectiveDate"));
 

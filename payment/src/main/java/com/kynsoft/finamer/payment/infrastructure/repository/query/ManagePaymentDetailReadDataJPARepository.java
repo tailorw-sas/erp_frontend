@@ -48,7 +48,7 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
     @Query("SELECT COUNT(pd) FROM PaymentDetail pd WHERE pd.payment.id = :payment AND pd.transactionType.deposit = true AND pd.canceledTransaction = false")
     Long countByPaymentDetailIdAndTransactionTypeDeposit(@Param("payment") UUID payment);
 
-    @Query("SELECT COUNT(pd) FROM PaymentDetail pd where pd.payment.id = :paymentId AND pd.applyPayment = true")
+    @Query("SELECT COUNT(pd) FROM PaymentDetail pd where pd.payment.id = :paymentId AND pd.process = true")
     Long countByApplyPaymentAndPaymentId(@Param("id") UUID paymentId);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto(" +

@@ -91,7 +91,7 @@ public class PaymentDetailDto {
                 .append(", paymentDetailId=").append(paymentDetailId)
                 .append(", parentId=").append(parentId)
                 .append(", applyDepositValue=").append(applyDepositValue)
-                .append(", applyPayment=").append(applyPayment)
+                .append(", process=").append(applyPayment)
                 .append(", appliedAt=").append(appliedAt)
                 .append(", effectiveDate=").append(effectiveDate)
                 .append('}')

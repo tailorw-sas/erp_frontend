@@ -10,7 +10,7 @@ import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeRequest;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeResponse;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
 import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
@@ -90,12 +90,12 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
         PaymentDetailDto paymentDetail = createPaymentDetail.getDetail();
 
         if (command.getApplyPayment()) {
-            ApplyPaymentDetail applyPaymentDetail = new ApplyPaymentDetail(payment,
+            ProcessApplyPaymentDetail applyPaymentDetail = new ProcessApplyPaymentDetail(payment,
                     paymentDetail,
                     booking,
                     transactionDate,
                     command.getAmount());
-            applyPaymentDetail.applyPayment();
+            applyPaymentDetail.process();
         }
 
         this.saveAndReplicateBooking(payment, paymentDetail, command.getApplyPayment(), booking, createPaymentDetail);

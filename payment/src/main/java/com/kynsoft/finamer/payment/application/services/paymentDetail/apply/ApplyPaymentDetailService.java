@@ -12,7 +12,7 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
@@ -74,12 +74,12 @@ public class ApplyPaymentDetailService {
         PaymentDto payment = paymentDetail.getPayment();
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
-        ApplyPaymentDetail applyPaymentDetail = new ApplyPaymentDetail(payment,
+        ProcessApplyPaymentDetail processApplyPaymentDetail = new ProcessApplyPaymentDetail(payment,
                 paymentDetail,
                 booking,
                 transactionDate,
                 paymentDetail.getAmount());
-        applyPaymentDetail.applyPayment();
+        processApplyPaymentDetail.process();
 
         this.saveAndReplicateBooking(payment, paymentDetail, booking);
 
@@ -128,7 +128,7 @@ public class ApplyPaymentDetailService {
 
     private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
         this.manageBookingService.update(booking);
-        this.paymentDetailService.update(paymentDetail);
+        this.paymentDetailService.update(paymentDetail);//TODO Cambiar el metodo update para que devuelva el id generado del booking
         this.paymentService.update(payment);
 
         try {

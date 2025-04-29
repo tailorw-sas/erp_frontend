@@ -11,7 +11,7 @@ public class CheckApplyPaymentRule extends BusinessRule {
     public CheckApplyPaymentRule(Boolean applyPayment) {
         super(
                 DomainErrorMessage.UNDO_APPLICATION_CHECK_APPLY_PAYMENT,
-                new ErrorField("applyPayment", DomainErrorMessage.UNDO_APPLICATION_CHECK_APPLY_PAYMENT.getReasonPhrase())
+                new ErrorField("process", DomainErrorMessage.UNDO_APPLICATION_CHECK_APPLY_PAYMENT.getReasonPhrase())
         );
         this.applyPayment = applyPayment;
     }

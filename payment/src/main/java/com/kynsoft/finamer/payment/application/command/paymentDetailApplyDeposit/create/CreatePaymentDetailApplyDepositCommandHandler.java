@@ -7,7 +7,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
 import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
@@ -86,12 +86,12 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
 
         ManageBookingDto booking = this.getBookingAndValidate(command.getApplyPayment(), command.getBooking(), command.getAmount());
         if (command.getApplyPayment()) {
-            ApplyPaymentDetail applyPaymentDetail = new ApplyPaymentDetail(payment,
+            ProcessApplyPaymentDetail applyPaymentDetail = new ProcessApplyPaymentDetail(payment,
                     newPaymentDetail,
                     booking,
                     transactionDate,
                     command.getAmount());
-            applyPaymentDetail.applyPayment();
+            applyPaymentDetail.process();
         }
 
         this.saveAndReplicateBooking(payment, newPaymentDetail, parentPaymentDetail, command.getApplyPayment(), booking, createPaymentDetail);
