@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import dayjs from 'dayjs'
@@ -759,7 +759,7 @@ const applyPaymentColumns = ref<IColumn[]>([
     widthTruncate: '70px', // Control de truncamiento
     columnClass: 'truncate-text',
     sortable: true,
-    showFilter: true
+    showFilter: false
   },
   {
     field: 'invoiceNumber',
@@ -771,7 +771,7 @@ const applyPaymentColumns = ref<IColumn[]>([
     widthTruncate: '70px', // Control de truncamiento
     columnClass: 'truncate-text',
     sortable: true,
-    showFilter: true
+    showFilter: false
   },
   {
     field: 'agency',
@@ -783,7 +783,7 @@ const applyPaymentColumns = ref<IColumn[]>([
     widthTruncate: '90px', // Control de truncamiento
     columnClass: 'truncate-text',
     sortable: true,
-    showFilter: true
+    showFilter: false
   },
   {
     field: 'hotel',
@@ -797,9 +797,9 @@ const applyPaymentColumns = ref<IColumn[]>([
     sortable: false,
     showFilter: false
   },
-  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: true },
-  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: false },
+  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: false },
+  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: false },
   // { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: true },
   {
     field: 'status',
@@ -811,6 +811,7 @@ const applyPaymentColumns = ref<IColumn[]>([
     columnClass: 'truncate-text',
     frozen: true,
     type: 'slot-select',
+    showFilter: false,
     statusClassMap: sClassMap,
     objApi: {
       moduleApi: 'invoicing',
@@ -1043,12 +1044,12 @@ const applyPaymentColumnsOtherDeduction = ref<IColumn[]>([
     minWidth: '20px', // Establece un ancho mínimo
     maxWidth: '40px', // Evita que se expanda demasiado
     widthTruncate: '30px', // Control de truncamiento
-    columnClass: 'truncate-text', sortable: true, showFilter: true },
+    columnClass: 'truncate-text', sortable: false, showFilter: false },
   { field: 'checkOut', header: 'Check-Out', type: 'date', width: '30px', // Define un ancho fijo
     minWidth: '20px', // Establece un ancho mínimo
     maxWidth: '40px', // Evita que se expanda demasiado
     widthTruncate: '30px', // Control de truncamiento
-    columnClass: 'truncate-text', sortable: true, showFilter: true },
+    columnClass: 'truncate-text', sortable: false, showFilter: false },
   { field: 'bookingAmountTemp', header: 'Booking Amount', type: 'number', width: '90px', sortable: true, showFilter: true },
   { field: 'dueAmountTemp', header: 'Booking Balance', type: 'number', width: '90px', sortable: true, showFilter: true, editable: true },
 ])
@@ -2010,6 +2011,7 @@ async function applyPaymentGetList() {
       applyPaymentOptions.value.uriApi,
       applyPaymentPayload.value
     )
+    console.log('RESPONSE COMPLETA:', response)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -4217,42 +4219,82 @@ function showIconAttachment(objData: any) {
   return false
 }
 
-async function parseDataTableFilterForApplyPayment(payloadFilter: any) {
-  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, applyPaymentColumns.value)
-  const objFilter = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
-  if (objFilter) {
-    objFilter.key = 'invoiceNumberPrefix'
-  }
-  const objFilterCoupon = parseFilter?.find((item: IFilter) => item?.key === 'couponNumbers')
-  if (objFilterCoupon) {
-    objFilterCoupon.key = 'bookings.couponNumber'
-  }
-  const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
-  if (objFilterDueAmount) {
-    objFilterDueAmount.key = 'dueAmount'
-  }
-  const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'invoiceAmountTemp')
-  if (objFilterInvoiceAmount) {
-    objFilterInvoiceAmount.key = 'invoiceAmount'
-  }
+async function parseDataTableFilterForApplyPayment(event: any) {
+  // 1) Averigua dónde viene la metadata de filtro
+  const meta = event.filters ?? event.filter ?? {}
 
-  const objFilterInvoiceStatus = parseFilter?.find((item: IFilter) => item?.key === 'status.id')
-  if (objFilterInvoiceStatus) {
-    objFilterInvoiceStatus.key = 'manageInvoiceStatus.id'
-  }
+  // 2) Construye tu array de IFilter[] manualmente
 
-  if (parseFilter && parseFilter?.length > 0) {
-    parseFilter.forEach((filter) => {
-      filter.type = 'filterSearch'
-    })
-  }
+  // 3) Asigna al payload y resetea página
+  applyPaymentPayload.value.filter = parseFilter
+  applyPaymentPayload.value.page = 0
 
-  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  applyPaymentPayload.value.filter = [...applyPaymentPayload.value.filter, ...parseFilter || []]
+  // 4) Recarga la lista
   await applyPaymentGetList()
 }
 
-function applyPaymentOnSortField(event: any) {
+const manualFilter = ref('')
+
+const filteredInvoices = computed(() => {
+  const term = manualFilter.value.trim().toLowerCase()
+  if (!term) { return applyPaymentListOfInvoice.value }
+
+  return applyPaymentListOfInvoice.value.filter((inv) => {
+    return (
+      inv.invoiceNumberPrefix?.toLowerCase().includes(term)
+      || String(inv.invoiceId)?.toLowerCase().includes(term)
+      || String(inv.invoiceNumber)?.toLowerCase().includes(term)
+      || inv.couponNumbers?.toLowerCase().includes(term)
+      || String(inv.invoiceAmount)?.toLowerCase().includes(term)
+      || String(inv.dueAmount)?.toLowerCase().includes(term)
+    )
+  })
+})
+
+function onManualSearch() {
+  // volver a la primera página
+  applyPaymentPagination.value.page = 0
+  // no hace falta llamar a la API: filteredInvoices se actualiza solo
+}
+async function parseDataTableFilterForApplyPayment1(payloadFilter: any) {
+  const parseFilter: IFilter[] = await getEventFromTable(payloadFilter, applyPaymentColumns.value) || []
+
+  parseFilter.forEach((f) => {
+    switch (f.key) {
+      case 'invoiceNumber':
+        f.key = 'invoiceNumber'
+        break
+      case 'invoiceId':
+        f.key = 'invoiceId'
+        break
+      case 'couponNumbers':
+        // dejamos couponNumbers tal cual
+        f.key = 'couponNumbers'
+        break
+      case 'dueAmountTemp':
+        f.key = 'dueAmount'
+        break
+      case 'invoiceAmountTemp':
+        f.key = 'invoiceAmount'
+        break
+      case 'status.id':
+        f.key = 'manageInvoiceStatus.id'
+        break
+    }
+    f.type = 'filterSearch'
+  })
+
+  // 3) Reconstruye el array de filtros en el payload
+  applyPaymentPayload.value.filter
+    = applyPaymentPayload.value.filter.filter(f => f.type !== 'filterSearch')
+  applyPaymentPayload.value.filter.push(...parseFilter)
+
+  // 4) Resetea página y recarga
+  applyPaymentPayload.value.page = 0
+  await applyPaymentGetList()
+}
+
+async function applyPaymentOnSortField(event: any) {
   if (event) {
     if (event.sortField === 'invoiceNumber') {
       event.sortField = 'invoiceNumberPrefix'
@@ -4273,6 +4315,7 @@ function applyPaymentOnSortField(event: any) {
     applyPaymentPayload.value.sortType = event.sortOrder
     parseDataTableFilterForApplyPayment(event.filter)
   }
+  applyPaymentGetList()
 }
 
 async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: any) {
@@ -4281,20 +4324,33 @@ async function parseDataTableFilterForApplyPaymentOtherDeduction(payloadFilter: 
   if (objFilter) {
     objFilter.key = 'invoice.invoiceId'
   }
+  const objFilterBookingId = parseFilter?.find((item: IFilter) => item?.key === 'bookingId')
+  if (objFilterBookingId) {
+    objFilterBookingId.key = 'bookingId'
+  }
   const objFilterInvoiceNumber = parseFilter?.find((item: IFilter) => item?.key === 'invoiceNumber')
   if (objFilterInvoiceNumber) {
-    objFilterInvoiceNumber.key = 'invoiceNumberPrefix'
+    objFilterInvoiceNumber.key = 'invoice.invoiceNumberPrefix'
   }
-  const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
-  if (objFilterDueAmount) {
-    objFilterDueAmount.key = 'dueAmount'
-    objFilterDueAmount.value = objFilterDueAmount.value ? Number(objFilterDueAmount.value).toFixed(2).toString() : '0.00'
-    objFilterDueAmount.type = 'filterSearch'
+  const objFilterFullName = parseFilter?.find((item: IFilter) => item?.key === 'fullName')
+  if (objFilterFullName) {
+    objFilterFullName.key = 'fullName'
+  }
+  const objFilterCoupon = parseFilter?.find((item: IFilter) => item?.key === 'couponNumber')
+  if (objFilterCoupon) {
+    objFilterCoupon.key = 'couponNumber'
+  }
+  const objFilterReservationNumber = parseFilter?.find((item: IFilter) => item?.key === 'reservationNumber')
+  if (objFilterReservationNumber) {
+    objFilterReservationNumber.key = 'reservationNumber'
   }
   const objFilterInvoiceAmount = parseFilter?.find((item: IFilter) => item?.key === 'bookingAmountTemp')
   if (objFilterInvoiceAmount) {
     objFilterInvoiceAmount.key = 'invoiceAmount'
-    objFilterInvoiceAmount.value = objFilterInvoiceAmount.value ? Number(objFilterInvoiceAmount.value).toFixed(2).toString() : '0.00'
+  }
+  const objFilterDueAmount = parseFilter?.find((item: IFilter) => item?.key === 'dueAmountTemp')
+  if (objFilterDueAmount) {
+    objFilterDueAmount.key = 'dueAmount'
   }
 
   if (parseFilter && parseFilter?.length > 0) {
@@ -4313,8 +4369,17 @@ function applyPaymentOtherDeductionOnSortField(event: any) {
     if (event.sortField === 'invoiceId') {
       event.sortField = 'invoice.invoiceId'
     }
+    if (event.sortField === 'bookingId') {
+      event.sortField = 'bookingId'
+    }
     if (event.sortField === 'invoiceNumber') {
-      event.sortField = 'invoiceNumberPrefix'
+      event.sortField = 'invoice.invoiceNumberPrefix'
+    }
+    if (event.sortField === 'couponNumber') {
+      event.sortField = 'invoice.invoiceNumberPrefix'
+    }
+    if (event.sortField === 'reservationNumber') {
+      event.sortField = 'reservationNumber'
     }
     if (event.sortField === 'dueAmountTemp') {
       event.sortField = 'dueAmount'
@@ -5132,7 +5197,7 @@ onMounted(async () => {
         modal
         class="mx-3 sm:mx-0"
         content-class="border-round-bottom border-top-1 surface-border"
-        :style="{ width: '80vw', maxHeight: '100vh' }"
+        :style="{ width: '90vw', maxHeight: '100vh' }"
         :pt="{
           root: {
             class: 'custom-dialog-history',
@@ -5160,7 +5225,7 @@ onMounted(async () => {
 
         <template #default>
           <div class="p-fluid pt-3">
-            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3">
+            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3 -mt-3">
               <DataTable
                 v-model:selection="paymentDetailsTypeDepositSelected"
                 :value="paymentDetailsTypeDepositList"
@@ -5205,18 +5270,25 @@ onMounted(async () => {
                 </template>
               </DataTable>
             </BlockUI>
-
+            <div class="flex align-items-center mb-3">
+              <InputText
+                v-model="manualFilter"
+                placeholder="Buscar Datos…"
+                class="-mb-3 -mt-3"
+                @keyup.enter="onManualSearch"
+              />
+            </div>
             <DynamicTable
               class="card p-0"
-              :data="applyPaymentListOfInvoice"
+              :data="filteredInvoices"
               :columns="applyPaymentColumns"
               :options="applyPaymentOptions"
               :pagination="applyPaymentPagination"
               @on-change-pagination="applyPaymentOnChangePage = $event"
               @on-change-filter="parseDataTableFilterForApplyPayment"
-              @on-expand-row="onExpandRowApplyPayment($event)"
               @update:clicked-item="addAmmountsToApplyPayment($event)"
               @on-sort-field="applyPaymentOnSortField"
+              @on-expand-row="onExpandRowApplyPayment($event)"
             >
               <template #column-status="{ data: item }">
                 <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
@@ -5295,7 +5367,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '80%', maxHeight: '100vh' }"
+      :style="{ width: '90vw', maxHeight: '100vh' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
@@ -5508,7 +5580,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '80%', maxHeight: '100vh' }"
+      :style="{ width: '90vw', maxHeight: '100vh' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
