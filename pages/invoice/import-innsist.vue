@@ -37,8 +37,8 @@ const filterToSearch = ref<IData>({
   allFromAndTo: false,
   agency: [],
   hotel: null,
-  from: dayjs(new Date()).startOf('month').toDate(),
-  to: dayjs(new Date()).endOf('month').toDate(),
+  from: new Date(),
+  to: new Date(),
 })
 
 const hotelList = ref<any[]>([])
@@ -1219,7 +1219,7 @@ onMounted(async () => {
                   </div>
                   <Button
                     v-tooltip.top="'Copiar tabla'"
-                    class="p-button-lg w-1rem h-2rem pt-2 ml-1 -mr-2"
+                    class="p-button-lg w-1rem h-2rem pt-2 -mr-2 -ml-2"
                     icon="pi pi-copy"
                     @click="copiarDatos"
                   />
