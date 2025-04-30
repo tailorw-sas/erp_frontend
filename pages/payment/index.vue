@@ -1805,9 +1805,42 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
     objLoading.value.loadingAgency = false
   }
 }
-async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+// 1) Extiende el tipo de queryObj para que acepte page/pageSize
+interface QueryParams {
+  query: string
+  keys: string[]
+  page?: number
+  pageSize?: number
 }
+
+async function getAgencyListTemp(
+  moduleApi: string,
+  uriApi: string,
+  queryObj: QueryParams,
+  filter?: FilterCriteria[]
+) {
+  const {
+    query,
+    keys,
+    page = 0, // valor por defecto
+    pageSize = 1000 // hasta 1000 filas
+  } = queryObj
+
+  return await getDataList<DataListItem, ListItem>(
+    moduleApi,
+    uriApi,
+    filter,
+    { query, keys },
+    mapFunction,
+    {
+      page,
+      pageSize,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+  )
+}
+
 async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   try {
     objLoading.value.loadingHotel = true
@@ -1964,7 +1997,12 @@ async function applyPaymentGetList() {
     const agencies = await getAgencyListTemp(
       objApis.value.agency.moduleApi,
       objApis.value.agency.uriApi,
-      { query: '', keys: ['name', 'code'] },
+      {
+        query: '',
+        keys: ['name', 'code'],
+        page: 0, // página inicial
+        pageSize: 1000 // hasta 1 000 registros
+      },
       [
         { key: 'client.id', logicalOperation: 'AND', operator: 'EQUALS', value: objItemSelectedForRightClickApplyPayment.value.client.id },
         { key: 'client.status', logicalOperation: 'AND', operator: 'EQUALS', value: 'ACTIVE' },
