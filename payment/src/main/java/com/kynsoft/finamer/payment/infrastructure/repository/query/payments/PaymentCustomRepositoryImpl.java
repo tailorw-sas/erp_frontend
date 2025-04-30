@@ -204,7 +204,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                         tuple.get(39, Boolean.class)
                 ),
                 null,
-                new ManageBankAccount(
+                (tuple.get(40, UUID.class) != null) ? new ManageBankAccount(
                         tuple.get(40, UUID.class),
                         tuple.get(41, String.class),
                         tuple.get(42, String.class),
@@ -218,7 +218,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                                 tuple.get(49, UUID.class),
                                 tuple.get(50, Boolean.class)
                         )
-                ),
+                ) : null,
                 new ManagePaymentAttachmentStatus(
                         tuple.get(51, UUID.class),
                         tuple.get(52, String.class),

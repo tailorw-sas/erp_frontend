@@ -50,4 +50,6 @@ public interface IManageInvoiceService {
     ManageInvoiceDto changeInvoiceStatus(ManageInvoiceDto dto, ManageInvoiceStatusDto status);
 
     ManageInvoiceDto findByBookingId(UUID bookingId);
+
+    List<ManageInvoiceDto> findInvoicesByBookingIds(List<UUID> bookingIds);
 }

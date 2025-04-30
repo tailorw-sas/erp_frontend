@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyOther
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -106,7 +107,8 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                         paymentDto.getPaymentId(),
                         new ReplicatePaymentDetailsKafka(detail.getId(), detail.getPaymentDetailId()
                         ));
-                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(detail.getManageBooking().getId(), detail.getManageBooking().getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(detail.getManageBooking().getId(), detail.getManageBooking().getAmountBalance(), paymentKafka, false, OffsetDateTime.now());
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
             }catch (Exception ex){
                 Logger.getLogger(CreateApplyOtherDeductionsCommandHandler.class.getName()).log(Level.SEVERE, "Error at replicating booking. Id: " + detail.getManageBooking().getId(), ex);
             }

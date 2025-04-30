@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.command.paymentDetail.undoApplyPayment;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -15,6 +16,7 @@ import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.undoAp
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Component
 public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<UndoApplyPaymentDetailCommand> {
@@ -54,12 +56,17 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
 
         PaymentDto paymentDto = this.paymentService.findById(paymentDetailDto.getPayment().getId());
         try {
+            ReplicatePaymentDetailsKafka replicatePaymentDetailsKafka = new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId());
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
                     paymentDto.getId(),
                     paymentDto.getPaymentId(),
-                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
-                    ));
-            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), paymentDetailDto.getAmount(), paymentKafka, deposit, OffsetDateTime.now()));
+                    replicatePaymentDetailsKafka);
+            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(),
+                    paymentDetailDto.getAmount(),
+                    paymentKafka,
+                    deposit,
+                    OffsetDateTime.now());
+            this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
         } catch (Exception e) {
         }
 

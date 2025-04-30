@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.application.command.payment.applyPayment;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.http.entity.InvoiceHttp;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -366,12 +367,22 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         createPaymentdetails.add(paymentDetailDto);
 
         try {
+            ReplicatePaymentDetailsKafka replicatePaymentDetailsKafka = new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(),
+                    paymentDetailDto.getPaymentDetailId());
+
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
                     updatePayment.getId(),
                     updatePayment.getPaymentId(),
-                    new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
-                    ));
-            kafkaList.add(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                    replicatePaymentDetailsKafka
+                    );
+
+            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(booking.getId(),
+                    booking.getAmountBalance(),
+                    paymentKafka,
+                    false,
+                    OffsetDateTime.now());
+            UpdateBookingBalanceKafka updateBookingBalanceKafka = new UpdateBookingBalanceKafka(List.of(replicateBookingKafka));
+            kafkaList.add(updateBookingBalanceKafka);
         } catch (Exception e) {
             System.err.println("Error al enviar el evento de integracion: " + e.getMessage());
         }
