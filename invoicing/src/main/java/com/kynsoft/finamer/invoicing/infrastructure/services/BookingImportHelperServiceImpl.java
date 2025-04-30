@@ -316,11 +316,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
-        manageInvoiceDto.setAgency(agency);
-        manageInvoiceDto.setHotel(hotel);
-        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
-        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);
-        manageInvoiceDto.setIsManual(false);
+        manageInvoiceDto.setAgency(agency);//
+        manageInvoiceDto.setHotel(hotel);//
+        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);//
+        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);//
+        manageInvoiceDto.setIsManual(false);//
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
         manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel, groupType));
         manageInvoiceDto.setId(UUID.randomUUID());
@@ -338,8 +338,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         if (innsist) {
             manageInvoiceDto.setImportType(ImportType.INSIST);
         }
-        manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
-        manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber() != null ? Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()) : null);
+
         //TODO Eliminar esto y devolver el manageInvoiceDto antes de crear para garantizar transaccionalidad
         manageInvoiceDto = invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
@@ -349,20 +348,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             this.producerReplicateManageInvoiceService.create(manageInvoiceDto, null, null);
         } catch (Exception e) {
         }
-    }
-
-    private String createInvoiceNumber(ManageHotelDto hotel, BookingRow sample) {
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if (hotel.isVirtual()) {
-            invoiceNumber += "-" + sample.getHotelInvoiceNumber();
-        } else {
-            if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-                invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-            } else {
-                invoiceNumber += "-" + hotel.getCode();
-            }
-        }
-        return invoiceNumber;
     }
 
     private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {

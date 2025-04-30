@@ -91,7 +91,6 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
     @Override
     public void handle(TotalCloneCommand command) {
-
         List<ManageBookingDto> bookings = new ArrayList<>();
         List<ManageAttachmentDto> attachmentDtos = new ArrayList<>();
 
@@ -252,28 +251,17 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             booking.setDueAmount(booking.getInvoiceAmount());
         }
 
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType());
-        if (hotelDto.getManageTradingCompanies() != null
-                && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotelDto.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotelDto.getCode();
-        }
-
-        LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
-//        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
-
+        LocalDateTime invoiceDate = this.invoiceDate(invoiceToClone.getHotel().getId());
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ManageInvoiceStatusDto invoiceStatus = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(
                 command.getClonedInvoice(),
                 0L,
                 0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType()) + "-" + 0L,
-                //command.getInvoiceDate(),
-                this.invoiceDate(invoiceToClone.getHotel().getId()),
-                dueDate,
+                null,
+                null,
+                invoiceDate,
+                invoiceDate.toLocalDate(),
                 true,
                 invoiceToClone.getInvoiceAmount(),
                 invoiceToClone.getDueAmount(),
@@ -305,7 +293,8 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         try {
             this.producerReplicateManageInvoiceService.create(created, null, null);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
         }
 
         //invoice status history

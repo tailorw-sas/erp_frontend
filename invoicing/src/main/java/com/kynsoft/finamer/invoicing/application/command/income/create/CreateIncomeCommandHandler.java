@@ -93,14 +93,12 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             employeeFullName = command.getEmployee();
         }
 
-        String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
-
         ManageInvoiceDto income = new ManageInvoiceDto(
                 command.getId(),
                 0L,
                 0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
+                null,
+                null,
                 command.getInvoiceDate(),
                 command.getDueDate(),
                 command.getManual(),
@@ -134,15 +132,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
         }
 
-    }
-
-    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
-        }
-        return invoiceNumber;
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
