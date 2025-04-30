@@ -1042,7 +1042,6 @@ async function getList() {
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
@@ -1896,6 +1895,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)  
 
   if (parseFilter && parseFilter?.length > 0) {
+    console.log('parseFilter', parseFilter)
     for (let i = 0; i < parseFilter?.length; i++) {
 
       if (parseFilter[i]?.key === 'agencyCd') {
@@ -1911,11 +1911,11 @@ async function parseDataTableFilter(payloadFilter: any) {
       }
 
       if (parseFilter[i]?.key === 'invoiceAmount') {
-        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+         parseFilter[i].key = 'invoiceAmount'
       }
 
       if (parseFilter[i]?.key === 'dueAmount') {
-        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+         parseFilter[i].key = 'dueAmount'
       }
     }
   }

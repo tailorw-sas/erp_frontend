@@ -1736,7 +1736,6 @@ function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolea
   // Buscar el objeto principal por su id
 
   const mainItem = items.find(item => item.id === mainId)
-  console.log('mainItem', mainItem)
   if (!mainItem) {
     return false // Si no se encuentra el objeto principal, devolver false
   }
@@ -2087,8 +2086,40 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
   agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
-async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+// 1) Extiende el tipo de queryObj para que acepte page/pageSize
+interface QueryParams {
+  query: string
+  keys: string[]
+  page?: number
+  pageSize?: number
+}
+
+async function getAgencyListTemp(
+  moduleApi: string,
+  uriApi: string,
+  queryObj: QueryParams,
+  filter?: FilterCriteria[]
+) {
+  const {
+    query,
+    keys,
+    page = 0, // valor por defecto
+    pageSize = 1000 // hasta 1000 filas
+  } = queryObj
+
+  return await getDataList<DataListItem, ListItem>(
+    moduleApi,
+    uriApi,
+    filter,
+    { query, keys },
+    mapFunction,
+    {
+      page,
+      pageSize,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+  )
 }
 
 interface DataListItemHotel {
@@ -2535,7 +2566,12 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
       const agencies = await getAgencyListTemp(
         objApis.value.agency.moduleApi,
         objApis.value.agency.uriApi,
-        { query: '', keys: ['name', 'code'] },
+        {
+          query: '',
+          keys: ['name', 'code'],
+          page: 0, // página inicial
+          pageSize: 1000 // hasta 1 000 registros
+        },
         [
           { key: 'client.id', operator: 'EQUALS', value: item.value.client.id, logicalOperation: 'AND' },
           { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
@@ -4263,7 +4299,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '80%' }"
+      :style="{ width: '90vw', maxHeight: '100vh' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
