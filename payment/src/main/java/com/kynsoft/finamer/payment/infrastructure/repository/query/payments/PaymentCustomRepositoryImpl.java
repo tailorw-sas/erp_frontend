@@ -137,7 +137,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(root.get("notApplied"));
         selections.add(root.get("applied"));
         selections.add(root.get("remark"));
-        selections.add(root.get("process"));
+        selections.add(root.get("applyPayment"));
         selections.add(root.get("hasAttachment"));
         selections.add(root.get("hasDetailTypeDeposit"));
         selections.add(root.get("paymentSupport"));
@@ -350,7 +350,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(root.get("applied"));
         selections.add(root.get("remark"));
         selections.add(root.get("eAttachment"));
-        selections.add(root.get("process"));
+        selections.add(root.get("applyPayment"));
         selections.add(root.get("paymentSupport"));
         selections.add(root.get("createByCredit"));
         selections.add(root.get("hasAttachment"));
@@ -450,7 +450,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
                     tuple.get(58, Double.class), // applied
                     tuple.get(59, String.class), // remark
                     tuple.get(60, EAttachment.class), // eAttachment
-                    tuple.get(61, Boolean.class), // process
+                    tuple.get(61, Boolean.class), // applyPayment
                     tuple.get(62, Boolean.class), // paymentSupport
                     tuple.get(63, Boolean.class) , // createByCredit
                     tuple.get(64, Boolean.class) , // hasAttachment

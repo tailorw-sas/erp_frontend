@@ -22,7 +22,7 @@ public interface PaymentWriteDataJPARepository extends JpaRepository<Payment, UU
             p.notIdentified = :notIdentified,
             p.notApplied = :notApplied,
             p.applied = :applied,
-            p.process = :process
+            p.applyPayment = :applyPayment
         WHERE p.id = :id
         """)
     @Transactional
@@ -33,7 +33,7 @@ public interface PaymentWriteDataJPARepository extends JpaRepository<Payment, UU
             @Param("notIdentified") Double notIdentified,
             @Param("notApplied") Double notApplied,
             @Param("applied") Double applied,
-            @Param("process") boolean applyPayment,
+            @Param("applyPayment") boolean applyPayment,
             @Param("id") UUID id
     );
 

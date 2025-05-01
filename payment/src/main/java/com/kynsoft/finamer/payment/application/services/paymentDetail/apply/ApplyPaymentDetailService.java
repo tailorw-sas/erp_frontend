@@ -67,12 +67,14 @@ public class ApplyPaymentDetailService {
     }
 
     @Transactional
-    public PaymentDto applyDetail(ApplyPaymentDetailCommand command){
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getBooking(), "id", "Booking ID cannot be null."));
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPaymentDetail(), "id", "Payment Detail ID cannot be null."));
+    public PaymentDto applyDetail(UUID paymentDetailId,
+                                  UUID bookingId,
+                                  UUID employeeId){
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(bookingId, "id", "Booking ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(paymentDetailId, "id", "Payment Detail ID cannot be null."));
 
-        ManageBookingDto booking = this.getBookingDto(command.getBooking());
-        PaymentDetailDto paymentDetail = this.paymentDetailService.findById(command.getPaymentDetail());
+        ManageBookingDto booking = this.getBookingDto(bookingId);
+        PaymentDetailDto paymentDetail = this.paymentDetailService.findById(paymentDetailId);
         PaymentDto payment = paymentDetail.getPayment();
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
@@ -83,7 +85,9 @@ public class ApplyPaymentDetailService {
                 paymentDetail.getAmount());
         processApplyPaymentDetail.process();
 
-        this.saveAndReplicateBooking(payment, paymentDetail, booking);
+        this.saveChanges(payment, paymentDetail, booking);
+
+        this.replicateBooking(payment, paymentDetail, booking);
 
         return payment;
     }
@@ -128,11 +132,14 @@ public class ApplyPaymentDetailService {
         }
     }
 
-    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
+    @Transactional
+    private void saveChanges(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
         this.manageBookingService.update(booking);
         this.paymentDetailService.update(paymentDetail);//TODO Cambiar el metodo update para que devuelva el id generado del booking
         this.paymentService.update(payment);
+    }
 
+    private void replicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
         try {
             ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
                     payment.getId(),

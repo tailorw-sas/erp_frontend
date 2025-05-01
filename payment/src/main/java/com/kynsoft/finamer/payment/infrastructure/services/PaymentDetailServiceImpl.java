@@ -16,6 +16,8 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentDetailReadDataJPARepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,8 +40,8 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public PaymentDetailDto create(PaymentDetailDto dto) {
-        PaymentDetail data = new PaymentDetail(dto);
-        return this.repositoryCommand.save(data).toAggregate();
+        PaymentDetail paymentDetail = new PaymentDetail(dto);
+        return this.repositoryCommand.saveAndFlush(paymentDetail).toAggregate();
     }
 
     @Override
