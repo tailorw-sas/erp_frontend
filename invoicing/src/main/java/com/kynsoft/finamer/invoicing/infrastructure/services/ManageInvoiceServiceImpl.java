@@ -222,12 +222,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public Page<ManageInvoiceSearchProjection> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
-
-
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         return repositoryQuery.findAllProjected(specifications, pageable);
-
-        //return repositoryQuery.findAll(specifications, pageable).map(Invoice::toAggregate);
     }
 
     @Override
