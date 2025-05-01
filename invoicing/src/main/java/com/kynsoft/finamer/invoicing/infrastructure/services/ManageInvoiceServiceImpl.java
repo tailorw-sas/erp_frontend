@@ -195,27 +195,19 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+    public Page<ManageInvoiceSearchProjection> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
-
-        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
-        FilterCriteria fcAgency = new FilterCriteria();
-        fcAgency.setKey("agency.id");
-        fcAgency.setLogicalOperation(LogicalOperation.AND);
-        fcAgency.setOperator(SearchOperation.IN);
-        fcAgency.setValue(agencyIds);
-        filterCriteria.add(fcAgency);
-
-        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
-        FilterCriteria fcHotel = new FilterCriteria();
-        fcHotel.setKey("hotel.id");
-        fcHotel.setLogicalOperation(LogicalOperation.AND);
-        fcHotel.setOperator(SearchOperation.IN);
-        fcHotel.setValue(hotelIds);
-        filterCriteria.add(fcHotel);
-
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAll(specifications, pageable).map(Invoice::toAggregate);
+        if (pageable.getSort().isSorted()) {
+            boolean hasCreatedAt = pageable.getSort().stream()
+                    .anyMatch(order -> order.getProperty().equals("createdAt"));
+            if (hasCreatedAt) {
+                Sort sort = Sort.by(Sort.Order.desc("createdAt"));
+                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+            }
+        }
+        
+        return repositoryQuery.findAllProjected(specifications, pageable);
     }
 
     @Override
