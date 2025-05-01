@@ -35,10 +35,10 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         invoices.forEach(invoice -> {
             if (invoice.getDueDate() != null) {
                 long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
-                logger.warn("Invoice con ID {} seteando aging ", aging);
+                logger.warn("Invoice ID {} aging {}",invoice.getInvoiceId(), aging);
                 invoice.setAging((int) aging);
             } else {
-                logger.warn("Invoice con ID {} seteando aging ", -1);
+                logger.warn("Invoice ID {} aging {}",invoice.getInvoiceId(), -1);
                 invoice.setAging(-1);
             }
         });
