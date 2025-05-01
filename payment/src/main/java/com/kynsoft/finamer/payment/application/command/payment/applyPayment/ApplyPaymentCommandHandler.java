@@ -321,6 +321,9 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         parentDetail.setPaymentDetails(updateChildren);
         parentDetail.setApplyDepositValue(BankerRounding.round(parentDetail.getApplyDepositValue() - amount));
 
+        parentDetail.setUpdatedAt(OffsetDateTime.now());
+        parentDetail.setAppliedAt(transactionDate);//TODO Preguntar si es factible setear el campo appliedAt al deposito del cual se esta creando el AANT.
+
         //Update Detail Deposit
         this.updatePaymentDetails(parentDetail, detailTypeDeposits);
         return children;
@@ -378,6 +381,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             this.createPaymentStatusHistory(employeeDto, updatePayment.toAggregateBasic());
         }
         updatePayment.setApplyPayment(true);
+        updatePayment.setUpdatedAt(OffsetDateTime.now());
     }
 
     private void updateBooking(Booking update, List<Booking> bookingsList) {
