@@ -94,6 +94,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         List<PaymentDetail> createPaymentDetails = new ArrayList<>();
 
         Payment updatePayment = this.paymentService.findByIdWithBalancesOnly(command.getPayment());
+        PaymentDto payment = this.paymentService.findByIdCustom(command.getPayment());
         ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();//AANT
         ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();//PAGO
 
@@ -115,7 +116,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                 double amountBalance = bookingDto.getAmountBalance();
                 if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance() && amountBalance > 0) {
                     double amountToApply = Math.min(notApplied, amountBalance);
-                    OffsetDateTime transactionDate = this.getTransactionDate(paymentCloseOperationByHotelMap.get(updatePayment.getHotel().getId()));
+                    OffsetDateTime transactionDate = this.getTransactionDate(paymentCloseOperationByHotelMap.get(payment.getHotel().getId()));
 
                     PaymentDetail message = createDetailsTypeCash(amountToApply, cachedPaymentInvoiceTransactionType, updatePayment, transactionDate);
                     this.applyPayment(command.getEmployee(), bookingDto, message, kafkaList, bookingsList, createPaymentDetails, updatePayment, transactionDate);
@@ -137,7 +138,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
                             }
                             while (depositAmount > 0) {
                                 double amountToApply = Math.min(depositAmount, amountBalance);
-                                OffsetDateTime transactionDate = getTransactionDate(paymentCloseOperationByHotelMap.get(updatePayment.getHotel().getId()));
+                                OffsetDateTime transactionDate = getTransactionDate(paymentCloseOperationByHotelMap.get(payment.getHotel().getId()));
 
                                 this.applyPayment(command.getEmployee(), bookingDto,
                                         this.createDetailsTypeApplyDeposit(parentDetail, amountToApply, cachedApplyDepositTransactionType,
