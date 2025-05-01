@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<InvoiceCollectionsSummaryQuery, InvoiceCollectionResponse> {
 
     private final IManageInvoiceService manageInvoiceService;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InvoiceCollectionsSummaryQueryHandler.class);
 
     public InvoiceCollectionsSummaryQueryHandler(IManageInvoiceService manageInvoiceService) {
         this.manageInvoiceService = manageInvoiceService;
@@ -34,8 +35,10 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         invoices.forEach(invoice -> {
             if (invoice.getDueDate() != null) {
                 long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
+                logger.warn("Invoice con ID {} seteando aging ", aging);
                 invoice.setAging((int) aging);
             } else {
+                logger.warn("Invoice con ID {} seteando aging ", -1);
                 invoice.setAging(-1);
             }
         });
@@ -49,7 +52,10 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
 
     private Map<Integer, List<ManageInvoiceDto>> groupInvoicesByAging(List<ManageInvoiceDto> invoices, LocalDate today) {
         return invoices.stream().collect(Collectors.groupingBy(invoice -> {
-            if (invoice.getDueDate() == null) return -1;
+            if (invoice.getDueDate() == null) {
+                logger.warn("Factura con ID {} no tiene fecha de vencimiento", invoice.getId());
+                return -1;
+            }
             long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
             return resolveAgingBucket(aging);
         }));
