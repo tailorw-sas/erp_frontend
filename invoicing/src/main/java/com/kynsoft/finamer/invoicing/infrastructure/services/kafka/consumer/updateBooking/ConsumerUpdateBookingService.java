@@ -13,6 +13,7 @@ import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.invoicing.domain.services.IPaymentService;
 
+import lombok.extern.java.Log;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -57,32 +58,23 @@ public class ConsumerUpdateBookingService {
                 this.setInvoiceDueAmount(invoice);
 
                 this.invoiceService.update(invoice);
-            }
 
-            PaymentDto payment = new PaymentDto(objKafka.getPaymentKafka().getId(), objKafka.getPaymentKafka().getPaymentId());
-            this.paymentService.create(payment);
-            this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, booking));
+                PaymentDto payment = new PaymentDto(objKafka.getPaymentKafka().getId(), objKafka.getPaymentKafka().getPaymentId());
+                this.paymentService.create(payment);
+                this.detailService.create(new PaymentDetailDto(objKafka.getPaymentKafka().getDetails().getId(), objKafka.getPaymentKafka().getDetails().getPaymentDetailId(), payment, booking));
 
-            ManageHotelDto hotelDto = this.manageHotelService.findById(invoice.getHotel().getId());
-            if (invoice.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit() && objKafka.isDeposit()) {
-                ManageBookingDto bookingParent = this.bookingService.findById(booking.getParent().getId());
-                double amountBalance = objKafka.getAmountBalance() * -1;
-                if (bookingParent.getDueAmount() >= amountBalance) {
-                    bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
-                } else {
-                    bookingParent.setDueAmount(bookingParent.getDueAmount() - bookingParent.getDueAmount());
+                ManageHotelDto hotelDto = this.manageHotelService.findById(invoice.getHotel().getId());
+                if (invoice.getInvoiceType().equals(EInvoiceType.CREDIT) && !hotelDto.getAutoApplyCredit() && objKafka.isDeposit()) {
+                    ManageBookingDto bookingParent = this.bookingService.findById(booking.getParent().getId());
+                    bookingParent.setDueAmount(bookingParent.getDueAmount());
+                    this.bookingService.update(bookingParent);
+
+                    ManageInvoiceDto parent = this.invoiceService.findById(invoice.getParent().getId());
+                    this.setInvoiceDueAmount(parent);
+                    this.invoiceService.update(parent);
                 }
-                //bookingParent.setDueAmount(bookingParent.getDueAmount() + objKafka.getAmountBalance());
-                this.bookingService.update(bookingParent);
-
-                ManageInvoiceDto parent = this.invoiceService.findById(invoice.getParent().getId());
-                if (parent.getDueAmount() >= amountBalance) {
-                    parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
-                } else {
-                    parent.setDueAmount(parent.getDueAmount() - parent.getDueAmount());
-                }
-                //parent.setDueAmount(parent.getDueAmount() + objKafka.getAmountBalance());
-                this.invoiceService.update(parent);
+            }else{
+                Logger.getLogger(ConsumerUpdateBookingService.class.getName()).log(Level.SEVERE, "The booking not found or it is null");
             }
         } catch (Exception ex) {
             Logger.getLogger(ConsumerUpdateBookingService.class.getName()).log(Level.SEVERE, null, ex);
