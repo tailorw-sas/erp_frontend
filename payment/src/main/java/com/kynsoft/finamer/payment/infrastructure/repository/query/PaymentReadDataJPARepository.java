@@ -61,5 +61,6 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
     @Query("SELECT p FROM Payment p WHERE p.id = :id")
     Optional<Payment> findByIdWithBalancesOnly(@Param("id") UUID id);
 
+    //TODO Optimizar con JOIN FETCH o el CustomRepository
     List<Payment> getByPaymentId_In(List<Long> paymentIds);
 }
