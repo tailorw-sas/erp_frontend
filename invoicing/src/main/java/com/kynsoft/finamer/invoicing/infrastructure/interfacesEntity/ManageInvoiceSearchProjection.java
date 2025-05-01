@@ -34,7 +34,7 @@ public class ManageInvoiceSearchProjection {
     private final Double originalAmount;
     private final ImportType importType;
     private final Boolean cloneParent;
-    private final Integer aging;
+    private Integer aging;
     private boolean isCloseOperation;
     private LocalDate dueDate;
 

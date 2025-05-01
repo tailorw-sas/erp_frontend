@@ -2,8 +2,8 @@ package com.kynsoft.finamer.invoicing.application.query.collections.invoice;
 
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
+import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<InvoiceCollectionsSummaryQuery, InvoiceCollectionResponse> {
 
     private final IManageInvoiceService manageInvoiceService;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InvoiceCollectionsSummaryQueryHandler.class);
 
     public InvoiceCollectionsSummaryQueryHandler(IManageInvoiceService manageInvoiceService) {
         this.manageInvoiceService = manageInvoiceService;
@@ -25,24 +24,21 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
 
     @Override
     public InvoiceCollectionResponse handle(InvoiceCollectionsSummaryQuery query) {
-        Page<ManageInvoiceDto> invoicePage = manageInvoiceService.getInvoiceForSummary(
+        Page<ManageInvoiceSearchProjection> invoicePage = manageInvoiceService.getInvoiceForSummary(
                 query.getPageable(), query.getFilter(), query.getEmployeeId()
         );
 
-        List<ManageInvoiceDto> invoices = invoicePage.getContent();
+        List<ManageInvoiceSearchProjection> invoices = invoicePage.getContent();
         LocalDate today = LocalDate.now();
-        // Asignar la propiedad aging a cada factura
         invoices.forEach(invoice -> {
             if (invoice.getDueDate() != null) {
                 long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
-                logger.warn("Invoice ID {} aging {}",invoice.getInvoiceId(), aging);
-                invoice.setAging((int) aging);
+                invoice.setAging((int) (aging < 0 ? 0 :aging));
             } else {
-                logger.warn("Invoice ID {} aging {}",invoice.getInvoiceId(), -1);
                 invoice.setAging(-1);
             }
         });
-        Map<Integer, List<ManageInvoiceDto>> agingGroups = groupInvoicesByAging(invoices, today);
+        Map<Integer, List<ManageInvoiceSearchProjection>> agingGroups = groupInvoicesByAging(invoices, today);
 
         InvoiceCollectionsSummaryResponse summaryResponse = buildSummaryResponse(invoices, agingGroups);
         PaginatedResponse paginatedResponse = buildPaginatedResponse(invoicePage);
@@ -50,10 +46,9 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         return new InvoiceCollectionResponse(paginatedResponse, summaryResponse);
     }
 
-    private Map<Integer, List<ManageInvoiceDto>> groupInvoicesByAging(List<ManageInvoiceDto> invoices, LocalDate today) {
+    private Map<Integer, List<ManageInvoiceSearchProjection>> groupInvoicesByAging(List<ManageInvoiceSearchProjection> invoices, LocalDate today) {
         return invoices.stream().collect(Collectors.groupingBy(invoice -> {
             if (invoice.getDueDate() == null) {
-                logger.warn("Factura con ID {} no tiene fecha de vencimiento", invoice.getId());
                 return -1;
             }
             long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
@@ -69,7 +64,8 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         return 0;
     }
 
-    private InvoiceCollectionsSummaryResponse buildSummaryResponse(List<ManageInvoiceDto> invoices, Map<Integer, List<ManageInvoiceDto>> agingGroups) {
+    private InvoiceCollectionsSummaryResponse buildSummaryResponse(List<ManageInvoiceSearchProjection> invoices,
+                                                                   Map<Integer, List<ManageInvoiceSearchProjection>> agingGroups) {
         int total = invoices.size();
 
         long count30 = agingGroups.getOrDefault(30, List.of()).size();
@@ -92,8 +88,8 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
                 .totalInvoiceBalanceWithAging60(balance(agingGroups.getOrDefault(60, List.of())))
                 .totalInvoiceBalanceWithAging90(balance(agingGroups.getOrDefault(90, List.of())))
                 .totalInvoiceBalanceWithAging120(balance(agingGroups.getOrDefault(120, List.of())))
-                .totalInvoiceAmount(invoices.stream().mapToDouble(ManageInvoiceDto::getInvoiceAmount).sum())
-                .totalInvoiceDueAmount(invoices.stream().mapToDouble(ManageInvoiceDto::getDueAmount).sum())
+                .totalInvoiceAmount(invoices.stream().mapToDouble(ManageInvoiceSearchProjection::getInvoiceAmount).sum())
+                .totalInvoiceDueAmount(invoices.stream().mapToDouble(ManageInvoiceSearchProjection::getDueAmount).sum())
                 .build();
     }
 
@@ -101,11 +97,11 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         return total > 0 ? Math.round(partial * 100.0 / total) : 0;
     }
 
-    private double balance(List<ManageInvoiceDto> invoices) {
-        return invoices.stream().mapToDouble(ManageInvoiceDto::getDueAmount).sum();
+    private double balance(List<ManageInvoiceSearchProjection> invoices) {
+        return invoices.stream().mapToDouble(ManageInvoiceSearchProjection::getDueAmount).sum();
     }
 
-    private PaginatedResponse buildPaginatedResponse(Page<ManageInvoiceDto> page) {
+    private PaginatedResponse buildPaginatedResponse(Page<ManageInvoiceSearchProjection> page) {
         return new PaginatedResponse(
                 page.getContent(),
                 page.getTotalPages(),
