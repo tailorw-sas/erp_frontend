@@ -120,7 +120,7 @@ public class Invoice {
     @Column(name = "aging", nullable = false, columnDefinition = "integer default 0")
     private Integer storedAging;
 
-    @org.hibernate.annotations.Formula("GREATEST(0, DATE_PART('day', CURRENT_DATE - duedate::DATE))")
+    @org.hibernate.annotations.Formula("GREATEST(0, current_date - TO_DATE(duedate::text, 'YYYYMMDD'))")
     private Integer aging;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
