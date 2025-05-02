@@ -4,6 +4,8 @@ import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjecti
 import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import java.util.List;
+
+import com.kynsoft.finamer.payment.infrastructure.repository.query.payments.ManageBookingCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,7 +21,7 @@ import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface ManageBookingReadDataJPARepository extends JpaRepository<Booking, UUID>, 
-        JpaSpecificationExecutor<Booking> {
+        JpaSpecificationExecutor<Booking>, ManageBookingCustomRepository {
 
     @Override
     Page<Booking> findAll(Specification specification, Pageable pageable);
@@ -47,7 +49,11 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
             "WHERE pd.bookingId IN :ids")
     List<BookingProjectionControlAmountBalance> findBookingsControlAmountBalanceProjectionByGenId(@Param("ids") List<Long> ids);
 
-    List<Booking> findByBookingIdIn(List<Long> ids);
+    @Query("SELECT b FROM Booking b " +
+            "LEFT JOIN FETCH b.invoice " +
+            "LEFT JOIN FETCH b.parent " +
+            "WHERE b.bookingId IN :ids")
+    List<Booking> findByBookingIdIn(@Param("ids") List<Long> ids);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance(" +
             "pd.id, pd.bookingId, pd.amountBalance, pd.couponNumber) " +
