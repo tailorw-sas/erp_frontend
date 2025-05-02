@@ -40,14 +40,12 @@ public class Deposit {
         this.paymentDetail.setId(UUID.randomUUID());
         this.paymentDetail.setStatus(Status.ACTIVE);
         this.paymentDetail.setPayment(this.payment);
-        this.paymentDetail.setTransactionType(this.paymentTransactionType); //this.paymentTransactionTypeService.findByDeposit(),
+        this.paymentDetail.setTransactionType(this.paymentTransactionType);
         this.paymentDetail.setAmount(this.amount * -1);
         this.paymentDetail.setRemark(this.remark);
         this.paymentDetail.setTransactionDate(this.transactionDate);
         this.paymentDetail.setApplyPayment(false);
         this.paymentDetail.setApplyDepositValue(paymentDetail.getAmount() * -1);
-        //TODO Validar si es today o el close operation
-        this.paymentDetail.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         this.paymentDetail.setCreateByCredit(false);
 
         this.calculate(this.payment, this.amount);
