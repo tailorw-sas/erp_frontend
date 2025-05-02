@@ -153,6 +153,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         ManageEmployeeDto employee = this.getEmployee(UUID.fromString(request.getEmployeeId()));
         List<PaymentImportCache> paymentCacheList = this.getPaymentImportCachedList(request.getImportProcessId());
         if(paymentCacheList.isEmpty()){
+            printLog("End readPaymentCacheAndSave process because there are errors in validation");
             return;
         }
 
@@ -841,7 +842,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<PaymentDto> getPayments(List<Long> paymentIds){
-        return paymentService.findPaymentsByPaymentId(paymentIds);
+        printLog(String.format("Hay %d ids de payments", paymentIds.size()));
+        List<PaymentDto> payments = paymentService.findPaymentsByPaymentId(paymentIds);
+        printLog(String.format("Hay %d payments encontrados", payments.size()));
+        return payments;
     }
 
     private List<PaymentDetailDto> getPaymentDetailsProyection(List<Long> paymentsIds){
