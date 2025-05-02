@@ -739,10 +739,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         }
 
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionCodeSet));
-        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));//TODO Optimizar este select con JOIN FETCH
+        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
-        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
-        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));//TODO Optimizar este select con JOIN FETCH o hacer custom repository
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailListByGenId(new ArrayList<>(paymentIdSet));//TODO Optimizar
+        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
         List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));//TODO Usar el  custom repository
 
         List<UUID> hotelIds = paymentList.stream()
@@ -794,7 +794,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionIdSet));
         List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
-        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailListByGenId(new ArrayList<>(paymentIdSet));
         List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
         List<PaymentDetailDto> paymentDetailListAnti = new ArrayList<>(getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet)));
 
@@ -837,7 +837,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<ManageBookingDto> getBookings(List<Long> ids){
-        return bookingService.findByBookingIdIn(ids);
+        return bookingService.findAllByBookingIdIn(ids);
     }
 
     private List<PaymentDto> getPayments(List<Long> paymentIds){
@@ -865,7 +865,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<PaymentDetailDto> getPaymentDetailListByGenId(List<Long> ids){
-        return paymentDetailService.findByPaymentDetailsIdIn(ids).stream()
+        return paymentDetailService.findByPaymentDetailsGenIdIn(ids).stream()
                 .map(PaymentDetail::toAggregate).collect(Collectors.toList());
     }
 }
