@@ -13,11 +13,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
 public class ManageInvoiceCustomRepositoryImpl implements ManageInvoiceCustomRepository {
-
     @PersistenceContext
     private EntityManager entityManager;
 
