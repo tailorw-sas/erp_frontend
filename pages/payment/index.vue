@@ -921,14 +921,14 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10000,
+  pageSize: 100,
   page: 0,
   sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -936,7 +936,7 @@ const applyPaymentPagination = ref<IPagination>({
 
 const applyPaymentPaginationTemp = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -947,14 +947,14 @@ const applyPaymentOnChangePage = ref<PageState>()
 const applyPaymentBookingPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentBookingPagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1144,14 +1144,14 @@ const applyPaymentOptionsOtherDeduction1 = ref({
 const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10000,
+  pageSize: 100,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   page: 0,
-  limit: 10000,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1159,14 +1159,14 @@ const applyPaymentPaginationOtherDeduction = ref<IPagination>({
 const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10000,
+  pageSize: 100,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
   page: 0,
-  limit: 10000,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
