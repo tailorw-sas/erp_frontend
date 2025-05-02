@@ -42,7 +42,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
 
         Join<ManageAgency, ManageClient> agencyClientJoin = agencyJoin.join("client", JoinType.LEFT);
         Join<ManageAgency, ManageCountry> agencyCountryJoin = agencyJoin.join("country", JoinType.LEFT);
-        Join<ManageCountry, ManageLanguage> agencyCountryLanguageJoin = agencyCountryJoin.join("managerLanguage");
+        Join<ManageCountry, ManageLanguage> agencyCountryLanguageJoin = agencyCountryJoin.join("managerLanguage", JoinType.LEFT);
 
         Join<Payment, ManageBankAccount> bankAccountJoin = root.join("bankAccount", JoinType.LEFT);
         Join<ManageBankAccount, ManageHotel> bankAccountHotelJoin = bankAccountJoin.join("manageHotel", JoinType.LEFT);
