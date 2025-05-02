@@ -198,15 +198,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public Page<ManageInvoiceSearchProjection> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        if (pageable.getSort().isSorted()) {
-            boolean hasCreatedAt = pageable.getSort().stream()
-                    .anyMatch(order -> order.getProperty().equals("createdAt"));
-            if (hasCreatedAt) {
-                Sort sort = Sort.by(Sort.Order.desc("createdAt"));
-                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-            }
-        }
-        
         return repositoryQuery.findAllProjected(specifications, pageable);
     }
 

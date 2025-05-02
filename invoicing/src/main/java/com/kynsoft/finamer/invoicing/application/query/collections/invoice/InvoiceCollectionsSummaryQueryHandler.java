@@ -7,8 +7,6 @@ import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoi
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,16 +27,7 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         );
 
         List<ManageInvoiceSearchProjection> invoices = invoicePage.getContent();
-        LocalDate today = LocalDate.now();
-        invoices.forEach(invoice -> {
-            if (invoice.getDueDate() != null) {
-                long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
-                invoice.setAging((int) (aging < 0 ? 0 :aging));
-            } else {
-                invoice.setAging(-1);
-            }
-        });
-        Map<Integer, List<ManageInvoiceSearchProjection>> agingGroups = groupInvoicesByAging(invoices, today);
+        Map<Integer, List<ManageInvoiceSearchProjection>> agingGroups = groupInvoicesByAging(invoices);
 
         InvoiceCollectionsSummaryResponse summaryResponse = buildSummaryResponse(invoices, agingGroups);
         PaginatedResponse paginatedResponse = buildPaginatedResponse(invoicePage);
@@ -46,13 +35,9 @@ public class InvoiceCollectionsSummaryQueryHandler implements IQueryHandler<Invo
         return new InvoiceCollectionResponse(paginatedResponse, summaryResponse);
     }
 
-    private Map<Integer, List<ManageInvoiceSearchProjection>> groupInvoicesByAging(List<ManageInvoiceSearchProjection> invoices, LocalDate today) {
+    private Map<Integer, List<ManageInvoiceSearchProjection>> groupInvoicesByAging(List<ManageInvoiceSearchProjection> invoices) {
         return invoices.stream().collect(Collectors.groupingBy(invoice -> {
-            if (invoice.getDueDate() == null) {
-                return -1;
-            }
-            long aging = ChronoUnit.DAYS.between(invoice.getDueDate(), today);
-            return resolveAgingBucket(aging);
+            return resolveAgingBucket(invoice.getAging());
         }));
     }
 

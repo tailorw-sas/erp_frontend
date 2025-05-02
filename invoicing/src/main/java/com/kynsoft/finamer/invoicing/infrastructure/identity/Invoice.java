@@ -115,7 +115,12 @@ public class Invoice {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-    @Column(nullable = false,columnDefinition = "integer default 0")
+
+    // [LEGACY] Campo obsoleto en BD. Usar solo para compatibilidad estructural. No usar en lógica.
+    @Column(name = "aging", nullable = false, columnDefinition = "integer default 0")
+    private Integer storedAging;
+
+    @org.hibernate.annotations.Formula("GREATEST(0, DATE_PART('day', CURRENT_DATE - due_date::DATE))")
     private Integer aging;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
