@@ -35,6 +35,7 @@ const onOffDialogPaymentDetailSummary = ref(false)
 
 // Attachments for Invoice
 const attachmentDialogOpenInvoice = ref<boolean>(false)
+const attachmentListInvoice = ref<any[]>([])
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -546,7 +547,7 @@ const options = ref({
 const optionsInv = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: 'collections/invoice-summary',
+  uriApi: 'manage-invoice',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -1177,7 +1178,7 @@ async function getListInvoice() {
     }
     // Aqui termina el filtro por el dueAmount ----------------------------------------------------------------------------------------------
 
-    const response = await GenericService.searchWithoutSearch(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
+    const response = await GenericService.search(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
     const { data: dataList, page, size, totalElements, totalPages } = response
     paginationInvoice.value.page = page
     paginationInvoice.value.limit = size
@@ -1234,45 +1235,28 @@ async function getListInvoice() {
   finally {
     optionsInv.value.loading = false
     if (paginationInvoice.value.totalElements !== 0) {
-      const agingBuckets = { 0: [], 30: [], 60: [], 90: [], 120: [] }
+      const days30 = listItemsInvoice.value.filter(item => item.aging === 30)
+      count.days30Count = days30.length
+      count.days30Balance = days30.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days30Percentage = (count.days30Balance * 100) / count.invoiceTotalAmount
 
-      listItemsInvoice.value.forEach((item) => {
-        const aging = item.aging
-        const bucket = [30, 60, 90, 120].find(limit => aging === limit) ?? 0
-        agingBuckets[bucket].push(item)
-      })
+      const days60 = listItemsInvoice.value.filter(item => item.aging === 60)
+      count.days60Count = days60.length
+      count.days60Balance = days60.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days60Percentage = (count.days60Balance * 100) / count.invoiceTotalAmount
 
-      const totalAmount = count.invoiceTotalAmount
+      const days90 = listItemsInvoice.value.filter(item => item.aging === 90)
+      count.days90Count = days90.length
+      count.days90Balance = days90.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days90Percentage = (count.days90Balance * 100) / count.invoiceTotalAmount
 
-      const calc = (items: any[]) => {
-        const balance = items.reduce((sum, item) => sum + item.dueAmount, 0)
-        const percentage = totalAmount > 0 ? (balance * 100) / totalAmount : 0
-        return { count: items.length, balance, percentage }
-      }
+      const days120 = listItemsInvoice.value.filter(item => item.aging === 120)
+      count.days120Count = days120.length
+      count.days120Balance = days120.reduce((sum, item) => sum + item.dueAmount, 0)
+      count.days120Percentage = (count.days120Balance * 100) / count.invoiceTotalAmount
 
-      const res30 = calc(agingBuckets[30])
-      const res60 = calc(agingBuckets[60])
-      const res90 = calc(agingBuckets[90])
-      const res120 = calc(agingBuckets[120])
-      const res0 = agingBuckets[0].length
-
-      count.days30Count = res30.count
-      count.days30Balance = res30.balance
-      count.days30Percentage = res30.percentage
-
-      count.days60Count = res60.count
-      count.days60Balance = res60.balance
-      count.days60Percentage = res60.percentage
-
-      count.days90Count = res90.count
-      count.days90Balance = res90.balance
-      count.days90Percentage = res90.percentage
-
-      count.days120Count = res120.count
-      count.days120Balance = res120.balance
-      count.days120Percentage = res120.percentage
-
-      count.days0Count = res0
+      const days0 = listItemsInvoice.value.filter(item => item.aging === 0)
+      count.days0Count = days0.length
     }
     subTotalsInvoice.value = { ...count }
   }

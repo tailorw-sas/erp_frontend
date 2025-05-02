@@ -921,7 +921,7 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10000,
+  pageSize: 50,
   page: 0,
   sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
