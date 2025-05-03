@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.core.paymentDetail;
 
+import com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode;
 import com.kynsoft.finamer.payment.domain.core.undoApplyPayment.UndoApplyPayment;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import lombok.Getter;
@@ -8,6 +9,9 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode.APPLY_DEPOSIT;
+import static com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode.CASH;
 
 public class ProcessReverseDetail {
 
@@ -47,23 +51,31 @@ public class ProcessReverseDetail {
     public void process(){
         this.paymentDetailClone = this.createPaymentDetailClone();
 
-        if (this.paymentDetail.getTransactionType().getApplyDeposit()) {
-            paymentDetailClone.setReverseFrom(this.paymentDetail.getPaymentDetailId());
-            paymentDetailClone.setParentId(this.paymentDetail.getParentId());
-            this.addPaymentDetails(paymentDetailClone, this.parent);
-            this.calculateReverseApplyDeposit(this.payment, this.paymentDetail);
-
-        } else if (this.paymentDetail.getTransactionType().getCash()) {
-            this.calculateReverseCash(this.payment, paymentDetailClone.getAmount());
-        } else {
-            this.calculateReverseOtherDeductions(this.payment, paymentDetailClone.getAmount());
+        switch(PaymentTransactionTypeCode.from(this.paymentDetail.getTransactionType())){
+            case CASH -> {
+                this.calculateReverseCash(this.payment, paymentDetailClone.getAmount());
+            }
+            case APPLY_DEPOSIT -> {
+                paymentDetailClone.setReverseFrom(this.paymentDetail.getPaymentDetailId());
+                paymentDetailClone.setParentId(this.paymentDetail.getParentId());
+                this.addPaymentDetails(paymentDetailClone, this.parent);
+                this.calculateReverseApplyDeposit(this.payment, this.paymentDetail);
+            }
+            case OTHER_DEDUCTIONS -> {
+                this.calculateReverseOtherDeductions(this.payment, paymentDetailClone.getAmount());
+            }
         }
 
         this.paymentDetail.setReverseTransaction(true);
 
         this.undoApplyPayment(this.paymentDetail, this.booking);
 
-        this.isPaymentChangeStatus = this.changeStatus(payment, this.paymentDetail, paymentStatusHistoryDto, this.employee);
+        this.isPaymentChangeStatus = this.changeStatus(payment,
+                this.paymentDetail,
+                paymentStatusHistoryDto,
+                this.employee,
+                PaymentTransactionTypeCode.from(this.paymentDetail.getTransactionType())
+        );
     }
 
     private PaymentDetailDto createPaymentDetailClone(){
@@ -93,11 +105,13 @@ public class ProcessReverseDetail {
         return paymentDetailClone;
     }
 
-    private void addPaymentDetails(PaymentDetailDto reverseFrom, PaymentDetailDto parent) {
-        List<PaymentDetailDto> _paymentDetails = new ArrayList<>(parent.getPaymentDetails());
-        _paymentDetails.add(reverseFrom);
-        parent.setPaymentDetails(_paymentDetails);
-        parent.setApplyDepositValue(parent.getApplyDepositValue() - reverseFrom.getAmount());
+    private void calculateReverseCash(PaymentDto paymentDto, double amount) {
+        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
+        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
+
+        paymentDto.setApplied(paymentDto.getApplied() + amount);
+        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
+        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
     }
 
     private void calculateReverseApplyDeposit(PaymentDto paymentDto, PaymentDetailDto newDetailDto) {
@@ -111,22 +125,23 @@ public class ProcessReverseDetail {
         paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + amount);
     }
 
-    private void calculateReverseCash(PaymentDto paymentDto, double amount) {
-        paymentDto.setIdentified(paymentDto.getIdentified() + amount);
-        paymentDto.setNotIdentified(paymentDto.getNotIdentified() - amount);
-
-        paymentDto.setApplied(paymentDto.getApplied() + amount);
-        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
-        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
+    private void addPaymentDetails(PaymentDetailDto reverseFrom, PaymentDetailDto parent) {
+        List<PaymentDetailDto> _paymentDetails = new ArrayList<>(parent.getPaymentDetails());
+        _paymentDetails.add(reverseFrom);
+        parent.setPaymentDetails(_paymentDetails);
+        parent.setApplyDepositValue(parent.getApplyDepositValue() - reverseFrom.getAmount());
     }
 
-    private boolean changeStatus(PaymentDto payment, PaymentDetailDto paymentDetailDto, PaymentStatusHistoryDto paymentStatusHistory, ManageEmployeeDto employee) {
-        if(paymentDetailDto.getTransactionType().getCash() || paymentDetailDto.getTransactionType().getApplyDeposit()){
-            if (payment.getPaymentStatus().getApplied()) {
-                payment.setPaymentStatus(this.confirmedPaymentStatus);
-                this.createPaymentAttachmentStatusHistory(payment, paymentStatusHistory, employee);
-                return true;
-            }
+    private boolean changeStatus(PaymentDto payment,
+                                 PaymentDetailDto paymentDetailDto,
+                                 PaymentStatusHistoryDto paymentStatusHistory,
+                                 ManageEmployeeDto employee,
+                                 PaymentTransactionTypeCode paymentTransactionTypeCode) {
+        if((paymentTransactionTypeCode.equals(CASH) || paymentTransactionTypeCode.equals(APPLY_DEPOSIT)
+                && payment.getPaymentStatus().getApplied())){
+            payment.setPaymentStatus(this.confirmedPaymentStatus);
+            this.createPaymentAttachmentStatusHistory(payment, paymentStatusHistory, employee);
+            return true;
         }
 
         return false;
@@ -142,6 +157,6 @@ public class ProcessReverseDetail {
 
     private void undoApplyPayment(PaymentDetailDto paymentDetail, ManageBookingDto booking){
         UndoApplyPayment undoApplyPayment = new UndoApplyPayment(paymentDetail, booking);
-        undoApplyPayment.undoApply();
+        undoApplyPayment.process();
     }
 }

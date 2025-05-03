@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.core.undoApplyPayment;
 
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 
@@ -16,11 +17,11 @@ public class UndoApplyPayment {
         this.booking = booking;
     }
 
-    public void undoApply(){
+    public void process(){
         if(Objects.isNull(this.booking) && Objects.isNull(this.paymentDetail)){
             throw new IllegalArgumentException("Booking and Payment detail must not be null");
         }
 
-        this.booking.setAmountBalance(this.booking.getAmountBalance() + paymentDetail.getAmount());
+        this.booking.setAmountBalance(BankerRounding.round(this.booking.getAmountBalance() + paymentDetail.getAmount()));
     }
 }

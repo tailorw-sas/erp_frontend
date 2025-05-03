@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.domain.core.paymentDetail;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.utils.BankerRounding;
+import com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode;
 import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -35,26 +36,6 @@ public class ProcessPaymentDetail {
 
     @Getter
     private boolean isPaymentApplied;
-
-    public enum PaymentTransactionTypeCode {
-        CASH,
-        DEPOSIT,
-        OTHER_DEDUCTIONS,
-        APPLY_DEPOSIT;
-
-        public static PaymentTransactionTypeCode from(ManagePaymentTransactionTypeDto paymentTransactionType) {
-            if (paymentTransactionType.getCash()) {
-                return CASH;
-            }
-            if (paymentTransactionType.getDeposit()) {
-                return DEPOSIT;
-            }
-            if(paymentTransactionType.getApplyDeposit()){
-                return APPLY_DEPOSIT;
-            }
-            return OTHER_DEDUCTIONS;
-        }
-    }
 
     public ProcessPaymentDetail(PaymentDto payment,
                                 Double amount,

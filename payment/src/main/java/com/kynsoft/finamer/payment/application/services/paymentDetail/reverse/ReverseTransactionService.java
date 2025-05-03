@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionCommandHandler;
@@ -38,7 +39,6 @@ public class ReverseTransactionService {
     private final IManagePaymentStatusService paymentStatusService;
     private final IPaymentCloseOperationService paymentCloseOperationService;
     private final IManageBookingService bookingService;
-    private final ProducerUpdateBookingService producerUpdateBookingBalanceService;
 
     public ReverseTransactionService(IPaymentDetailService paymentDetailService,
                                      IPaymentService paymentService,
@@ -46,8 +46,7 @@ public class ReverseTransactionService {
                                      IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
                                      IManagePaymentStatusService paymentStatusService,
                                      IPaymentCloseOperationService paymentCloseOperationService,
-                                     IManageBookingService bookingService,
-                                     ProducerUpdateBookingService producerUpdateBookingBalanceService){
+                                     IManageBookingService bookingService){
         this.paymentDetailService = paymentDetailService;
         this.paymentService = paymentService;
         this.employeeService = employeeService;
@@ -55,23 +54,23 @@ public class ReverseTransactionService {
         this.paymentStatusService = paymentStatusService;
         this.paymentCloseOperationService = paymentCloseOperationService;
         this.bookingService = bookingService;
-        this.producerUpdateBookingBalanceService = producerUpdateBookingBalanceService;
     }
 
     @Transactional
-    public void reverseTransaction(CreateReverseTransactionCommand command){
+    public void reverseTransaction(UUID paymentDetailId,
+                                   UUID employeeId){
 
-        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
+        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(paymentDetailId);
         PaymentDto payment = paymentDetailDto.getPayment();
+        OffsetDateTime transactionDate = this.getTtransactionDate(payment.getHotel().getId());
+        ManageEmployeeDto employeeDto = this.employeeService.findById(employeeId);
+
         PaymentStatusHistoryDto paymentStatusHistoryDto = new PaymentStatusHistoryDto();
-        OffsetDateTime transactionDate = this.getTtransactionDate(paymentDetailDto.getPayment().getHotel().getId());
+
         PaymentDetailDto parent = this.getParentPaymentDetail(paymentDetailDto);
         ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
         ManagePaymentStatusDto confirmedPaymentStatus = this.paymentStatusService.findByConfirmed();
-        ManageEmployeeDto employeeDto = command.getEmployee() != null ? this.employeeService.findById(command.getEmployee()) : null;
 
-        //Comprobar que la fecha sea anterior al dia actual
-        //Comprobar que el paymentDetails sea de tipo Apply Deposit o Cash, pero puede ser de other deductions
         //Lo que no puede suceder es que si es other deductions cambie el estado del payment.
 
         RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplyPayment()));
@@ -91,8 +90,6 @@ public class ReverseTransactionService {
         PaymentDetailDto paymentDetailClone = processReverseDetail.getPaymentDetailClone();
 
         this.saveChanges(paymentDetailClone, paymentDetailDto, payment, processReverseDetail.getIsPaymentChangeStatus(), paymentStatusHistoryDto, bookingDto);
-
-        this.replicateBooking(payment, paymentDetailDto, bookingDto);
     }
 
     private PaymentDetailDto getParentPaymentDetail(PaymentDetailDto paymentDetailDto){
@@ -112,30 +109,6 @@ public class ReverseTransactionService {
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
-    private void replicateBooking(PaymentDto paymentDto, PaymentDetailDto paymentDetailDto, ManageBookingDto bookingDto){
-        try {
-            ReplicatePaymentDetailsKafka replicatePaymentDetailsKafka = new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId());
-
-            ReplicatePaymentKafka replicatePaymentKafka = new ReplicatePaymentKafka(
-                    paymentDto.getId(),
-                    paymentDto.getPaymentId(),
-                    replicatePaymentDetailsKafka
-            );
-
-            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(), bookingDto.getAmountBalance(),
-                    replicatePaymentKafka,
-                    paymentDetailDto.getTransactionType().getApplyDeposit(),
-                    OffsetDateTime.now());
-
-            UpdateBookingBalanceKafka updateBookingBalanceKafka = new UpdateBookingBalanceKafka(List.of(replicateBookingKafka));
-            this.producerUpdateBookingBalanceService.update(updateBookingBalanceKafka);
-        } catch (Exception e) {
-            Logger.getLogger(CreateReverseTransactionCommandHandler.class.getName()).log(Level.SEVERE, "Error trying to replicate booking", e);
-        }
-    }
-
-
-    @Transactional
     private void saveChanges(PaymentDetailDto paymentDetailClone,
                       PaymentDetailDto paymentDetailParent,
                       PaymentDto payment,

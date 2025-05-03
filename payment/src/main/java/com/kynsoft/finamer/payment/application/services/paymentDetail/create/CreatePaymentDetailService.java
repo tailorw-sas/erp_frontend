@@ -46,8 +46,6 @@ public class CreatePaymentDetailService {
     private final IManageBookingService bookingService;
     private final IPaymentStatusHistoryService paymentStatusHistoryService;
 
-    private final PaymentPersistenceService paymentPersistenceService;
-
     @Getter
     private PaymentDto payment;
 
@@ -62,8 +60,7 @@ public class CreatePaymentDetailService {
                                       IPaymentCloseOperationService paymentCloseOperationService,
                                       IManageEmployeeService employeeService,
                                       IManageBookingService bookingService,
-                                      IPaymentStatusHistoryService paymentStatusHistoryService,
-                                      PaymentPersistenceService paymentPersistenceService){
+                                      IPaymentStatusHistoryService paymentStatusHistoryService){
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
@@ -73,7 +70,6 @@ public class CreatePaymentDetailService {
         this.employeeService = employeeService;
         this.bookingService = bookingService;
         this.paymentStatusHistoryService = paymentStatusHistoryService;
-        this.paymentPersistenceService = paymentPersistenceService;
     }
 
     @Transactional
