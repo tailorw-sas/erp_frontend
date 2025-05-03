@@ -9,7 +9,7 @@ import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafk
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
 import com.kynsoft.finamer.payment.domain.services.*;
@@ -74,7 +74,7 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
 
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
-        ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(payment,
+        ProcessCreatePaymentDetail createPaymentDetail = new ProcessCreatePaymentDetail(payment,
                 command.getAmount(),
                 transactionDate,
                 employee,
@@ -120,7 +120,7 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         return null;
     }
 
-    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, PaymentDetailDto parentPaymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessPaymentDetail createPaymentDetail){
+    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, PaymentDetailDto parentPaymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessCreatePaymentDetail createPaymentDetail){
         this.paymentDetailService.create(paymentDetail);
         this.paymentDetailService.update(parentPaymentDetail);
         this.paymentService.update(payment);

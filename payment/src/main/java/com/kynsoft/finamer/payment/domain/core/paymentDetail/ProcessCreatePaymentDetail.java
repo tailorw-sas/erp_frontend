@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ProcessPaymentDetail {
+public class ProcessCreatePaymentDetail {
 
     private final PaymentDto payment;
     private final Double amount;
@@ -37,14 +37,14 @@ public class ProcessPaymentDetail {
     @Getter
     private boolean isPaymentApplied;
 
-    public ProcessPaymentDetail(PaymentDto payment,
-                                Double amount,
-                                OffsetDateTime transactionDate,
-                                ManageEmployeeDto employee,
-                                String remark,
-                                ManagePaymentTransactionTypeDto paymentTransactionType,
-                                ManagePaymentStatusDto paymentStatus,
-                                PaymentDetailDto parentDetail){
+    public ProcessCreatePaymentDetail(PaymentDto payment,
+                                      Double amount,
+                                      OffsetDateTime transactionDate,
+                                      ManageEmployeeDto employee,
+                                      String remark,
+                                      ManagePaymentTransactionTypeDto paymentTransactionType,
+                                      ManagePaymentStatusDto paymentStatus,
+                                      PaymentDetailDto parentDetail){
         this.payment = payment;
         this.amount = amount;
         this.transactionDate = transactionDate;

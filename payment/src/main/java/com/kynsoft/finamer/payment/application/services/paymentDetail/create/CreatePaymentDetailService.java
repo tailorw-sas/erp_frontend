@@ -1,25 +1,19 @@
 package com.kynsoft.finamer.payment.application.services.paymentDetail.create;
 
 import com.kynsof.share.core.domain.RulesChecker;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.managePaymentTransactionType.create.CreateManagePaymentTransactionTypeCommand;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeRequest;
 import com.kynsoft.finamer.payment.application.query.http.setting.paymenteTransactionType.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckBookingExistsApplyPayment;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfNewPaymentDetailIsApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.http.PaymentTransactionTypeHttpService;
-import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
@@ -28,10 +22,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Service
 public class CreatePaymentDetailService {
@@ -94,7 +85,7 @@ public class CreatePaymentDetailService {
 
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
-        ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(payment,
+        ProcessCreatePaymentDetail createPaymentDetail = new ProcessCreatePaymentDetail(payment,
                 amount,
                 transactionDate,
                 employee,
@@ -152,7 +143,7 @@ public class CreatePaymentDetailService {
         return null;
     }
 
-    private void saveChanges(PaymentDto payment, PaymentDetailDto paymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessPaymentDetail createPaymentDetail){
+    private void saveChanges(PaymentDto payment, PaymentDetailDto paymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessCreatePaymentDetail createPaymentDetail){
         PaymentDetailDto createdDetail = this.paymentDetailService.create(paymentDetail);
         paymentDetail.setParentId(createdDetail.getPaymentDetailId());
 

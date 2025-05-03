@@ -1,21 +1,12 @@
 package com.kynsoft.finamer.payment.application.services.paymentDetail.reverse;
 
 import com.kynsof.share.core.domain.RulesChecker;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
-import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionCommand;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.reverseTransaction.CreateReverseTransactionCommandHandler;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessReverseDetail;
-import com.kynsoft.finamer.payment.domain.core.undoApplyPayment.UndoApplyPayment;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessReversePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailReversedTransactionRule;
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.services.*;
-import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +14,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Service
 public class ReverseTransactionService {
@@ -76,7 +63,7 @@ public class ReverseTransactionService {
         RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplyPayment()));
         RulesChecker.checkRule(new CheckPaymentDetailReversedTransactionRule(paymentDetailDto));
 
-        ProcessReverseDetail processReverseDetail = new ProcessReverseDetail(paymentDetailDto,
+        ProcessReversePaymentDetail processReverseDetail = new ProcessReversePaymentDetail(paymentDetailDto,
                 parent,
                 transactionDate,
                 payment,

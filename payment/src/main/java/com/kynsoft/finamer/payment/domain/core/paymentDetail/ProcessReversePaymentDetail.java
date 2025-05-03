@@ -13,7 +13,7 @@ import java.util.UUID;
 import static com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode.APPLY_DEPOSIT;
 import static com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode.CASH;
 
-public class ProcessReverseDetail {
+public class ProcessReversePaymentDetail {
 
     private final PaymentDetailDto paymentDetail;
     private final PaymentDetailDto parent;
@@ -30,14 +30,14 @@ public class ProcessReverseDetail {
     @Getter
     private PaymentDetailDto paymentDetailClone;
 
-    public ProcessReverseDetail(PaymentDetailDto paymentDetail,
-                                PaymentDetailDto parent,
-                                OffsetDateTime transactionDate,
-                                PaymentDto payment,
-                                ManagePaymentStatusDto confirmedPaymentStatus,
-                                ManageEmployeeDto employee,
-                                PaymentStatusHistoryDto paymentStatusHistoryDto,
-                                ManageBookingDto booking){
+    public ProcessReversePaymentDetail(PaymentDetailDto paymentDetail,
+                                       PaymentDetailDto parent,
+                                       OffsetDateTime transactionDate,
+                                       PaymentDto payment,
+                                       ManagePaymentStatusDto confirmedPaymentStatus,
+                                       ManageEmployeeDto employee,
+                                       PaymentStatusHistoryDto paymentStatusHistoryDto,
+                                       ManageBookingDto booking){
         this.paymentDetail = paymentDetail;
         this.parent = parent;
         this.transactionDate = transactionDate;
