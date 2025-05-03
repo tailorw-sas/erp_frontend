@@ -153,6 +153,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         ManageEmployeeDto employee = this.getEmployee(UUID.fromString(request.getEmployeeId()));
         List<PaymentImportCache> paymentCacheList = this.getPaymentImportCachedList(request.getImportProcessId());
         if(paymentCacheList.isEmpty()){
+            printLog("End readPaymentCacheAndSave process because there are errors in validation");
             return;
         }
 
@@ -706,6 +707,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         Set<String> couponNumberSet = new HashSet<>();
         Set<Long> paymentDetailsAntiSet = new HashSet<>();
 
+        //TODO Optimizar esta consulta
         List<UUID> agencys = this.getEmployeeAgencyList(employee);
         List<UUID> hotels = this.getEmployeeHotelList(employee);
 
@@ -740,9 +742,9 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionCodeSet));
         List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
-        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailListByGenId(new ArrayList<>(paymentIdSet));//TODO Optimizar
         List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
-        List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));
+        List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));//TODO Usar el  custom repository
 
         List<UUID> hotelIds = paymentList.stream()
                 .map(payment -> payment.getHotel().getId())
@@ -793,7 +795,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionIdSet));
         List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
-        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailListByGenId(new ArrayList<>(paymentIdSet));
         List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
         List<PaymentDetailDto> paymentDetailListAnti = new ArrayList<>(getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet)));
 
@@ -815,6 +817,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<ManagePaymentTransactionTypeDto> getTransactionType(List<String> ids){
+        //TODO Validar para traer todo
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = new ArrayList<>(transactionTypeService.findByCodesAndPaymentInvoice(ids));
         ManagePaymentTransactionTypeDto depositTransactionType = transactionTypeService.findByDeposit();
         addManagePaymentTransactionTypeToList(depositTransactionType, managePaymentTransactionTypeList);
@@ -835,11 +838,14 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<ManageBookingDto> getBookings(List<Long> ids){
-        return bookingService.findByBookingIdIn(ids);
+        return bookingService.findAllByBookingIdIn(ids);
     }
 
     private List<PaymentDto> getPayments(List<Long> paymentIds){
-        return paymentService.findPaymentsByPaymentId(paymentIds);
+        printLog(String.format("Hay %d ids de payments", paymentIds.size()));
+        List<PaymentDto> payments = paymentService.findPaymentsByPaymentId(paymentIds);
+        printLog(String.format("Hay %d payments encontrados", payments.size()));
+        return payments;
     }
 
     private List<PaymentDetailDto> getPaymentDetailsProyection(List<Long> paymentsIds){
@@ -863,7 +869,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<PaymentDetailDto> getPaymentDetailListByGenId(List<Long> ids){
-        return paymentDetailService.findByPaymentDetailsIdIn(ids).stream()
+        return paymentDetailService.findByPaymentDetailsGenIdIn(ids).stream()
                 .map(PaymentDetail::toAggregate).collect(Collectors.toList());
     }
 }
