@@ -220,7 +220,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                     paymentStatusApplied,
                                     paymentDetailsToCreate);
                         } else {
-                            if(Objects.isNull(bookings)){
+                            if(Objects.isNull(bookings) || bookings.isEmpty()){
                                 PaymentDetailDto paymentDetailTypeDeposit = getDeposit(paymentImportCache,
                                         paymentDto,
                                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
@@ -707,7 +707,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         Set<String> couponNumberSet = new HashSet<>();
         Set<Long> paymentDetailsAntiSet = new HashSet<>();
 
-        //TODO Optimizar esta consulta
         List<UUID> agencys = this.getEmployeeAgencyList(employee);
         List<UUID> hotels = this.getEmployeeHotelList(employee);
 
