@@ -221,6 +221,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                     paymentDetailsToCreate);
                         } else {
                             if(Objects.isNull(bookings) || bookings.isEmpty()){
+                                printLog("Ingresa a bookings null o vacio");
                                 PaymentDetailDto paymentDetailTypeDeposit = getDeposit(paymentImportCache,
                                         paymentDto,
                                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
@@ -229,7 +230,8 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                         transactionDate,
                                         depositPaymentTransactionType);
                                 paymentDetailsToCreate.add(paymentDetailTypeDeposit);
-                            }else{
+                             }else{
+                                printLog("Ingresa a bookings tiene 1 elemento");
                                 ManageBookingDto booking = bookings.get(0);
                                 if (booking.getAmountBalance() == 0) {
                                     PaymentDetailDto paymentDetailTypeDeposit = sendDeposit(paymentImportCache,
