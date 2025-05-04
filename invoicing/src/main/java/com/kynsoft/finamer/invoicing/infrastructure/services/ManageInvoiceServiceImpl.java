@@ -223,7 +223,18 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public Page<ManageInvoiceSearchProjection> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAllProjected(specifications, pageable);
+        Pageable cleanedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        pageable.getSort().stream()
+                                .map(order -> "aging".equalsIgnoreCase(order.getProperty())
+                                        ? new Sort.Order(order.getDirection(), "dueDate")
+                                        : order)
+                                .toList()
+                )
+        );
+        return repositoryQuery.findAllProjected(specifications, cleanedPageable);
     }
 
     @Override
