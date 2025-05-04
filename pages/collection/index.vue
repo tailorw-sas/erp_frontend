@@ -494,7 +494,7 @@ const columnsInvoice = ref<IColumn[]>([
     columnClass: 'truncate-text' // Clase CSS para truncar
   },
   { field: 'invoiceAmount', header: 'I. Amnt', tooltip: 'Invoice Amount', type: 'number' },
-  { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
+  // { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
   { field: 'dueAmount', header: 'I. Balance', tooltip: 'Invoice Balance', type: 'number' },
   {
     field: 'aging',
