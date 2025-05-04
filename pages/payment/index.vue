@@ -921,14 +921,14 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 10,
   page: 0,
   sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 10,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -936,7 +936,7 @@ const applyPaymentPagination = ref<IPagination>({
 
 const applyPaymentPaginationTemp = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 10,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -947,14 +947,14 @@ const applyPaymentOnChangePage = ref<PageState>()
 const applyPaymentBookingPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 10,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentBookingPagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 10,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1144,14 +1144,14 @@ const applyPaymentOptionsOtherDeduction1 = ref({
 const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10000,
+  pageSize: 1000,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   page: 0,
-  limit: 10000,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1159,14 +1159,14 @@ const applyPaymentPaginationOtherDeduction = ref<IPagination>({
 const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10000,
+  pageSize: 1000,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
   page: 0,
-  limit: 10000,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -3327,8 +3327,10 @@ function closeModalCopyBatch() {
   applyPaymentOnChangePageOtherDeduction1.value = undefined
   applyPaymentPayloadOtherDeduction.value.filter = []
 }
+const manualFilter = ref('')
 
 async function openModalApplyPayment() {
+  manualFilter.value = ''
   paymentDetailsTypeDepositSelected.value = []
   openDialogApplyPayment.value = true
   invoiceAmmountSelected.value = 0
@@ -4271,21 +4273,27 @@ async function parseDataTableFilterForApplyPayment(event: any) {
   await applyPaymentGetList()
 }
 
-const manualFilter = ref('')
-
 const filteredInvoices = computed(() => {
-  const term = manualFilter.value.trim().toLowerCase()
-  if (!term) { return applyPaymentListOfInvoice.value }
+  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
 
+  if (!terms.length) {
+    return applyPaymentListOfInvoice.value // Si no hay término de búsqueda, devolver la lista completa
+  }
+
+  // Filtrar las filas basadas en que cada término esté presente en cualquier campo de la fila
   return applyPaymentListOfInvoice.value.filter((inv) => {
-    return (
-      inv.invoiceNumberPrefix?.toLowerCase().includes(term)
-      || String(inv.invoiceId)?.toLowerCase().includes(term)
-      || String(inv.invoiceNumber)?.toLowerCase().includes(term)
-      || inv.couponNumbers?.toLowerCase().includes(term)
-      || String(inv.invoiceAmount)?.toLowerCase().includes(term)
-      || String(inv.dueAmount)?.toLowerCase().includes(term)
-    )
+    return terms.some((term) => {
+      // Buscar cada término en todos los campos de la fila
+      return (
+        inv.invoiceNumberPrefix?.toLowerCase().includes(term)
+        || String(inv.invoiceId)?.toLowerCase().includes(term)
+        || String(inv.invoiceNumber)?.toLowerCase().includes(term)
+        || inv.couponNumbers?.toLowerCase().includes(term)
+        || String(inv.invoiceAmount)?.toLowerCase().includes(term)
+        || String(inv.dueAmount)?.toLowerCase().includes(term)
+        || inv.name?.toLowerCase().includes(term) // También puedes incluir más campos si es necesario
+      )
+    })
   })
 })
 
@@ -4294,6 +4302,7 @@ function onManualSearch() {
   applyPaymentPagination.value.page = 0
   // no hace falta llamar a la API: filteredInvoices se actualiza solo
 }
+
 async function parseDataTableFilterForApplyPayment1(payloadFilter: any) {
   const parseFilter: IFilter[] = await getEventFromTable(payloadFilter, applyPaymentColumns.value) || []
 
