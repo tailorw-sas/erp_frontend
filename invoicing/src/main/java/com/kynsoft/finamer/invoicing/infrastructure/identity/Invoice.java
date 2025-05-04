@@ -117,14 +117,14 @@ public class Invoice {
     private LocalDateTime updatedAt;
 
     // [LEGACY] Campo obsoleto en BD. Usar solo para compatibilidad estructural. No usar en lógica.
-    @Column(name = "aging", nullable = false, columnDefinition = "integer default 0")
-    private Integer storedAging;
-
-    @org.hibernate.annotations.Formula("GREATEST(0, current_date - TO_DATE(duedate::text, 'YYYYMMDD'))")
-    private Integer aging;
+//    @Column(name = "aging", nullable = false, columnDefinition = "integer default 0")
+//    private Integer storedAging;
 
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean cloneParent;
+
+    @org.hibernate.annotations.Formula("GREATEST(0, current_date - COALESCE(duedate::date,'1900-01-01'::DATE))")
+    private Integer aging;
 
     public Invoice(ManageInvoiceDto dto) {
         this.id = dto.getId();
