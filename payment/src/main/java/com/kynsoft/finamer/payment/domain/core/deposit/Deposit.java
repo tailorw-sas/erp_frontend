@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.core.deposit;
 
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -52,10 +53,10 @@ public class Deposit {
     }
 
     private void calculate(PaymentDto paymentDto, double amount) {
-        paymentDto.setDepositAmount(paymentDto.getDepositAmount() + amount);
-        paymentDto.setDepositBalance(paymentDto.getDepositBalance() + amount);
-        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
-        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
+        paymentDto.setDepositAmount(BankerRounding.round(paymentDto.getDepositAmount() + amount));
+        paymentDto.setDepositBalance(BankerRounding.round(paymentDto.getDepositBalance() + amount));
+        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
+        paymentDto.setPaymentBalance(BankerRounding.round(paymentDto.getPaymentBalance() - amount));
     }
 
 }
