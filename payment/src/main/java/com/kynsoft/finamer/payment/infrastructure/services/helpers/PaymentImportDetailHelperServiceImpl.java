@@ -205,14 +205,13 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         List<ManageBookingDto> bookings = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
                         if(Objects.nonNull(bookings) && bookings.size() > 1){
                             ManagePaymentTransactionTypeDto transactionTypeDto = cache.getPaymentInvoiceTransactionType();
-                            String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
                             //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
                             createDetailAndDeposit(paymentImportCache,
                                     null,
                                     transactionTypeDto,
                                     paymentDto,
                                     Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                    remarks,
+                                    String.format("Payment was not applied because the coupon '%s' is duplicated.", paymentImportCache.getCoupon()),
                                     employee,
                                     depositPaymentTransactionType,
                                     transactionDate,
@@ -225,11 +224,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                         paymentDto,
                                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
                                         true,
-                                        "#coupon not found",
+                                        String.format("Coupon '%s' not found", paymentImportCache.getCoupon()),
                                         transactionDate,
                                         depositPaymentTransactionType);
                                 paymentDetailsToCreate.add(paymentDetailTypeDeposit);
-                            }else{
+                             }else{
                                 ManageBookingDto booking = bookings.get(0);
                                 if (booking.getAmountBalance() == 0) {
                                     PaymentDetailDto paymentDetailTypeDeposit = sendDeposit(paymentImportCache,
@@ -299,7 +298,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                    List<PaymentDetailDto> paymentDetailsToCreate,
                                    List<PaymentDetailDto> paymentDetailsAntiToUpdate,
                                    List<ManageBookingDto> bookingsToUpdate){
-        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
+        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentDetailId(Long.parseLong(paymentImportCache.getAnti()));
 
         if(Objects.isNull(bookingDto)){
             List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
@@ -325,7 +324,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
                         employee,
                         managePaymentTransactionTypeDto,
-                        " #payment was not applied because the coupon is duplicated.",
+                        String.format("payment was not applied because the coupon '%s' is duplicated.", paymentImportCache.getCoupon()),
                         null,
                         paymentDto,
                         transactionDate,
