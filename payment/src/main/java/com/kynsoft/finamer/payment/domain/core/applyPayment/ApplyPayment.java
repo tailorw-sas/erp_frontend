@@ -76,15 +76,15 @@ public class ApplyPayment {
     private void updatePayment(PaymentDto paymentDto, Double amount){
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
-        UpdateIfNotNull.updateDouble(paymentDto::setIdentified, paymentDto.getIdentified() + amount, updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentDto::setNotIdentified, paymentDto.getNotIdentified() - amount, updatePayment::setUpdate);
+        UpdateIfNotNull.updateDouble(paymentDto::setIdentified, BankerRounding.round(paymentDto.getIdentified() + amount), updatePayment::setUpdate);
+        UpdateIfNotNull.updateDouble(paymentDto::setNotIdentified, BankerRounding.round(paymentDto.getNotIdentified() - amount), updatePayment::setUpdate);
 
         //Suma de trx tipo check Cash + Check Apply Deposit  en el Manage Payment Transaction Type
-        UpdateIfNotNull.updateDouble(paymentDto::setApplied, paymentDto.getApplied() + amount, updatePayment::setUpdate);
+        UpdateIfNotNull.updateDouble(paymentDto::setApplied, BankerRounding.round(paymentDto.getApplied() + amount), updatePayment::setUpdate);
 
         //Las transacciones de tipo Cash se restan al Payment Balance.
-        UpdateIfNotNull.updateDouble(paymentDto::setPaymentBalance, paymentDto.getPaymentBalance() - amount, updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentDto::setNotApplied, paymentDto.getNotApplied() - amount, updatePayment::setUpdate);
+        UpdateIfNotNull.updateDouble(paymentDto::setPaymentBalance, BankerRounding.round(paymentDto.getPaymentBalance() - amount), updatePayment::setUpdate);
+        UpdateIfNotNull.updateDouble(paymentDto::setNotApplied, BankerRounding.round(paymentDto.getNotApplied() - amount), updatePayment::setUpdate);
     }
 
     private void updateBooking(ManageBookingDto booking, Double amount){
