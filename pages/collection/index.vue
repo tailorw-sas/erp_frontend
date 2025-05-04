@@ -1096,9 +1096,6 @@ async function getListInvoice() {
     listItemsInvoice.value = []
     const newListItems = []
 
-    // totalInvoiceAmount.value = 0
-    // totalDueAmount.value = 0
-
     // Filtros por reconciledStatus y sentStatus ----------------------------------------------------------------------------------------------
     const objFilterByReconciledStatus = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceStatus.reconciledStatus')
     if (objFilterByReconciledStatus) {
@@ -1145,7 +1142,6 @@ async function getListInvoice() {
     // Aqui termina el filtro por el check Enable To Policy para el Status ----------------------------------------------------------------------------------------------
 
     // Filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
-
     const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
     if (objFilterByInvoiceType) {
       objFilterByInvoiceType.value = true
@@ -1178,13 +1174,12 @@ async function getListInvoice() {
     // Aqui termina el filtro por el dueAmount ----------------------------------------------------------------------------------------------
 
     const response = await GenericService.searchWithoutSearch(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { paginatedResponse, summaryResponse } = response
+    const { data: dataList, page, size, totalElements, totalPages } = paginatedResponse
     paginationInvoice.value.page = page
     paginationInvoice.value.limit = size
     paginationInvoice.value.totalElements = totalElements
     paginationInvoice.value.totalPages = totalPages
-
-    paginationInvoice.value.totalElements = totalElements
 
     const existingIds = new Set(listItemsInvoice.value.map(item => item.id))
 
@@ -1213,67 +1208,46 @@ async function getListInvoice() {
           dueAmount: iterator?.dueAmount || 0,
           invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
+          invoiceStatus: iterator?.manageInvoiceStatus,
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
           rowClass: iterator.aging > 60 ? 'row-aging' : '' // ✅ Asigna la clase aquí
         })
-
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
-      // totalInvoiceAmount.value += iterator.invoiceAmount
-      // totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
 
     listItemsInvoice.value = [...listItemsInvoice.value, ...newListItems]
+
+    // Tomar los valores del resumen directamente del summaryResponse si existe
+    if (summaryResponse) {
+      count.days30Count = summaryResponse.totalInvoiceWith30 || 0
+      count.days30Balance = summaryResponse.totalInvoiceBalanceWithAging30 || 0
+      count.days30Percentage = summaryResponse.totalInvoicePercentWithAging30 || 0
+
+      count.days60Count = summaryResponse.totalInvoiceWithAging60 || 0
+      count.days60Balance = summaryResponse.totalInvoiceBalanceWithAging60 || 0
+      count.days60Percentage = summaryResponse.totalInvoicePercentWithAging60 || 0
+
+      count.days90Count = summaryResponse.totalInvoiceWithAging90 || 0
+      count.days90Balance = summaryResponse.totalInvoiceBalanceWithAging90 || 0
+      count.days90Percentage = summaryResponse.totalInvoicePercentWithAging90 || 0
+
+      count.days120Count = summaryResponse.totalInvoiceWithAging120 || 0
+      count.days120Balance = summaryResponse.totalInvoiceBalanceWithAging120 || 0
+      count.days120Percentage = summaryResponse.totalInvoicePercentWithAging120 || 0
+
+      count.days0Count = summaryResponse.totalInvoiceWithAging0 || 0
+
+      count.invoiceTotalAmount = summaryResponse.totalInvoiceAmount || 0
+      count.invoiceDueTotalAmount = summaryResponse.totalInvoiceDueAmount || 0
+    }
     return listItemsInvoice
   }
-
   catch (error) {
     console.error(error)
   }
   finally {
     optionsInv.value.loading = false
-    if (paginationInvoice.value.totalElements !== 0) {
-      const agingBuckets = { 0: [], 30: [], 60: [], 90: [], 120: [] }
-
-      listItemsInvoice.value.forEach((item) => {
-        const aging = item.aging
-        const bucket = [30, 60, 90, 120].find(limit => aging === limit) ?? 0
-        agingBuckets[bucket].push(item)
-      })
-
-      const totalAmount = count.invoiceTotalAmount
-
-      const calc = (items: any[]) => {
-        const balance = items.reduce((sum, item) => sum + item.dueAmount, 0)
-        const percentage = totalAmount > 0 ? (balance * 100) / totalAmount : 0
-        return { count: items.length, balance, percentage }
-      }
-
-      const res30 = calc(agingBuckets[30])
-      const res60 = calc(agingBuckets[60])
-      const res90 = calc(agingBuckets[90])
-      const res120 = calc(agingBuckets[120])
-      const res0 = agingBuckets[0].length
-
-      count.days30Count = res30.count
-      count.days30Balance = res30.balance
-      count.days30Percentage = res30.percentage
-
-      count.days60Count = res60.count
-      count.days60Balance = res60.balance
-      count.days60Percentage = res60.percentage
-
-      count.days90Count = res90.count
-      count.days90Balance = res90.balance
-      count.days90Percentage = res90.percentage
-
-      count.days120Count = res120.count
-      count.days120Balance = res120.balance
-      count.days120Percentage = res120.percentage
-
-      count.days0Count = res0
-    }
     subTotalsInvoice.value = { ...count }
   }
 }
