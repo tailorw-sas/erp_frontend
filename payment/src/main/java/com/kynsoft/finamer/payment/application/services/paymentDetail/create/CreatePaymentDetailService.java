@@ -22,6 +22,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -73,17 +74,18 @@ public class CreatePaymentDetailService {
                                    String remark,
                                    UUID bookingId,
                                    Boolean applyPayment,
-                                   IMediator mediator){
+                                   IMediator mediator,
+                                   UUID parentPaymentDetailId){
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.getPaymenTransactionType(transactionTypeId, mediator);
-
-        RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
-
-        this.payment = this.paymentService.findByIdCustom(paymentId);
+        PaymentDetailDto parentPaymentDetail = this.getParentPaymentDetail(paymentTransactionTypeDto, parentPaymentDetailId);
+        this.payment = this.getPayment(paymentTransactionTypeDto, paymentId, parentPaymentDetail);
         ManageEmployeeDto employee = this.employeeService.findById(employeeId);
         ManagePaymentStatusDto paymentStatusDto = this.statusService.findByApplied();
         this.booking = this.getBookingAndValidate(applyPayment, bookingId, amount);
-
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
+
+        //Hacer una regla que si el paymentTransacionType es Apply Deposit el parentPaymentDetail no debe ser null
+        //RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
 
         ProcessCreatePaymentDetail createPaymentDetail = new ProcessCreatePaymentDetail(payment,
                 amount,
@@ -92,7 +94,7 @@ public class CreatePaymentDetailService {
                 remark,
                 paymentTransactionTypeDto,
                 paymentStatusDto,
-                null
+                parentPaymentDetail
         );
         createPaymentDetail.process();
         PaymentDetailDto paymentDetail = createPaymentDetail.getDetail();
@@ -122,6 +124,21 @@ public class CreatePaymentDetailService {
         }
 
         return paymentTransactionTypeDto;
+    }
+
+    private PaymentDetailDto getParentPaymentDetail(ManagePaymentTransactionTypeDto paymentTransactionTypeDto, UUID parentPaymentDetailId){
+        if(paymentTransactionTypeDto.getApplyDeposit()){
+            return this.paymentDetailService.findById(parentPaymentDetailId);
+        }
+        return null;
+    }
+
+    private PaymentDto getPayment(ManagePaymentTransactionTypeDto paymentTransactionType, UUID paymentId, PaymentDetailDto parentPaymentDetail){
+        if(paymentTransactionType.getApplyDeposit()){
+            return parentPaymentDetail.getPayment();
+        }
+
+        return this.paymentService.findByIdCustom(paymentId);
     }
 
     private OffsetDateTime getTransactionDate(UUID hotel) {

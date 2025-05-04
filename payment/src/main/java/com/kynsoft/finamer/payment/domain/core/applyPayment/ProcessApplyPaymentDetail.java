@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckBookingExistsApplyPayment;
 
 import java.time.OffsetDateTime;
 
@@ -30,6 +31,7 @@ public class ProcessApplyPaymentDetail {
 
     public void process(){
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentDetail, "id", "Payment Detail ID cannot be null."));
+        RulesChecker.checkRule(new CheckBookingExistsApplyPayment(true, booking));
         RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.amount, this.booking.getAmountBalance()));
 
         updatePayment(this.payment, this.amount);

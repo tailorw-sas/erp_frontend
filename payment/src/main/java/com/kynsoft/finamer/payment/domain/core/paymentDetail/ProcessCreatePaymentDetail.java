@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckGreaterThanOrEqualToTheTransactionAmountRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
 import lombok.Getter;
 
@@ -77,20 +78,18 @@ public class ProcessCreatePaymentDetail {
                 this.updatePaymentTypeOtherDeductions(this.payment, this.amount);
             }
             case APPLY_DEPOSIT -> {
+                RulesChecker.checkRule(new CheckGreaterThanOrEqualToTheTransactionAmountRule(this.amount, parentDetail.getApplyDepositValue()));//TODO Verificar
                 this.updatePaymentTypeApplyDeposit(this.payment, this.amount);
                 this.updateParentDetailWhenApplyDeposit(this.detail, this.parentDetail);
                 this.updateParentDetail(this.detail, this.parentDetail, this.amount);
             }
         }
-
-        detail.setEffectiveDate(this.transactionDate);//TODO Cuando se aplica
     }
 
     private void validate() {
         if (payment == null) throw new IllegalArgumentException("Payment must not be null");
         if (transactionDate == null) throw new IllegalArgumentException("transactionDate must not be null");
         if (employee == null) throw new IllegalArgumentException("employee must not be null");
-        if (remark == null) throw new IllegalArgumentException("remark must not be null");
         if (paymentTransactionType == null) throw new IllegalArgumentException("paymentTransactionType must not be null");
         if (paymentStatus == null && !paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit()) throw new IllegalArgumentException("paymentStatus must not be null");
     }
@@ -122,7 +121,7 @@ public class ProcessCreatePaymentDetail {
     }
 
     private String getRemark(String remark, ManagePaymentTransactionTypeDto paymentTransactionType){
-        if(remark.isBlank()){
+        if(Objects.isNull(remark) || remark.isBlank()){
             return paymentTransactionType.getDefaultRemark();
         }
         return remark;

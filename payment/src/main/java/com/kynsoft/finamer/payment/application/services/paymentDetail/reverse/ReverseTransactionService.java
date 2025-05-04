@@ -8,6 +8,7 @@ import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetail
 import com.kynsoft.finamer.payment.domain.rules.undoApplication.CheckApplyPaymentRule;
 import com.kynsoft.finamer.payment.domain.services.*;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
@@ -27,6 +28,12 @@ public class ReverseTransactionService {
     private final IPaymentCloseOperationService paymentCloseOperationService;
     private final IManageBookingService bookingService;
 
+    @Getter
+    private PaymentDto payment;
+
+    @Getter
+    private ManageBookingDto booking;
+
     public ReverseTransactionService(IPaymentDetailService paymentDetailService,
                                      IPaymentService paymentService,
                                      IManageEmployeeService employeeService,
@@ -44,39 +51,39 @@ public class ReverseTransactionService {
     }
 
     @Transactional
-    public void reverseTransaction(UUID paymentDetailId,
+    public PaymentDetailDto reverseTransaction(UUID paymentDetailId,
                                    UUID employeeId){
 
-        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(paymentDetailId);
-        PaymentDto payment = paymentDetailDto.getPayment();
-        OffsetDateTime transactionDate = this.getTtransactionDate(payment.getHotel().getId());
+        PaymentDetailDto paymentDetailToReverse = this.paymentDetailService.findById(paymentDetailId);
+        this.payment = paymentDetailToReverse.getPayment();
+        OffsetDateTime transactionDate = this.getTtransactionDate(this.payment.getHotel().getId());
         ManageEmployeeDto employeeDto = this.employeeService.findById(employeeId);
 
         PaymentStatusHistoryDto paymentStatusHistoryDto = new PaymentStatusHistoryDto();
 
-        PaymentDetailDto parent = this.getParentPaymentDetail(paymentDetailDto);
-        ManageBookingDto bookingDto = paymentDetailDto.getManageBooking();
+        PaymentDetailDto parent = this.getParentPaymentDetail(paymentDetailToReverse);
+        this.booking = paymentDetailToReverse.getManageBooking();
         ManagePaymentStatusDto confirmedPaymentStatus = this.paymentStatusService.findByConfirmed();
 
-        //Lo que no puede suceder es que si es other deductions cambie el estado del payment.
+        RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailToReverse.getApplyPayment()));
+        RulesChecker.checkRule(new CheckPaymentDetailReversedTransactionRule(paymentDetailToReverse));
 
-        RulesChecker.checkRule(new CheckApplyPaymentRule(paymentDetailDto.getApplyPayment()));
-        RulesChecker.checkRule(new CheckPaymentDetailReversedTransactionRule(paymentDetailDto));
-
-        ProcessReversePaymentDetail processReverseDetail = new ProcessReversePaymentDetail(paymentDetailDto,
+        ProcessReversePaymentDetail processReverseDetail = new ProcessReversePaymentDetail(paymentDetailToReverse,
                 parent,
                 transactionDate,
-                payment,
+                this.payment,
                 confirmedPaymentStatus,
                 employeeDto,
                 paymentStatusHistoryDto,
-                bookingDto
+                this.booking
         );
         processReverseDetail.process();
 
         PaymentDetailDto paymentDetailClone = processReverseDetail.getPaymentDetailClone();
 
-        this.saveChanges(paymentDetailClone, paymentDetailDto, payment, processReverseDetail.getIsPaymentChangeStatus(), paymentStatusHistoryDto, bookingDto);
+        this.saveChanges(paymentDetailClone, paymentDetailToReverse, this.payment, processReverseDetail.getIsPaymentChangeStatus(), paymentStatusHistoryDto, this.booking);
+
+        return paymentDetailToReverse;
     }
 
     private PaymentDetailDto getParentPaymentDetail(PaymentDetailDto paymentDetailDto){

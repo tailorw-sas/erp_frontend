@@ -35,7 +35,8 @@ public class CreatePaymentDetailCommandHandler implements ICommandHandler<Create
                 command.getRemark(),
                 command.getBooking(),
                 command.getApplyPayment(),
-                command.getMediator());
+                command.getMediator(),
+                null);
 
         PaymentDto payment = createPaymentDetailService.getPayment();
         ManageBookingDto booking = createPaymentDetailService.getBooking();

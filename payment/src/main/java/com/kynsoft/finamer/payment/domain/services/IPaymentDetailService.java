@@ -18,7 +18,7 @@ public interface IPaymentDetailService {
 
     void createAll(List<PaymentDetail> dto);
 
-    void update(PaymentDetailDto dto);
+    PaymentDetailDto update(PaymentDetailDto dto);
 
     void delete(PaymentDetailDto dto);
 

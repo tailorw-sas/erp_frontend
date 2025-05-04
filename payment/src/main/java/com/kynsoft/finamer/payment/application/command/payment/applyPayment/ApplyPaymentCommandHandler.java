@@ -10,11 +10,7 @@ import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafk
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
 import com.kynsoft.finamer.payment.domain.services.IManageEmployeeService;
@@ -90,7 +86,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPayment(), "id", "Payment ID cannot be null."));
 
         List<UpdateBookingBalanceKafka> kafkaList = new ArrayList<>();
-        List<Booking> bookingsList = new ArrayList<>();
+        //List<Booking> bookingsList = new ArrayList<>();
         List<PaymentDetail> detailTypeDeposits = new ArrayList<>();
         List<PaymentDetail> createPaymentDetails = new ArrayList<>();
 
@@ -99,19 +95,18 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();//AANT
         ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();//PAGO
 
-        List<Invoice> invoiceQueue = createInvoiceQueue(command, bookingsList);
+        List<ManageInvoiceDto> invoiceSorted = createInvoiceQueue(command.getInvoices());
         List<PaymentDetailDto> deposits = this.createPaymentDetailsTypeDepositQueue(command.getDeposits(), detailTypeDeposits);
 
-        List<UUID> hotelIds = invoiceQueue.stream().map(invoice -> invoice.getHotel().getId()).collect(Collectors.toList());
-        Map<UUID, PaymentCloseOperationDto> paymentCloseOperationByHotelMap = this.getTransactionDateMapByHotel(hotelIds);
+        Map<UUID, PaymentCloseOperationDto> paymentCloseOperationByHotelMap = this.getPaymentCloseOperationMap(invoiceSorted);
 
         double paymentBalance = updatePayment.getPaymentBalance();
         double notApplied = updatePayment.getNotApplied();
         double depositBalance = updatePayment.getDepositBalance();
-        boolean applyPaymentBalance =  (updatePayment.getPaymentBalance() == 0) ? false : true;
-        for (Invoice manageInvoiceDto : invoiceQueue) {
-            List<Booking> bookingDtoList = getSortedBookings(manageInvoiceDto);
-            for (Booking bookingDto : bookingDtoList) {
+        boolean applyPaymentBalance = updatePayment.getPaymentBalance() != 0;
+        for (ManageInvoiceDto manageInvoiceDto : invoiceSorted) {
+            this.sortBookingsInInvoice(manageInvoiceDto);
+            for (ManageBookingDto bookingDto : manageInvoiceDto.getBookings()) {
                 //TODO: almaceno el valor de Balance del Booking porque puede que no llegue a cero cuando el Payment Balance si lo haga. Y todavia
                 // tenga valor el notApplied
                 double amountBalance = bookingDto.getAmountBalance();
@@ -206,6 +201,12 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
     }
 
+    private Map<UUID, PaymentCloseOperationDto> getPaymentCloseOperationMap(List<ManageInvoiceDto> invoices){
+        List<UUID> hotelIds = invoices.stream().map(invoice -> invoice.getHotel().getId()).collect(Collectors.toList());
+        return this.paymentCloseOperationService.findByHotelIds(hotelIds).stream()
+                .collect(Collectors.toMap(paymentCloseOperationDto -> paymentCloseOperationDto.getHotel().getId(),
+                        paymentCloseOperationDto -> paymentCloseOperationDto));
+    }
     /**
      * Ordena los Booking de menor a mayor por su AmountBalance.
      *
@@ -221,25 +222,13 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return bookingDtoList;
     }
 
-    /**
-     * Ordena las Invoice de menor a mayor por su InvoiceAmount.
-     *
-     * @param command
-     * @return
-     */
-    private List<Invoice> createInvoiceQueue(ApplyPaymentCommand command, List<Booking> bookingsList) {
-        List<Invoice> queue = new ArrayList<>();
+    private List<ManageInvoiceDto> createInvoiceQueue(List<UUID> invoiceIds) {
+        List<ManageInvoiceDto> queue = this.manageInvoiceService.findSortedInvoicesByIdIn(invoiceIds);
         //List<ManageInvoiceDto> queue = new ArrayList<>();
-        try {
-            queue.addAll(this.manageInvoiceService.findInvoiceWithEntityGraphByIdIn(command.getInvoices()));
+        /*try {
+            queue.addAll(this.manageInvoiceService.findSortedInvoicesByIdIn(command.getInvoices()));
         } catch (Exception e) {
             for (UUID invoice : command.getInvoices()) {
-                /**
-                 * *
-                 * TODO: Aqui se define un flujo alternativo por HTTP si en
-                 * algun momento kafka falla y las invoice no se replicaron,
-                 * para evitar que el flujo de aplicacion de pago falle.
-                 */
                 InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
                 this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
             }
@@ -248,7 +237,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             int delay = 1;
             while (maxAttempts > 0) {
                 try {
-                    queue.addAll(manageInvoiceService.findInvoiceWithEntityGraphByIdIn(command.getInvoices()));
+                    queue.addAll(manageInvoiceService.findSortedInvoicesByIdIn(command.getInvoices()));
                     break;
                 } catch (Exception exp) {
                     //log.warn("Retrying invoice fetch. Attempts left: {}. Error: {}", maxAttempts, exp.getMessage());
@@ -263,11 +252,13 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
             }
         }
 
-        queue.sort(Comparator.comparingDouble(Invoice::getInvoiceAmount));
-        for (Invoice invoice : queue) {
-            bookingsList.addAll(invoice.getBookings());
-        }
+        //queue.sort(Comparator.comparingDouble(Invoice::getInvoiceAmount));
+         */
         return queue;
+    }
+
+    private void sortBookingsInInvoice(ManageInvoiceDto invoices){
+        invoices.getBookings().sort(Comparator.comparingDouble(ManageBookingDto::getAmountBalance));
     }
 
     private PaymentDetail createDetailsTypeCash(double invoiceAmount, ManagePaymentTransactionType transactionTypeDto, Payment updatePayment, OffsetDateTime transactionDate) {
@@ -417,9 +408,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
     }
 
     private Map<UUID, PaymentCloseOperationDto> getTransactionDateMapByHotel(List<UUID> hotelIds){
-        return this.paymentCloseOperationService.findByHotelIds(hotelIds).stream()
-                .collect(Collectors.toMap(paymentCloseOperationDto -> paymentCloseOperationDto.getHotel().getId(),
-                        paymentCloseOperationDto -> paymentCloseOperationDto));
+        return
     }
 
     private OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperationDto) {

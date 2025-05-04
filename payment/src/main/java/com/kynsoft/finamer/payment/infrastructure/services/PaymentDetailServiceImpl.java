@@ -55,12 +55,10 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
-    public void update(PaymentDetailDto dto) {
+    public PaymentDetailDto update(PaymentDetailDto dto) {
         PaymentDetail update = new PaymentDetail(dto);
-
-        update.setUpdatedAt(OffsetDateTime.now(ZoneId.of("UTC")));
-
-        this.repositoryCommand.save(update);
+        update.setUpdatedAt(OffsetDateTime.now());
+        return this.repositoryCommand.saveAndFlush(update).toAggregate();
     }
 
     @Override
