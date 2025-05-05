@@ -19,10 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentServiceImpl implements IPaymentService {
@@ -37,6 +35,14 @@ public class PaymentServiceImpl implements IPaymentService {
     public PaymentDto create(PaymentDto dto) {
         Payment data = new Payment(dto);
         return this.repositoryCommand.save(data).toAggregate();
+    }
+
+    @Override
+    public void createAll(List<PaymentDto> paymentList) {
+        if(Objects.nonNull(paymentList)){
+            List<Payment> payments = paymentList.stream().map(Payment::new).collect(Collectors.toList());
+            repositoryCommand.saveAll(payments);
+        }
     }
 
     @Override

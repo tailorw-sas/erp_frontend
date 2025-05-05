@@ -32,7 +32,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -288,7 +287,7 @@ public class PaymentImportExpenseBookingHelperServiceImpl extends AbstractPaymen
     }
 
     private LocalDate getTransactionDate(UUID hotelId) {
-        PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelIds(hotelId);
+        PaymentCloseOperationDto closeOperationDto = closeOperationService.findByHotelId(hotelId);
         LocalDate firstDateOgMonth = LocalDate.now().withDayOfMonth(1);
         if (closeOperationDto.getEndDate().isBefore(firstDateOgMonth)) {
             return closeOperationDto.getEndDate();

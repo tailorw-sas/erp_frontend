@@ -19,6 +19,8 @@ public interface PaymentDetailCustomRepository {
 
     List<PaymentDetail> findAllByPaymentIdCustom(UUID id);
 
+    List<PaymentDetail> findChildrenWithDetailsByParentId(UUID parentId);
+
     List<PaymentDetail> findChildrensByParentId(Long parentId);
 
     List<PaymentDetail> findAllByPaymentGenIdIn(List<Long> genIds);

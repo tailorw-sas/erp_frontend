@@ -3,17 +3,13 @@ package com.kynsoft.finamer.payment.domain.core.applyPayment;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
-import lombok.Getter;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckBookingExistsApplyPayment;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
-public class ApplyPaymentDetail {
+public class ProcessApplyPaymentDetail {
 
     private final PaymentDto payment;
     private final PaymentDetailDto paymentDetail;
@@ -21,11 +17,11 @@ public class ApplyPaymentDetail {
     private final OffsetDateTime transactionDate;
     private final Double amount;
 
-    public ApplyPaymentDetail(PaymentDto payment,
-                              PaymentDetailDto paymentDetail,
-                              ManageBookingDto booking,
-                              OffsetDateTime transactionDate,
-                              Double amount){
+    public ProcessApplyPaymentDetail(PaymentDto payment,
+                                     PaymentDetailDto paymentDetail,
+                                     ManageBookingDto booking,
+                                     OffsetDateTime transactionDate,
+                                     Double amount){
         this.booking = booking;
         this.payment = payment;
         this.paymentDetail = paymentDetail;
@@ -33,8 +29,9 @@ public class ApplyPaymentDetail {
         this.amount = amount;
     }
 
-    public void applyPayment(){
+    public void process(){
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentDetail, "id", "Payment Detail ID cannot be null."));
+        RulesChecker.checkRule(new CheckBookingExistsApplyPayment(true, booking));
         RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.amount, this.booking.getAmountBalance()));
 
         updatePayment(this.payment, this.amount);
@@ -43,9 +40,9 @@ public class ApplyPaymentDetail {
     }
 
     private void updatePayment(PaymentDto paymentDto, Double amount){
-//        paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
-//        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
-        this.payment.setApplyPayment(true);
+        if(!this.payment.isApplyPayment()){
+            this.payment.setApplyPayment(true);
+        }
     }
 
     private void updateBooking(ManageBookingDto booking, Double amount){

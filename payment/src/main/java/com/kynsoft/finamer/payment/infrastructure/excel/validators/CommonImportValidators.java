@@ -110,7 +110,7 @@ public class CommonImportValidators {
               isValidTransactionDate ) {
             ManageHotelDto manageHotelDto = hotelService.findByCode(hotelCode);
             if (Status.ACTIVE.name().equals(manageHotelDto.getStatus())) {
-                PaymentCloseOperationDto paymentCloseOperationDto = closeOperationService.findByHotelIds(manageHotelDto.getId());
+                PaymentCloseOperationDto paymentCloseOperationDto = closeOperationService.findByHotelId(manageHotelDto.getId());
                 LocalDate beginDate = paymentCloseOperationDto.getBeginDate();
                 LocalDate endDate = paymentCloseOperationDto.getEndDate();
                 LocalDate transactionDate = DateUtil.parseDateToLocalDate(transactionDateArg, dateFormat);

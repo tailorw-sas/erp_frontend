@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.command.paymentDetail.undoReverseTransaction.apply;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -19,6 +20,7 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -72,7 +74,8 @@ public class ReverseTransactionApplyPaymentDetailCommandHandler implements IComm
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, deposit, OffsetDateTime.now()));
+            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, deposit, OffsetDateTime.now());
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
         } catch (Exception e) {
         }
 

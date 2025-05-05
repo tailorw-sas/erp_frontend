@@ -16,9 +16,9 @@ public interface IPaymentDetailService {
 
     void create(PaymentDetail dto);
 
-    void createAll(List<PaymentDetail> dto);
+    public List<PaymentDetailDto> createAll(List<PaymentDetailDto> dto);
 
-    void update(PaymentDetailDto dto);
+    PaymentDetailDto update(PaymentDetailDto dto);
 
     void delete(PaymentDetailDto dto);
 
@@ -49,8 +49,6 @@ public interface IPaymentDetailService {
     PaymentDetailSimple findPaymentDetailsSimpleCacheableByGenId(int id);
 
     List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids);
-
-    List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids);
 
     List<PaymentDetailDto> change(List<PaymentDetail> pd);
 

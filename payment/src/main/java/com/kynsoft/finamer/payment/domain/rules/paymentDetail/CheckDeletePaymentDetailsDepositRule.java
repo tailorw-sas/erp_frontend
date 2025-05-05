@@ -16,7 +16,7 @@ public class CheckDeletePaymentDetailsDepositRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return !this.detailDto.getPaymentDetails().isEmpty();
+        return this.detailDto.getPaymentDetails() != null && !this.detailDto.getPaymentDetails().isEmpty();
     }
 
 }

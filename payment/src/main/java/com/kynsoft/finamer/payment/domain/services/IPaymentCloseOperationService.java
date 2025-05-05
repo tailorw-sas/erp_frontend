@@ -17,15 +17,15 @@ public interface IPaymentCloseOperationService {
 
     void delete(PaymentCloseOperationDto dto);
 
-    List<PaymentCloseOperationDto> findByHotelIds(List<UUID> hotelIds);
+    List<PaymentCloseOperationDto> findByHotelId(List<UUID> hotelIds);
 
     PaymentCloseOperationDto findById(UUID id);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
-    Long findByHotelId(UUID hotelId);
+    Long countByHotelId(UUID hotelId);
 
-    PaymentCloseOperationDto findByHotelIds(UUID hotel);
+    PaymentCloseOperationDto findByHotelId(UUID hotel);
 
     PaymentCloseOperationDto findByHotelIdsCacheable(UUID hotel);
 

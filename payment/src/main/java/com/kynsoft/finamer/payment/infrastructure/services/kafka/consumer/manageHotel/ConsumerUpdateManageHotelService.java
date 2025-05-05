@@ -38,7 +38,7 @@ public class ConsumerUpdateManageHotelService {
             );
             mediator.send(command);
 
-            if (paymentCloseOperationService.findByHotelId(objKafka.getId()) == 0) {
+            if (paymentCloseOperationService.countByHotelId(objKafka.getId()) == 0) {
                 CreatePaymentCloseOperationCommand commandCloseOperationCommand = new CreatePaymentCloseOperationCommand(
                         Status.ACTIVE,
                         objKafka.getId(),
