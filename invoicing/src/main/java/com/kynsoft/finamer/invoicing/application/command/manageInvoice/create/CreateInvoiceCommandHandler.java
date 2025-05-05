@@ -39,21 +39,12 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceType());
-
-        if (hotelDto.getManageTradingCompanies() != null && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotelDto.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotelDto.getCode();
-        }
-
-
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceType());
 
 
-        ManageInvoiceDto creInvoiceDto = new ManageInvoiceDto(command.getId(), 0L, 0L,
-                invoiceNumber, InvoiceType.getInvoiceTypeCode(command.getInvoiceType()) + "-" + 0L, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
+        ManageInvoiceDto creInvoiceDto = new ManageInvoiceDto(command.getId(), 0L, null,
+                null, null, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),
                 command.getInvoiceAmount(), command.getInvoiceAmount(), hotelDto, agencyDto, command.getInvoiceType(), EInvoiceStatus.PROCESSED,
                 false,
                 null, null, null, null, invoiceTypeDto, manageInvoiceStatus, null,  false,
