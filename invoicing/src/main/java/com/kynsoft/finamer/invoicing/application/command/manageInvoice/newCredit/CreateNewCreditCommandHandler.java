@@ -4,21 +4,17 @@ import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
-import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.invoicing.application.command.manageAttachment.create.CreateAttachmentCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +23,6 @@ import java.util.UUID;
 public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewCreditCommand> {
 
     private final IManageInvoiceService invoiceService;
-    private final IManageAgencyService agencyService;
     private final IManageHotelService hotelService;
     private final IManageInvoiceTypeService iManageInvoiceTypeService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
@@ -43,15 +38,14 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
     private final IManageEmployeeService employeeService;
 
-    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageAgencyService agencyService, IManageHotelService hotelService,
-                                         IManageInvoiceTypeService iManageInvoiceTypeService,
-                                         IManageInvoiceStatusService manageInvoiceStatusService, IManageAttachmentTypeService attachmentTypeService,
-                                         IManageBookingService bookingService, IInvoiceCloseOperationService closeOperationService,
-                                         IManageResourceTypeService resourceTypeService, IInvoiceStatusHistoryService invoiceStatusHistoryService,
+    public CreateNewCreditCommandHandler(IManageInvoiceService invoiceService, IManageHotelService hotelService,
+                                         IManageInvoiceTypeService iManageInvoiceTypeService, IManageInvoiceStatusService manageInvoiceStatusService,
+                                         IManageAttachmentTypeService attachmentTypeService, IManageBookingService bookingService,
+                                         IInvoiceCloseOperationService closeOperationService, IManageResourceTypeService resourceTypeService,
+                                         IInvoiceStatusHistoryService invoiceStatusHistoryService,
                                          IAttachmentStatusHistoryService attachmentStatusHistoryService,
             ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService, IManageEmployeeService employeeService) {
         this.invoiceService = invoiceService;
-        this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.iManageInvoiceTypeService = iManageInvoiceTypeService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
@@ -194,10 +188,10 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         }
     }
 
-    private List<ManageAttachmentDto> createAttachments(List<CreateNewCreditAttachmentCommand> attachmentCommands, String employeeId) {
+    private List<ManageAttachmentDto> createAttachments(List<CreateAttachmentCommand> attachmentCommands, String employeeId) {
         List<ManageAttachmentDto> attachments = new LinkedList<>();
         int cont = 0;
-        for (CreateNewCreditAttachmentCommand attachmentCommand : attachmentCommands) {
+        for (CreateAttachmentCommand attachmentCommand : attachmentCommands) {
             RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
                     attachmentCommand.getFile()
             ));
