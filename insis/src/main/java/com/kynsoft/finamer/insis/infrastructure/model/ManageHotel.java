@@ -49,6 +49,16 @@ public class ManageHotel implements Serializable {
         this.manageTradingCompany = new ManageTradingCompany(dto.getManageTradingCompany());
     }
 
+    public ManageHotel(UUID id,
+                       String code,
+                       String name,
+                       String status){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.status = status;
+    }
+
     public ManageHotelDto toAggregate(){
         return new ManageHotelDto(
                 id,

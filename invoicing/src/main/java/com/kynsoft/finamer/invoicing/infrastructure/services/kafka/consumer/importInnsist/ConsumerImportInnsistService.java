@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.importInnsist;
 
 import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafka;
+import com.kynsoft.finamer.invoicing.domain.services.IImportInnsistService;
 import com.kynsoft.finamer.invoicing.infrastructure.services.ImportInnsistServiceImpl;
 
 import org.springframework.kafka.annotation.KafkaListener;
@@ -12,9 +13,9 @@ import java.util.logging.Logger;
 @Service
 public class ConsumerImportInnsistService {
 
-    private final ImportInnsistServiceImpl service;
+    private final IImportInnsistService service;
 
-    public ConsumerImportInnsistService(ImportInnsistServiceImpl service) {
+    public ConsumerImportInnsistService(IImportInnsistService service) {
         this.service = service;
     }
 

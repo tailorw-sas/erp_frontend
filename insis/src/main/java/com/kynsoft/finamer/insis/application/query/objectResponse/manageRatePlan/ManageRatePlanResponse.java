@@ -28,6 +28,6 @@ public class ManageRatePlanResponse implements IResponse {
         this.status = dto.getStatus();
         this.deleted = dto.isDeleted();
         this.updatedAt = dto.getUpdatedAt();
-        this.hotel = dto.getManageHotel();
+        this.hotel = dto.getHotel();
     }
 }

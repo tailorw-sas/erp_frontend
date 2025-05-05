@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking;
 
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 import org.springframework.stereotype.Repository;
