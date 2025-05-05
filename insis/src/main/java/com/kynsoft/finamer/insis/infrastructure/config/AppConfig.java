@@ -28,6 +28,7 @@ public class AppConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.registerModule(new JavaTimeModule());
         MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
         jsonConverter.setObjectMapper(objectMapper);
         List<MediaType> mediaTypes = new ArrayList<>(jsonConverter.getSupportedMediaTypes());

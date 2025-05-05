@@ -23,5 +23,7 @@ public interface PaymentDetailCustomRepository {
 
     List<PaymentDetail> findChildrensByParentId(Long parentId);
 
+    List<PaymentDetail> findAllByPaymentGenIdIn(List<Long> genIds);
+
     Page<PaymentDetail> findAllCustom(Specification<PaymentDetail> specification, Pageable pageable);
 }

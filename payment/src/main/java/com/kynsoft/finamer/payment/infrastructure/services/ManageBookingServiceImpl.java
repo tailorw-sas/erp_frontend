@@ -149,8 +149,10 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public List<Booking> findAllByBookingIdIn(List<Long> ids) {
-        return this.repositoryQuery.findByBookingIdIn(ids);
+    public List<ManageBookingDto> findAllByBookingIdIn(List<Long> ids) {
+        return this.repositoryQuery.findAllByBookingId(ids).stream()
+                .map(Booking::toAggregate)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -176,7 +178,9 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public List<ManageBookingDto> findAllBookingByCoupons(List<String> coupons) {
         if(Objects.nonNull(coupons)){
-            return repositoryQuery.findAllByCouponNumber(coupons).stream().map(Booking::toAggregate).toList();
+            return repositoryQuery.findAllByCouponIn(coupons).stream()
+                    .map(Booking::toAggregate)
+                    .collect(Collectors.toList());
         }
         throw new IllegalArgumentException("Coupon numbers must not be null");
 

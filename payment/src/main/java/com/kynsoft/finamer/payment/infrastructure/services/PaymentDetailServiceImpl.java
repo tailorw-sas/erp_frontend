@@ -209,6 +209,11 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
+    public List<PaymentDetail> findByPaymentDetailsGenIdIn(List<Long> ids) {
+        return this.repositoryQuery.findAllByPaymentGenIdIn(ids);
+    }
+
+    @Override
     public Long countByPaymentDetailIdAndTransactionTypeDeposit(UUID payment) {
         return this.repositoryQuery.countByPaymentDetailIdAndTransactionTypeDeposit(payment);
     }

@@ -15,6 +15,7 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByVirtualHotel;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByVirtualHotelBookingNumber;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportRowErrorRedisRepository;
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class BookingImportHelperServiceImpl implements IBookingImportHelperService {
@@ -87,8 +89,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
-    public void saveCachingImportBooking(BookingRow bookingRow) {
-        this.createCacheInsist(bookingRow);
+    public List<BookingImportCache> saveCachingImportBooking(List<BookingRow> bookingRows, List<ManageAgencyDto> agencies) {
+        return this.createCacheInsist(bookingRows, agencies);
     }
 
     @Override
@@ -246,6 +248,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
+        Map<BookingRow, BookingImportCache> mapping = bookingImportCacheStream.stream()
+                .collect(Collectors.toMap(BookingImportCache::toAggregate, cache -> cache));
+
         groupedByHotelBookingNumber = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
                         -> new GroupByCoupon(
@@ -263,8 +268,18 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             groupedByHotelBookingNumber.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon", innsist);
+                UUID invoiceId = this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon", innsist);
+
+                value.forEach(bookingRow -> {
+                    BookingImportCache cache = mapping.get(bookingRow);
+                    if (cache != null) {
+                        cache.setInvoiceId(invoiceId);
+                    }
+                });
+
             });
+
+            repository.saveAll(bookingImportCacheStream);
         }
     }
 
@@ -279,6 +294,9 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         Map<GroupByHotelBookingNumber, List<BookingRow>> grouped;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByBooking.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
+
+        Map<BookingRow, BookingImportCache> mapping = bookingImportCacheStream.stream()
+                .collect(Collectors.toMap(BookingImportCache::toAggregate, cache -> cache));
 
         grouped = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
@@ -305,22 +323,37 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insisit);
+                UUID invoiceId = this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insisit);
+
+                value.forEach(bookingRow -> {
+                    BookingImportCache cache = mapping.get(bookingRow);
+                    if (cache != null) {
+                        cache.setInvoiceId(invoiceId);
+                    }
+                });
+
             });
+
+            repository.saveAll(bookingImportCacheStream);
         }
     }
 
-    private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList,
+    @Override
+    public List<BookingImportCache> findAllByImportProcess(String importProcess) {
+        return repository.findAllByImportProcessId(importProcess);
+    }
+
+    private UUID createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList,
                                           String employee, String groupType, boolean innsist) {
         //TODO - Mejorar todo este proceso
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
-        manageInvoiceDto.setAgency(agency);
-        manageInvoiceDto.setHotel(hotel);
-        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
-        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);
-        manageInvoiceDto.setIsManual(false);
+        manageInvoiceDto.setAgency(agency);//
+        manageInvoiceDto.setHotel(hotel);//
+        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);//
+        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);//
+        manageInvoiceDto.setIsManual(false);//
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
         manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel, groupType));
         manageInvoiceDto.setId(UUID.randomUUID());
@@ -338,8 +371,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         if (innsist) {
             manageInvoiceDto.setImportType(ImportType.INSIST);
         }
-        manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
-        manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber() != null ? Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()) : null);
+
         //TODO Eliminar esto y devolver el manageInvoiceDto antes de crear para garantizar transaccionalidad
         manageInvoiceDto = invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
@@ -349,20 +381,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             this.producerReplicateManageInvoiceService.create(manageInvoiceDto, null, null);
         } catch (Exception e) {
         }
-    }
-
-    private String createInvoiceNumber(ManageHotelDto hotel, BookingRow sample) {
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if (hotel.isVirtual()) {
-            invoiceNumber += "-" + sample.getHotelInvoiceNumber();
-        } else {
-            if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-                invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-            } else {
-                invoiceNumber += "-" + hotel.getCode();
-            }
-        }
-        return invoiceNumber;
+        return manageInvoiceDto.getId();
     }
 
     private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
@@ -584,7 +603,44 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         bookingImportCache.setInsistImportProcessId(bookingRow.getInsistImportProcessId());
         bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
         bookingImportCache.setInsistImportProcessBookingId(bookingRow.getInsistImportProcessBookingId());
+        bookingImportCache.setInvoiceId(null);
         repository.save(bookingImportCache);
+    }
+
+    /**
+     * Metodo que recibe un listado de BookingRow, convierte en listado de BookingImportCache y guarda en Redis la lista
+     */
+    private List<BookingImportCache> createCacheInsist(List<BookingRow> bookingRows, List<ManageAgencyDto> agencies) {
+        List<BookingImportCache> bookingImportCacheList = bookingRows.stream()
+                .map(bookingRow -> {
+                  BookingImportCache importBookingCache = bookingRowToBookingImportCache(bookingRow);
+                  Optional<ManageAgencyDto> agency = getAgencyByCode(agencies, importBookingCache.getManageAgencyCode());
+                  agency.ifPresent(manageAgencyDto -> importBookingCache.setGenerationType(manageAgencyDto.getGenerationType().name()));
+                  return importBookingCache;
+                }).toList();
+
+        Iterable<BookingImportCache> iterable = repository.saveAll(bookingImportCacheList);
+
+        return StreamSupport.stream(iterable.spliterator(), false)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     *Metodo que convierte un objeto BookingRow a BookingImportCache
+     */
+    private BookingImportCache bookingRowToBookingImportCache(BookingRow bookingRow){
+        BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);
+        bookingImportCache.setInsistImportProcessId(bookingRow.getInsistImportProcessId());
+        bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
+        bookingImportCache.setInsistImportProcessBookingId(bookingRow.getInsistImportProcessBookingId());
+        bookingImportCache.setInvoiceId(null);
+        return bookingImportCache;
+    }
+
+    private Optional<ManageAgencyDto> getAgencyByCode(List<ManageAgencyDto> agencies, String code){
+        return agencies.stream()
+                .filter(agency -> agency.getCode().equals(code))
+                .findFirst();
     }
 
     private void createInvoiceHistory(ManageInvoiceDto manageInvoice, String employee) {

@@ -53,4 +53,6 @@ public interface IPaymentDetailService {
     List<PaymentDetailDto> change(List<PaymentDetail> pd);
 
     List<PaymentDetailDto> findSimpleDetailsByPaymentGenIds(List<Long> id);
+
+    List<PaymentDetail> findByPaymentDetailsGenIdIn(List<Long> ids);
 }

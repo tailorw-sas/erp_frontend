@@ -345,6 +345,67 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
 
 
     @Override
+    public List<PaymentDetail> findAllByPaymentGenIdIn(List<Long> genIds) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<PaymentDetail> root = query.from(PaymentDetail.class);
+        Join<PaymentDetail, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
+        Join<PaymentDetail, ManagePaymentTransactionType> transactionTypeJoin = root.join("transactionType", JoinType.LEFT);
+        Join<PaymentDetail, Booking> bookingJoin = root.join("manageBooking", JoinType.LEFT);
+        Join<Payment, ManagePaymentSource> paymentManagePaymentSourceJoin = paymentJoin.join("paymentSource", JoinType.LEFT);
+        Join<Payment, ManagePaymentStatus> paymentManagePaymentStatusJoin = paymentJoin.join("paymentStatus", JoinType.LEFT);
+        Join<Payment, ManageClient> paymentManageClientJoin = paymentJoin.join("client", JoinType.LEFT);
+        Join<Payment, ManageAgency> paymentManageAgencyJoin = paymentJoin.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> paymentManageAgencyManageAgencyType = paymentManageAgencyJoin.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> paymentManageAgencyManageClient = paymentManageAgencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> paymentManageAgencyManageCountry = paymentManageAgencyJoin.join("country", JoinType.LEFT);
+        Join<Payment, ManageHotel> paymentManageHotelJoin = paymentJoin.join("hotel", JoinType.LEFT);
+        Join<Payment, Invoice> paymentInvoiceJoin = paymentJoin.join("invoice", JoinType.LEFT);
+        Join<Invoice, ManageHotel> paymentInvoiceManageHotelJoin = paymentInvoiceJoin.join("hotel", JoinType.LEFT);
+        Join<Invoice, ManageAgency> paymentInvoiceManageAgencyJoin = paymentInvoiceJoin.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> paymentInvoiceManageAgencyManageAgencyType = paymentInvoiceManageAgencyJoin.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> paymentInvoiceManageAgencyManageClient = paymentInvoiceManageAgencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> paymentInvoiceManageAgencyManageCountry = paymentInvoiceManageAgencyJoin.join("country", JoinType.LEFT);
+        Join<Payment, ManageBankAccount> paymentManageBankAccountJoin = paymentJoin.join("bankAccount", JoinType.LEFT);
+        Join<Payment, ManagePaymentAttachmentStatus> paymentManagePaymentAttachmentStatusJoin = paymentJoin.join("attachmentStatus", JoinType.LEFT);
+        Join<Booking, Invoice> bookingInvoiceJoin = bookingJoin.join("invoice", JoinType.LEFT);
+
+        query.where(root.get("paymentDetailId").in(genIds));
+
+        List<Selection<?>> selections = getPaymentDetailSelections(root,
+                paymentJoin,
+                transactionTypeJoin,
+                bookingJoin,
+                paymentManagePaymentSourceJoin,
+                paymentManagePaymentStatusJoin,
+                paymentManageClientJoin,
+                paymentManageAgencyJoin,
+                paymentManageAgencyManageAgencyType,
+                paymentManageAgencyManageClient,
+                paymentManageAgencyManageCountry,
+                paymentManageHotelJoin,
+                paymentInvoiceJoin,
+                paymentInvoiceManageHotelJoin,
+                paymentInvoiceManageAgencyJoin,
+                paymentInvoiceManageAgencyManageAgencyType,
+                paymentInvoiceManageAgencyManageClient,
+                paymentInvoiceManageAgencyManageCountry,
+                paymentManageBankAccountJoin,
+                paymentManagePaymentAttachmentStatusJoin,
+                bookingInvoiceJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        List<Tuple> tuples = entityManager.createQuery(query).getResultList();
+
+        List<PaymentDetail> results = tuples.stream()
+                .map(this::convertTupleToEntity).collect(Collectors.toList());
+
+        return results;
+    }
+
+    @Override
     public Page<PaymentDetail> findAllCustom(Specification<PaymentDetail> specification, Pageable pageable) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();

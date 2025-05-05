@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.application.excel.writer.ExcelWriter;
 import com.kynsof.share.core.application.excel.writer.WriterConfiguration;
 import com.kynsof.share.core.domain.EWorkbookFormat;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
@@ -15,7 +14,6 @@ import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsoft.finamer.invoicing.application.query.manageInvoice.search.ManageInvoiceSearchResponse;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceToPaymentResponse;
-import com.kynsoft.finamer.invoicing.domain.dto.HotelInvoiceNumberSequenceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceStatusDto;
@@ -53,10 +51,10 @@ import java.util.stream.Collectors;
 import static com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.services.IHotelInvoiceNumberSequenceService;
-import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.UpdateSequenceEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -67,35 +65,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Autowired
     private final ManageInvoiceReadDataJPARepository repositoryQuery;
 
-    @Autowired
-    private final IInvoiceCloseOperationService closeOperationService;
-
-    private final ApplicationEventPublisher applicationEventPublisher;
-    private final IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService;
     private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
-            IInvoiceCloseOperationService closeOperationService,
-            ApplicationEventPublisher applicationEventPublisher,
-            IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
             ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.closeOperationService = closeOperationService;
-        this.applicationEventPublisher = applicationEventPublisher;
-        this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
         this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
-    }
-
-    public Long getInvoiceNumberSequence(String invoiceNumber) {
-        Long lastInvoiceNo = this.repositoryQuery.findByInvoiceNumber(invoiceNumber);
-
-        lastInvoiceNo += 1;
-        return lastInvoiceNo;
     }
 
     @Override
@@ -103,16 +83,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         Double InvoiceAmount = 0.00;
 
         if (dto.getBookings() != null) {
-
             for (int i = 0; i < dto.getBookings().size(); i++) {
-
                 InvoiceAmount += dto.getBookings().get(i).getInvoiceAmount();
-
             }
 
             dto.setInvoiceAmount(InvoiceAmount);
             dto.setDueAmount(InvoiceAmount);
-
             this.update(dto);
         }
     }
@@ -120,7 +96,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Override
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         InvoiceUtils.establishDueDate(dto);
-        InvoiceUtils.calculateInvoiceAging(dto);//TODO Eliminar esto
         Invoice entity = new Invoice(dto);
         entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
@@ -130,31 +105,11 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             dto.setInvoiceNo(dto.getHotelInvoiceNumber());
             String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumberPrefix(invoicePrefix);
-        } else {
-            String invoiceNumber = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType());
-            Long lastInvoiceNo = 0L;
-
-            if (dto.getHotel().getManageTradingCompanies() != null && dto.getHotel().getApplyByTradingCompany()) {
-                EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
-                HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByTradingCompanyCodeAndInvoiceType(dto.getHotel().getManageTradingCompanies().getCode(), invoiceType);
-                lastInvoiceNo = sequence.getInvoiceNo() + 1;
-                this.applicationEventPublisher.publishEvent(new UpdateSequenceEvent(this, sequence));
-                invoiceNumber += "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
-            } else {
-                EInvoiceType invoiceType = dto.getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name()) ? EInvoiceType.CREDIT : dto.getInvoiceType();
-                HotelInvoiceNumberSequenceDto sequence = this.hotelInvoiceNumberSequenceService.getByHotelCodeAndInvoiceType(dto.getHotel().getCode(), invoiceType);
-                lastInvoiceNo = sequence.getInvoiceNo() + 1;
-                this.applicationEventPublisher.publishEvent(new UpdateSequenceEvent(this, sequence));
-                invoiceNumber += "-" + dto.getHotel().getCode() + "-" + lastInvoiceNo;
-            }
-            entity.setInvoiceNo(lastInvoiceNo);
-            entity.setInvoiceNumber(invoiceNumber);
-            dto.setInvoiceNo(lastInvoiceNo);
-            String invoicePrefix = InvoiceType.getInvoiceTypeCode(dto.getInvoiceType()) + "-" + lastInvoiceNo;
-            entity.setInvoiceNumberPrefix(invoicePrefix);
         }
 
         Invoice invoice = this.repositoryCommand.saveAndFlush(entity);
+        invoice = this.repositoryCommand.findById(invoice.getId())
+                .orElseThrow(() -> new IllegalStateException("Invoice not found after save"));;
         return invoice.toAggregate();
     }
 
@@ -173,21 +128,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         }
 
         Page<ManageInvoiceSearchProjection> data1 = repositoryQuery.findAllProjected(specifications, pageable);
-        //   Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
-        //getPaginatedResponseTest(example);
-        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
-
         return getPaginatedResponseProjection(data1);
-        //  return getPaginatedResponse(data);
     }
 
     private PaginatedResponse getPaginatedResponseProjection(Page<ManageInvoiceSearchProjection> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
         for (ManageInvoiceSearchProjection entity : data.getContent()) {
             try {
-//                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
-//                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
-//                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
                 ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity);
                 responseList.add(response);
             } catch (Exception e) {
@@ -204,8 +151,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
-        //getPaginatedResponseTest(example);
-        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedSendListResponse(data);
     }
@@ -230,27 +175,21 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+    public Page<ManageInvoiceSearchProjection> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
-
-        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
-        FilterCriteria fcAgency = new FilterCriteria();
-        fcAgency.setKey("agency.id");
-        fcAgency.setLogicalOperation(LogicalOperation.AND);
-        fcAgency.setOperator(SearchOperation.IN);
-        fcAgency.setValue(agencyIds);
-        filterCriteria.add(fcAgency);
-
-        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
-        FilterCriteria fcHotel = new FilterCriteria();
-        fcHotel.setKey("hotel.id");
-        fcHotel.setLogicalOperation(LogicalOperation.AND);
-        fcHotel.setOperator(SearchOperation.IN);
-        fcHotel.setValue(hotelIds);
-        filterCriteria.add(fcHotel);
-
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAll(specifications, pageable).map(Invoice::toAggregate);
+        Pageable cleanedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        pageable.getSort().stream()
+                                .map(order -> "aging".equalsIgnoreCase(order.getProperty())
+                                        ? new Sort.Order(order.getDirection(), "dueDate")
+                                        : order)
+                                .toList()
+                )
+        );
+        return repositoryQuery.findAllProjected(specifications, cleanedPageable);
     }
 
     @Override
@@ -376,24 +315,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 "",
                 "", "", "", null
         );
-    }
-
-    private PaginatedResponse getPaginatedResponse(Page<Invoice> data) {
-        List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
-        for (Invoice entity : data.getContent()) {
-            try {
-                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
-                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
-                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(),
-                        entity.getHasAttachments(), isCloseOperation);
-                responseList.add(response);
-            } catch (Exception e) {
-                System.err.print(e.getMessage());
-            }
-        }
-        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
-                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private PaginatedResponse getPaginatedSendListResponse(Page<Invoice> data) {
@@ -633,5 +554,4 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 .map(Invoice::toAggregate)
                 .collect(Collectors.toList());
     }
-
 }
