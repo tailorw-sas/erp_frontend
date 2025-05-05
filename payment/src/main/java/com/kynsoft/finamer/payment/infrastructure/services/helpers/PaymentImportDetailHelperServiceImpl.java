@@ -2,48 +2,49 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
-import com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposit.create.CreatePaymentDetailApplyDepositCommand;
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
-import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
-import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
-import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjectionControlAmountBalance;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyOtherDeduction;
+import com.kynsoft.finamer.payment.domain.core.deposit.ApplyDeposit;
+import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
-import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperService;
-import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
-import com.kynsoft.finamer.payment.domain.services.IManagePaymentTransactionTypeService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.applyDeposit.ApplyDepositEvent;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.createPayment.CreatePaymentDetailEvent;
-import com.kynsoft.finamer.payment.infrastructure.excel.event.deposit.DepositEvent;
-import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.detail.PaymentDetailValidatorFactory;
-import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
+import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
+import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
+import com.kynsoft.finamer.payment.domain.core.deposit.Deposit;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPayment;
+import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import io.jsonwebtoken.lang.Assert;
-import java.util.Comparator;
-import java.util.List;
+
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,16 +58,31 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     private final IPaymentDetailService paymentDetailService;
     private final PaymentImportDetailErrorRepository detailErrorRepository;
     private final IManageBookingService bookingService;
-    private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
+    private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final IManageEmployeeService employeeService;
+    private final IManagePaymentStatusService paymentStatusService;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
+    private final ProducerUpdateBookingService producerUpdateBookingService;
+    private final IManageInvoiceService invoiceService;
+
+    private static final Logger logger = LoggerFactory.getLogger(PaymentImportDetailHelperServiceImpl.class);
+
+
+    private boolean stopProcess;
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
-            PaymentDetailValidatorFactory paymentDetailValidatorFactory,
-            ApplicationEventPublisher applicationEventPublisher,
-            IManagePaymentTransactionTypeService transactionTypeService,
-            IPaymentService paymentService, IPaymentDetailService paymentDetailService,
-            PaymentImportDetailErrorRepository detailErrorRepository,
-            IManageBookingService bookingService,
-            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
+                                                PaymentDetailValidatorFactory paymentDetailValidatorFactory,
+                                                ApplicationEventPublisher applicationEventPublisher,
+                                                IManagePaymentTransactionTypeService transactionTypeService,
+                                                IPaymentService paymentService, IPaymentDetailService paymentDetailService,
+                                                PaymentImportDetailErrorRepository detailErrorRepository,
+                                                IManageBookingService bookingService,
+                                                IPaymentCloseOperationService paymentCloseOperationService,
+                                                IManageEmployeeService employeeService,
+                                                IManagePaymentStatusService paymentStatusService,
+                                                IPaymentStatusHistoryService paymentStatusHistoryService,
+                                                ProducerUpdateBookingService producerUpdateBookingService,
+                                                IManageInvoiceService invoiceService) {
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
         this.applicationEventPublisher = applicationEventPublisher;
@@ -75,33 +91,38 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         this.paymentDetailService = paymentDetailService;
         this.detailErrorRepository = detailErrorRepository;
         this.bookingService = bookingService;
-        this.employeeReadDataJPARepository = employeeReadDataJPARepository;
+        this.paymentCloseOperationService = paymentCloseOperationService;
+        this.employeeService = employeeService;
+        this.paymentStatusService = paymentStatusService;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
+        this.producerUpdateBookingService = producerUpdateBookingService;
+        this.invoiceService = invoiceService;
     }
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        printLog("Start readExcel process");
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
-        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
-
-        paymentDetailValidatorFactory.createValidators();
+        ManageEmployeeDto employee = this.getEmployee(UUID.fromString(request.getEmployeeId()));
         ExcelBeanReader<PaymentDetailRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, PaymentDetailRow.class);
         ExcelBean<PaymentDetailRow> excelBean = new ExcelBean<>(excelBeanReader);
-        for (PaymentDetailRow row : excelBean) {
-            row.setImportProcessId(request.getImportProcessId());
-            row.setImportType(request.getImportPaymentType().name());
-            row.setAgencys(agencys);
-            row.setHotels(hotels);
-            if (Objects.nonNull(request.getPaymentId())
-                    && !request.getPaymentId().isEmpty()) {
-                row.setExternalPaymentId(UUID.fromString(request.getPaymentId()));
-            }
-            if (paymentDetailValidatorFactory.validate(row)) {
+        List<PaymentDetailRow> excelRows = new ArrayList<>();
+
+        printLog("Antes de obtener cache");
+        Cache cache = this.createCache(excelBean, excelRows, request, employee);
+        printLog("Despues de obtener cache");
+
+        paymentDetailValidatorFactory.createValidators(cache);
+        boolean validationResult = paymentDetailValidatorFactory.validate(excelRows);
+        if(validationResult){
+            excelRows.forEach(row -> {
                 cachingPaymentImport(row);
                 this.totalProcessRow++;
-            }
+            });
         }
+
+        printLog("End readExcel process");
     }
 
     private void clearCache() {
@@ -128,136 +149,305 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        Pageable pageable = PageRequest.of(0, 500, Sort.by(Sort.Direction.ASC, "rowNumber"));
-        Page<PaymentImportCache> cacheList;
-        do {
-            cacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
-            cacheList.forEach(paymentImportCache -> {
-                ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = transactionTypeService.findByCode(paymentImportCache.getTransactionId());
-                Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
-                //PaymentDto paymentDto = paymentService.findByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
-                PaymentProjectionSimple paymentDto = paymentService.findPaymentIdCacheable(Long.parseLong(paymentImportCache.getPaymentId()));
-                BookingProjectionControlAmountBalance bookingDto = paymentImportCache.getBookId() != null ? this.bookingService.findSimpleBookingByGenId(Long.parseLong(paymentImportCache.getBookId())) : null;
-                if (bookingDto != null && bookingDto.getBookingAmountBalance() == 0) {
-                    sendToDeposit(paymentImportCache, paymentDto);
-                    return;
-                }
-                if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
-                    boolean applyPayment = true;
-                    if (bookingDto == null) {
-                        applyPayment = false;
-                    }
-                    //PaymentDetailDto paymentDetailDto = paymentDetailService.findByGenId(Integer.parseInt(paymentImportCache.getAnti()));
-                    PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(Integer.parseInt(paymentImportCache.getAnti()));
-                    this.sendToCreateApplyDeposit(paymentDetailDto.getId(),
-                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                            UUID.fromString(request.getEmployeeId()),
-                            managePaymentTransactionTypeDto.getId(),
-                            null,
-                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
-                            bookingDto != null ? bookingDto.getBookingId() : null,
-                            applyPayment
-                    );
+        printLog("Start readPaymentCacheAndSave process");
+        ManageEmployeeDto employee = this.getEmployee(UUID.fromString(request.getEmployeeId()));
+        List<PaymentImportCache> paymentCacheList = this.getPaymentImportCachedList(request.getImportProcessId());
+        if(paymentCacheList.isEmpty()){
+            return;
+        }
 
+        Cache cache = this.createCache(paymentCacheList, employee);
+        //List<CreatePaymentDetail> createPaymentDetailList = new ArrayList<>();//TODO Validar una lista segura para implementar en hilos
+        List<PaymentDto> paymentsToUpdateList = new ArrayList<>();
+        List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
+        List<PaymentDetailDto> paymentDetailsAntiToUpdate = new ArrayList<>();
+        List<ManageBookingDto> bookingsToUpdate = new ArrayList<>();
+        ManagePaymentTransactionTypeDto depositPaymentTransactionType = cache.getDepositTransactionType();
+        List<PaymentStatusHistoryDto> paymentStatusHistories = new ArrayList<>();
+        ManagePaymentStatusDto paymentStatusApplied = getPaymentStatusApplied();
+
+        for(PaymentImportCache paymentImportCache : paymentCacheList ){
+            ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto = cache.getManageTransactionTypeByCode(paymentImportCache.getTransactionId());
+            Assert.notNull(managePaymentTransactionTypeDto, "Transaction type is null");
+
+            PaymentDto paymentDto = cache.getPaymentByPaymentId(Long.parseLong(paymentImportCache.getPaymentId()));
+            if(Objects.isNull(paymentDto)){
+                break;
+            }
+            addPaymentToList(paymentDto, paymentsToUpdateList);
+            OffsetDateTime transactionDate = cache.getTransactionDateByHotelId(paymentDto.getHotel().getId());
+
+            ManageBookingDto bookingDto = getBookingFromCache(paymentImportCache.getBookId(), cache);
+            if ( Objects.nonNull(bookingDto) && bookingDto.getAmountBalance() == 0) {
+                PaymentDetailDto paymentDetailTypeDeposit = sendDeposit(paymentImportCache,
+                                                                        paymentDto,
+                                                                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                                                        transactionDate,
+                                                                        depositPaymentTransactionType);
+                paymentDetailsToCreate.add(paymentDetailTypeDeposit);
+            }else{
+                if (Objects.nonNull(paymentImportCache.getAnti()) && !paymentImportCache.getAnti().isEmpty()) {
+                    this.processAntiDetail(paymentImportCache,
+                            cache,
+                            paymentDto,
+                            bookingDto,
+                            employee,
+                            managePaymentTransactionTypeDto,
+                            transactionDate,
+                            paymentStatusApplied,
+                            paymentStatusHistories,
+                            paymentDetailsToCreate,
+                            paymentDetailsAntiToUpdate,
+                            bookingsToUpdate);
                 } else {
                     if (bookingDto == null) {
-                        try {
-                            if (this.bookingService.countByCoupon(paymentImportCache.getCoupon()) > 1) {
-                                //todo: implementar cuando existe mas de un booking con este coupon
-                                ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByPaymentInvoice();
-                                String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
-
-                                //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
-                                createDetailAndDeposit(paymentImportCache, null, transactionTypeDto, paymentDto, request, false, Double.parseDouble(paymentImportCache.getPaymentAmount()), remarks);
-                            } else {
-                                BookingProjectionControlAmountBalance bookingProjection = this.bookingService.findByCoupon(paymentImportCache.getCoupon());
-                                if (bookingProjection == null) {
-                                    //todo: implementar cuando no existe el booking
-                                    DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), true, "#coupon not found");
-                                    this.applicationEventPublisher.publishEvent(depositEvent);
-                                } else {
-                                    //todo: implementar el caso de que existe el booking
-                                    //mismo flujo de cuando existe el booking por el id, en este caso el que se encuentra por el coupon
-                                    if (bookingProjection.getBookingAmountBalance() == 0) {
-                                        sendToDeposit(paymentImportCache, paymentDto);
-                                        return;
-                                    }
-                                    createDetailAndDeposit(paymentImportCache, bookingProjection, managePaymentTransactionTypeDto, paymentDto, request, true, Double.parseDouble(paymentImportCache.getPaymentAmount()), getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
+                        List<ManageBookingDto> bookings = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
+                        if(Objects.nonNull(bookings) && bookings.size() > 1){
+                            ManagePaymentTransactionTypeDto transactionTypeDto = cache.getPaymentInvoiceTransactionType();
+                            String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
+                            //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
+                            createDetailAndDeposit(paymentImportCache,
+                                    null,
+                                    transactionTypeDto,
+                                    paymentDto,
+                                    Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                    remarks,
+                                    employee,
+                                    depositPaymentTransactionType,
+                                    transactionDate,
+                                    paymentStatusHistories,
+                                    paymentStatusApplied,
+                                    paymentDetailsToCreate);
+                        } else {
+                            if(Objects.isNull(bookings)){
+                                PaymentDetailDto paymentDetailTypeDeposit = getDeposit(paymentImportCache,
+                                        paymentDto,
+                                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                        true,
+                                        "#coupon not found",
+                                        transactionDate,
+                                        depositPaymentTransactionType);
+                                paymentDetailsToCreate.add(paymentDetailTypeDeposit);
+                            }else{
+                                ManageBookingDto booking = bookings.get(0);
+                                if (booking.getAmountBalance() == 0) {
+                                    PaymentDetailDto paymentDetailTypeDeposit = sendDeposit(paymentImportCache,
+                                                                                            paymentDto,
+                                                                                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                                                                            transactionDate,
+                                                                                            depositPaymentTransactionType);
+                                    paymentDetailsToCreate.add(paymentDetailTypeDeposit);
+                                }else{
+                                    createDetailAndDeposit(paymentImportCache,
+                                            booking,
+                                            managePaymentTransactionTypeDto,
+                                            paymentDto,
+                                            Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                            getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                            employee,
+                                            depositPaymentTransactionType,
+                                            transactionDate,
+                                            paymentStatusHistories,
+                                            paymentStatusApplied,
+                                            paymentDetailsToCreate);
+                                    bookingsToUpdate.add(booking);
                                 }
                             }
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
                         }
                     } else {
-                        createDetailAndDeposit(paymentImportCache, bookingDto, managePaymentTransactionTypeDto, paymentDto, request, true, Double.parseDouble(paymentImportCache.getPaymentAmount()), getRemarks(paymentImportCache, managePaymentTransactionTypeDto));
+                        createDetailAndDeposit(paymentImportCache,
+                                bookingDto,
+                                managePaymentTransactionTypeDto,
+                                paymentDto,
+                                Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                                getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                                employee,
+                                depositPaymentTransactionType,
+                                transactionDate,
+                                paymentStatusHistories,
+                                paymentStatusApplied,
+                                paymentDetailsToCreate);
+                        bookingsToUpdate.add(bookingDto);
                     }
                 }
-            });
-            pageable = pageable.next();
-        } while (cacheList.hasNext());
-        this.clearCache();
-    }
-
-    private void sendToDeposit(PaymentImportCache paymentImportCache, PaymentProjectionSimple paymentDto) {
-        PaymentProjection paymentProjection = this.paymentService.findByPaymentIdProjection(paymentDto.getPaymentId());
-        double rest = paymentProjection.getPaymentBalance() - Double.parseDouble(paymentImportCache.getPaymentAmount());
-        if (rest >= 0) {
-            DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), false, "");
-            this.applicationEventPublisher.publishEvent(depositEvent);
+            }
         }
-        return;
+
+        printLog("Antes de guardar en BDD");
+        this.createPaymentsDetails(paymentDetailsToCreate);
+        this.createPaymentsDetails(paymentDetailsAntiToUpdate);
+        this.updatePayments(paymentsToUpdateList);
+        this.updateBookings(bookingsToUpdate);
+        this.createPaymentStatusHistory(paymentStatusHistories);
+        this.replicateBookingToKafka(paymentDetailsToCreate);
+        printLog("Despues de guardar en BDD");
+
+        this.clearCache();
+        printLog("End readPaymentCacheAndSave process");
     }
 
-    private void createDetailAndDeposit(PaymentImportCache paymentImportCache, BookingProjectionControlAmountBalance bookingDto, ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto, PaymentProjectionSimple paymentDto, PaymentImportDetailRequest request, boolean applyPayment, double amount, String remarks) {
+    private void processAntiDetail(PaymentImportCache paymentImportCache,
+                                   Cache cache,
+                                   PaymentDto paymentDto,
+                                   ManageBookingDto bookingDto,
+                                   ManageEmployeeDto employee,
+                                   ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto,
+                                   OffsetDateTime transactionDate,
+                                   ManagePaymentStatusDto paymentStatusApplied,
+                                   List<PaymentStatusHistoryDto> paymentStatusHistories,
+                                   List<PaymentDetailDto> paymentDetailsToCreate,
+                                   List<PaymentDetailDto> paymentDetailsAntiToUpdate,
+                                   List<ManageBookingDto> bookingsToUpdate){
+        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
+
+        if(Objects.isNull(bookingDto)){
+            List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
+            if(Objects.nonNull(bookingList) && bookingList.size() == 1 && Objects.nonNull(paymentDetailDto)){
+                ManageBookingDto booking = bookingList.get(0);
+                this.sendToCreateApplyDeposit(paymentDetailDto,
+                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                        employee,
+                        managePaymentTransactionTypeDto,
+                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                        booking,
+                        paymentDto,
+                        transactionDate,
+                        paymentStatusApplied,
+                        paymentStatusHistories,
+                        paymentDetailsToCreate,
+                        paymentDetailsAntiToUpdate
+                );
+                bookingsToUpdate.add(booking);
+            }else{
+                //Cuando esta duplicado, solo crea el detalle AANT sin aplicar a la factura
+                this.sendToCreateApplyDeposit(paymentDetailDto,
+                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                        employee,
+                        managePaymentTransactionTypeDto,
+                        " #payment was not applied because the coupon is duplicated.",
+                        null,
+                        paymentDto,
+                        transactionDate,
+                        paymentStatusApplied,
+                        paymentStatusHistories,
+                        paymentDetailsToCreate,
+                        paymentDetailsAntiToUpdate
+                );
+            }
+        }else{
+            if(Objects.nonNull(paymentDetailDto)){
+                this.sendToCreateApplyDeposit(paymentDetailDto,
+                        Double.parseDouble(paymentImportCache.getPaymentAmount()),
+                        employee,
+                        managePaymentTransactionTypeDto,
+                        getRemarks(paymentImportCache, managePaymentTransactionTypeDto),
+                        bookingDto,
+                        paymentDto,
+                        transactionDate,
+                        paymentStatusApplied,
+                        paymentStatusHistories,
+                        paymentDetailsToCreate,
+                        paymentDetailsAntiToUpdate
+                );
+                bookingsToUpdate.add(bookingDto);
+            }
+        }
+    }
+
+    private ManageBookingDto getBookingFromCache(String bookingId, Cache cache){
+        if(Objects.isNull(bookingId)){
+            return null;
+        }
+
+        return cache.getBooking(Long.parseLong(bookingId));
+    }
+
+    private PaymentDetailDto sendDeposit(PaymentImportCache paymentImportCache, PaymentDto paymentDto, Double amount, OffsetDateTime transactionDate, ManagePaymentTransactionTypeDto depositPaymentTransactionType){
+        double restAmount = BankerRounding.round(paymentDto.getPaymentAmount() - amount);
+        if (restAmount > 0) {
+            return getDeposit(paymentImportCache, paymentDto, Double.parseDouble(paymentImportCache.getPaymentAmount()), false, "", transactionDate, depositPaymentTransactionType);
+        }
+        return null;
+    }
+
+    private void createDetailAndDeposit(PaymentImportCache paymentImportCache,
+                                        ManageBookingDto bookingDto,
+                                        ManagePaymentTransactionTypeDto managePaymentTransactionTypeDto,
+                                        PaymentDto paymentDto,
+                                        double amount,
+                                        String remarks,
+                                        ManageEmployeeDto employee,
+                                        ManagePaymentTransactionTypeDto depositPaymentTransactionType,
+                                        OffsetDateTime transactionDate,
+                                        List<PaymentStatusHistoryDto> paymentStatusHistories,
+                                        ManagePaymentStatusDto paymentStatusDto,
+                                        List<PaymentDetailDto> createDetailPaymentList) {
         //cash
         if (bookingDto != null) {
-            amount = Math.min(bookingDto.getBookingAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
+            amount = Math.min(bookingDto.getAmountBalance(), Double.parseDouble(paymentImportCache.getPaymentAmount()));
         }
 
         if (managePaymentTransactionTypeDto.getCash() || managePaymentTransactionTypeDto.getPaymentInvoice()) {
-            this.sendCreatePaymentDetail(
-                    paymentDto.getId(),
+            //Crear el detalle y aplicar
+            this.createPaymentDetailAndApply(
+                    paymentDto,
                     amount,
-                    UUID.fromString(request.getEmployeeId()),
-                    managePaymentTransactionTypeDto.getId(),
+                    employee,
+                    managePaymentTransactionTypeDto,
                     remarks,
-                    bookingDto != null ? bookingDto.getBookingId() : null,
-                    applyPayment);
+                    bookingDto,
+                    transactionDate,
+                    paymentStatusDto,
+                    paymentStatusHistories,
+                    createDetailPaymentList
+                    );
 
-            //Crear el deposit.
-            double restAmount = Double.valueOf(paymentImportCache.getPaymentAmount()) - amount;
+            //Crear el deposit con el valor sobrante no cubierto por el booking (restante del importPaymentCache)
+            double restAmount = BankerRounding.round(Double.parseDouble(paymentImportCache.getPaymentAmount()) - amount);
             if (restAmount > 0) {
-                DepositEvent depositEvent = getDepositEvent(paymentImportCache, paymentDto, restAmount, false, "");
-                this.applicationEventPublisher.publishEvent(depositEvent);
+                PaymentDetailDto paymentDetailTypeDeposit = getDeposit(paymentImportCache, paymentDto, restAmount, false, "", transactionDate, depositPaymentTransactionType);
+                createDetailPaymentList.add(paymentDetailTypeDeposit);
             }
         } else {
-            ///Other deductions
-            this.sendCreatePaymentDetail(paymentDto.getId(),
+            //Other deductions
+            this.createPaymentDetailAndApply(paymentDto,
                     Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                    UUID.fromString(request.getEmployeeId()),
-                    managePaymentTransactionTypeDto.getId(),
+                    employee,
+                    managePaymentTransactionTypeDto,
                     remarks,
-                    bookingDto != null ? bookingDto.getBookingId() : null,
-                    applyPayment);
+                    bookingDto,
+                    transactionDate,
+                    paymentStatusDto,
+                    paymentStatusHistories,
+                    createDetailPaymentList);
         }
     }
 
-    private DepositEvent getDepositEvent(PaymentImportCache paymentImportCache, PaymentProjectionSimple paymentDto, double restAmount, boolean byCoupon, String remarks) {
-        DepositEvent depositEvent = new DepositEvent(this);
-        depositEvent.setAmount(restAmount);
-        depositEvent.setPaymentDto(paymentDto);
-        //depositEvent.setRemark("Create deposit in import details.");
-        String invoiceNo = paymentImportCache.getInvoiceNo() != null ? paymentImportCache.getInvoiceNo() : "";
-        String firstName = paymentImportCache.getFirstName() != null ? paymentImportCache.getFirstName() : "";
-        String lastName = paymentImportCache.getLastName() != null ? paymentImportCache.getLastName() : "";
-        String bookingNo = paymentImportCache.getBookingNo() != null ? paymentImportCache.getBookingNo() : "";
+    private PaymentDetailDto getDeposit(PaymentImportCache paymentImportCache,
+                                        PaymentDto paymentDto,
+                                        double restAmount,
+                                        boolean byCoupon,
+                                        String remarks,
+                                        OffsetDateTime transactionDate,
+                                        ManagePaymentTransactionTypeDto paymentTransactionType) {
+        String invoiceNo = validateStringRemark(paymentImportCache.getInvoiceNo());
+        String firstName = validateStringRemark(paymentImportCache.getFirstName());
+        String lastName = validateStringRemark(paymentImportCache.getLastName());
+        String bookingNo = validateStringRemark(paymentImportCache.getBookingNo());
 
-        if (byCoupon) {
-            depositEvent.setRemark(remarks);
-        } else {
-            depositEvent.setRemark("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
+        if (!byCoupon) {
+            remarks = ("S/P " + invoiceNo + " " + firstName + " " + lastName + " " + bookingNo);
         }
-        return depositEvent;
+
+        Deposit deposit = new Deposit(
+                paymentDto,
+                restAmount,
+                remarks,
+                paymentTransactionType,
+                transactionDate
+        );
+        deposit.create();
+        return deposit.getPaymentDetail();
     }
 
     private String getRemarks(PaymentImportCache paymentImportCache, ManagePaymentTransactionTypeDto transactionTypeDto) {
@@ -265,6 +455,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
             return transactionTypeDto.getDefaultRemark();
         }
         return paymentImportCache.getRemarks();
+    }
+
+    private String validateStringRemark(String value){
+        return (value != null && !"null".equals(value)) ? value : "";
     }
 
     @Override
@@ -280,41 +474,398 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         );
     }
 
-    private void sendCreatePaymentDetail(UUID paymentId, double amount,
-            UUID employee,
-            UUID transactionType,
-            String remarks,
-            UUID bookId,
-            boolean applyPayment) {
-        CreatePaymentDetailEvent createPaymentDetailEvent = new CreatePaymentDetailEvent(this);
-        createPaymentDetailEvent.setPayment(paymentId);
-        createPaymentDetailEvent.setAmount(amount);
-        createPaymentDetailEvent.setStatus(Status.ACTIVE);
-        createPaymentDetailEvent.setEmployee(employee);
-        createPaymentDetailEvent.setTransactionType(transactionType);
-        createPaymentDetailEvent.setRemark(remarks);
-        createPaymentDetailEvent.setBooking(bookId);
-        createPaymentDetailEvent.setApplyPayment(applyPayment);
-        applicationEventPublisher.publishEvent(createPaymentDetailEvent);
+    private void createPaymentDetailAndApply(PaymentDto payment,
+                                             double amount,
+                                             ManageEmployeeDto employee,
+                                             ManagePaymentTransactionTypeDto transactionType,
+                                             String remarks,
+                                             ManageBookingDto booking,
+                                             OffsetDateTime transactionDate,
+                                             ManagePaymentStatusDto paymentStatusApplied,
+                                             List<PaymentStatusHistoryDto> paymentStatusHistories,
+                                             List<PaymentDetailDto> createDetailPaymentList) {
+        PaymentDetailDto newPaymentDetailDto = new PaymentDetailDto(
+                UUID.randomUUID(),
+                Status.ACTIVE,
+                payment,
+                transactionType,
+                amount,
+                remarks,
+                null,
+                null,
+                null,
+                transactionDate,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false
+        );
+
+        //Other Deductions
+        boolean otherDeductionAndApplyPayment = !transactionType.getCash() && !transactionType.getDeposit();
+
+        if (!otherDeductionAndApplyPayment){
+            //Apply Payment Detail
+            ApplyPayment applyPayment = new ApplyPayment(payment,
+                    newPaymentDetailDto,
+                    booking,
+                    transactionDate,
+                    employee,
+                    paymentStatusApplied,
+                    amount);
+            applyPayment.applyPayment();
+            if(applyPayment.isPaymentApplied()){
+                PaymentStatusHistoryDto paymentStatusHistory = applyPayment.getPaymentStatusHistory();
+                paymentStatusHistories.add(paymentStatusHistory);
+            }
+        }else{
+            //Apply Other Deductions
+            ApplyOtherDeduction applyOtherDeduction = new ApplyOtherDeduction(payment,
+                    newPaymentDetailDto,
+                    booking,
+                    transactionType,
+                    transactionDate,
+                    amount);
+            applyOtherDeduction.applyOtherDeduction();
+        }
+
+        createDetailPaymentList.add(newPaymentDetailDto);
     }
 
-    private void sendToCreateApplyDeposit(UUID paymentDetail, double amount, UUID employee, UUID transactionType,
-            UUID transactionTypeIdForAdjustment, String remarks,
-            UUID bookId,
-            boolean applyPayment) {
-        CreatePaymentDetailApplyDepositCommand createPaymentDetailApplyDepositCommand
-                = new CreatePaymentDetailApplyDepositCommand(
-                        Status.ACTIVE,
-                        paymentDetail,
-                        transactionType,
-                        amount,
-                        remarks,
-                        employee,
-                        transactionTypeIdForAdjustment,
-                        bookId,
-                        applyPayment
-                );
-        ApplyDepositEvent applyDepositEvent = new ApplyDepositEvent(createPaymentDetailApplyDepositCommand, false);
-        applicationEventPublisher.publishEvent(applyDepositEvent);
+    private void sendToCreateApplyDeposit(PaymentDetailDto paymentDetail,
+                                          double amount,
+                                          ManageEmployeeDto employee,
+                                          ManagePaymentTransactionTypeDto transactionType,
+                                          String remarks,
+                                          ManageBookingDto booking,
+                                          PaymentDto payment,
+                                          OffsetDateTime transactionDate,
+                                          ManagePaymentStatusDto paymentStatusApplied,
+                                          List<PaymentStatusHistoryDto> paymentStatusHistories,
+                                          List<PaymentDetailDto> createPaymentDetailList,
+                                          List<PaymentDetailDto> updatePaymentDetailAntiList) {
+        PaymentDetailDto newPaymentDetail = new PaymentDetailDto(
+                UUID.randomUUID(),
+                Status.ACTIVE,
+                payment,
+                transactionType,
+                amount,
+                remarks,
+                null,
+                null,
+                null,
+                transactionDate,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false
+        );
+
+        ApplyDeposit applyDeposit = new ApplyDeposit(transactionType,
+                paymentDetail,
+                payment,
+                newPaymentDetail,
+                amount,
+                paymentStatusApplied,
+                booking,
+                transactionDate,
+                employee);
+        if(applyDeposit.apply()){
+            if(applyDeposit.isPaymentApplied()){
+                PaymentStatusHistoryDto paymentStatusHistory = applyDeposit.getPaymentStatusHistory();
+                paymentStatusHistories.add(paymentStatusHistory);
+            }
+            if(!updatePaymentDetailAntiList.contains(paymentDetail)){
+                updatePaymentDetailAntiList.add(paymentDetail);
+            }
+            createPaymentDetailList.add(newPaymentDetail);
+        }
+    }
+
+    public void addPaymentToList(PaymentDto payment, List<PaymentDto> paymentList) {
+        boolean exists = paymentList.stream().anyMatch(item -> item.getId().equals(payment.getId()));
+        if(!exists){
+            paymentList.add(payment);
+        }
+    }
+
+    private void createPaymentsDetails(List<PaymentDetailDto> paymentDetailsToCreate){
+        if(Objects.isNull(paymentDetailsToCreate) || paymentDetailsToCreate.isEmpty() ){
+            printLog("The payment detail list is null or empty");
+            return;
+        }
+
+        paymentDetailService.bulk(paymentDetailsToCreate);
+    }
+
+    private void updatePayments(List<PaymentDto> paymentList){
+        if(Objects.isNull(paymentList) || paymentList.isEmpty()){
+            printLog("The payment list is null or empty");
+            return;
+        }
+
+        paymentService.createBulk(paymentList);
+    }
+
+    private void createPaymentStatusHistory(List<PaymentStatusHistoryDto> paymentStatusHistoryList){
+        if(Objects.isNull(paymentStatusHistoryList) || paymentStatusHistoryList.isEmpty()){
+            printLog("The payment status history list is null or empty");
+            return;
+        }
+
+        paymentStatusHistoryService.createAll(paymentStatusHistoryList);
+    }
+
+    private void updateBookings(List<ManageBookingDto> bookingList){
+        if(Objects.isNull(bookingList) || bookingList.isEmpty()){
+            printLog("The booking list is null or empty");
+            return;
+        }
+
+        bookingService.updateAll(bookingList.stream().map(Booking::new).toList());
+    }
+
+    //TODO: Implementar en Invoicing esta replicacion para que se haga en bloque y no de uno en uno
+    private void replicateBookingToKafka(List<PaymentDetailDto> details){
+        details.forEach(paymentDetail -> {
+            try {
+                if(paymentDetail.getManageBooking() != null){
+                    PaymentDto payment = paymentDetail.getPayment();
+                    ManageBookingDto booking = paymentDetail.getManageBooking();
+
+                    ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                            payment.getId(),
+                            payment.getPaymentId(),
+                            new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
+                            ));
+                    if (booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || booking.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
+                        this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                    } else {
+                        this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                    }
+                }
+            } catch (Exception e) {
+                printLog("Error at sending UpdateBookingBalanceKafka to kafka: " + e);
+            }
+        });
+    }
+
+
+    private void printLog(String message){
+        logger.info("{} at: {}", message, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    }
+
+    private ManageEmployeeDto getEmployee(UUID id){
+        return employeeService.findById(id);
+    }
+
+    private List<UUID> getEmployeeHotelList(ManageEmployeeDto employee){
+        if(Objects.isNull(employee)){
+            return null;
+        }
+
+        return employee.getManageHotelList().stream()
+                .map(ManageHotelDto::getId)
+                .toList();
+    }
+
+    private List<UUID> getEmployeeAgencyList(ManageEmployeeDto employee){
+        if(Objects.isNull(employee)){
+            return null;
+        }
+
+        return employee.getManageAgencyList().stream()
+                .map(ManageAgencyDto::getId)
+                .toList();
+    }
+
+    private List<PaymentImportCache> getPaymentImportCachedList(String importProcessId){
+        if(Objects.isNull(importProcessId) || importProcessId.isEmpty()){
+            return Collections.emptyList();
+        }
+
+        List<PaymentImportCache> paymentCacheList = paymentImportCacheRepository.findAllByImportProcessId(importProcessId);
+        if (paymentCacheList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        paymentCacheList.sort(Comparator.comparing(PaymentImportCache::getRowNumber));
+        return paymentCacheList;
+    }
+
+    private Cache createCache(ExcelBean<PaymentDetailRow> excelBean, List<PaymentDetailRow> excelRows, PaymentImportDetailRequest request, ManageEmployeeDto employee){
+        Set<String> transactionCodeSet = new HashSet<>();
+        Set<Long> bookingsIdSet = new HashSet<>();
+        Set<Long> paymentIdSet = new HashSet<>();
+        Set<String> couponNumberSet = new HashSet<>();
+        Set<Long> paymentDetailsAntiSet = new HashSet<>();
+
+        //TODO Optimizar esta consulta
+        List<UUID> agencys = this.getEmployeeAgencyList(employee);
+        List<UUID> hotels = this.getEmployeeHotelList(employee);
+
+        for(PaymentDetailRow excelRow : excelBean){
+            excelRow.setImportProcessId(request.getImportProcessId());
+            excelRow.setImportType(request.getImportPaymentType().name());
+            excelRow.setAgencys(agencys);
+            excelRow.setHotels(hotels);
+            excelRows.add(excelRow);
+
+            if(Objects.nonNull(excelRow.getTransactionType())){
+                transactionCodeSet.add(excelRow.getTransactionType());
+            }
+
+            if(Objects.nonNull(excelRow.getBookId())){
+                bookingsIdSet.add(Long.parseLong(excelRow.getBookId()));
+            }
+
+            if(Objects.nonNull(excelRow.getPaymentId())){
+                paymentIdSet.add(Long.parseLong(excelRow.getPaymentId()));
+            }
+
+            if(Objects.nonNull(excelRow.getCoupon())){
+                couponNumberSet.add(excelRow.getCoupon());
+            }
+
+            if(excelRow.getAnti() != null){
+                paymentDetailsAntiSet.add(excelRow.getAnti().longValue());
+            }
+        }
+
+        List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionCodeSet));
+        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));//TODO Optimizar este select con JOIN FETCH
+        List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
+        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));//TODO Optimizar este select con JOIN FETCH o hacer custom repository
+        List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));//TODO Usar el  custom repository
+
+        List<UUID> hotelIds = paymentList.stream()
+                .map(payment -> payment.getHotel().getId())
+                .distinct()
+                .toList();
+
+        List<PaymentCloseOperationDto> closeOperationList = getCloseOperationDateTimeByHotel(hotelIds);
+
+        return new Cache(managePaymentTransactionTypeList,
+                bookings,
+                paymentList,
+                paymentDetailList,
+                bookingsByCouponList,
+                closeOperationList,
+                paymentDetailListAnti,
+                employee);
+    }
+
+    private Cache createCache(List<PaymentImportCache> paymentImportCacheList, ManageEmployeeDto employeeDto){
+        Set<String> transactionIdSet = new HashSet<>();
+        Set<Long> bookingsIdSet = new HashSet<>();
+        Set<Long> paymentIdSet = new HashSet<>();
+        Set<String> couponNumberSet = new HashSet<>();
+        Set<Long> paymentDetailsAntiSet = new HashSet<>();
+
+        for(PaymentImportCache paymentImportCache : paymentImportCacheList){
+            if(Objects.nonNull(paymentImportCache.getTransactionId())){
+                transactionIdSet.add(paymentImportCache.getTransactionId());
+            }
+
+            if(Objects.nonNull(paymentImportCache.getBookId())){
+                bookingsIdSet.add(Long.parseLong(paymentImportCache.getBookId()));
+            }
+
+            if(Objects.nonNull(paymentImportCache.getPaymentId())){
+                paymentIdSet.add(Long.parseLong(paymentImportCache.getPaymentId()));
+            }
+
+            if(Objects.nonNull(paymentImportCache.getCoupon())){
+                couponNumberSet.add(paymentImportCache.getCoupon());
+            }
+
+            if(paymentImportCache.getAnti() != null){
+                paymentDetailsAntiSet.add(Long.parseLong(paymentImportCache.getAnti()));
+            }
+        }
+
+        List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionIdSet));
+        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
+        List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
+        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
+        List<PaymentDetailDto> paymentDetailListAnti = new ArrayList<>(getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet)));
+
+        List<UUID> hotelIds = paymentList.stream()
+                .map(payment -> payment.getHotel().getId())
+                .distinct()
+                .toList();
+
+        List<PaymentCloseOperationDto> closeOperationList = getCloseOperationDateTimeByHotel(hotelIds);
+
+        return new Cache(managePaymentTransactionTypeList,
+                bookings,
+                paymentList,
+                paymentDetailList,
+                bookingsByCouponList,
+                closeOperationList,
+                paymentDetailListAnti,
+                employeeDto);
+    }
+
+    private List<ManagePaymentTransactionTypeDto> getTransactionType(List<String> ids){
+        //TODO Validar para traer todo
+        List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = new ArrayList<>(transactionTypeService.findByCodesAndPaymentInvoice(ids));
+        ManagePaymentTransactionTypeDto depositTransactionType = transactionTypeService.findByDeposit();
+        addManagePaymentTransactionTypeToList(depositTransactionType, managePaymentTransactionTypeList);
+
+        ManagePaymentTransactionTypeDto cashTransactionType = transactionTypeService.findByCash();
+        addManagePaymentTransactionTypeToList(cashTransactionType, managePaymentTransactionTypeList);
+
+        ManagePaymentTransactionTypeDto antiTransactionType = transactionTypeService.findByApplyDeposit();
+        addManagePaymentTransactionTypeToList(antiTransactionType, managePaymentTransactionTypeList);
+
+        return managePaymentTransactionTypeList;
+    }
+
+    private void addManagePaymentTransactionTypeToList(ManagePaymentTransactionTypeDto transactionType, List<ManagePaymentTransactionTypeDto> list){
+        if(list.stream().noneMatch(manageTransactionType -> manageTransactionType.getCode().equals(transactionType.getCode()))){
+            list.add(transactionType);
+        }
+    }
+
+    private List<ManageBookingDto> getBookings(List<Long> ids){
+        return bookingService.findByBookingIdIn(ids);
+    }
+
+    private List<PaymentDto> getPayments(List<Long> paymentIds){
+        return paymentService.findPaymentsByPaymentId(paymentIds);
+    }
+
+    private List<PaymentDetailDto> getPaymentDetailsProyection(List<Long> paymentsIds){
+        return paymentDetailService.findSimpleDetailsByPaymentGenIds(paymentsIds);
+    }
+
+    private List<ManageBookingDto> getBookingByCoupon(List<String> couponNumbers){
+        return bookingService.findAllBookingByCoupons(couponNumbers);
+    }
+
+    private List<ManageInvoiceDto> getInvoicesByGenId(List<Long> invoiceIds){
+        return new ArrayList<>(invoiceService.findInvoicesByGenId(invoiceIds));
+    }
+
+    private List<PaymentCloseOperationDto> getCloseOperationDateTimeByHotel(List<UUID> hotelIds){
+        return this.paymentCloseOperationService.findByHotelIds(hotelIds);
+    }
+
+    private ManagePaymentStatusDto getPaymentStatusApplied(){
+        return paymentStatusService.findByApplied();
+    }
+
+    private List<PaymentDetailDto> getPaymentDetailListByGenId(List<Long> ids){
+        return paymentDetailService.findByPaymentDetailsIdIn(ids).stream()
+                .map(PaymentDetail::toAggregate).collect(Collectors.toList());
     }
 }

@@ -22,8 +22,8 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
     private final PaymentImportCacheRepository paymentImportCacheRepository;
 
     public PaymentImportAmountValidator(ApplicationEventPublisher applicationEventPublisher,
-            IPaymentDetailService paymentDetailService,
-            PaymentImportCacheRepository paymentImportCacheRepository) {
+                                        IPaymentDetailService paymentDetailService,
+                                        PaymentImportCacheRepository paymentImportCacheRepository) {
         super(applicationEventPublisher);
         this.paymentDetailService = paymentDetailService;
         this.paymentImportCacheRepository = paymentImportCacheRepository;
@@ -50,7 +50,7 @@ public class PaymentImportAmountValidator extends ExcelRuleValidator<AntiToIncom
                 pageCache = paymentImportCacheRepository.findAllByImportProcessId(obj.getImportProcessId(), pageable);
                 amountTotal += pageCache.stream().filter(Objects::nonNull)
                         .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getAnti())
-                        && !paymentImportCache.getAnti().isEmpty())
+                                && !paymentImportCache.getAnti().isEmpty())
                         .map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount()))
                         .reduce(0.0, Double::sum);
                 pageable = pageable.next();

@@ -240,32 +240,8 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>auth</artifactId>
-      <version>2.21.7</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>aws-core</artifactId>
-      <version>2.21.7</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
-      <version>2.21.7</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.minio</groupId>
-      <artifactId>minio</artifactId>
-      <version>8.5.14</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>com.kynsoft.finamer</groupId>
-      <artifactId>share</artifactId>
+      <artifactId>share-dev</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>

@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.repository.query;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.dto.projection.paymentDetails.PaymentDetailSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.payments.PaymentDetailCustomRepository;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +18,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<PaymentDetail, UUID>,
-        JpaSpecificationExecutor<PaymentDetail> {
+        JpaSpecificationExecutor<PaymentDetail>, PaymentDetailCustomRepository {
 
     @EntityGraph(attributePaths = {"payment", "transactionType", "manageBooking", "paymentDetails"}, type = EntityGraph.EntityGraphType.LOAD)
     Page<PaymentDetail> findAll(Specification specification, Pageable pageable);
@@ -51,7 +52,7 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
     Long countByApplyPaymentAndPaymentId(@Param("id") UUID paymentId);
 
     @Query("SELECT new com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto(" +
-            "pd.id, pd.applyDepositValue, tt.deposit, pp.id, pp.agency.id, pp.hotel.id) " +
+            "pd.id, pd.applyDepositValue, tt.deposit, pp.id, pp.agency.id, pp.hotel.id, pd.paymentDetailId) " +
             "FROM PaymentDetail pd " +
             "JOIN pd.transactionType tt " +
             "LEFT JOIN pd.payment pp " +
@@ -63,4 +64,7 @@ public interface ManagePaymentDetailReadDataJPARepository extends JpaRepository<
             "FROM PaymentDetail pd " +
             "WHERE pd.paymentDetailId = :id")
     Optional<PaymentDetailSimple> findPaymentDetailsSimpleCacheableByGenId(@Param("id") int id);
+
+    List<PaymentDetail> findByPayment_PaymentIdIn(List<Long> ids);
+
 }

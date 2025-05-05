@@ -23,6 +23,8 @@ public interface IPaymentService {
 
     PaymentDto findById(UUID id);
 
+    PaymentDto findByIdCustom(UUID id);
+
     Payment findPaymentById(UUID id);
     /**
      * Permite obtener los Payment con Detalles.
@@ -71,4 +73,7 @@ public interface IPaymentService {
             Double applied, 
             boolean applyPayment,
             UUID id);
+    void updateStatus(UUID paymentId, UUID paymentStatus);
+
+    List<PaymentDto> findPaymentsByPaymentId(List<Long> paymentsId);
 }

@@ -21,10 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageBookingServiceImpl implements IManageBookingService {
@@ -48,6 +46,14 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public void updateAll(List<Booking> list) {
         this.repositoryCommand.saveAll(list);
+    }
+
+    @Override
+    public void updateAllBooking(List<ManageBookingDto> list) {
+        if(Objects.isNull(list)){
+            throw new IllegalArgumentException("The booking list must not be null");
+        }
+        this.repositoryCommand.saveAll(list.stream().map(Booking::new).collect(Collectors.toList()));
     }
 
     @Override
@@ -121,6 +127,14 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public List<BookingProjectionControlAmountBalance> findAllSimpleBookingByGenId(List<Long> ids) {
+        if(Objects.nonNull(ids)){
+            return repositoryQuery.findBookingsControlAmountBalanceProjectionByGenId(ids);
+        }
+        throw new IllegalArgumentException("Booking Ids must not be null");
+    }
+
+    @Override
     public List<ManageBookingDto> findByBookingIdIn(List<Long> ids) {
         List<ManageBookingDto> list = new ArrayList<>();
         for (Booking booking : this.repositoryQuery.findByBookingIdIn(ids)) {
@@ -157,6 +171,25 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     @Override
     public Long countByCoupon(String coupon) {
         return this.repositoryQuery.countByCouponNumber(coupon);
+    }
+
+    @Override
+    public List<ManageBookingDto> findAllBookingByCoupons(List<String> coupons) {
+        if(Objects.nonNull(coupons)){
+            return repositoryQuery.findAllByCouponNumber(coupons).stream().map(Booking::toAggregate).toList();
+        }
+        throw new IllegalArgumentException("Coupon numbers must not be null");
+
+    }
+
+    @Override
+    public List<ManageBookingDto> findAllById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The booking Id list must not be null");
+        }
+        return repositoryQuery.findAllById(ids).stream()
+                .map(Booking::toAggregate)
+                .collect(Collectors.toList());
     }
 
 }

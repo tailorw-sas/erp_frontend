@@ -23,18 +23,14 @@ public class CreateJasperReportTemplateCommand implements ICommand {
     private String file;
 
     private Double menuPosition;
-    private UUID dbConection;
+    private UUID dbConnection;
     private String query;
 
     private final ModuleSystems moduleSystems;
 
-    public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type,
-                                             String file,
-                                             Double menuPosition,
-                                           UUID dbConection,
-                                              ModuleSystems moduleSystems) {
+    public CreateJasperReportTemplateCommand(String code, String name, String description, JasperReportTemplateType type, String file,
+        Double menuPosition, UUID dbConnection, ModuleSystems moduleSystems) {
         this.moduleSystems = moduleSystems;
-
         this.id = UUID.randomUUID();
         this.code = code;
         this.name = name;
@@ -42,7 +38,7 @@ public class CreateJasperReportTemplateCommand implements ICommand {
         this.type = type;
         this.file = file;
         this.menuPosition = menuPosition;
-        this.dbConection = dbConection;
+        this.dbConnection = dbConnection;
     }
 
     public static CreateJasperReportTemplateCommand fromRequest(CreateJasperReportTemplateRequest request) {

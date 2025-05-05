@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 
 @Getter
@@ -16,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @XmlRootElement(name = "Product")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Product {
+public class Product extends BaseXml {
     @XmlAttribute(name = "SupplierSKU")
     private String supplierSku;
 
@@ -41,9 +43,42 @@ public class Product {
     @XmlAttribute(name = "Comment")
     private String comment= StringUtils.EMPTY;
 
-    @XmlElement(name = "Taxes")
+    @XmlElementWrapper(name="Taxes")
+    @XmlElement(name = "Tax")
     private List<Tax> taxes;
 
-    @XmlElement(name = "ServicesData")
+    @XmlElementWrapper(name="ServicesData")
+    @XmlElement(name = "ServiceData")
     private List<ServiceData> serviceDatas;
+
+    @Override
+    public String toString() {
+        String taxesXml = "";
+        if (taxes != null && !taxes.isEmpty()) {
+            taxesXml = taxes.stream()
+                    .map(Tax::toString)
+                    .collect(Collectors.joining("\n", "<Taxes>\n", "\n</Taxes>"));
+        }
+
+        String servicesXml = "";
+        if (serviceDatas != null && !serviceDatas.isEmpty()) {
+            servicesXml = serviceDatas.stream()
+                    .map(ServiceData::toString)
+                    .collect(Collectors.joining("\n", "<ServicesData>\n", "\n</ServicesData>"));
+        }
+
+        return String.format(Locale.US,
+                "<Product SupplierSKU=\"%s\" CustomerSKU=\"%s\" Item=\"%s\" Qty=\"%d\" MU=\"%s\" UP=\"%.2f\" Total=\"%.2f\" Comment=\"%s\">%s%s\n</Product>",
+                safe(supplierSku),
+                safe(customerSku),
+                safe(item),
+                qty,
+                safe(mu),
+                up,
+                total,
+                safe(comment),
+                taxesXml.isEmpty() ? "" : "\n" + taxesXml,
+                servicesXml.isEmpty() ? "" : "\n" + servicesXml
+        );
+    }
 }

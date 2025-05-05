@@ -28,6 +28,7 @@ public class ManagerTimeZone implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
     @Column(unique = true)
     private String code;
 
@@ -56,6 +57,20 @@ public class ManagerTimeZone implements Serializable {
 
     public ManagerTimeZoneDto toAggregate() {
         return new ManagerTimeZoneDto(id, code, name, description, elapse, status);
+    }
+
+    public ManagerTimeZone(UUID id,
+                           String code,
+                           String name,
+                           String description,
+                           Double elapse,
+                           Status status){
+        this.id = id;
+        this.code = code;
+        this.description = description;
+        this.name = name;
+        this.elapse = elapse;
+        this.status = status;
     }
 
 }

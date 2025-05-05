@@ -1,5 +1,5 @@
 package com.kynsoft.report.infrastructure.services;
-
+/*
 import com.kynsoft.report.domain.services.IAmazonClient;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.PutObjectArgs;
@@ -122,4 +122,4 @@ public class MinIOClient implements IAmazonClient {
                 .build();
         minioClient.removeObject(req);
     }
-}
+}*/

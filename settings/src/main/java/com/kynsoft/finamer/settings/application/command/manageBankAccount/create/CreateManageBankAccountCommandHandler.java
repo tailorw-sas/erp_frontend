@@ -43,7 +43,7 @@ public class CreateManageBankAccountCommandHandler implements ICommandHandler<Cr
 
     @Override
     public void handle(CreateManageBankAccountCommand command) {
-        RulesChecker.checkRule(new ManageBankAccountNumberMustBeUniqueRule(this.service, command.getAccountNumber(), command.getId(), command.getManageBank()));
+        //RulesChecker.checkRule(new ManageBankAccountNumberMustBeUniqueRule(this.service, command.getAccountNumber(), command.getId(), command.getManageBank()));
         RulesChecker.checkRule(new ManageBankAccountNumberRule(command.getAccountNumber()));
 
         ManagerBankDto manageBankDto = bankService.findById(command.getManageBank());

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -59,4 +60,7 @@ public interface PaymentReadDataJPARepository extends JpaRepository<Payment, UUI
     @EntityGraph(attributePaths = {"paymentBalance", "depositBalance"}, type = EntityGraph.EntityGraphType.FETCH)
     @Query("SELECT p FROM Payment p WHERE p.id = :id")
     Optional<Payment> findByIdWithBalancesOnly(@Param("id") UUID id);
+
+    //TODO Optimizar con JOIN FETCH o el CustomRepository
+    List<Payment> getByPaymentId_In(List<Long> paymentIds);
 }

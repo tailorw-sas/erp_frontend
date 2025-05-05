@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.services;
 
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
+import com.kynsof.share.core.application.excel.validator.IImportControl;
 import com.kynsof.share.core.domain.exception.BusinessRuleValidationException;
 import com.kynsof.share.core.domain.exception.ExcelException;
 import com.kynsof.share.core.domain.request.FilterCriteria;
@@ -14,6 +15,7 @@ import com.kynsoft.finamer.payment.application.query.paymentImport.details.statu
 import com.kynsoft.finamer.payment.domain.dto.PaymentImportStatusDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EImportPaymentType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentImportProcessStatus;
+import com.kynsoft.finamer.payment.domain.excel.ImportControl;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportProcessStatusEntity;
 import com.kynsoft.finamer.payment.domain.services.AbstractPaymentImportHelperService;
 import com.kynsoft.finamer.payment.domain.services.IPaymentImportDetailService;
@@ -54,6 +56,7 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
     @Override
     public void importPaymentFromFile(PaymentImportDetailRequest request) {
         paymentImportHelperService = paymentImportHelperProvider.provideImportHelperService(request.getImportPaymentType());
+        ImportControl importControl = new ImportControl(false);
         try {
             ReaderConfiguration readerConfiguration = new ReaderConfiguration();
             readerConfiguration.setIgnoreHeaders(true);

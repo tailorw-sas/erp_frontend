@@ -31,10 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -106,9 +103,22 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public PaymentDto findById(UUID id) {
-        Optional<Payment> userSystem = this.repositoryQuery.findById(id);
-        if (userSystem.isPresent()) {
-            return userSystem.get().toAggregateWihtDetails();
+        Optional<Payment> payment = this.repositoryQuery.findById(id);
+        if (payment.isPresent()) {
+            return payment.get().toAggregateWihtDetails();
+        }
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public PaymentDto findByIdCustom(UUID id) {
+        long startTime = System.nanoTime();
+        Optional<Payment> payment = this.repositoryQuery.findByIdCustom(id);
+        long endTime = System.nanoTime();
+        System.out.println("*****************Tiempo:" + (endTime - startTime)/1_000_000);
+
+        if (payment.isPresent()) {
+            return payment.get().toAggregateBasicPayment();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.PAYMENT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.PAYMENT_NOT_FOUND.getReasonPhrase())));
     }
@@ -389,6 +399,21 @@ public class PaymentServiceImpl implements IPaymentService {
             boolean applyPayment,
             UUID id) {
         this.repositoryCommand.updateBalances(paymentBalance, depositBalance, identified, notIdentified, notApplied, applied, applyPayment, id);
+    }
+
+    @Override
+    public void updateStatus(UUID paymentId, UUID paymentStatus) {
+        this.repositoryCommand.updateStatus(paymentStatus, paymentId);
+    }
+
+    @Override
+    public List<PaymentDto> findPaymentsByPaymentId(List<Long> paymentsId) {
+        if(Objects.nonNull(paymentsId)){
+            return repositoryQuery.getByPaymentId_In(paymentsId).stream()
+                    .map(Payment::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("Payments ids must not be null");
     }
 
 }

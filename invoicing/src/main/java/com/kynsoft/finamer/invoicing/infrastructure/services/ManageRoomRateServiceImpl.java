@@ -38,7 +38,8 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
 
     private final ManageBookingReadDataJPARepository manageBookingReadDataJPARepository;
 
-    public ManageRoomRateServiceImpl(ManageRoomRateWriteDataJPARepository repositoryCommand, ManageRoomRateReadDataJPARepository repositoryQuery, ManageBookingReadDataJPARepository manageBookingReadDataJPARepository) {
+    public ManageRoomRateServiceImpl(ManageRoomRateWriteDataJPARepository repositoryCommand, ManageRoomRateReadDataJPARepository repositoryQuery,
+                                     ManageBookingReadDataJPARepository manageBookingReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.manageBookingReadDataJPARepository = manageBookingReadDataJPARepository;

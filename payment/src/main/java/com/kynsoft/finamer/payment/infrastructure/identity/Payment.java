@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.BankerRounding;
@@ -21,6 +22,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.hibernate.annotations.DynamicUpdate;
@@ -32,8 +34,8 @@ import org.hibernate.generator.EventType;
 @Setter
 @Entity
 @Table(name = "payment")
-@EntityListeners(AuditEntityListener.class)
-@RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+//@EntityListeners(AuditEntityListener.class)
+//@RemoteAudit(name = "payment", id = "7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 @DynamicUpdate
 public class Payment implements Serializable {
 
@@ -99,6 +101,7 @@ public class Payment implements Serializable {
      * pago, son quienes proporcionan la invoice.
      */
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "payment")
+    @JsonManagedReference
     private List<PaymentDetail> paymentDetails;
 
     //@Column(precision = 2)
@@ -293,6 +296,104 @@ public class Payment implements Serializable {
                 hasAttachment,
                 hasDetailTypeDeposit
         );
+    }
+
+    public PaymentDto toAggregateBasic() {
+        return new PaymentDto(
+                id,
+                paymentId != null ? paymentId : null,
+                status,
+                reference,
+                transactionDate,
+                Objects.nonNull(paymentStatus) ? paymentStatus.toAggregate() : null,
+                paymentAmount,
+                paymentBalance,
+                depositAmount,
+                depositBalance,
+                otherDeductions,
+                identified,
+                notIdentified,
+                notApplied,
+                applied,
+                remark,
+                createdAt,
+                eAttachment != null ? eAttachment : EAttachment.NONE,
+                dateTime
+        );
+    }
+
+    public Payment(
+            UUID id,
+            Long paymentId,
+            Status status,
+            EAttachment eAttachment,
+            ManagePaymentSource paymentSource,
+            String reference,
+            LocalDate transactionDate,
+            LocalTime dateTime,
+            ManagePaymentStatus paymentStatus,
+            ManageClient client,
+            ManageAgency agency,
+            ManageHotel hotel,
+            Invoice invoice,
+            ManageBankAccount bankAccount,
+            ManagePaymentAttachmentStatus attachmentStatus,
+            List<MasterPaymentAttachment> attachments,
+            List<PaymentDetail> paymentDetails,
+            Double paymentAmount,
+            Double paymentBalance,
+            Double depositAmount,
+            Double depositBalance,
+            Double otherDeductions,
+            Double identified,
+            Double notIdentified,
+            Double notApplied,
+            Double applied,
+            String remark,
+            boolean applyPayment,
+            boolean hasAttachment,
+            boolean hasDetailTypeDeposit,
+            boolean paymentSupport,
+            boolean createByCredit,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt,
+            ImportType importType
+    ) {
+        this.id = id;
+        this.paymentId = paymentId;
+        this.status = status;
+        this.eAttachment = eAttachment;
+        this.paymentSource = paymentSource;
+        this.reference = reference;
+        this.transactionDate = transactionDate;
+        this.dateTime = dateTime;
+        this.paymentStatus = paymentStatus;
+        this.client = client;
+        this.agency = agency;
+        this.hotel = hotel;
+        this.invoice = invoice;
+        this.bankAccount = bankAccount;
+        this.attachmentStatus = attachmentStatus;
+        this.attachments = attachments;
+        this.paymentDetails = paymentDetails;
+        this.paymentAmount = paymentAmount;
+        this.paymentBalance = paymentBalance;
+        this.depositAmount = depositAmount;
+        this.depositBalance = depositBalance;
+        this.otherDeductions = otherDeductions;
+        this.identified = identified;
+        this.notIdentified = notIdentified;
+        this.notApplied = notApplied;
+        this.applied = applied;
+        this.remark = remark;
+        this.applyPayment = applyPayment;
+        this.hasAttachment = hasAttachment;
+        this.hasDetailTypeDeposit = hasDetailTypeDeposit;
+        this.paymentSupport = paymentSupport;
+        this.createByCredit = createByCredit;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.importType = importType;
     }
 
 }

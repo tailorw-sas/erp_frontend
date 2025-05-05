@@ -127,7 +127,8 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 null, 
                 null,
                 command.getContract(),
-                false
+                false,
+                null
         );
         bookingService.create(newBooking);
 

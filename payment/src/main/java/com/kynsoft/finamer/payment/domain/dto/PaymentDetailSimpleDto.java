@@ -19,4 +19,5 @@ public class PaymentDetailSimpleDto {
     private UUID paymentId;
     private UUID paymentAgency;
     private UUID paymentHotel;
+    private Long paymentDetailId;
 }

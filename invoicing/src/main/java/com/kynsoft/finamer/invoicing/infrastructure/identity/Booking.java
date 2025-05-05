@@ -1,9 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
-import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +14,7 @@ import org.hibernate.generator.EventType;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,8 +24,6 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "booking")
-//@EntityListeners(AuditEntityListener.class)
-//@RemoteAudit(name = "booking",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class Booking {
     @Id
     @Column(name = "id")
@@ -119,108 +115,161 @@ public class Booking {
         this.checkOut = dto.getCheckOut();
         this.hotelBookingNumber = dto.getHotelBookingNumber();
         this.fullName = dto.getFullName();
-        this.invoiceAmount = dto.getInvoiceAmount() != null ? BankerRounding.round(dto.getInvoiceAmount()) : null;
+        this.invoiceAmount = Objects.nonNull(dto.getInvoiceAmount()) ? BankerRounding.round(dto.getInvoiceAmount()) : null;
         this.roomNumber = dto.getRoomNumber();
         this.couponNumber = dto.getCouponNumber();
         this.adults = dto.getAdults();
-        this.children = dto.getChildren() != null ? dto.getChildren() : 0;
+        this.children = Objects.nonNull(dto.getChildren()) ? dto.getChildren() : 0;
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
-        this.rateAdult = dto.getRateAdult() != null ? BankerRounding.round(dto.getRateAdult()) : null;
-        this.rateChild = dto.getRateChild() != null ? BankerRounding.round(dto.getRateChild()) : null;
+        this.rateAdult = Objects.nonNull(dto.getRateAdult()) ? BankerRounding.round(dto.getRateAdult()) : null;
+        this.rateChild = Objects.nonNull(dto.getRateChild()) ? BankerRounding.round(dto.getRateChild()) : null;
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.folioNumber = dto.getFolioNumber();
-        this.hotelAmount = dto.getHotelAmount() != null ? BankerRounding.round(dto.getHotelAmount()) : null;
+        this.hotelAmount = Objects.nonNull(dto.getHotelAmount()) ? BankerRounding.round(dto.getHotelAmount()) : null;
         this.description = dto.getDescription();
-        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
-        this.ratePlan = dto.getRatePlan() != null ? new ManageRatePlan(dto.getRatePlan()) : null;
-        this.nightType = dto.getNightType() != null ? new ManageNightType(dto.getNightType()) : null;
-        this.roomType = dto.getRoomType() != null ? new ManageRoomType(dto.getRoomType()) : null;
-        this.roomCategory = dto.getRoomCategory() != null ? new ManageRoomCategory(dto.getRoomCategory()) : null;
-        this.roomRates = dto.getRoomRates() != null ? dto.getRoomRates().stream().map(r -> {
+        this.invoice = Objects.nonNull(dto.getInvoice()) ? new Invoice(dto.getInvoice()) : null;
+        this.ratePlan = Objects.nonNull(dto.getRatePlan()) ? new ManageRatePlan(dto.getRatePlan()) : null;
+        this.nightType = Objects.nonNull(dto.getNightType()) ? new ManageNightType(dto.getNightType()) : null;
+        this.roomType = Objects.nonNull(dto.getRoomType()) ? new ManageRoomType(dto.getRoomType()) : null;
+        this.roomCategory = Objects.nonNull(dto.getRoomCategory()) ? new ManageRoomCategory(dto.getRoomCategory()) : null;
+        this.roomRates = Objects.nonNull(dto.getRoomRates()) ? dto.getRoomRates().stream().map(r -> {
             r.setBooking(null);
             ManageRoomRate roomRate = new ManageRoomRate(r);
-            roomRate.setRoomRateId(this.roomRates != null ? this.roomRates.size() + 1L : 1L);
+            roomRate.setRoomRateId(Objects.nonNull(this.roomRates) ? this.roomRates.size() + 1L : 1L);
             roomRate.setBooking(this);
             return roomRate;
         }).collect(Collectors.toList()) : null;
 
-        this.nights = dto.getCheckIn() != null && dto.getCheckOut() !=null ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
-        this.dueAmount = dto.getDueAmount() != null ? BankerRounding.round(dto.getDueAmount()) : 0.0;
-        this.parent = dto.getParent() != null ? new Booking(dto.getParent()) : null;
+        this.nights = Objects.nonNull(dto.getCheckIn()) && Objects.nonNull(dto.getCheckOut()) ? dto.getCheckIn().until(dto.getCheckOut(), ChronoUnit.DAYS) : 0L;
+        this.dueAmount = Objects.nonNull(dto.getDueAmount()) ? BankerRounding.round(dto.getDueAmount()) : 0.0;
+        this.parent = Objects.nonNull(dto.getParent()) ? new Booking(dto.getParent()) : null;
         this.contract = dto.getContract();
         this.deleteInvoice = dto.isDeleteInvoice();
+        this.updatedAt = dto.getUpdatedAt();
     }
 
     public ManageBookingDto toAggregate() {
-        return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
-                checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, 
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
-                dueAmount != null ? BankerRounding.round(dueAmount) : 0.0, 
-                roomNumber, couponNumber, adults,
-                children != null ? children : 0,
-                rateAdult != null ? BankerRounding.round(rateAdult) : null,
-                rateChild != null ? BankerRounding.round(rateChild) : null,
-                hotelInvoiceNumber, folioNumber, 
-                hotelAmount != null ? BankerRounding.round(hotelAmount) : null, 
-                description,
-                invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
-                nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
-                roomCategory != null ? roomCategory.toAggregate() : null,
-                null,  //roomRates != null ? roomRates.stream().map(ManageRoomRate::toAggregateSample).collect(Collectors.toList()) : null,
-                 nights,
-                parent != null ? parent.toAggregateSample() : null, contract, deleteInvoice);
+        return new ManageBookingDto(
+                this.id,
+                this.bookingId,
+                this.reservationNumber,
+                this.hotelCreationDate,
+                this.bookingDate,
+                this.checkIn,
+                this.checkOut,
+                this.hotelBookingNumber,
+                this.fullName,
+                this.firstName,
+                this.lastName,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(this.dueAmount) : 0.0,
+                this.roomNumber,
+                this.couponNumber,
+                this.adults,
+                Objects.nonNull(this.children) ? this.children : 0,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                this.hotelInvoiceNumber,
+                this.folioNumber,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.description,
+                Objects.nonNull(this.invoice) ? this.invoice.toAggregateSimple() : null,
+                Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
+                Objects.nonNull(this.nightType) ? this.nightType.toAggregate() : null,
+                Objects.nonNull(this.roomType) ? this.roomType.toAggregate() : null,
+                Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
+                null,
+                this.nights,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                this.contract,
+                this.deleteInvoice,
+                this.updatedAt
+        );
+
     }
 
     public ManageBookingDto toAggregateWithRates() {
-        return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
-                checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, 
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
-                dueAmount != null ? BankerRounding.round(dueAmount) : 0.0, 
-                roomNumber, couponNumber, adults,
-                children != null ? children : 0,
-                rateAdult != null ? BankerRounding.round(rateAdult) : null,
-                rateChild != null ? BankerRounding.round(rateChild) : null,
-                hotelInvoiceNumber, folioNumber, 
-                hotelAmount != null ? BankerRounding.round(hotelAmount) : null, 
-                description,
-                invoice != null ? invoice.toAggregateSample() : null, ratePlan != null ? ratePlan.toAggregate() : null,
-                nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
-                roomCategory != null ? roomCategory.toAggregate() : null,
-                roomRates != null ? roomRates.stream().map(ManageRoomRate::toAggregateSample).collect(Collectors.toList()) : null,
-                nights,
-                parent != null ? parent.toAggregateSample() : null, contract, deleteInvoice);
+        return new ManageBookingDto(
+                this.id,
+                this.bookingId,
+                this.reservationNumber,
+                this.hotelCreationDate,
+                this.bookingDate,
+                this.checkIn,
+                this.checkOut,
+                this.hotelBookingNumber,
+                this.fullName,
+                this.firstName,
+                this.lastName,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(this.dueAmount) : 0.0,
+                this.roomNumber,
+                this.couponNumber,
+                this.adults,
+                Objects.nonNull(this.children) ? this.children : 0,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                this.hotelInvoiceNumber, this.folioNumber,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.description,
+                Objects.nonNull(this.invoice) ? this.invoice.toAggregateSimple() : null,
+                Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
+                Objects.nonNull(this.nightType) ? this.nightType.toAggregate() : null,
+                Objects.nonNull(this.roomType) ? this.roomType.toAggregate() : null,
+                Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
+                Objects.nonNull(this.roomRates) ? this.roomRates.stream().map(ManageRoomRate::toAggregateSimple).collect(Collectors.toList()) : null,
+                this.nights,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                this.contract,
+                this.deleteInvoice,
+                this.updatedAt
+        );
     }
 
-    public ManageBookingDto toAggregateSample() {
-        return new ManageBookingDto(id, bookingId, reservationNumber, hotelCreationDate, bookingDate, checkIn,
-                checkOut,
-                hotelBookingNumber, fullName, firstName, lastName, 
-                invoiceAmount != null ? BankerRounding.round(invoiceAmount) : null, 
-                dueAmount != null ? BankerRounding.round(dueAmount) : null, 
-                roomNumber, couponNumber, adults,
-                children,
-                rateAdult != null ? BankerRounding.round(rateAdult) : null,
-                rateChild != null ? BankerRounding.round(rateChild) : null,
-                hotelInvoiceNumber, folioNumber, 
-                hotelAmount != null ? BankerRounding.round(hotelAmount) : null, 
-                description,
-                null, ratePlan != null ? ratePlan.toAggregate() : null,
-                nightType != null ? nightType.toAggregate() : null, roomType != null ? roomType.toAggregate() : null,
-                roomCategory != null ? roomCategory.toAggregate() : null,
-//                roomRates != null ? roomRates.stream().map(b -> {
-//                    return b.toAggregateSample();
-//                }).collect(Collectors.toList()) : null,
+    public ManageBookingDto toAggregateSimple() {
+        return new ManageBookingDto(
+                this.id,
+                this.bookingId,
+                this.reservationNumber,
+                this.hotelCreationDate,
+                this.bookingDate,
+                this.checkIn,
+                this.checkOut,
+                this.hotelBookingNumber,
+                this.fullName,
+                this.firstName,
+                this.lastName,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(this.dueAmount) : null,
+                this.roomNumber,
+                this.couponNumber,
+                this.adults,
+                this.children,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                this.hotelInvoiceNumber,
+                this.folioNumber,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.description,
                 null,
-                nights, null, contract, deleteInvoice);
+                Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
+                Objects.nonNull(this.nightType) ? this.nightType.toAggregate() : null,
+                Objects.nonNull(this.roomType) ? this.roomType.toAggregate() : null,
+                Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
+                null,
+                this.nights,
+                null,
+                this.contract,
+                this.deleteInvoice,
+                this.updatedAt
+        );
     }
 
     @PostLoad
     public void initDefaultValue() {
-        if (dueAmount == null) {
-            dueAmount = 0.0;
+        if (Objects.isNull(this.dueAmount)) {
+            this.dueAmount = 0.0;
         }
     }
 }
