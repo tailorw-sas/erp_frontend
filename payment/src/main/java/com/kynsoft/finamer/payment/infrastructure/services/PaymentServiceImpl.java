@@ -409,7 +409,7 @@ public class PaymentServiceImpl implements IPaymentService {
     @Override
     public List<PaymentDto> findPaymentsByPaymentId(List<Long> paymentsId) {
         if(Objects.nonNull(paymentsId)){
-            return repositoryQuery.getByPaymentId_In(paymentsId).stream()
+            return repositoryQuery.findAllByPaymentIdCustom(paymentsId).stream()
                     .map(Payment::toAggregate)
                     .toList();
         }

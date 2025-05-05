@@ -52,7 +52,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private final PaymentImportCacheRepository paymentImportCacheRepository;
     private final PaymentDetailValidatorFactory paymentDetailValidatorFactory;
-    private final ApplicationEventPublisher applicationEventPublisher;
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final IPaymentService paymentService;
     private final IPaymentDetailService paymentDetailService;
@@ -67,12 +66,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentImportDetailHelperServiceImpl.class);
 
-
     private boolean stopProcess;
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                                 PaymentDetailValidatorFactory paymentDetailValidatorFactory,
-                                                ApplicationEventPublisher applicationEventPublisher,
                                                 IManagePaymentTransactionTypeService transactionTypeService,
                                                 IPaymentService paymentService, IPaymentDetailService paymentDetailService,
                                                 PaymentImportDetailErrorRepository detailErrorRepository,
@@ -85,7 +82,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                                 IManageInvoiceService invoiceService) {
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
-        this.applicationEventPublisher = applicationEventPublisher;
         this.transactionTypeService = transactionTypeService;
         this.paymentService = paymentService;
         this.paymentDetailService = paymentDetailService;
@@ -153,6 +149,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         ManageEmployeeDto employee = this.getEmployee(UUID.fromString(request.getEmployeeId()));
         List<PaymentImportCache> paymentCacheList = this.getPaymentImportCachedList(request.getImportProcessId());
         if(paymentCacheList.isEmpty()){
+            printLog("End readPaymentCacheAndSave process because there are errors in validation");
             return;
         }
 
@@ -204,14 +201,13 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         List<ManageBookingDto> bookings = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
                         if(Objects.nonNull(bookings) && bookings.size() > 1){
                             ManagePaymentTransactionTypeDto transactionTypeDto = cache.getPaymentInvoiceTransactionType();
-                            String remarks = getRemarks(paymentImportCache, transactionTypeDto) + " #payment was not applied because the coupon is duplicated.";
                             //detail sin booking, transaction type tipo cash, sin aplicar pago, tomando directo el amount que viene en el excel y con remark modificado
                             createDetailAndDeposit(paymentImportCache,
                                     null,
                                     transactionTypeDto,
                                     paymentDto,
                                     Double.parseDouble(paymentImportCache.getPaymentAmount()),
-                                    remarks,
+                                    String.format("Payment was not applied because the coupon '%s' is duplicated.", paymentImportCache.getCoupon()),
                                     employee,
                                     depositPaymentTransactionType,
                                     transactionDate,
@@ -219,16 +215,16 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                     paymentStatusApplied,
                                     paymentDetailsToCreate);
                         } else {
-                            if(Objects.isNull(bookings)){
+                            if(Objects.isNull(bookings) || bookings.isEmpty()){
                                 PaymentDetailDto paymentDetailTypeDeposit = getDeposit(paymentImportCache,
                                         paymentDto,
                                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
                                         true,
-                                        "#coupon not found",
+                                        String.format("Coupon '%s' not found", paymentImportCache.getCoupon()),
                                         transactionDate,
                                         depositPaymentTransactionType);
                                 paymentDetailsToCreate.add(paymentDetailTypeDeposit);
-                            }else{
+                             }else{
                                 ManageBookingDto booking = bookings.get(0);
                                 if (booking.getAmountBalance() == 0) {
                                     PaymentDetailDto paymentDetailTypeDeposit = sendDeposit(paymentImportCache,
@@ -298,7 +294,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                    List<PaymentDetailDto> paymentDetailsToCreate,
                                    List<PaymentDetailDto> paymentDetailsAntiToUpdate,
                                    List<ManageBookingDto> bookingsToUpdate){
-        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentId(paymentDto.getId(), Long.parseLong(paymentImportCache.getAnti()));
+        PaymentDetailDto paymentDetailDto = cache.getPaymentDetailByPaymentDetailId(Long.parseLong(paymentImportCache.getAnti()));
 
         if(Objects.isNull(bookingDto)){
             List<ManageBookingDto> bookingList = cache.getBookingsByCoupon(paymentImportCache.getCoupon());
@@ -324,7 +320,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                         Double.parseDouble(paymentImportCache.getPaymentAmount()),
                         employee,
                         managePaymentTransactionTypeDto,
-                        " #payment was not applied because the coupon is duplicated.",
+                        String.format("payment was not applied because the coupon '%s' is duplicated.", paymentImportCache.getCoupon()),
                         null,
                         paymentDto,
                         transactionDate,
@@ -451,7 +447,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private String getRemarks(PaymentImportCache paymentImportCache, ManagePaymentTransactionTypeDto transactionTypeDto) {
+        String DEFAULT_REMARK = "";
         if (Objects.isNull(paymentImportCache.getRemarks()) || paymentImportCache.getRemarks().isEmpty()) {
+            if(Objects.isNull(transactionTypeDto.getDefaultRemark()) || transactionTypeDto.getDefaultRemark().isEmpty()){
+                return DEFAULT_REMARK;
+            }
             return transactionTypeDto.getDefaultRemark();
         }
         return paymentImportCache.getRemarks();
@@ -706,7 +706,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         Set<String> couponNumberSet = new HashSet<>();
         Set<Long> paymentDetailsAntiSet = new HashSet<>();
 
-        //TODO Optimizar esta consulta
         List<UUID> agencys = this.getEmployeeAgencyList(employee);
         List<UUID> hotels = this.getEmployeeHotelList(employee);
 
@@ -739,10 +738,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         }
 
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionCodeSet));
-        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));//TODO Optimizar este select con JOIN FETCH
+        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
-        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
-        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));//TODO Optimizar este select con JOIN FETCH o hacer custom repository
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailListByGenId(new ArrayList<>(paymentIdSet));//TODO Optimizar
+        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
         List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));//TODO Usar el  custom repository
 
         List<UUID> hotelIds = paymentList.stream()
@@ -794,7 +793,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionIdSet));
         List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
-        List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
+        List<PaymentDetailDto> paymentDetailList = getPaymentDetailListByGenId(new ArrayList<>(paymentIdSet));
         List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
         List<PaymentDetailDto> paymentDetailListAnti = new ArrayList<>(getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet)));
 
@@ -837,11 +836,14 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<ManageBookingDto> getBookings(List<Long> ids){
-        return bookingService.findByBookingIdIn(ids);
+        return bookingService.findAllByBookingIdIn(ids);
     }
 
     private List<PaymentDto> getPayments(List<Long> paymentIds){
-        return paymentService.findPaymentsByPaymentId(paymentIds);
+        printLog(String.format("Hay %d ids de payments", paymentIds.size()));
+        List<PaymentDto> payments = paymentService.findPaymentsByPaymentId(paymentIds);
+        printLog(String.format("Hay %d payments encontrados", payments.size()));
+        return payments;
     }
 
     private List<PaymentDetailDto> getPaymentDetailsProyection(List<Long> paymentsIds){
@@ -865,7 +867,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<PaymentDetailDto> getPaymentDetailListByGenId(List<Long> ids){
-        return paymentDetailService.findByPaymentDetailsIdIn(ids).stream()
+        return paymentDetailService.findByPaymentDetailsGenIdIn(ids).stream()
                 .map(PaymentDetail::toAggregate).collect(Collectors.toList());
     }
 }

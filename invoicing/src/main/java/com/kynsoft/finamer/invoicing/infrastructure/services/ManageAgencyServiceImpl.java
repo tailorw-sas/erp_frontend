@@ -101,6 +101,12 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
+    public List<ManageAgencyDto> findByCodes(List<String> codes) {
+        List<ManageAgency> agencies = repositoryQuery.findByCodeIn(codes);
+        return agencies.stream().map(ManageAgency::toAggregate).toList();
+    }
+
+    @Override
     public boolean existByCode(String manageAgencyCode) {
         return repositoryQuery.existsManageAgenciesByCode(manageAgencyCode);
     }

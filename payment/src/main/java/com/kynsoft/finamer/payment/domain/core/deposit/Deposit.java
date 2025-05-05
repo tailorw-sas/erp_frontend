@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.core.deposit;
 
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
@@ -40,24 +41,22 @@ public class Deposit {
         this.paymentDetail.setId(UUID.randomUUID());
         this.paymentDetail.setStatus(Status.ACTIVE);
         this.paymentDetail.setPayment(this.payment);
-        this.paymentDetail.setTransactionType(this.paymentTransactionType); //this.paymentTransactionTypeService.findByDeposit(),
+        this.paymentDetail.setTransactionType(this.paymentTransactionType);
         this.paymentDetail.setAmount(this.amount * -1);
         this.paymentDetail.setRemark(this.remark);
         this.paymentDetail.setTransactionDate(this.transactionDate);
         this.paymentDetail.setApplyPayment(false);
         this.paymentDetail.setApplyDepositValue(paymentDetail.getAmount() * -1);
-        //TODO Validar si es today o el close operation
-        this.paymentDetail.setTransactionDate(OffsetDateTime.now(ZoneId.of("UTC")));
         this.paymentDetail.setCreateByCredit(false);
 
         this.calculate(this.payment, this.amount);
     }
 
     private void calculate(PaymentDto paymentDto, double amount) {
-        paymentDto.setDepositAmount(paymentDto.getDepositAmount() + amount);
-        paymentDto.setDepositBalance(paymentDto.getDepositBalance() + amount);
-        paymentDto.setNotApplied(paymentDto.getNotApplied() - amount);
-        paymentDto.setPaymentBalance(paymentDto.getPaymentBalance() - amount);
+        paymentDto.setDepositAmount(BankerRounding.round(paymentDto.getDepositAmount() + amount));
+        paymentDto.setDepositBalance(BankerRounding.round(paymentDto.getDepositBalance() + amount));
+        paymentDto.setNotApplied(BankerRounding.round(paymentDto.getNotApplied() - amount));
+        paymentDto.setPaymentBalance(BankerRounding.round(paymentDto.getPaymentBalance() - amount));
     }
 
 }

@@ -37,6 +37,11 @@ public class PaymentDetailsBookingFieldValidator extends ExcelRuleValidator<Paym
     public boolean validate(PaymentDetailRow obj, List<ErrorField> errorFieldList) {
         PaymentDto payment = this.cache.getPaymentByPaymentId(Long.parseLong(obj.getPaymentId()));
 
+        if(Objects.isNull(payment)){
+            errorFieldList.add(new ErrorField("Payment Id", "The payment not exist."));
+            return false;
+        }
+
         if(Objects.nonNull(obj.getBookId())){
             ManageBookingDto booking = this.cache.getBooking(Long.parseLong(obj.getBookId()));
 
