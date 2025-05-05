@@ -35,10 +35,12 @@ public class ManageClient implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
     @Column(unique = true)
     private String code;
 
     private String name;
+
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -73,6 +75,17 @@ public class ManageClient implements Serializable {
         return manageClientDto;
     }
 
-
-
+    public ManageClient(UUID id,
+                        String code,
+                        String name,
+                        String description,
+                        Status status,
+                        Boolean isNightType){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.isNightType = isNightType;
+    }
 }

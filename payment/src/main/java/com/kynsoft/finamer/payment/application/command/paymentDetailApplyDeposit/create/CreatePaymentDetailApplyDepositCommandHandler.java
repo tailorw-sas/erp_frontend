@@ -2,30 +2,26 @@ package com.kynsoft.finamer.payment.application.command.paymentDetailApplyDeposi
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
+import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
+import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
-import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailMessage;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckApplyDepositRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckDepositToApplyDepositRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckGreaterThanOrEqualToTheTransactionAmountRule;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.create.CreatePaymentDetailCommandHandler;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
+import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.*;
 import com.kynsoft.finamer.payment.domain.services.*;
+import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHandler<CreatePaymentDetailApplyDepositCommand> {
@@ -35,17 +31,29 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
     private final IPaymentService paymentService;
     private final IManagePaymentStatusService statusService;
     private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final IManageEmployeeService employeeService;
+    private final IManageBookingService bookingService;
+    private final IPaymentStatusHistoryService paymentStatusHistoryService;
+    private final ProducerUpdateBookingService producerUpdateBookingService;
 
     public CreatePaymentDetailApplyDepositCommandHandler(IPaymentDetailService paymentDetailService,
                                                          IManagePaymentTransactionTypeService paymentTransactionTypeService,
                                                          IPaymentService paymentService,
                                                          IManagePaymentStatusService statusService,
-                                                         IPaymentCloseOperationService paymentCloseOperationService) {
+                                                         IPaymentCloseOperationService paymentCloseOperationService,
+                                                         IManageEmployeeService employeeService,
+                                                         IManageBookingService bookingService,
+                                                         IPaymentStatusHistoryService paymentStatusHistoryService,
+                                                         ProducerUpdateBookingService producerUpdateBookingService) {
         this.paymentDetailService = paymentDetailService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.paymentService = paymentService;
         this.statusService = statusService;
         this.paymentCloseOperationService = paymentCloseOperationService;
+        this.employeeService = employeeService;
+        this.bookingService = bookingService;
+        this.paymentStatusHistoryService = paymentStatusHistoryService;
+        this.producerUpdateBookingService = producerUpdateBookingService;
     }
 
     @Override
@@ -53,70 +61,89 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
 
         ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.paymentTransactionTypeService.findById(command.getTransactionType());
-        PaymentDetailDto paymentDetailDto = this.paymentDetailService.findById(command.getPaymentDetail());
-        PaymentDto paymentUpdate = paymentDetailDto.getPayment();
+        PaymentDetailDto parentPaymentDetail = this.paymentDetailService.findById(command.getPaymentDetail());
+        PaymentDto payment = parentPaymentDetail.getPayment();
+        ManagePaymentStatusDto paymentStatusDto = this.statusService.findByApplied();
+        ManageEmployeeDto employee = this.employeeService.findById(command.getEmployee());
 
         RulesChecker.checkRule(new CheckApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
-        RulesChecker.checkRule(new CheckDepositToApplyDepositRule(paymentDetailDto.getTransactionType().getDeposit()));
-        RulesChecker.checkRule(new CheckGreaterThanOrEqualToTheTransactionAmountRule(command.getAmount(), paymentDetailDto.getApplyDepositValue()));
+        RulesChecker.checkRule(new CheckDepositToApplyDepositRule(parentPaymentDetail.getTransactionType().getDeposit()));
+        RulesChecker.checkRule(new CheckGreaterThanOrEqualToTheTransactionAmountRule(command.getAmount(), parentPaymentDetail.getApplyDepositValue()));
 
-        ConsumerUpdate updatePayment = new ConsumerUpdate();
+        OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
 
-        UpdateIfNotNull.updateDouble(paymentUpdate::setDepositBalance, paymentUpdate.getDepositBalance() - command.getAmount(), updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentUpdate::setApplied, paymentUpdate.getApplied() + command.getAmount(), updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentUpdate::setIdentified, paymentUpdate.getIdentified() + command.getAmount(), updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(paymentUpdate::setNotIdentified, paymentUpdate.getPaymentAmount() - paymentUpdate.getIdentified(), updatePayment::setUpdate);
-
-        PaymentDetailDto _newPaymentDetailDto = new PaymentDetailDto(
-                command.getId(),
-                command.getStatus(),
-                paymentUpdate,
-                paymentTransactionTypeDto,
+        ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(payment,
                 command.getAmount(),
+                transactionDate,
+                employee,
                 command.getRemark(),
-                null,
-                null,
-                null,
-                transactionDate(paymentUpdate.getHotel().getId()),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false
+                paymentTransactionTypeDto,
+                paymentStatusDto,
+                parentPaymentDetail
         );
+        createPaymentDetail.process();
+        PaymentDetailDto newPaymentDetail = createPaymentDetail.getDetail();
 
-        _newPaymentDetailDto.setParentId(paymentDetailDto.getPaymentDetailId());
-        this.paymentDetailService.create(_newPaymentDetailDto);
-
-        List<PaymentDetailDto> paymentDetails = new ArrayList<>(paymentDetailDto.getPaymentDetails());
-        paymentDetails.add(_newPaymentDetailDto);
-        paymentDetailDto.setPaymentDetails(paymentDetails);
-        paymentDetailDto.setApplyDepositValue(paymentDetailDto.getApplyDepositValue() - command.getAmount());
-        paymentDetailService.update(paymentDetailDto);
-
-        if (paymentUpdate.getPaymentBalance() == 0 && paymentUpdate.getDepositBalance() == 0) {
-            paymentUpdate.setPaymentStatus(this.statusService.findByApplied());
-        }
-        this.paymentService.update(paymentUpdate);
-
-        if (Objects.nonNull(command.getApplyPayment()) && command.getApplyPayment()) {
-            ApplyPaymentDetailMessage message = command.getMediator().send(new ApplyPaymentDetailCommand(command.getId(),
-                    command.getBooking(), command.getEmployee()));
-            paymentUpdate.setApplyPayment(message.getPayment().isApplyPayment());
-            paymentUpdate.setPaymentStatus(message.getPayment().getPaymentStatus());
+        ManageBookingDto booking = this.getBookingAndValidate(command.getApplyPayment(), command.getBooking(), command.getAmount());
+        if (command.getApplyPayment()) {
+            ApplyPaymentDetail applyPaymentDetail = new ApplyPaymentDetail(payment,
+                    newPaymentDetail,
+                    booking,
+                    transactionDate,
+                    command.getAmount());
+            applyPaymentDetail.applyPayment();
         }
 
-        command.setPaymentResponse(paymentUpdate);
+        this.saveAndReplicateBooking(payment, newPaymentDetail, parentPaymentDetail, command.getApplyPayment(), booking, createPaymentDetail);
+
+        command.setPaymentResponse(payment);
     }
 
-    private OffsetDateTime transactionDate(UUID hotel) {
+    private OffsetDateTime getTransactionDate(UUID hotel) {
         PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));
         }
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+    }
+
+    private ManageBookingDto getBookingAndValidate(Boolean applyPayment, UUID bookingId, Double amount){
+        if(applyPayment){
+            ManageBookingDto booking = this.bookingService.findById(bookingId);
+            RulesChecker.checkRule(new CheckBookingExistsApplyPayment(applyPayment, booking));
+            return booking;
+        }
+
+        return null;
+    }
+
+    private void saveAndReplicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, PaymentDetailDto parentPaymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessPaymentDetail createPaymentDetail){
+        this.paymentDetailService.create(paymentDetail);
+        this.paymentDetailService.update(parentPaymentDetail);
+        this.paymentService.update(payment);
+
+        if(createPaymentDetail.isPaymentApplied()){
+            PaymentStatusHistoryDto paymentStatusHistoryDto = createPaymentDetail.getPaymentStatusHistory();
+            this.paymentStatusHistoryService.create(paymentStatusHistoryDto);
+        }
+
+        if(applyPayment){
+            this.bookingService.update(booking);
+            this.replicateBooking(payment, paymentDetail, booking);
+        }
+    }
+
+    private void replicateBooking(PaymentDto payment, PaymentDetailDto paymentDetail, ManageBookingDto booking){
+        try {
+            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
+                    payment.getId(),
+                    payment.getPaymentId(),
+                    new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
+                    ));
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+        } catch (Exception ex) {
+            Logger.getLogger(CreatePaymentDetailCommandHandler.class.getName()).log(Level.SEVERE, "Error at replicating booking", ex);
+        }
     }
 }

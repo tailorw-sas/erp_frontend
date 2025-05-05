@@ -15,6 +15,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 @JsonIdentityInfo(
@@ -34,6 +35,7 @@ public class ManageB2BPartner implements Serializable {
     @Id
     @Column(name = "id")
     private UUID id;
+
     @Column(unique = true)
     private String code;
     
@@ -59,6 +61,7 @@ public class ManageB2BPartner implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
+
     @OneToMany(mappedBy = "sentB2BPartner", fetch = FetchType.EAGER)
     private List<ManageAgency> agencies;
 
@@ -80,6 +83,30 @@ public class ManageB2BPartner implements Serializable {
         return new ManagerB2BPartnerDto(
                 id, code, name, description, status, url, ip, userName, password, token,
                 b2bPartnerType != null ? b2bPartnerType.toAggregate() : null);
+    }
+
+    public ManageB2BPartner(UUID id,
+                            String code,
+                            String name,
+                            String description,
+                            Status status,
+                            String url,
+                            String ip,
+                            String userName,
+                            String password,
+                            String token,
+                            ManageB2BPartnerType manageB2BPartnerType){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.url = url;
+        this.ip = ip;
+        this.userName = userName;
+        this.password = password;
+        this.token = token;
+        this.b2bPartnerType = Objects.nonNull(manageB2BPartnerType) ? manageB2BPartnerType : null;
     }
 
 }

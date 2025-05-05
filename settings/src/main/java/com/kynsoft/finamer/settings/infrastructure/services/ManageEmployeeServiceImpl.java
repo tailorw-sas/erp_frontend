@@ -116,7 +116,9 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
     @Override
     public List<ManageEmployeeDto> finAllByIds(List<UUID> ids) {
-        return repositoryQuery.findAllById(ids).stream().map(ManageEmployee::toAggregate).collect(Collectors.toList());
+        return repositoryQuery.findAllByIdCustom(ids).stream()
+                .map(ManageEmployee::toAggregate)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -126,7 +128,7 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
 
     @Override
     public List<ManageEmployeeDto> findAllToReplicate() {
-        List<ManageEmployee> objects = this.repositoryQuery.findAll();
+        List<ManageEmployee> objects = this.repositoryQuery.findAllCustom();
         List<ManageEmployeeDto> objectDtos = new ArrayList<>();
 
         for (ManageEmployee object : objects) {

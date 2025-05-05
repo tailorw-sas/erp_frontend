@@ -28,7 +28,7 @@ import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImport
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportDetailErrorRepository;
 
 import com.kynsoft.finamer.payment.domain.core.deposit.Deposit;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPayment;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import io.jsonwebtoken.lang.Assert;
 
@@ -509,7 +509,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
         if (!otherDeductionAndApplyPayment){
             //Apply Payment Detail
-            ApplyPaymentDetail applyPayment = new ApplyPaymentDetail(payment,
+            ApplyPayment applyPayment = new ApplyPayment(payment,
                     newPaymentDetailDto,
                     booking,
                     transactionDate,
@@ -706,6 +706,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         Set<String> couponNumberSet = new HashSet<>();
         Set<Long> paymentDetailsAntiSet = new HashSet<>();
 
+        //TODO Optimizar esta consulta
         List<UUID> agencys = this.getEmployeeAgencyList(employee);
         List<UUID> hotels = this.getEmployeeHotelList(employee);
 
@@ -738,11 +739,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         }
 
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = getTransactionType(new ArrayList<>(transactionCodeSet));
-        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));
+        List<ManageBookingDto> bookings = getBookings(new ArrayList<>(bookingsIdSet));//TODO Optimizar este select con JOIN FETCH
         List<PaymentDto> paymentList = getPayments(new ArrayList<>(paymentIdSet));
         List<PaymentDetailDto> paymentDetailList = getPaymentDetailsProyection(new ArrayList<>(paymentIdSet));
-        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));
-        List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));
+        List<ManageBookingDto> bookingsByCouponList = getBookingByCoupon(new ArrayList<>(couponNumberSet));//TODO Optimizar este select con JOIN FETCH o hacer custom repository
+        List<PaymentDetailDto> paymentDetailListAnti = getPaymentDetailListByGenId(new ArrayList<>(paymentDetailsAntiSet));//TODO Usar el  custom repository
 
         List<UUID> hotelIds = paymentList.stream()
                 .map(payment -> payment.getHotel().getId())
@@ -815,6 +816,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<ManagePaymentTransactionTypeDto> getTransactionType(List<String> ids){
+        //TODO Validar para traer todo
         List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList = new ArrayList<>(transactionTypeService.findByCodesAndPaymentInvoice(ids));
         ManagePaymentTransactionTypeDto depositTransactionType = transactionTypeService.findByDeposit();
         addManagePaymentTransactionTypeToList(depositTransactionType, managePaymentTransactionTypeList);
