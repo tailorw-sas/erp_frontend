@@ -15,6 +15,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -81,7 +82,7 @@ public class ReverseTransactionService {
 
         PaymentDetailDto paymentDetailClone = processReverseDetail.getPaymentDetailClone();
 
-        this.saveChanges(paymentDetailClone, paymentDetailToReverse, this.payment, processReverseDetail.getIsPaymentChangeStatus(), paymentStatusHistoryDto, this.booking);
+        this.saveChanges(paymentDetailClone, paymentDetailToReverse, parent, this.payment, processReverseDetail.getIsPaymentChangeStatus(), paymentStatusHistoryDto, this.booking);
 
         return paymentDetailToReverse;
     }
@@ -105,12 +106,16 @@ public class ReverseTransactionService {
 
     private void saveChanges(PaymentDetailDto paymentDetailClone,
                       PaymentDetailDto paymentDetailParent,
+                      PaymentDetailDto parentPaymentDetail,
                       PaymentDto payment,
                       Boolean wasPaymentChangedStatus,
                       PaymentStatusHistoryDto paymentStatusHistory,
                       ManageBookingDto booking){
         this.paymentDetailService.create(paymentDetailClone);
         this.paymentDetailService.update(paymentDetailParent);
+        if(Objects.nonNull(parentPaymentDetail)){
+            this.paymentDetailService.update(parentPaymentDetail);
+        }
         this.paymentService.update(payment);
 
         if(wasPaymentChangedStatus){

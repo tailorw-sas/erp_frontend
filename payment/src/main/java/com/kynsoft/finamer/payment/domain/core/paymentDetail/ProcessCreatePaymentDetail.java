@@ -27,10 +27,13 @@ public class ProcessCreatePaymentDetail {
     private final String remark;
     private final ManagePaymentTransactionTypeDto paymentTransactionType;
     private final ManagePaymentStatusDto paymentStatus;
-    private final PaymentDetailDto parentDetail;
+
 
     @Getter
     private PaymentDetailDto detail;
+
+    @Getter
+    private final PaymentDetailDto parentDetail;
 
     @Getter
     private PaymentStatusHistoryDto paymentStatusHistory;
@@ -80,8 +83,8 @@ public class ProcessCreatePaymentDetail {
             case APPLY_DEPOSIT -> {
                 RulesChecker.checkRule(new CheckGreaterThanOrEqualToTheTransactionAmountRule(this.amount, parentDetail.getApplyDepositValue()));//TODO Verificar
                 this.updatePaymentTypeApplyDeposit(this.payment, this.amount);
-                this.updateParentDetailWhenApplyDeposit(this.detail, this.parentDetail);
-                this.updateParentDetail(this.detail, this.parentDetail, this.amount);
+                this.updateDetailWhenApplyDeposit(this.detail, this.parentDetail);
+                this.updateParentDetailWhenApplyDeposit(this.detail, this.parentDetail, this.amount);
             }
         }
     }
@@ -160,11 +163,7 @@ public class ProcessCreatePaymentDetail {
         updatePaymentAsApplied();
     }
 
-    private void updateParentDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail){
-        detail.setParentId(parentDetail.getPaymentDetailId());
-    }
-
-    private void updateParentDetail(PaymentDetailDto detail, PaymentDetailDto parentDetail, Double amount){
+    private void updateParentDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail, Double amount){
         List<PaymentDetailDto> paymentDetails = new ArrayList<>();
         if(Objects.nonNull(parentDetail.getPaymentDetails())){
             paymentDetails.addAll(parentDetail.getPaymentDetails());
@@ -172,6 +171,11 @@ public class ProcessCreatePaymentDetail {
         paymentDetails.add(detail);
         parentDetail.setPaymentDetails(paymentDetails);
         parentDetail.setApplyDepositValue(BankerRounding.round(parentDetail.getApplyDepositValue() - amount));
+
+    }
+
+    private void updateDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail){
+        detail.setParentId(parentDetail.getPaymentDetailId());
     }
 
     private PaymentStatusHistoryDto createPaymentStatusHistory(){

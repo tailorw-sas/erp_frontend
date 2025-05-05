@@ -59,7 +59,7 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     public PaymentDetailDto update(PaymentDetailDto dto) {
         PaymentDetail update = new PaymentDetail(dto);
         update.setUpdatedAt(OffsetDateTime.now());
-        return this.repositoryCommand.saveAndFlush(update).toAggregate();
+        return this.repositoryCommand.saveAndFlush(update).toAggregateSimpleNotPayment();
     }
 
     @Override

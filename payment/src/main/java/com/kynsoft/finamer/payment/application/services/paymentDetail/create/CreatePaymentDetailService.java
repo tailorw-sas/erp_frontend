@@ -106,7 +106,7 @@ public class CreatePaymentDetailService {
             applyPaymentDetail.process();
         }
 
-        this.saveChanges(payment, paymentDetail, applyPayment, booking, createPaymentDetail);
+        this.saveChanges(payment, paymentDetail, parentPaymentDetail, applyPayment, booking, createPaymentDetail, paymentTransactionTypeDto);
 
         return paymentDetail;
     }
@@ -158,11 +158,21 @@ public class CreatePaymentDetailService {
         return null;
     }
 
-    private void saveChanges(PaymentDto payment, PaymentDetailDto paymentDetail, Boolean applyPayment, ManageBookingDto booking, ProcessCreatePaymentDetail createPaymentDetail){
+    private void saveChanges(PaymentDto payment,
+                             PaymentDetailDto paymentDetail,
+                             PaymentDetailDto parentPaymetDetail,
+                             Boolean applyPayment,
+                             ManageBookingDto booking,
+                             ProcessCreatePaymentDetail createPaymentDetail,
+                             ManagePaymentTransactionTypeDto paymentTransactionTypeDto){
         PaymentDetailDto createdDetail = this.paymentDetailService.create(paymentDetail);
         paymentDetail.setParentId(createdDetail.getPaymentDetailId());
 
         this.paymentService.update(payment);
+
+        if(paymentTransactionTypeDto.getApplyDeposit()){
+            this.paymentDetailService.update(parentPaymetDetail);
+        }
 
         if(createPaymentDetail.isPaymentApplied()){
             PaymentStatusHistoryDto paymentStatusHistoryDto = createPaymentDetail.getPaymentStatusHistory();

@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.core.paymentDetail;
 
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode;
 import com.kynsoft.finamer.payment.domain.core.undoApplyPayment.UndoApplyPayment;
 import com.kynsoft.finamer.payment.domain.dto.*;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode.APPLY_DEPOSIT;
@@ -58,8 +60,9 @@ public class ProcessReversePaymentDetail {
             case APPLY_DEPOSIT -> {
                 paymentDetailClone.setReverseFrom(this.paymentDetail.getPaymentDetailId());
                 paymentDetailClone.setParentId(this.paymentDetail.getParentId());
-                this.addPaymentDetails(paymentDetailClone, this.parent);
+                this.addPaymentDetails(paymentDetailClone, this.paymentDetail);
                 this.calculateReverseApplyDeposit(this.payment, this.paymentDetail);
+                this.updateParentDetail(this.parent, this.paymentDetail.getAmount(), this.paymentDetail);
             }
             case OTHER_DEDUCTIONS -> {
                 this.calculateReverseOtherDeductions(this.payment, paymentDetailClone.getAmount());
@@ -125,11 +128,24 @@ public class ProcessReversePaymentDetail {
         paymentDto.setOtherDeductions(paymentDto.getOtherDeductions() + amount);
     }
 
-    private void addPaymentDetails(PaymentDetailDto reverseFrom, PaymentDetailDto parent) {
-        List<PaymentDetailDto> _paymentDetails = new ArrayList<>(parent.getPaymentDetails());
+    private void addPaymentDetails(PaymentDetailDto reverseFrom, PaymentDetailDto paymentDetail) {
+        List<PaymentDetailDto> _paymentDetails = new ArrayList<>();
+        if(Objects.nonNull(paymentDetail.getPaymentDetails())){
+            _paymentDetails.addAll(paymentDetail.getPaymentDetails());
+        }
         _paymentDetails.add(reverseFrom);
-        parent.setPaymentDetails(_paymentDetails);
-        parent.setApplyDepositValue(parent.getApplyDepositValue() - reverseFrom.getAmount());
+        paymentDetail.setPaymentDetails(_paymentDetails);
+
+    }
+
+    private void updateParentDetail(PaymentDetailDto parent, Double amount, PaymentDetailDto paymentDetail){
+        parent.setApplyDepositValue(parent.getApplyDepositValue() + amount);
+
+        if(Objects.nonNull(parent.getPaymentDetails())){
+            List<PaymentDetailDto> parentPaymentDetails = new ArrayList<>(parent.getPaymentDetails());
+            parentPaymentDetails.removeIf(detail -> detail.getId().equals(paymentDetail.getId()));
+            parent.setPaymentDetails(parentPaymentDetails);
+        }
     }
 
     private boolean changeStatus(PaymentDto payment,
