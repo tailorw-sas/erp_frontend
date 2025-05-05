@@ -10,6 +10,7 @@ import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafk
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.BankerRounding;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageBookingService;
@@ -38,245 +39,21 @@ import java.util.stream.Collectors;
 @Component
 public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentCommand> {
 
-    private final IManageInvoiceService manageInvoiceService;
-    private final IPaymentService paymentService;
-    private final IPaymentDetailService paymentDetailService;
 
-    private final InvoiceHttpUUIDService invoiceHttpUUIDService;
-    private final InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl;
 
-    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
-    private final IPaymentStatusHistoryService paymentStatusHistoryService;
+    public ApplyPaymentCommandHandler() {
 
-    private final IPaymentCloseOperationService paymentCloseOperationService;
-    private final IManageBookingService manageBookingService;
-
-    private final ProducerUpdateListBookingService producerUpdateListBookingService;
-    private final IManagePaymentStatusService statusService;
-    private final IManageEmployeeService manageEmployeeService;
-
-    public ApplyPaymentCommandHandler(IPaymentService paymentService,
-            IManageInvoiceService manageInvoiceService,
-            IPaymentDetailService paymentDetailService,
-            InvoiceHttpUUIDService invoiceHttpUUIDService,
-            InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService,
-            IPaymentStatusHistoryService paymentStatusHistoryService,
-            IPaymentCloseOperationService paymentCloseOperationService,
-            IManageBookingService manageBookingService,
-            IManagePaymentStatusService statusService,
-            IManageEmployeeService manageEmployeeService,
-            ProducerUpdateListBookingService producerUpdateListBookingService) {
-        this.invoiceHttpUUIDService = invoiceHttpUUIDService;
-        this.invoiceImportAutomaticeHelperServiceImpl = invoiceImportAutomaticeHelperServiceImpl;
-        this.paymentService = paymentService;
-        this.manageInvoiceService = manageInvoiceService;
-        this.paymentDetailService = paymentDetailService;
-        this.paymentTransactionTypeService = paymentTransactionTypeService;
-        this.paymentStatusHistoryService = paymentStatusHistoryService;
-        this.paymentCloseOperationService = paymentCloseOperationService;
-        this.manageBookingService = manageBookingService;
-        this.statusService = statusService;
-        this.manageEmployeeService = manageEmployeeService;
-        this.producerUpdateListBookingService = producerUpdateListBookingService;
     }
 
     @Override
     public void handle(ApplyPaymentCommand command) {
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getPayment(), "id", "Payment ID cannot be null."));
 
-        List<UpdateBookingBalanceKafka> kafkaList = new ArrayList<>();
-        //List<Booking> bookingsList = new ArrayList<>();
-        List<PaymentDetail> detailTypeDeposits = new ArrayList<>();
-        List<PaymentDetail> createPaymentDetails = new ArrayList<>();
-
-        Payment updatePayment = this.paymentService.findByIdWithBalancesOnly(command.getPayment());
-        PaymentDto payment = this.paymentService.findByIdCustom(command.getPayment());
-        ManagePaymentTransactionType cachedApplyDepositTransactionType = this.paymentTransactionTypeService.findByApplyDepositEntityGraph();//AANT
-        ManagePaymentTransactionType cachedPaymentInvoiceTransactionType = this.paymentTransactionTypeService.findByPaymentInvoiceEntityGraph();//PAGO
-
-        List<ManageInvoiceDto> invoiceSorted = createInvoiceQueue(command.getInvoices());
-        List<PaymentDetailDto> deposits = this.createPaymentDetailsTypeDepositQueue(command.getDeposits(), detailTypeDeposits);
-
-        Map<UUID, PaymentCloseOperationDto> paymentCloseOperationByHotelMap = this.getPaymentCloseOperationMap(invoiceSorted);
-
-        double paymentBalance = updatePayment.getPaymentBalance();
-        double notApplied = updatePayment.getNotApplied();
-        double depositBalance = updatePayment.getDepositBalance();
-        boolean applyPaymentBalance = updatePayment.getPaymentBalance() != 0;
-        for (ManageInvoiceDto manageInvoiceDto : invoiceSorted) {
-            this.sortBookingsInInvoice(manageInvoiceDto);
-            for (ManageBookingDto bookingDto : manageInvoiceDto.getBookings()) {
-                //TODO: almaceno el valor de Balance del Booking porque puede que no llegue a cero cuando el Payment Balance si lo haga. Y todavia
-                // tenga valor el notApplied
-                double amountBalance = bookingDto.getAmountBalance();
-                if (notApplied > 0 && paymentBalance > 0 && command.isApplyPaymentBalance() && amountBalance > 0) {
-                    double amountToApply = Math.min(notApplied, amountBalance);
-                    OffsetDateTime transactionDate = this.getTransactionDate(paymentCloseOperationByHotelMap.get(payment.getHotel().getId()));
-
-                    PaymentDetail message = createDetailsTypeCash(amountToApply, cachedPaymentInvoiceTransactionType, updatePayment, transactionDate);
-                    this.applyPayment(command.getEmployee(), bookingDto, message, kafkaList, bookingsList, createPaymentDetails, updatePayment, transactionDate);
-                    notApplied =  BankerRounding.round(notApplied - amountToApply);
-                    paymentBalance = BankerRounding.round(paymentBalance - amountToApply);
-                    amountBalance = BankerRounding.round(amountBalance - amountToApply);
-                }
-                if ((notApplied == 0 && paymentBalance == 0 && command.isApplyDeposit() && amountBalance > 0 && depositBalance > 0)
-                        || (command.isApplyDeposit() && !command.isApplyPaymentBalance() && amountBalance > 0 && depositBalance > 0)) {
-                    //TODO: este aplica para cuando se quiere aplicar solo a los deposit
-                    if (command.getDeposits() != null && !command.getDeposits().isEmpty()) {
-                        for (PaymentDetailDto paymentDetailTypeDeposit : deposits) {
-                            PaymentDetail parentDetail = detailTypeDeposits.stream().filter(detail ->
-                                    detail.getId().equals(paymentDetailTypeDeposit.getId())).findFirst().get();
-
-                            double depositAmount = parentDetail.getApplyDepositValue();
-                            if (depositAmount == 0) {
-                                continue;
-                            }
-                            while (depositAmount > 0) {
-                                double amountToApply = Math.min(depositAmount, amountBalance);
-                                OffsetDateTime transactionDate = getTransactionDate(paymentCloseOperationByHotelMap.get(payment.getHotel().getId()));
-
-                                this.applyPayment(command.getEmployee(), bookingDto,
-                                        this.createDetailsTypeApplyDeposit(parentDetail, amountToApply, cachedApplyDepositTransactionType,
-                                                detailTypeDeposits, updatePayment, transactionDate),
-                                        kafkaList, bookingsList, createPaymentDetails, updatePayment, transactionDate);
-                                depositAmount = BankerRounding.round(depositAmount - amountToApply);
-                                amountBalance = BankerRounding.round(amountBalance - amountToApply);
-                                depositBalance = BankerRounding.round(depositBalance - amountToApply);
-                                if (amountBalance == 0 || depositBalance == 0) {
-                                    break;
-                                }
-                            }
-                            if (amountBalance == 0 || depositBalance == 0) {
-                                break;
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-            if (notApplied == 0 && paymentBalance == 0 && depositBalance == 0) {
-                break;
-            }
-        }
-
-        //Se crean los Payment Details que genera el flujo de aplicacion de pago.
-        this.paymentDetailService.createAll(createPaymentDetails);
-        //Se actualizan los booking balance.
-        this.manageBookingService.updateAll(bookingsList);
-
-        //Se actualiza el payment
-        this.paymentService.updateBalances(
-                updatePayment.getPaymentBalance(),
-                updatePayment.getDepositBalance(),
-                updatePayment.getIdentified(),
-                updatePayment.getNotIdentified(),
-                updatePayment.getNotApplied(),
-                updatePayment.getApplied(),
-                updatePayment.isApplyPayment(),
-                updatePayment.getId()
-        );
-        //Se actualizan los deposit
-        this.paymentDetailService.createAll(detailTypeDeposits);
-        this.paymentCloseOperationService.clearCache();
-
-        this.producerUpdateListBookingService.update(kafkaList);
     }
 
-    /**
-     *
-     * @param deposits
-     * @return
-     */
-    private List<PaymentDetailDto> createPaymentDetailsTypeDepositQueue(List<UUID> deposits, List<PaymentDetail> detailTypeDeposits) {
-        try {
-            detailTypeDeposits.addAll(this.paymentDetailService.findByPaymentDetailsApplyIdIn(deposits));
-            List<PaymentDetailDto> queue = this.paymentDetailService.change(detailTypeDeposits);
 
-            queue.sort(Comparator.comparingDouble(PaymentDetailDto::getApplyDepositValue));
-            return queue;
-        } catch (Exception e) {
-            return List.of();
-        }
-    }
 
-    private Map<UUID, PaymentCloseOperationDto> getPaymentCloseOperationMap(List<ManageInvoiceDto> invoices){
-        List<UUID> hotelIds = invoices.stream().map(invoice -> invoice.getHotel().getId()).collect(Collectors.toList());
-        return this.paymentCloseOperationService.findByHotelIds(hotelIds).stream()
-                .collect(Collectors.toMap(paymentCloseOperationDto -> paymentCloseOperationDto.getHotel().getId(),
-                        paymentCloseOperationDto -> paymentCloseOperationDto));
-    }
-    /**
-     * Ordena los Booking de menor a mayor por su AmountBalance.
-     *
-     * @param manageInvoiceDto
-     * @return
-     */
-    private List<Booking> getSortedBookings(Invoice manageInvoiceDto) {
-        List<Booking> bookingDtoList = new ArrayList<>();
-        if (manageInvoiceDto.getBookings() != null && !manageInvoiceDto.getBookings().isEmpty()) {
-            bookingDtoList.addAll(manageInvoiceDto.getBookings());
-            bookingDtoList.sort(Comparator.comparingDouble(Booking::getAmountBalance));
-        }
-        return bookingDtoList;
-    }
 
-    private List<ManageInvoiceDto> createInvoiceQueue(List<UUID> invoiceIds) {
-        List<ManageInvoiceDto> queue = this.manageInvoiceService.findSortedInvoicesByIdIn(invoiceIds);
-        //List<ManageInvoiceDto> queue = new ArrayList<>();
-        /*try {
-            queue.addAll(this.manageInvoiceService.findSortedInvoicesByIdIn(command.getInvoices()));
-        } catch (Exception e) {
-            for (UUID invoice : command.getInvoices()) {
-                InvoiceHttp response = invoiceHttpUUIDService.sendGetBookingHttpRequest(invoice);
-                this.invoiceImportAutomaticeHelperServiceImpl.createInvoice(response);
-            }
-            //FLUJO PARA ESPERAR MIENTRAS LAS BD SE SINCRONIZAN.
-            int maxAttempts = 3;
-            int delay = 1;
-            while (maxAttempts > 0) {
-                try {
-                    queue.addAll(manageInvoiceService.findSortedInvoicesByIdIn(command.getInvoices()));
-                    break;
-                } catch (Exception exp) {
-                    //log.warn("Retrying invoice fetch. Attempts left: {}. Error: {}", maxAttempts, exp.getMessage());
-                }
-                maxAttempts--;
-                try {
-                    TimeUnit.SECONDS.sleep(delay);
-                    delay *= 2;
-                } catch (InterruptedException exp) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
 
-        //queue.sort(Comparator.comparingDouble(Invoice::getInvoiceAmount));
-         */
-        return queue;
-    }
-
-    private void sortBookingsInInvoice(ManageInvoiceDto invoices){
-        invoices.getBookings().sort(Comparator.comparingDouble(ManageBookingDto::getAmountBalance));
-    }
-
-    private PaymentDetail createDetailsTypeCash(double invoiceAmount, ManagePaymentTransactionType transactionTypeDto, Payment updatePayment, OffsetDateTime transactionDate) {
-        PaymentDetail newDetailDto = new PaymentDetail();
-        newDetailDto.setId(UUID.randomUUID());
-        newDetailDto.setStatus(Status.ACTIVE);
-        newDetailDto.setPayment(updatePayment);
-        newDetailDto.setTransactionType(transactionTypeDto);
-        newDetailDto.setAmount(invoiceAmount);
-        newDetailDto.setRemark(transactionTypeDto.getDefaultRemark());
-        newDetailDto.setApplyPayment(Boolean.FALSE);
-        newDetailDto.setCreateByCredit(false);
-        newDetailDto.setTransactionDate(transactionDate);
-
-        this.calculateCash(invoiceAmount, updatePayment);
-
-        return newDetailDto;
-    }
 
     private void createPaymentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
 
@@ -322,15 +99,6 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         return children;
     }
 
-    private void calculateCash(double amount, Payment updatePayment) {
-        updatePayment.setIdentified(BankerRounding.round(updatePayment.getIdentified() + amount));
-        updatePayment.setNotIdentified(BankerRounding.round(updatePayment.getNotIdentified() - amount));
-
-        updatePayment.setApplied(BankerRounding.round(updatePayment.getApplied() + amount));
-        updatePayment.setNotApplied(BankerRounding.round(updatePayment.getNotApplied() - amount));
-        updatePayment.setPaymentBalance(BankerRounding.round(updatePayment.getPaymentBalance() - amount));
-    }
-
     private void calculateApplyDeposit(double amount, Payment updatePayment) {
         updatePayment.setDepositBalance(BankerRounding.round(updatePayment.getDepositBalance() - amount));
         updatePayment.setApplied(BankerRounding.round(updatePayment.getApplied() + amount)); // TODO: Suma de trx tipo check Cash + Check Apply
@@ -340,52 +108,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
 
     }
 
-    public void applyPayment(UUID empoyee, Booking bookingDto, PaymentDetail paymentDetailDto,
-                            List<UpdateBookingBalanceKafka> kafkaList, List<Booking> bookingsList,
-                            List<PaymentDetail> createPaymentdetails,
-                            Payment updatePayment, OffsetDateTime effectiveDate) {
-        Booking booking = bookingsList.stream().filter(d -> d.getId().equals(bookingDto.getId())).findFirst().get();
-        booking.setAmountBalance(BankerRounding.round(booking.getAmountBalance() - paymentDetailDto.getAmount()));
-        this.updateBooking(booking, bookingsList);
 
-        paymentDetailDto.setManageBooking(booking);
-        paymentDetailDto.setApplyPayment(Boolean.TRUE);
-        paymentDetailDto.setAppliedAt(OffsetDateTime.now(ZoneId.of("UTC")));
-        paymentDetailDto.setEffectiveDate(effectiveDate);
-        paymentDetailDto.setUpdatedAt(OffsetDateTime.now());
-
-        createPaymentdetails.add(paymentDetailDto);
-
-        try {
-            ReplicatePaymentDetailsKafka replicatePaymentDetailsKafka = new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(),
-                    paymentDetailDto.getPaymentDetailId());
-
-            ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
-                    updatePayment.getId(),
-                    updatePayment.getPaymentId(),
-                    replicatePaymentDetailsKafka
-                    );
-
-            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(booking.getId(),
-                    booking.getAmountBalance(),
-                    paymentKafka,
-                    false,
-                    OffsetDateTime.now());
-            UpdateBookingBalanceKafka updateBookingBalanceKafka = new UpdateBookingBalanceKafka(List.of(replicateBookingKafka));
-            kafkaList.add(updateBookingBalanceKafka);
-        } catch (Exception e) {
-            System.err.println("Error al enviar el evento de integracion: " + e.getMessage());
-        }
-
-        if (updatePayment.getPaymentBalance() == 0 && updatePayment.getDepositBalance() == 0) {
-            updatePayment.setPaymentStatus(this.statusService.findPaymentStatusByApplied());
-            ManageEmployeeDto employeeDto = empoyee != null ? this.manageEmployeeService.findById(empoyee) : null;
-            this.updatePaymentStatus(updatePayment);
-            this.createPaymentStatusHistory(employeeDto, updatePayment.toAggregateBasic());
-        }
-        updatePayment.setApplyPayment(true);
-        updatePayment.setUpdatedAt(OffsetDateTime.now());
-    }
 
     private void updateBooking(Booking update, List<Booking> bookingsList) {
         int index = bookingsList.indexOf(update);
@@ -407,15 +130,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         }
     }
 
-    private Map<UUID, PaymentCloseOperationDto> getTransactionDateMapByHotel(List<UUID> hotelIds){
-        return
-    }
 
-    private OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperationDto) {
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
-            return OffsetDateTime.now(ZoneId.of("UTC"));
-        }
-        return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
-    }
+
 
 }

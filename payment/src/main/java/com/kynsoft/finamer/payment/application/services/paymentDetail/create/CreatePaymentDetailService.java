@@ -11,7 +11,6 @@ import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymen
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckBookingExistsApplyPayment;
-import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfNewPaymentDetailIsApplyDepositRule;
 import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.http.PaymentTransactionTypeHttpService;
 import jakarta.transaction.Transactional;
@@ -22,7 +21,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -142,7 +140,7 @@ public class CreatePaymentDetailService {
     }
 
     private OffsetDateTime getTransactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));

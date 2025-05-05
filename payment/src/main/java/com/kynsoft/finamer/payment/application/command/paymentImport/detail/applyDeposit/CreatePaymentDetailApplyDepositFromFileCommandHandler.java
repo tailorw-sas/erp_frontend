@@ -16,7 +16,6 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.services.http.CreateAdjustmentHttpService;
 import com.kynsoft.finamer.payment.infrastructure.services.http.CreateIncomeHttpService;
-import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.createIncomeTransaction.ProducerCreateIncomeTransactionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -163,7 +162,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
     }
 
     private OffsetDateTime transactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));

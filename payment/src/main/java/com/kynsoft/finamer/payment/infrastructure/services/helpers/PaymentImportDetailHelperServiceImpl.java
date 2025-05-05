@@ -860,7 +860,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private List<PaymentCloseOperationDto> getCloseOperationDateTimeByHotel(List<UUID> hotelIds){
-        return this.paymentCloseOperationService.findByHotelIds(hotelIds);
+        return this.paymentCloseOperationService.findByHotelId(hotelIds);
     }
 
     private ManagePaymentStatusDto getPaymentStatusApplied(){

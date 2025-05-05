@@ -24,7 +24,7 @@ public class CloseOperationHotelMustBeUniqueRule extends BusinessRule {
 
     @Override
     public boolean isBroken() {
-        return this.service.findByHotelId(hotelId) > 0;
+        return this.service.countByHotelId(hotelId) > 0;
     }
 
 }
