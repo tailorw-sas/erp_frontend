@@ -52,7 +52,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private final PaymentImportCacheRepository paymentImportCacheRepository;
     private final PaymentDetailValidatorFactory paymentDetailValidatorFactory;
-    private final ApplicationEventPublisher applicationEventPublisher;
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final IPaymentService paymentService;
     private final IPaymentDetailService paymentDetailService;
@@ -67,12 +66,10 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentImportDetailHelperServiceImpl.class);
 
-
     private boolean stopProcess;
 
     public PaymentImportDetailHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
                                                 PaymentDetailValidatorFactory paymentDetailValidatorFactory,
-                                                ApplicationEventPublisher applicationEventPublisher,
                                                 IManagePaymentTransactionTypeService transactionTypeService,
                                                 IPaymentService paymentService, IPaymentDetailService paymentDetailService,
                                                 PaymentImportDetailErrorRepository detailErrorRepository,
@@ -85,7 +82,6 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
                                                 IManageInvoiceService invoiceService) {
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentDetailValidatorFactory = paymentDetailValidatorFactory;
-        this.applicationEventPublisher = applicationEventPublisher;
         this.transactionTypeService = transactionTypeService;
         this.paymentService = paymentService;
         this.paymentDetailService = paymentDetailService;
@@ -451,7 +447,11 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
     }
 
     private String getRemarks(PaymentImportCache paymentImportCache, ManagePaymentTransactionTypeDto transactionTypeDto) {
+        String DEFAULT_REMARK = "";
         if (Objects.isNull(paymentImportCache.getRemarks()) || paymentImportCache.getRemarks().isEmpty()) {
+            if(Objects.isNull(transactionTypeDto.getDefaultRemark()) || transactionTypeDto.getDefaultRemark().isEmpty()){
+                return DEFAULT_REMARK;
+            }
             return transactionTypeDto.getDefaultRemark();
         }
         return paymentImportCache.getRemarks();
