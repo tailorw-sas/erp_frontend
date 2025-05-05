@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsof.share.utils.ScaleAmount;
+import com.kynsoft.finamer.invoicing.application.command.manageBooking.create.CreateBookingCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -97,348 +98,388 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
 
     @Override
     public void handle(CreateBulkInvoiceCommand command) {
+        ManageHotelDto hotelDto = findHotel(command);
+        ManageEmployeeDto employee = findEmployee(command.getEmployee());
+        String employeeFullName = getEmployeeFullName(employee, command.getEmployee());
+        validateInvoiceDate(command, hotelDto);
+        ManageAgencyDto agencyDto = findAgency(command);
+        validateClient(agencyDto);
+
+        List<ManageBookingDto> bookings = processBookings(command, hotelDto, agencyDto);
+        List<ManageRoomRateDto> roomRates = processRoomRates(command, bookings);
+        List<ManageAdjustmentDto> adjustments = processAdjustments(command, roomRates);
+        List<ManageAttachmentDto> attachments = processAttachments(command);
+
+        validateBookingsNightType(bookings, agencyDto);
+        calculateBookingsHotelAmount(bookings);
+
+        EInvoiceStatus status = determineInvoiceStatus(command, attachments);
+        ManageInvoiceDto invoiceDto = buildInvoice(command, hotelDto, agencyDto, bookings, attachments, status);
+
+        ManageInvoiceDto created = saveInvoice(invoiceDto, attachments, employee, employeeFullName);
+
+        command.setInvoiceId(created.getInvoiceId());
+        command.setInvoiceNo(created.getInvoiceNumber());
+    }
+
+    // Métodos auxiliares privados
+    private ManageHotelDto findHotel(CreateBulkInvoiceCommand command) {
         ManageHotelDto hotelDto = this.hotelService.findById(command.getInvoiceCommand().getHotel());
-
         RulesChecker.checkRule(new InvoiceManualValidateVirtualHotelRule(hotelDto));
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
-        try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
-        } catch (Exception e) {
-            employeeFullName = command.getEmployee();
-        }
+        return hotelDto;
+    }
 
+    private ManageEmployeeDto findEmployee(String employeeId) {
+        try {
+            return this.employeeService.findById(UUID.fromString(employeeId));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getEmployeeFullName(ManageEmployeeDto employee, String employeeId) {
+        if (employee != null) {
+            return employee.getFirstName() + " " + employee.getLastName();
+        }
+        return employeeId;
+    }
+
+    private void validateInvoiceDate(CreateBulkInvoiceCommand command, ManageHotelDto hotelDto) {
         RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
                 this.closeOperationService,
                 command.getInvoiceCommand().getInvoiceDate().toLocalDate(),
-                hotelDto.getId()));
+                hotelDto.getId()
+        ));
+    }
 
-        ManageAgencyDto agencyDto = this.agencyService.findById(command.getInvoiceCommand().getAgency());
+    private ManageAgencyDto findAgency(CreateBulkInvoiceCommand command) {
+        return this.agencyService.findById(command.getInvoiceCommand().getAgency());
+    }
+
+    private void validateClient(ManageAgencyDto agencyDto) {
         RulesChecker.checkRule(new InvoiceValidateClienteRule(agencyDto.getClient()));
+    }
 
-        List<ManageAdjustmentDto> adjustments = new LinkedList<>();
+    private List<ManageBookingDto> processBookings(CreateBulkInvoiceCommand command, ManageHotelDto hotelDto, ManageAgencyDto agencyDto) {
         List<ManageBookingDto> bookings = new LinkedList<>();
-        List<ManageRoomRateDto> roomRates = new LinkedList<>();
-        List<ManageAttachmentDto> attachmentDtos = new LinkedList<>();
-
         StringBuilder hotelBookingNumber = new StringBuilder();
+        EInvoiceType invoiceType = command.getInvoiceCommand().getInvoiceType();
         for (int i = 0; i < command.getBookingCommands().size(); i++) {
-            RulesChecker.checkRule(new ManageBookingCheckInCheckOutRule(
-                    command.getBookingCommands().get(i).getCheckIn(),
-                    command.getBookingCommands().get(i).getCheckOut()));
+            CreateBookingCommand bookingDto = command.getBookingCommands().get(i);
+            RulesChecker.checkRule(new ManageBookingCheckInCheckOutRule(bookingDto.getCheckIn(), bookingDto.getCheckOut()));
 
-            if (command.getBookingCommands().get(i).getHotelBookingNumber().length() > 2
-                    && command.getInvoiceCommand().getInvoiceType() != null
-                    && !command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
-
-                RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(bookingService,
-                        //command.getBookingCommands().get(i).getHotelBookingNumber()
-                        //        .split("\\s+")[command.getBookingCommands().get(i).getHotelBookingNumber()
-                        //.split("\\s+").length - 1],
-                        removeBlankSpaces(command.getBookingCommands().get(i).getHotelBookingNumber()),
-                        command.getInvoiceCommand().getHotel(), command.getBookingCommands().get(i).getHotelBookingNumber()));
+            if (bookingDto.getHotelBookingNumber().length() > 2 && invoiceType != null && !invoiceType.equals(EInvoiceType.CREDIT)) {
+                RulesChecker.checkRule(new ManageBookingHotelBookingNumberValidationRule(
+                        bookingService,
+                        removeBlankSpaces(bookingDto.getHotelBookingNumber()),
+                        command.getInvoiceCommand().getHotel(),
+                        bookingDto.getHotelBookingNumber()));
             }
 
-            ManageNightTypeDto nightTypeDto = command.getBookingCommands().get(i).getNightType() != null ? this.nightTypeService.findById(command.getBookingCommands().get(i).getNightType()) : null;
-            ManageRoomCategoryDto roomCategoryDto = command.getBookingCommands().get(i).getRoomCategory() != null ? this.roomCategoryService.findById(command.getBookingCommands().get(i).getRoomCategory()) : null;
-
-            ManageRatePlanDto ratePlanDto = command.getBookingCommands().get(i).getRatePlan() != null ? this.ratePlanService.findById(command.getBookingCommands().get(i).getRatePlan()) : null;
+            ManageNightTypeDto nightTypeDto = bookingDto.getNightType() != null ? this.nightTypeService.findById(bookingDto.getNightType()) : null;
+            ManageRoomCategoryDto roomCategoryDto = bookingDto.getRoomCategory() != null ? this.roomCategoryService.findById(bookingDto.getRoomCategory()) : null;
+            ManageRatePlanDto ratePlanDto = bookingDto.getRatePlan() != null ? this.ratePlanService.findById(bookingDto.getRatePlan()) : null;
             if (ratePlanDto != null)
-                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto, command.getBookingCommands().get(i).getHotelBookingNumber()));
-
-            ManageRoomTypeDto roomTypeDto = command.getBookingCommands().get(i).getRoomType() != null ? this.roomTypeService.findById(command.getBookingCommands().get(i).getRoomType()) : null;
+                RulesChecker.checkRule(new ManageInvoiceValidateRatePlanRule(hotelDto, ratePlanDto, bookingDto.getHotelBookingNumber()));
+            ManageRoomTypeDto roomTypeDto = bookingDto.getRoomType() != null ? this.roomTypeService.findById(bookingDto.getRoomType()) : null;
             if (roomTypeDto != null)
-                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto, command.getBookingCommands().get(i).getHotelBookingNumber()));
+                RulesChecker.checkRule(new ManageInvoiceValidateRoomTypeRule(hotelDto, roomTypeDto, bookingDto.getHotelBookingNumber()));
 
             Double invoiceAmount = 0.00;
-            if (command.getInvoiceCommand().getInvoiceType() != null
-                    && command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)) {
-
-                if (command.getBookingCommands().get(i).getInvoiceAmount() > 0) {
-                    invoiceAmount -= command.getBookingCommands().get(i).getInvoiceAmount();
-
+            if (invoiceType != null && invoiceType.equals(EInvoiceType.CREDIT)) {
+                if (bookingDto.getInvoiceAmount() > 0) {
+                    invoiceAmount -= bookingDto.getInvoiceAmount();
                 } else {
-                    invoiceAmount = command.getBookingCommands().get(i).getInvoiceAmount();
+                    invoiceAmount = bookingDto.getInvoiceAmount();
                 }
-
             } else {
-                invoiceAmount = command.getBookingCommands().get(i).getInvoiceAmount();
+                invoiceAmount = bookingDto.getInvoiceAmount();
             }
 
-            bookings.add(new ManageBookingDto(command.getBookingCommands().get(i).getId(),
+            bookings.add(new ManageBookingDto(
+                    bookingDto.getId(),
                     null,
                     null,
-                    command.getBookingCommands().get(i).getHotelCreationDate(),
-                    command.getBookingCommands().get(i).getBookingDate(),
-                    command.getBookingCommands().get(i).getCheckIn(),
-                    command.getBookingCommands().get(i).getCheckOut(),
-                    command.getBookingCommands().get(i).getHotelBookingNumber(),
-                    command.getBookingCommands().get(i).getFullName(),
-                    command.getBookingCommands().get(i).getFirstName(),
-                    command.getBookingCommands().get(i).getLastName(),
+                    bookingDto.getHotelCreationDate(),
+                    bookingDto.getBookingDate(),
+                    bookingDto.getCheckIn(),
+                    bookingDto.getCheckOut(),
+                    bookingDto.getHotelBookingNumber(),
+                    bookingDto.getFullName(),
+                    bookingDto.getFirstName(),
+                    bookingDto.getLastName(),
                     invoiceAmount,
                     invoiceAmount,
-                    command.getBookingCommands().get(i).getRoomNumber(),
-                    command.getBookingCommands().get(i).getCouponNumber(),
-                    command.getBookingCommands().get(i).getAdults(),
-                    command.getBookingCommands().get(i).getChildren(),
-                    command.getBookingCommands().get(i).getRateAdult(),
-                    command.getBookingCommands().get(i).getRateChild(),
-                    command.getBookingCommands().get(i).getHotelInvoiceNumber(),
-                    command.getBookingCommands().get(i).getFolioNumber(),
-                    command.getBookingCommands().get(i).getHotelAmount(),
-                    command.getBookingCommands().get(i).getDescription(),
+                    bookingDto.getRoomNumber(),
+                    bookingDto.getCouponNumber(),
+                    bookingDto.getAdults(),
+                    bookingDto.getChildren(),
+                    bookingDto.getRateAdult(),
+                    bookingDto.getRateChild(),
+                    bookingDto.getHotelInvoiceNumber(),
+                    bookingDto.getFolioNumber(),
+                    bookingDto.getHotelAmount(),
+                    bookingDto.getDescription(),
                     null,
                     ratePlanDto,
                     nightTypeDto,
                     roomTypeDto,
-                    roomCategoryDto, new LinkedList<>(), null, null,
-                    command.getBookingCommands().get(i).getContract(),
+                    roomCategoryDto,
+                    new LinkedList<>(),
+                    null,
+                    null,
+                    bookingDto.getContract(),
                     false,
                     null
             ));
             if (agencyDto.getClient().getIsNightType() && nightTypeDto == null) {
-                hotelBookingNumber.append(command.getBookingCommands().get(i).getHotelBookingNumber()+", ");
+                hotelBookingNumber.append(bookingDto.getHotelBookingNumber()).append(", ");
             }
         }
-
-        if (!hotelBookingNumber.isEmpty()){
+        if (!hotelBookingNumber.isEmpty()) {
             throw new BusinessException(
                     DomainErrorMessage.NIGHT_TYPE_REQUIRED,
-                    "Bookings with Hotel Booking Number: " + hotelBookingNumber +"require the Night Type field."
+                    "Bookings with Hotel Booking Number: " + hotelBookingNumber + "require the Night Type field."
             );
         }
+        return bookings;
+    }
 
-        for (int i = 0; i < command.getRoomRateCommands().size(); i++) {
-//            RulesChecker.checkRule(new ManageRoomRateCheckInCheckOutRule(command.getRoomRateCommands().get(i).getCheckIn(), command.getRoomRateCommands().get(i).getCheckOut()));
-//            RulesChecker.checkRule(new ManageRoomRateCheckAdultsAndChildrenRule(command.getRoomRateCommands().get(i).getAdults(), command.getRoomRateCommands().get(i).getChildren()));
-            Double invoiceAmount = command.getRoomRateCommands().get(i).getInvoiceAmount();
-            if (command.getInvoiceCommand().getInvoiceType().compareTo(EInvoiceType.CREDIT) == 0
-                    && invoiceAmount > 0) {
+    private List<ManageRoomRateDto> processRoomRates(CreateBulkInvoiceCommand command, List<ManageBookingDto> bookings) {
+        List<ManageRoomRateDto> roomRates = new LinkedList<>();
+        EInvoiceType invoiceType = command.getInvoiceCommand().getInvoiceType();
+
+        for (var rateCommand : command.getRoomRateCommands()) {
+            Double invoiceAmount = rateCommand.getInvoiceAmount();
+            if (invoiceType == EInvoiceType.CREDIT && invoiceAmount > 0) {
                 invoiceAmount = -invoiceAmount;
             }
-//            Long nights = this.calculateNights(command.getRoomRateCommands().get(i).getCheckIn(), command.getRoomRateCommands().get(i).getCheckOut());
+
             ManageRoomRateDto roomRateDto = new ManageRoomRateDto(
-                    command.getRoomRateCommands().get(i).getId(),
+                    rateCommand.getId(),
                     null,
-                    command.getRoomRateCommands().get(i).getCheckIn(),
-                    command.getRoomRateCommands().get(i).getCheckOut(),
+                    rateCommand.getCheckIn(),
+                    rateCommand.getCheckOut(),
                     invoiceAmount,
-                    command.getRoomRateCommands().get(i).getRoomNumber(),
-                    command.getRoomRateCommands().get(i).getAdults(),
-                    command.getRoomRateCommands().get(i).getChildren(),
-                    //                    this.calculateRateAdult(invoiceAmount, nights, command.getRoomRateCommands().get(i).getAdults()),
-                    command.getRoomRateCommands().get(i).getRateAdult(),
-                    //                    this.calculateRateChild(invoiceAmount, nights, command.getRoomRateCommands().get(i).getChildren()),
-                    command.getRoomRateCommands().get(i).getRateChild(),
-                    command.getRoomRateCommands().get(i).getHotelAmount(),
-                    command.getRoomRateCommands().get(i).getRemark(),
+                    rateCommand.getRoomNumber(),
+                    rateCommand.getAdults(),
+                    rateCommand.getChildren(),
+                    rateCommand.getRateAdult(),
+                    rateCommand.getRateChild(),
+                    rateCommand.getHotelAmount(),
+                    rateCommand.getRemark(),
                     null,
                     new LinkedList<>(),
-                    //                    nights
                     null,
                     false,
                     null
             );
 
-            if (command.getRoomRateCommands().get(i).getBooking() != null) {
+            if (rateCommand.getBooking() != null) {
                 for (ManageBookingDto bookingDto : bookings) {
-                    if (bookingDto.getId()
-                            .equals(command.getRoomRateCommands().get(i).getBooking())) {
-
+                    if (bookingDto.getId().equals(rateCommand.getBooking())) {
                         List<ManageRoomRateDto> rates = bookingDto.getRoomRates();
-                        roomRateDto.setRoomRateId(rates != null ? rates.size() + 1L : 1L);
-                        if (rates != null) {
-                            rates.add(roomRateDto);
-                        } else {
+                        if (rates == null) {
                             rates = new LinkedList<>();
-                            rates.add(roomRateDto);
+                            bookingDto.setRoomRates(rates);
                         }
-
-                        bookingDto.setRoomRates(rates);
-
+                        roomRateDto.setRoomRateId((long) (rates.size() + 1));
+                        rates.add(roomRateDto);
+                        break;
                     }
                 }
             }
-            roomRates.add(roomRateDto);
 
+            roomRates.add(roomRateDto);
         }
 
-        for (int i = 0; i < command.getAdjustmentCommands().size(); i++) {
+        return roomRates;
+    }
 
-            ManageInvoiceTransactionTypeDto transactionTypeDto = command.getAdjustmentCommands().get(i)
-                    .getTransactionType() != null
-                    && !command
-                            .getAdjustmentCommands().get(i).getTransactionType().equals("")
-                    ? transactionTypeService.findById(
-                            command.getAdjustmentCommands()
-                                    .get(i)
-                                    .getTransactionType())
+    private List<ManageAdjustmentDto> processAdjustments(CreateBulkInvoiceCommand command, List<ManageRoomRateDto> roomRates) {
+        List<ManageAdjustmentDto> adjustments = new LinkedList<>();
+
+        for (var adjCmd : command.getAdjustmentCommands()) {
+            ManageInvoiceTransactionTypeDto transactionTypeDto = (adjCmd.getTransactionType() != null && !adjCmd.getTransactionType().equals(""))
+                    ? transactionTypeService.findById(adjCmd.getTransactionType())
                     : null;
 
-            ManagePaymentTransactionTypeDto paymnetTransactionTypeDto = command.getAdjustmentCommands()
-                    .get(i).getPaymentTransactionType() != null
-                    ? paymentTransactionTypeService
-                            .findById(command.getAdjustmentCommands().get(i)
-                                    .getPaymentTransactionType())
+            ManagePaymentTransactionTypeDto paymentTransactionTypeDto = (adjCmd.getPaymentTransactionType() != null)
+                    ? paymentTransactionTypeService.findById(adjCmd.getPaymentTransactionType())
                     : null;
 
             ManageAdjustmentDto adjustmentDto = new ManageAdjustmentDto(
-                    command.getAdjustmentCommands().get(i).getId(),
+                    adjCmd.getId(),
                     null,
-                    command.getAdjustmentCommands().get(i).getAmount(),
-                    command.getAdjustmentCommands().get(i).getDate(),
-                    command.getAdjustmentCommands().get(i).getDescription(),
+                    adjCmd.getAmount(),
+                    adjCmd.getDate(),
+                    adjCmd.getDescription(),
                     transactionTypeDto,
-                    paymnetTransactionTypeDto,
-                    null, command.getAdjustmentCommands().get(i).getEmployee(),
+                    paymentTransactionTypeDto,
+                    null,
+                    adjCmd.getEmployee(),
                     false
             );
 
-            if (command.getAdjustmentCommands().get(i).getRoomRate() != null) {
+            if (adjCmd.getRoomRate() != null) {
                 for (ManageRoomRateDto rateDto : roomRates) {
-                    if (rateDto.getId()
-                            .equals(command.getAdjustmentCommands().get(i).getRoomRate())) {
-
-                        List<ManageAdjustmentDto> adjustmentDtos = rateDto.getAdjustments();
-                        adjustmentDtos.add(adjustmentDto);
-
-                        if (adjustmentDto.getAmount() != null) {
-
-                            rateDto.setInvoiceAmount(rateDto.getInvoiceAmount() != null
-                                    ? rateDto.getInvoiceAmount()
-                                    : 0.00 + adjustmentDto.getAmount());
+                    if (rateDto.getId().equals(adjCmd.getRoomRate())) {
+                        if (rateDto.getAdjustments() == null) {
+                            rateDto.setAdjustments(new LinkedList<>());
                         }
+                        rateDto.getAdjustments().add(adjustmentDto);
 
-                        rateDto.setAdjustments(adjustmentDtos);
+                        Double invoiceAmount = rateDto.getInvoiceAmount() != null ? rateDto.getInvoiceAmount() : 0.0;
+                        Double adjustmentAmount = adjustmentDto.getAmount() != null ? adjustmentDto.getAmount() : 0.0;
+                        rateDto.setInvoiceAmount(invoiceAmount + adjustmentAmount);
 
+                        break;
                     }
                 }
             }
 
             adjustments.add(adjustmentDto);
-
         }
 
-        int cont = 0;
+        return adjustments;
+    }
+
+    private List<ManageAttachmentDto> processAttachments(CreateBulkInvoiceCommand command) {
+        List<ManageAttachmentDto> attachmentDtos = new LinkedList<>();
+
         UUID attachmentDefault = null;
-        for (int i = 0; i < command.getAttachmentCommands().size(); i++) {
-            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(
-                    command.getAttachmentCommands().get(i).getFile()
-            ));
-            ManageAttachmentTypeDto attachmentType = this.attachmentTypeService.findById(
-                    command.getAttachmentCommands().get(i).getType());
-            ResourceTypeDto resourceTypeDto = this.resourceTypeService.findById(command.getAttachmentCommands().get(i).getPaymentResourceType());
-            if (attachmentType.isAttachInvDefault()) {
-                cont++;
-            }
+        int defaultCount = 0;
+
+        for (var attachmentCmd : command.getAttachmentCommands()) {
+            RulesChecker.checkRule(new ManageAttachmentFileNameNotNullRule(attachmentCmd.getFile()));
+
+            var attachmentType = attachmentTypeService.findById(attachmentCmd.getType());
+            var resourceTypeDto = resourceTypeService.findById(attachmentCmd.getPaymentResourceType());
+
             ManageAttachmentDto attachmentDto = new ManageAttachmentDto(
-                    command.getAttachmentCommands().get(i).getId(),
-                    null,
-                    command.getAttachmentCommands().get(i).getFilename(),
-                    command.getAttachmentCommands().get(i).getFile(),
-                    command.getAttachmentCommands().get(i).getRemark(),
-                    attachmentType,
-                    null, command.getAttachmentCommands().get(i).getEmployee(),
-                    command.getAttachmentCommands().get(i).getEmployeeId(),
-                    null,
-                    resourceTypeDto,
-                    false
+                attachmentCmd.getId(),
+                null,
+                attachmentCmd.getFilename(),
+                attachmentCmd.getFile(),
+                attachmentCmd.getRemark(),
+                attachmentType,
+                null,
+                attachmentCmd.getEmployee(),
+                attachmentCmd.getEmployeeId(),
+                null,
+                resourceTypeDto,
+                false
             );
 
-            if (cont == 1) {
-                attachmentDefault = attachmentDto.getId();
+            if (attachmentType.isAttachInvDefault()) {
+                defaultCount++;
+                if (defaultCount == 1) {
+                    attachmentDefault = attachmentDto.getId();
+                }
             }
+
             attachmentDtos.add(attachmentDto);
         }
-        if (cont == 0) {
+
+        if (defaultCount == 0) {
             throw new BusinessException(
-                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
-                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
+                DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+                DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
             );
         }
+
+        return attachmentDtos;
+    }
+
+    private void validateBookingsNightType(List<ManageBookingDto> bookings, ManageAgencyDto agencyDto) {
+        // Ya validado en processBookings, método incluido para mantener la estructura.
+    }
+
+    private void calculateBookingsHotelAmount(List<ManageBookingDto> bookings) {
         for (ManageBookingDto booking : bookings) {
             this.calculateBookingHotelAmount(booking);
-
         }
+    }
 
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType());
-
-        if (hotelDto.getManageTradingCompanies() != null
-                && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotelDto.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotelDto.getCode();
-        }
-
+    private EInvoiceStatus determineInvoiceStatus(CreateBulkInvoiceCommand command, List<ManageAttachmentDto> attachments) {
         EInvoiceStatus status = EInvoiceStatus.PROCESSED;
-        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         if (command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.CREDIT)
                 || command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
             status = EInvoiceStatus.SENT;
-
-            invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         }
-
-        if (status.equals(EInvoiceStatus.PROCESSED) && !attachmentDtos.isEmpty()) {
+        if (status.equals(EInvoiceStatus.PROCESSED) && !attachments.isEmpty()) {
             status = EInvoiceStatus.RECONCILED;
-
-            invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
         }
-        LocalDate dueDate = command.getInvoiceCommand().getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
-        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceCommand().getInvoiceType());
+        return status;
+    }
 
-        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(command.getInvoiceCommand().getId(), 0L, 0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(command.getInvoiceCommand().getInvoiceType()) + "-" + 0L,
-                command.getInvoiceCommand().getInvoiceDate(), dueDate,
+    private ManageInvoiceDto buildInvoice(CreateBulkInvoiceCommand command, ManageHotelDto hotelDto, ManageAgencyDto agencyDto,
+                                          List<ManageBookingDto> bookings, List<ManageAttachmentDto> attachments, EInvoiceStatus status) {
+        ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(status);
+        // Convertir OLD_CREDIT a CREDIT para el tipo de invoice
+        EInvoiceType invoiceType = command.getInvoiceCommand().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)
+                ? EInvoiceType.CREDIT
+                : command.getInvoiceCommand().getInvoiceType();
+        ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(invoiceType);
+
+        Double amount = BankerRounding.round(command.getInvoiceCommand().getInvoiceAmount());//TODO APF validar si esto es igual a la suma de los bookings
+        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
+                command.getInvoiceCommand().getId(),
+                hotelDto,
+                agencyDto,
+                command.getInvoiceCommand().getInvoiceType(),
+                invoiceTypeDto,
+                status,
+                invoiceStatus,
+                command.getInvoiceCommand().getInvoiceDate(),
                 true,
-                BankerRounding.round(command.getInvoiceCommand().getInvoiceAmount()),
-                command.getInvoiceCommand().getInvoiceAmount(), hotelDto, agencyDto,
-                command.getInvoiceCommand().getInvoiceType(), status,
-                false, bookings, attachmentDtos, null, null, invoiceTypeDto, invoiceStatus, null, false,
-                null, 0.0,0);
-        invoiceDto.setOriginalAmount(BankerRounding.round(invoiceDto.getInvoiceAmount()));
+                amount,
+                amount,
+                amount,
+                bookings,
+                attachments,
+                false,
+                null
+        );
 
-        if (status.compareTo(EInvoiceStatus.RECONCILED) == 0) {
+        if (status.equals(EInvoiceStatus.RECONCILED)) {
             invoiceDto = this.service.changeInvoiceStatus(invoiceDto, invoiceStatus);
         }
-        ManageInvoiceDto created = service.create(invoiceDto);
+        return invoiceDto;
+    }
 
-        command.setInvoiceId(created.getInvoiceId());
-        command.setInvoiceNo(created.getInvoiceNumber());
-
-        //calcular el amount de los bookings
-        for (ManageBookingDto booking : created.getBookings()) {
+    private ManageInvoiceDto saveInvoice(ManageInvoiceDto invoiceDto, List<ManageAttachmentDto> attachments, ManageEmployeeDto employee,
+                                         String employeeFullName) {
+        // Calcular los montos de los bookings antes
+        for (ManageBookingDto booking : invoiceDto.getBookings()) {
             this.bookingService.calculateInvoiceAmount(booking);
         }
-        //calcular el amount del invoice
-        this.service.calculateInvoiceAmount(created);
+        // Crear el invoice ya con los montos de bookings
+        ManageInvoiceDto created = service.create(invoiceDto);
+        // Buscar el attachment default (si existe)
+        UUID attachmentDefault = findDefaultAttachmentId(attachments);
 
-        created.setOriginalAmount(created.getInvoiceAmount());
-        this.service.update(created);
+        // Replicación en Kafka (con manejo de error)
         try {
-            UUID uuidEmployee = employee != null ? employee.getId() : null;
-            this.producerReplicateManageInvoiceService.create(created, attachmentDefault, uuidEmployee);
-        } catch (Exception e) {
+            UUID employeeId = (employee != null) ? employee.getId() : null;
+            this.producerReplicateManageInvoiceService.create(created, attachmentDefault, employeeId);
+        } catch (Exception ex) {
         }
 
-        //invoice status history
+        // Historial de estado del invoice
         this.invoiceStatusHistoryService.create(
                 new InvoiceStatusHistoryDto(
                         UUID.randomUUID(),
                         created,
                         "The invoice data was inserted.",
                         null,
-                        //command.getEmployee(),
                         employeeFullName,
-                        status,
+                        created.getStatus(),
                         0L
                 )
         );
 
-        //attachment status history
+        // Historial de status de attachments
         for (ManageAttachmentDto attachment : created.getAttachments()) {
             this.attachmentStatusHistoryService.create(
                     new AttachmentStatusHistoryDto(
@@ -446,7 +487,6 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
                             created,
-                            //command.getEmployee(),
                             employeeFullName,
                             attachment.getEmployeeId(),
                             null,
@@ -455,38 +495,30 @@ public class CreateBulkInvoiceCommandHandler implements ICommandHandler<CreateBu
             );
         }
 
+        return created;
+    }
+
+    private UUID findDefaultAttachmentId(List<ManageAttachmentDto> attachments) {
+        return attachments.stream()
+                .filter(a -> a.getType() != null && a.getType().isAttachInvDefault())
+                .map(ManageAttachmentDto::getId)
+                .findFirst()
+                .orElse(null);
     }
 
     public void calculateBookingHotelAmount(ManageBookingDto dto) {
         Double HotelAmount = 0.00;
 
         if (dto.getRoomRates() != null) {
-
             for (int i = 0; i < dto.getRoomRates().size(); i++) {
-
                 HotelAmount += dto.getRoomRates().get(i).getHotelAmount();
-
             }
 
             dto.setHotelAmount(HotelAmount);
-
         }
     }
 
     private String removeBlankSpaces(String text) {
         return text.replaceAll("\\s+", " ").trim();
     }
-
-    private Double calculateRateAdult(Double rateAmount, Long nights, Integer adults) {
-        return adults == 0 ? 0.0 : rateAmount / (nights * adults);
-    }
-
-    private Double calculateRateChild(Double rateAmount, Long nights, Integer children) {
-        return children == 0 ? 0.0 : rateAmount / (nights * children);
-    }
-
-    private Long calculateNights(LocalDateTime checkIn, LocalDateTime checkOut) {
-        return ChronoUnit.DAYS.between(checkIn.toLocalDate(), checkOut.toLocalDate());
-    }
-
 }

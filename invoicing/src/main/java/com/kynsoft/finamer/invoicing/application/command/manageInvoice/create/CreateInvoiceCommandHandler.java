@@ -36,12 +36,16 @@ public class CreateInvoiceCommandHandler implements ICommandHandler<CreateInvoic
     @Override
     public void handle(CreateInvoiceCommand command) {
 
-        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
+        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
 
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(command.getInvoiceType());
+        ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
 
+        ManageInvoiceDto creInvoiceDto = new ManageInvoiceDto(command.getId(), hotelDto, agencyDto, command.getInvoiceType(), invoiceTypeDto,
+                EInvoiceStatus.PROCESSED, manageInvoiceStatus, command.getInvoiceDate(), command.getIsManual(), command.getInvoiceAmount(),
+                command.getInvoiceAmount(), command.getInvoiceAmount(), null, null, Boolean.FALSE, null);
 
         ManageInvoiceDto creInvoiceDto = new ManageInvoiceDto(command.getId(), 0L, null,
                 null, null, command.getInvoiceDate(), command.getDueDate(), command.getIsManual(),

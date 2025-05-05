@@ -65,35 +65,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     @Autowired
     private final ManageInvoiceReadDataJPARepository repositoryQuery;
 
-    @Autowired
-    private final IInvoiceCloseOperationService closeOperationService;
-
-    private final ApplicationEventPublisher applicationEventPublisher;
-    private final IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService;
     private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
-            IInvoiceCloseOperationService closeOperationService,
-            ApplicationEventPublisher applicationEventPublisher,
-            IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
             ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
-        this.closeOperationService = closeOperationService;
-        this.applicationEventPublisher = applicationEventPublisher;
-        this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
         this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
-    }
-
-    public Long getInvoiceNumberSequence(String invoiceNumber) {
-        Long lastInvoiceNo = this.repositoryQuery.findByInvoiceNumber(invoiceNumber);
-
-        lastInvoiceNo += 1;
-        return lastInvoiceNo;
     }
 
     @Override
@@ -101,16 +83,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         Double InvoiceAmount = 0.00;
 
         if (dto.getBookings() != null) {
-
             for (int i = 0; i < dto.getBookings().size(); i++) {
-
                 InvoiceAmount += dto.getBookings().get(i).getInvoiceAmount();
-
             }
 
             dto.setInvoiceAmount(InvoiceAmount);
             dto.setDueAmount(InvoiceAmount);
-
             this.update(dto);
         }
     }
@@ -130,6 +108,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         }
 
         Invoice invoice = this.repositoryCommand.saveAndFlush(entity);
+        invoice = this.repositoryCommand.findById(invoice.getId())
+                .orElseThrow(() -> new IllegalStateException("Invoice not found after save"));;
         return invoice.toAggregate();
     }
 
@@ -335,24 +315,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 "",
                 "", "", "", null
         );
-    }
-
-    private PaginatedResponse getPaginatedResponse(Page<Invoice> data) {
-        List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
-        for (Invoice entity : data.getContent()) {
-            try {
-                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
-                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
-                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
-                ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity.toAggregateSearch(),
-                        entity.getHasAttachments(), isCloseOperation);
-                responseList.add(response);
-            } catch (Exception e) {
-                System.err.print(e.getMessage());
-            }
-        }
-        return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
-                data.getTotalElements(), data.getSize(), data.getNumber());
     }
 
     private PaginatedResponse getPaginatedSendListResponse(Page<Invoice> data) {
@@ -582,5 +544,4 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
                 new ErrorField("id", "The invoice not found.")));
     }
-
 }
