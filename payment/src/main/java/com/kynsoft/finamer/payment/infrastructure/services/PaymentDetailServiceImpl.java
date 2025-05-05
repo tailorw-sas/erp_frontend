@@ -50,8 +50,9 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
-    public void createAll(List<PaymentDetail> dto) {
-        this.repositoryCommand.saveAll(dto);
+    public List<PaymentDetailDto> createAll(List<PaymentDetailDto> dto) {
+        List<PaymentDetail> paymentDetails = dto.stream().map(PaymentDetail::new).collect(Collectors.toList());
+        return this.repositoryCommand.saveAllAndFlush(paymentDetails).stream().map(PaymentDetail::toAggregate).collect(Collectors.toList());
     }
 
     @Override

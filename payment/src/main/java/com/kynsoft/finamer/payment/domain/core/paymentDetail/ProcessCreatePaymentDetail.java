@@ -156,6 +156,8 @@ public class ProcessCreatePaymentDetail {
         paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
         paymentDto.setIdentified(BankerRounding.round(paymentDto.getIdentified() + amount));
         paymentDto.setNotIdentified(BankerRounding.round(paymentDto.getPaymentAmount() - paymentDto.getIdentified()));
+
+        updatePaymentAsApplied();
     }
 
     private void updateParentDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail){

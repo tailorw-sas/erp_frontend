@@ -10,11 +10,12 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.services.*;
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import com.kynsoft.finamer.payment.infrastructure.identity.Invoice;
-import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.services.http.InvoiceHttpUUIDService;
 import com.kynsoft.finamer.payment.infrastructure.services.http.helper.InvoiceImportAutomaticeHelperServiceImpl;
 import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateListBookingService;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -23,39 +24,34 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class ApplyPaymentService {
 
     private final IManageInvoiceService manageInvoiceService;
     private final IPaymentService paymentService;
     private final IPaymentDetailService paymentDetailService;
-
-    private final InvoiceHttpUUIDService invoiceHttpUUIDService;
-    private final InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl;
-
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IPaymentStatusHistoryService paymentStatusHistoryService;
-
     private final IPaymentCloseOperationService paymentCloseOperationService;
     private final IManageBookingService manageBookingService;
-
-    private final ProducerUpdateListBookingService producerUpdateListBookingService;
     private final IManagePaymentStatusService statusService;
     private final IManageEmployeeService manageEmployeeService;
+
+    @Getter
+    private List<PaymentDetailDto> createPaymentDetails;
+
+    @Getter
+    private List<ManageBookingDto> bookingList;
 
     public ApplyPaymentService(IPaymentService paymentService,
                                IManageInvoiceService manageInvoiceService,
                                IPaymentDetailService paymentDetailService,
-                               InvoiceHttpUUIDService invoiceHttpUUIDService,
-                               InvoiceImportAutomaticeHelperServiceImpl invoiceImportAutomaticeHelperServiceImpl,
                                IManagePaymentTransactionTypeService paymentTransactionTypeService,
                                IPaymentStatusHistoryService paymentStatusHistoryService,
                                IPaymentCloseOperationService paymentCloseOperationService,
                                IManageBookingService manageBookingService,
                                IManagePaymentStatusService statusService,
-                               IManageEmployeeService manageEmployeeService,
-                               ProducerUpdateListBookingService producerUpdateListBookingService){
-        this.invoiceHttpUUIDService = invoiceHttpUUIDService;
-        this.invoiceImportAutomaticeHelperServiceImpl = invoiceImportAutomaticeHelperServiceImpl;
+                               IManageEmployeeService manageEmployeeService){
         this.paymentService = paymentService;
         this.manageInvoiceService = manageInvoiceService;
         this.paymentDetailService = paymentDetailService;
@@ -65,12 +61,11 @@ public class ApplyPaymentService {
         this.manageBookingService = manageBookingService;
         this.statusService = statusService;
         this.manageEmployeeService = manageEmployeeService;
-        this.producerUpdateListBookingService = producerUpdateListBookingService;
     }
     @Transactional
     public PaymentDto apply(UUID paymentId,
-                            boolean shouldApplyDeposit,
                             boolean shouldApplyPaymentBalance,
+                            boolean shouldApplyDeposit,
                             List<UUID> invoices,
                             List<UUID> deposits,
                             UUID employeeId){
@@ -80,119 +75,110 @@ public class ApplyPaymentService {
         ManageEmployeeDto employeeDto = this.getEmployee(employeeId);
         List<ManageInvoiceDto> sortedInvoices = createInvoiceQueue(invoices);
         List<PaymentDetailDto> depositPaymentDetails = this.createPaymentDetailsTypeDepositQueue(deposits);
+        List<PaymentDetailDto> updatedDepositPaymentDetails = new ArrayList<>();
 
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
         ManagePaymentTransactionTypeDto paymentInvoiceTransactionType = this.getCashTransactionType(); //PAGO
         ManagePaymentTransactionTypeDto applyDepositTransactionType = this.getApplyPaymentTransactionType();//AANT
         ManagePaymentStatusDto appliedPaymentStatus = this.getAppliedPaymentStatus();
 
-        List<PaymentDetailDto> createPaymentDetails = new ArrayList<>();
+        this.createPaymentDetails = new ArrayList<>();
+        this.bookingList = new ArrayList<>();
+
         List<PaymentStatusHistoryDto> paymentStatusHistoryList = new ArrayList<>();
 
-        double paymentBalance = payment.getPaymentBalance();
-        double notApplied = payment.getNotApplied();
-        double depositBalance = payment.getDepositBalance();
-        boolean applyPaymentBalance = payment.getPaymentBalance() != 0;
 
         for (ManageInvoiceDto manageInvoiceDto : sortedInvoices) {
             this.sortBookingsInInvoice(manageInvoiceDto);
             for (ManageBookingDto bookingDto : manageInvoiceDto.getBookings()) {
-                //TODO: almaceno el valor de Balance del Booking porque puede que no llegue a cero cuando el Payment Balance si lo haga. Y todavia
-                // tenga valor el notApplied
-                double amountBalance = bookingDto.getAmountBalance();
-
-                if (notApplied > 0 && paymentBalance > 0 && shouldApplyPaymentBalance && amountBalance > 0) {
-                    double amountToApply = Math.min(notApplied, amountBalance);
+                if (payment.getNotApplied() > 0 && payment.getPaymentBalance() > 0 && shouldApplyPaymentBalance && bookingDto.getAmountBalance() > 0) {
+                    double amountToApply = Math.min(payment.getNotApplied(), bookingDto.getAmountBalance());
 
                     PaymentDetailDto paymentDetail = this.createPaymentDetail(amountToApply,
                             paymentInvoiceTransactionType,
                             payment,
+                            null,
                             transactionDate,
                             employeeDto,
                             appliedPaymentStatus,
                             paymentStatusHistoryList);
-                    createPaymentDetails.add(paymentDetail);
+                    this.createPaymentDetails.add(paymentDetail);
                     this.applyPayment(payment, paymentDetail, bookingDto, transactionDate);
-
-                    notApplied =  BankerRounding.round(notApplied - amountToApply);
-                    paymentBalance = BankerRounding.round(paymentBalance - amountToApply);
-                    amountBalance = BankerRounding.round(amountBalance - amountToApply);
-
                 }
 
-                if ((notApplied == 0 && paymentBalance == 0 && shouldApplyDeposit && amountBalance > 0 && depositBalance > 0)
-                        || (shouldApplyDeposit && !shouldApplyPaymentBalance && amountBalance > 0 && depositBalance > 0)) {
-                    //TODO: este aplica para cuando se quiere aplicar solo a los deposit
-                    if (deposits != null && !deposits.isEmpty()) {
-                        List<PaymentDetailDto> availableDepositPaymentDetails = depositPaymentDetails.stream().
-                                filter(detail -> detail.getApplyDepositValue() > 0)
-                                .collect(Collectors.toList());
-
-                        for (PaymentDetailDto depositPaymentDetail : availableDepositPaymentDetails) {
-                            double depositAmount = depositPaymentDetail.getApplyDepositValue();
-
-
-                            while (depositAmount > 0) {
-                                double amountToApply = Math.min(depositAmount, amountBalance);//TODO Validar ambos casos, cuando el valor del deposito sea mayor que el valor del booking y cuando el valor del booking sea mayor que el deposito
-
-                                PaymentDetailDto applyPaymentDetail = this.createPaymentDetail(amountToApply,
-                                        applyDepositTransactionType,
-                                        payment,
-                                        transactionDate,
-                                        employeeDto,
-                                        appliedPaymentStatus,
-                                        paymentStatusHistoryList);
-                                createPaymentDetails.add(applyPaymentDetail);
-
-                                this.applyPayment(payment,
-                                        applyPaymentDetail,
-                                        bookingDto,
-                                        transactionDate);
-
-                                depositAmount = BankerRounding.round(depositAmount - amountToApply);
-                                amountBalance = BankerRounding.round(amountBalance - amountToApply);
-                                depositBalance = BankerRounding.round(depositBalance - amountToApply);
-                                if (amountBalance == 0 || depositBalance == 0) {
-                                    break;
-                                }
-                            }
-
-                            //Termino el for cuando el balance del booking llegue a 0
-                            if (bookingDto.getAmountBalance() == 0) {
-                                break;
-                            }
-                        }
-                    } else {
+                if ((payment.getNotApplied() == 0 && payment.getPaymentBalance() == 0 && shouldApplyDeposit && bookingDto.getAmountBalance() > 0 && payment.getDepositBalance() > 0)
+                        || (shouldApplyDeposit && !shouldApplyPaymentBalance && bookingDto.getAmountBalance() > 0 && payment.getDepositBalance() > 0)) {
+                    if (depositPaymentDetails.isEmpty()) {
                         break;
                     }
+
+                    Iterator<PaymentDetailDto> depositPaymentDetailsIterator = depositPaymentDetails.iterator();
+                    while (depositPaymentDetailsIterator.hasNext()){
+                        PaymentDetailDto depositPaymentDetail = depositPaymentDetailsIterator.next();
+                        double amountToApply = Math.min(depositPaymentDetail.getApplyDepositValue(), bookingDto.getAmountBalance());//TODO Validar ambos casos, cuando el valor del deposito sea mayor que el valor del booking y cuando el valor del booking sea mayor que el deposito
+
+                        PaymentDetailDto applyDepositPaymentDetail = this.createPaymentDetail(amountToApply,
+                                applyDepositTransactionType,
+                                payment,
+                                depositPaymentDetail,
+                                transactionDate,
+                                employeeDto,
+                                appliedPaymentStatus,
+                                paymentStatusHistoryList);
+                        this.createPaymentDetails.add(applyDepositPaymentDetail);
+
+                        this.applyPayment(payment,
+                                applyDepositPaymentDetail,
+                                bookingDto,
+                                transactionDate);
+
+                        //Cuando se usa todo el deposit value del deposito lo quito de la lista de depositos
+                        if(depositPaymentDetail.getApplyDepositValue() == 0){
+                            updatedDepositPaymentDetails.add(depositPaymentDetail);
+                            depositPaymentDetailsIterator.remove();
+                        }
+
+                        if (bookingDto.getAmountBalance() == 0 || payment.getDepositBalance() == 0) {
+                            break;
+                        }
+                    }
                 }
+
+                if (payment.getPaymentBalance() == 0 && payment.getDepositBalance() == 0) {
+                    break;
+                }
+
+                this.bookingList.add(bookingDto);
             }
-            if (notApplied == 0 && paymentBalance == 0 && depositBalance == 0) {
+            if (payment.getPaymentBalance() == 0 && payment.getDepositBalance() == 0) {
                 break;
             }
         }
 
         //Se crean los Payment Details que genera el flujo de aplicacion de pago.
-        this.paymentDetailService.createAll(createPaymentDetails);
+        this.paymentDetailService.createAll(this.createPaymentDetails);
+        this.paymentDetailService.createAll(updatedDepositPaymentDetails);
+
         //Se actualizan los booking balance.
-        this.manageBookingService.updateAll(bookingsList);
+        this.manageBookingService.updateAllBooking(this.bookingList);
+
+        this.paymentStatusHistoryService.createAll(paymentStatusHistoryList);
 
         //Se actualiza el payment
         this.paymentService.updateBalances(
-                updatePayment.getPaymentBalance(),
-                updatePayment.getDepositBalance(),
-                updatePayment.getIdentified(),
-                updatePayment.getNotIdentified(),
-                updatePayment.getNotApplied(),
-                updatePayment.getApplied(),
-                updatePayment.isApplyPayment(),
-                updatePayment.getId()
+                payment.getPaymentBalance(),
+                payment.getDepositBalance(),
+                payment.getIdentified(),
+                payment.getNotIdentified(),
+                payment.getNotApplied(),
+                payment.getApplied(),
+                payment.isApplyPayment(),
+                payment.getId()
         );
-        //Se actualizan los deposit
-        this.paymentDetailService.createAll(detailTypeDeposits);
+
         this.paymentCloseOperationService.clearCache();
 
-        this.producerUpdateListBookingService.update(kafkaList);
+        return payment;
     }
 
     private PaymentDto getPayment(UUID paymentId){
@@ -262,6 +248,7 @@ public class ApplyPaymentService {
     private PaymentDetailDto createPaymentDetail(double invoiceAmount,
                                                    ManagePaymentTransactionTypeDto transactionTypeDto,
                                                    PaymentDto updatePayment,
+                                                   PaymentDetailDto depositPaymentDetail,
                                                    OffsetDateTime transactionDate,
                                                    ManageEmployeeDto employeeDto,
                                                    ManagePaymentStatusDto appliedPaymentStatus,
@@ -273,7 +260,7 @@ public class ApplyPaymentService {
                 "",
                 transactionTypeDto,
                 appliedPaymentStatus,
-                null
+                depositPaymentDetail
         );
         processCreatePaymentDetail.process();
         PaymentDetailDto paymentDetailDto = processCreatePaymentDetail.getDetail();
