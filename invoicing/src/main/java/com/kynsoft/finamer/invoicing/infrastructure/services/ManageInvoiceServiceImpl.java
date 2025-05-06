@@ -618,7 +618,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     public ManageInvoiceDto findByBookingId(UUID bookingId) {
         UUID invoiceId = repositoryQuery.findInvoiceIdByBookingId(bookingId);
         if(invoiceId != null){
-            Optional<Invoice> invoice = repositoryQuery.findById(invoiceId);
+            Optional<Invoice> invoice = repositoryQuery.findInvoiceByBookingIdWithBookings(invoiceId);
             return invoice.map(Invoice::toAggregate).orElse(null);
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
