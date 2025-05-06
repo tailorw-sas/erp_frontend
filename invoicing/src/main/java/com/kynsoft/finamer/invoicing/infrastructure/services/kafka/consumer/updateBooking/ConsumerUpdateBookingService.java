@@ -50,9 +50,8 @@ public class ConsumerUpdateBookingService {
     @KafkaListener(topics = "finamer-update-booking-balance", groupId = "invoicing-entity-replica")
     public void listen(UpdateBookingBalanceKafka objKafka) {
         try {
-            ManageBookingDto booking = this.bookingService.findById(objKafka.getId());
-            ManageInvoiceDto invoice = booking.getInvoice();
-
+            ManageInvoiceDto invoice = this.invoiceService.findByBookingId(objKafka.getId());
+            ManageBookingDto booking = this.getBookingById(invoice.getBookings(), objKafka.getId());
             if(Objects.nonNull(booking)){
                 booking.setDueAmount(objKafka.getAmountBalance());
                 booking.setUpdatedAt(LocalDateTime.now());
