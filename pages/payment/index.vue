@@ -2813,611 +2813,488 @@ function removeDuplicateFilters(request: IQueryRequest): IQueryRequest {
 }
 
 async function applyPaymentGetListForOtherDeductions() {
-  if (applyPaymentOptionsOtherDeduction.value.loading) { return }
-
-  // loaders & reset
-  applyPaymentOptionsOtherDeduction.value.loading = true
-  applyPaymentOptionsOtherDeduction1.value.loading = true
-  applyPaymentListOfInvoiceOtherDeduction.value = []
-  const newListItems: typeof applyPaymentListOfInvoiceOtherDeduction.value = []
-
+  if (applyPaymentOptionsOtherDeduction.value.loading) {
+    // Si ya hay una solicitud en proceso, no hacer nada.
+    return
+  }
   try {
-    const paymentCtx = objItemSelectedForRightClickApplyPaymentOtherDeduction.value
-    // must have active client
-    if (paymentCtx?.client.status !== 'ACTIVE') { return }
+    applyPaymentOptionsOtherDeduction.value.loading = true
+    applyPaymentOptionsOtherDeduction1.value.loading = true
+    applyPaymentListOfInvoiceOtherDeduction.value = []
+    const newListItems = []
 
-    // build filters
-    const filters: FilterCriteria[] = []
-    // 1) payment filter (only if not loading all)
-    if (!loadAllInvoices.value && paymentCtx.id) {
-      filters.push({ key: 'paymentDetails.payment.id', operator: 'EQUALS', value: paymentCtx.id, logicalOperation: 'AND' })
-    }
-    // 2) dueAmount > 0
-    filters.push({ key: 'dueAmount', operator: 'GREATER_THAN', value: '0.00', logicalOperation: 'AND' })
-    // 3) enabledToApply
-    filters.push({ key: 'invoice.manageInvoiceStatus.enabledToApply', operator: 'EQUALS', value: true, logicalOperation: 'AND' })
-
-    // agency filter
-    const agencyQuery = { query: '', keys: ['name', 'code'] }
-    const agencyFilter: FilterCriteria[] = [
-      { key: 'client.id', operator: 'EQUALS', value: paymentCtx.client.id, logicalOperation: 'AND' },
-      { key: 'client.status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' },
-      { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
-    ]
-    const agencies = await getAgencyListTemp(
-      objApis.value.agency.moduleApi,
-      objApis.value.agency.uriApi,
-      agencyQuery,
-      agencyFilter
-    )
-    if (!agencies.length) { return }
-    filters.push({ key: 'invoice.agency.id', operator: 'IN', value: agencies.map(a => a.id), logicalOperation: 'AND' })
-
-    // hotel filter
-    const hotel = paymentCtx.hotel
-    if (hotel?.id) {
-      const hotelQuery = { query: '', keys: ['name', 'code'] }
-      let hotelIds: string[] = []
-      if (hotel.status === 'ACTIVE' && hotel.applyByTradingCompany) {
-        const tradingFilter: FilterCriteria[] = [
-          { key: 'manageTradingCompanies.id', operator: 'EQUALS', value: hotel.manageTradingCompany, logicalOperation: 'AND' },
-          { key: 'applyByTradingCompany', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
-          { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
-        ]
-        const hotels = await getHotelListTemp(
-          objApis.value.hotel.moduleApi,
-          objApis.value.hotel.uriApi,
-          hotelQuery,
-          tradingFilter
-        )
-        hotelIds = hotels.length ? hotels.map(h => h.id) : [hotel.id]
+    //  Si el cliente esta activo se sigue con el proceso, en caso contrario se detiene
+    if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.client.status === 'ACTIVE') {
+      // Validacion para busar por por las agencias
+      const filter: FilterCriteria[] = [
+        {
+          key: 'client.id',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.client.id,
+        },
+        {
+          key: 'client.status',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+        },
+        {
+          key: 'status',
+          logicalOperation: 'AND',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+        },
+      ]
+      const objQueryToSearch = {
+        query: '',
+        keys: ['name', 'code'],
       }
-      else {
-        hotelIds = [hotel.id]
-      }
-      filters.push({
-        key: 'invoice.hotel.id',
-        operator: hotelIds.length > 1 ? 'IN' : 'EQUALS',
-        value: hotelIds.length > 1 ? hotelIds : hotelIds[0],
-        logicalOperation: 'AND'
-      })
-    }
 
-    // apply loadAll override: remove payment filter if loading all
-    if (loadAllInvoices.value) {
-      // remove any paymentDetails.payment.id filter
-      const idx = filters.findIndex(f => f.key === 'paymentDetails.payment.id')
-      if (idx >= 0) { filters.splice(idx, 1) }
-    }
+      let listAgenciesForApplyPayment: any[] = []
+      listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
 
-    // finalize payload
-    applyPaymentPayloadOtherDeduction.value.filter = removeDuplicateFilters({ filter: filters } as IQueryRequest).filter
+      // Si existe al menos una agencia se continua con el proceso, en caso contrario se detiene
+      if (listAgenciesForApplyPayment.length > 0) {
+        const objFilter = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.agency.id')
 
-    // fetch data
-    const response = await GenericService.search(
-      'invoicing',
-      'manage-booking',
-      applyPaymentPayloadOtherDeduction.value
-    )
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    // pagination
-    Object.assign(applyPaymentPaginationOtherDeduction.value, { page, limit: size, totalElements, totalPages })
-
-    // map results, avoid duplicates
-    const existing = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(i => i.id))
-    dataList.forEach((item) => {
-      if (!existing.has(item.id)) {
-        const record = {
-          ...item,
-          invoiceId: item.invoice?.invoiceId.toString(),
-          invoiceNumber: item.invoice?.invoiceNumberPrefix.toString(),
-          checkIn: item.checkIn ? dayjs(item.checkIn).format('YYYY-MM-DD') : null,
-          checkOut: item.checkOut ? dayjs(item.checkOut).format('YYYY-MM-DD') : null,
-          dueAmountTemp: item.dueAmount || 0,
-          bookingAmountTemp: item.invoiceAmount || 0,
-          paymentId: paymentCtx.paymentId,
-          loadingEdit: false,
-          loadingDelete: false,
-          loadingBookings: false
+        if (objFilter) {
+          objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
         }
-        newListItems.push(record)
-        existing.add(item.id)
+        else {
+          applyPaymentPayloadOtherDeduction.value.filter.push({
+            key: 'invoice.agency.id',
+            operator: 'IN',
+            value: listAgenciesForApplyPayment.map(item => item.id),
+            logicalOperation: 'AND'
+          })
+        }
+
+        // Validacion para bucsar por los hoteles
+        if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel && objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id) {
+          if (objItemSelectedForRightClickApplyPayment.value?.hotel?.status === 'ACTIVE') {
+            if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.applyByTradingCompany) {
+              // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
+              const filter: FilterCriteria[] = [
+                {
+                  key: 'manageTradingCompanies.id',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel?.manageTradingCompany,
+                },
+                {
+                  key: 'applyByTradingCompany',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: true,
+                },
+                {
+                  key: 'status',
+                  logicalOperation: 'AND',
+                  operator: 'EQUALS',
+                  value: 'ACTIVE',
+                }
+              ]
+              const objQueryToSearch = {
+                query: '',
+                keys: ['name', 'code'],
+              }
+
+              let listHotelsForApplyPayment: any[] = []
+              listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
+
+              // Si existe al menos un hotel se continua con el proceso, en caso contrario se detiene
+              if (listHotelsForApplyPayment.length > 0) {
+                const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+                if (objFilter) {
+                  objFilter.value = listHotelsForApplyPayment.map(item => item.id)
+                }
+                else {
+                  applyPaymentPayloadOtherDeduction.value.filter.push({
+                    key: 'invoice.hotel.id',
+                    operator: 'IN',
+                    value: listHotelsForApplyPayment.map(item => item.id),
+                    logicalOperation: 'AND'
+                  })
+                }
+                const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
+
+                if (objFilterDueAmount) {
+                  objFilterDueAmount.value = '0.00'
+                }
+                else {
+                  applyPaymentPayloadOtherDeduction.value.filter.push({
+                    key: 'dueAmount',
+                    operator: 'GREATER_THAN',
+                    value: '0.00',
+                    logicalOperation: 'AND'
+                  })
+                }
+
+                if (loadAllInvoices.value) {
+                  applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
+                }
+                else {
+                  const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
+
+                  if (objFilterForPayment) {
+                    objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+                  }
+                  else {
+                    applyPaymentPayloadOtherDeduction.value.filter.push(
+                      {
+                        key: 'paymentDetails.payment.id',
+                        operator: 'EQUALS',
+                        value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
+                        logicalOperation: 'AND'
+                      }
+                    )
+                  }
+                }
+
+                const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+                if (objFilterEnabledToApply) {
+                  objFilterEnabledToApply.value = true
+                }
+                else {
+                  applyPaymentPayloadOtherDeduction.value.filter.push(
+                    {
+                      key: 'invoice.manageInvoiceStatus.enabledToApply',
+                      operator: 'EQUALS',
+                      value: true,
+                      logicalOperation: 'AND'
+                    }
+                  )
+                }
+
+                const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+                applyPaymentPayloadOtherDeduction.value = filterTemp
+
+                const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
+
+                const { data: dataList, page, size, totalElements, totalPages } = response
+
+                applyPaymentPaginationOtherDeduction.value.page = page
+                applyPaymentPaginationOtherDeduction.value.limit = size
+                applyPaymentPaginationOtherDeduction.value.totalElements = totalElements
+                applyPaymentPaginationOtherDeduction.value.totalPages = totalPages
+
+                const existingIds = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(item => item.id))
+
+                for (const iterator of dataList) {
+                  iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                  iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
+                  iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+                  iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+                  // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                  // iterator.bookingBalance = iterator.dueAmount?.toString()
+
+                  // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                  // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+                  iterator.dueAmountTemp = iterator.dueAmount || 0
+                  iterator.bookingAmountTemp = iterator.invoiceAmount || 0
+
+                  // for (const booking of iterator.bookings) {
+                  //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                  //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                  // }
+                  // // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                  // // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                  // // iterator.bookingBalance = iterator.dueAmount?.toString()
+                  // // iterator.paymentStatus = iterator.status
+
+                  // iterator.bookingsList = []
+
+                  // Verificar si el ID ya existe en la lista
+                  iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
+                  if (!existingIds.has(iterator.id)) {
+                    newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
+                    existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+                  }
+                  // if (iterator.status !== 'PROCESSED') {
+                  // }
+                }
+
+                applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
+              }
+            }
+            else {
+              const objFilter = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+              if (objFilter) {
+                objFilter.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id
+              }
+              else {
+                applyPaymentPayloadOtherDeduction.value.filter.push({
+                  key: 'invoice.hotel.id',
+                  operator: 'EQUALS',
+                  value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id,
+                  logicalOperation: 'AND'
+                })
+              }
+
+              const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
+
+              if (objFilterDueAmount) {
+                objFilterDueAmount.value = '0.00'
+              }
+              else {
+                applyPaymentPayloadOtherDeduction.value.filter.push({
+                  key: 'dueAmount',
+                  operator: 'GREATER_THAN',
+                  value: '0.00',
+                  logicalOperation: 'AND'
+                })
+              }
+
+              // if (loadAllInvoices.value) {
+              //   applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
+              // }
+              // else {
+              //   const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
+
+              //   if (objFilterForPayment) {
+              //     objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+              //   }
+              //   else {
+              //     applyPaymentPayloadOtherDeduction.value.filter.push(
+              //       {
+              //         key: 'paymentDetails.payment.id',
+              //         operator: 'EQUALS',
+              //         value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
+              //         logicalOperation: 'AND'
+              //       }
+              //     )
+              //   }
+              // }
+
+              const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+              if (objFilterEnabledToApply) {
+                objFilterEnabledToApply.value = true
+              }
+              else {
+                applyPaymentPayloadOtherDeduction.value.filter.push(
+                  {
+                    key: 'invoice.manageInvoiceStatus.enabledToApply',
+                    operator: 'EQUALS',
+                    value: true,
+                    logicalOperation: 'AND'
+                  }
+                )
+              }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+              applyPaymentPayloadOtherDeduction.value = filterTemp
+
+              const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
+
+              const { data: dataList, page, size, totalElements, totalPages } = response
+
+              applyPaymentPaginationOtherDeduction.value.page = page
+              applyPaymentPaginationOtherDeduction.value.limit = size
+              applyPaymentPaginationOtherDeduction.value.totalElements = totalElements
+              applyPaymentPaginationOtherDeduction.value.totalPages = totalPages
+
+              const existingIds = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(item => item.id))
+
+              for (const iterator of dataList) {
+                iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
+                iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+                iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+                // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                // iterator.bookingBalance = iterator.dueAmount?.toString()
+
+                // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                iterator.dueAmountTemp = iterator.dueAmount || 0
+                iterator.bookingAmountTemp = iterator.invoiceAmount || 0
+
+                // for (const booking of iterator.bookings) {
+                //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                // }
+                // // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                // // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                // // iterator.bookingBalance = iterator.dueAmount?.toString()
+                // // iterator.paymentStatus = iterator.status
+
+                // iterator.bookingsList = []
+                iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
+                // Verificar si el ID ya existe en la lista
+                if (!existingIds.has(iterator.id)) {
+                  newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
+                  existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+                }
+                // if (iterator.status !== 'PROCESSED') {
+                // }
+              }
+
+              applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
+            }
+          }
+          else { // En caso de que el hotel no este activo buscamos por los hoteles que pertenecen a la misma Tradin Company
+            // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
+            const filter: FilterCriteria[] = [
+              {
+                key: 'manageTradingCompanies.id',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel?.manageTradingCompany,
+              },
+              {
+                key: 'applyByTradingCompany',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: true,
+              },
+              {
+                key: 'status',
+                logicalOperation: 'AND',
+                operator: 'EQUALS',
+                value: 'ACTIVE',
+              }
+            ]
+            const objQueryToSearch = {
+              query: '',
+              keys: ['name', 'code'],
+            }
+
+            let listHotelsForApplyPayment: any[] = []
+            listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
+
+            // Si existe al menos un hotel se continua con el proceso, en caso contrario se detiene
+            if (listHotelsForApplyPayment.length > 0) {
+              const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
+
+              if (objFilter) {
+                objFilter.value = listHotelsForApplyPayment.map(item => item.id)
+              }
+              else {
+                applyPaymentPayloadOtherDeduction.value.filter.push({
+                  key: 'invoice.hotel.id',
+                  operator: 'IN',
+                  value: listHotelsForApplyPayment.map(item => item.id),
+                  logicalOperation: 'AND'
+                })
+              }
+              const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
+              if (objFilterDueAmount) {
+                objFilterDueAmount.value = '0.00'
+              }
+              else {
+                applyPaymentPayloadOtherDeduction.value.filter.push({
+                  key: 'dueAmount',
+                  operator: 'GREATER_THAN',
+                  value: '0.00',
+                  logicalOperation: 'AND'
+                })
+              }
+
+              // if (loadAllInvoices.value) {
+              //   applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
+              //   console.log('LoadAllInvoices1')
+              //   console.log(applyPaymentPayloadOtherDeduction.value.filter)
+              // }
+              // else {
+              //   const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
+
+              //   if (objFilterForPayment) {
+              //     objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
+              //   }
+              //   else {
+              //     applyPaymentPayloadOtherDeduction.value.filter.push(
+              //       {
+              //         key: 'paymentDetails.payment.id',
+              //         operator: 'EQUALS',
+              //         value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
+              //         logicalOperation: 'AND'
+              //       }
+              //     )
+              //   }
+              // }
+
+              const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
+
+              if (objFilterEnabledToApply) {
+                objFilterEnabledToApply.value = true
+              }
+              else {
+                applyPaymentPayloadOtherDeduction.value.filter.push(
+                  {
+                    key: 'invoice.manageInvoiceStatus.enabledToApply',
+                    operator: 'EQUALS',
+                    value: true,
+                    logicalOperation: 'AND'
+                  }
+                )
+              }
+              const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
+              applyPaymentPayloadOtherDeduction.value = filterTemp
+
+              const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
+
+              const { data: dataList, page, size, totalElements, totalPages } = response
+
+              applyPaymentPaginationOtherDeduction.value.page = page
+              applyPaymentPaginationOtherDeduction.value.limit = size
+              applyPaymentPaginationOtherDeduction.value.totalElements = totalElements
+              applyPaymentPaginationOtherDeduction.value.totalPages = totalPages
+
+              const existingIds = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(item => item.id))
+
+              for (const iterator of dataList) {
+                iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
+                iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
+                iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
+                // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                // iterator.bookingBalance = iterator.dueAmount?.toString()
+
+                // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
+                // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
+
+                iterator.dueAmountTemp = iterator.dueAmount || 0
+                iterator.bookingAmountTemp = iterator.invoiceAmount || 0
+
+                // for (const booking of iterator.bookings) {
+                //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
+                //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
+                // }
+                // // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
+                // // iterator.bookingAmount = iterator.invoiceAmount?.toString()
+                // // iterator.bookingBalance = iterator.dueAmount?.toString()
+                // // iterator.paymentStatus = iterator.status
+
+                // iterator.bookingsList = []
+                iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
+                // Verificar si el ID ya existe en la lista
+                if (!existingIds.has(iterator.id)) {
+                  newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
+                  existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+                }
+                // if (iterator.status !== 'PROCESSED') {
+                // }
+              }
+
+              applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
+            }
+          }
+        }
       }
-    })
-    applyPaymentListOfInvoiceOtherDeduction.value = newListItems
+    }
   }
   catch (error) {
-    console.error('applyPaymentOtherDeduction error:', error)
+    console.error(error)
   }
   finally {
     applyPaymentOptionsOtherDeduction.value.loading = false
     applyPaymentOptionsOtherDeduction1.value.loading = false
   }
 }
-
-// async function applyPaymentGetListForOtherDeductions() {
-//   if (applyPaymentOptionsOtherDeduction.value.loading) {
-//     // Si ya hay una solicitud en proceso, no hacer nada.
-//     return
-//   }
-//   try {
-//     applyPaymentOptionsOtherDeduction.value.loading = true
-//     applyPaymentOptionsOtherDeduction1.value.loading = true
-//     applyPaymentListOfInvoiceOtherDeduction.value = []
-//     const newListItems = []
-
-//     //  Si el cliente esta activo se sigue con el proceso, en caso contrario se detiene
-//     if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.client.status === 'ACTIVE') {
-//       // Validacion para busar por por las agencias
-//       const filter: FilterCriteria[] = [
-//         {
-//           key: 'client.id',
-//           logicalOperation: 'AND',
-//           operator: 'EQUALS',
-//           value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.client.id,
-//         },
-//         {
-//           key: 'client.status',
-//           logicalOperation: 'AND',
-//           operator: 'EQUALS',
-//           value: 'ACTIVE',
-//         },
-//         {
-//           key: 'status',
-//           logicalOperation: 'AND',
-//           operator: 'EQUALS',
-//           value: 'ACTIVE',
-//         },
-//       ]
-//       const objQueryToSearch = {
-//         query: '',
-//         keys: ['name', 'code'],
-//       }
-
-//       let listAgenciesForApplyPayment: any[] = []
-//       listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
-
-//       // Si existe al menos una agencia se continua con el proceso, en caso contrario se detiene
-//       if (listAgenciesForApplyPayment.length > 0) {
-//         const objFilter = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.agency.id')
-//         if (objFilter) {
-//           objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
-//         }
-//         else {
-//           applyPaymentPayloadOtherDeduction.value.filter.push({
-//             key: 'invoice.agency.id',
-//             operator: 'IN',
-//             value: listAgenciesForApplyPayment.map(item => item.id),
-//             logicalOperation: 'AND'
-//           })
-//         }
-
-//         // Validacion para bucsar por los hoteles
-//         if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel && objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id) {
-//           if (objItemSelectedForRightClickApplyPayment.value?.hotel?.status === 'ACTIVE') {
-//             if (objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.applyByTradingCompany) {
-//               // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
-//               const filter: FilterCriteria[] = [
-//                 {
-//                   key: 'manageTradingCompanies.id',
-//                   logicalOperation: 'AND',
-//                   operator: 'EQUALS',
-//                   value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel?.manageTradingCompany,
-//                 },
-//                 {
-//                   key: 'applyByTradingCompany',
-//                   logicalOperation: 'AND',
-//                   operator: 'EQUALS',
-//                   value: true,
-//                 },
-//                 {
-//                   key: 'status',
-//                   logicalOperation: 'AND',
-//                   operator: 'EQUALS',
-//                   value: 'ACTIVE',
-//                 }
-//               ]
-//               const objQueryToSearch = {
-//                 query: '',
-//                 keys: ['name', 'code'],
-//               }
-
-//               let listHotelsForApplyPayment: any[] = []
-//               listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
-//               // Si existe al menos un hotel se continua con el proceso, en caso contrario se detiene
-//               if (listHotelsForApplyPayment.length > 0) {
-//                 const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-//                 if (objFilter) {
-//                   objFilter.value = listHotelsForApplyPayment.map(item => item.id)
-//                 }
-//                 else {
-//                   applyPaymentPayloadOtherDeduction.value.filter.push({
-//                     key: 'invoice.hotel.id',
-//                     operator: 'IN',
-//                     value: listHotelsForApplyPayment.map(item => item.id),
-//                     logicalOperation: 'AND'
-//                   })
-//                 }
-//                 const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
-
-//                 if (objFilterDueAmount) {
-//                   objFilterDueAmount.value = '0.00'
-//                 }
-//                 else {
-//                   applyPaymentPayloadOtherDeduction.value.filter.push({
-//                     key: 'dueAmount',
-//                     operator: 'GREATER_THAN',
-//                     value: '0.00',
-//                     logicalOperation: 'AND'
-//                   })
-//                 }
-
-//                 if (loadAllInvoices.value) {
-//                   applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
-//                 }
-//                 else {
-//                   const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
-
-//                   if (objFilterForPayment) {
-//                     objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
-//                   }
-//                   else {
-//                     applyPaymentPayloadOtherDeduction.value.filter.push(
-//                       {
-//                         key: 'paymentDetails.payment.id',
-//                         operator: 'EQUALS',
-//                         value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
-//                         logicalOperation: 'AND'
-//                       }
-//                     )
-//                   }
-//                 }
-
-//                 const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-//                 if (objFilterEnabledToApply) {
-//                   objFilterEnabledToApply.value = true
-//                 }
-//                 else {
-//                   applyPaymentPayloadOtherDeduction.value.filter.push(
-//                     {
-//                       key: 'invoice.manageInvoiceStatus.enabledToApply',
-//                       operator: 'EQUALS',
-//                       value: true,
-//                       logicalOperation: 'AND'
-//                     }
-//                   )
-//                 }
-
-//                 const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
-//                 applyPaymentPayloadOtherDeduction.value = filterTemp
-
-//                 const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
-
-//                 const { data: dataList, page, size, totalElements, totalPages } = response
-
-//                 applyPaymentPaginationOtherDeduction.value.page = page
-//                 applyPaymentPaginationOtherDeduction.value.limit = size
-//                 applyPaymentPaginationOtherDeduction.value.totalElements = totalElements
-//                 applyPaymentPaginationOtherDeduction.value.totalPages = totalPages
-
-//                 const existingIds = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(item => item.id))
-
-//                 for (const iterator of dataList) {
-//                   iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-//                   iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
-//                   iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-//                   iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-//                   // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-//                   // iterator.bookingBalance = iterator.dueAmount?.toString()
-
-//                   // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-//                   // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
-//                   iterator.dueAmountTemp = iterator.dueAmount || 0
-//                   iterator.bookingAmountTemp = iterator.invoiceAmount || 0
-
-//                   // for (const booking of iterator.bookings) {
-//                   //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-//                   //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-//                   // }
-//                   // // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-//                   // // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-//                   // // iterator.bookingBalance = iterator.dueAmount?.toString()
-//                   // // iterator.paymentStatus = iterator.status
-
-//                   // iterator.bookingsList = []
-
-//                   // Verificar si el ID ya existe en la lista
-//                   iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
-//                   if (!existingIds.has(iterator.id)) {
-//                     newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
-//                     existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-//                   }
-//                   // if (iterator.status !== 'PROCESSED') {
-//                   // }
-//                 }
-
-//                 applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
-//               }
-//             }
-//             else {
-//               const objFilter = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-//               if (objFilter) {
-//                 objFilter.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id
-//               }
-//               else {
-//                 applyPaymentPayloadOtherDeduction.value.filter.push({
-//                   key: 'invoice.hotel.id',
-//                   operator: 'EQUALS',
-//                   value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel.id,
-//                   logicalOperation: 'AND'
-//                 })
-//               }
-
-//               const objFilterDueAmount = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && !item.type)
-
-//               if (objFilterDueAmount) {
-//                 objFilterDueAmount.value = '0.00'
-//               }
-//               else {
-//                 applyPaymentPayloadOtherDeduction.value.filter.push({
-//                   key: 'dueAmount',
-//                   operator: 'GREATER_THAN',
-//                   value: '0.00',
-//                   logicalOperation: 'AND'
-//                 })
-//               }
-
-//               // if (loadAllInvoices.value) {
-//               //   applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
-//               // }
-//               // else {
-//               //   const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
-
-//               //   if (objFilterForPayment) {
-//               //     objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
-//               //   }
-//               //   else {
-//               //     applyPaymentPayloadOtherDeduction.value.filter.push(
-//               //       {
-//               //         key: 'paymentDetails.payment.id',
-//               //         operator: 'EQUALS',
-//               //         value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
-//               //         logicalOperation: 'AND'
-//               //       }
-//               //     )
-//               //   }
-//               // }
-
-//               const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-//               if (objFilterEnabledToApply) {
-//                 objFilterEnabledToApply.value = true
-//               }
-//               else {
-//                 applyPaymentPayloadOtherDeduction.value.filter.push(
-//                   {
-//                     key: 'invoice.manageInvoiceStatus.enabledToApply',
-//                     operator: 'EQUALS',
-//                     value: true,
-//                     logicalOperation: 'AND'
-//                   }
-//                 )
-//               }
-//               const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
-//               applyPaymentPayloadOtherDeduction.value = filterTemp
-
-//               const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
-
-//               const { data: dataList, page, size, totalElements, totalPages } = response
-
-//               applyPaymentPaginationOtherDeduction.value.page = page
-//               applyPaymentPaginationOtherDeduction.value.limit = size
-//               applyPaymentPaginationOtherDeduction.value.totalElements = totalElements
-//               applyPaymentPaginationOtherDeduction.value.totalPages = totalPages
-
-//               const existingIds = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(item => item.id))
-
-//               for (const iterator of dataList) {
-//                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-//                 iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
-//                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-//                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-//                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-//                 // iterator.bookingBalance = iterator.dueAmount?.toString()
-
-//                 // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-//                 // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
-
-//                 iterator.dueAmountTemp = iterator.dueAmount || 0
-//                 iterator.bookingAmountTemp = iterator.invoiceAmount || 0
-
-//                 // for (const booking of iterator.bookings) {
-//                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-//                 //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-//                 // }
-//                 // // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-//                 // // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-//                 // // iterator.bookingBalance = iterator.dueAmount?.toString()
-//                 // // iterator.paymentStatus = iterator.status
-
-//                 // iterator.bookingsList = []
-//                 iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
-//                 // Verificar si el ID ya existe en la lista
-//                 if (!existingIds.has(iterator.id)) {
-//                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
-//                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-//                 }
-//                 // if (iterator.status !== 'PROCESSED') {
-//                 // }
-//               }
-
-//               applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
-//             }
-//           }
-//           else { // En caso de que el hotel no este activo buscamos por los hoteles que pertenecen a la misma Tradin Company
-//             // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
-//             const filter: FilterCriteria[] = [
-//               {
-//                 key: 'manageTradingCompanies.id',
-//                 logicalOperation: 'AND',
-//                 operator: 'EQUALS',
-//                 value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.hotel?.manageTradingCompany,
-//               },
-//               {
-//                 key: 'applyByTradingCompany',
-//                 logicalOperation: 'AND',
-//                 operator: 'EQUALS',
-//                 value: true,
-//               },
-//               {
-//                 key: 'status',
-//                 logicalOperation: 'AND',
-//                 operator: 'EQUALS',
-//                 value: 'ACTIVE',
-//               }
-//             ]
-//             const objQueryToSearch = {
-//               query: '',
-//               keys: ['name', 'code'],
-//             }
-
-//             let listHotelsForApplyPayment: any[] = []
-//             listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
-//             // Si existe al menos un hotel se continua con el proceso, en caso contrario se detiene
-//             if (listHotelsForApplyPayment.length > 0) {
-//               const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-//               if (objFilter) {
-//                 objFilter.value = listHotelsForApplyPayment.map(item => item.id)
-//               }
-//               else {
-//                 applyPaymentPayloadOtherDeduction.value.filter.push({
-//                   key: 'invoice.hotel.id',
-//                   operator: 'IN',
-//                   value: listHotelsForApplyPayment.map(item => item.id),
-//                   logicalOperation: 'AND'
-//                 })
-//               }
-//               const objFilterDueAmount = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.operator === 'GREATER_THAN' && item.type !== 'filterSearch')
-//               if (objFilterDueAmount) {
-//                 objFilterDueAmount.value = '0.00'
-//               }
-//               else {
-//                 applyPaymentPayloadOtherDeduction.value.filter.push({
-//                   key: 'dueAmount',
-//                   operator: 'GREATER_THAN',
-//                   value: '0.00',
-//                   logicalOperation: 'AND'
-//                 })
-//               }
-
-//               // if (loadAllInvoices.value) {
-//               //   applyPaymentPayloadOtherDeduction.value.filter = applyPaymentPayloadOtherDeduction.value.filter.filter(item => item.key !== 'paymentDetails.payment.id')
-//               //   console.log('LoadAllInvoices1')
-//               //   console.log(applyPaymentPayloadOtherDeduction.value.filter)
-//               // }
-//               // else {
-//               //   const objFilterForPayment = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'paymentDetails.payment.id')
-
-//               //   if (objFilterForPayment) {
-//               //     objFilterForPayment.value = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id
-//               //   }
-//               //   else {
-//               //     applyPaymentPayloadOtherDeduction.value.filter.push(
-//               //       {
-//               //         key: 'paymentDetails.payment.id',
-//               //         operator: 'EQUALS',
-//               //         value: objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.id,
-//               //         logicalOperation: 'AND'
-//               //       }
-//               //     )
-//               //   }
-//               // }
-
-//               const objFilterEnabledToApply = applyPaymentPayloadOtherDeduction.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-//               if (objFilterEnabledToApply) {
-//                 objFilterEnabledToApply.value = true
-//               }
-//               else {
-//                 applyPaymentPayloadOtherDeduction.value.filter.push(
-//                   {
-//                     key: 'invoice.manageInvoiceStatus.enabledToApply',
-//                     operator: 'EQUALS',
-//                     value: true,
-//                     logicalOperation: 'AND'
-//                   }
-//                 )
-//               }
-//               const filterTemp: IQueryRequest = removeDuplicateFilters(applyPaymentPayloadOtherDeduction.value)
-//               applyPaymentPayloadOtherDeduction.value = filterTemp
-
-//               const response = await GenericService.search('invoicing', 'manage-booking', applyPaymentPayloadOtherDeduction.value)
-
-//               const { data: dataList, page, size, totalElements, totalPages } = response
-
-//               applyPaymentPaginationOtherDeduction.value.page = page
-//               applyPaymentPaginationOtherDeduction.value.limit = size
-//               applyPaymentPaginationOtherDeduction.value.totalElements = totalElements
-//               applyPaymentPaginationOtherDeduction.value.totalPages = totalPages
-
-//               const existingIds = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(item => item.id))
-
-//               for (const iterator of dataList) {
-//                 iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-//                 iterator.invoiceNumber = iterator.invoice?.invoiceNumberPrefix.toString()
-//                 iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-//                 iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-//                 // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-//                 // iterator.bookingBalance = iterator.dueAmount?.toString()
-
-//                 // iterator.bookingAmountTemp = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0
-//                 // iterator.dueAmountTemp = iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0
-
-//                 iterator.dueAmountTemp = iterator.dueAmount || 0
-//                 iterator.bookingAmountTemp = iterator.invoiceAmount || 0
-
-//                 // for (const booking of iterator.bookings) {
-//                 //   booking.checkIn = booking.checkIn ? dayjs(booking.checkIn).format('YYYY-MM-DD') : null
-//                 //   booking.checkOut = booking.checkOut ? dayjs(booking.checkOut).format('YYYY-MM-DD') : null
-//                 // }
-//                 // // iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-//                 // // iterator.bookingAmount = iterator.invoiceAmount?.toString()
-//                 // // iterator.bookingBalance = iterator.dueAmount?.toString()
-//                 // // iterator.paymentStatus = iterator.status
-
-//                 // iterator.bookingsList = []
-//                 iterator.paymentId = objItemSelectedForRightClickApplyPaymentOtherDeduction.value?.paymentId
-//                 // Verificar si el ID ya existe en la lista
-//                 if (!existingIds.has(iterator.id)) {
-//                   newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false, loadingBookings: false })
-//                   existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-//                 }
-//                 // if (iterator.status !== 'PROCESSED') {
-//                 // }
-//               }
-
-//               applyPaymentListOfInvoiceOtherDeduction.value = [...applyPaymentListOfInvoiceOtherDeduction.value, ...newListItems]
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-//   catch (error) {
-//     console.error(error)
-//   }
-//   finally {
-//     applyPaymentOptionsOtherDeduction.value.loading = false
-//     applyPaymentOptionsOtherDeduction1.value.loading = false
-//   }
-// }
 
 function closeModalApplyPayment() {
   objItemSelectedForRightClickApplyPayment.value = {}
@@ -5395,14 +5272,14 @@ onMounted(async () => {
 
         <template #default>
           <div class="p-fluid pt-3">
-            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3 -mt-4">
+            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3 -mt-3">
               <DataTable
                 v-model:selection="paymentDetailsTypeDepositSelected"
                 :value="paymentDetailsTypeDepositList"
                 striped-rows
                 show-gridlines
                 scrollable
-                scroll-height="150px"
+                scroll-height="90px"
                 :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
                 data-key="id"
                 selection-mode="multiple"
@@ -5440,11 +5317,11 @@ onMounted(async () => {
                 </template>
               </DataTable>
             </BlockUI>
-            <div class="flex align-items-center mb-4">
+            <div class="flex align-items-center mb-3">
               <InputText
                 v-model="manualFilter"
                 placeholder="Buscar Datos…"
-                class="-mb-4 -mt-3"
+                class="-mb-3 -mt-3"
                 @keyup.enter="onManualSearch"
               />
             </div>
@@ -6126,17 +6003,7 @@ onMounted(async () => {
   <template>
     <div>
       <Dialog
-        v-model:visible="isPrintModalOpen" modal header="Payment To Print" :style="{
-          width,
-          height,
-          'min-height': '40vh',
-          'min-width': '90vw',
-          'max-height': '800px',
-          'position': 'fixed',
-          'top': '20px', // o '0px' si quieres totalmente arriba
-          'margin-top': '0px',
-          'transform': 'none', // evita centrado vertical
-        }"
+        v-model:visible="isPrintModalOpen" modal header="Payment To Print" :style="{ width: '95vw', height: '100vh' }"
         :closable="true"
       >
         <PayPrint />
@@ -6202,77 +6069,27 @@ onMounted(async () => {
   </ContextMenu>
   <DynamicContentModalImport
     :visible="PaymentExpenseToBookingDialogVisible" :component="PaymentExpenseToBookingDialog"
-    header="Expense To Booking Import" :style="{
-      width,
-      height,
-      'min-height': '40vh',
-      'min-width': '90vw',
-      'max-height': '800px',
-      'position': 'fixed',
-      'top': '20px', // o '0px' si quieres totalmente arriba
-      'margin-top': '0px',
-      'transform': 'none', // evita centrado vertical
-    }"
+    header="Expense To Booking Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
     @close="closeImportExpenseToBooking"
   />
   <DynamicContentModalImport
     :visible="PaymentDetailDialogVisible" :component="PaymentDetailDialog"
-    header="Payment Detail Import" :style="{
-      width,
-      height,
-      'min-height': '40vh',
-      'min-width': '90vw',
-      'max-height': '800px',
-      'position': 'fixed',
-      'top': '20px', // o '0px' si quieres totalmente arriba
-      'margin-top': '0px',
-      'transform': 'none', // evita centrado vertical
-    }"
+    header="Payment Detail Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
     @close="closePaymentDetail"
   />
   <DynamicContentModalImport
     :visible="PaymentAntiToIncomeDialogVisible" :component="PaymentAntiToIncomeDialog"
-    header="Anti To Income Import" :style="{
-      width,
-      height,
-      'min-height': '40vh',
-      'min-width': '90vw',
-      'max-height': '800px',
-      'position': 'fixed',
-      'top': '20px', // o '0px' si quieres totalmente arriba
-      'margin-top': '0px',
-      'transform': 'none', // evita centrado vertical
-    }"
+    header="Anti To Income Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
     @close="closeImportAntiToIncome"
   />
   <DynamicContentModalImport
     :visible="PaymentExpenseDialogVisible" :component="PaymentExpenseDialog"
-    header="Payment of Expense Import" :style="{
-      width,
-      height,
-      'min-height': '40vh',
-      'min-width': '90vw',
-      'max-height': '800px',
-      'position': 'fixed',
-      'top': '20px', // o '0px' si quieres totalmente arriba
-      'margin-top': '0px',
-      'transform': 'none', // evita centrado vertical
-    }"
+    header="Payment of Expense Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
     @close="closeImportExpense"
   />
   <DynamicContentModalImport
     :visible="PaymentBankDialogVisible" :component="PaymentBankDialog"
-    header="Payment of Bank Import" :style="{
-      width,
-      height,
-      'min-height': '40vh',
-      'min-width': '90vw',
-      'max-height': '800px',
-      'position': 'fixed',
-      'top': '20px', // o '0px' si quieres totalmente arriba
-      'margin-top': '0px',
-      'transform': 'none', // evita centrado vertical
-    }"
+    header="Payment of Bank Import" :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw' }"
     @close="closeImportBank"
   />
 </template>
