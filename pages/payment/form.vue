@@ -72,8 +72,6 @@ const showCanceledDetails = ref(false)
 const showImportModal = ref(false)
 const loadingReverseTransaction = ref(false)
 
-const isLoadingApplyPayment = ref(false)
-
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
   applyPayment: false,
@@ -663,7 +661,7 @@ const fieldPaymentDetails = ref<FieldDefinitionType[]>([
     dataType: 'textarea',
     class: 'field col-12',
     validation: z.string().trim().max(255, 'Maximum 255 characters')
-  }
+  },
 ])
 
 const itemDetails = ref({
@@ -1865,7 +1863,7 @@ async function createPaymentDetails(item: { [key: string]: any }) {
         break
       }
     }
-    // onOffDialogPaymentDetail.value = false
+    onOffDialogPaymentDetail.value = false
     clearFormDetails()
   }
 }
@@ -1946,17 +1944,11 @@ async function updateItem(item: { [key: string]: any }) {
   const id = route?.query?.id.toString()
   await GenericService.update(confApi.moduleApi, confApi.uriApi, id || '', payload)
   toast.add({ severity: 'info', summary: 'Updated', detail: `The payment Id ${item.paymentId} was updated successfully`, life: 10000 })
-  hasBeenEdited.value += 1.0
+  hasBeenEdited.value += 1
 }
 
 async function saveAndReload(item: { [key: string]: any }) {
-  // 1. bloqueo al entrar
-  if (loadingSaveAll.value) { return }
-  loadingSaveAll.value = true
-
   toast.add({ severity: 'info', summary: 'Confirmed', detail: `The detail was created successfully`, life: 5000 })
-
-  onOffDialogPaymentDetail.value = false
   if (item?.amount && item?.amount !== '' && item?.amount !== undefined && typeof item?.amount === 'string') {
     item.amount = Number(item.amount.replace(/,/g, ''))
   }
@@ -1989,13 +1981,9 @@ async function saveAndReload(item: { [key: string]: any }) {
       }
       itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
       await getItemById(idItem.value)
-      clearFormDetails()
     }
     catch (error: any) {
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-    finally {
-      // 4. destrabo aquí, después de todo
       loadingSaveAll.value = false
     }
   }
@@ -3501,65 +3489,37 @@ function onRowContextMenu(event: any) {
 }
 
 async function onRowDoubleClickInDataTableApplyPayment(event: any) {
-  if (isLoadingApplyPayment.value) { return }
-  isLoadingApplyPayment.value = true
-
-  try {
-    if (isApplyPaymentFromTheForm.value) {
-      payloadToApplyPayment.value.invoiceNo = event?.invoiceNo
-      payloadToApplyPayment.value.amount = event?.bookingBalance
-      payloadToApplyPayment.value.booking = event?.id
-      payloadToApplyPayment.value.applyPayment = true
-      payloadToApplyPayment.value.employe = userData?.value?.user?.userId || ''
-      openDialogApplyPayment.value = false
-
-      toast.add({
-        severity: 'success',
-        summary: 'Successful',
-        detail: 'The selected payment will be applied once the corresponding detail is created.',
-        life: 10000
-      })
-    }
-    else {
+  if (isApplyPaymentFromTheForm.value) {
+    payloadToApplyPayment.value.invoiceNo = event?.invoiceNo
+    payloadToApplyPayment.value.amount = event?.bookingBalance
+    payloadToApplyPayment.value.booking = event?.id
+    payloadToApplyPayment.value.applyPayment = true
+    payloadToApplyPayment.value.employe = userData?.value?.user?.userId || ''
+    openDialogApplyPayment.value = false
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'The selected payment will be applied once the corresponding detail is created.', life: 10000 })
+  }
+  else {
+    try {
       const payloadToApplyPayment: GenericObject = {
         paymentDetail: idPaymentDetail.value || '',
         booking: event.id,
         employe: userData?.value?.user?.userId || ''
       }
 
-      const response: any = await GenericService.create(
-        'payment',
-        'payment-detail/apply-payment',
-        payloadToApplyPayment
-      )
+      const response: any = await GenericService.create('payment', 'payment-detail/apply-payment', payloadToApplyPayment)
 
       if (response) {
         openDialogApplyPayment.value = false
-        toast.add({
-          severity: 'success',
-          summary: 'Payment applied',
-          detail: 'The payment has been successfully applied.',
-          life: 5000
-        })
-
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
         if (route?.query?.id) {
           const id = route.query.id.toString()
           await getItemById(id)
         }
       }
     }
-  }
-  catch (error) {
-    console.error('Error applying payment:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'An error occurred while applying the payment.',
-      life: 5000
-    })
-  }
-  finally {
-    isLoadingApplyPayment.value = false
+    catch (error) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
+    }
   }
 }
 
@@ -3697,11 +3657,11 @@ onMounted(async () => {
         :show-actions="false"
         container-class="grid"
         :loading-save="loadingSaveAll"
-        :loading-save-all="loadingSaveAll"
         :loading-delete="loadingDelete"
         :force-save="forceSave"
         @cancel="clearForm"
         @force-save="forceSave = $event"
+        @submit="handleSave($event)"
         @delete="requireConfirmationToDelete($event)"
       >
         <template #field-paymentStatus="{ item: data, onUpdate, fields: listFields, field }">
@@ -4385,7 +4345,6 @@ onMounted(async () => {
             icon="pi pi-copy"
             @click="copiarDatosApplyPayment"
           />
-          <div v-if="isLoadingApplyPayment" class="loading-overlay" />
         </div>
       </template>
     </Dialog>
@@ -4513,15 +4472,9 @@ onMounted(async () => {
       header="Import Payment Detail"
       :modal="true"
       :style="{
-        width,
-        height,
-        'min-height': '40vh',
-        'min-width': '90vw',
-        'max-height': '800px',
-        'position': 'fixed',
-        'top': '20px', // o '0px' si quieres totalmente arriba
-        'margin-top': '0px',
-        'transform': 'none', // evita centrado vertical
+        'width': '90vw',
+        'height': '90vh', // Altura al 90% del viewport
+        'max-height': '800px', // Altura máxima fija
       }"
       :closable="true"
     >
@@ -4578,20 +4531,4 @@ onMounted(async () => {
 // .p-checkbox.p-component.p-highlight >.p-checkbox-box > .p-checkbox-icon {
 //   color: blue; /* Color del check en azul */
 // }
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%; /* se adapta al contenedor padre */
-  height: 100%;
-  background-color: rgba(137, 134, 134, 0.6); /* Gris claro semitransparente */
-  z-index: 10; /* suficientemente alto para quedar encima */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
 </style>
