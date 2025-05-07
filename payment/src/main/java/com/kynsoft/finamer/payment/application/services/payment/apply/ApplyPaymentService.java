@@ -91,6 +91,7 @@ public class ApplyPaymentService {
         for (ManageInvoiceDto manageInvoiceDto : sortedInvoices) {
             this.sortBookingsInInvoice(manageInvoiceDto);
             for (ManageBookingDto bookingDto : manageInvoiceDto.getBookings()) {
+                boolean isUpdatedBooking = false;
                 if (payment.getNotApplied() > 0 && payment.getPaymentBalance() > 0 && shouldApplyPaymentBalance && bookingDto.getAmountBalance() > 0) {
                     double amountToApply = Math.min(payment.getNotApplied(), bookingDto.getAmountBalance());
 
@@ -104,6 +105,7 @@ public class ApplyPaymentService {
                             paymentStatusHistoryList);
                     this.createPaymentDetails.add(paymentDetail);
                     this.applyPayment(payment, paymentDetail, bookingDto, transactionDate);
+                    isUpdatedBooking = true;
                 }
 
                 if ((payment.getNotApplied() == 0 && payment.getPaymentBalance() == 0 && shouldApplyDeposit && bookingDto.getAmountBalance() > 0 && payment.getDepositBalance() > 0)
@@ -132,6 +134,8 @@ public class ApplyPaymentService {
                                 bookingDto,
                                 transactionDate);
 
+                        isUpdatedBooking = true;
+
                         //Cuando se usa todo el deposit value del deposito lo quito de la lista de depositos
                         if(depositPaymentDetail.getApplyDepositValue() == 0){
                             updatedDepositPaymentDetails.add(depositPaymentDetail);
@@ -144,11 +148,13 @@ public class ApplyPaymentService {
                     }
                 }
 
+                if(isUpdatedBooking){
+                    this.bookingList.add(bookingDto);
+                }
+
                 if (payment.getPaymentBalance() == 0 && payment.getDepositBalance() == 0) {
                     break;
                 }
-
-                this.bookingList.add(bookingDto);
             }
             if (payment.getPaymentBalance() == 0 && payment.getDepositBalance() == 0) {
                 break;
