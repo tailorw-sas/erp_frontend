@@ -47,9 +47,8 @@ public class DeletePaymentDetailCommandHandler implements ICommandHandler<Delete
     public void handle(DeletePaymentDetailCommand command) {
 
         PaymentDetailDto delete = this.service.findById(command.getId());
+        PaymentDto update = delete.getPayment();
 
-        PaymentDto update = this.paymentService.findById(delete.getPayment().getId());
-        //RulesChecker.checkRule(new CheckValidateHourForDeleteRule(delete.getCreatedAt()));
         if (!command.isUndoApplication()) {
             if (delete.getTransactionType().getCash() || delete.getTransactionType().getApplyDeposit()) {
                 RulesChecker.checkRule(new CheckDeletePaymentDetailsApplyPaymentRule(delete));

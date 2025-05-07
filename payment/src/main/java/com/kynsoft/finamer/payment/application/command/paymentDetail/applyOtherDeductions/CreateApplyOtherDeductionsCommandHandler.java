@@ -2,12 +2,13 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyOther
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsoft.finamer.payment.domain.core.applyPayment.ApplyPaymentDetail;
-import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule;
 import com.kynsoft.finamer.payment.domain.rules.applyOtherDeductions.CheckBookingListRule;
@@ -70,7 +71,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
             Double amountRequest = bookingRequestMap.get(bookingRequest.getId());
             RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(amountRequest, bookingRequest.getAmountBalance()));
 
-            ProcessPaymentDetail createPaymentDetail = new ProcessPaymentDetail(
+            ProcessCreatePaymentDetail createPaymentDetail = new ProcessCreatePaymentDetail(
                     paymentDto,
                     amountRequest,
                     transactionDate,
@@ -84,14 +85,14 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
             PaymentDetailDto otherDeductionPaymentDetail = createPaymentDetail.getDetail();
             otherDeductionPaymentDetails.add(otherDeductionPaymentDetail);
 
-            ApplyPaymentDetail applyPaymentDetail = new ApplyPaymentDetail(
+            ProcessApplyPaymentDetail applyPaymentDetail = new ProcessApplyPaymentDetail(
                     paymentDto,
                     otherDeductionPaymentDetail,
                     bookingRequest,
                     transactionDate,
                     amountRequest
             );
-            applyPaymentDetail.applyPayment();
+            applyPaymentDetail.process();
         }
 
         this.paymentDetailService.bulk(otherDeductionPaymentDetails);
@@ -106,7 +107,8 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                         paymentDto.getPaymentId(),
                         new ReplicatePaymentDetailsKafka(detail.getId(), detail.getPaymentDetailId()
                         ));
-                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(detail.getManageBooking().getId(), detail.getManageBooking().getAmountBalance(), paymentKafka, false, OffsetDateTime.now()));
+                ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(detail.getManageBooking().getId(), detail.getManageBooking().getAmountBalance(), false, OffsetDateTime.now());
+                this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
             }catch (Exception ex){
                 Logger.getLogger(CreateApplyOtherDeductionsCommandHandler.class.getName()).log(Level.SEVERE, "Error at replicating booking. Id: " + detail.getManageBooking().getId(), ex);
             }
@@ -128,7 +130,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
 
 
     private OffsetDateTime getTransactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));

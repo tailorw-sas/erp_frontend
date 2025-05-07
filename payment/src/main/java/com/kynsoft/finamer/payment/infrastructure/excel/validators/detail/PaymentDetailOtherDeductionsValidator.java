@@ -46,6 +46,7 @@ public class PaymentDetailOtherDeductionsValidator extends ExcelListRuleValidato
         Map<String, List<PaymentDetailRow>> paymentsGroupByBookingIdMap = paymentDetailRows.stream()
                 .filter(paymentDetailRow -> Objects.nonNull(paymentDetailRow.getBookId())
                                                             && !paymentDetailRow.getBookId().isEmpty()
+                        && Objects.nonNull(paymentDetailRow.getTransactionType()) && !paymentDetailRow.getTransactionType().isEmpty()
                 && !paymentDetailRow.getTransactionType().equals(cachPaymentTransactionType.getCode())
                 && !paymentDetailRow.getTransactionType().equals(applyInvoicePaymentTransactionType.getCode())
                 && !paymentDetailRow.getTransactionType().equals(antiPaymentTransactionType.getCode()))

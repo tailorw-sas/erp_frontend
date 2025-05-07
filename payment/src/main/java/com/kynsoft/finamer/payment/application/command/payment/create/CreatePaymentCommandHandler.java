@@ -114,7 +114,7 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(command.getPaymentAmount()));
 
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
-        PaymentCloseOperationDto closeOperationDto = this.closeOperationService.findByHotelIds(hotelDto.getId());
+        PaymentCloseOperationDto closeOperationDto = this.closeOperationService.findByHotelId(hotelDto.getId());
         RulesChecker.checkRule(new CheckIfTransactionDateIsWithInRangeCloseOperationRule(command.getTransactionDate(),
                 closeOperationDto.getBeginDate(), closeOperationDto.getEndDate()));
 

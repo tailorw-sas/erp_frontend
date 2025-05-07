@@ -76,12 +76,12 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-            ManageInvoiceReadDataJPARepository repositoryQuery,
-            IInvoiceCloseOperationService closeOperationService,
-            ApplicationEventPublisher applicationEventPublisher,
-            IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
-            ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
-            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
+                                    ManageInvoiceReadDataJPARepository repositoryQuery,
+                                    IInvoiceCloseOperationService closeOperationService,
+                                    ApplicationEventPublisher applicationEventPublisher,
+                                    IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
+                                    ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
+                                    ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -573,7 +573,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryQuery.findByInvoiceId(id)
                 .map(Invoice::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
-                new ErrorField("invoiceId", "The invoice not found."))));
+                        new ErrorField("invoiceId", "The invoice not found."))));
     }
 
     @Override
@@ -624,4 +624,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 new ErrorField("id", "The invoice not found.")));
     }
 
+    @Override
+    public List<ManageInvoiceDto> findInvoicesByBookingIds(List<UUID> bookingIds) {
+        if(Objects.isNull(bookingIds)){
+            throw new IllegalArgumentException("The booking Ids must not be null");
+        }
+        return repositoryQuery.findInvoicesByBookingIds(bookingIds).stream()
+                .map(Invoice::toAggregate)
+                .collect(Collectors.toList());
+    }
 }

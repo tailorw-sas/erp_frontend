@@ -49,7 +49,7 @@ public class CreateManyManageRatePlanCommandHandler implements ICommandHandler<C
             for(ManageRatePlanDto newManageRatePlanDto : newRatePlanDtoList){
                 ReplicateManageRatePlanKafka replicate = new ReplicateManageRatePlanKafka(
                         newManageRatePlanDto.getId(),
-                        newManageRatePlanDto.getManageHotel().getId(),
+                        newManageRatePlanDto.getHotel().getId(),
                         newManageRatePlanDto.getCode(),
                         newManageRatePlanDto.getName(),
                         "ACTIVE");

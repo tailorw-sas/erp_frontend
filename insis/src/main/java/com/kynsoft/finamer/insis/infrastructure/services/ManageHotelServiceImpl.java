@@ -87,6 +87,13 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
+    public List<ManageHotelDto> findByIds(List<UUID> ids) {
+        return readRepository.findByIdIn(ids).stream()
+                .map(ManageHotel::toAggregate)
+                .toList();
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         GenericSpecificationsBuilder<ManageHotel> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<ManageHotel> data = readRepository.findAll(specifications, pageable);

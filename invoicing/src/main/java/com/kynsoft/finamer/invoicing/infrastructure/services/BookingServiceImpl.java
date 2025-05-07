@@ -316,6 +316,11 @@ public class BookingServiceImpl implements ImportBookingService {
     }
 
     @Override
+    public List<BookingRowError> getImportError(String importProcessId) {
+        return bookingImportRowErrorRedisRepository.findAllByImportProcessId(importProcessId);
+    }
+
+    @Override
     public ImportBookingProcessStatusResponse getImportBookingProcessStatus(ImportBookingProcessStatusRequest importBookingProcessStatusRequest) {
         BookingImportProcessDto statusDtp
                 = bookingImportProcessRedisRepository.findByImportProcessId(importBookingProcessStatusRequest.getImportProcessId())

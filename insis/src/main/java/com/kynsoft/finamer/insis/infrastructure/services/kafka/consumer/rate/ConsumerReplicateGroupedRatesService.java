@@ -60,28 +60,20 @@ public class ConsumerReplicateGroupedRatesService {
             createLog(objKafka.getLogId(), objKafka.getHotelCode(), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), objKafka.getProcessId());
 
             UUID hotelId = getHotelIdFromCode(objKafka.getHotelCode());
-            List<ManageRateKafka> newRatesKafkaList = new ArrayList<>();
-            objKafka.getBookingKafkaList().forEach(bookingKafka -> {
-                newRatesKafkaList.addAll(bookingKafka.getRateKafkaList());
-            });
 
-            processNewRatePlans(newRatesKafkaList, hotelId);
-            processNewRoomTypes(newRatesKafkaList, hotelId);
-            processNewRoomCategories(newRatesKafkaList);
+            processNewRatePlans(objKafka.getManageRateKafkaList(), hotelId);
+            processNewRoomTypes(objKafka.getManageRateKafkaList(), hotelId);
+            processNewRoomCategories(objKafka.getManageRateKafkaList());
 
-            objKafka.getBookingKafkaList().forEach(bookingKafka -> {
-                CreateGroupedRatesCommand command = new CreateGroupedRatesCommand(
-                        objKafka.getLogId(),
-                        objKafka.getHotelCode(),
-                        LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER),
-                        bookingKafka.getReservationCode(),
-                        bookingKafka.getCouponNumber(),
-                        bookingKafka.getRateKafkaList().stream()
-                                .map(this::rateKafkaToCommand)
-                                .collect(Collectors.toList())
-                );
-                mediator.send(command);
-            });
+            CreateGroupedRatesCommand command = new CreateGroupedRatesCommand(
+                    objKafka.getLogId(),
+                    objKafka.getHotelCode(),
+                    LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER),
+                    objKafka.getManageRateKafkaList().stream()
+                            .map(this::rateKafkaToCommand)
+                            .toList()
+            );
+            mediator.send(command);
 
             setLogAsCompleted(objKafka.getLogId(), objKafka.getHotelCode());
         }catch (Exception ex){

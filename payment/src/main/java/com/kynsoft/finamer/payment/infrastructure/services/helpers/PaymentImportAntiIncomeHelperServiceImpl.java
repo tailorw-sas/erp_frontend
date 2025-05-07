@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest
 import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
 import com.kynsof.share.core.domain.http.entity.income.ajustment.CreateIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.http.entity.income.ajustment.NewIncomeAdjustmentRequest;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -331,13 +332,13 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                                 detail.getPayment().getPaymentId(),
                                 new ReplicatePaymentDetailsKafka(detail.getId(), detail.getPaymentDetailId())
                         );
+                        ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(detail.getManageBooking().getId(),
+                                detail.getManageBooking().getAmountBalance(),
+                                false,
+                                OffsetDateTime.now());
                         producerUpdateBookingService.update(
                                 new UpdateBookingBalanceKafka(
-                                        detail.getManageBooking().getId(),
-                                        detail.getManageBooking().getAmountBalance(),
-                                        paymentKafka,
-                                        false,
-                                        OffsetDateTime.now()
+                                        List.of(replicateBookingKafka)
                                 )
                         );
                     } catch (Exception e) {

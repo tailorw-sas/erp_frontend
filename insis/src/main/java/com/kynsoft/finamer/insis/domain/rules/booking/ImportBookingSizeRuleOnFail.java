@@ -1,9 +1,9 @@
 package com.kynsoft.finamer.insis.domain.rules.booking;
 
 import com.kynsof.share.core.domain.RulesChecker;
-import com.kynsoft.finamer.insis.domain.dto.BookingDto;
-import com.kynsoft.finamer.insis.domain.dto.ImportBookingDto;
-import com.kynsoft.finamer.insis.domain.services.IImportBookingService;
+import com.kynsoft.finamer.insis.domain.dto.ImportRoomRateDto;
+import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
+import com.kynsoft.finamer.insis.domain.services.IImportRoomRateService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -12,24 +12,24 @@ import java.util.stream.Collectors;
 public class ImportBookingSizeRuleOnFail implements RulesChecker.IBrokenRuleCallback {
 
     private final UUID importProcessId;
-    private final List<BookingDto> bookingsToImport;
-    private final List<BookingDto> bookingsAvailable;
-    private final IImportBookingService importBookingService;
+    private final List<RoomRateDto> roomRatesToImport;
+    private final List<RoomRateDto> roomRatesAvailable;
+    private final IImportRoomRateService importRoomRateService;
 
     public ImportBookingSizeRuleOnFail(UUID importProcessId,
-                                       List<BookingDto> bookingsToImport,
-                                       List<BookingDto> bookingsAvailable,
-                                       IImportBookingService importBookingService){
+                                       List<RoomRateDto> roomRatesToImport,
+                                       List<RoomRateDto> roomRatesAvailable,
+                                       IImportRoomRateService importRoomRateService){
         this.importProcessId = importProcessId;
-        this.bookingsToImport = bookingsToImport;
-        this.bookingsAvailable = bookingsAvailable;
-        this.importBookingService = importBookingService;
+        this.roomRatesToImport = roomRatesToImport;
+        this.roomRatesAvailable = roomRatesAvailable;
+        this.importRoomRateService = importRoomRateService;
     }
 
     @Override
     public void onFail() {
-        List<BookingDto> duplicatedBookings = removeAllById(bookingsToImport, bookingsAvailable);
-        List<ImportBookingDto> duplicatedImportBookings = importBookingService.findByImportProcessIdAndBookings(importProcessId, duplicatedBookings);
+        List<RoomRateDto> duplicatedRoomRates = removeAllById(roomRatesToImport, roomRatesAvailable);
+        List<ImportRoomRateDto> duplicatedImportBookings = importRoomRateService.findByImportProcessIdAndRoomRates(importProcessId, duplicatedRoomRates);
 
         duplicatedImportBookings.forEach(
                 bookingWithError -> {
@@ -37,16 +37,16 @@ public class ImportBookingSizeRuleOnFail implements RulesChecker.IBrokenRuleCall
                     bookingWithError.setUpdatedAt(LocalDateTime.now());
                 }
         );
-        importBookingService.updateMany(duplicatedImportBookings);
+        importRoomRateService.updateMany(duplicatedImportBookings);
     }
 
-    private List<BookingDto> removeAllById(List<BookingDto> booking, List<BookingDto> bookingToRemove){
-        Set<UUID> bookingsToRemoveIds = bookingToRemove.stream()
-                .map(BookingDto::getId)
+    private List<RoomRateDto> removeAllById(List<RoomRateDto> roomRate, List<RoomRateDto> roomRateToRemove){
+        Set<UUID> roomRatesToRemoveIds = roomRateToRemove.stream()
+                .map(RoomRateDto::getId)
                 .collect(Collectors.toSet());
 
-        return booking.stream()
-                .filter(bookingDto -> !bookingsToRemoveIds.contains(bookingDto.getId()))
+        return roomRate.stream()
+                .filter(roomRateDto -> !roomRatesToRemoveIds.contains(roomRateDto.getId()))
                 .toList();
     }
 }

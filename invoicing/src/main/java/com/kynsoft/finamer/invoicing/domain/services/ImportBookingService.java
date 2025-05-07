@@ -6,12 +6,17 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooki
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingFromFileErrorResponse;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
+
+import java.util.List;
 
 public interface ImportBookingService {
 
     void importBookingFromFile(ImportBookingFromFileRequest importBookingFromFileRequest);
 
     PaginatedResponse getImportError(ImportBookingErrorRequest importBookingErrorRequest);
+
+    List<BookingRowError>getImportError(String importProcessId);
 
     ImportBookingProcessStatusResponse getImportBookingProcessStatus(ImportBookingProcessStatusRequest importBookingProcessStatusRequest);
 

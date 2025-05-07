@@ -33,7 +33,7 @@ public class UpdateRoomTypeCommandHandler implements ICommandHandler<UpdateRoomT
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setName, command.getName(), dto.getName(), update::setUpdate);
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setStatus, command.getStatus(), dto.getStatus(), update::setUpdate);
         dto.setUpdatedAt(command.getUpdatedAt());
-        updateHotel(dto::setManageHotel, command.getHotelId(), hotelDto.getId(), update::setUpdate);
+        updateHotel(dto::setHotel, command.getHotelId(), hotelDto.getId(), update::setUpdate);
 
         service.update(dto);
     }

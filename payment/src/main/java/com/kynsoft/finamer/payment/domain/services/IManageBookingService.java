@@ -35,7 +35,7 @@ public interface IManageBookingService {
 
     List<BookingProjectionControlAmountBalance> findAllSimpleBookingByGenId(List<Long> ids);
 
-    List<Booking> findAllByBookingIdIn(List<Long> ids);
+    List<ManageBookingDto> findAllByBookingIdIn(List<Long> ids);
 
     List<Booking> findBookingWithEntityGraphByBookingIdIn(List<Long> ids);
 
