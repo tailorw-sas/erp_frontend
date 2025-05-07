@@ -112,35 +112,11 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
         EInvoiceStatus invoiceStatus = EInvoiceStatus.SENT;
         ManageInvoiceStatusDto manageInvoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
 
-        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
-                UUID.randomUUID(),
-                0L,
-                0L,
-                null,
-                null,
-                command.getInvoiceDate(),
-                null,
-                true,
-                invoiceAmount,
-                invoiceAmount,
-                parentInvoice.getHotel(),
-                parentInvoice.getAgency(),
-                invoiceType,
-                invoiceStatus,
-                false,
-                newBookings,
-                attachments,
-                false,
-                null,
-                invoiceTypeDto,
-                manageInvoiceStatus,
-                null,
-                false,
-                parentInvoice,
-                0.0,
-                0
-        );
-        invoiceDto.setOriginalAmount(invoiceAmount);
+        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(UUID.randomUUID(), parentInvoice.getHotel(), parentInvoice.getAgency(),
+                invoiceType, invoiceTypeDto, invoiceStatus, manageInvoiceStatus, command.getInvoiceDate(), true,
+                invoiceAmount, invoiceAmount, invoiceAmount, newBookings, attachments,
+                false, parentInvoice);
+
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
         UUID uuidEmployee = employeeData.getId();
 

@@ -64,7 +64,6 @@ public class InvoiceController {
 
     @GetMapping(path = "/uuid-id/{id}")
     public ResponseEntity<?> getByUuidId(@PathVariable UUID id) {
-
         FindInvoiceHttpByIdQuery query = new FindInvoiceHttpByIdQuery(id);
         InvoiceHttp response = mediator.send(query);
 
@@ -76,11 +75,6 @@ public class InvoiceController {
         CreateInvoiceCommand createCommand = CreateInvoiceCommand.fromRequest(request);
         CreateInvoiceMessage response = mediator.send(createCommand);
 
-        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
-        ManageInvoiceResponse resp = mediator.send(query);
-
-        this.mediator.send(
-                new UpdateInvoiceCommand(response.getId(), null, resp.getAgency().getId(), null, null));
         return ResponseEntity.ok(response);
     }
 
@@ -89,45 +83,31 @@ public class InvoiceController {
         CreateBulkInvoiceCommand command = CreateBulkInvoiceCommand.fromRequest(request);
         CreateBulkInvoiceMessage message = this.mediator.send(command);
 
-        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(message.getId());
-        ManageInvoiceResponse resp = mediator.send(query);
-
-        this.mediator.send(new UpdateInvoiceOriginalAmountCommand(resp.getId(), resp.getInvoiceAmount()));
         return ResponseEntity.ok(message);
-
     }
 
     @PostMapping("total-clone-invoice")
     public ResponseEntity<?> totalClone(@RequestBody TotalCloneRequest request) {
-
         TotalCloneCommand command = TotalCloneCommand.fromRequest(request, mediator);
-
         TotalCloneMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
-
     }
 
     @PostMapping("partial-clone")
     public ResponseEntity<PartialCloneInvoiceMessage> createBulk(@RequestBody PartialCloneInvoiceRequest request) {
-
         PartialCloneInvoiceCommand command = PartialCloneInvoiceCommand.fromRequest(request);
-
         PartialCloneInvoiceMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
-
     }
 
     @PostMapping("/undo")
     public ResponseEntity<UndoImportInvoiceMessage> createBulk(@RequestBody UndoImportInvoiceRequest request) {
-
         UndoImportInvoiceCommand command = UndoImportInvoiceCommand.fromRequest(request, mediator);
-
         UndoImportInvoiceMessage message = this.mediator.send(command);
 
         return ResponseEntity.ok(message);
-
     }
 
     @GetMapping(path = "/{id}")
@@ -208,7 +188,6 @@ public class InvoiceController {
 
     @PatchMapping(path = "/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateInvoiceRequest request) {
-
         UpdateInvoiceCommand command = UpdateInvoiceCommand.fromRequest(request, id);
         UpdateInvoiceMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
