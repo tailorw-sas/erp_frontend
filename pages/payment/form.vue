@@ -71,6 +71,7 @@ const showCanceledDetails = ref(false)
 
 const showImportModal = ref(false)
 const loadingReverseTransaction = ref(false)
+const manualFilter = ref('')
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -863,14 +864,14 @@ const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 500,
+  pageSize: 10,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
 })
-const pagination = ref<IPagination>({
+const pagination = ref({
   page: 0,
-  limit: 50,
+  limit: 10, // ítems por página
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -3166,7 +3167,7 @@ async function historyParseDataTableFilter(payloadFilter: any) {
   historyGetList()
 }
 
-async function parseDataTableFilter(payloadFilter: any) {
+async function parseDataTableFilter1(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
 
   const objFilterBookingId = parseFilter?.find((item: IFilter) => item?.key === 'bookingId')
@@ -3201,6 +3202,54 @@ async function parseDataTableFilter(payloadFilter: any) {
 
   payload.value.filter = [...parseFilter || []]
   getListPaymentDetail()
+}
+
+async function parseDataTableFilter(event: any) {
+// 1) Averigua dónde viene la metadata de filtro
+  const meta = event.filters ?? event.filter ?? {}
+
+  // 2) Construye tu array de IFilter[] manualmente
+
+  // 3) Asigna al payload y resetea página
+  payload.value.filter = parseFilter
+  payload.value.page = 0
+
+  // 4) Recarga la lista
+  await getListPaymentDetail()
+}
+
+const filteredInvoices = computed(() => {
+  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
+
+  if (!terms.length) {
+    return paymentDetailsList.value // Si no hay término de búsqueda, devolver la lista completa
+  }
+  else if (terms.length > 1) {
+    // Si hay más de un término, filtrar por todos los términos
+    return paymentDetailsList.value // Si el término de búsqueda es una cadena vacía, devolver la lista completa
+  }
+
+  // Filtrar las filas basadas en que cada término esté presente en cualquier campo de la fila
+  return paymentDetailsList.value.filter((inv) => {
+    return terms.some((term) => {
+      // Buscar cada término en todos los campos de la fila
+      return (
+        inv.invoiceNumberPrefix?.toLowerCase().includes(term)
+        || String(inv.invoiceId)?.toLowerCase().includes(term)
+        || String(inv.invoiceNumber)?.toLowerCase().includes(term)
+        || inv.couponNumbers?.toLowerCase().includes(term)
+        || String(inv.invoiceAmount)?.toLowerCase().includes(term)
+        || String(inv.dueAmount)?.toLowerCase().includes(term)
+        || String(inv.agency?.name)?.toLowerCase().includes(term)
+        || inv.name?.toLowerCase().includes(term) // También puedes incluir más campos si es necesario
+      )
+    })
+  })
+})
+function onManualSearch() {
+  // volver a la primera página
+  payload.value.page = 0
+  // no hace falta llamar a la API: filteredInvoices se actualiza solo
 }
 
 function onSortField(event: any) {
@@ -4028,9 +4077,17 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
-    <div class="-mt-3 card p-1">
+    <div class="-mt-2 card p-1">
+      <div class="flex align-items-center mb-4">
+        <InputText
+          v-model="manualFilter"
+          placeholder="Buscar Datos…"
+          class="-mb-4 -mt-3 p-1"
+          @keyup.enter="onManualSearch"
+        />
+      </div>
       <DynamicTable
-        :data="paymentDetailsList"
+        :data="filteredInvoices"
         :columns="columns"
         :options="options"
         :pagination="pagination"

@@ -4291,6 +4291,7 @@ const filteredInvoices = computed(() => {
         || inv.couponNumbers?.toLowerCase().includes(term)
         || String(inv.invoiceAmount)?.toLowerCase().includes(term)
         || String(inv.dueAmount)?.toLowerCase().includes(term)
+        || String(inv.agency?.name)?.toLowerCase().includes(term)
         || inv.name?.toLowerCase().includes(term) // También puedes incluir más campos si es necesario
       )
     })
