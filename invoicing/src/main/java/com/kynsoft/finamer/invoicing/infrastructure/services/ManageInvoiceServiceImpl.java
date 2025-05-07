@@ -173,21 +173,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         }
 
         Page<ManageInvoiceSearchProjection> data1 = repositoryQuery.findAllProjected(specifications, pageable);
-        //   Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
-        //getPaginatedResponseTest(example);
-        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
-
         return getPaginatedResponseProjection(data1);
-        //  return getPaginatedResponse(data);
     }
 
     private PaginatedResponse getPaginatedResponseProjection(Page<ManageInvoiceSearchProjection> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
         for (ManageInvoiceSearchProjection entity : data.getContent()) {
             try {
-//                Boolean isCloseOperation = entity.getHotel().getCloseOperation() != null
-//                        && !(entity.getInvoiceDate().toLocalDate().isBefore(entity.getHotel().getCloseOperation().getBeginDate())
-//                        || entity.getInvoiceDate().toLocalDate().isAfter(entity.getHotel().getCloseOperation().getEndDate()));
                 ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity);
                 responseList.add(response);
             } catch (Exception e) {
@@ -204,8 +196,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
         Page<Invoice> data = repositoryQuery.findAll(specifications, pageable);
-        //getPaginatedResponseTest(example);
-        //Page<ManageInvoice> data = repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedSendListResponse(data);
     }
@@ -230,27 +220,21 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    public Page<ManageInvoiceDto> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
+    public Page<ManageInvoiceSearchProjection> getInvoiceForSummary(Pageable pageable, List<FilterCriteria> filterCriteria, UUID employeeId) {
         filterCriteria(filterCriteria);
-
-        List<UUID> agencyIds = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(employeeId);
-        FilterCriteria fcAgency = new FilterCriteria();
-        fcAgency.setKey("agency.id");
-        fcAgency.setLogicalOperation(LogicalOperation.AND);
-        fcAgency.setOperator(SearchOperation.IN);
-        fcAgency.setValue(agencyIds);
-        filterCriteria.add(fcAgency);
-
-        List<UUID> hotelIds = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(employeeId);
-        FilterCriteria fcHotel = new FilterCriteria();
-        fcHotel.setKey("hotel.id");
-        fcHotel.setLogicalOperation(LogicalOperation.AND);
-        fcHotel.setOperator(SearchOperation.IN);
-        fcHotel.setValue(hotelIds);
-        filterCriteria.add(fcHotel);
-
         GenericSpecificationsBuilder<Invoice> specifications = new GenericSpecificationsBuilder<>(filterCriteria);
-        return repositoryQuery.findAll(specifications, pageable).map(Invoice::toAggregate);
+        Pageable cleanedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        pageable.getSort().stream()
+                                .map(order -> "aging".equalsIgnoreCase(order.getProperty())
+                                        ? new Sort.Order(order.getDirection(), "dueDate")
+                                        : order)
+                                .toList()
+                )
+        );
+        return repositoryQuery.findAllProjected(specifications, cleanedPageable);
     }
 
     @Override
