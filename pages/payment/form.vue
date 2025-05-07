@@ -1865,7 +1865,7 @@ async function createPaymentDetails(item: { [key: string]: any }) {
         break
       }
     }
-    onOffDialogPaymentDetail.value = false
+    // onOffDialogPaymentDetail.value = false
     clearFormDetails()
   }
 }
@@ -1950,7 +1950,13 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveAndReload(item: { [key: string]: any }) {
+  // 1. bloqueo al entrar
+  if (loadingSaveAll.value) { return }
+  loadingSaveAll.value = true
+
   toast.add({ severity: 'info', summary: 'Confirmed', detail: `The detail was created successfully`, life: 5000 })
+
+  onOffDialogPaymentDetail.value = false
   if (item?.amount && item?.amount !== '' && item?.amount !== undefined && typeof item?.amount === 'string') {
     item.amount = Number(item.amount.replace(/,/g, ''))
   }
@@ -1983,9 +1989,13 @@ async function saveAndReload(item: { [key: string]: any }) {
       }
       itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
       await getItemById(idItem.value)
+      clearFormDetails()
     }
     catch (error: any) {
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+    finally {
+      // 4. destrabo aquí, después de todo
       loadingSaveAll.value = false
     }
   }
