@@ -349,11 +349,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
-        manageInvoiceDto.setAgency(agency);
-        manageInvoiceDto.setHotel(hotel);
-        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);
-        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);
-        manageInvoiceDto.setIsManual(false);
+        manageInvoiceDto.setAgency(agency);//
+        manageInvoiceDto.setHotel(hotel);//
+        manageInvoiceDto.setInvoiceType(EInvoiceType.INVOICE);//
+        manageInvoiceDto.setManageInvoiceType(invoiceTypeDto);//
+        manageInvoiceDto.setIsManual(false);//
         manageInvoiceDto.setInvoiceDate(getInvoiceDate(bookingRowList.get(0)));
         manageInvoiceDto.setBookings(createBooking(bookingRowList, hotel, groupType));
         manageInvoiceDto.setId(UUID.randomUUID());

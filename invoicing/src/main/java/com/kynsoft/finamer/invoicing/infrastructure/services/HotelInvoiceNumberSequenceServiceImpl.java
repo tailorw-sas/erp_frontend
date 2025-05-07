@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumberSequenceService {
@@ -63,7 +64,8 @@ public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumbe
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
 
     }
 
@@ -104,7 +106,7 @@ public class HotelInvoiceNumberSequenceServiceImpl implements IHotelInvoiceNumbe
             return optionalEntity.get().toAggregate();
         }
 
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.HOTEL_INVOICE_NUMBER_SEQUENCE_NOT_FOUND.getReasonPhrase())));
     }
-
 }
