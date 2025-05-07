@@ -65,8 +65,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     public void handle(CreateAntiToIncomeCommand command) {
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        //RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
-
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
@@ -87,33 +85,10 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             employeeFullName = command.getEmployee();
         }
 
-        ManageInvoiceDto income = new ManageInvoiceDto(
-                command.getId(),
-                0L,
-                0L,
-                null,
-                null,
-                command.getInvoiceDate(),
-                command.getDueDate(),
-                command.getManual(),
-                0.0,
-                0.0,
-                hotelDto,
-                agencyDto,
-                EInvoiceType.INCOME,
-                EInvoiceStatus.SENT,
-                Boolean.FALSE,
-                null,
-                null,
-                command.getReSend(),
-                command.getReSendDate(),
-                invoiceTypeDto,
-                invoiceStatusDto,
-                null,
-                false,
-                null, 0.0, 0
-        );
-        income.setOriginalAmount(0.0);
+        ManageInvoiceDto income = new ManageInvoiceDto(UUID.randomUUID(), hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
+                EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
+                0.0, null, null, false,null);
+
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());

@@ -15,6 +15,7 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculate
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.calculateInvoiceAmount.UpdateInvoiceCalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRatePlanRule;
@@ -254,33 +255,11 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
         LocalDateTime invoiceDate = this.invoiceDate(invoiceToClone.getHotel().getId());
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ManageInvoiceStatusDto invoiceStatus = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-        ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(
-                command.getClonedInvoice(),
-                0L,
-                0L,
-                null,
-                null,
-                invoiceDate,
-                invoiceDate.toLocalDate(),
-                true,
-                invoiceToClone.getInvoiceAmount(),
-                invoiceToClone.getDueAmount(),
-                hotelDto,
-                agencyDto,
-                invoiceToClone.getInvoiceType(),
-                status,
-                false,
-                bookings,
-                attachmentDtos,
-                false,
-                null,
-                invoiceToClone.getManageInvoiceType(),
-                invoiceStatus,
-                null,
-                true,
-                invoiceToClone,
-                invoiceToClone.getCredits(), 0
-        );
+
+        ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(UUID.randomUUID(), hotelDto, agencyDto, invoiceToClone.getInvoiceType(),
+                invoiceToClone.getManageInvoiceType(), status, invoiceStatus, invoiceDate, true, invoiceToClone.getInvoiceAmount(),
+                invoiceToClone.getInvoiceAmount(), invoiceToClone.getDueAmount(), bookings, attachmentDtos, true,invoiceToClone);
+
         //actualizando el invoice con la info de los bookings
         command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(clonedInvoice));
         clonedInvoice.setDueAmount(clonedInvoice.getInvoiceAmount());
