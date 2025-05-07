@@ -33,8 +33,8 @@ public class ApplyPaymentDetailCommandHandler implements ICommandHandler<ApplyPa
         PaymentDetailDto paymentDetail = applyPaymentDetailService.getPaymentDetail();
         ManageBookingDto booking = applyPaymentDetailService.getBooking();
 
-        ReplicateBookingBalanceHelper replicateBookingBalanceHelper = ReplicateBookingBalanceHelper.from(payment, paymentDetail, booking, false);
-        this.replicateBookingBalanceService.replicateBooking(List.of(replicateBookingBalanceHelper));
+        List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = ReplicateBookingBalanceHelper.from(booking, false);
+        this.replicateBookingBalanceService.replicateBooking(replicateBookingBalanceHelpers);
 
         command.setPaymentResponse(payment);
     }

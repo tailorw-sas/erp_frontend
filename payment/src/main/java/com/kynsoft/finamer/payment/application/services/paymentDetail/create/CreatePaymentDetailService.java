@@ -12,15 +12,16 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckBookingExistsApplyPayment;
 import com.kynsoft.finamer.payment.domain.services.*;
+import com.kynsoft.finamer.payment.infrastructure.services.helpers.PaymentImportDetailHelperServiceImpl;
 import com.kynsoft.finamer.payment.infrastructure.services.http.PaymentTransactionTypeHttpService;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
@@ -41,6 +42,8 @@ public class CreatePaymentDetailService {
 
     @Getter
     private ManageBookingDto booking;
+
+    private static final Logger logger = LoggerFactory.getLogger(CreatePaymentDetailService.class);
 
     public CreatePaymentDetailService(IPaymentDetailService paymentDetailService,
                                       IManagePaymentTransactionTypeService paymentTransactionTypeService,
@@ -165,22 +168,31 @@ public class CreatePaymentDetailService {
                              ManageBookingDto booking,
                              ProcessCreatePaymentDetail createPaymentDetail,
                              ManagePaymentTransactionTypeDto paymentTransactionTypeDto){
+        printLog("*****************Guardando el nuevo paymentDetail");
         PaymentDetailDto createdDetail = this.paymentDetailService.create(paymentDetail);
         paymentDetail.setParentId(createdDetail.getPaymentDetailId());
 
+        printLog("*****************Actualizando el payment");
         this.paymentService.update(payment);
 
         if(paymentTransactionTypeDto.getApplyDeposit()){
+            printLog("*****************Actualizando el parent payment");
             this.paymentDetailService.update(parentPaymetDetail);
         }
 
         if(createPaymentDetail.isPaymentApplied()){
+            printLog("*****************Creando los status history del payment");
             PaymentStatusHistoryDto paymentStatusHistoryDto = createPaymentDetail.getPaymentStatusHistory();
             this.paymentStatusHistoryService.create(paymentStatusHistoryDto);
         }
 
         if(applyPayment){
+            printLog("*****************Actualizando el booking");
             this.bookingService.update(booking);
         }
+    }
+
+    private void printLog(String message){
+        logger.info("{} at: {}", message, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     }
 }

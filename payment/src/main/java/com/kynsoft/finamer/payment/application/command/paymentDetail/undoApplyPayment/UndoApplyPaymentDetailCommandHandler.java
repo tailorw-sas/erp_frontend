@@ -63,7 +63,6 @@ public class UndoApplyPaymentDetailCommandHandler implements ICommandHandler<Und
                     replicatePaymentDetailsKafka);
             ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(),
                     paymentDetailDto.getAmount(),
-                    paymentKafka,
                     deposit,
                     OffsetDateTime.now());
             this.producerUndoApplicationUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));

@@ -111,6 +111,7 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         printLog("Despues de obtener cache");
 
         paymentDetailValidatorFactory.createValidators(cache);
+        printLog("Validating...");
         boolean validationResult = paymentDetailValidatorFactory.validate(excelRows);
         if(validationResult){
             excelRows.forEach(row -> {
@@ -276,9 +277,9 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         this.updatePayments(paymentsToUpdateList);
         this.updateBookings(bookingsToUpdate);
         this.createPaymentStatusHistory(paymentStatusHistories);
-        this.replicateBookingToKafka(paymentDetailsToCreate);
         printLog("Despues de guardar en BDD");
 
+        this.replicateBookingToKafka(paymentDetailsToCreate);
         this.clearCache();
         printLog("End readPaymentCacheAndSave process");
     }
@@ -632,33 +633,37 @@ public class PaymentImportDetailHelperServiceImpl extends AbstractPaymentImportH
         bookingService.updateAll(bookingList.stream().map(Booking::new).toList());
     }
 
-    //TODO: Implementar en Invoicing esta replicacion para que se haga en bloque y no de uno en uno
     private void replicateBookingToKafka(List<PaymentDetailDto> details){
-        details.forEach(paymentDetail -> {
-            try {
-                if(paymentDetail.getManageBooking() != null){
-                    PaymentDto payment = paymentDetail.getPayment();
-                    ManageBookingDto booking = paymentDetail.getManageBooking();
-
-                    ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
-                            payment.getId(),
-                            payment.getPaymentId(),
-                            new ReplicatePaymentDetailsKafka(paymentDetail.getId(), paymentDetail.getPaymentDetailId()
-                            ));
-                    if (booking.getInvoice().getInvoiceType().equals(EInvoiceType.CREDIT) || booking.getInvoice().getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
-                        ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now());
-                        this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
-                    } else {
-                        ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(booking.getId(), booking.getAmountBalance(), paymentKafka, false, OffsetDateTime.now());
-                        this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
-                    }
-                }
-            } catch (Exception e) {
-                printLog("Error at sending UpdateBookingBalanceKafka to kafka: " + e);
-            }
-        });
+       List<ReplicateBookingKafka> replicateBookingKafkaList = this.getReplicateBookingKafka(details);
+       this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(replicateBookingKafkaList));
     }
 
+    private List<ReplicateBookingKafka> getReplicateBookingKafka(List<PaymentDetailDto> paymentDetails){
+        Set<UUID> seenIds = new HashSet<>();
+
+        return paymentDetails.stream()
+                .map(PaymentDetailDto::getManageBooking)
+                .filter(Objects::nonNull)
+                .filter(mb -> seenIds.add(mb.getId()))
+                .map(mb -> new ReplicateBookingKafka(
+                        mb.getId(),
+                        mb.getAmountBalance(),
+                        false,
+                        OffsetDateTime.now(ZoneOffset.UTC)))
+                .collect(Collectors.toList());
+    }
+
+    private List<ReplicatePaymentKafka> getReplicatePaymentsKafka(List<PaymentDto> payments){
+        return payments.stream()
+                .map(payment -> {
+                    return new ReplicatePaymentKafka(
+                            payment.getId(),
+                            payment.getPaymentId(),
+                            null
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 
     private void printLog(String message){
         logger.info("{} at: {}", message, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

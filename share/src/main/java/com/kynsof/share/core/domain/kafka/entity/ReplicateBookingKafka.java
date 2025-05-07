@@ -15,7 +15,6 @@ import java.util.UUID;
 public class ReplicateBookingKafka {
     private UUID id;
     private Double amountBalance;//dueAmount
-    private ReplicatePaymentKafka paymentKafka;
     private boolean deposit;
     private OffsetDateTime timestamp;
 }

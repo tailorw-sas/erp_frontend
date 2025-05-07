@@ -29,19 +29,9 @@ public class ReplicateBookingBalanceService {
         try {
             List<ReplicateBookingKafka> bookingsToReplicate = new ArrayList<>();
             for(ReplicateBookingBalanceHelper replicateBooking : replicateBookingBalanceList){
-                ReplicatePaymentDetailsKafka paymentDetailKafka = new ReplicatePaymentDetailsKafka(
-                        replicateBooking.getPaymentDetailId(),
-                        replicateBooking.getPaymentDetailGenId());
-
-                ReplicatePaymentKafka paymentKafka = new ReplicatePaymentKafka(
-                        replicateBooking.getPaymentId(),
-                        replicateBooking.getPaymentGenId(),
-                        paymentDetailKafka);
-
                 ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(
                         replicateBooking.getBoooking().getId(),
                         replicateBooking.getBoooking().getAmountBalance(),
-                        paymentKafka,
                         replicateBooking.getApplyDeposit(),
                         OffsetDateTime.now(ZoneOffset.UTC));
                 bookingsToReplicate.add(replicateBookingKafka);

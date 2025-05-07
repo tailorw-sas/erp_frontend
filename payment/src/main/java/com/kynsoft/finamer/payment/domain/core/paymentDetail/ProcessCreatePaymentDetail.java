@@ -65,6 +65,7 @@ public class ProcessCreatePaymentDetail {
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(this.amount));
 
         this.detail = this.createPaymentDetailEntity(this.payment, paymentTransactionType, this.amount, this.remark, this.transactionDate);
+        this.addDetailToPayment(this.payment, this.detail);
 
         switch(PaymentTransactionTypeCode.from(this.paymentTransactionType)){
             case CASH -> {
@@ -190,5 +191,14 @@ public class ProcessCreatePaymentDetail {
             this.paymentStatusHistory = createPaymentStatusHistory();
             this.isPaymentApplied = true;
         }
+    }
+
+    private void addDetailToPayment(PaymentDto payment, PaymentDetailDto paymentDetail){
+        List<PaymentDetailDto> currentDetails = new ArrayList<>();
+        if(payment.getPaymentDetails() != null){
+            currentDetails.addAll(payment.getPaymentDetails());
+        }
+        currentDetails.add(paymentDetail);
+        payment.setPaymentDetails(currentDetails);
     }
 }

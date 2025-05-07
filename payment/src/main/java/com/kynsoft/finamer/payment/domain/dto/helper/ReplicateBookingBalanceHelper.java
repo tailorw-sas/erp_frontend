@@ -18,33 +18,21 @@ import java.util.UUID;
 public class ReplicateBookingBalanceHelper {
 
     private ManageBookingDto boooking;
-    private UUID paymentId;
-    private Long paymentGenId;
-    private UUID paymentDetailId;
-    private Long paymentDetailGenId;
     private Boolean applyDeposit;
 
-    public static ReplicateBookingBalanceHelper from(PaymentDto payment, PaymentDetailDto detail, ManageBookingDto booking, Boolean applyDeposit) {
-        return new ReplicateBookingBalanceHelper(
+    public static List<ReplicateBookingBalanceHelper> from(ManageBookingDto booking, Boolean applyDeposit) {
+        return List.of(new ReplicateBookingBalanceHelper(
                 booking,
-                payment.getId(),
-                payment.getPaymentId(),
-                detail.getId(),
-                detail.getPaymentDetailId(),
-                applyDeposit
+                applyDeposit)
         );
     }
 
-    public static List<ReplicateBookingBalanceHelper> from(PaymentDto payment, List<PaymentDetailDto> detail, Boolean applyDeposit) {
+    public static List<ReplicateBookingBalanceHelper> from(List<ManageBookingDto> bookings, Boolean applyDeposit) {
         List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = new ArrayList<>();
-        detail.forEach(detailDto -> {
-            if(Objects.nonNull(detailDto.getManageBooking())){
+        bookings.forEach(booking -> {
+            if(Objects.nonNull(booking)){
                 ReplicateBookingBalanceHelper replicateBookingBalanceHelper = new ReplicateBookingBalanceHelper(
-                        detailDto.getManageBooking(),
-                        payment.getId(),
-                        payment.getPaymentId(),
-                        detailDto.getId(),
-                        detailDto.getPaymentDetailId(),
+                        booking,
                         applyDeposit
                 );
                 replicateBookingBalanceHelpers.add(replicateBookingBalanceHelper);

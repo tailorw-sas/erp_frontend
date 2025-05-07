@@ -72,7 +72,7 @@ public class ApplyPaymentService {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(paymentId, "id", "Payment ID cannot be null."));
 
         PaymentDto payment = this.getPayment(paymentId);
-        ManageEmployeeDto employeeDto = this.getEmployee(employeeId);
+        ManageEmployeeDto employeeDto = this.getEmployee(employeeId);//TODO Optimizar esta consulta de employee con Criteria API
         List<ManageInvoiceDto> sortedInvoices = createInvoiceQueue(invoices);
         List<PaymentDetailDto> depositPaymentDetails = this.createPaymentDetailsTypeDepositQueue(deposits);
         List<PaymentDetailDto> updatedDepositPaymentDetails = new ArrayList<>();
@@ -155,26 +155,11 @@ public class ApplyPaymentService {
             }
         }
 
-        //Se crean los Payment Details que genera el flujo de aplicacion de pago.
-        this.paymentDetailService.createAll(this.createPaymentDetails);
-        this.paymentDetailService.createAll(updatedDepositPaymentDetails);
-
-        //Se actualizan los booking balance.
-        this.manageBookingService.updateAllBooking(this.bookingList);
-
-        this.paymentStatusHistoryService.createAll(paymentStatusHistoryList);
-
-        //Se actualiza el payment
-        this.paymentService.updateBalances(
-                payment.getPaymentBalance(),
-                payment.getDepositBalance(),
-                payment.getIdentified(),
-                payment.getNotIdentified(),
-                payment.getNotApplied(),
-                payment.getApplied(),
-                payment.isApplyPayment(),
-                payment.getId()
-        );
+        this.saveChanges(payment,
+                this.createPaymentDetails,
+                updatedDepositPaymentDetails,
+                paymentStatusHistoryList,
+                this.bookingList);
 
         this.paymentCloseOperationService.clearCache();
 
@@ -283,5 +268,22 @@ public class ApplyPaymentService {
                 transactionDate,
                 paymentDetailDto.getAmount());
         processApplyPaymentDetail.process();
+    }
+
+    private void saveChanges(PaymentDto payment,
+                             List<PaymentDetailDto> createPaymentDetails,
+                             List<PaymentDetailDto> updatedDepositPaymentDetails,
+                             List<PaymentStatusHistoryDto> paymentStatusHistoryList,
+                             List<ManageBookingDto> bookingList){
+        //Se crean los Payment Details que genera el flujo de aplicacion de pago.
+        this.paymentDetailService.createAll(createPaymentDetails);
+        this.paymentDetailService.createAll(updatedDepositPaymentDetails);
+
+        //Se actualizan los booking balance.
+        this.manageBookingService.updateAllBooking(bookingList);
+
+        this.paymentStatusHistoryService.createAll(paymentStatusHistoryList);
+
+        this.paymentService.update(payment);
     }
 }

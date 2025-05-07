@@ -263,5 +263,4 @@ public class ManageBookingServiceImpl implements IManageBookingService {
             repositoryCommand.saveAll(bookings);
         }
     }
-
 }

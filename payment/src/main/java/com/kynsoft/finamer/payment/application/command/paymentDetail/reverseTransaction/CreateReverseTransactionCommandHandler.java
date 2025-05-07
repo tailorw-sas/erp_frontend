@@ -31,7 +31,7 @@ public class CreateReverseTransactionCommandHandler implements ICommandHandler<C
         PaymentDto payment = this.reverseTransactionService.getPayment();
         ManageBookingDto booking = this.reverseTransactionService.getBooking();
 
-        ReplicateBookingBalanceHelper replicateBookingBalanceHelper = ReplicateBookingBalanceHelper.from(payment, updatedPaymentDetail, booking, false);
-        this.replicateBookingBalanceService.replicateBooking(List.of(replicateBookingBalanceHelper));
+        List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = ReplicateBookingBalanceHelper.from(booking, false);
+        this.replicateBookingBalanceService.replicateBooking(replicateBookingBalanceHelpers);
     }
 }

@@ -74,7 +74,7 @@ public class ReverseTransactionApplyPaymentDetailCommandHandler implements IComm
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, deposit, OffsetDateTime.now());
+            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(), bookingDto.getAmountBalance(), deposit, OffsetDateTime.now());
             this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
         } catch (Exception e) {
         }

@@ -334,7 +334,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                         );
                         ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(detail.getManageBooking().getId(),
                                 detail.getManageBooking().getAmountBalance(),
-                                paymentKafka,
                                 false,
                                 OffsetDateTime.now());
                         producerUpdateBookingService.update(

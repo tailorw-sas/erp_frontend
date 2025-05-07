@@ -65,7 +65,7 @@ public class ApplyPaymentCommandHandler implements ICommandHandler<ApplyPaymentC
         List<PaymentDetailDto> paymentDetails = this.applyPaymentService.getCreatePaymentDetails();
         List<ManageBookingDto> bookings = this.applyPaymentService.getBookingList();
 
-        List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = ReplicateBookingBalanceHelper.from(payment, paymentDetails, false);
+        List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = ReplicateBookingBalanceHelper.from(bookings, false);
         this.replicateBookingBalanceService.replicateBooking(replicateBookingBalanceHelpers);
     }
 }

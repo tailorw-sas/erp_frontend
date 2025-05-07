@@ -107,7 +107,9 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
                         paymentDto.getPaymentId(),
                         new ReplicatePaymentDetailsKafka(detail.getId(), detail.getPaymentDetailId()
                         ));
-                ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(detail.getManageBooking().getId(), detail.getManageBooking().getAmountBalance(), paymentKafka, false, OffsetDateTime.now());
+
+                ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(detail.getManageBooking().getId(), detail.getManageBooking().getAmountBalance(), false, OffsetDateTime.now());
+
                 this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
             }catch (Exception ex){
                 Logger.getLogger(CreateApplyOtherDeductionsCommandHandler.class.getName()).log(Level.SEVERE, "Error at replicating booking. Id: " + detail.getManageBooking().getId(), ex);
