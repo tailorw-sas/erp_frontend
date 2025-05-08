@@ -3619,10 +3619,20 @@ watch(() => paymentDetailsList.value, (newValue) => {
 //   }
 // })
 
-watch(applyPaymentOnChangePage, (newValue) => {
-  applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
-  applyPaymentPayload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  applyPaymentGetList(amountOfDetailItem.value)
+watch(applyPaymentOnChangePage, async (newValue) => {
+  const newPageSize = newValue?.rows ?? 10
+  const newPage = newValue?.page ?? 0
+
+  applyPaymentPayload.value.pageSize = newPageSize
+  applyPaymentPayload.value.page = newPage
+
+  await applyPaymentGetList(amountOfDetailItem.value)
+
+  const totalPages = applyPaymentPagination.value.totalPages ?? 1
+  if (applyPaymentPayload.value.page >= totalPages) {
+    applyPaymentPayload.value.page = Math.max(totalPages - 1, 0)
+    await applyPaymentGetList(amountOfDetailItem.value)
+  }
 })
 
 onMounted(async () => {
