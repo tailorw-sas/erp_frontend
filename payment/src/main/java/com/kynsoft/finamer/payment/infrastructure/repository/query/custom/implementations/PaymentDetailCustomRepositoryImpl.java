@@ -1,10 +1,11 @@
-package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
+package com.kynsoft.finamer.payment.infrastructure.repository.query.custom.implementations;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.infrastructure.identity.*;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.custom.PaymentDetailCustomRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -25,7 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
-public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRepository{
+public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRepository {
 
     @PersistenceContext
     private EntityManager entityManager;

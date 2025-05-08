@@ -3,7 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.repository.query;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjection;
 import com.kynsoft.finamer.payment.domain.dto.projection.PaymentProjectionSimple;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
-import com.kynsoft.finamer.payment.infrastructure.repository.query.payments.PaymentCustomRepository;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.custom.PaymentCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
