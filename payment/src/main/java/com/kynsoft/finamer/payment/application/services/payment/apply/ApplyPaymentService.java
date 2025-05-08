@@ -73,7 +73,7 @@ public class ApplyPaymentService {
 
         PaymentDto payment = this.getPayment(paymentId);
         ManageEmployeeDto employeeDto = this.getEmployee(employeeId);//TODO Optimizar esta consulta de employee con Criteria API
-        List<ManageInvoiceDto> sortedInvoices = createInvoiceQueue(invoices);
+        List<ManageInvoiceDto> sortedInvoices = createInvoiceQueue(invoices);//TODO Optimizar esta consulta en PaymentDetail
         List<PaymentDetailDto> depositPaymentDetails = this.createPaymentDetailsTypeDepositQueue(deposits);
         List<PaymentDetailDto> updatedDepositPaymentDetails = new ArrayList<>();
 
