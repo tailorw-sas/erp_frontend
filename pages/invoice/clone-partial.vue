@@ -2,7 +2,6 @@
 import { ref, watch } from 'vue'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import { v4 } from 'uuid'
 import dayjs from 'dayjs'
 
 import { GenericService } from '~/services/generic-services'
@@ -14,44 +13,33 @@ import type { IPagination } from '~/components/table/interfaces/ITableInterfaces
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
-const isCreationDialog = ref(true)
 const showAdjustmentDialogFirstTime = ref(false)
 
 const totalInvoiceAmount = ref(0)
 const idItemToLoadFirstTime = ref('')
-const totalAmount = ref(0)
 const totalHotelAmount = ref(0)
 const toast = useToast()
-const openAdjustment = ref(true)
 const forceUpdate = ref(false)
 const active = ref(0)
 const route = useRoute()
 
-const transactionTypeList = ref<any[]>([])
-const listItems = ref<any[]>([])
 const { data: userData } = useAuth()
 
-const selectedInvoice = ref({})
 const selectedBooking = ref<string>('')
 const selectedRoomRate = ref<string>('')
 const parentInvoiceId = ref<any>('')
 const selectedInvoicing = ref<any>('')
 const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
-const agencyError = ref(false)
-const hotelError = ref(false)
 let globalSelectedInvoicing = ''
 const bookingDialogOpen = ref<boolean>(false)
-const roomRateDialogOpen = ref<boolean>(false)
 const adjustmentDialogOpen = ref<boolean>(false)
 const attachmentDialogOpen = ref<boolean>(false)
-const attachmentHistoryDialogOpen = ref<boolean>(false)
 
 const bookingList = ref<any[]>([])
 const roomRateList = ref<any[]>([])
-const loadedRoomRates = ref<any[]>([])
 const adjustmentList = ref<any[]>([])
-const auxList = ref<any[]>([])
+
 const attachmentList = ref<any[]>([])
 
 const confClonationPartialApi = reactive({
@@ -59,41 +47,17 @@ const confClonationPartialApi = reactive({
   uriApi: 'manage-invoice/partial-clone',
 })
 
-const nightTypeRequired = ref(false)
 const requiresFlatRate = ref(false)
 
 const invoiceAmountError = ref(false)
-const showAdjustmentInTable = ref(false)
-const invoiceAmountErrorMessage = ref('')
 
-const hotelList = ref<any[]>([])
-const agencyList = ref<any[]>([])
-const invoiceTypeList = ref<any[]>([])
+const invoiceAmountErrorMessage = ref('')
 
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
 })
 
-const confagencyListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-agency',
-})
-
-const confinvoiceTypeListtApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-type',
-})
-
-const confAttachmentApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-attachment',
-})
-
-const confAdjustmentsApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-adjustment',
-})
 const confRoomApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-room-rate',
@@ -106,7 +70,6 @@ const CreditFields = ref<FieldDefinitionType[]>([
     dataType: 'text',
     class: `field col-12 md:col-4  ${String(route.query.type) as any === InvoiceType.OLD_CREDIT ? '' : ''}`,
     disabled: true,
-
   },
   {
     field: 'invoiceType',
@@ -328,11 +291,7 @@ const bookingApi = {
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
 }
-const transactionTypeApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-transaction-type',
-  keyValue: 'name'
-})
+
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -345,13 +304,9 @@ function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
 }
 
-function handleAttachmentHistoryDialogOpen() {
-  attachmentHistoryDialogOpen.value = true
-}
-
 // metodo de clonacion de factura parcial
 
-async function getBookingList(clearFilter: boolean = false) {
+async function getBookingList() {
   try {
     payload.value.filter = []
     payload.value.filter = [{
@@ -397,7 +352,7 @@ async function getBookingList(clearFilter: boolean = false) {
     // Options.value.loading = false
   }
 }
-async function getBookingClonationList(clearFilter: boolean = false) {
+async function getBookingClonationList() {
   try {
     const Payload: any = ({
       filter: [{
@@ -480,13 +435,10 @@ async function getRoomRateClonationList(idItemCreated: any) {
     Pagination.value.totalElements = totalElements
     Pagination.value.totalPages = totalPages
 
-    let countRR = 0
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
 
     for (const iterator of dataList) {
-      countRR++
-
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         hotelAmount: 0,
@@ -551,13 +503,10 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
     Pagination.value.totalElements = totalElements
     Pagination.value.totalPages = totalPages
 
-    let countRR = 0
     totalInvoiceAmount.value = 0
     totalHotelAmount.value = 0
 
     for (const iterator of dataList) {
-      countRR++
-
       roomRateList.value = [...roomRateList.value, {
         ...iterator,
         roomRateId: '',
@@ -596,153 +545,6 @@ async function getRoomRateList(globalSelectedInvoicing: any) {
     console.error(error)
   }
 }
-async function getAdjustmentList() {
-  try {
-    idItemToLoadFirstTime.value = ''
-    listItems.value = []
-    totalAmount.value = 0
-
-    const payload: any = {
-      filter: [
-        {
-          key: 'roomRate.booking.invoice.id',
-          operator: 'EQUALS',
-          value: idItemCreated,
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 1000,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-
-    const response = await GenericService.search(confAdjustmentsApi.moduleApi, confAdjustmentsApi.uriApi, payload)
-
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    Pagination.value.page = page
-    Pagination.value.limit = size
-    Pagination.value.totalElements = totalElements
-    Pagination.value.totalPages = totalPages
-
-    const adjustmentList = []
-    for (const iterator of dataList) {
-      let transaction = { ...iterator?.transaction, name: `${iterator?.transaction?.code || ''}-${iterator?.transaction?.name || ''}` }
-
-      if (iterator?.invoice?.invoiceType === InvoiceType.INCOME) {
-        transaction = { ...iterator?.paymentTransactionType, name: `${iterator?.paymentTransactionType?.code || ''}-${iterator?.paymentTransactionType?.name || ''}` }
-      }
-
-      adjustmentList.push({
-        ...iterator,
-        loadingEdit: false,
-        loadingDelete: false,
-        roomRateId: iterator?.roomRate?.roomRateId,
-        date: iterator?.date,
-      })
-
-      if (typeof +iterator?.amount === 'number') {
-        totalAmount.value += Number(iterator?.amount)
-      }
-    }
-
-    if (adjustmentList.length > 0) {
-      idItemToLoadFirstTime.value = adjustmentList[0].id
-    }
-
-    return adjustmentList
-  }
-  catch (error) {
-    console.error(error)
-    return []
-  }
-}
-
-async function getAttachmentList(globalSelectedInvoicing: any) {
-  try {
-    // Inicializar variables y estados
-    idItemToLoadFirstTime.value = ''
-    listItems.value = []
-
-    // Construir el payload para la búsqueda
-    const payload: any = {
-      filter: [
-        {
-          key: 'invoice.id',
-          operator: 'EQUALS',
-          value: globalSelectedInvoicing,
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 10,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.ASC
-    }
-
-    // Realizar la búsqueda utilizando el GenericService
-    const response = await GenericService.search(
-      confAttachmentApi.moduleApi,
-      confAttachmentApi.uriApi,
-      payload
-    )
-
-    // Extraer los datos de la respuesta
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    // Actualizar los valores de la paginación
-    Pagination.value.page = page
-    Pagination.value.limit = size
-    Pagination.value.totalElements = totalElements
-    Pagination.value.totalPages = totalPages
-
-    // Procesar y formatear los datos de la lista de adjuntos
-    const attachments = dataList.map((item: any) => ({
-      ...item,
-      type: {
-        ...item?.type,
-        name: `${item?.type?.code}-${item?.type?.name}`
-      },
-      paymenResourceType: 'INV-Invoice',
-      resource: globalSelectedInvoicing
-    }))
-
-    // Establecer el primer elemento de la lista como el que se cargará inicialmente
-    if (attachments.length > 0) {
-      idItemToLoadFirstTime.value = attachments[0].id
-    }
-
-    // Devolver la lista de adjuntos
-    return attachments
-  }
-  catch (error) {
-    console.error(error)
-    return [] // Devolver una lista de adjuntos vacía en caso de error
-  }
-}
-
-/*
-async function findRoomRates() {
-  try {
-    const roomRates = await getRoomRateList(globalSelectedInvoicing);
-    console.log('Room Rates encontrados:', roomRates);
-
-    if (roomRates.length > 0) {
-      console.log('Room Rates asociados encontrados:', roomRates);
-      return roomRates;
-    } else {
-      console.error('No se encontraron room rates asociados a la factura seleccionada.');
-      return [];
-    }
-  } catch (error) {
-    console.error('Error al buscar los room rates asociados a la factura:', error);
-    return [];
-  }
-}
-*/
 
 // Variante 1
 async function createPartialClonation(item: { [key: string]: any }) {
@@ -807,218 +609,11 @@ async function createPartialClonation(item: { [key: string]: any }) {
   }
 }
 
-async function getHotelList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    hotelList.value = []
-    for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { isNightType: iterator?.isNightType, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-async function getAgencyList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = []
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { client: iterator?.client, id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status, fullName: `${iterator.code} - ${iterator.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading agency list:', error)
-  }
-}
-
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
 
   formReload.value++
-}
-
-async function createItem(item: { [key: string]: any }) {
-  if (item) {
-    loadingSaveAll.value = true
-    const payload: { [key: string]: any } = { ...item }
-
-    payload.invoiceId = item.invoiceId
-    payload.invoiceNumber = item.invoiceNumber
-    payload.invoiceDate = dayjs(item.invoiceDate).startOf('day').toISOString()
-    payload.isManual = item.isManual
-    payload.invoiceAmount = 0.00
-    payload.hotel = item.hotel?.id
-    payload.agency = item.agency?.id
-    payload.invoiceType = route.query.type
-
-    if (invoiceAmount.value === 0) {
-      throw new Error('The Invoice amount field cannot be 0')
-    }
-
-    await getInvoiceAgency(item.agency?.id)
-    await getInvoiceHotel(item.hotel?.id)
-
-    const adjustments = []
-    const bookings = []
-    let roomRates = []
-    const attachments = []
-
-    bookingList.value?.forEach((booking) => {
-      if (nightTypeRequired.value && !booking.nightType?.id) {
-        throw new Error('The Night Type field is required for this client')
-      }
-
-      if (requiresFlatRate.value && +booking.hotelAmount <= 0) {
-        throw new Error('The Hotel amount field must be greater than 0 for this hotel')
-      }
-
-      if (booking?.invoiceAmount !== 0) {
-        bookings.push({
-          ...booking,
-          invoiceAmount: route.query.type === InvoiceType.CREDIT ? toNegative(booking?.invoiceAmount) : booking?.invoiceAmount,
-          ratePlan: booking.ratePlan?.id,
-          roomCategory: booking.roomCategory?.id,
-          roomType: booking.roomType?.id,
-          nightType: booking.nightType?.id,
-          ...(booking?.invoice?.id && { invoice: booking?.invoice?.id }),
-        })
-
-        if (route.query.type === InvoiceType.CREDIT) {
-          loadedRoomRates.value.push({
-            checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-            checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
-            invoiceAmount: route.query.type === InvoiceType.CREDIT ? toNegative(booking?.invoiceAmount) : booking?.invoiceAmount,
-            roomNumber: booking?.roomNumber,
-            adults: booking?.adults,
-            children: booking?.children,
-            rateAdult: booking?.rateAdult,
-            rateChild: booking?.rateChild,
-            hotelAmount: Number(booking?.hotelAmount),
-            remark: booking?.description,
-            booking: booking?.id,
-            nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),
-            ratePlan: booking?.ratePlan,
-            roomType: booking?.roomType,
-            fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-            firstName: booking?.firstName,
-            lastName: booking?.lastName,
-            id: v4()
-          })
-        }
-      }
-    })
-
-    for (let i = 0; i < roomRateList.value.length; i++) {
-      if (requiresFlatRate.value && +roomRateList.value[i].hotelAmount <= 0) {
-        throw new Error('The Hotel amount field must be greater than 0 for this hotel')
-      }
-    }
-
-    for (let i = 0; i < adjustmentList?.value.length; i++) {
-      adjustments.push({
-        ...adjustmentList.value[i],
-        transactionType: adjustmentList.value[i].transactionType?.id
-      })
-    }
-
-    roomRates = []
-
-    if (route.query.type === InvoiceType.CREDIT) {
-      roomRates = loadedRoomRates.value
-    }
-    else {
-      roomRates = roomRateList.value
-    }
-
-    for (let i = 0; i < attachmentList.value.length; i++) {
-      const fileurl: any = await GenericService.getUrlByImage(attachmentList.value[i]?.file)
-      attachments.push({
-        ...attachmentList.value[i],
-        type: attachmentList.value[i]?.type?.id,
-        file: fileurl,
-      })
-    }
-
-    const response = await GenericService.createBulk('invoicing', 'manage-invoice', { bookings, invoice: payload, roomRates, adjustments, attachments, employee: userData?.value?.user?.name })
-    return response
-  }
-}
-
-async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-  payload.invoiceId = item.invoiceId
-  payload.invoiceNumber = item.invoiceNumber
-  payload.invoiceDate = item.invoiceDate
-  payload.isManual = item.isManual
-  payload.invoiceAmount = item.invoiceAmount
-  payload.hotel = item.hotel.id
-  payload.agency = item.agency.id
-  payload.invoiceType = item.invoiceType?.id
-  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
 }
 
 async function deleteItem(id: string) {
@@ -1036,41 +631,14 @@ async function deleteItem(id: string) {
   }
 }
 
-/*
-function disabledButtonSave() {
-  const roomRateIdsWithAdjustments = new Set(adjustmentList.value.map(adjustment => adjustment.roomRateId));
-
-  for (let i = 0; i < roomRateList.value.length; i++) {
-    const roomRate = roomRateList.value[i];
-    if (!roomRateIdsWithAdjustments.has(roomRate.id)) {
-       return true; // Deshabilitar el botón si al menos un room rate no tiene ajustes asociados
-    }
-  }
-
-  return false; // Habilitar el botón si todos los room rates tienen ajustes asociados
-}
-*/
 // Funcion para el cloando total
 function disabledButtonSave() {
-  let result = true
-
-  if (adjustmentList.value.length === 0 || !existsAttachmentTypeInv.value) {
+  if (adjustmentList.value.length === 0) {
     return true
   }
 
   const bookingIds = [...new Set(roomRateList.value.map(roomRate => roomRate.bookingId))]
 
-  // Caso 1: Para un booking con un room rate, el room rate debe tener un ajuste(ok)
-  if (bookingIds.length === 1) {
-    const roomRate = roomRateList.value.find(roomRate => roomRate.bookingId === bookingIds[0])
-    result = adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id)
-  }
-
-  // Caso 2: Para un booking con dos room rates, al menos uno debe tener un ajuste (ok)
-  if (bookingIds.length === 1) {
-    const roomRates = roomRateList.value.filter(roomRate => roomRate.bookingId === bookingIds[0])
-    result = roomRates.some(roomRate => adjustmentList.value.some(adjustment => adjustment.roomRate === roomRate.id))
-  }
   // Caso 4: Para más de un booking con más de un room rate, al menos uno de los room rates de cada booking debe tener un ajuste (OK)
   if (bookingIds.length > 1) {
     for (const bookingId of bookingIds) {
@@ -1106,13 +674,10 @@ function disabledButtonSave() {
 
 async function saveItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
-  let successOperation = true
   let itemDetails = null
 
   try {
     const response: any = await createPartialClonation(item)
-
-    // Imprimir la respuesta en la consola
 
     if (response && response.cloned) {
       // Llamar a getItemById para actualizar los campos invoiceId e invoiceNo
@@ -1133,28 +698,12 @@ async function saveItem(item: { [key: string]: any }) {
     }
   }
   catch (error: any) {
-    successOperation = false
     toast.add({
       severity: 'error',
       summary: 'Error',
       detail: error?.data?.data?.error?.errorMessage || error?.message,
       life: 10000
     })
-  }
-  finally {
-    loadingSaveAll.value = false
-
-    if (successOperation) {
-      if (itemDetails && itemDetails.cloned) {
-        await getBookingClonationList()
-        await getRoomRateClonationList(idItemCreated.value)
-        await getItemById(itemDetails.cloned)
-        //  await getItemById(itemDetails.cloned)
-
-        // Obtener los detalles del elemento recién creado
-      }
-      // clearForm();
-    }
   }
 }
 async function goToList() {
@@ -1166,66 +715,6 @@ async function goToList() {
   }
 }
 
-async function getTransactionTypeList(query = '') {
-  try {
-    const payload
-      = {
-        filter: [
-          {
-            key: 'name',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'code',
-            operator: 'LIKE',
-            value: query,
-            logicalOperation: 'OR'
-          },
-          {
-            key: 'status',
-            operator: 'EQUALS',
-            value: 'ACTIVE',
-            logicalOperation: 'AND'
-          }
-        ],
-        query: '',
-        pageSize: 200,
-        page: 0,
-        sortBy: 'createdAt',
-        sortType: ENUM_SHORT_TYPE.DESC
-      }
-
-    transactionTypeList.value = []
-    const response = await GenericService.search(transactionTypeApi.moduleApi, transactionTypeApi.uriApi, payload)
-    const { data: dataList } = response
-    for (const iterator of dataList) {
-      transactionTypeList.value = [...transactionTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, fullName: `${iterator?.code}-${iterator?.name}` }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
 function requireConfirmationToDelete(event: any) {
   confirm.require({
     target: event.currentTarget,
@@ -1247,19 +736,6 @@ function requireConfirmationToDelete(event: any) {
 
 function toggleForceUpdate() {
   forceUpdate.value = !forceUpdate.value
-}
-const existsAttachmentTypeInv = computed(() => {
-  return attachmentList.value.some(attachment => attachment?.type?.code === 'INV')
-})
-
-function openRoomRateDialog(booking?: any) {
-  active.value = 1
-
-  if (booking?.id) {
-    selectedBooking.value = booking?.id
-  }
-
-  roomRateDialogOpen.value = true
 }
 
 function openAdjustmentDialog(roomRate?: any) {
@@ -1306,53 +782,6 @@ function sortRoomRate(event: any) {
         return b[event.sortField] - a[event.sortField]
       }
     })
-  }
-}
-
-function addBooking(booking: any) {
-  bookingList.value = [...bookingList.value, {
-    ...booking,
-    checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
-    nights: dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false),
-    roomType: { ...booking?.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    ratePlan: { ...booking?.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-  }]
-
-  roomRateList.value = [...roomRateList.value, {
-    checkIn: dayjs(booking?.checkIn).toISOString(),
-    checkOut: dayjs(booking?.checkOut).toISOString(),
-    invoiceAmount: String(booking?.invoiceAmount),
-    roomNumber: booking?.roomNumber,
-    adults: booking?.adults,
-    children: booking?.children,
-    rateAdult: booking?.rateAdult,
-    rateChild: booking?.rateChild,
-    hotelAmount: String(booking?.hotelAmount),
-    remark: booking?.description,
-    booking: booking?.id,
-    nights: dayjs(booking?.checkOut).diff(dayjs(booking?.checkIn), 'day', false),
-    roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
-    ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-    fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-    firstName: booking?.firstName,
-    lastName: booking?.lastName,
-    id: v4()
-  }]
-  calcInvoiceAmount()
-}
-
-async function getInvoiceAgency(id) {
-  try {
-    const agency = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, id)
-
-    if (agency) {
-      nightTypeRequired.value = agency?.client?.isNightType
-    }
-  }
-  catch (err) {
-
   }
 }
 
@@ -1423,12 +852,6 @@ function calcBookingInvoiceAmount(roomRate: any) {
   roomRates.forEach((roomRate) => {
     bookingList.value[bookingIndex].invoiceAmount += Number(roomRate.invoiceAmount)
   })
-  // calcInvoiceAmount()
-
-  // if (bookingIndex > -1) {
-  //   bookingList.value[bookingIndex].invoiceAmount = Number(bookingList.value[bookingIndex].invoiceAmount) + Number(roomRate.invoiceAmount)
-
-  // }
 }
 
 function calcBookingHotelAmount(roomRate: any) {
@@ -1480,61 +903,6 @@ function calcInvoiceAmountInBookingByRoomRate() {
       b.dueAmount = Number(roomRates.invoiceAmount) || 0
     }
   })
-}
-
-function updateBooking(booking: any) {
-  const index = bookingList.value.findIndex(item => item.id === booking.id)
-
-  for (let i = 0; i < roomRateList.value.length; i++) {
-    const element = roomRateList.value[i]
-
-    if (element?.booking === booking?.id) {
-      roomRateList.value[i] = {
-        ...element,
-        roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-        nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
-        ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-        fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-        firstName: booking?.firstName,
-        lastName: booking?.lastName,
-        hotelAmount: booking?.hotelAmount,
-
-      }
-    }
-  }
-
-  bookingList.value[index] = {
-    ...booking,
-    checkIn: dayjs(booking?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(booking?.checkOut).startOf('day').toISOString(),
-    roomType: { ...booking?.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    ratePlan: { ...booking?.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-  }
-  bookingList.value[index].nights = dayjs(booking?.checkOut).endOf('day').diff(dayjs(booking?.checkIn).startOf('day'), 'day', false)
-
-  calcInvoiceAmount()
-}
-
-function addRoomRate(rate: any) {
-  const booking = bookingList.value.find((b => b?.id === rate?.booking))
-
-  roomRateList.value = [...roomRateList.value, {
-    ...rate,
-    nights: dayjs(rate?.checkOut).endOf('day').diff(dayjs(rate?.checkIn).startOf('day'), 'day', false),
-    roomType: { ...booking.roomType, name: `${booking?.roomType?.code || ''}-${booking?.roomType?.name || ''}` },
-    nightType: { ...booking.nightType, name: `${booking?.nightType?.code || ''}-${booking?.nightType?.name || ''}` },
-    ratePlan: { ...booking.ratePlan, name: `${booking?.ratePlan?.code || ''}-${booking?.ratePlan?.name || ''}` },
-    fullName: `${booking?.firstName ?? ''} ${booking?.lastName ?? ''}`,
-    checkIn: dayjs(rate?.checkIn).startOf('day').toISOString(),
-    checkOut: dayjs(rate?.checkOut).startOf('day').toISOString(),
-    adults: booking?.adults,
-    children: booking?.children,
-    rateChild: booking?.rateChild,
-    rateAdult: booking?.rateAdult
-
-  }]
-  calcBookingInvoiceAmount(rate)
-  // calcBookingHotelAmount(rate)
 }
 
 function updateRoomRate(roomRate: any) {
@@ -1757,7 +1125,6 @@ onMounted(async () => {
                 v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
                 :disabled="disabledButtonSave()" @click="() => {
                   saveItem(props.item.fieldValues)
-                  // createPartialClonation()
                 }"
               />
 
@@ -1805,19 +1172,3 @@ onMounted(async () => {
   top: 0;
 }
 </style>
-
-<!-- <Button v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-:disabled="adjustmentList.length === 0 || attachmentList.length === 0 ||
-  (bookingList.length > 1 &&
-    bookingList.every(booking =>
-      roomRateList.every(room =>
-        adjustmentList.some(adjustment => adjustment.roomId === room.id && adjustment.bookingId === booking.id)
-      )
-    ) &&
-    roomRateList.every(room =>
-      bookingList.some(booking => booking.roomRates.includes(room.id))
-    )
-  )" @click="() => {
-saveItem(props.item.fieldValues)
-// createPartialClonation()
-}" /> -->
