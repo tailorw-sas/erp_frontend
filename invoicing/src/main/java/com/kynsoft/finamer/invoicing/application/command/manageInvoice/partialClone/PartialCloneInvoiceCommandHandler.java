@@ -21,10 +21,7 @@ import java.time.ZoneId;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @Transactional
@@ -37,7 +34,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
     private final IManageRoomRateService rateService;
     private final IManageInvoiceStatusService manageInvoiceStatusService;
-    private final IManageBookingService bookingService;
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageInvoiceTransactionTypeService transactionTypeService;
@@ -51,7 +47,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             IManageAttachmentTypeService attachmentTypeService,
             ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
             IManageRoomRateService rateService, IManageInvoiceStatusService manageInvoiceStatusService,
-            IManageBookingService bookingService,
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IManageInvoiceTransactionTypeService transactionTypeService,
@@ -66,7 +61,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
         this.rateService = rateService;
         this.manageInvoiceStatusService = manageInvoiceStatusService;
-        this.bookingService = bookingService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.transactionTypeService = transactionTypeService;
@@ -77,80 +71,65 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     }
 
     @Override
-    @Transactional
     public void handle(PartialCloneInvoiceCommand command) {
         ManageInvoiceDto invoiceToClone = this.service.findById(command.getInvoice());
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
+        String employeeFullName;
         try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
+            ManageEmployeeDto employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
+            employeeFullName = String.format("%s %s", employee.getFirstName(), employee.getLastName());
         } catch (Exception e) {
             employeeFullName = command.getEmployee();
         }
-        List<ManageBookingDto> bookingDtos = new ArrayList<>();
 
-        List<ManageRoomRateDto> roomRateDtos = new ArrayList<>();
+        Map<UUID, ManageBookingDto> bookingMap = new LinkedHashMap<>();
+        Map<UUID, List<ManageRoomRateDto>> bookingRoomRateMap = new HashMap<>();
+        Map<UUID, ManageRoomRateDto> roomRateMap = new HashMap<>();
 
-        for (int i = 0; i < invoiceToClone.getBookings().size(); i++) {
+        // Agrupamos las RoomRates por bookingId y preprocesamos los ajustes
+        Map<UUID, List<PartialCloneInvoiceAdjustmentRelation>> adjustmentsByRoomRate = new HashMap<>();
+        for (PartialCloneInvoiceAdjustmentRelation adj : command.getRoomRateAdjustments()) {
+            adjustmentsByRoomRate.computeIfAbsent(adj.getRoomRate(), k -> new ArrayList<>()).add(adj);
+        }
 
-            ManageBookingDto newBooking = new ManageBookingDto(invoiceToClone.getBookings().get(i));
-
-            List<ManageRoomRateDto> roomRates = this.rateService.findByBooking(invoiceToClone.getBookings().get(i).getId());
+        for (ManageBookingDto originalBooking : invoiceToClone.getBookings()) {
+            ManageBookingDto newBooking = new ManageBookingDto(originalBooking);
+            bookingMap.put(newBooking.getId(), newBooking);
+            List<ManageRoomRateDto> roomRates = this.rateService.findByBooking(originalBooking.getId());
 
             for (ManageRoomRateDto roomRate : roomRates) {
                 roomRate.setBooking(newBooking);
-                roomRate.setAdjustments(new LinkedList<>());
+                roomRate.setAdjustments(new ArrayList<>());
                 roomRate.setHotelAmount(0.00);
                 roomRate.setInvoiceAmount(0.00);
-                roomRateDtos.add(roomRate);
-            }
 
-            bookingDtos.add(newBooking);
-
-        }
-
-        for (PartialCloneInvoiceAdjustmentRelation adjustmentRequest : command.getRoomRateAdjustments()) {
-            for (ManageRoomRateDto roomRate : roomRateDtos) {
-                if (adjustmentRequest.getRoomRate().equals(roomRate.getId())) {
-                    Double adjustmentAmount = adjustmentRequest.getAdjustment().getAmount();
-                    roomRate.setInvoiceAmount(roomRate.getInvoiceAmount() + adjustmentAmount);
-                    List<ManageAdjustmentDto> adjustmentDtoList = roomRate.getAdjustments() != null ? roomRate.getAdjustments() : new LinkedList<>();
-                    adjustmentDtoList.add(new ManageAdjustmentDto(
-                            adjustmentRequest.getAdjustment().getId(),
-                            null,
-                            adjustmentAmount,
+                List<PartialCloneInvoiceAdjustmentRelation> adjustments = adjustmentsByRoomRate.getOrDefault(roomRate.getId(), Collections.emptyList());
+                for (PartialCloneInvoiceAdjustmentRelation adj : adjustments) {
+                    var _adj = adj.getAdjustment();
+                    double amount = _adj.getAmount();
+                    roomRate.setInvoiceAmount(roomRate.getInvoiceAmount() + amount);
+                    roomRate.getAdjustments().add(new ManageAdjustmentDto(
+                            _adj.getId(), null, amount,
                             invoiceDate(invoiceToClone.getHotel().getId()),
-                            adjustmentRequest.getAdjustment().getDescription(),
-                            adjustmentRequest.getAdjustment().getTransactionType() != null
-                                ? this.transactionTypeService.findById(adjustmentRequest.getAdjustment().getTransactionType())
-                                : null,
-                            adjustmentRequest.getAdjustment().getPaymentTransactionType() != null
-                                ? this.paymentTransactionTypeService.findById(adjustmentRequest.getAdjustment().getPaymentTransactionType())
-                                : null,
-                            null,
-                            adjustmentRequest.getAdjustment().getEmployee(),
-                            false
+                            _adj.getDescription(),
+                            _adj.getTransactionType() != null ? this.transactionTypeService.findById(_adj.getTransactionType()) : null,
+                            _adj.getPaymentTransactionType() != null ? this.paymentTransactionTypeService.findById(_adj.getPaymentTransactionType()) : null,
+                            null, _adj.getEmployee(), false
                     ));
-                    roomRate.setAdjustments(adjustmentDtoList);
                 }
-            }
-
-        }
-
-        for (ManageRoomRateDto roomRate : roomRateDtos) {
-            roomRate.setId(UUID.randomUUID());
-
-            for (ManageBookingDto booking : bookingDtos) {
-                if (booking.getId().equals(roomRate.getBooking().getId())) {
-
-                    List<ManageRoomRateDto> list = booking.getRoomRates();
-                    list.add(roomRate);
-
-                    booking.setRoomRates(list);
-                }
+                roomRate.setId(UUID.randomUUID());
+                roomRateMap.put(roomRate.getId(), roomRate);
+                bookingRoomRateMap.computeIfAbsent(newBooking.getId(), k -> new ArrayList<>()).add(roomRate);
             }
         }
+
+        for (Map.Entry<UUID, List<ManageRoomRateDto>> entry : bookingRoomRateMap.entrySet()) {
+            ManageBookingDto booking = bookingMap.get(entry.getKey());
+            if (booking != null) {
+                booking.setRoomRates(entry.getValue());
+            }
+        }
+
+        List<ManageBookingDto> bookingDtos = new ArrayList<>(bookingMap.values());
 
         List<ManageAttachmentDto> attachmentDtos = new LinkedList<>();
 
@@ -182,8 +161,7 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             attachmentDtos.add(attachmentDto);
         }
         if (cont == 0) {
-            throw new BusinessException(
-                    DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
+            throw new BusinessException(DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE,
                     DomainErrorMessage.INVOICE_MUST_HAVE_ATTACHMENT_TYPE.getReasonPhrase()
             );
         }
@@ -200,50 +178,15 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
 
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
-                UUID.randomUUID(),
-                0L,
-                0L,
-                null,
-                null,
-                //invoiceToClone.getInvoiceDate(), 
-                this.invoiceDate(invoiceToClone.getHotel().getId(), command.getInvoiceDate()),
-                null,
-                true,
-                invoiceToClone.getInvoiceAmount(),
-                invoiceToClone.getInvoiceAmount(),
-                invoiceToClone.getHotel(),
-                invoiceToClone.getAgency(),
-                invoiceToClone.getInvoiceType(),
-                status,
-                false,
-                bookingDtos,
-                attachmentDtos,
-                null,
-                null,
-                invoiceToClone.getManageInvoiceType(),
-                invoiceStatus,
-                null,
-                true,
-                invoiceToClone,
-                0.00,
-                0
-        );
+        var _invoiceDate = this.invoiceDate(invoiceToClone.getHotel().getId(), command.getInvoiceDate());
+        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(UUID.randomUUID(), invoiceToClone.getHotel(), invoiceToClone.getAgency(),
+                invoiceToClone.getInvoiceType(), invoiceToClone.getManageInvoiceType(), status, invoiceStatus, _invoiceDate, true,
+                0d, 0d, 0d, bookingDtos, attachmentDtos,
+                true, invoiceToClone);
 
-        invoiceDto.setOriginalAmount(invoiceToClone.getInvoiceAmount());
+        this.service.calculateInvoiceAmount(invoiceDto);
+        invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
         ManageInvoiceDto created = service.create(invoiceDto);
-
-        //calcular el amount del invoice
-        this.service.calculateInvoiceAmount(created);
-
-        //establecer el original amount
-        created.setOriginalAmount(created.getInvoiceAmount());
-        this.service.update(created);
-
-        try {
-            this.producerReplicateManageInvoiceService.create(created, null, null);
-        } catch (Exception e) {
-        }
 
         //invoice status history
         this.invoiceStatusHistoryService.create(
@@ -275,10 +218,11 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             );
         }
 
-//        command.setBookings(bookingDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
-//        command.setRoomRates(roomRateDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
-//        command.setAttachments(attachmentDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
         command.setCloned(created.getId());
+        try {
+            this.producerReplicateManageInvoiceService.create(created, null, null);
+        } catch (Exception e) {
+        }
     }
 
     private LocalDateTime invoiceDate(UUID hotel) {
