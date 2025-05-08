@@ -1,7 +1,8 @@
-package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
+package com.kynsoft.finamer.payment.infrastructure.repository.query.custom.implementations;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.infrastructure.identity.*;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.custom.ManageBookingCustomRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;

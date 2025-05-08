@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
+package com.kynsoft.finamer.payment.infrastructure.repository.query.custom;
 
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
