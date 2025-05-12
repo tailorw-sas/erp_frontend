@@ -94,11 +94,13 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
+    @Transactional
     public ManageInvoiceDto create(ManageInvoiceDto dto) {
         InvoiceUtils.establishDueDate(dto);
         Invoice entity = new Invoice(dto);
         entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
+            this.repositoryCommand.saveAndFlush(entity);
             String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumber(invoiceNumber);
             entity.setInvoiceNo(dto.getHotelInvoiceNumber());
@@ -107,10 +109,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
             entity.setInvoiceNumberPrefix(invoicePrefix);
         }
 
-        Invoice invoice = this.repositoryCommand.saveAndFlush(entity);
-        invoice = this.repositoryCommand.findById(invoice.getId())
-                .orElseThrow(() -> new IllegalStateException("Invoice not found after save"));;
-        return invoice.toAggregate();
+        entity = this.repositoryCommand.saveAndFlush(entity);
+        return entity.toAggregate();
     }
 
     @Override

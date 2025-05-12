@@ -13,6 +13,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 import java.time.LocalDate;
@@ -40,9 +41,16 @@ public class Invoice {
     @Generated(event = EventType.INSERT)
     private Long invoiceId;
 
+    @Column(name = "invoiceno", insertable = false)
+    @Generated(GenerationTime.ALWAYS)
     private Long invoiceNo;
 
+    @Column(name = "invoicenumber", insertable = false)
+    @Generated(GenerationTime.ALWAYS)
     private String invoiceNumber;
+
+    @Column(name = "invoicenumberprefix", insertable = false)
+    @Generated(GenerationTime.ALWAYS)
     private String invoiceNumberPrefix;
 
     private LocalDateTime invoiceDate;

@@ -71,7 +71,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
     }
 
     @Override
-    @Transactional
     public void handle(PartialCloneInvoiceCommand command) {
         ManageInvoiceDto invoiceToClone = this.service.findById(command.getInvoice());
         String employeeFullName;
@@ -189,18 +188,6 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
         invoiceDto.setOriginalAmount(invoiceDto.getInvoiceAmount());
         ManageInvoiceDto created = service.create(invoiceDto);
 
-        //calcular el amount del invoice
-
-
-        //establecer el original amount
-        //created.setOriginalAmount(created.getInvoiceAmount());
-        //this.service.update(created);
-
-        try {
-            this.producerReplicateManageInvoiceService.create(created, null, null);
-        } catch (Exception e) {
-        }
-
         //invoice status history
         this.invoiceStatusHistoryService.create(
                 new InvoiceStatusHistoryDto(
@@ -231,10 +218,11 @@ public class PartialCloneInvoiceCommandHandler implements ICommandHandler<Partia
             );
         }
 
-//        command.setBookings(bookingDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
-//        command.setRoomRates(roomRateDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
-//        command.setAttachments(attachmentDtos.stream().map(e -> e.getId()).collect(Collectors.toList()));
         command.setCloned(created.getId());
+        try {
+            this.producerReplicateManageInvoiceService.create(created, null, null);
+        } catch (Exception e) {
+        }
     }
 
     private LocalDateTime invoiceDate(UUID hotel) {
