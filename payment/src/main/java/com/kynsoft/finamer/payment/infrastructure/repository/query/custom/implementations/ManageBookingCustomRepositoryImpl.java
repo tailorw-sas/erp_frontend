@@ -319,171 +319,171 @@ public class ManageBookingCustomRepositoryImpl implements ManageBookingCustomRep
     private Booking convertTupleToBooking(Tuple tuple){
         int i = 0;
         Booking booking = new Booking(
-                tuple.get(i++, UUID.class),
-                tuple.get(i++, Long.class),
-                tuple.get(i++, String.class),
-                tuple.get(i++, LocalDateTime.class),
-                tuple.get(i++, LocalDateTime.class),
-                tuple.get(i++, String.class),
-                tuple.get(i++, String.class),
-                tuple.get(i++, String.class),
-                tuple.get(i++, Double.class),
-                tuple.get(i++, Double.class),
-                tuple.get(i++, String.class),
-                tuple.get(i++, Integer.class),
-                tuple.get(i++, Integer.class),
+                tuple.get(i++, UUID.class), // 0
+                tuple.get(i++, Long.class), // 1
+                tuple.get(i++, String.class), // 2
+                tuple.get(i++, LocalDateTime.class), // 3
+                tuple.get(i++, LocalDateTime.class), // 4
+                tuple.get(i++, String.class), // 5
+                tuple.get(i++, String.class), // 6
+                tuple.get(i++, String.class), // 7
+                tuple.get(i++, Double.class), // 8
+                tuple.get(i++, Double.class), // 9
+                tuple.get(i++, String.class), // 10
+                tuple.get(i++, Integer.class), // 11
+                tuple.get(i++, Integer.class), // 12
                 (tuple.get(i, UUID.class) != null) ? new Invoice(
-                        tuple.get(i++, UUID.class),
-                        tuple.get(i++, Long.class),
-                        tuple.get(i++, Long.class),
-                        tuple.get(i++, String.class),
-                        tuple.get(i++, Double.class),
-                        tuple.get(i++, LocalDateTime.class),
-                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, UUID.class), // 13
+                        tuple.get(i++, Long.class), // 14
+                        tuple.get(i++, Long.class), // 15
+                        tuple.get(i++, String.class), // 16
+                        tuple.get(i++, Double.class), // 17
+                        tuple.get(i++, LocalDateTime.class), // 18
+                        tuple.get(i++, Boolean.class), // 19
                         (tuple.get(i, UUID.class) != null) ? new Invoice(
-                                tuple.get(i++, UUID.class),
-                                tuple.get(i++, Long.class),
-                                tuple.get(i++, Long.class),
-                                tuple.get(i++, String.class),
-                                tuple.get(i++, Double.class),
-                                tuple.get(i++, LocalDateTime.class),
-                                tuple.get(i++, Boolean.class),
+                                tuple.get(i++, UUID.class), // 20
+                                tuple.get(i++, Long.class), // 21
+                                tuple.get(i++, Long.class), // 22
+                                tuple.get(i++, String.class), // 23
+                                tuple.get(i++, Double.class), // 24
+                                tuple.get(i++, LocalDateTime.class), // 25
+                                tuple.get(i++, Boolean.class), // 26
                                 null,
-                                tuple.get(i++, EInvoiceType.class),
+                                tuple.get(i++, EInvoiceType.class), // 27
                                 null,
                                 (tuple.get(i, UUID.class) != null) ? new ManageHotel(
-                                        tuple.get(i++, UUID.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, Boolean.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, Boolean.class),
-                                        tuple.get(i++, UUID.class),
-                                        tuple.get(i++, Boolean.class),
-                                        tuple.get(i++, LocalDateTime.class),
-                                        tuple.get(i++, LocalDateTime.class),
-                                        tuple.get(i++, LocalDateTime.class)
+                                        tuple.get(i++, UUID.class), // 28
+                                        tuple.get(i++, String.class), // 29
+                                        tuple.get(i++, Boolean.class), // 30
+                                        tuple.get(i++, String.class), // 31
+                                        tuple.get(i++, String.class), // 32
+                                        tuple.get(i++, Boolean.class), // 33
+                                        tuple.get(i++, UUID.class), // 34
+                                        tuple.get(i++, Boolean.class), // 35
+                                        tuple.get(i++, LocalDateTime.class), // 36
+                                        tuple.get(i++, LocalDateTime.class), // 37
+                                        tuple.get(i++, LocalDateTime.class) // 38
                                 ) : skip( i+= 11),
                                 (tuple.get(i, UUID.class) != null) ? new ManageAgency(
-                                        tuple.get(i++, UUID.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
+                                        tuple.get(i++, UUID.class), // 39
+                                        tuple.get(i++, String.class), // 40
+                                        tuple.get(i++, String.class), // 41
+                                        tuple.get(i++, String.class), // 42
                                         (tuple.get(i, UUID.class) != null) ? new ManageAgencyType(
-                                                tuple.get(i++, UUID.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class)
+                                                tuple.get(i++, UUID.class), // 43
+                                                tuple.get(i++, String.class), // 44
+                                                tuple.get(i++, String.class), // 45
+                                                tuple.get(i++, String.class) // 46
                                         ) : skip( i += 4),
                                         (tuple.get(i, UUID.class) != null) ? new ManageClient(
-                                                tuple.get(i++, UUID.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class)
+                                                tuple.get(i++, UUID.class), // 47
+                                                tuple.get(i++, String.class), // 48
+                                                tuple.get(i++, String.class), // 49
+                                                tuple.get(i++, String.class) // 50
                                         ) : skip( i=+ 4),
                                         (tuple.get(i, UUID.class) != null) ? new ManageCountry(
-                                                tuple.get(i++, UUID.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, Boolean.class),
-                                                tuple.get(i++, String.class),
+                                                tuple.get(i++, UUID.class), // 51
+                                                tuple.get(i++, String.class), // 52
+                                                tuple.get(i++, String.class), // 53
+                                                tuple.get(i++, String.class), // 54
+                                                tuple.get(i++, Boolean.class), // 55
+                                                tuple.get(i++, String.class), // 56
                                                 (tuple.get(i, UUID.class) != null) ? new ManageLanguage(
-                                                        tuple.get(i++, UUID.class),
-                                                        tuple.get(i++, String.class),
-                                                        tuple.get(i++, String.class),
-                                                        tuple.get(i++, Boolean.class),
-                                                        tuple.get(i++, String.class),
-                                                        tuple.get(i++, LocalDateTime.class),
-                                                        tuple.get(i++, LocalDateTime.class)
+                                                        tuple.get(i++, UUID.class), // 57
+                                                        tuple.get(i++, String.class), // 58
+                                                        tuple.get(i++, String.class), // 59
+                                                        tuple.get(i++, Boolean.class), // 60
+                                                        tuple.get(i++, String.class), // 61
+                                                        tuple.get(i++, LocalDateTime.class), // 62
+                                                        tuple.get(i++, LocalDateTime.class) // 63
                                                 ) : skip( i += 7),
-                                                tuple.get(i++, LocalDateTime.class),
-                                                tuple.get(i++, LocalDateTime.class),
-                                                tuple.get(i++, LocalDateTime.class),
-                                                tuple.get(i++, String.class)
+                                                tuple.get(i++, LocalDateTime.class), // 64
+                                                tuple.get(i++, LocalDateTime.class), // 65
+                                                tuple.get(i++, LocalDateTime.class), // 66
+                                                tuple.get(i++, String.class) // 67
                                         ): skip( i+= 17),
-                                        tuple.get(i++, LocalDateTime.class),
-                                        tuple.get(i++, LocalDateTime.class)
+                                        tuple.get(i++, LocalDateTime.class), // 68
+                                        tuple.get(i++, LocalDateTime.class) // 69
                                 ) : skip( i+= 31),
-                                tuple.get(i++, Boolean.class)
+                                tuple.get(i++, Boolean.class) // 70
                         ) : skip( i+= 51 ),
-                        tuple.get(i++, EInvoiceType.class),
+                        tuple.get(i++, EInvoiceType.class), // 71
                         null,
                         (tuple.get(i, UUID.class) != null) ? new ManageHotel(
-                                tuple.get(i++, UUID.class),
-                                tuple.get(i++, String.class),
-                                tuple.get(i++, Boolean.class),
-                                tuple.get(i++, String.class),
-                                tuple.get(i++, String.class),
-                                tuple.get(i++, Boolean.class),
-                                tuple.get(i++, UUID.class),
-                                tuple.get(i++, Boolean.class),
-                                tuple.get(i++, LocalDateTime.class),
-                                tuple.get(i++, LocalDateTime.class),
-                                tuple.get(i++, LocalDateTime.class)
+                                tuple.get(i++, UUID.class), // 72
+                                tuple.get(i++, String.class), // 73
+                                tuple.get(i++, Boolean.class), // 74
+                                tuple.get(i++, String.class), // 75
+                                tuple.get(i++, String.class), // 76
+                                tuple.get(i++, Boolean.class), // 77
+                                tuple.get(i++, UUID.class), // 78
+                                tuple.get(i++, Boolean.class), // 79
+                                tuple.get(i++, LocalDateTime.class), // 80
+                                tuple.get(i++, LocalDateTime.class), // 81
+                                tuple.get(i++, LocalDateTime.class) // 82
                         ) : skip( i += 11),
                         (tuple.get(i, UUID.class) != null) ? new ManageAgency(
-                                tuple.get(i++, UUID.class),
-                                tuple.get(i++, String.class),
-                                tuple.get(i++, String.class),
-                                tuple.get(i++, String.class),
+                                tuple.get(i++, UUID.class), // 83
+                                tuple.get(i++, String.class), // 84
+                                tuple.get(i++, String.class), // 85
+                                tuple.get(i++, String.class), // 86
                                 (tuple.get(i, UUID.class) != null) ? new ManageAgencyType(
-                                        tuple.get(i++, UUID.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class)
+                                        tuple.get(i++, UUID.class), // 87
+                                        tuple.get(i++, String.class), // 88
+                                        tuple.get(i++, String.class), // 89
+                                        tuple.get(i++, String.class) // 90
                                 ) : skip( i += 4),
                                 (tuple.get(i, UUID.class) != null) ? new ManageClient(
-                                        tuple.get(i++, UUID.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class)
+                                        tuple.get(i++, UUID.class), // 91
+                                        tuple.get(i++, String.class), // 92
+                                        tuple.get(i++, String.class), // 93
+                                        tuple.get(i++, String.class) // 94
                                 ) : skip( i += 4),
                                 (tuple.get(i, UUID.class) != null) ? new ManageCountry(
-                                        tuple.get(i++, UUID.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, String.class),
-                                        tuple.get(i++, Boolean.class),
-                                        tuple.get(i++, String.class),
+                                        tuple.get(i++, UUID.class), // 95
+                                        tuple.get(i++, String.class), // 96
+                                        tuple.get(i++, String.class), // 97
+                                        tuple.get(i++, String.class), // 98
+                                        tuple.get(i++, Boolean.class), // 99
+                                        tuple.get(i++, String.class), // 100
                                         (tuple.get(i, UUID.class) != null) ? new ManageLanguage(
-                                                tuple.get(i++, UUID.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, Boolean.class),
-                                                tuple.get(i++, String.class),
-                                                tuple.get(i++, LocalDateTime.class),
-                                                tuple.get(i++, LocalDateTime.class)
+                                                tuple.get(i++, UUID.class), // 101
+                                                tuple.get(i++, String.class), // 102
+                                                tuple.get(i++, String.class), // 103
+                                                tuple.get(i++, Boolean.class), // 104
+                                                tuple.get(i++, String.class), // 105
+                                                tuple.get(i++, LocalDateTime.class), // 106
+                                                tuple.get(i++, LocalDateTime.class) // 107
                                         ) : skip( i += 7),
-                                        tuple.get(i++, LocalDateTime.class),
-                                        tuple.get(i++, LocalDateTime.class),
-                                        tuple.get(i++, LocalDateTime.class),
-                                        tuple.get(i++, String.class)
+                                        tuple.get(i++, LocalDateTime.class), // 108
+                                        tuple.get(i++, LocalDateTime.class), // 109
+                                        tuple.get(i++, LocalDateTime.class), // 110
+                                        tuple.get(i++, String.class) // 111
                                 ) : skip( i += 17),
-                                tuple.get(i++, LocalDateTime.class),
-                                tuple.get(i++, LocalDateTime.class)
+                                tuple.get(i++, LocalDateTime.class), // 112
+                                tuple.get(i++, LocalDateTime.class) // 113
                         ) : skip( i += 31),
-                        tuple.get(i++, Boolean.class)
-                ) : skip( i+= 103),
+                        tuple.get(i++, Boolean.class) // 114
+                ) : skip( i+= 102),
                 (tuple.get(i, UUID.class) != null) ? new Booking(
-                        tuple.get(i++, UUID.class),
-                        tuple.get(i++, Long.class),
-                        tuple.get(i++, String.class),
-                        tuple.get(i++, LocalDateTime.class),
-                        tuple.get(i++, LocalDateTime.class),
-                        tuple.get(i++, String.class),
-                        tuple.get(i++, String.class),
-                        tuple.get(i++, String.class),
-                        tuple.get(i++, Double.class),
-                        tuple.get(i++, Double.class),
-                        tuple.get(i++, String.class),
-                        tuple.get(i++, Integer.class),
-                        tuple.get(i++, Integer.class),
+                        tuple.get(i++, UUID.class), // 115
+                        tuple.get(i++, Long.class), // 116
+                        tuple.get(i++, String.class), // 117
+                        tuple.get(i++, LocalDateTime.class), // 118
+                        tuple.get(i++, LocalDateTime.class), // 119
+                        tuple.get(i++, String.class), // 120
+                        tuple.get(i++, String.class), // 121
+                        tuple.get(i++, String.class), // 122
+                        tuple.get(i++, Double.class), // 123
+                        tuple.get(i++, Double.class), // 124
+                        tuple.get(i++, String.class), // 125
+                        tuple.get(i++, Integer.class), // 126
+                        tuple.get(i++, Integer.class), // 127
                         null,
                         null,
-                        tuple.get(i++, LocalDateTime.class)
+                        tuple.get(i++, LocalDateTime.class) // 128
                 ) : skip(i += 14) ,
-                tuple.get(i++, LocalDateTime.class)
+                tuple.get(i++, LocalDateTime.class) // 129
         );
 
         return booking;
