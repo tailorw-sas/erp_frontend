@@ -48,9 +48,6 @@ public class ConsumerReplicateManageInvoiceService {
 
     @KafkaListener(topics = "finamer-replicate-manage-invoice", groupId = "payment-entity-replica")
     public void listen(ManageInvoiceKafka objKafka) {
-        List<ManageBookingDto> bookingDtos = new ArrayList<>();
-        this.createBookingList(objKafka, bookingDtos);
-
         ManageHotelDto manageHotelDto = manageHotelService.findById(objKafka.getHotel());
         ManageAgencyDto manageAgencyDto = manageAgencyService.findById(objKafka.getAgency());
 
@@ -61,7 +58,7 @@ public class ConsumerReplicateManageInvoiceService {
                 deleteHotelInfo(objKafka.getInvoiceNumber()),
                 EInvoiceType.valueOf(objKafka.getInvoiceType()),
                 objKafka.getInvoiceAmount(),
-                bookingDtos,
+                null,
                 objKafka.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
                 objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
                 objKafka.getInvoiceDate(),
@@ -71,6 +68,10 @@ public class ConsumerReplicateManageInvoiceService {
         );
 
         this.service.create(invoiceDto);
+
+        List<ManageBookingDto> bookingDtos = new ArrayList<>();
+        this.createBookingList(objKafka, bookingDtos, invoiceDto);
+        this.serviceBookingService.updateAllBooking(bookingDtos);
 
         if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
             ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
@@ -88,7 +89,7 @@ public class ConsumerReplicateManageInvoiceService {
         }
     }
 
-    private void createBookingList(ManageInvoiceKafka objKafka, List<ManageBookingDto> bookingDtos) {
+    private void createBookingList(ManageInvoiceKafka objKafka, List<ManageBookingDto> bookingDtos, ManageInvoiceDto invoiceDto) {
         if (objKafka.getBookings() != null) {
             for (ManageBookingKafka booking : objKafka.getBookings()) {
                 bookingDtos.add(new ManageBookingDto(
@@ -105,7 +106,7 @@ public class ConsumerReplicateManageInvoiceService {
                         booking.getCouponNumber(),
                         booking.getAdults(),
                         booking.getChildren(),
-                        null,
+                        invoiceDto,
                         booking.getBookingParent() != null ? this.serviceBookingService.findById(booking.getBookingParent()) : null,
                         booking.getBookingDate()
                 ));
