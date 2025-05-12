@@ -28,8 +28,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    private final IInvoiceCloseOperationService closeOperationService;
-
     private final IManageAttachmentService attachmentService;
 
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
@@ -43,7 +41,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             IManageAttachmentTypeService attachmentTypeService,
             IManageResourceTypeService resourceTypeService,
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            IInvoiceCloseOperationService closeOperationService,
             IManageAttachmentService attachmentService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IManageEmployeeService employeeService) {
@@ -55,7 +52,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
-        this.closeOperationService = closeOperationService;
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
@@ -102,7 +98,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
-
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
         dto.setInvoice(invoiceDto);
