@@ -57,7 +57,7 @@ public class ImportInnsistServiceImpl implements IImportInnsistService{
     }
 
     @Async
-    private void createCache(ImportInnsistKafka request) {
+    protected void createCache(ImportInnsistKafka request) {
         try {
             UUID importProcessId = UUID.randomUUID();
 

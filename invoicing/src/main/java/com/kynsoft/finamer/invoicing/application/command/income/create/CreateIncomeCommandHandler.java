@@ -93,11 +93,13 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             employeeFullName = command.getEmployee();
         }
 
-         ManageInvoiceDto income = new ManageInvoiceDto(UUID.randomUUID(), hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
+        UUID invoiceUUID = UUID.randomUUID();
+         ManageInvoiceDto income = new ManageInvoiceDto(invoiceUUID, hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
                 EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
                  0.0, null, null, false,null);
 
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+        command.setId(invoiceUUID);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
@@ -107,7 +109,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
         }
-
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
@@ -130,7 +131,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             attachmentStatusHistoryDto
                     .setDescription("An attachment to the invoice was inserted. The file name: " + attachment.getFile());
             attachmentStatusHistoryDto.setEmployee(employeeFullName);
-            //attachmentStatusHistoryDto.setEmployee(attachment.getEmployee());
             invoice.setAttachments(null);
             attachmentStatusHistoryDto.setInvoice(invoice);
             attachmentStatusHistoryDto.setEmployeeId(attachment.getEmployeeId());
@@ -180,14 +180,5 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         }
         this.attachmentService.create(dtos);
         return dtos;
-    }
-
-    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
-        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
-
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
-            return invoiceDate;
-        }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }
