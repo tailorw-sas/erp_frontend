@@ -59,7 +59,7 @@ public class ConsumerReplicateManageInvoiceService {
                 EInvoiceType.valueOf(objKafka.getInvoiceType()),
                 objKafka.getInvoiceAmount(),
                 null,
-                objKafka.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
+                objKafka.getHasAttachment(),
                 objKafka.getInvoiceParent() != null ? this.service.findById(objKafka.getInvoiceParent()) : null,
                 objKafka.getInvoiceDate(),
                 manageHotelDto,
