@@ -80,7 +80,7 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     public boolean validate(BookingRow bookingRow) {
         validators.forEach((key, value) -> {
             try{
-            value.validate(bookingRow, errorFieldList);
+                value.validate(bookingRow, errorFieldList);
             }
             catch (Exception e) {
                 errorFieldList.add(new ErrorField("Unknown error", e.getMessage()));

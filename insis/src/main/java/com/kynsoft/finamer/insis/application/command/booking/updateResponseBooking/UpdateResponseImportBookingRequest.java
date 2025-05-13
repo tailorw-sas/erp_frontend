@@ -14,5 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UpdateResponseImportBookingRequest {
     private UUID importProcessId;
-    private List<ErrorResponse> errorResponses;
+    private List<RoomRateResponse> responses;
+    private Boolean processed;
 }

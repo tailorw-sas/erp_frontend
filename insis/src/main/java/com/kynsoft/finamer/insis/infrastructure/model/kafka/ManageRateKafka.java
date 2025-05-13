@@ -12,7 +12,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ManageRateKafka implements Serializable {
-
     private String reservationCode;
     private String couponNumber;
     private String checkInDate;

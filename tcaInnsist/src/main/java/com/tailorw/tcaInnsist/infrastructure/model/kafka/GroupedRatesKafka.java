@@ -10,10 +10,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class GroupedBookingKafka {
+public class GroupedRatesKafka {
     private UUID logId;
     private UUID processId;
     private String invoiceDate;
     private String hotelCode;
-    private List<BookingKafka> bookingKafkaList;
+    private List<ManageRateKafka> manageRateKafkaList;
 }

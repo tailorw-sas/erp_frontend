@@ -38,7 +38,12 @@ public class RoomRate {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    private String agency;
+    private String agencyCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "agency_id")
+    private ManageAgency agency;
+
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private int stayDays;
@@ -47,12 +52,24 @@ public class RoomRate {
     private String firstName;
     private String lastName;
     private Double amount;
-    private String roomType;
+
+    private String roomTypeCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "roomType_id")
+    private ManageRoomType roomType;
+
     private String couponNumber;
     private int totalNumberOfGuest;
     private int adults;
     private int childrens;
-    private String ratePlan;
+
+    private String ratePlanCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ratePlan_id")
+    private ManageRatePlan ratePlan;
+
     private LocalDate invoicingDate;
     private LocalDate hotelCreationDate;
     private Double originalAmount;
@@ -66,17 +83,25 @@ public class RoomRate {
     private String invoiceFolioNumber;
     private Double quote;
     private String renewalNumber;
-    private String hash;
+
+    private String roomCategoryCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "booking_id")
-    private Booking booking;
+    @JoinColumn(name = "roomCategory_id")
+    private ManageRoomCategory roomCategory;
+
+    private String hash;
+
+    @Column(name = "invoice_id")
+    private UUID invoiceId;
 
     public RoomRate(RoomRateDto dto){
         this.id = dto.getId();
+        this.status = dto.getStatus();
         this.hotel = Objects.nonNull(dto.getHotel()) ? new ManageHotel(dto.getHotel()) : null;
         this.updatedAt = dto.getUpdatedAt();
-        this.agency = dto.getAgency();
+        this.agencyCode = dto.getAgencyCode();
+        this.agency = Objects.nonNull(dto.getAgency()) ? new ManageAgency(dto.getAgency()) : null;
         this.checkInDate = dto.getCheckInDate();
         this.checkOutDate = dto.getCheckOutDate();
         this.stayDays = dto.getStayDays();
@@ -85,12 +110,14 @@ public class RoomRate {
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.amount = dto.getAmount();
-        this.roomType = dto.getRoomType();
+        this.roomTypeCode = dto.getRoomTypeCode();
+        this.roomType = Objects.nonNull(dto.getRoomType()) ? new ManageRoomType(dto.getRoomType()) : null;
         this.couponNumber = dto.getCouponNumber();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
         this.childrens = dto.getChildrens();
-        this.ratePlan = dto.getRatePlan();
+        this.ratePlanCode = dto.getRatePlanCode();
+        this.ratePlan = Objects.nonNull(dto.getRatePlan()) ? new ManageRatePlan(dto.getRatePlan()) : null;
         this.invoicingDate = dto.getInvoicingDate();
         this.hotelCreationDate = dto.getHotelCreationDate();
         this.originalAmount = dto.getOriginalAmount();
@@ -104,8 +131,10 @@ public class RoomRate {
         this.invoiceFolioNumber = dto.getInvoiceFolioNumber();
         this.quote = dto.getQuote();
         this.renewalNumber = dto.getRenewalNumber();
+        this.roomCategoryCode = dto.getRoomCategoryCode();
+        this.roomCategory = Objects.nonNull(dto.getRoomCategory()) ? new ManageRoomCategory(dto.getRoomCategory()) : null;
         this.hash = dto.getHash();
-        this.booking = Objects.nonNull(dto.getBooking()) ? new Booking(dto.getBooking()) : null;
+        this.invoiceId = dto.getInvoiceId();
     }
 
     public RoomRateDto toAggregate(){
@@ -114,7 +143,8 @@ public class RoomRate {
                 this.status,
                 Objects.nonNull(this.hotel) ? this.hotel.toAggregate() : null,
                 this.updatedAt,
-                this.agency,
+                this.agencyCode,
+                Objects.nonNull(this.agency) ? this.agency.toAggregate() : null,
                 this.checkInDate,
                 this.checkOutDate,
                 this.stayDays,
@@ -123,12 +153,14 @@ public class RoomRate {
                 this.firstName,
                 this.lastName,
                 this.amount,
-                this.roomType,
+                this.roomTypeCode,
+                Objects.nonNull(this.roomCategory) ? this.roomType.toAggregate() : null,
                 this.couponNumber,
                 this.totalNumberOfGuest,
                 this.adults,
                 this.childrens,
-                this.ratePlan,
+                this.ratePlanCode,
+                Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
                 this.invoicingDate,
                 this.hotelCreationDate,
                 this.originalAmount,
@@ -143,7 +175,10 @@ public class RoomRate {
                 this.quote,
                 this.renewalNumber,
                 this.hash,
-                Objects.nonNull(this.booking) ? this.booking.toAggregate() : null
+                this.roomCategoryCode,
+                Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
+                Objects.isNull(this.agency) ? "Agency doesn´t exist" : null,
+                this.invoiceId
         );
     }
 }

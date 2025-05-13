@@ -17,5 +17,5 @@ public class GroupedRatesKafka {
     private UUID processId;
     private String invoiceDate;
     private String hotelCode;
-    private List<BookingKafka> bookingKafkaList;
+    private List<ManageRateKafka> manageRateKafkaList;
 }
