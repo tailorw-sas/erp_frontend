@@ -111,6 +111,12 @@ public class ManageInvoiceCustomRepositoryImpl implements ManageInvoiceCustomRep
         }
         long total = entityManager.createQuery(countQuery).getSingleResult();
         org.hibernate.query.Query<?> hibernateQuery = typedQuery.unwrap(org.hibernate.query.Query.class);
+
+        System.out.println("Total registros disponibles: " + total);
+        System.out.println("Page size: " + pageable.getPageSize());
+        System.out.println("Offset: " + pageable.getOffset());
+        System.out.println("Registros obtenidos: " + typedQuery.getResultList().size());
+        
         return new PageImpl<>(typedQuery.getResultList(), pageable, total);
     }
 }
