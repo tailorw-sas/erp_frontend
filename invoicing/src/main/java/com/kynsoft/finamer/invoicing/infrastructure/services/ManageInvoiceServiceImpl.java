@@ -69,8 +69,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery,
-                                    ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
+            ManageInvoiceReadDataJPARepository repositoryQuery,
+            ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;

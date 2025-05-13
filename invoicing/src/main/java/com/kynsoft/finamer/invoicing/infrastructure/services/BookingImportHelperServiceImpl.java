@@ -230,9 +230,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
-        Map<BookingRow, BookingImportCache> mapping = bookingImportCacheStream.stream()
-                .collect(Collectors.toMap(BookingImportCache::toAggregate, cache -> cache));
-
         groupedByCoupon = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
                         -> new GroupByCoupon(

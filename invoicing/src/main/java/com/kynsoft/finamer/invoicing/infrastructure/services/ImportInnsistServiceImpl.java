@@ -124,54 +124,42 @@ public class ImportInnsistServiceImpl implements IImportInnsistService{
         }
     }
 
-    private List<BookingImportCache> create(List<ImportInnsistBookingKafka> bookingRowList, UUID importInnsitProcessId, UUID importProcessId) {
-        List<ManageAgencyDto> agencies = getAgencies(bookingRowList);
-        List<BookingRow> bookingRows = bookingRowList.stream()
-                .flatMap(importInnsistBookingKafka -> importInnsistBookingKafka.getRoomRates().stream()
-                        .map(roomRate -> {
-                            BookingRow bookingRow = new BookingRow();
-                            bookingRow.setImportProcessId(importProcessId.toString());
-                            bookingRow.setInsistImportProcessBookingId(importInnsistBookingKafka.getId().toString());
-                            bookingRow.setInsistImportProcessId(importInnsitProcessId.toString());
-                            bookingRow.setTransactionDate(importInnsistBookingKafka.getInvoiceDate()
-                                    .toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
-                            bookingRow.setManageHotelCode(importInnsistBookingKafka.getManageHotelCode());
-                            bookingRow.setManageAgencyCode(importInnsistBookingKafka.getManageAgencyCode());
-                            bookingRow.setFirstName(importInnsistBookingKafka.getFirstName());
-                            bookingRow.setLastName(importInnsistBookingKafka.getLastName());
-                            bookingRow.setCoupon(importInnsistBookingKafka.getCouponNumber());
-                            bookingRow.setHotelBookingNumber(importInnsistBookingKafka.getHotelBookingNumber());
-                            bookingRow.setRoomType(importInnsistBookingKafka.getRoomTypeCode());
-                            bookingRow.setRatePlan(importInnsistBookingKafka.getRatePlanCode());
-                            bookingRow.setHotelInvoiceNumber(importInnsistBookingKafka.getHotelInvoiceNumber().toString());
+    private void create(List<ImportInnsistBookingKafka> bookingRowList, UUID importInnsitProcessId, UUID insistImportProcessId) {
+        for (ImportInnsistBookingKafka importInnsistBookingKafka : bookingRowList) {
+            for (ImportInnsistRoomRateKafka roomRate : importInnsistBookingKafka.getRoomRates()) {
+                BookingRow bookingRow = new BookingRow();
+                bookingRow.setImportProcessId(insistImportProcessId.toString());// este es para escribir en redis.
+                bookingRow.setInsistImportProcessBookingId(importInnsistBookingKafka.getId().toString());
+                bookingRow.setInsistImportProcessId(importInnsitProcessId.toString());//Este es el que le tengo que dar al flujo de validacion. que viene en la request.
+                bookingRow.setTransactionDate(importInnsistBookingKafka.getInvoiceDate()
+                         .toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                bookingRow.setManageHotelCode(importInnsistBookingKafka.getManageHotelCode());
+                bookingRow.setManageAgencyCode(importInnsistBookingKafka.getManageAgencyCode());
+                bookingRow.setFirstName(importInnsistBookingKafka.getFirstName());
+                bookingRow.setLastName(importInnsistBookingKafka.getLastName());
+                bookingRow.setCoupon(importInnsistBookingKafka.getCouponNumber());
+                bookingRow.setHotelBookingNumber(importInnsistBookingKafka.getHotelBookingNumber());
+                bookingRow.setRoomType(importInnsistBookingKafka.getRoomTypeCode());
+                bookingRow.setRatePlan(importInnsistBookingKafka.getRatePlanCode());
+                bookingRow.setHotelInvoiceNumber(importInnsistBookingKafka.getHotelInvoiceNumber().toString());
                             bookingRow.setBookingDate(importInnsistBookingKafka.getBookingDate()
                                     .toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
-                            bookingRow.setNightType(importInnsistBookingKafka.getNightTypeCode());
+                bookingRow.setNightType(importInnsistBookingKafka.getNightTypeCode());
 
-                            // Rate Details
-                            bookingRow.setCheckIn(roomRate.getCheckIn().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
-                            bookingRow.setCheckOut(roomRate.getCheckOut().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
-                            bookingRow.setNights(roomRate.getNights().doubleValue());
-                            bookingRow.setAdults(roomRate.getAdults().doubleValue());
-                            bookingRow.setChildren(roomRate.getChildren().doubleValue());
-                            bookingRow.setInvoiceAmount(roomRate.getInvoiceAmount());
-                            bookingRow.setRemarks(roomRate.getRemark());
-                            bookingRow.setAmountPAX(roomRate.getAdults().doubleValue() + roomRate.getChildren().doubleValue());
-                            bookingRow.setRoomNumber(roomRate.getRoomNumber());
-                            bookingRow.setHotelInvoiceAmount(roomRate.getHotelAmount());
-
-                            return bookingRow;
-                        })
-                )
-                .toList();
-
-        return this.bookingImportHelperService.saveCachingImportBooking(bookingRows, agencies);
-    }
-
-    private List<ManageAgencyDto> getAgencies(List<ImportInnsistBookingKafka> bookingRowList){
-        List<String> agencyCodes = bookingRowList.stream()
-                .map(ImportInnsistBookingKafka::getManageAgencyCode).toList();
-        return agencyService.findByCodes(agencyCodes);
+                //Rate
+                bookingRow.setCheckIn(roomRate.getCheckIn().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                bookingRow.setCheckOut(roomRate.getCheckOut().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                bookingRow.setNights(roomRate.getNights().doubleValue());
+                bookingRow.setAdults(roomRate.getAdults().doubleValue());
+                bookingRow.setChildren(roomRate.getChildren().doubleValue());
+                bookingRow.setInvoiceAmount(roomRate.getInvoiceAmount());
+                bookingRow.setRemarks(roomRate.getRemark());
+                bookingRow.setAmountPAX(roomRate.getAdults().doubleValue() + roomRate.getChildren().doubleValue());
+                bookingRow.setRoomNumber(roomRate.getRoomNumber());
+                bookingRow.setHotelInvoiceAmount(roomRate.getHotelAmount());
+                this.bookingImportHelperService.saveCachingImportBooking(bookingRow);
+            }
+        }
     }
 
     private void clearCache() {
