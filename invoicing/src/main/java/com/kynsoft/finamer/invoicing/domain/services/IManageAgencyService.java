@@ -25,8 +25,6 @@ public interface IManageAgencyService {
 
     List<ManageAgencyDto> findByIds(List<UUID> ids);
 
-    List<ManageAgencyDto> findByCodes(List<String> codes);
-
     boolean existByCode(String manageAgencyCode);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);

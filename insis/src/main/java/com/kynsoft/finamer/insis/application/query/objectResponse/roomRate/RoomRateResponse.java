@@ -1,10 +1,6 @@
 package com.kynsoft.finamer.insis.application.query.objectResponse.roomRate;
 
-import com.kynsoft.finamer.insis.application.query.objectResponse.manageAgency.ManageAgencyResponse;
 import com.kynsoft.finamer.insis.application.query.objectResponse.manageHotel.ManageHotelResponse;
-import com.kynsoft.finamer.insis.application.query.objectResponse.manageRatePlan.ManageRatePlanResponse;
-import com.kynsoft.finamer.insis.application.query.objectResponse.manageRoomCategory.ManageRoomCategoryResponse;
-import com.kynsoft.finamer.insis.application.query.objectResponse.manageRoomType.ManageRoomTypeResponse;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import lombok.Getter;
@@ -21,7 +17,7 @@ public class RoomRateResponse {
     private UUID id;
     private RoomRateStatus status;
     private ManageHotelResponse hotel;
-    private ManageAgencyResponse agency;
+    private String agency;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private int stayDays;
@@ -30,12 +26,12 @@ public class RoomRateResponse {
     private String firstName;
     private String lastName;
     private Double amount;
-    private ManageRoomTypeResponse roomType;
+    private String roomType;
     private String couponNumber;
     private int totalNumberOfGuest;
     private int adults;
     private int childrens;
-    private ManageRatePlanResponse ratePlan;
+    private String ratePlan;
     private LocalDate invoicingDate;
     private LocalDate hotelCreationDate;
     private Double originalAmount;
@@ -49,14 +45,12 @@ public class RoomRateResponse {
     private String invoiceFolioNumber;
     private Double quote;
     private String renewalNumber;
-    private ManageRoomCategoryResponse roomCategory;
-    private String message;
 
     public RoomRateResponse(RoomRateDto dto){
         this.id = dto.getId();
         this.status = dto.getStatus();
         this.hotel = Objects.nonNull(dto.getHotel()) ? new ManageHotelResponse(dto.getHotel()) : null;
-        this.agency = Objects.nonNull(dto.getAgency()) ? new ManageAgencyResponse(dto.getAgency()) : null;
+        this.agency = dto.getAgency();
         this.checkInDate= dto.getCheckInDate();
         this.checkOutDate = dto.getCheckOutDate();
         this.stayDays = dto.getStayDays();
@@ -65,12 +59,12 @@ public class RoomRateResponse {
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.amount = dto.getAmount();
-        this.roomType = Objects.nonNull(dto.getRoomType()) ? new ManageRoomTypeResponse(dto.getRoomType()) : null;
+        this.roomType = dto.getRoomType();
         this.couponNumber = dto.getCouponNumber();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
         this.childrens = dto.getChildrens();
-        this.ratePlan = Objects.nonNull(dto.getRatePlan()) ? new ManageRatePlanResponse(dto.getRatePlan()) : null;
+        this.ratePlan = dto.getRatePlan();
         this.invoicingDate = dto.getInvoicingDate();
         this.hotelCreationDate = dto.getHotelCreationDate();
         this.originalAmount = dto.getOriginalAmount();
@@ -84,7 +78,5 @@ public class RoomRateResponse {
         this.invoiceFolioNumber = dto.getInvoiceFolioNumber();
         this.quote = dto.getQuote();
         this.renewalNumber = dto.getRenewalNumber();
-        this.roomCategory = Objects.nonNull(dto.getRoomCategory()) ? new ManageRoomCategoryResponse(dto.getRoomCategory()) : null;
-        this.message = dto.getMessage();
     }
 }

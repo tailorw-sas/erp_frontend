@@ -22,6 +22,4 @@ public interface IManageRoomCategoryService {
     List<ManageRoomCategoryDto> findAll();
 
     Map<String, UUID> findIdsByCodes(List<String> codes);
-
-    List<ManageRoomCategoryDto> findAllByCodes(List<String> codes);
 }

@@ -1,7 +1,8 @@
 package com.tailorw.tcaInnsist.infrastructure.service.kafka.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedRatesKafka;
+import com.tailorw.tcaInnsist.infrastructure.model.kafka.BookingKafka;
+import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedBookingKafka;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class ProducerReplicateGroupedRatesService {
     }
 
     @Async
-    public void create(GroupedRatesKafka entity){
+    public void create(GroupedBookingKafka entity){
         try{
             ObjectMapper mapper = new ObjectMapper();
             String stringSerialized = mapper.writeValueAsString(entity);

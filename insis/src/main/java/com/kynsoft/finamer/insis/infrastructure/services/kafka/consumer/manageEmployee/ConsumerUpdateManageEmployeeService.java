@@ -25,9 +25,7 @@ public class ConsumerUpdateManageEmployeeService {
                     entity.getId(),
                     entity.getFirstName(),
                     entity.getLastName(),
-                    entity.getEmail(),
-                    entity.getManageHotelList(),
-                    entity.getManageAgencyList()
+                    entity.getEmail()
             );
             mediator.send(command);
         }catch (Exception ex){

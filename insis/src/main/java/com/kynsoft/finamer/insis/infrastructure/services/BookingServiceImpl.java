@@ -13,12 +13,13 @@ import com.kynsoft.finamer.insis.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.insis.domain.dto.ManageHotelDto;
 import com.kynsoft.finamer.insis.domain.services.IBookingService;
 import com.kynsoft.finamer.insis.infrastructure.model.Booking;
+import com.kynsoft.finamer.insis.infrastructure.model.ImportBooking;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageAgency;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.BookingStatus;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.BookingWriteDataJPARepository;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.BookingReadDataJPARepository;
-import com.kynsoft.finamer.insis.infrastructure.repository.query.ImportRoomRateReadDataJPARepository;
+import com.kynsoft.finamer.insis.infrastructure.repository.query.ImportBookingReadDataJPARepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +37,10 @@ public class BookingServiceImpl implements IBookingService {
 
     private final BookingWriteDataJPARepository writeRepository;
     private final BookingReadDataJPARepository readRepository;
-    private final ImportRoomRateReadDataJPARepository importBookingRepository;
+    private final ImportBookingReadDataJPARepository importBookingRepository;
 
     public BookingServiceImpl(BookingWriteDataJPARepository writeRepository, BookingReadDataJPARepository readRepository,
-                              ImportRoomRateReadDataJPARepository importBookingRepository){
+                              ImportBookingReadDataJPARepository importBookingRepository){
         this.writeRepository = writeRepository;
         this.readRepository = readRepository;
         this.importBookingRepository = importBookingRepository;
@@ -146,7 +147,7 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     private List<String> getBookingErrorsHistory(UUID bookingId){
-        return importBookingRepository.findByRoomRate_Id(bookingId).stream()
+        return importBookingRepository.findByBooking_Id(bookingId).stream()
                 .filter(importBooking -> importBooking.getErrorMessage() != null && !importBooking.getErrorMessage().isBlank())
                 .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
                 .map(importBooking -> {

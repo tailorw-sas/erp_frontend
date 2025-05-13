@@ -72,7 +72,7 @@ public class InvoiceUtils {
 
     public static ManageInvoiceDto establishDueDate(ManageInvoiceDto manageInvoiceDto) {
         if (!manageInvoiceDto.getManageInvoiceStatus().isSentStatus()) {
-            LocalDateTime transactionDate = manageInvoiceDto.getInvoiceDate();
+        LocalDateTime transactionDate = manageInvoiceDto.getInvoiceDate();
             int creditDay = manageInvoiceDto.getAgency().getCreditDay();
             transactionDate = transactionDate.plusDays(creditDay);
             manageInvoiceDto.setDueDate(transactionDate.toLocalDate());

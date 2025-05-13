@@ -19,10 +19,8 @@ public interface ManageRatePlanReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageRatePlan> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT m.code, m.id FROM ManageRatePlan m WHERE m.code IN :codes AND m.hotel.id = :hotel")
+    @Query("SELECT m.code, m.id FROM ManageRatePlan m WHERE m.code IN :codes AND m.manageHotel.id = :hotel")
     List<Object[]> findRatePlanIdsByCodesAndHotel(@Param("codes") List<String> codes, @Param("hotel") UUID hotel);
 
-    Optional<ManageRatePlan> findByCodeAndHotel_Id(String code, UUID hotelId);
-
-    List<ManageRatePlan> findByCodeInAndHotel_Id(List<String> codes, UUID hotelId);
+    Optional<ManageRatePlan> findByCodeAndManageHotel_Id(String code, UUID hotelId);
 }
