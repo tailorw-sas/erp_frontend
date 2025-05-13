@@ -891,8 +891,8 @@ const payloadpaymentDetailForTypeDepositPaginationTemp = ref<IPagination>({
 
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
-  moduleApi: 'invoicing',
-  uriApi: 'manage-invoice/search-payment',
+  moduleApi: 'payment',
+  uriApi: 'manage-invoice',
   expandableRows: true,
   selectionMode: 'multiple',
   loading: false,
@@ -947,9 +947,9 @@ const applyPaymentOnChangePage = ref<PageState>()
 const applyPaymentBookingPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 100,
   page: 0,
-  sortBy: 'invoice.invoiceNumber',
+  sortBy: 'bookingId',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentBookingPagination = ref<IPagination>({
@@ -2015,8 +2015,8 @@ async function applyPaymentGetList() {
     const hotel = objItemSelectedForRightClickApplyPayment.value.hotel
     const filters: FilterCriteria[] = [
       { key: 'agency.id', operator: 'IN', value: agencies.map(a => a.id), logicalOperation: 'AND' },
-      { key: 'dueAmount', operator: 'GREATER_THAN', value: '0.00', logicalOperation: 'AND' },
-      { key: 'manageInvoiceStatus.enabledToApply', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
+      { key: 'invoiceAmount', operator: 'GREATER_THAN', value: '0.00', logicalOperation: 'AND' },
+      // { key: 'manageInvoiceStatus.enabledToApply', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
     ]
 
     if (hotel && hotel.id) {

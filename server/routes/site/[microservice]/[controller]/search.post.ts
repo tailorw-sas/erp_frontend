@@ -1,6 +1,7 @@
 import { getToken } from '#auth'
 
 export default defineEventHandler(async (event): Promise<any> => {
+  console.log('Ingreso a search.post')
   const body = await readBody(event)
   const microservice = getRouterParam(event, 'microservice')
   const controller = getRouterParam(event, 'controller')
