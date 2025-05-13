@@ -93,56 +93,22 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             employeeFullName = command.getEmployee();
         }
 
-        String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
+        UUID invoiceUUID = UUID.randomUUID();
+         ManageInvoiceDto income = new ManageInvoiceDto(invoiceUUID, hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
+                EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
+                 0.0, null, null, false,null);
 
-        ManageInvoiceDto income = new ManageInvoiceDto(
-                command.getId(),
-                0L,
-                0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
-                command.getInvoiceDate(),
-                command.getDueDate(),
-                command.getManual(),
-                0.0,
-                0.0,
-                hotelDto,
-                agencyDto,
-                EInvoiceType.INCOME,
-                EInvoiceStatus.SENT,
-                Boolean.FALSE,
-                null,
-                null,
-                command.getReSend(),
-                command.getReSendDate(),
-                invoiceTypeDto,
-                invoiceStatusDto,
-                null,
-                false,
-                null, 0.0,0
-        );
-        income.setOriginalAmount(0.0);
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+        command.setId(invoiceUUID);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
         this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
-        //this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
         if (command.getAttachments() != null) {
             List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
         }
-
-    }
-
-    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
-        }
-        return invoiceNumber;
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
@@ -165,7 +131,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             attachmentStatusHistoryDto
                     .setDescription("An attachment to the invoice was inserted. The file name: " + attachment.getFile());
             attachmentStatusHistoryDto.setEmployee(employeeFullName);
-            //attachmentStatusHistoryDto.setEmployee(attachment.getEmployee());
             invoice.setAttachments(null);
             attachmentStatusHistoryDto.setInvoice(invoice);
             attachmentStatusHistoryDto.setEmployeeId(attachment.getEmployeeId());
@@ -215,14 +180,5 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         }
         this.attachmentService.create(dtos);
         return dtos;
-    }
-
-    private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
-        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
-
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
-            return invoiceDate;
-        }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 }

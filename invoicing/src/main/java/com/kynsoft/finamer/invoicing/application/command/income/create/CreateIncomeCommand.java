@@ -57,6 +57,7 @@ public class CreateIncomeCommand implements ICommand {
         this.employee = employee;
         this.attachments = attachments;
     }
+
     public CreateIncomeCommand(UUID id,Status status, LocalDateTime invoiceDate, Boolean manual,
                                UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
                                Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,

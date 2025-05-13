@@ -47,7 +47,33 @@ public class ImportInnsistBookingKafka implements Serializable {
 
     private List<ImportInnsistRoomRateKafka> roomRates;
 
-    public ImportInnsistBookingKafka(UUID id, LocalDateTime invoiceDate, LocalDateTime hotelCreationDate, LocalDateTime bookingDate, LocalDateTime checkIn, LocalDateTime checkOut, String hotelBookingNumber, String firstName, String lastName, String roomNumber, Integer adults, Integer children, Integer nights, Double rateAdult, Double rateChild, Long hotelInvoiceNumber, String folioNumber, Double hotelAmount, String description, String ratePlanCode, String nightTypeCode, String roomTypeCode, String roomCategoryCode, String manageHotelCode, String manageAgencyCode, String couponNumber, List<ImportInnsistRoomRateKafka> roomRates) {
+    public ImportInnsistBookingKafka(UUID id,
+                                     LocalDateTime invoiceDate,
+                                     LocalDateTime hotelCreationDate,
+                                     LocalDateTime bookingDate,
+                                     LocalDateTime checkIn,
+                                     LocalDateTime checkOut,
+                                     String hotelBookingNumber,
+                                     String firstName,
+                                     String lastName,
+                                     String roomNumber,
+                                     Integer adults,
+                                     Integer children,
+                                     Integer nights,
+                                     Double rateAdult,
+                                     Double rateChild,
+                                     Long hotelInvoiceNumber,
+                                     String folioNumber,
+                                     Double hotelAmount,
+                                     String description,
+                                     String ratePlanCode,
+                                     String nightTypeCode,
+                                     String roomTypeCode,
+                                     String roomCategoryCode,
+                                     String manageHotelCode,
+                                     String manageAgencyCode,
+                                     String couponNumber,
+                                     List<ImportInnsistRoomRateKafka> roomRates) {
         this.id = id;
         this.invoiceDate = invoiceDate;
         this.hotelCreationDate = hotelCreationDate;

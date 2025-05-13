@@ -49,13 +49,19 @@ public interface ManageInvoiceReadDataJPARepository extends JpaRepository<Invoic
             " WHERE i.id = :id")
     Invoice findInvoiceByUUID(@Param("id") UUID id);
 
-    @Query("""
-    SELECT DISTINCT i FROM Invoice i 
-    JOIN FETCH i.bookings 
-    WHERE i.id = (
-        SELECT b.invoice.id FROM Booking b WHERE b.id = :bookingId
-    )
-    """)
-    Optional<Invoice> findInvoiceByBookingIdWithBookings(@Param("bookingId") UUID bookingId);
+    @Query("SELECT DISTINCT b.invoice.id FROM Booking b WHERE b.id = :bookingId")
+    UUID findInvoiceIdByBookingId(@Param("bookingId") UUID bookingId);
 
+    @Query("SELECT DISTINCT i FROM Invoice i " +
+            " JOIN FETCH i.bookings " +
+            " WHERE i.id = :invoiceId ")
+    Optional<Invoice> findInvoiceByBookingIdWithBookings(@Param("invoiceId") UUID invoiceId);
+
+    @Query("SELECT DISTINCT i FROM Invoice i " +
+            "JOIN FETCH i.bookings " +
+            "WHERE i.id IN ( " +
+            "SELECT DISTINCT b.invoice.id FROM Booking b WHERE b.id IN :bookingIds " +
+            ") "
+    )
+    List<Invoice> findInvoicesByBookingIds(@Param("bookingIds") List<UUID> bookingIds);
 }

@@ -27,7 +27,7 @@ public class UpdateAllPaymentCloseOperationCommandHandler implements ICommandHan
     public void handle(UpdateAllPaymentCloseOperationCommand command) {
 
         RulesChecker.checkRule(new CheckBeginDateAndEndDateRule(command.getBeginDate(), command.getEndDate()));
-        List<PaymentCloseOperationDto> closeOperationDtos = this.closeOperationService.findByHotelIds(command.getHotels());
+        List<PaymentCloseOperationDto> closeOperationDtos = this.closeOperationService.findByHotelId(command.getHotels());
         List<PaymentCloseOperationDto> update = new ArrayList<>();
 
         for (PaymentCloseOperationDto closeOperationDto : closeOperationDtos) {

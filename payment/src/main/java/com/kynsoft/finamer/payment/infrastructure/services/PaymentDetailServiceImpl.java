@@ -16,6 +16,8 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.query.ManagePaymentDetailReadDataJPARepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,8 +40,8 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
 
     @Override
     public PaymentDetailDto create(PaymentDetailDto dto) {
-        PaymentDetail data = new PaymentDetail(dto);
-        return this.repositoryCommand.save(data).toAggregate();
+        PaymentDetail paymentDetail = new PaymentDetail(dto);
+        return this.repositoryCommand.saveAndFlush(paymentDetail).toAggregate();
     }
 
     @Override
@@ -48,17 +50,16 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
     }
 
     @Override
-    public void createAll(List<PaymentDetail> dto) {
-        this.repositoryCommand.saveAll(dto);
+    public List<PaymentDetailDto> createAll(List<PaymentDetailDto> dto) {
+        List<PaymentDetail> paymentDetails = dto.stream().map(PaymentDetail::new).collect(Collectors.toList());
+        return this.repositoryCommand.saveAllAndFlush(paymentDetails).stream().map(PaymentDetail::toAggregate).collect(Collectors.toList());
     }
 
     @Override
-    public void update(PaymentDetailDto dto) {
+    public PaymentDetailDto update(PaymentDetailDto dto) {
         PaymentDetail update = new PaymentDetail(dto);
-
-        update.setUpdatedAt(OffsetDateTime.now(ZoneId.of("UTC")));
-
-        this.repositoryCommand.save(update);
+        update.setUpdatedAt(OffsetDateTime.now());
+        return this.repositoryCommand.saveAndFlush(update).toAggregateSimpleNotPayment();
     }
 
     @Override
@@ -197,19 +198,19 @@ public class PaymentDetailServiceImpl implements IPaymentDetailService {
         if(Objects.isNull(ids)){
             throw new IllegalArgumentException("The Ids must not be null");
         }
-        return repositoryQuery.findByPayment_PaymentIdIn(ids).stream()
+        return repositoryQuery.findAllByPaymentGenIdInCustom(ids).stream()
                 .map(PaymentDetail::toAggregate)
                 .toList();
     }
 
     @Override
-    public List<PaymentDetail> findByPaymentDetailsApplyIdIn(List<UUID> ids) {
-        return this.repositoryQuery.findByIdIn(ids);
+    public List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids) {
+        return this.repositoryQuery.findByPaymentDetailIdIn(ids);
     }
 
     @Override
-    public List<PaymentDetail> findByPaymentDetailsIdIn(List<Long> ids) {
-        return this.repositoryQuery.findByPaymentDetailIdIn(ids);
+    public List<PaymentDetail> findByPaymentDetailsGenIdIn(List<Long> ids) {
+        return this.repositoryQuery.findAllByPaymentGenIdIn(ids);
     }
 
     @Override

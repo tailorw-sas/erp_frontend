@@ -120,7 +120,8 @@ public class ImportInnsistServiceImpl {
                 bookingRow.setImportProcessId(insistImportProcessId.toString());// este es para escribir en redis.
                 bookingRow.setInsistImportProcessBookingId(importInnsistBookingKafka.getId().toString());
                 bookingRow.setInsistImportProcessId(importInnsitProcessId.toString());//Este es el que le tengo que dar al flujo de validacion. que viene en la request.
-                bookingRow.setTransactionDate(importInnsistBookingKafka.getInvoiceDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                bookingRow.setTransactionDate(importInnsistBookingKafka.getInvoiceDate()
+                         .toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
                 bookingRow.setManageHotelCode(importInnsistBookingKafka.getManageHotelCode());
                 bookingRow.setManageAgencyCode(importInnsistBookingKafka.getManageAgencyCode());
                 bookingRow.setFirstName(importInnsistBookingKafka.getFirstName());
@@ -130,7 +131,8 @@ public class ImportInnsistServiceImpl {
                 bookingRow.setRoomType(importInnsistBookingKafka.getRoomTypeCode());
                 bookingRow.setRatePlan(importInnsistBookingKafka.getRatePlanCode());
                 bookingRow.setHotelInvoiceNumber(importInnsistBookingKafka.getHotelInvoiceNumber().toString());
-                bookingRow.setBookingDate(importInnsistBookingKafka.getBookingDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                            bookingRow.setBookingDate(importInnsistBookingKafka.getBookingDate()
+                                    .toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
                 bookingRow.setNightType(importInnsistBookingKafka.getNightTypeCode());
 
                 //Rate

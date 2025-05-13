@@ -28,8 +28,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
 
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
 
-    private final IInvoiceCloseOperationService closeOperationService;
-
     private final IManageAttachmentService attachmentService;
 
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
@@ -43,7 +41,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             IManageAttachmentTypeService attachmentTypeService,
             IManageResourceTypeService resourceTypeService,
             IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            IInvoiceCloseOperationService closeOperationService,
             IManageAttachmentService attachmentService,
             IAttachmentStatusHistoryService attachmentStatusHistoryService,
             IManageEmployeeService employeeService) {
@@ -55,7 +52,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
-        this.closeOperationService = closeOperationService;
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
@@ -65,8 +61,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     public void handle(CreateAntiToIncomeCommand command) {
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        //RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
-
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
 
@@ -87,60 +81,23 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             employeeFullName = command.getEmployee();
         }
 
-        String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
+        ManageInvoiceDto income = new ManageInvoiceDto(UUID.randomUUID(), hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
+                EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
+                0.0, null, null, false,null);
 
-        ManageInvoiceDto income = new ManageInvoiceDto(
-                command.getId(),
-                0L,
-                0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
-                command.getInvoiceDate(),
-                command.getDueDate(),
-                command.getManual(),
-                0.0,
-                0.0,
-                hotelDto,
-                agencyDto,
-                EInvoiceType.INCOME,
-                EInvoiceStatus.SENT,
-                Boolean.FALSE,
-                null,
-                null,
-                command.getReSend(),
-                command.getReSendDate(),
-                invoiceTypeDto,
-                invoiceStatusDto,
-                null,
-                false,
-                null, 0.0, 0
-        );
-        income.setOriginalAmount(0.0);
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 
         this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
-        //this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
         if (command.getAttachments() != null) {
             List<ManageAttachmentDto> attachmentDtoList = this.attachments(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
         }
-
-    }
-
-    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
-        }
-        return invoiceNumber;
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
-
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
         dto.setInvoice(invoiceDto);
