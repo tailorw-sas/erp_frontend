@@ -16,8 +16,6 @@ public interface ImportBookingService {
 
     PaginatedResponse getImportError(ImportBookingErrorRequest importBookingErrorRequest);
 
-    List<BookingRowError>getImportError(String importProcessId);
-
     ImportBookingProcessStatusResponse getImportBookingProcessStatus(ImportBookingProcessStatusRequest importBookingProcessStatusRequest);
 
 }

@@ -19,5 +19,5 @@ public class ManageRoomTypeDto {
     private String status;
     private boolean deleted;
     private LocalDateTime updatedAt;
-    private ManageHotelDto hotel;
+    private ManageHotelDto manageHotel;
 }

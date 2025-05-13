@@ -1,6 +1,8 @@
 package com.kynsoft.finamer.invoicing.infrastructure.services;
 
-import com.kynsof.share.core.domain.kafka.entity.importInnsist.*;
+import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistBookingKafka;
+import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistKafka;
+import com.kynsof.share.core.domain.kafka.entity.importInnsist.ImportInnsistRoomRateKafka;
 import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.*;
@@ -8,59 +10,47 @@ import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.excel.event.ImportBookingProcessEvent;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingRowError;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
-import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.ProducerResponseImportInnsistService;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.BookingImportCacheRedisRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.Optional;
-
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 
 @Service
-public class ImportInnsistServiceImpl implements IImportInnsistService{
+public class ImportInnsistServiceImpl {
 
     private final IManageAgencyService agencyService;
+
     private final IManageHotelService manageHotelService;
+
+    private final BookingImportCacheRedisRepository repository;
     private final IBookingImportHelperService bookingImportHelperService;
     private final ValidatorFactory<BookingRow> validatorFactory;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
-    private final ProducerResponseImportInnsistService producerResponseImportInnsistService;
-    private final ImportBookingService importBookingService;
 
     public ImportInnsistServiceImpl(IManageAgencyService agencyService,
-                                    IManageHotelService manageHotelService,
-                                    IBookingImportHelperService bookingImportHelperService,
-                                    ValidatorFactory<BookingRow> validatorFactory,
-                                    ApplicationEventPublisher applicationEventPublisher,
-                                    ManageEmployeeReadDataJPARepository employeeReadDataJPARepository,
-                                    ProducerResponseImportInnsistService producerResponseImportInnsistService,
-                                    ImportBookingService importBookingService) {
+            IManageHotelService manageHotelService,
+            BookingImportCacheRedisRepository repository,
+            IBookingImportHelperService bookingImportHelperService,
+            ValidatorFactory<BookingRow> validatorFactory,
+            ApplicationEventPublisher applicationEventPublisher, ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.agencyService = agencyService;
         this.manageHotelService = manageHotelService;
+        this.repository = repository;
         this.bookingImportHelperService = bookingImportHelperService;
         this.validatorFactory = validatorFactory;
         this.applicationEventPublisher = applicationEventPublisher;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
-        this.producerResponseImportInnsistService = producerResponseImportInnsistService;
-        this.importBookingService = importBookingService;
     }
 
-    @Override
-    public void createInvoiceFromGroupedBooking(ImportInnsistKafka request) {
-        this.createCache(request);
-    }
-
-    @Async
-    protected void createCache(ImportInnsistKafka request) {
+    private void createCache(ImportInnsistKafka request) {
         try {
-            UUID importProcessId = UUID.randomUUID();
-
             //Genera el log del proceso en redis al inicio de todo.
             BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
                     .status(EProcessStatus.RUNNING)
@@ -68,14 +58,17 @@ public class ImportInnsistServiceImpl implements IImportInnsistService{
                     .build();
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, start));
 
-            //Guarda en cache los rates
-            List<BookingImportCache> list = this.create(request.getImportList(), request.getImportInnsitProcessId(), importProcessId);
+            UUID insistImportProcessId = UUID.randomUUID();
+            //Construye el objeto usado en el excel y guarda en cache.
+            this.create(request.getImportList(), request.getImportInnsitProcessId(), insistImportProcessId);
 
+            //Obtengo de cache
+            List<BookingImportCache> list = this.repository.findAllByImportProcessId(insistImportProcessId.toString());
             boolean validateInsist = validatorFactory.validateInsist(list);
             validatorFactory.createValidators(EImportType.INNSIST.name());
 
             int rowNumber = 0;
-            boolean stop = false;
+            boolean stop = true;
 
             List<UUID> agencies = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
             List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
@@ -86,30 +79,26 @@ public class ImportInnsistServiceImpl implements IImportInnsistService{
                 row.setImportProcessId(row.getInsistImportProcessId());
                 row.setAgencies(agencies);
                 row.setHotels(hotels);
-                if(!validatorFactory.validate(row)){
-                    stop = true;
+                if (validatorFactory.validate(row)) {
+                    bookingImportHelperService.groupAndCachingImportBooking(row, EImportType.NO_VIRTUAL);
+                } else {
+                    stop = false;
                 }
                 rowNumber++;
             }
-            validatorFactory.removeValidators();
-            if (validateInsist && !stop) {
-                this.bookingImportHelperService.createInvoiceGroupingByCoupon(importProcessId.toString(), request.getEmployee(), true);
-                this.bookingImportHelperService.createInvoiceGroupingByBooking(importProcessId.toString(), request.getEmployee(), true);
-                list = this.bookingImportHelperService.findAllByImportProcess(importProcessId.toString());
-                replicateResponseOk(list, request.getImportInnsitProcessId());
-            }else{
-                List<BookingRowError> errors = importBookingService.getImportError(request.getImportInnsitProcessId().toString());
-                replicateResponseError(errors, request.getImportInnsitProcessId());
-            }
-
             list.clear();
+            validatorFactory.removeValidators();
+            if (validateInsist && stop) {
+                this.bookingImportHelperService.createInvoiceGroupingByCoupon(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
+                this.bookingImportHelperService.createInvoiceGroupingByBooking(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
+            }
             BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
                     .status(EProcessStatus.FINISHED)
                     .total(list.size())
                     .build();
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
             bookingImportHelperService.removeAllImportCache(request.getImportInnsitProcessId().toString());
-            bookingImportHelperService.removeAllImportCache(importProcessId.toString());
+            bookingImportHelperService.removeAllImportCache(insistImportProcessId.toString());
             this.clearCache();
 
         } catch (Exception e) {
@@ -167,39 +156,8 @@ public class ImportInnsistServiceImpl implements IImportInnsistService{
         this.agencyService.clearManageHotelCache();
     }
 
-    private void replicateResponseOk(List<BookingImportCache> bookingImportCacheList, UUID innsistImportId){
-        List<RoomRateResponseKafka> roomRateResponses = bookingImportCacheList.stream()
-                .map(this::bookingImportCacheToRoomRateKafka)
-                .toList();
-        ImportInnsistResponseKafka importInnsistResponseKafka = new ImportInnsistResponseKafka(innsistImportId,
-                roomRateResponses, true);
-        producerResponseImportInnsistService.create(importInnsistResponseKafka);
-    }
-
-    private void replicateResponseError(List<BookingRowError> bookingRowErrors, UUID innsistImportId){
-        List<RoomRateResponseKafka> roomRateResponses = bookingRowErrors.stream()
-                .map(this::bookingErrorResponseToRoomRateKafka)
-                .toList();
-        ImportInnsistResponseKafka importInnsistResponseKafka = new ImportInnsistResponseKafka(innsistImportId,
-                roomRateResponses, false);
-        producerResponseImportInnsistService.create(importInnsistResponseKafka);
-    }
-
-    private RoomRateResponseKafka bookingImportCacheToRoomRateKafka(BookingImportCache booking){
-        return new RoomRateResponseKafka(
-                null,
-                UUID.fromString(booking.getInsistImportProcessBookingId()),
-                booking.getInvoiceId(),
-                null
-        );
-    }
-
-    private RoomRateResponseKafka bookingErrorResponseToRoomRateKafka(BookingRowError bookingRowError){
-        return new RoomRateResponseKafka(
-                null,
-                UUID.fromString(bookingRowError.getRow().getInsistImportProcessBookingId()),
-                null,
-                bookingRowError.getErrorFields()
-        );
+    @Async
+    public void createInvoiceFromGroupedBooking(ImportInnsistKafka request) {
+        this.createCache(request);
     }
 }

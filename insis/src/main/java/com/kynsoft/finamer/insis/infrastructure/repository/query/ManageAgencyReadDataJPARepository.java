@@ -19,8 +19,4 @@ public interface ManageAgencyReadDataJPARepository extends JpaRepository<ManageA
 
     @Query("SELECT m.code, m.id FROM ManageAgency m WHERE m.code IN :codes")
     List<Object[]> findAgencyIdsByCodes(@Param("codes") List<String> codes);
-
-    List<ManageAgency> findByIdIn(List<UUID> ids);
-
-    List<ManageAgency> findByCodeIn(List<String> codes);
 }

@@ -17,6 +17,7 @@ import java.util.UUID;
 public class CreateRoomRateCommand implements ICommand {
 
     private UUID id;
+    private RoomRateStatus status;
     private String hotel;
     private LocalDateTime updatedAt;
     private String agency;
@@ -83,6 +84,7 @@ public class CreateRoomRateCommand implements ICommand {
                                  String hash)
     {
         this.id = UUID.randomUUID();
+        this.status = RoomRateStatus.PENDING;
         this.hotel = hotel;
         this.agency = agency;
         this.checkInDate = checkInDate;

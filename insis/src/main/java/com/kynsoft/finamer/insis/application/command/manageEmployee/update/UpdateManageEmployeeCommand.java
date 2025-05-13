@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -18,17 +17,13 @@ public class UpdateManageEmployeeCommand implements ICommand {
     private String lastName;
     private String email;
     private LocalDateTime updatedAt;
-    private List<UUID> hotels;
-    private List<UUID> agencies;
 
-    public UpdateManageEmployeeCommand(UUID id, String firstName, String lastName, String email, List<UUID> hotels, List<UUID> agencies){
+    public UpdateManageEmployeeCommand(UUID id, String firstName, String lastName, String email){
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.updatedAt = LocalDateTime.now();
-        this.hotels = hotels;
-        this.agencies = agencies;
     }
 
     @Override

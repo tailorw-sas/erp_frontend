@@ -86,13 +86,6 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
-    public List<ManageAgencyDto> findByIds(List<UUID> ids) {
-        return readRepository.findByIdIn(ids).stream()
-                .map(ManageAgency::toAggregate)
-                .toList();
-    }
-
-    @Override
     public Map<String, UUID> findIdsByCodes(List<String> codes) {
         List<Object[]> result = readRepository.findAgencyIdsByCodes(codes);
         return result.stream()
@@ -100,16 +93,6 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
                         row -> (String)row[0],
                         row -> (UUID)row[1]
                 ));
-    }
-
-    @Override
-    public List<ManageAgencyDto> findByCodes(List<String> codes) {
-        if(Objects.nonNull(codes)){
-            return readRepository.findByCodeIn(codes).stream()
-                    .map(ManageAgency::toAggregate)
-                    .toList();
-        }
-        throw new IllegalArgumentException("Codes list must not be null");
     }
 
     @Override

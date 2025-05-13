@@ -11,7 +11,10 @@ import com.kynsoft.finamer.insis.infrastructure.repository.command.ManageRoomCat
 import com.kynsoft.finamer.insis.infrastructure.repository.query.ManageRoomCategoryReadDataJPARepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -93,15 +96,5 @@ public class ManageRoomCategoryServiceImpl implements IManageRoomCategoryService
                         row -> (String)row[0],
                         row -> (UUID)row[1]
                 ));
-    }
-
-    @Override
-    public List<ManageRoomCategoryDto> findAllByCodes(List<String> codes) {
-        if(Objects.nonNull(codes)){
-            return readRepository.findByCodeIn(codes).stream()
-                    .map(ManageRoomCategory::toAggregate)
-                    .toList();
-        }
-        throw new IllegalArgumentException("Room Category codes must not be must");
     }
 }
