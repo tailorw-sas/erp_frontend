@@ -61,11 +61,11 @@ public class PaymentImportService implements IPaymentImportService {
                     new PaymentImportStatusDto(EPaymentImportProcessStatus.RUNNING.name(),
                             request.getImportProcessId())));
             paymentImportHelperService.readExcel(readerConfiguration, request);
-        } catch (ExcelException e) {
+        } catch (Exception ex) {
             paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
                     new PaymentImportStatusDto(null, EPaymentImportProcessStatus.FINISHED.name(),
-                            request.getImportProcessId(), true, e.getMessage())));
-            throw new RuntimeException(e);
+                        request.getImportProcessId(), true, ex.getMessage())));
+            throw new RuntimeException(ex);
         }
         paymentImportHelperService.readPaymentCacheAndSave(request);
         paymentEventPublisher.publishEvent(new PaymentImportProcessEvent(this,
