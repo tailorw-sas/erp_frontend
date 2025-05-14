@@ -43,9 +43,6 @@ public class CreateIncomeHttpService {
         HttpEntity<CreateAntiToIncomeRequest> entity = new HttpEntity<>(request, headers);
 
         try {
-            log.info("Sending request to URL: {}", url);
-            log.info("Request Payload as JSON: {}", new ObjectMapper().writeValueAsString(request));
-
             // Realizar la solicitud POST
             ResponseEntity<CreateIncomeFromPaymentMessage> response = restTemplate.postForEntity(url, entity, CreateIncomeFromPaymentMessage.class);
 
@@ -59,7 +56,7 @@ public class CreateIncomeHttpService {
         } catch (RestClientException e) {
             log.error("Exception occurred while creating income: {}", e.getMessage(), e);
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INCOME_CREATE_PROCESS_FAILED, new ErrorField("id", DomainErrorMessage.INCOME_CREATE_PROCESS_FAILED.getReasonPhrase())));
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.error("Exception occurred while creating income: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }

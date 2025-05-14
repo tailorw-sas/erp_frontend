@@ -12,6 +12,8 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeCommand> {
 
@@ -31,28 +34,26 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IManageInvoiceService manageInvoiceService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
-
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
-
     private final IInvoiceCloseOperationService closeOperationService;
-
     private final IManageAttachmentService attachmentService;
-
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
-                                        IManageHotelService hotelService,
-                                        IManageInvoiceTypeService invoiceTypeService,
-                                        IManageInvoiceStatusService invoiceStatusService,
-                                        IManageInvoiceService manageInvoiceService, 
-                                        IManageAttachmentTypeService attachmentTypeService, 
-                                        IManageResourceTypeService resourceTypeService, 
-                                        IInvoiceStatusHistoryService invoiceStatusHistoryService, 
-                                        IInvoiceCloseOperationService closeOperationService, 
-                                        IManageAttachmentService attachmentService, 
-                                        IAttachmentStatusHistoryService attachmentStatusHistoryService,
-                                        IManageEmployeeService employeeService) {
+                                      IManageHotelService hotelService,
+                                      IManageInvoiceTypeService invoiceTypeService,
+                                      IManageInvoiceStatusService invoiceStatusService,
+                                      IManageInvoiceService manageInvoiceService,
+                                      IManageAttachmentTypeService attachmentTypeService,
+                                      IManageResourceTypeService resourceTypeService,
+                                      IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                      IInvoiceCloseOperationService closeOperationService,
+                                      IManageAttachmentService attachmentService,
+                                      IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                      IManageEmployeeService employeeService,
+                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -65,13 +66,15 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
     public void handle(CreateIncomeCommand command) {
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
+                command.getInvoiceDate().toLocalDate(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
@@ -109,6 +112,12 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
+        }
+
+        try {
+            this.producerReplicateManageInvoiceService.create(invoiceDto, null, null);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 

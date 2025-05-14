@@ -9,12 +9,15 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateAntiToIncomeCommand> {
 
@@ -25,25 +28,24 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     private final IManageInvoiceService manageInvoiceService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
-
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
-
     private final IManageAttachmentService attachmentService;
-
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     public CreateAntiToIncomeCommandHandler(IManageAgencyService agencyService,
-            IManageHotelService hotelService,
-            IManageInvoiceTypeService invoiceTypeService,
-            IManageInvoiceStatusService invoiceStatusService,
-            IManageInvoiceService manageInvoiceService,
-            IManageAttachmentTypeService attachmentTypeService,
-            IManageResourceTypeService resourceTypeService,
-            IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            IManageAttachmentService attachmentService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageEmployeeService employeeService) {
+                                            IManageHotelService hotelService,
+                                            IManageInvoiceTypeService invoiceTypeService,
+                                            IManageInvoiceStatusService invoiceStatusService,
+                                            IManageInvoiceService manageInvoiceService,
+                                            IManageAttachmentTypeService attachmentTypeService,
+                                            IManageResourceTypeService resourceTypeService,
+                                            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                            IManageAttachmentService attachmentService,
+                                            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                            IManageEmployeeService employeeService,
+                                            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -55,6 +57,7 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
@@ -96,6 +99,12 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             List<ManageAttachmentDto> attachmentDtoList = this.attachments(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
+        }
+
+        try {
+            this.producerReplicateManageInvoiceService.create(invoiceDto, null, null);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 
