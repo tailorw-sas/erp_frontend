@@ -100,7 +100,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         Invoice entity = new Invoice(dto);
         entity.setInvoiceDate(LocalDateTime.of(dto.getInvoiceDate().toLocalDate(), LocalTime.now()));
         if (dto.getHotel().isVirtual() && dto.getInvoiceType().equals(EInvoiceType.INVOICE)) {
-            this.repositoryCommand.saveAndFlush(entity);
+            entity = this.repositoryCommand.saveAndFlush(entity);
             String invoiceNumber = dto.getInvoiceNumber() + "-" + dto.getHotelInvoiceNumber();
             entity.setInvoiceNumber(invoiceNumber);
             entity.setInvoiceNo(dto.getHotelInvoiceNumber());
