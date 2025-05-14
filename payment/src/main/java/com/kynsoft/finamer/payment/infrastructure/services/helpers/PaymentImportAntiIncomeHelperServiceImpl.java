@@ -293,7 +293,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     public void applyPayment(ManageEmployeeDto employeeDto, List<DetailAndIncomeHelper> incomes, List<UUID> incoList) {
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(5);
         } catch (Exception e) {
         }
         List<Invoice> invoices = this.repositoryInvoiceReadDataJPARepository.findByIdIn(incoList);
