@@ -118,13 +118,13 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
     }
 
     @Override
-    public Long findByHotelId(UUID hotelId) {
+    public Long countByHotelId(UUID hotelId) {
         return this.repositoryQuery.findByHotelId(hotelId);
     }
 
 
     @Override
-    public List<PaymentCloseOperationDto> findByHotelIds(List<UUID> hotelIds) {
+    public List<PaymentCloseOperationDto> findByHotelId(List<UUID> hotelIds) {
         return this.repositoryQuery.findByHotelIds(hotelIds)
                 .stream()
                 .map(PaymentCloseOperation::toAggregate)
@@ -132,7 +132,7 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
     }
 
     @Override
-    public PaymentCloseOperationDto findByHotelIds(UUID hotel) {
+    public PaymentCloseOperationDto findByHotelId(UUID hotel) {
         Optional<PaymentCloseOperation> object = this.repositoryQuery.findByHotelIds(hotel);
         if (object.isPresent()) {
             return object.get().toAggregate();

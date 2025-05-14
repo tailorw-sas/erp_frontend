@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface IManageBookingService {
 
-    UUID create(ManageBookingDto dto);
+    ManageBookingDto create(ManageBookingDto dto);
 
     void update(ManageBookingDto dto);
 
@@ -43,4 +43,6 @@ public interface IManageBookingService {
     boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId);
 
     ManageBookingDto findBookingId(Long bookingId);
+
+    void updateAll(List<ManageBookingDto> bookingList);
 }

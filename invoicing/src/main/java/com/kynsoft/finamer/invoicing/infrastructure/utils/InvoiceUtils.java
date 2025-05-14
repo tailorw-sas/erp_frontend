@@ -49,30 +49,9 @@ public class InvoiceUtils {
         return null;
     }
 
-    public static ManageInvoiceDto calculateInvoiceAging(ManageInvoiceDto manageInvoiceDto) {
-        LocalDate dueDate = manageInvoiceDto.getDueDate();
-        LocalDate serverDate = LocalDate.now();
-        if (Objects.isNull(dueDate) || serverDate.isEqual(dueDate) || dueDate.isAfter(serverDate)) {
-            manageInvoiceDto.setAging(0);
-        } else {
-            long dayBetween = ChronoUnit.DAYS.between(dueDate, serverDate);
-
-            if (dayBetween <= 30) {
-                manageInvoiceDto.setAging(30);
-            } else if (dayBetween > 31 && dayBetween <= 60) {
-                manageInvoiceDto.setAging(60);
-            } else if (dayBetween > 61 && dayBetween <= 90) {
-                manageInvoiceDto.setAging(90);
-            } else {
-                manageInvoiceDto.setAging(120);
-            }
-        }
-        return manageInvoiceDto;
-    }
-
     public static ManageInvoiceDto establishDueDate(ManageInvoiceDto manageInvoiceDto) {
         if (!manageInvoiceDto.getManageInvoiceStatus().isSentStatus()) {
-            LocalDateTime transactionDate = manageInvoiceDto.getInvoiceDate();
+        LocalDateTime transactionDate = manageInvoiceDto.getInvoiceDate();
             int creditDay = manageInvoiceDto.getAgency().getCreditDay();
             transactionDate = transactionDate.plusDays(creditDay);
             manageInvoiceDto.setDueDate(transactionDate.toLocalDate());

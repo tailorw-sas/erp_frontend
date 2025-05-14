@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface IPaymentService {
     PaymentDto create(PaymentDto dto);
 
+    void createAll(List<PaymentDto> payments);
+
     void update(PaymentDto dto);
 
     void delete(PaymentDto dto);

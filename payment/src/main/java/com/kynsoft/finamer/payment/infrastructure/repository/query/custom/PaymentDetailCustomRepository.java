@@ -1,8 +1,6 @@
-package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
+package com.kynsoft.finamer.payment.infrastructure.repository.query.custom;
 
-import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
-import com.kynsoft.finamer.payment.infrastructure.identity.projection.PaymentSearchProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,9 +17,13 @@ public interface PaymentDetailCustomRepository {
 
     List<PaymentDetail> findAllByPaymentIdCustom(UUID id);
 
+    List<PaymentDetail> findChildrenWithDetailsByParentId(UUID parentId);
+
     List<PaymentDetail> findChildrensByParentId(Long parentId);
 
     List<PaymentDetail> findAllByPaymentGenIdIn(List<Long> genIds);
 
     Page<PaymentDetail> findAllCustom(Specification<PaymentDetail> specification, Pageable pageable);
+
+    List<PaymentDetail> findAllByPaymentGenIdInCustom(List<Long> paymentGenIds);
 }

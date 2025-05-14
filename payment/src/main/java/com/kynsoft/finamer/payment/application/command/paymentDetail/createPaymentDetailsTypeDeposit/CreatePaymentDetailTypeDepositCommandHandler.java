@@ -63,7 +63,7 @@ public class CreatePaymentDetailTypeDepositCommandHandler implements ICommandHan
     }
 
     private OffsetDateTime transactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));

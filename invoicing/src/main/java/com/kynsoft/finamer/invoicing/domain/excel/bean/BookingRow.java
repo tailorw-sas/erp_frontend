@@ -3,7 +3,6 @@ package com.kynsoft.finamer.invoicing.domain.excel.bean;
 import com.kynsof.share.core.application.excel.CustomCellType;
 import com.kynsof.share.core.application.excel.annotation.Cell;
 import com.kynsof.share.utils.BankerRounding;
-import com.kynsof.share.utils.ScaleAmount;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.excel.util.DateUtil;
 import lombok.Data;

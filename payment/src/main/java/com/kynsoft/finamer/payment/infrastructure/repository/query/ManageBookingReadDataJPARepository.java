@@ -5,7 +5,7 @@ import com.kynsoft.finamer.payment.domain.dto.projection.booking.BookingProjecti
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import java.util.List;
 
-import com.kynsoft.finamer.payment.infrastructure.repository.query.payments.ManageBookingCustomRepository;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.custom.ManageBookingCustomRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

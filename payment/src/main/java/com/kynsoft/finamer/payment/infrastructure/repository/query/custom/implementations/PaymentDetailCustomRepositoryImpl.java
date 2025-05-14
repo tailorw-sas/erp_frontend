@@ -1,10 +1,11 @@
-package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
+package com.kynsoft.finamer.payment.infrastructure.repository.query.custom.implementations;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.infrastructure.identity.*;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.custom.PaymentDetailCustomRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -25,7 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
-public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRepository{
+public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRepository {
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -86,7 +87,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         Tuple tuple = entityManager.createQuery(query).getSingleResult();
 
         PaymentDetail paymentDetail = this.convertTupleToEntity(tuple);
-        List<PaymentDetail> childrens = findChildrensByParentId(paymentDetail.getPaymentDetailId());
+        List<PaymentDetail> childrens = findChildrenWithDetailsByParentId(paymentDetail.getId());
         if(Objects.nonNull(childrens) && !childrens.isEmpty()){
             paymentDetail.setPaymentDetails(childrens);
         }
@@ -150,7 +151,7 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         Tuple tuple = entityManager.createQuery(query).getSingleResult();
 
         PaymentDetail paymentDetail = this.convertTupleToEntity(tuple);
-        List<PaymentDetail> childrens = findChildrensByParentId(paymentDetail.getPaymentDetailId());
+        List<PaymentDetail> childrens = findChildrenWithDetailsByParentId(paymentDetail.getId());
         if(Objects.nonNull(childrens) && !childrens.isEmpty()){
             paymentDetail.setPaymentDetails(childrens);
         }
@@ -279,6 +280,70 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
 
         return results;
     }
+
+    public List<PaymentDetail> findChildrenWithDetailsByParentId(UUID parentId) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<PaymentDetail> parent = query.from(PaymentDetail.class);
+        Join<PaymentDetail, PaymentDetail> children = parent.join("paymentDetails", JoinType.INNER);
+
+        // Joins sobre el hijo
+        Join<PaymentDetail, Payment> paymentJoin = children.join("payment", JoinType.LEFT);
+        Join<PaymentDetail, ManagePaymentTransactionType> transactionTypeJoin = children.join("transactionType", JoinType.LEFT);
+        Join<PaymentDetail, Booking> bookingJoin = children.join("manageBooking", JoinType.LEFT);
+
+        Join<Payment, ManagePaymentSource> paymentManagePaymentSourceJoin = paymentJoin.join("paymentSource", JoinType.LEFT);
+        Join<Payment, ManagePaymentStatus> paymentManagePaymentStatusJoin = paymentJoin.join("paymentStatus", JoinType.LEFT);
+        Join<Payment, ManageClient> paymentManageClientJoin = paymentJoin.join("client", JoinType.LEFT);
+        Join<Payment, ManageAgency> paymentManageAgencyJoin = paymentJoin.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> paymentManageAgencyManageAgencyType = paymentManageAgencyJoin.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> paymentManageAgencyManageClient = paymentManageAgencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> paymentManageAgencyManageCountry = paymentManageAgencyJoin.join("country", JoinType.LEFT);
+        Join<Payment, ManageHotel> paymentManageHotelJoin = paymentJoin.join("hotel", JoinType.LEFT);
+        Join<Payment, Invoice> paymentInvoiceJoin = paymentJoin.join("invoice", JoinType.LEFT);
+        Join<Invoice, ManageHotel> paymentInvoiceManageHotelJoin = paymentInvoiceJoin.join("hotel", JoinType.LEFT);
+        Join<Invoice, ManageAgency> paymentInvoiceManageAgencyJoin = paymentInvoiceJoin.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> paymentInvoiceManageAgencyManageAgencyType = paymentInvoiceManageAgencyJoin.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> paymentInvoiceManageAgencyManageClient = paymentInvoiceManageAgencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> paymentInvoiceManageAgencyManageCountry = paymentInvoiceManageAgencyJoin.join("country", JoinType.LEFT);
+        Join<Payment, ManageBankAccount> paymentManageBankAccountJoin = paymentJoin.join("bankAccount", JoinType.LEFT);
+        Join<Payment, ManagePaymentAttachmentStatus> paymentManagePaymentAttachmentStatusJoin = paymentJoin.join("attachmentStatus", JoinType.LEFT);
+        Join<Booking, Invoice> bookingInvoiceJoin = bookingJoin.join("invoice", JoinType.LEFT);
+
+        query.where(cb.equal(parent.get("id"), parentId));
+
+        List<Selection<?>> selections = getChildrensPaymentDetailSelections(
+                children,
+                paymentJoin,
+                transactionTypeJoin,
+                bookingJoin,
+                paymentManagePaymentSourceJoin,
+                paymentManagePaymentStatusJoin,
+                paymentManageClientJoin,
+                paymentManageAgencyJoin,
+                paymentManageAgencyManageAgencyType,
+                paymentManageAgencyManageClient,
+                paymentManageAgencyManageCountry,
+                paymentManageHotelJoin,
+                paymentInvoiceJoin,
+                paymentInvoiceManageHotelJoin,
+                paymentInvoiceManageAgencyJoin,
+                paymentInvoiceManageAgencyManageAgencyType,
+                paymentInvoiceManageAgencyManageClient,
+                paymentInvoiceManageAgencyManageCountry,
+                paymentManageBankAccountJoin,
+                paymentManagePaymentAttachmentStatusJoin,
+                bookingInvoiceJoin
+        );
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        List<Tuple> tuples = entityManager.createQuery(query).getResultList();
+
+        return tuples.stream().map(this::convertTupleToEntity).collect(Collectors.toList());
+    }
+
 
     @Override
     public List<PaymentDetail> findAllByPaymentGenIdIn(List<Long> genIds) {
@@ -419,6 +484,67 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         long total = entityManager.createQuery(countQuery).getSingleResult();
 
         return new PageImpl<>(results, pageable, total);
+    }
+
+    @Override
+    public List<PaymentDetail> findAllByPaymentGenIdInCustom(List<Long> paymentGenIds) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<PaymentDetail> root = query.from(PaymentDetail.class);
+        Join<PaymentDetail, Payment> paymentJoin = root.join("payment", JoinType.LEFT);
+        Join<PaymentDetail, ManagePaymentTransactionType> transactionTypeJoin = root.join("transactionType", JoinType.LEFT);
+        Join<PaymentDetail, Booking> bookingJoin = root.join("manageBooking", JoinType.LEFT);
+        Join<Payment, ManagePaymentSource> paymentManagePaymentSourceJoin = paymentJoin.join("paymentSource", JoinType.LEFT);
+        Join<Payment, ManagePaymentStatus> paymentManagePaymentStatusJoin = paymentJoin.join("paymentStatus", JoinType.LEFT);
+        Join<Payment, ManageClient> paymentManageClientJoin = paymentJoin.join("client", JoinType.LEFT);
+        Join<Payment, ManageAgency> paymentManageAgencyJoin = paymentJoin.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> paymentManageAgencyManageAgencyType = paymentManageAgencyJoin.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> paymentManageAgencyManageClient = paymentManageAgencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> paymentManageAgencyManageCountry = paymentManageAgencyJoin.join("country", JoinType.LEFT);
+        Join<Payment, ManageHotel> paymentManageHotelJoin = paymentJoin.join("hotel", JoinType.LEFT);
+        Join<Payment, Invoice> paymentInvoiceJoin = paymentJoin.join("invoice", JoinType.LEFT);
+        Join<Invoice, ManageHotel> paymentInvoiceManageHotelJoin = paymentInvoiceJoin.join("hotel", JoinType.LEFT);
+        Join<Invoice, ManageAgency> paymentInvoiceManageAgencyJoin = paymentInvoiceJoin.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> paymentInvoiceManageAgencyManageAgencyType = paymentInvoiceManageAgencyJoin.join("agencyType", JoinType.LEFT);
+        Join<ManageAgency, ManageClient> paymentInvoiceManageAgencyManageClient = paymentInvoiceManageAgencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> paymentInvoiceManageAgencyManageCountry = paymentInvoiceManageAgencyJoin.join("country", JoinType.LEFT);
+        Join<Payment, ManageBankAccount> paymentManageBankAccountJoin = paymentJoin.join("bankAccount", JoinType.LEFT);
+        Join<Payment, ManagePaymentAttachmentStatus> paymentManagePaymentAttachmentStatusJoin = paymentJoin.join("attachmentStatus", JoinType.LEFT);
+        Join<Booking, Invoice> bookingInvoiceJoin = bookingJoin.join("invoice", JoinType.LEFT);
+
+        query.where(paymentJoin.get("paymentId").in(paymentGenIds));
+
+        List<Selection<?>> selections = getPaymentDetailSelections(root,
+                paymentJoin,
+                transactionTypeJoin,
+                bookingJoin,
+                paymentManagePaymentSourceJoin,
+                paymentManagePaymentStatusJoin,
+                paymentManageClientJoin,
+                paymentManageAgencyJoin,
+                paymentManageAgencyManageAgencyType,
+                paymentManageAgencyManageClient,
+                paymentManageAgencyManageCountry,
+                paymentManageHotelJoin,
+                paymentInvoiceJoin,
+                paymentInvoiceManageHotelJoin,
+                paymentInvoiceManageAgencyJoin,
+                paymentInvoiceManageAgencyManageAgencyType,
+                paymentInvoiceManageAgencyManageClient,
+                paymentInvoiceManageAgencyManageCountry,
+                paymentManageBankAccountJoin,
+                paymentManagePaymentAttachmentStatusJoin,
+                bookingInvoiceJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        List<Tuple> tuples = entityManager.createQuery(query).getResultList();
+
+        List<PaymentDetail> results = tuples.stream()
+                .map(this::convertTupleToEntity).collect(Collectors.toList());
+
+        return results;
     }
 
     private List<Selection<?>> getPaymentDetailSelections(Root<PaymentDetail> root,
@@ -693,6 +819,282 @@ public class PaymentDetailCustomRepositoryImpl implements PaymentDetailCustomRep
         selections.add(root.get("applyPayment"));
         selections.add(root.get("appliedAt"));
         selections.add(root.get("effectiveDate"));
+
+        return selections;
+    }
+
+    private List<Selection<?>> getChildrensPaymentDetailSelections(Join<PaymentDetail, PaymentDetail> children,
+                                                          Join<PaymentDetail, Payment> paymentJoin,
+                                                          Join<PaymentDetail, ManagePaymentTransactionType> transactionTypeJoin,
+                                                          Join<PaymentDetail, Booking> bookingJoin,
+                                                          Join<Payment, ManagePaymentSource> paymentManagePaymentSourceJoin,
+                                                          Join<Payment, ManagePaymentStatus> paymentManagePaymentStatusJoin,
+                                                          Join<Payment, ManageClient> paymentManageClientJoin,
+                                                          Join<Payment, ManageAgency> paymentManageAgencyJoin,
+                                                          Join<ManageAgency, ManageAgencyType> paymentManageAgencyManageAgencyType,
+                                                          Join<ManageAgency, ManageClient> paymentManageAgencyManageClient,
+                                                          Join<ManageAgency, ManageCountry> paymentManageAgencyManageCountry,
+                                                          Join<Payment, ManageHotel> paymentManageHotelJoin,
+                                                          Join<Payment, Invoice> paymentInvoiceJoin,
+                                                          Join<Invoice, ManageHotel> paymentInvoiceManageHotelJoin,
+                                                          Join<Invoice, ManageAgency> paymentInvoiceManageAgencyJoin,
+                                                          Join<ManageAgency, ManageAgencyType> paymentInvoiceManageAgencyManageAgencyType,
+                                                          Join<ManageAgency, ManageClient> paymentInvoiceManageAgencyManageClient,
+                                                          Join<ManageAgency, ManageCountry> paymentInvoiceManageAgencyManageCountry,
+                                                          Join<Payment, ManageBankAccount> paymentManageBankAccountJoin,
+                                                          Join<Payment, ManagePaymentAttachmentStatus> paymentManagePaymentAttachmentStatusJoin,
+                                                          Join<Booking, Invoice> bookingInvoiceJoin){
+        List<Selection<?>> selections = new ArrayList<>();
+        selections.add(children.get("id"));
+        selections.add(children.get("status"));
+        selections.add(children.get("paymentDetailId"));
+        selections.add(children.get("parentId"));
+
+        //Payment
+        selections.add(paymentJoin.get("id"));
+        selections.add(paymentJoin.get("paymentId"));
+        selections.add(paymentJoin.get("status"));
+        selections.add(paymentJoin.get("eAttachment"));
+
+        // Payment - Payment Source
+        selections.add(paymentManagePaymentSourceJoin.get("id"));
+        selections.add(paymentManagePaymentSourceJoin.get("code"));
+        selections.add(paymentManagePaymentSourceJoin.get("name"));
+        selections.add(paymentManagePaymentSourceJoin.get("status"));
+        selections.add(paymentManagePaymentSourceJoin.get("expense"));
+        selections.add(paymentManagePaymentSourceJoin.get("isBank"));
+
+        selections.add(paymentJoin.get("reference"));
+        selections.add(paymentJoin.get("transactionDate"));
+        selections.add(paymentJoin.get("dateTime"));
+
+        // Payment - Payment Status
+        selections.add(paymentManagePaymentStatusJoin.get("id"));
+        selections.add(paymentManagePaymentStatusJoin.get("code"));
+        selections.add(paymentManagePaymentStatusJoin.get("name"));
+        selections.add(paymentManagePaymentStatusJoin.get("status"));
+        selections.add(paymentManagePaymentStatusJoin.get("applied"));
+        selections.add(paymentManagePaymentStatusJoin.get("confirmed"));
+        selections.add(paymentManagePaymentStatusJoin.get("cancelled"));
+        selections.add(paymentManagePaymentStatusJoin.get("transit"));
+
+        // Payment - Payment Client
+        selections.add(paymentManageClientJoin.get("id"));
+        selections.add(paymentManageClientJoin.get("code"));
+        selections.add(paymentManageClientJoin.get("name"));
+        selections.add(paymentManageClientJoin.get("status"));
+
+        // Payment - Payment Agency
+        selections.add(paymentManageAgencyJoin.get("id"));
+        selections.add(paymentManageAgencyJoin.get("code"));
+        selections.add(paymentManageAgencyJoin.get("name"));
+        selections.add(paymentManageAgencyJoin.get("status"));
+
+        // Payment - Payment Agency - Agency Type
+        selections.add(paymentManageAgencyManageAgencyType.get("id"));
+        selections.add(paymentManageAgencyManageAgencyType.get("code"));
+        selections.add(paymentManageAgencyManageAgencyType.get("status"));
+        selections.add(paymentManageAgencyManageAgencyType.get("name"));
+
+        // Payment - Payment Agency - Client
+        selections.add(paymentManageAgencyManageClient.get("id"));
+        selections.add(paymentManageAgencyManageClient.get("code"));
+        selections.add(paymentManageAgencyManageClient.get("name"));
+        selections.add(paymentManageAgencyManageClient.get("status"));
+
+        // Payment - Payment Agency - Country
+        selections.add(paymentManageAgencyManageCountry.get("id"));
+        selections.add(paymentManageAgencyManageCountry.get("code"));
+        selections.add(paymentManageAgencyManageCountry.get("name"));
+        selections.add(paymentManageAgencyManageCountry.get("description"));
+        selections.add(paymentManageAgencyManageCountry.get("isDefault"));
+        selections.add(paymentManageAgencyManageCountry.get("status"));
+        selections.add(paymentManageAgencyManageCountry.get("createdAt"));
+        selections.add(paymentManageAgencyManageCountry.get("updateAt"));
+        selections.add(paymentManageAgencyManageCountry.get("deleteAt"));
+        selections.add(paymentManageAgencyManageCountry.get("iso3"));
+
+        selections.add(paymentManageAgencyJoin.get("createdAt"));
+        selections.add(paymentManageAgencyJoin.get("updatedAt"));
+
+        // Payment - Payment Hotel
+        selections.add(paymentManageHotelJoin.get("id"));
+        selections.add(paymentManageHotelJoin.get("code"));
+        selections.add(paymentManageHotelJoin.get("deleted"));
+        selections.add(paymentManageHotelJoin.get("name"));
+        selections.add(paymentManageHotelJoin.get("status"));
+        selections.add(paymentManageHotelJoin.get("applyByTradingCompany"));
+        selections.add(paymentManageHotelJoin.get("manageTradingCompany"));
+        selections.add(paymentManageHotelJoin.get("autoApplyCredit"));
+        selections.add(paymentManageHotelJoin.get("createdAt"));
+        selections.add(paymentManageHotelJoin.get("updatedAt"));
+        selections.add(paymentManageHotelJoin.get("deletedAt"));
+
+        //Payment - Payment - Invoice
+        selections.add(paymentInvoiceJoin.get("id"));
+        selections.add(paymentInvoiceJoin.get("invoiceId"));
+        selections.add(paymentInvoiceJoin.get("invoiceNo"));
+        selections.add(paymentInvoiceJoin.get("invoiceNumber"));
+        selections.add(paymentInvoiceJoin.get("invoiceAmount"));
+        selections.add(paymentInvoiceJoin.get("invoiceDate"));
+        selections.add(paymentInvoiceJoin.get("hasAttachment"));
+        selections.add(paymentInvoiceJoin.get("invoiceType"));
+
+        //Payment - Payment - Invoice Hotel
+        selections.add(paymentInvoiceManageHotelJoin.get("id"));
+        selections.add(paymentInvoiceManageHotelJoin.get("code"));
+        selections.add(paymentInvoiceManageHotelJoin.get("deleted"));
+        selections.add(paymentInvoiceManageHotelJoin.get("name"));
+        selections.add(paymentInvoiceManageHotelJoin.get("status"));
+        selections.add(paymentInvoiceManageHotelJoin.get("applyByTradingCompany"));
+        selections.add(paymentInvoiceManageHotelJoin.get("manageTradingCompany"));
+        selections.add(paymentInvoiceManageHotelJoin.get("autoApplyCredit"));
+        selections.add(paymentInvoiceManageHotelJoin.get("createdAt"));
+        selections.add(paymentInvoiceManageHotelJoin.get("updatedAt"));
+        selections.add(paymentInvoiceManageHotelJoin.get("deletedAt"));
+
+        //Payment - Payment - Invoice Agency
+        selections.add(paymentInvoiceManageAgencyJoin.get("id"));
+        selections.add(paymentInvoiceManageAgencyJoin.get("code"));
+        selections.add(paymentInvoiceManageAgencyJoin.get("name"));
+        selections.add(paymentInvoiceManageAgencyJoin.get("status"));
+
+        //Payment - Payment - Invoice Agency Type
+        selections.add(paymentInvoiceManageAgencyManageAgencyType.get("id"));
+        selections.add(paymentInvoiceManageAgencyManageAgencyType.get("code"));
+        selections.add(paymentInvoiceManageAgencyManageAgencyType.get("status"));
+        selections.add(paymentInvoiceManageAgencyManageAgencyType.get("name"));
+
+        // Payment - Payment Agency - Client
+        selections.add(paymentInvoiceManageAgencyManageClient.get("id"));
+        selections.add(paymentInvoiceManageAgencyManageClient.get("code"));
+        selections.add(paymentInvoiceManageAgencyManageClient.get("name"));
+        selections.add(paymentInvoiceManageAgencyManageClient.get("status"));
+
+        // Payment - Payment Agency - Country
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("id"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("code"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("name"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("description"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("isDefault"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("status"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("createdAt"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("updateAt"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("deleteAt"));
+        selections.add(paymentInvoiceManageAgencyManageCountry.get("iso3"));
+
+        selections.add(paymentInvoiceManageAgencyJoin.get("createdAt"));
+        selections.add(paymentInvoiceManageAgencyJoin.get("updatedAt"));
+
+        //Payment - resto
+        selections.add(paymentInvoiceJoin.get("autoRec"));
+
+        // Payment - Payment Bank Account
+        selections.add(paymentManageBankAccountJoin.get("id"));
+        selections.add(paymentManageBankAccountJoin.get("accountNumber"));
+        selections.add(paymentManageBankAccountJoin.get("status"));
+        selections.add(paymentManageBankAccountJoin.get("nameOfBank"));
+
+        // Payment - Payment Attachement Status
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("id"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("code"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("name"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("status"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("defaults"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("nonNone"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("patWithAttachment"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("pwaWithOutAttachment"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("supported"));
+        selections.add(paymentManagePaymentAttachmentStatusJoin.get("otherSupport"));
+
+        //Payment
+        selections.add(paymentJoin.get("paymentAmount"));
+        selections.add(paymentJoin.get("paymentBalance"));
+        selections.add(paymentJoin.get("depositAmount"));
+        selections.add(paymentJoin.get("depositBalance"));
+        selections.add(paymentJoin.get("otherDeductions"));
+        selections.add(paymentJoin.get("identified"));
+        selections.add(paymentJoin.get("notIdentified"));
+        selections.add(paymentJoin.get("notApplied"));
+        selections.add(paymentJoin.get("applied"));
+        selections.add(paymentJoin.get("remark"));
+        selections.add(paymentJoin.get("applyPayment"));
+        selections.add(paymentJoin.get("hasAttachment"));
+        selections.add(paymentJoin.get("hasDetailTypeDeposit"));
+        selections.add(paymentJoin.get("paymentSupport"));
+        selections.add(paymentJoin.get("createByCredit"));
+        selections.add(paymentJoin.get("createdAt"));
+        selections.add(paymentJoin.get("updatedAt"));
+        selections.add(paymentJoin.get("importType"));
+
+        //ManagePaymentTransactionType
+        selections.add(transactionTypeJoin.get("id"));
+        selections.add(transactionTypeJoin.get("code"));
+        selections.add(transactionTypeJoin.get("name"));
+        selections.add(transactionTypeJoin.get("status"));
+        selections.add(transactionTypeJoin.get("cash"));
+        selections.add(transactionTypeJoin.get("deposit"));
+        selections.add(transactionTypeJoin.get("applyDeposit"));
+        selections.add(transactionTypeJoin.get("remarkRequired"));
+        selections.add(transactionTypeJoin.get("minNumberOfCharacter"));
+        selections.add(transactionTypeJoin.get("defaultRemark"));
+        selections.add(transactionTypeJoin.get("defaults"));
+        selections.add(transactionTypeJoin.get("paymentInvoice"));
+        selections.add(transactionTypeJoin.get("debit"));
+        selections.add(transactionTypeJoin.get("expenseToBooking"));
+        selections.add(transactionTypeJoin.get("negative"));
+
+        //Booking
+        selections.add(bookingJoin.get("id"));
+        selections.add(bookingJoin.get("bookingId"));
+        selections.add(bookingJoin.get("reservationNumber"));
+        selections.add(bookingJoin.get("checkIn"));
+        selections.add(bookingJoin.get("checkOut"));
+        selections.add(bookingJoin.get("fullName"));
+        selections.add(bookingJoin.get("firstName"));
+        selections.add(bookingJoin.get("lastName"));
+        selections.add(bookingJoin.get("invoiceAmount"));
+        selections.add(bookingJoin.get("amountBalance"));
+        selections.add(bookingJoin.get("couponNumber"));
+        selections.add(bookingJoin.get("adults"));
+        selections.add(bookingJoin.get("children"));
+
+        //Booking - Invoice
+        selections.add(bookingInvoiceJoin.get("id"));
+        selections.add(bookingInvoiceJoin.get("invoiceId"));
+        selections.add(bookingInvoiceJoin.get("invoiceNo"));
+        selections.add(bookingInvoiceJoin.get("invoiceNumber"));
+        selections.add(bookingInvoiceJoin.get("invoiceAmount"));
+        selections.add(bookingInvoiceJoin.get("invoiceDate"));
+        selections.add(bookingInvoiceJoin.get("hasAttachment"));
+        selections.add(bookingInvoiceJoin.get("invoiceType"));
+        selections.add(bookingInvoiceJoin.get("autoRec"));
+
+        //Booking - resto
+        selections.add(bookingJoin.get("bookingDate"));
+
+        selections.add(children.get("reverseFrom"));
+        selections.add(children.get("reverseFromParentId"));
+        selections.add(children.get("amount"));
+        selections.add(children.get("applyDepositValue"));
+        selections.add(children.get("remark"));
+        selections.add(children.get("reverseTransaction"));
+        selections.add(children.get("canceledTransaction"));
+        selections.add(children.get("createByCredit"));
+        selections.add(children.get("bookingId"));
+        selections.add(children.get("invoiceId"));
+        selections.add(children.get("transactionDate"));
+        selections.add(children.get("firstName"));
+        selections.add(children.get("lastName"));
+        selections.add(children.get("reservation"));
+        selections.add(children.get("couponNo"));
+        selections.add(children.get("adults"));
+        selections.add(children.get("children"));
+        selections.add(children.get("createdAt"));
+        selections.add(children.get("updatedAt"));
+        selections.add(children.get("applyPayment"));
+        selections.add(children.get("appliedAt"));
+        selections.add(children.get("effectiveDate"));
 
         return selections;
     }
