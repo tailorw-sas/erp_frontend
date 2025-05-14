@@ -30,4 +30,6 @@ public interface IManageAttachmentTypeService {
     AttachmentTypeDto getByDefault();
 
     AttachmentTypeDto getByAntiToIncomeImport();
+
+    List<AttachmentTypeDto> findAllById(List<UUID> ids);
 }

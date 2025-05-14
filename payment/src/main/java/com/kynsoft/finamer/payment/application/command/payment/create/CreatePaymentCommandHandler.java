@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.application.command.manageEmployee.create.CreateManageEmployeeCommand;
 import com.kynsoft.finamer.payment.application.query.http.setting.manageEmployee.ManageEmployeeRequest;
 import com.kynsoft.finamer.payment.application.query.http.setting.manageEmployee.ManageEmployeeResponse;
+import com.kynsoft.finamer.payment.application.services.payment.create.CreatePaymentService;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
@@ -49,6 +50,10 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
 
     private final ManageEmployeeHttpService employeeHttpService;
 
+
+    //Nueva version de Create Payment
+    private final CreatePaymentService createPaymentService;
+
     public CreatePaymentCommandHandler(IManagePaymentSourceService sourceService,
             IManagePaymentStatusService statusService,
             IManageClientService clientService,
@@ -64,7 +69,9 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
             IManageEmployeeService manageEmployeeService,
             IPaymentStatusHistoryService paymentAttachmentStatusHistoryService,
             IMasterPaymentAttachmentService masterPaymentAttachmentService,
-            ManageEmployeeHttpService employeeHttpService) {
+            ManageEmployeeHttpService employeeHttpService,
+//Nueva version de Create Payment
+                                       CreatePaymentService createPaymentService) {
         this.sourceService = sourceService;
         this.statusService = statusService;
         this.clientService = clientService;
@@ -81,8 +88,12 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         this.paymentAttachmentStatusHistoryService = paymentAttachmentStatusHistoryService;
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
         this.employeeHttpService = employeeHttpService;
+
+        //Nueva version de Create Payment
+        this.createPaymentService = createPaymentService;
     }
 
+    /*
     @Override
     @Transactional
     public void handle(CreatePaymentCommand command) {
@@ -272,5 +283,24 @@ public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymen
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
 
     }
+    */
 
+    @Override
+    public void handle(CreatePaymentCommand command){
+        PaymentDto paymentDto = this.createPaymentService.create(command.getPaymentSource(),
+                command.getPaymentStatus(),
+                command.getHotel(),
+                command.getClient(),
+                command.getAgency(),
+                command.isIgnoreBankAccount(),
+                command.getBankAccount(),
+                command.getPaymentAmount(),
+                command.getRemark(),
+                command.getReference(),
+                command.getEmployee(),
+                command.getAttachments()
+                );
+
+        command.setPayment(paymentDto);
+    }
 }

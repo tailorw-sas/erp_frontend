@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface IAttachmentStatusHistoryService {
     UUID create(AttachmentStatusHistoryDto dto);
 
+    void create(List<AttachmentStatusHistoryDto> dtoList);
+
     void update(AttachmentStatusHistoryDto dto);
 
     void delete(AttachmentStatusHistoryDto dto);

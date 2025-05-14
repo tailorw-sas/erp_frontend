@@ -6,6 +6,7 @@ import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPaymen
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashMessage;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
+import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.core.payment.ProcessCreatePayment;
 import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
@@ -13,6 +14,7 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.*;
+import org.springframework.stereotype.Service;
 
 import java.time.*;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@Service
 public class CreatePaymentFromCreditService {
 
     private final IManageHotelService hotelService;
@@ -32,6 +35,7 @@ public class CreatePaymentFromCreditService {
     private final IManagePaymentAttachmentStatusService attachmentStatusService;
     private final IPaymentCloseOperationService paymentCloseOperationService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService;
 
     public CreatePaymentFromCreditService(IManageHotelService hotelService,
                                           IManageBankAccountService manageBankAccountService,
@@ -42,7 +46,8 @@ public class CreatePaymentFromCreditService {
                                           IManageEmployeeService manageEmployeeService,
                                           IManagePaymentAttachmentStatusService attachmentStatusService,
                                           IPaymentCloseOperationService paymentCloseOperationService,
-                                          IManagePaymentTransactionTypeService paymentTransactionTypeService){
+                                          IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                          IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService){
         this.hotelService = hotelService;
         this.manageBankAccountService = manageBankAccountService;
         this.sourceService = sourceService;
@@ -53,6 +58,7 @@ public class CreatePaymentFromCreditService {
         this.attachmentStatusService = attachmentStatusService;
         this.paymentCloseOperationService = paymentCloseOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.managePaymentAttachmentStatusService = managePaymentAttachmentStatusService;
     }
 
     public PaymentDto createPayment(UUID hotelId,
@@ -70,7 +76,8 @@ public class CreatePaymentFromCreditService {
         ManageEmployeeDto employee = this.getEmployee(employeeId);
         //El credit en su process debe de tener al menos attachemt de tipo support
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.getSupportedPaymentAttachementStatus();
-        OffsetDateTime transactionDate = this.getTransactionDate(hotelDto.getId());
+        PaymentCloseOperationDto closeOperationDto = this.getCloseOperacion(hotelDto.getId());
+        OffsetDateTime transactionDate = this.getTransactionDate(closeOperationDto);
         ManagePaymentTransactionTypeDto cashPaymentTransactionType = this.getCashPaymentTransactionType();
         List<PaymentStatusHistoryDto> paymentStatusHistoryList = new ArrayList<>();
         List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
@@ -87,7 +94,8 @@ public class CreatePaymentFromCreditService {
                 employee,
                 cashPaymentTransactionType,
                 paymentStatusHistoryList,
-                paymentDetailsToCreate);
+                paymentDetailsToCreate,
+                closeOperationDto);
 
         //this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command, employee);
 
@@ -107,11 +115,15 @@ public class CreatePaymentFromCreditService {
                                                ManageEmployeeDto employee,
                                                ManagePaymentTransactionTypeDto cashPaymentTransactionType,
                                                List<PaymentStatusHistoryDto> paymentStatusHistoryDtoList,
-                                               List<PaymentDetailDto> paymentDetailDtoList) {
+                                               List<PaymentDetailDto> paymentDetailDtoList,
+                                               PaymentCloseOperationDto closeOperationDto) {
 
         Double paymentAmount = invoiceDto.getInvoiceAmount();
         String remark = this.getRemark(invoiceDto);
-
+        String reference = "";
+        List<CreateAttachment> createAttachmentList = new ArrayList<>();
+        ManagePaymentAttachmentStatusDto attachmentStatusSupport = this.managePaymentAttachmentStatusService.findBySupported();
+        ManagePaymentAttachmentStatusDto attachmentOtherSupport = this.managePaymentAttachmentStatusService.findByOtherSupported();
         //AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
         //ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(attachment.getResourceType());
 
@@ -125,6 +137,13 @@ public class CreatePaymentFromCreditService {
                 attachmentStatusDto,
                 paymentAmount,
                 remark,
+                reference,
+                bankAccountDto == null,
+                employee,
+                closeOperationDto,
+                createAttachmentList,
+                attachmentStatusSupport,
+                attachmentOtherSupport
                 );
         PaymentDto paymentDto = processCreatePayment.create();
 //this.masterPaymentAttachmentService.create(dtos);
@@ -316,9 +335,7 @@ public class CreatePaymentFromCreditService {
         return this.attachmentStatusService.findBySupported();
     }
 
-    private OffsetDateTime getTransactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
-
+    private OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperationDto) {
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));
         }
@@ -339,5 +356,9 @@ public class CreatePaymentFromCreditService {
 
     private ManagePaymentTransactionTypeDto getDepositPaymentTransactionType(){
         return this.paymentTransactionTypeService.findByDeposit();
+    }
+
+    private PaymentCloseOperationDto getCloseOperacion(UUID hotelId){
+        return this.paymentCloseOperationService.findByHotelId(hotelId);
     }
 }
