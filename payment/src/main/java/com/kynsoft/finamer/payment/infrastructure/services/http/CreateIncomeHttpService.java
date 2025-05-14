@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @Service
 public class CreateIncomeHttpService {
 
@@ -42,10 +45,12 @@ public class CreateIncomeHttpService {
             ResponseEntity<CreateIncomeFromPaymentMessage> response = restTemplate.postForEntity(url, entity, CreateIncomeFromPaymentMessage.class);
 
             if (!HttpStatus.OK.equals(response.getStatusCode())) {
+                Logger.getLogger(CreateIncomeHttpService.class.getName()).log(Level.SEVERE, response.toString(), response.getStatusCode());
                 throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INCOME_CREATE_PROCESS_FAILED, new ErrorField("id", DomainErrorMessage.INCOME_CREATE_PROCESS_FAILED.getReasonPhrase())));
             }
             return response.getBody();
         } catch (RestClientException e) {
+            Logger.getLogger(CreateIncomeHttpService.class.getName()).log(Level.SEVERE, e.getMessage(), e);
             throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INCOME_CREATE_PROCESS_FAILED, new ErrorField("id", DomainErrorMessage.INCOME_CREATE_PROCESS_FAILED.getReasonPhrase())));
         }
     }
