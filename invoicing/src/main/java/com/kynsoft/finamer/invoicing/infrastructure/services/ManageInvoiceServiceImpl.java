@@ -135,12 +135,16 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     private PaginatedResponse getPaginatedResponseProjection(Page<ManageInvoiceSearchProjection> data) {
         List<ManageInvoiceSearchResponse> responseList = new ArrayList<>();
+        int i = 0;
         for (ManageInvoiceSearchProjection entity : data.getContent()) {
             try {
+                i++;
+                System.out.println("Indice: " + i);
                 ManageInvoiceSearchResponse response = new ManageInvoiceSearchResponse(entity);
                 responseList.add(response);
             } catch (Exception e) {
-                System.err.print(e.getMessage());
+                //System.err.print(e.getMessage());
+                System.out.print(e.toString());
             }
         }
         return new PaginatedResponse(responseList, data.getTotalPages(), data.getNumberOfElements(),
