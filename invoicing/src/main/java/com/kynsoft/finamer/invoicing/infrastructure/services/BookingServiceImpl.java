@@ -13,7 +13,6 @@ import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooki
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusRequest;
 import com.kynsoft.finamer.invoicing.application.query.manageBooking.importbooking.ImportBookingProcessStatusResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EProcessStatus;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
@@ -121,8 +120,6 @@ public class BookingServiceImpl implements ImportBookingService {
                         //loadImportDataCache(excelBean, request.getEmployee());
 
                         validatorFactory.createValidators(request.getImportType().name());
-                        //boolean validateInsist = validatorFactory.validateInsist(list);
-//                        validatorFactory.createValidators(EImportType.INNSIST.name());
 
                         List<UUID> agencies = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
                         List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
@@ -316,11 +313,6 @@ public class BookingServiceImpl implements ImportBookingService {
                 importErrorPages.getSize(),
                 importErrorPages.getNumber()
         );
-    }
-
-    @Override
-    public List<BookingRowError> getImportError(String importProcessId) {
-        return bookingImportRowErrorRedisRepository.findAllByImportProcessId(importProcessId);
     }
 
     @Override

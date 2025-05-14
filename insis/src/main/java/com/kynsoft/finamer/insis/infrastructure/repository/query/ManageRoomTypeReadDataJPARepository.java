@@ -19,10 +19,8 @@ public interface ManageRoomTypeReadDataJPARepository extends JpaRepository<Manag
 
     Page<ManageRoomType> findAll(Specification specification, Pageable pageable);
 
-    @Query("SELECT m.code, m.id FROM ManageRoomType m WHERE m.code IN :codes AND m.hotel.id = :hotel")
+    @Query("SELECT m.code, m.id FROM ManageRoomType m WHERE m.code IN :codes AND m.manageHotel.id = :hotel")
     List<Object[]> findRoomTypeIdsByCodesAndHotel(@Param("codes") List<String> codes, @Param("hotel") UUID hotel);
 
-    Optional<ManageRoomType> findByCodeAndHotel_Id(String code, UUID hotelId);
-
-    List<ManageRoomType> findByCodeInAndHotel_Id(List<String> codes, UUID hotelId);
+    Optional<ManageRoomType> findByCodeAndManageHotel_Id(String code, UUID hotelId);
 }

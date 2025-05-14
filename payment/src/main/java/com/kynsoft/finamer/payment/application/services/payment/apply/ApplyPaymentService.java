@@ -75,7 +75,7 @@ public class ApplyPaymentService {
         ManageEmployeeDto employeeDto = this.getEmployee(employeeId);//TODO Optimizar esta consulta de employee con Criteria API
         List<ManageInvoiceDto> sortedInvoices = createInvoiceQueue(invoices);//TODO Optimizar esta consulta en PaymentDetail
         List<PaymentDetailDto> depositPaymentDetails = this.createPaymentDetailsTypeDepositQueue(deposits);
-        List<PaymentDetailDto> updatedDepositPaymentDetails = new ArrayList<>();
+        Set<PaymentDetailDto> updatedDepositPaymentDetails = new HashSet<>();
 
         OffsetDateTime transactionDate = this.getTransactionDate(payment.getHotel().getId());
         ManagePaymentTransactionTypeDto paymentInvoiceTransactionType = this.getCashTransactionType(); //PAGO
@@ -135,10 +135,9 @@ public class ApplyPaymentService {
                                 transactionDate);
 
                         isUpdatedBooking = true;
-
+                        updatedDepositPaymentDetails.add(depositPaymentDetail);
                         //Cuando se usa todo el deposit value del deposito lo quito de la lista de depositos
                         if(depositPaymentDetail.getApplyDepositValue() == 0){
-                            updatedDepositPaymentDetails.add(depositPaymentDetail);
                             depositPaymentDetailsIterator.remove();
                         }
 
@@ -278,12 +277,15 @@ public class ApplyPaymentService {
 
     private void saveChanges(PaymentDto payment,
                              List<PaymentDetailDto> createPaymentDetails,
-                             List<PaymentDetailDto> updatedDepositPaymentDetails,
+                             Set<PaymentDetailDto> updatedDepositPaymentDetails,
                              List<PaymentStatusHistoryDto> paymentStatusHistoryList,
                              List<ManageBookingDto> bookingList){
         //Se crean los Payment Details que genera el flujo de aplicacion de pago.
         this.paymentDetailService.createAll(createPaymentDetails);
-        this.paymentDetailService.createAll(updatedDepositPaymentDetails);
+        if(!updatedDepositPaymentDetails.isEmpty()){
+            List<PaymentDetailDto> updatedDepositPaymentDetailList = new ArrayList<>(updatedDepositPaymentDetails);
+            this.paymentDetailService.createAll(updatedDepositPaymentDetailList);
+        }
 
         //Se actualizan los booking balance.
         this.manageBookingService.updateAllBooking(bookingList);

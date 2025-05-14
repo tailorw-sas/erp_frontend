@@ -1,10 +1,6 @@
 package com.kynsoft.finamer.insis.domain.dto;
 
-import com.kynsoft.finamer.insis.infrastructure.model.ManageRoomCategory;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,8 +20,7 @@ public class RoomRateDto {
     private RoomRateStatus status;
     private ManageHotelDto hotel;
     private LocalDateTime updatedAt;
-    private String agencyCode;
-    private ManageAgencyDto agency;
+    private String agency;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private int stayDays;
@@ -34,14 +29,12 @@ public class RoomRateDto {
     private String firstName;
     private String lastName;
     private Double amount;
-    private String roomTypeCode;
-    private ManageRoomTypeDto roomType;
+    private String roomType;
     private String couponNumber;
     private int totalNumberOfGuest;
     private int adults;
     private int childrens;
-    private String ratePlanCode;
-    private ManageRatePlanDto ratePlan;
+    private String ratePlan;
     private LocalDate invoicingDate;
     private LocalDate hotelCreationDate;
     private Double originalAmount;
@@ -56,8 +49,5 @@ public class RoomRateDto {
     private Double quote;
     private String renewalNumber;
     private String hash;
-    private String roomCategoryCode;
-    private ManageRoomCategoryDto roomCategory;
-    private String message;
-    private UUID invoiceId;
+    private BookingDto booking;
 }

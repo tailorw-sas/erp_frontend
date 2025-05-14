@@ -28,7 +28,5 @@ public interface IManageRatePlanService {
 
     Map<String, UUID> findIdsByCodes(UUID hotelCode, List<String> codes);
 
-    List<ManageRatePlanDto> findAllByCodesAndHotel(List<String> codes, UUID hotelId);
-
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

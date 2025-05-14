@@ -1,12 +1,8 @@
 package com.kynsoft.finamer.invoicing.domain.services;
 
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
-
-import java.util.List;
 
 public interface IBookingImportHelperService {
 
@@ -16,11 +12,9 @@ public interface IBookingImportHelperService {
 
     void removeAllImportCache(String importProcessId);
 
-    List<BookingImportCache> saveCachingImportBooking(List<BookingRow> bookingRows, List<ManageAgencyDto> agencyDtoList);
+    void saveCachingImportBooking(BookingRow bookingRow);
 
-    void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean insist);
+    void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean insisit);
 
-    void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insist);
-
-    List<BookingImportCache> findAllByImportProcess(String importProcessId);
+    void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insisit);
 }

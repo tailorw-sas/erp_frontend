@@ -7,7 +7,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
 
@@ -16,8 +15,6 @@ public interface ManageHotelReadDataJPARepository extends JpaRepository<ManageHo
     Optional<ManageHotel> findByCode(String code);
 
     Optional<ManageHotel> findByManageTradingCompany_id(UUID id);
-
-    List<ManageHotel> findByIdIn(List<UUID> ids);
 
     Page<ManageHotel> findAll(Specification specification, Pageable pageable);
 }

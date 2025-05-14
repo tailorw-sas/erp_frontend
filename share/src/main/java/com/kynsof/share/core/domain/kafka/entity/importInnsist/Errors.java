@@ -1,7 +1,5 @@
 package com.kynsof.share.core.domain.kafka.entity.importInnsist;
 
-import java.util.List;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Setter
 @Getter
-public class ImportInnsistResponseKafka {
-    private UUID importInnsitProcessId;
-    private List<RoomRateResponseKafka> errors;
-    private Boolean processed;
+public class Errors {
+    private String bookingId;
+    private String msg;
 }

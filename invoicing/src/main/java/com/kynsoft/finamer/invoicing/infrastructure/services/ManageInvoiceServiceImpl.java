@@ -69,8 +69,8 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
-                                    ManageInvoiceReadDataJPARepository repositoryQuery,
-                                    ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
+            ManageInvoiceReadDataJPARepository repositoryQuery,
+            ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
@@ -494,7 +494,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         return repositoryQuery.findByInvoiceId(id)
                 .map(Invoice::toAggregate)
                 .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_NOT_FOUND_,
-                        new ErrorField("invoiceId", "The invoice not found."))));
+                new ErrorField("invoiceId", "The invoice not found."))));
     }
 
     @Override
