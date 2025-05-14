@@ -5,6 +5,7 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class ProcessCreatePayment {
     private final ManagePaymentAttachmentStatusDto attachmentStatusDto;
     private final Double amount;
     private final String remark;
-    private final ManageInvoiceDto invoiceDto;
+    private final String reference;
 
     public ProcessCreatePayment(ManagePaymentSourceDto paymentSourceDto,
                                 ManagePaymentStatusDto paymentStatusDto,
@@ -33,7 +34,7 @@ public class ProcessCreatePayment {
                                 ManagePaymentAttachmentStatusDto attachmentStatusDto,
                                 Double amount,
                                 String remark,
-                                ManageInvoiceDto invoiceDto){
+                                String reference){
         this.paymentSourceDto = paymentSourceDto;
         this.paymentStatusDto = paymentStatusDto;
         this.transactionDate = transactionDate;
@@ -44,7 +45,7 @@ public class ProcessCreatePayment {
         this.attachmentStatusDto = attachmentStatusDto;
         this.amount = amount;
         this.remark = remark;
-        this.invoiceDto = invoiceDto;
+        this.reference = reference;
     }
 
     public PaymentDto create(){
@@ -57,12 +58,12 @@ public class ProcessCreatePayment {
                 this.bankAccountDto,
                 this.attachmentStatusDto,
                 this.amount,
-                this.invoiceDto,
-                this.remark);
+                this.remark,
+                this.reference);
 
-        paymentDto.setCreateByCredit(true);
-        paymentDto.setImportType(ImportType.AUTOMATIC);
-        paymentDto.setHasAttachment(true);
+//        paymentDto.setCreateByCredit(true);
+//        paymentDto.setImportType(ImportType.AUTOMATIC);
+//        paymentDto.setHasAttachment(true);
         //paymentDto.setHasDetailTypeDeposit(false);
 
         return paymentDto;
@@ -77,14 +78,14 @@ public class ProcessCreatePayment {
                                   ManageBankAccountDto bankAccountDto,
                                   ManagePaymentAttachmentStatusDto attachmentStatusDto,
                                   Double amount,
-                                  ManageInvoiceDto invoiceDto,
-                                  String remark){
+                                  String remark,
+                                  String reference){
         return new PaymentDto(
                 UUID.randomUUID(),
                 Long.MIN_VALUE,
                 Status.ACTIVE,
                 paymentSourceDto,
-                invoiceDto.getInvoiceNumber().toString(),
+                reference,//invoiceDto.getInvoiceNumber().toString(),
                 transactionDate.toLocalDate(),
                 paymentStatusDto,
                 clientDto,
@@ -93,24 +94,20 @@ public class ProcessCreatePayment {
                 bankAccountDto,
                 attachmentStatusDto,
                 amount,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                /**
-                 *Para este caso, el identified toma el valor del paymentAmount, dado que se crean cash por el valor total del payment Amount y
-                 * entonces el notIdentified se hace cero.
-                 **/
                 amount,
                 0.0,
-                0.0,//Payment Amount - Deposit Balance - (Suma de trx tipo check Cash en el Manage Payment Transaction Type)
+                0.0,
+                0.0,
+                0.0,
                 amount,
+                amount,
+                0.0,
                 remark,
-                invoiceDto,
                 null,
                 null,
+                OffsetDateTime.now(),
                 EAttachment.NONE,
-                LocalTime.now()
+                transactionDate.toLocalTime()
         );
     }
 }

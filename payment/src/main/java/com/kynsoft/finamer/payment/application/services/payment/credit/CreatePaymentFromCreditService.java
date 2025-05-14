@@ -2,7 +2,12 @@ package com.kynsoft.finamer.payment.application.services.payment.credit;
 
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.payment.createPaymentToCredit.CreatePaymentToCreditCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashCommand;
+import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashMessage;
+import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
 import com.kynsoft.finamer.payment.domain.core.payment.ProcessCreatePayment;
+import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
@@ -10,7 +15,9 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.*;
 
 import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class CreatePaymentFromCreditService {
@@ -24,6 +31,7 @@ public class CreatePaymentFromCreditService {
     private final IManageEmployeeService manageEmployeeService;
     private final IManagePaymentAttachmentStatusService attachmentStatusService;
     private final IPaymentCloseOperationService paymentCloseOperationService;
+    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
 
     public CreatePaymentFromCreditService(IManageHotelService hotelService,
                                           IManageBankAccountService manageBankAccountService,
@@ -33,7 +41,8 @@ public class CreatePaymentFromCreditService {
                                           IManageAgencyService agencyService,
                                           IManageEmployeeService manageEmployeeService,
                                           IManagePaymentAttachmentStatusService attachmentStatusService,
-                                          IPaymentCloseOperationService paymentCloseOperationService){
+                                          IPaymentCloseOperationService paymentCloseOperationService,
+                                          IManagePaymentTransactionTypeService paymentTransactionTypeService){
         this.hotelService = hotelService;
         this.manageBankAccountService = manageBankAccountService;
         this.sourceService = sourceService;
@@ -43,13 +52,15 @@ public class CreatePaymentFromCreditService {
         this.manageEmployeeService = manageEmployeeService;
         this.attachmentStatusService = attachmentStatusService;
         this.paymentCloseOperationService = paymentCloseOperationService;
+        this.paymentTransactionTypeService = paymentTransactionTypeService;
     }
 
     public PaymentDto createPayment(UUID hotelId,
                                     UUID clientId,
                                     UUID agencyId,
-                                    UUID employeeId){
-        //TODO Validar en caso de exepcion como se manaja para que no llegue la exepcion a kafka y siga enviando el registro
+                                    UUID employeeId,
+                                    ManageInvoiceDto invoiceDto){
+        //TODO Validar en caso de excepcion como se manaja para que no llegue la exepcion a kafka y siga enviando el registro
         ManageHotelDto hotelDto = this.getHotelFromCredit(hotelId);
         ManageBankAccountDto bankAccountDto = this.getBankAccountFromHotel(hotelDto);
         ManagePaymentSourceDto paymentSourceDto = this.getExpensePaymentSource();
@@ -60,8 +71,24 @@ public class CreatePaymentFromCreditService {
         //El credit en su process debe de tener al menos attachemt de tipo support
         ManagePaymentAttachmentStatusDto attachmentStatusDto = this.getSupportedPaymentAttachementStatus();
         OffsetDateTime transactionDate = this.getTransactionDate(hotelDto.getId());
+        ManagePaymentTransactionTypeDto cashPaymentTransactionType = this.getCashPaymentTransactionType();
+        List<PaymentStatusHistoryDto> paymentStatusHistoryList = new ArrayList<>();
+        List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
 
-        //this.createPaymentToCreditNegative(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command, employee);
+        this.createPaymentToCreditNegative(hotelDto,
+                bankAccountDto,
+                paymentSourceDto,
+                paymentStatusDto,
+                transactionDate,
+                clientDto,
+                agencyDto,
+                attachmentStatusDto,
+                invoiceDto,
+                employee,
+                cashPaymentTransactionType,
+                paymentStatusHistoryList,
+                paymentDetailsToCreate);
+
         //this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command, employee);
 
         return null;
@@ -77,10 +104,12 @@ public class CreatePaymentFromCreditService {
                                                ManageAgencyDto agencyDto,
                                                ManagePaymentAttachmentStatusDto attachmentStatusDto,
                                                ManageInvoiceDto invoiceDto,
-                                               CreatePaymentToCreditCommand command,
-                                               ManageEmployeeDto employee) {
+                                               ManageEmployeeDto employee,
+                                               ManagePaymentTransactionTypeDto cashPaymentTransactionType,
+                                               List<PaymentStatusHistoryDto> paymentStatusHistoryDtoList,
+                                               List<PaymentDetailDto> paymentDetailDtoList) {
 
-        Double paymentAmount = command.getInvoiceDto().getInvoiceAmount();
+        Double paymentAmount = invoiceDto.getInvoiceAmount();
         String remark = this.getRemark(invoiceDto);
 
         ProcessCreatePayment processCreatePayment = new ProcessCreatePayment(paymentSourceDto,
@@ -97,29 +126,161 @@ public class CreatePaymentFromCreditService {
                 );
         PaymentDto paymentDto = processCreatePayment.create();
 
-        if (command.getInvoiceDto().getBookings() != null) {
-            for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
-                //this.createPaymentDetailsToCreditCash(paymentSave, booking, command);
+        if (invoiceDto.getBookings() != null) {
+            for (ManageBookingDto booking : invoiceDto.getBookings()) {
+                PaymentDetailDto paymentDetailDto = this.createPaymentDetailsToCreditCash(paymentDto,
+                        booking,
+                        transactionDate,
+                        employee,
+                        cashPaymentTransactionType,
+                        paymentStatusDto,
+                        paymentStatusHistoryDtoList
+                );
+                paymentDetailDtoList.add(paymentDetailDto);
             }
         }
 
-        if (command.getAttachments() != null) {
+        //TODO Implementar la creación de los attachments
+        //if (command.getAttachments() != null) {
             //paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto, command));
             //this.createAttachmentStatusHistory(employee, paymentDto, command);
-        }
-
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        System.err.println("Employeee: " + employee.getFirstName() + employee.getLastName());
-        System.err.println("Employeee: " + employee.getId());
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        System.err.println("##################################################");
-        //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
-        //this.createPaymentAttachmentStatusHistory(employee, paymentDto, command);
+        //}
 
     }
+
+    private PaymentDetailDto createPaymentDetailsToCreditCash(PaymentDto paymentCash,
+                                                  ManageBookingDto booking,
+                                                  OffsetDateTime transactionDate,
+                                                  ManageEmployeeDto employeeDto,
+                                                  ManagePaymentTransactionTypeDto paymentTransactionType,
+                                                  ManagePaymentStatusDto paymentStatusDto,
+                                                  List<PaymentStatusHistoryDto> paymentStatusHistoryList) {
+
+        ProcessCreatePaymentDetail processCreatePaymentDetail = new ProcessCreatePaymentDetail(paymentCash,
+                booking.getInvoiceAmount(),
+                transactionDate,
+                employeeDto,
+                null,
+                paymentTransactionType,
+                paymentStatusDto,
+                null
+                );
+        processCreatePaymentDetail.process();
+        PaymentDetailDto paymentDetailDto = processCreatePaymentDetail.getDetail();
+        if(processCreatePaymentDetail.isPaymentApplied()){
+            PaymentStatusHistoryDto paymentStatusHistoryDto = processCreatePaymentDetail.getPaymentStatusHistory();
+            paymentStatusHistoryList.add(paymentStatusHistoryDto);
+        }
+
+        ProcessApplyPaymentDetail processApplyPaymentDetail = new ProcessApplyPaymentDetail(paymentCash,
+                paymentDetailDto,
+                booking,
+                transactionDate,
+                booking.getInvoiceAmount());
+        processApplyPaymentDetail.process();
+
+        return paymentDetailDto;
+    }
+
+    //Payment creado con el deposit y apply deposit
+//    private void createPaymentToCreditPositive(ManageHotelDto hotelDto, ManageBankAccountDto bankAccountDto, ManagePaymentSourceDto paymentSourceDto,
+//            ManagePaymentStatusDto paymentStatusDto, ManageClientDto clientDto, ManageAgencyDto agencyDto,
+//            ManagePaymentAttachmentStatusDto attachmentStatusDto, CreatePaymentToCreditCommand command, ManageEmployeeDto employee) {
+//
+//        if (!command.isAutoApplyCredit()) {
+//            paymentStatusDto = this.statusService.findByConfirmed();
+//        }
+//
+//        Double paymentAmount = command.getInvoiceDto().getInvoiceAmount() * -1;
+//        double applied = 0.0;
+//        double identified = 0.0;
+//        double notIdentified = paymentAmount;
+//        if (hotelDto.getAutoApplyCredit()) {// no aplica los apply deposit
+//            applied = 0.0;
+//            identified = 0.0;
+//            notIdentified = paymentAmount;
+//        } else {// aplica los apply deposit
+//            applied = paymentAmount;
+//            identified = paymentAmount;
+//            notIdentified = 0.0;
+//        }
+//        if (command.getInvoiceDto().getInvoiceType().name().equals(EInvoiceType.OLD_CREDIT.name())) {
+//            applied = 0.0;
+//            identified = 0.0;
+//            notIdentified = paymentAmount;
+//        }
+//        PaymentDto paymentDto = new PaymentDto(
+//                UUID.randomUUID(),
+//                Long.MIN_VALUE,
+//                Status.ACTIVE,
+//                paymentSourceDto,
+//                deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()),
+//                transactionDate(hotelDto.getId()),
+//                //LocalDate.now(),
+//                paymentStatusDto,
+//                clientDto,
+//                agencyDto,
+//                hotelDto,
+//                //hotelDto,
+//                bankAccountDto,
+//                attachmentStatusDto,
+//                paymentAmount,
+//                0.0,
+//                paymentAmount,
+//                0.0,
+//                0.0,
+//                /*
+//                *identified es cero y el notIdentified toma el valor del paymentAmount y su valor varia en paymentAmount - identified.
+//                *identified es la suma de todos los cash, que para este payment siempre va a ser cero.
+//                */
+//                identified,
+//                notIdentified,
+//                0.0, //Siempre es cero para este caso
+//                applied,
+//                "Created automatic to apply credit ( " + deleteHotelInfo(command.getInvoiceDto().getInvoiceNumber()) + ")",
+//                command.getInvoiceDto(),
+//                null,
+//                null,
+//                EAttachment.NONE,
+//                LocalTime.now()
+//        );
+//
+//        paymentDto.setCreateByCredit(true);
+//        paymentDto.setImportType(ImportType.AUTOMATIC);
+//        paymentDto.setApplyPayment(true);
+//        paymentDto.setHasAttachment(true);
+//        paymentDto.setHasDetailTypeDeposit(true);
+//        PaymentDto paymentSave = this.paymentService.create(paymentDto);
+//        PaymentDetailDto parentDetailDto = this.createPaymentDetailsToCreditDeposit(paymentSave, command);
+////        if (command.getInvoiceDto().getBookings() != null) {
+//        if (command.getInvoiceDto().getBookings() != null && command.isAutoApplyCredit()) {
+//            List<PaymentDetailDto> updateChildrens = new ArrayList<>();
+//            for (ManageBookingDto booking : command.getInvoiceDto().getBookings()) {
+//                updateChildrens.add(this.createPaymentDetailsToCreditApplyDeposit(paymentSave, booking.getParent(), parentDetailDto, command, booking.getInvoiceAmount()));
+//            }
+//            parentDetailDto.setPaymentDetails(updateChildrens);
+//        } else {
+//            paymentSave.setDepositBalance(paymentAmount);
+//            this.paymentService.update(paymentSave);
+//        }
+//
+////        ManageEmployeeDto employeeDto = null;
+//        if (command.getAttachments() != null) {
+    ////            try {
+    ////                employeeDto = this.manageEmployeeService.findById(command.getAttachments().get(0).getEmployee());
+    ////            } catch (Exception e) {
+    ////            }
+//            paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto, command));
+//            //this.createAttachmentStatusHistory(employeeDto, paymentDto, command);
+//            this.createAttachmentStatusHistory(employee, paymentDto, command);
+//        }
+//
+//        //this.createPaymentAttachmentStatusHistory(employeeDto, paymentDto, command);
+//        this.createPaymentAttachmentStatusHistory(employee, paymentDto, command);
+//
+//        this.paymentDetailService.update(parentDetailDto);
+//
+//    }
 
     private ManageHotelDto getHotelFromCredit(UUID hotelId){
         return this.hotelService.findById(hotelId);
@@ -127,9 +288,7 @@ public class CreatePaymentFromCreditService {
 
     private ManageBankAccountDto getBankAccountFromHotel(ManageHotelDto hotelDto){
         List<ManageBankAccountDto> listBankAccountDtos = this.manageBankAccountService.findAllByHotel(hotelDto.getId());
-        ManageBankAccountDto bankAccountDto = listBankAccountDtos.isEmpty() ? null : listBankAccountDtos.get(0);
-
-        return bankAccountDto;
+        return listBankAccountDtos.isEmpty() ? null : listBankAccountDtos.get(0);
     }
 
     private ManagePaymentSourceDto getExpensePaymentSource(){
@@ -171,5 +330,13 @@ public class CreatePaymentFromCreditService {
 
     private String getRemark(ManageInvoiceDto invoiceDto){
         return "Created automatic to apply credit ( " + deleteHotelInfo(invoiceDto.getInvoiceNumber()) + ")";
+    }
+
+    private ManagePaymentTransactionTypeDto getCashPaymentTransactionType(){
+        return this.paymentTransactionTypeService.findByCash();
+    }
+
+    private ManagePaymentTransactionTypeDto getDepositPaymentTransactionType(){
+        return this.paymentTransactionTypeService.findByDeposit();
     }
 }

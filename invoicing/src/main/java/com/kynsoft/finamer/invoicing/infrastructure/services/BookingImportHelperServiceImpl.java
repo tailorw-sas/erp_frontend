@@ -253,7 +253,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
-    public void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insisit) {
+    public void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insist) {
         /**
          * *
          * Para el caso de la agrupacion por Booking, al tener en una agrupacion
@@ -289,14 +289,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insisit);
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insist);
             });
         }
     }
 
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList,
-                                          String employee, String groupType, boolean innsist) {
-        //TODO - Mejorar todo este proceso
+                                          String employee, String groupType, boolean insist) {
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
@@ -319,7 +318,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         } else {
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
         }
-        if (innsist) {
+        if (insist) {
             manageInvoiceDto.setImportType(ImportType.INSIST);
         }
 
@@ -334,25 +333,17 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
     }
 
-    private String createInvoiceNumber(ManageHotelDto hotel, BookingRow sample) {
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if (hotel.isVirtual()) {
-            invoiceNumber += "-" + sample.getHotelInvoiceNumber();
-        } else {
-            if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-                invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-            } else {
-                invoiceNumber += "-" + hotel.getCode();
-            }
-        }
-        return invoiceNumber;
-    }
-
     private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
         //TODO Mejorar este proceso (Cargar en memoria los catalogos)
-        ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode()) : null;
-        ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRowList.get(0).getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRowList.get(0).getRoomType(), hotel.getCode()) : null;
-        ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRowList.get(0).getNightType()) ? nightTypeService.findByCode(bookingRowList.get(0).getNightType()) : null;
+        ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan())
+                ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode())
+                : null;
+        ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRowList.get(0).getRoomType())
+                ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRowList.get(0).getRoomType(), hotel.getCode())
+                : null;
+        ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRowList.get(0).getNightType())
+                ? nightTypeService.findByCode(bookingRowList.get(0).getNightType())
+                : null;
         ManageBookingDto bookingDto = bookingRowList.get(0).toAggregate();
         bookingDto.setRatePlan(ratePlanDto);
         bookingDto.setRoomType(roomTypeDto);
