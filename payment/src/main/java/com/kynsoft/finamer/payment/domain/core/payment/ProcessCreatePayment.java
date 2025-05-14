@@ -1,13 +1,25 @@
 package com.kynsoft.finamer.payment.domain.core.payment;
 
+import com.kynsof.share.core.domain.RulesChecker;
+import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsoft.finamer.payment.application.command.payment.create.CreateAttachmentRequest;
+import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule;
+import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIsWithInRangeCloseOperationRule;
+import com.kynsoft.finamer.payment.domain.rules.payment.PaymentValidateBankAccountAndHotelRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckIfDateIsBeforeCurrentDateRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentAmountGreaterThanZeroRule;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class ProcessCreatePayment {
@@ -23,6 +35,15 @@ public class ProcessCreatePayment {
     private final Double amount;
     private final String remark;
     private final String reference;
+    private final Boolean isIgnoreBankAccount;
+    private final ManageEmployeeDto employeeDto;
+    private final PaymentCloseOperationDto closeOperationDto;
+    private final List<CreateAttachment> attachments;
+    private final ManagePaymentAttachmentStatusDto attachmentStatusSupport;
+    private final ManagePaymentAttachmentStatusDto attachmentOtherSupport;
+
+    @Getter
+    private List<MasterPaymentAttachmentDto> dtos;
 
     public ProcessCreatePayment(ManagePaymentSourceDto paymentSourceDto,
                                 ManagePaymentStatusDto paymentStatusDto,
@@ -34,7 +55,13 @@ public class ProcessCreatePayment {
                                 ManagePaymentAttachmentStatusDto attachmentStatusDto,
                                 Double amount,
                                 String remark,
-                                String reference){
+                                String reference,
+                                Boolean isIgnoreBankAccount,
+                                ManageEmployeeDto employeeDto,
+                                PaymentCloseOperationDto closeOperationDto,
+                                List<CreateAttachment> attachments,
+                                ManagePaymentAttachmentStatusDto attachmentStatusSupport,
+                                ManagePaymentAttachmentStatusDto attachmentOtherSupport){
         this.paymentSourceDto = paymentSourceDto;
         this.paymentStatusDto = paymentStatusDto;
         this.transactionDate = transactionDate;
@@ -46,9 +73,36 @@ public class ProcessCreatePayment {
         this.amount = amount;
         this.remark = remark;
         this.reference = reference;
+        this.isIgnoreBankAccount = isIgnoreBankAccount;
+        this.employeeDto = employeeDto;
+        this.closeOperationDto = closeOperationDto;
+        this.attachments = attachments;
+        this.attachmentStatusSupport = attachmentStatusSupport;
+        this.attachmentOtherSupport = attachmentOtherSupport;
     }
 
     public PaymentDto create(){
+
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentSourceDto, "paymentSource", "Payment Source ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentStatusDto, "paymentStatus", "Payment Status ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.clientDto, "client", "Client ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.agencyDto, "agency", "Agency ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.hotelDto, "hotel", "Hotel ID cannot be null."));
+        if (!this.isIgnoreBankAccount || !this.paymentSourceDto.getExpense())//Se agrega esto con el objetivo de ignorar este check cuando se importa
+        {
+            RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.bankAccountDto, "bankAccount", "Bank Account ID cannot be null."));
+            RulesChecker.checkRule(new PaymentValidateBankAccountAndHotelRule(this.hotelDto, this.bankAccountDto));
+        }
+
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.attachmentStatusDto, "attachmentStatus", "Attachment Status ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.employeeDto, "employee", "Employee ID cannot be null."));
+
+        RulesChecker.checkRule(new CheckIfDateIsBeforeCurrentDateRule(this.transactionDate.toLocalDate()));
+        RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(this.amount));
+
+        RulesChecker.checkRule(new CheckIfTransactionDateIsWithInRangeCloseOperationRule(this.transactionDate.toLocalDate(),
+                this.closeOperationDto.getBeginDate(), this.closeOperationDto.getEndDate()));
+
         PaymentDto paymentDto = this.getPayment(this.paymentSourceDto,
                 this.transactionDate,
                 this.paymentStatusDto,
@@ -60,6 +114,15 @@ public class ProcessCreatePayment {
                 this.amount,
                 this.remark,
                 this.reference);
+
+        if(!this.attachments.isEmpty()){
+            paymentDto.setHasAttachment(true);
+            dtos = this.createAttachment(paymentDto,
+                    this.attachments,
+                    this.attachmentStatusSupport,
+                    this.attachmentOtherSupport);
+            paymentDto.setAttachments(dtos);
+        }
 
 //        paymentDto.setCreateByCredit(true);
 //        paymentDto.setImportType(ImportType.AUTOMATIC);
@@ -107,7 +170,65 @@ public class ProcessCreatePayment {
                 null,
                 OffsetDateTime.now(),
                 EAttachment.NONE,
-                transactionDate.toLocalTime()
+                LocalTime.now()
         );
+    }
+
+    private List<MasterPaymentAttachmentDto> createAttachment(PaymentDto paymentDto,
+                                                              List<CreateAttachment> attachments,
+                                                              ManagePaymentAttachmentStatusDto attachmentStatusSupport,
+                                                              ManagePaymentAttachmentStatusDto attachmentOtherSupport){
+        List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
+        Integer countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
+        for (CreateAttachment attachment : attachments) {
+            MasterPaymentAttachmentDto newAttachmentDto = new MasterPaymentAttachmentDto(
+                    UUID.randomUUID(),
+                    Status.ACTIVE,
+                    paymentDto,
+                    attachment.getManageResourceTypeDto(),
+                    attachment.getManageAttachmentTypeDto(),
+                    attachment.getFileName(),
+                    attachment.getFileWeight(),
+                    attachment.getPath(),
+                    attachment.getRemark(),
+                    0L
+            );
+            if (attachment.getManageAttachmentTypeDto().getDefaults()) {
+                countDefaults++;
+                newAttachmentDto.setStatusHistory(attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName());
+            } else {
+                //newAttachmentDto.setStatusHistory(attachmentStatusNonNone.getCode() + "-" + attachmentStatusNonNone.getName());
+                newAttachmentDto.setStatusHistory(attachmentOtherSupport.getCode() + "-" + attachmentOtherSupport.getName());
+            }
+            dtos.add(newAttachmentDto);
+        }
+
+        RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
+
+        if (countDefaults > 0) {
+            paymentDto.setPaymentSupport(true);
+            paymentDto.setAttachmentStatus(attachmentStatusSupport);
+            //paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
+        } else {
+            paymentDto.setAttachmentStatus(attachmentOtherSupport);
+            //paymentDto.setAttachmentStatus(attachmentStatusNonNone);
+            paymentDto.setPaymentSupport(false);
+        }
+
+        return dtos;
+    }
+
+    private void createAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment, List<MasterPaymentAttachmentDto> list) {
+        for (MasterPaymentAttachmentDto attachment : list) {
+            AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
+            attachmentStatusHistoryDto.setId(UUID.randomUUID());//Quitar
+            attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name: " + attachment.getFileName());
+            attachmentStatusHistoryDto.setEmployee(employeeDto);
+            attachmentStatusHistoryDto.setPayment(payment);
+            attachmentStatusHistoryDto.setStatus(attachment.getStatusHistory());
+            //attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
+            attachmentStatusHistoryDto.setAttachmentId(attachment.getAttachmentId());
+            list.add(attachmentStatusHistoryDto);
+        }
     }
 }

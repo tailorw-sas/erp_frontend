@@ -334,7 +334,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
-        //TODO Mejorar este proceso (Cargar en memoria los catalogos)
         ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan())
                 ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode())
                 : null;
