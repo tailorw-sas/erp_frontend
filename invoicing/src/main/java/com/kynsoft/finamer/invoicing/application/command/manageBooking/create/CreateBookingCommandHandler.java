@@ -30,7 +30,6 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
     private final IManageRoomTypeService roomTypeService;
     private final IManageRoomCategoryService roomCategoryService;
 
-    private final IInvoiceCloseOperationService closeOperationService;
     private final ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService;
     private final ProducerReplicateManageBookingService producerReplicateManageBookingService;
 
@@ -40,7 +39,6 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                                         IManageNightTypeService nightTypeService,
                                         IManageRoomTypeService roomTypeService, 
                                         IManageRoomCategoryService roomCategoryService,
-                                        IInvoiceCloseOperationService closeOperationService,
                                         ProducerUpdateManageInvoiceService producerUpdateManageInvoiceService,
                                         ProducerReplicateManageBookingService producerReplicateManageBookingService) {
         this.bookingService = bookingService;
@@ -49,7 +47,6 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
         this.nightTypeService = nightTypeService;
         this.roomTypeService = roomTypeService;
         this.roomCategoryService = roomCategoryService;
-        this.closeOperationService = closeOperationService;
         this.producerUpdateManageInvoiceService = producerUpdateManageInvoiceService;
         this.producerReplicateManageBookingService = producerReplicateManageBookingService;
     }
@@ -130,7 +127,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 false,
                 null
         );
-        bookingService.create(newBooking);
+        newBooking = bookingService.create(newBooking);
 
         try {
             // TODO: aqui se envia el booking para payment
