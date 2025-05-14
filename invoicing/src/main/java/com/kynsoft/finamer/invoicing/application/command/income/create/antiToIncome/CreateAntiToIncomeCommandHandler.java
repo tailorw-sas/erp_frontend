@@ -81,11 +81,13 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             employeeFullName = command.getEmployee();
         }
 
-        ManageInvoiceDto income = new ManageInvoiceDto(UUID.randomUUID(), hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
+        var invoiceUUID = UUID.randomUUID();
+        ManageInvoiceDto income = new ManageInvoiceDto(invoiceUUID, hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
                 EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
                 0.0, null, null, false,null);
 
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+        command.setId(invoiceUUID);
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
 

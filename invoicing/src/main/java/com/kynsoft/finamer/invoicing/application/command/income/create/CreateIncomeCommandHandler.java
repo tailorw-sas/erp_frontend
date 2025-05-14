@@ -93,7 +93,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             employeeFullName = command.getEmployee();
         }
 
-        UUID invoiceUUID = UUID.randomUUID();
+        String id = command.getId().toString();
+        UUID invoiceUUID = (id == null || id.trim().isEmpty()) ? UUID.randomUUID() : command.getId();
          ManageInvoiceDto income = new ManageInvoiceDto(invoiceUUID, hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
                 EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
                  0.0, null, null, false,null);
