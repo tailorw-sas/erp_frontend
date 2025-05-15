@@ -21,10 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageBookingServiceImpl implements IManageBookingService {
@@ -258,4 +256,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
                 new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
     }
 
+    @Override
+    public void updateAll(List<ManageBookingDto> bookingList) {
+        if(Objects.nonNull(bookingList) && !bookingList.isEmpty()){
+            List<Booking> bookings = bookingList.stream().map(Booking::new).collect(Collectors.toList());
+            repositoryCommand.saveAll(bookings);
+        }
+    }
 }

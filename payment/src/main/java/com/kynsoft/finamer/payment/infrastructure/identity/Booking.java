@@ -87,7 +87,7 @@ public class Booking {
                 adults,
                 children,
                 invoice != null ? invoice.toAggregate() : null,
-                parent != null ? parent.toAggregateSimple() : null,
+                parent != null ? parent.toAggregate() : null,
                 bookingDate != null ? bookingDate : null
         );
     }

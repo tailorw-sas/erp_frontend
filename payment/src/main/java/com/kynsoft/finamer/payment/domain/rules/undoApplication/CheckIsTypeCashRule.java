@@ -12,7 +12,7 @@ public class CheckIsTypeCashRule extends BusinessRule {
     public CheckIsTypeCashRule(PaymentDetailDto paymentDetailDto) {
         super(
                 DomainErrorMessage.UNDO_APPLICATION_TYPE_CASH_OR_APPLY_DEPOSIT,
-                new ErrorField("applyPayment", DomainErrorMessage.UNDO_APPLICATION_TYPE_CASH_OR_APPLY_DEPOSIT.getReasonPhrase())
+                new ErrorField("process", DomainErrorMessage.UNDO_APPLICATION_TYPE_CASH_OR_APPLY_DEPOSIT.getReasonPhrase())
         );
         this.paymentDetailDto = paymentDetailDto;
     }
