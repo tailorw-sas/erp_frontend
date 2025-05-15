@@ -28,29 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class CreatePaymentCommandHandler implements ICommandHandler<CreatePaymentCommand> {
 
-    private final IManagePaymentSourceService sourceService;
-    private final IManagePaymentStatusService statusService;
-    private final IManageClientService clientService;
-    private final IManageAgencyService agencyService;
-    private final IManageHotelService hotelService;
-    private final IManageBankAccountService bankAccountService;
-    private final IManagePaymentAttachmentStatusService attachmentStatusService;
-    private final IPaymentService paymentService;
-    private final IPaymentCloseOperationService closeOperationService;
-
-    private final IManageAttachmentTypeService manageAttachmentTypeService;
-    private final IManageResourceTypeService manageResourceTypeService;
-
-    private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
-    private final IManageEmployeeService manageEmployeeService;
-
-    private final IPaymentStatusHistoryService paymentAttachmentStatusHistoryService;
-    private final IMasterPaymentAttachmentService masterPaymentAttachmentService;
-
-    private final ManageEmployeeHttpService employeeHttpService;
-
-
-    //Nueva version de Create Payment
     private final CreatePaymentService createPaymentService;
 
     public CreatePaymentCommandHandler(CreatePaymentService createPaymentService) {
