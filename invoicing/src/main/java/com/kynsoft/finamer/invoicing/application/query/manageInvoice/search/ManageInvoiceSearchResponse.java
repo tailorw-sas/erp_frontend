@@ -95,6 +95,9 @@ public class ManageInvoiceSearchResponse {
     }
 
     private String deleteHotelInfo(String input) {
+        if(input == null){
+            return null;
+        }
         return input.replaceAll("-(.*?)-", "-");
     }
 }

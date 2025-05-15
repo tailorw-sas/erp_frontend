@@ -1,10 +1,11 @@
-package com.kynsoft.finamer.payment.infrastructure.repository.query.payments;
+package com.kynsoft.finamer.payment.infrastructure.repository.query.custom.implementations;
 
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.infrastructure.identity.*;
 import com.kynsoft.finamer.payment.infrastructure.identity.projection.*;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.custom.PaymentCustomRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -18,6 +19,7 @@ import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -38,6 +40,11 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         Join<Payment, ManagePaymentSource> sourceJoin = root.join("paymentSource", JoinType.LEFT);
         Join<Payment, ManageAgency> agencyJoin = root.join("agency", JoinType.LEFT);
         Join<ManageAgency, ManageAgencyType> agencyTypeJoin = agencyJoin.join("agencyType", JoinType.LEFT);
+
+        Join<ManageAgency, ManageClient> agencyClientJoin = agencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> agencyCountryJoin = agencyJoin.join("country", JoinType.LEFT);
+        Join<ManageCountry, ManageLanguage> agencyCountryLanguageJoin = agencyCountryJoin.join("managerLanguage", JoinType.LEFT);
+
         Join<Payment, ManageBankAccount> bankAccountJoin = root.join("bankAccount", JoinType.LEFT);
         Join<ManageBankAccount, ManageHotel> bankAccountHotelJoin = bankAccountJoin.join("manageHotel", JoinType.LEFT);
         Join<Payment, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
@@ -46,6 +53,90 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
 
         query.where(cb.equal(root.get("id"), id));
 
+        List<Selection<?>> selections = this.getPaymentSelections(root,
+                statusJoin,
+                sourceJoin,
+                agencyJoin,
+                agencyTypeJoin,
+                agencyClientJoin,
+                agencyCountryJoin,
+                agencyCountryLanguageJoin,
+                bankAccountJoin,
+                bankAccountHotelJoin,
+                clientJoin,
+                hotelJoin,
+                attachmentStatusJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        Tuple tuple = entityManager.createQuery(query).getSingleResult();
+
+        Payment payment = this.convertTupleToPayment(tuple);
+
+        return Optional.of(payment);
+    }
+
+    @Override
+    public List<Payment> findAllByPaymentIdCustom(List<Long> ids) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+        Root<Payment> root = query.from(Payment.class);
+        Join<Payment, ManagePaymentStatus> statusJoin = root.join("paymentStatus", JoinType.LEFT);
+        Join<Payment, ManagePaymentSource> sourceJoin = root.join("paymentSource", JoinType.LEFT);
+        Join<Payment, ManageAgency> agencyJoin = root.join("agency", JoinType.LEFT);
+        Join<ManageAgency, ManageAgencyType> agencyTypeJoin = agencyJoin.join("agencyType", JoinType.LEFT);
+
+        Join<ManageAgency, ManageClient> agencyClientJoin = agencyJoin.join("client", JoinType.LEFT);
+        Join<ManageAgency, ManageCountry> agencyCountryJoin = agencyJoin.join("country", JoinType.LEFT);
+        Join<ManageCountry, ManageLanguage> agencyCountryLanguageJoin = agencyCountryJoin.join("managerLanguage", JoinType.LEFT);
+
+        Join<Payment, ManageBankAccount> bankAccountJoin = root.join("bankAccount", JoinType.LEFT);
+        Join<ManageBankAccount, ManageHotel> bankAccountHotelJoin = bankAccountJoin.join("manageHotel", JoinType.LEFT);
+        Join<Payment, ManageClient> clientJoin = root.join("client", JoinType.LEFT);
+        Join<Payment, ManageHotel> hotelJoin = root.join("hotel", JoinType.LEFT);
+        Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin = root.join("attachmentStatus", JoinType.LEFT);
+
+        query.where(root.get("paymentId").in(ids));
+
+        List<Selection<?>> selections = this.getPaymentSelections(root,
+                statusJoin,
+                sourceJoin,
+                agencyJoin,
+                agencyTypeJoin,
+                agencyClientJoin,
+                agencyCountryJoin,
+                agencyCountryLanguageJoin,
+                bankAccountJoin,
+                bankAccountHotelJoin,
+                clientJoin,
+                hotelJoin,
+                attachmentStatusJoin);
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        List<Tuple> tuples = entityManager.createQuery(query).getResultList();
+
+        List<Payment> results = tuples.stream()
+                .map(this::convertTupleToPayment)
+                .collect(Collectors.toList());
+
+        return results;
+    }
+
+    private List<Selection<?>> getPaymentSelections(Root<Payment> root,
+                                                    Join<Payment, ManagePaymentStatus> statusJoin,
+                                                    Join<Payment, ManagePaymentSource> sourceJoin,
+                                                    Join<Payment, ManageAgency> agencyJoin,
+                                                    Join<ManageAgency, ManageAgencyType> agencyTypeJoin,
+                                                    Join<ManageAgency, ManageClient> agencyClientJoin,
+                                                    Join<ManageAgency, ManageCountry> agencyCountryJoin,
+                                                    Join<ManageCountry, ManageLanguage> agencyCountryLanguageJoin,
+                                                    Join<Payment, ManageBankAccount> bankAccountJoin,
+                                                    Join<ManageBankAccount, ManageHotel> bankAccountHotelJoin,
+                                                    Join<Payment, ManageClient> clientJoin,
+                                                    Join<Payment, ManageHotel> hotelJoin,
+                                                    Join<Payment, ManagePaymentAttachmentStatus> attachmentStatusJoin){
         List<Selection<?>> selections = new ArrayList<>();
         selections.add(root.get("id"));
         selections.add(root.get("paymentId"));
@@ -91,6 +182,34 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(agencyTypeJoin.get("code"));
         selections.add(agencyTypeJoin.get("status"));
         selections.add(agencyTypeJoin.get("name"));
+
+        selections.add(agencyClientJoin.get("id"));
+        selections.add(agencyClientJoin.get("code"));
+        selections.add(agencyClientJoin.get("name"));
+        selections.add(agencyClientJoin.get("status"));
+
+        selections.add(agencyCountryJoin.get("id"));
+        selections.add(agencyCountryJoin.get("code"));
+        selections.add(agencyCountryJoin.get("name"));
+        selections.add(agencyCountryJoin.get("description"));
+        selections.add(agencyCountryJoin.get("isDefault"));
+        selections.add(agencyCountryJoin.get("status"));
+
+        selections.add(agencyCountryLanguageJoin.get("id"));
+        selections.add(agencyCountryLanguageJoin.get("code"));
+        selections.add(agencyCountryLanguageJoin.get("name"));
+        selections.add(agencyCountryLanguageJoin.get("defaults"));
+        selections.add(agencyCountryLanguageJoin.get("status"));
+        selections.add(agencyCountryLanguageJoin.get("createdAt"));
+        selections.add(agencyCountryLanguageJoin.get("updatedAt"));
+
+        selections.add(agencyCountryJoin.get("createdAt"));
+        selections.add(agencyCountryJoin.get("updateAt"));
+        selections.add(agencyCountryJoin.get("deleteAt"));
+        selections.add(agencyCountryJoin.get("iso3"));
+
+        selections.add(agencyJoin.get("createdAt"));
+        selections.add(agencyJoin.get("updatedAt"));
 
         // Hotel
         selections.add(hotelJoin.get("id"));
@@ -146,114 +265,144 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         selections.add(root.get("updatedAt"));
         selections.add(root.get("importType"));
 
-        query.multiselect(selections.toArray(new Selection[0]));
+        return selections;
+    }
 
-        Tuple tuple = entityManager.createQuery(query).getSingleResult();
-
+    private Payment convertTupleToPayment(Tuple tuple){
+        int i = 0;
         Payment payment = new Payment(
-                tuple.get(0, UUID.class),
-                tuple.get(1, Long.class),
-                tuple.get(2, Status.class),
-                tuple.get(3, EAttachment.class),
-                (tuple.get(4, UUID.class) != null) ? new ManagePaymentSource(
-                        tuple.get(4, UUID.class),
-                        tuple.get(5, String.class),
-                        tuple.get(6, String.class),
-                        tuple.get(7, String.class),
-                        tuple.get(8, Boolean.class),
-                        tuple.get(9, Boolean.class)
-                ) : null,
-                tuple.get(10, String.class),
-                tuple.get(11, LocalDate.class),
-                tuple.get(12, LocalTime.class),
-                (tuple.get(13, UUID.class) != null) ? new ManagePaymentStatus(
-                        tuple.get(13, UUID.class),
-                        tuple.get(14, String.class),
-                        tuple.get(15, String.class),
-                        tuple.get(16, String.class),
-                        tuple.get(17, Boolean.class),
-                        tuple.get(18, Boolean.class),
-                        tuple.get(19, Boolean.class),
-                        tuple.get(20, Boolean.class)
-                ) : null,
-                (tuple.get(21, UUID.class) != null ) ? new ManageClient(
-                        tuple.get(21, UUID.class),
-                        tuple.get(22, String.class),
-                        tuple.get(23, String.class),
-                        tuple.get(24, String.class)
-                ) : null,
-                (tuple.get(25, UUID.class) != null) ? new ManageAgency(
-                        tuple.get(25, UUID.class),
-                        tuple.get(26, String.class),
-                        tuple.get(27, String.class),
-                        tuple.get(28, String.class),
-                        (tuple.get(29, UUID.class) != null) ? new ManageAgencyType(
-                                tuple.get(29, UUID.class),
-                                tuple.get(30, String.class),
-                                tuple.get(31, String.class),
-                                tuple.get(32, String.class)
-                        ): null
-                ) : null,
-                (tuple.get(33, UUID.class) != null) ? new ManageHotel(
-                        tuple.get(33, UUID.class),
-                        tuple.get(34, String.class),
-                        tuple.get(35, String.class),
-                        tuple.get(36, String.class),
-                        tuple.get(37, Boolean.class),
-                        tuple.get(38, UUID.class),
-                        tuple.get(39, Boolean.class)
-                ) : null,
+                tuple.get(i++, UUID.class),
+                tuple.get(i++, Long.class),
+                tuple.get(i++, Status.class),
+                tuple.get(i++, EAttachment.class),
+                (tuple.get(i, UUID.class) != null) ? new ManagePaymentSource(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class)
+                ) : skip( i += 6),
+                tuple.get(i++, String.class),
+                tuple.get(i++, LocalDate.class),
+                tuple.get(i++, LocalTime.class),
+                (tuple.get(i, UUID.class) != null) ? new ManagePaymentStatus(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class)
+                ) : skip( i += 8),
+                (tuple.get(i, UUID.class) != null ) ? new ManageClient(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class)
+                ) : skip( i += 4),
+                (tuple.get(i, UUID.class) != null) ? new ManageAgency(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        (tuple.get(i, UUID.class) != null) ? new ManageAgencyType(
+                                tuple.get(i++, UUID.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class)
+                        ) : skip( i += 4),
+                        (tuple.get(i, UUID.class) != null) ? new ManageClient(
+                                tuple.get(i++, UUID.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class)
+                        ) : skip( i += 4),
+                        (tuple.get(i, UUID.class) != null) ? new ManageCountry(
+                                tuple.get(i++, UUID.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, Boolean.class),
+                                tuple.get(i++, String.class),
+                                (tuple.get(i, UUID.class) != null) ? new ManageLanguage(
+                                        tuple.get(i++, UUID.class),
+                                        tuple.get(i++, String.class),
+                                        tuple.get(i++, String.class),
+                                        tuple.get(i++, Boolean.class),
+                                        tuple.get(i++, String.class),
+                                        tuple.get(i++, LocalDateTime.class),
+                                        tuple.get(i++, LocalDateTime.class)
+                                ) : skip( i += 7),
+                                tuple.get(i++, LocalDateTime.class),
+                                tuple.get(i++, LocalDateTime.class),
+                                tuple.get(i++, LocalDateTime.class),
+                                tuple.get(i++, String.class)
+                        ): skip( i+= 17),
+                        tuple.get(i++, LocalDateTime.class),
+                        tuple.get(i++, LocalDateTime.class)
+                ) : skip( i += 31),
+                (tuple.get(i, UUID.class) != null) ? new ManageHotel(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, Boolean.class)
+                ) : skip( i += 7),
                 null,
-                (tuple.get(40, UUID.class) != null) ? new ManageBankAccount(
-                        tuple.get(40, UUID.class),
-                        tuple.get(41, String.class),
-                        tuple.get(42, String.class),
-                        tuple.get(43, String.class),
-                        (tuple.get(44, UUID.class) != null) ? new ManageHotel(
-                                tuple.get(44, UUID.class),
-                                tuple.get(45, String.class),
-                                tuple.get(46, String.class),
-                                tuple.get(47, String.class),
-                                tuple.get(48, Boolean.class),
-                                tuple.get(49, UUID.class),
-                                tuple.get(50, Boolean.class)
-                        ) : null
-                ) : null,
-                (tuple.get(51, UUID.class) != null) ? new ManagePaymentAttachmentStatus(
-                        tuple.get(51, UUID.class),
-                        tuple.get(52, String.class),
-                        tuple.get(53, String.class),
-                        tuple.get(54, String.class),
-                        tuple.get(55, Boolean.class),
-                        tuple.get(56, Boolean.class),
-                        tuple.get(57, Boolean.class),
-                        tuple.get(58, Boolean.class),
-                        tuple.get(59, Boolean.class),
-                        tuple.get(60, Boolean.class)
-                ) : null,
+                (tuple.get(i, UUID.class) != null) ? new ManageBankAccount(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        (tuple.get(i, UUID.class) != null) ? new ManageHotel(
+                                tuple.get(i++, UUID.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, String.class),
+                                tuple.get(i++, Boolean.class),
+                                tuple.get(i++, UUID.class),
+                                tuple.get(i++, Boolean.class)
+                        ) : skip( i += 7)
+                ) : skip( i += 11),
+                (tuple.get(i, UUID.class) != null) ? new ManagePaymentAttachmentStatus(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class)
+                ) : skip( i += 10),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                tuple.get(61, Double.class),
-                tuple.get(62, Double.class),
-                tuple.get(63, Double.class),
-                tuple.get(64, Double.class),
-                tuple.get(65, Double.class),
-                tuple.get(66, Double.class),
-                tuple.get(67, Double.class),
-                tuple.get(68, Double.class),
-                tuple.get(69, Double.class),
-                tuple.get(70, String.class),
-                tuple.get(71, Boolean.class),
-                tuple.get(72, Boolean.class),
-                tuple.get(73, Boolean.class),
-                tuple.get(74, Boolean.class),
-                tuple.get(75, Boolean.class),
-                tuple.get(76, OffsetDateTime.class),
-                tuple.get(77, OffsetDateTime.class),
-                tuple.get(78, ImportType.class)
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, Double.class),
+                tuple.get(i++, String.class),
+                tuple.get(i++, Boolean.class),
+                tuple.get(i++, Boolean.class),
+                tuple.get(i++, Boolean.class),
+                tuple.get(i++, Boolean.class),
+                tuple.get(i++, Boolean.class),
+                tuple.get(i++, OffsetDateTime.class),
+                tuple.get(i++, OffsetDateTime.class),
+                tuple.get(i++, ImportType.class)
         );
 
-        return Optional.of(payment);
+        return payment;
     }
 
     @Override
@@ -470,5 +619,10 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         long total = entityManager.createQuery(countQuery).getSingleResult();
 
         return new PageImpl<>(results, pageable, total);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T skip(int i) {
+        return null;
     }
 }

@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayme
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
 import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
 import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
@@ -22,6 +23,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -69,14 +71,17 @@ public class ApplyPaymentToCreditDetailCommandHandler implements ICommandHandler
                     paymentDto.getPaymentId(),
                     new ReplicatePaymentDetailsKafka(paymentDetailDto.getId(), paymentDetailDto.getPaymentDetailId()
                     ));
-            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(bookingDto.getId(), bookingDto.getAmountBalance(), paymentKafka, true, OffsetDateTime.now()));
+
+            ReplicateBookingKafka replicateBookingKafka = new ReplicateBookingKafka(bookingDto.getId(), bookingDto.getAmountBalance(), true, OffsetDateTime.now());
+
+            this.producerUpdateBookingService.update(new UpdateBookingBalanceKafka(List.of(replicateBookingKafka)));
             command.setPaymentResponse(paymentDto);
         } catch (Exception e) {
         }
     }
 
     private OffsetDateTime transactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelIds(hotel);
+        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
 
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
             return OffsetDateTime.now(ZoneId.of("UTC"));

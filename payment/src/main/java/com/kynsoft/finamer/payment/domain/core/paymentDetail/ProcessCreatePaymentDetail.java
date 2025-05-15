@@ -2,11 +2,13 @@ package com.kynsoft.finamer.payment.domain.core.paymentDetail;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.utils.BankerRounding;
+import com.kynsoft.finamer.payment.domain.core.enums.PaymentTransactionTypeCode;
 import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountGreaterThanZeroStrictlyRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckAmountIfGreaterThanPaymentBalanceRule;
+import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckGreaterThanOrEqualToTheTransactionAmountRule;
 import com.kynsoft.finamer.payment.domain.rules.paymentDetail.CheckPaymentDetailAmountGreaterThanZeroRule;
 import lombok.Getter;
 
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ProcessPaymentDetail {
+public class ProcessCreatePaymentDetail {
 
     private final PaymentDto payment;
     private final Double amount;
@@ -25,10 +27,13 @@ public class ProcessPaymentDetail {
     private final String remark;
     private final ManagePaymentTransactionTypeDto paymentTransactionType;
     private final ManagePaymentStatusDto paymentStatus;
-    private final PaymentDetailDto parentDetail;
+
 
     @Getter
     private PaymentDetailDto detail;
+
+    @Getter
+    private final PaymentDetailDto parentDetail;
 
     @Getter
     private PaymentStatusHistoryDto paymentStatusHistory;
@@ -36,34 +41,14 @@ public class ProcessPaymentDetail {
     @Getter
     private boolean isPaymentApplied;
 
-    public enum PaymentTransactionTypeCode {
-        CASH,
-        DEPOSIT,
-        OTHER_DEDUCTIONS,
-        APPLY_DEPOSIT;
-
-        public static PaymentTransactionTypeCode from(ManagePaymentTransactionTypeDto paymentTransactionType) {
-            if (paymentTransactionType.getCash()) {
-                return CASH;
-            }
-            if (paymentTransactionType.getDeposit()) {
-                return DEPOSIT;
-            }
-            if(paymentTransactionType.getApplyDeposit()){
-                return APPLY_DEPOSIT;
-            }
-            return OTHER_DEDUCTIONS;
-        }
-    }
-
-    public ProcessPaymentDetail(PaymentDto payment,
-                                Double amount,
-                                OffsetDateTime transactionDate,
-                                ManageEmployeeDto employee,
-                                String remark,
-                                ManagePaymentTransactionTypeDto paymentTransactionType,
-                                ManagePaymentStatusDto paymentStatus,
-                                PaymentDetailDto parentDetail){
+    public ProcessCreatePaymentDetail(PaymentDto payment,
+                                      Double amount,
+                                      OffsetDateTime transactionDate,
+                                      ManageEmployeeDto employee,
+                                      String remark,
+                                      ManagePaymentTransactionTypeDto paymentTransactionType,
+                                      ManagePaymentStatusDto paymentStatus,
+                                      PaymentDetailDto parentDetail){
         this.payment = payment;
         this.amount = amount;
         this.transactionDate = transactionDate;
@@ -80,6 +65,7 @@ public class ProcessPaymentDetail {
         RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(this.amount));
 
         this.detail = this.createPaymentDetailEntity(this.payment, paymentTransactionType, this.amount, this.remark, this.transactionDate);
+        this.addDetailToPayment(this.payment, this.detail);
 
         switch(PaymentTransactionTypeCode.from(this.paymentTransactionType)){
             case CASH -> {
@@ -96,20 +82,18 @@ public class ProcessPaymentDetail {
                 this.updatePaymentTypeOtherDeductions(this.payment, this.amount);
             }
             case APPLY_DEPOSIT -> {
+                RulesChecker.checkRule(new CheckGreaterThanOrEqualToTheTransactionAmountRule(this.amount, parentDetail.getApplyDepositValue()));//TODO Verificar
                 this.updatePaymentTypeApplyDeposit(this.payment, this.amount);
-                this.updateParentDetailWhenApplyDeposit(this.detail, this.parentDetail);
-                this.updateParentDetail(this.detail, this.parentDetail, this.amount);
+                this.updateDetailWhenApplyDeposit(this.detail, this.parentDetail);
+                this.updateParentDetailWhenApplyDeposit(this.detail, this.parentDetail, this.amount);
             }
         }
-
-        detail.setEffectiveDate(this.transactionDate);//TODO Cuando se aplica
     }
 
     private void validate() {
         if (payment == null) throw new IllegalArgumentException("Payment must not be null");
         if (transactionDate == null) throw new IllegalArgumentException("transactionDate must not be null");
         if (employee == null) throw new IllegalArgumentException("employee must not be null");
-        if (remark == null) throw new IllegalArgumentException("remark must not be null");
         if (paymentTransactionType == null) throw new IllegalArgumentException("paymentTransactionType must not be null");
         if (paymentStatus == null && !paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit()) throw new IllegalArgumentException("paymentStatus must not be null");
     }
@@ -141,7 +125,7 @@ public class ProcessPaymentDetail {
     }
 
     private String getRemark(String remark, ManagePaymentTransactionTypeDto paymentTransactionType){
-        if(remark.isBlank()){
+        if(Objects.isNull(remark) || remark.isBlank()){
             return paymentTransactionType.getDefaultRemark();
         }
         return remark;
@@ -176,13 +160,11 @@ public class ProcessPaymentDetail {
         paymentDto.setApplied(BankerRounding.round(paymentDto.getApplied() + amount));
         paymentDto.setIdentified(BankerRounding.round(paymentDto.getIdentified() + amount));
         paymentDto.setNotIdentified(BankerRounding.round(paymentDto.getPaymentAmount() - paymentDto.getIdentified()));
+
+        updatePaymentAsApplied();
     }
 
-    private void updateParentDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail){
-        detail.setParentId(parentDetail.getPaymentDetailId());
-    }
-
-    private void updateParentDetail(PaymentDetailDto detail, PaymentDetailDto parentDetail, Double amount){
+    private void updateParentDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail, Double amount){
         List<PaymentDetailDto> paymentDetails = new ArrayList<>();
         if(Objects.nonNull(parentDetail.getPaymentDetails())){
             paymentDetails.addAll(parentDetail.getPaymentDetails());
@@ -190,6 +172,11 @@ public class ProcessPaymentDetail {
         paymentDetails.add(detail);
         parentDetail.setPaymentDetails(paymentDetails);
         parentDetail.setApplyDepositValue(BankerRounding.round(parentDetail.getApplyDepositValue() - amount));
+
+    }
+
+    private void updateDetailWhenApplyDeposit(PaymentDetailDto detail, PaymentDetailDto parentDetail){
+        detail.setParentId(parentDetail.getPaymentDetailId());
     }
 
     private PaymentStatusHistoryDto createPaymentStatusHistory(){
@@ -204,5 +191,14 @@ public class ProcessPaymentDetail {
             this.paymentStatusHistory = createPaymentStatusHistory();
             this.isPaymentApplied = true;
         }
+    }
+
+    private void addDetailToPayment(PaymentDto payment, PaymentDetailDto paymentDetail){
+        List<PaymentDetailDto> currentDetails = new ArrayList<>();
+        if(payment.getPaymentDetails() != null){
+            currentDetails.addAll(payment.getPaymentDetails());
+        }
+        currentDetails.add(paymentDetail);
+        payment.setPaymentDetails(currentDetails);
     }
 }

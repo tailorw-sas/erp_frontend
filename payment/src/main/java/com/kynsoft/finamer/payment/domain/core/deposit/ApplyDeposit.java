@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.domain.core.deposit;
 
+import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.payment.domain.core.paymentStatusHistory.PaymentStatusHistory;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import lombok.Getter;
@@ -76,11 +77,11 @@ public class ApplyDeposit {
                                PaymentStatusHistoryDto paymentStatusHistory,
                                ManageEmployeeDto employee
                                ){
-        payment.setDepositBalance(payment.getDepositBalance() - amount);
-        payment.setApplied(payment.getApplied() + amount);
-        payment.setIdentified(payment.getIdentified() + amount);
-        payment.setNotIdentified(payment.getPaymentAmount() - payment.getIdentified());
-        payment.setNotApplied(payment.getPaymentAmount() - payment.getIdentified());
+        payment.setDepositBalance(BankerRounding.round(payment.getDepositBalance() - amount));
+        payment.setApplied(BankerRounding.round(payment.getApplied() + amount));
+        payment.setIdentified(BankerRounding.round(payment.getIdentified() + amount));
+        payment.setNotIdentified(BankerRounding.round(payment.getPaymentAmount() - payment.getIdentified()));
+        payment.setNotApplied(BankerRounding.round(payment.getPaymentAmount() - payment.getIdentified()));
 
         if (payment.getPaymentBalance() == 0 && payment.getDepositBalance() == 0) {
             payment.setPaymentStatus(paymentStatusApplied);
@@ -93,7 +94,7 @@ public class ApplyDeposit {
 
     private void updateBooking(ManageBookingDto booking, Double amount){
         if(Objects.nonNull(booking)){
-            booking.setAmountBalance(booking.getAmountBalance() - amount);
+            booking.setAmountBalance(BankerRounding.round(booking.getAmountBalance() - amount));
         }
     }
 
@@ -109,10 +110,13 @@ public class ApplyDeposit {
     }
 
     private void updateParentPaymentDetail(PaymentDetailDto depositPaymentDetail, PaymentDetailDto paymentDetail, Double amount){
-        List<PaymentDetailDto> updatedList = new ArrayList<>(depositPaymentDetail.getPaymentDetails());
+        List<PaymentDetailDto> updatedList = new ArrayList<>();
+        if(Objects.nonNull(depositPaymentDetail.getPaymentDetails())){
+            updatedList.addAll(depositPaymentDetail.getPaymentDetails());
+        }
         updatedList.add(paymentDetail);
         depositPaymentDetail.setPaymentDetails(Collections.unmodifiableList(updatedList));
-        depositPaymentDetail.setApplyDepositValue(depositPaymentDetail.getApplyDepositValue() - amount);
+        depositPaymentDetail.setApplyDepositValue(BankerRounding.round(depositPaymentDetail.getApplyDepositValue() - amount));
     }
 
     private PaymentStatusHistoryDto createPaymentStatusHistory(PaymentDto payment, ManageEmployeeDto employee){

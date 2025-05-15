@@ -43,4 +43,6 @@ public interface IManageBookingService {
     boolean existsByHotelInvoiceNumber(String hotelInvoiceNumber, UUID hotelId);
 
     ManageBookingDto findBookingId(Long bookingId);
+
+    void updateAll(List<ManageBookingDto> bookingList);
 }
