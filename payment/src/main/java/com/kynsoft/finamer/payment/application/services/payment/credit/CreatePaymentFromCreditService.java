@@ -127,6 +127,10 @@ public class CreatePaymentFromCreditService {
         //AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
         //ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(attachment.getResourceType());
 
+        PaymentStatusHistoryDto paymentStatusHistoryDto = new PaymentStatusHistoryDto();
+        List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList = new ArrayList<>();
+        List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList = new ArrayList<>();
+
         ProcessCreatePayment processCreatePayment = new ProcessCreatePayment(paymentSourceDto,
                 paymentStatusDto,
                 transactionDate,
@@ -145,7 +149,11 @@ public class CreatePaymentFromCreditService {
                 attachmentStatusSupport,
                 attachmentOtherSupport
                 );
-        PaymentDto paymentDto = processCreatePayment.create();
+
+        PaymentDto paymentDto = processCreatePayment.create(masterPaymentAttachmentDtoList,
+                attachmentStatusHistoryDtoList,
+                paymentStatusHistoryDto);
+
 //this.masterPaymentAttachmentService.create(dtos);
         if (invoiceDto.getBookings() != null) {
             for (ManageBookingDto booking : invoiceDto.getBookings()) {

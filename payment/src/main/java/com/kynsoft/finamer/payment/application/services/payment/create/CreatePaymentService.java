@@ -70,7 +70,7 @@ public class CreatePaymentService {
         this.masterPaymentAttachmentService = masterPaymentAttachmentService;
     }
 
-    //@Transactional
+    @Transactional
     public PaymentDto create(UUID paymentSourceId,
                              UUID paymentStatusId,
                              UUID hotelId,
@@ -98,6 +98,10 @@ public class CreatePaymentService {
         ManagePaymentAttachmentStatusDto attachmentStatusSupported = this.attachmentStatusService.findBySupported();
         ManagePaymentAttachmentStatusDto attachmentStatusOtherSupported = this.attachmentStatusService.findByOtherSupported();
 
+        PaymentStatusHistoryDto paymentStatusHistoryDto = new PaymentStatusHistoryDto();
+        List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList = new ArrayList<>();
+        List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList = new ArrayList<>();
+
         ProcessCreatePayment processCreatePayment = new ProcessCreatePayment(paymentSourceDto,
                 paymentStatusDto,
                 transactionDate,
@@ -115,11 +119,10 @@ public class CreatePaymentService {
                 createAttachmentList,
                 attachmentStatusSupported,
                 attachmentStatusOtherSupported);
-        PaymentDto payment = processCreatePayment.create();
-
-        PaymentStatusHistoryDto paymentStatusHistoryDto = processCreatePayment.getPaymentStatusHistoryDto();
-        List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList = processCreatePayment.getMasterPaymentAttachmentDtoList();
-        List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList = processCreatePayment.getAttachmentStatusHistoryDtoList();
+        
+        PaymentDto payment = processCreatePayment.create(masterPaymentAttachmentDtoList,
+                attachmentStatusHistoryDtoList,
+                paymentStatusHistoryDto);
 
         this.saveChanges(payment,
                 masterPaymentAttachmentDtoList,
@@ -195,11 +198,13 @@ public class CreatePaymentService {
                              List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList,
                              List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList,
                              PaymentStatusHistoryDto paymentStatusHistoryDto){
-        this.paymentService.create(paymentDto);
+        PaymentDto newPayment = this.paymentService.create(paymentDto);
         if(Objects.nonNull(masterPaymentAttachmentDtoList)){
             this.masterPaymentAttachmentService.create(masterPaymentAttachmentDtoList);
         }
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryDtoList);
         this.paymentStatusHistoryService.create(paymentStatusHistoryDto);
+
+        paymentDto.setPaymentId(newPayment.getPaymentId());
     }
 }
