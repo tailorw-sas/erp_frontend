@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.rules.masterPaymentAttachment.MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule;
 import com.kynsoft.finamer.payment.domain.rules.payment.CheckIfTransactionDateIsWithInRangeCloseOperationRule;
@@ -38,15 +39,11 @@ public class ProcessCreatePayment {
     private final List<CreateAttachment> attachments;
     private final ManagePaymentAttachmentStatusDto attachmentStatusSupport;
     private final ManagePaymentAttachmentStatusDto attachmentOtherSupport;
-
-//    @Getter
-//    private List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList;
-//
-//    @Getter
-//    private List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList;
-//
-//    @Getter
-//    private PaymentStatusHistoryDto paymentStatusHistoryDto;
+    private final List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList;
+    private final List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList;
+    private final PaymentStatusHistoryDto paymentStatusHistoryDto;
+    private final ImportType importType;
+    private final boolean createdByCredit;
 
     public ProcessCreatePayment(ManagePaymentSourceDto paymentSourceDto,
                                 ManagePaymentStatusDto paymentStatusDto,
@@ -64,7 +61,12 @@ public class ProcessCreatePayment {
                                 PaymentCloseOperationDto closeOperationDto,
                                 List<CreateAttachment> attachments,
                                 ManagePaymentAttachmentStatusDto attachmentStatusSupport,
-                                ManagePaymentAttachmentStatusDto attachmentOtherSupport){
+                                ManagePaymentAttachmentStatusDto attachmentOtherSupport,
+                                List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList,
+                                List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList,
+                                PaymentStatusHistoryDto paymentStatusHistoryDto,
+                                ImportType importType,
+                                boolean createdByCredit){
         this.paymentSourceDto = paymentSourceDto;
         this.paymentStatusDto = paymentStatusDto;
         this.transactionDate = transactionDate;
@@ -82,11 +84,14 @@ public class ProcessCreatePayment {
         this.attachments = attachments;
         this.attachmentStatusSupport = attachmentStatusSupport;
         this.attachmentOtherSupport = attachmentOtherSupport;
+        this.masterPaymentAttachmentDtoList = masterPaymentAttachmentDtoList;
+        this.attachmentStatusHistoryDtoList = attachmentStatusHistoryDtoList;
+        this.paymentStatusHistoryDto = paymentStatusHistoryDto;
+        this.importType = importType;
+        this.createdByCredit = createdByCredit;
     }
 
-    public PaymentDto create(List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList,
-                             List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList,
-                             PaymentStatusHistoryDto paymentStatusHistoryDto){
+    public PaymentDto create(){
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentSourceDto, "paymentSource", "Payment Source ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentStatusDto, "paymentStatus", "Payment Status ID cannot be null."));
@@ -123,28 +128,31 @@ public class ProcessCreatePayment {
                 this.remark,
                 this.reference);
 
+        paymentDto.setImportType(this.importType);
+        paymentDto.setCreateByCredit(this.createdByCredit);
+
         if(!this.attachments.isEmpty()){
             paymentDto.setHasAttachment(true);
             this.createAttachment(paymentDto,
                     this.attachments,
                     this.attachmentStatusSupport,
                     this.attachmentOtherSupport,
-                    masterPaymentAttachmentDtoList);
-            paymentDto.setAttachments(masterPaymentAttachmentDtoList);
+                    this.masterPaymentAttachmentDtoList);
+            paymentDto.setAttachments(this.masterPaymentAttachmentDtoList);
 
             this.createAttachmentStatusHistory(this.employeeDto,
                     paymentDto,
-                    masterPaymentAttachmentDtoList,
-                    attachmentStatusHistoryDtoList);
+                    this.masterPaymentAttachmentDtoList,
+                    this.attachmentStatusHistoryDtoList);
         }else{
             this.createAttachmentStatusHistoryWithoutAttachment(paymentDto,
                     this.employeeDto,
-                    attachmentStatusHistoryDtoList);
+                    this.attachmentStatusHistoryDtoList);
         }
 
         this.createPaymentAttachmentStatusHistory(paymentDto,
-                employeeDto,
-                paymentStatusHistoryDto);
+                this.employeeDto,
+                this.paymentStatusHistoryDto);
 
 //        paymentDto.setCreateByCredit(true);
 //        paymentDto.setImportType(ImportType.AUTOMATIC);
@@ -201,8 +209,7 @@ public class ProcessCreatePayment {
                                                               ManagePaymentAttachmentStatusDto attachmentStatusSupport,
                                                               ManagePaymentAttachmentStatusDto attachmentOtherSupport,
                                                               List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList){
-        //List<MasterPaymentAttachmentDto> dtos = new ArrayList<>();
-        Integer countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
+        int countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
         for (CreateAttachment attachment : attachments) {
             MasterPaymentAttachmentDto newAttachmentDto = new MasterPaymentAttachmentDto(
                     UUID.randomUUID(),

@@ -147,14 +147,16 @@ public class CreatePaymentFromCreditService {
                 closeOperationDto,
                 createAttachmentList,
                 attachmentStatusSupport,
-                attachmentOtherSupport
+                attachmentOtherSupport,
+                masterPaymentAttachmentDtoList,
+                attachmentStatusHistoryDtoList,
+                paymentStatusHistoryDto,
+                ImportType.AUTOMATIC,
+                true
                 );
 
-        PaymentDto paymentDto = processCreatePayment.create(masterPaymentAttachmentDtoList,
-                attachmentStatusHistoryDtoList,
-                paymentStatusHistoryDto);
-
-//this.masterPaymentAttachmentService.create(dtos);
+        PaymentDto paymentDto = processCreatePayment.create();
+        
         if (invoiceDto.getBookings() != null) {
             for (ManageBookingDto booking : invoiceDto.getBookings()) {
                 PaymentDetailDto paymentDetailDto = this.createPaymentDetailsToCreditCash(paymentDto,

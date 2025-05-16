@@ -5,6 +5,7 @@ import com.kynsoft.finamer.payment.application.command.payment.create.CreateAtta
 import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.core.payment.ProcessCreatePayment;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.services.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -118,11 +119,14 @@ public class CreatePaymentService {
                 closeOperationDto,
                 createAttachmentList,
                 attachmentStatusSupported,
-                attachmentStatusOtherSupported);
-        
-        PaymentDto payment = processCreatePayment.create(masterPaymentAttachmentDtoList,
+                attachmentStatusOtherSupported,
+                masterPaymentAttachmentDtoList,
                 attachmentStatusHistoryDtoList,
-                paymentStatusHistoryDto);
+                paymentStatusHistoryDto,
+                ImportType.NONE,
+                false);
+        
+        PaymentDto payment = processCreatePayment.create();
 
         this.saveChanges(payment,
                 masterPaymentAttachmentDtoList,

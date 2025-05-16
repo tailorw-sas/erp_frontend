@@ -46,16 +46,6 @@ public class CreatePaymentToCreditCommandHandler implements ICommandHandler<Crea
 
     }
 
-
-
-
-
-
-
-    private LocalDate transactionDate(UUID hotel) {
-        PaymentCloseOperationDto closeOperationDto = this.paymentCloseOperationService.findByHotelId(hotel);
-    }
-
     private PaymentDetailDto createPaymentDetailsToCreditDeposit(PaymentDto payment, CreatePaymentToCreditCommand command) {
         CreatePaymentDetailTypeDepositMessage message = command.getMediator().send(new CreatePaymentDetailTypeDepositCommand(payment, true));
         return message.getNewDetailDto();
