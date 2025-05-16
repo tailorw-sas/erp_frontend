@@ -50,4 +50,6 @@ public interface IManageBookingService {
     List<ManageBookingDto> findAllBookingByCoupons(List<String> coupons);
 
     List<ManageBookingDto> findAllById(List<UUID> ids);
+
+    void createAll(List<ManageBookingDto> bookingDtos);
 }
