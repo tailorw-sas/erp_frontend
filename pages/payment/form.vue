@@ -4170,7 +4170,7 @@ onMounted(async () => {
         @click="update"
       />
       <Button
-        v-tooltip.top="'Copiar tabla'"
+        v-tooltip.top="'Copy Table'"
         class="w-3rem mx-1"
         icon="pi pi-copy"
         @click="copiarDatos"
@@ -4349,7 +4349,7 @@ onMounted(async () => {
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
           />
           <Button
-            v-tooltip.top="'Copiar tabla'"
+            v-tooltip.top="'Copy Table'"
             class="p-button-lg w-1rem h-2rem"
             style="margin-left: 1150px; margin-top: -20px"
             icon="pi pi-copy"
