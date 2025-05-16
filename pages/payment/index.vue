@@ -4,6 +4,7 @@ import type { PageState } from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import dayjs from 'dayjs'
 import { z } from 'zod'
+import { pad } from 'lodash'
 import { formatNumber } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
@@ -744,7 +745,7 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
+const messageForEmptyTable = ref('There are no items to show.')
 const loadingSaveApplyPayment = ref(false)
 const invoiceSelectedListForApplyPayment = ref<any[]>([])
 const applyPaymentListOfInvoice = ref<any[]>([])
@@ -798,33 +799,32 @@ const applyPaymentColumns = ref<IColumn[]>([
     showFilter: false
   },
   { field: 'couponNumbers', header: 'Coupon No.', type: 'text', width: '90px', maxWidth: '100px', sortable: true, showFilter: false },
-  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '90px', sortable: true, showFilter: false },
-  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '90px', sortable: true, showFilter: false },
+  { field: 'invoiceAmountTemp', header: 'Invoice Amount', type: 'text', width: '80px', sortable: true, showFilter: false },
+  { field: 'dueAmountTemp', header: 'Invoice Balance', type: 'text', width: '80px', sortable: true, showFilter: false },
   // { field: 'status', header: 'Status', type: 'slot-text', width: '90px', sortable: true, showFilter: true },
-  {
-    field: 'status',
-    header: 'Status',
-    width: '60px', // Define el ancho de la columna
-    minWidth: '40px', // Establece un ancho mínimo
-    maxWidth: '60px', // Establece un ancho máximo
-    widthTruncate: '60px', // Controla el truncamiento dentro del ancho
-    columnClass: 'truncate-text',
-    frozen: true,
-    type: 'slot-select',
-    showFilter: false,
-    statusClassMap: sClassMap,
-    objApi: {
-      moduleApi: 'invoicing',
-      uriApi: 'manage-invoice-status',
-      filter: [{
-        key: 'enabledToApply',
-        operator: 'EQUALS',
-        value: true,
-        logicalOperation: 'AND'
-      }]
-    },
-    sortable: true
-  }
+  // {
+  //   field: 'status',
+  //   header: 'Status',
+  //   width: '60px', // Define el ancho de la columna
+  //   minWidth: '40px', // Establece un ancho mínimo
+  //   maxWidth: '60px', // Establece un ancho máximo
+  //   widthTruncate: '60px', // Controla el truncamiento dentro del ancho
+  //   columnClass: 'truncate-text',
+  //   frozen: true,
+  //   type: 'slot-select',
+  //   showFilter: false,
+  //   statusClassMap: sClassMap,
+  //   objApi: {
+  //     moduleApi: 'invoicing',
+  //     uriApi: 'manage-invoice-status',
+  //       key: 'enabledToApply',
+  //       operator: 'EQUALS',
+  //       value: true,
+  //       logicalOperation: 'AND'
+  //     }]
+  //   },
+  //   sortable: true
+  // }
 ])
 
 // Table
@@ -846,7 +846,7 @@ const columnsPaymentDetailTypeDeposit: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', tooltip: 'Detail Id', width: 'auto', type: 'text' },
   { field: 'transactionType', header: 'P. Trans Type', tooltip: 'Payment Transaction Type', width: '150px', type: 'text' },
   { field: 'amount', header: 'Deposit Amount', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
-  { field: 'applyDepositValue', header: 'Deposit. Balance', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
+  { field: 'applyDepositValue', header: 'Deposit Balance', tooltip: 'Deposit Amount', width: 'auto', type: 'text' },
   { field: 'remark', header: 'Remark', width: 'auto', maxWidth: '200px', type: 'text' },
   // { field: 'bookingId', header: 'Booking Id', tooltip: 'Booking Id', width: '100px', type: 'text' },
   // { field: 'invoiceNumber', header: 'Invoice No', tooltip: 'Invoice No', width: '100px', type: 'text' },
@@ -921,14 +921,14 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 10,
+  pageSize: 100,
   page: 0,
   sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
   page: 0,
-  limit: 10,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -936,7 +936,7 @@ const applyPaymentPagination = ref<IPagination>({
 
 const applyPaymentPaginationTemp = ref<IPagination>({
   page: 0,
-  limit: 10,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -3950,7 +3950,7 @@ const filteredInvoices = computed(() => {
         || inv.couponNumbers?.toLowerCase().includes(term)
         || String(inv.invoiceAmount)?.toLowerCase().includes(term)
         || String(inv.dueAmount)?.toLowerCase().includes(term)
-        || inv.name?.toLowerCase().includes(term) // También puedes incluir más campos si es necesario
+        || inv.name?.toLowerCase().includes(term)
       )
     })
   })
@@ -4756,7 +4756,7 @@ onMounted(async () => {
               />
 
               <Button
-                v-tooltip.top="'Copiar tabla'"
+                v-tooltip.top="'Copy Table'"
                 class="p-button-lg w-1rem h-2rem ml-2"
                 style="margin-left: 10px; margin-top: 10px"
                 icon="pi pi-copy"
@@ -4949,7 +4949,7 @@ onMounted(async () => {
             class: 'custom-dialog-history',
           },
           header: {
-            style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
+            style: 'padding-top: 0.1rem; padding-bottom: 0.1rem',
           },
         }"
         @hide="closeModalApplyPayment()"
@@ -4970,109 +4970,111 @@ onMounted(async () => {
         </template>
 
         <template #default>
-          <div class="p-fluid pt-3">
-            <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3 -mt-3">
-              <DataTable
-                v-model:selection="paymentDetailsTypeDepositSelected"
-                :value="paymentDetailsTypeDepositList"
-                striped-rows
-                show-gridlines
-                scrollable
-                scroll-height="90px"
-                :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
-                data-key="id"
-                selection-mode="multiple"
-                @update:selection="onRowSelectAll"
-              >
-                <Column selection-mode="multiple" header-style="width: 3rem" />
-                <Column
-                  v-for="column of columnsPaymentDetailTypeDeposit.filter(c =>
-                    ['paymentDetailId', 'transactionType', 'amount', 'applyDepositValue'].includes(c.field),
-                  )"
-                  :key="column.field"
-                  :field="column.field"
-                  :header="column.header"
-                  :sortable="column?.sortable"
+          <div class="-px-4 -my-4 py-1 mb-3">
+            <div class="p-fluid pt-3">
+              <BlockUI v-if="applyPaymentListOfInvoice.length" :blocked="paymentDetailsTypeDepositLoading" class="mb-3 -mt-2">
+                <DataTable
+                  v-model:selection="paymentDetailsTypeDepositSelected"
+                  :value="paymentDetailsTypeDepositList"
+                  striped-rows
+                  show-gridlines
+                  scrollable
+                  scroll-height="150px"
+                  :row-class="(row) => isRowSelectable(row) ? 'p-selectable-row' : 'p-disabled p-text-disabled'"
+                  data-key="id"
+                  selection-mode="multiple"
+                  @update:selection="onRowSelectAll"
                 >
-                  <template v-if="column.field === 'applyDepositValue'" #body="slotProps">
-                    {{ formatNumber(slotProps.data.applyDepositValue) }}
-                  </template>
-                </Column>
+                  <Column selection-mode="multiple" header-style="width: 3rem" />
+                  <Column
+                    v-for="column of columnsPaymentDetailTypeDeposit.filter(c =>
+                      ['paymentDetailId', 'transactionType', 'amount', 'applyDepositValue', 'remark'].includes(c.field),
+                    )"
+                    :key="column.field"
+                    :field="column.field"
+                    :header="column.header"
+                    :sortable="column?.sortable"
+                  >
+                    <template v-if="column.field === 'applyDepositValue'" #body="slotProps">
+                      {{ formatNumber(slotProps.data.applyDepositValue) }}
+                    </template>
+                  </Column>
 
-                <template #empty>
-                  <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                    <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
-                      <div class="row">
-                        <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                      </div>
-                      <div class="row">
-                        <p>{{ messageForEmptyTable }}</p>
-                      </div>
-                    </span>
-                    <span v-else class="flex flex-column align-items-center justify-content-center">
-                      <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                    </span>
+                  <template #empty>
+                    <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                      <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
+                        <div class="row">
+                          <i class="pi pi-trash -mt-6" style="font-size: 2rem;" />
+                        </div>
+                        <div class="row">
+                          <p>{{ messageForEmptyTable }}</p>
+                        </div>
+                      </span>
+                      <span v-else class="flex flex-column align-items-center justify-content-center">
+                        <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                      </span>
+                    </div>
+                  </template>
+                </DataTable>
+              </BlockUI>
+              <div class="flex align-items-center mb-3">
+                <InputText
+                  v-model="manualFilter"
+                  placeholder="Search Data…"
+                  class="-mb-3 -mt-3"
+                  style="padding-top: 0.1rem"
+                  @keyup.enter="onManualSearch"
+                />
+              </div>
+              <DynamicTable
+                class="card p-0"
+                :data="filteredInvoices"
+                :columns="applyPaymentColumns"
+                :options="applyPaymentOptions"
+                :pagination="applyPaymentPagination"
+                @on-change-pagination="applyPaymentOnChangePage = $event"
+                @on-change-filter="parseDataTableFilterForApplyPayment"
+                @update:clicked-item="addAmmountsToApplyPayment($event)"
+                @on-sort-field="applyPaymentOnSortField"
+                @on-expand-row="onExpandRowApplyPayment($event)"
+              >
+                <template #column-status="{ data: item }">
+                  <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
+                </template>
+
+                <template #expansion="{ data: item }">
+                  <div class="p-0 m-0">
+                    <DataTable :value="item.bookings" striped-rows>
+                      <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
+                        <template v-if="column.field === 'dueAmount'" #body="slotProps">
+                          {{ formatNumber(slotProps.data.dueAmount) }}
+                        </template>
+                        <template v-else-if="column.field === 'invoiceAmount'" #body="slotProps">
+                          {{ formatNumber(slotProps.data.invoiceAmount) }}
+                        </template>
+                      </Column>
+                      <template #empty>
+                        <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
+                          <span v-if="!item?.loadingBookings" class="flex flex-column align-items-center justify-content-center">
+                            <div class="row">
+                              <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
+                            </div>
+                            <div class="row">
+                              <p>{{ messageForEmptyTable }}</p>
+                            </div>
+                          </span>
+                          <span v-else class="flex flex-column align-items-center justify-content-center">
+                            <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
+                          </span>
+                        </div>
+                      </template>
+                    </DataTable>
                   </div>
                 </template>
-              </DataTable>
-            </BlockUI>
-            <div class="flex align-items-center mb-3">
-              <InputText
-                v-model="manualFilter"
-                placeholder="Buscar Datos…"
-                class="-mb-3 -mt-3"
-                @keyup.enter="onManualSearch"
-              />
+              </DynamicTable>
             </div>
-            <DynamicTable
-              class="card p-0"
-              :data="filteredInvoices"
-              :columns="applyPaymentColumns"
-              :options="applyPaymentOptions"
-              :pagination="applyPaymentPagination"
-              @on-change-pagination="applyPaymentOnChangePage = $event"
-              @on-change-filter="parseDataTableFilterForApplyPayment"
-              @update:clicked-item="addAmmountsToApplyPayment($event)"
-              @on-sort-field="applyPaymentOnSortField"
-              @on-expand-row="onExpandRowApplyPayment($event)"
-            >
-              <template #column-status="{ data: item }">
-                <Badge :value="getStatusName(item?.status)" :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`" />
-              </template>
-
-              <template #expansion="{ data: item }">
-                <div class="p-0 m-0">
-                  <DataTable :value="item.bookings" striped-rows>
-                    <Column v-for="column of columnsExpandTable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable">
-                      <template v-if="column.field === 'dueAmount'" #body="slotProps">
-                        {{ formatNumber(slotProps.data.dueAmount) }}
-                      </template>
-                      <template v-else-if="column.field === 'invoiceAmount'" #body="slotProps">
-                        {{ formatNumber(slotProps.data.invoiceAmount) }}
-                      </template>
-                    </Column>
-                    <template #empty>
-                      <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                        <span v-if="!item?.loadingBookings" class="flex flex-column align-items-center justify-content-center">
-                          <div class="row">
-                            <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
-                          </div>
-                          <div class="row">
-                            <p>{{ messageForEmptyTable }}</p>
-                          </div>
-                        </span>
-                        <span v-else class="flex flex-column align-items-center justify-content-center">
-                          <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-                        </span>
-                      </div>
-                    </template>
-                  </DataTable>
-                </div>
-              </template>
-            </DynamicTable>
           </div>
-
-          <div class="flex justify-content-between">
+          <div class="flex justify-content-between -mb-4 -mt-3">
             <div class="flex align-items-center">
               <Chip class="bg-primary py-1 font-bold" label="Applied Payment Amount:">
                 Available Payment Amount: ${{ formatNumber(paymentAmmountSelected) }}
@@ -5302,7 +5304,7 @@ onMounted(async () => {
           </div>
           <div>
             <Button
-              v-tooltip.top="'Copiar tabla'"
+              v-tooltip.top="'Copy Table'"
               class="w-3rem mx-1"
               icon="pi pi-copy"
               @click="copiarDatosOtherDeductions"
@@ -5427,13 +5429,13 @@ onMounted(async () => {
           </div>
           <div>
             <Button
-              v-tooltip.top="'Copiar batch'"
+              v-tooltip.top="'Copy Batch'"
               class="w-3rem mx-1 mt-1"
               icon="pi pi-copy"
               @click="copiarDatosBatch"
             />
             <Button
-              v-tooltip.top="'Exportar Excel'"
+              v-tooltip.top="'Export Excel'"
               class="w-3rem mx-1 mt-1"
               icon="pi pi-file-excel"
               @click="exportarOtherDeductions"
