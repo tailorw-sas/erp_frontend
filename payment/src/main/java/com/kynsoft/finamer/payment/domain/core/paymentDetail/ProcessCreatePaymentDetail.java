@@ -26,7 +26,7 @@ public class ProcessCreatePaymentDetail {
     private final ManageEmployeeDto employee;
     private final String remark;
     private final ManagePaymentTransactionTypeDto paymentTransactionType;
-    private final ManagePaymentStatusDto paymentStatus;
+    private final ManagePaymentStatusDto appliedPaymentStatus;
 
 
     @Getter
@@ -47,7 +47,7 @@ public class ProcessCreatePaymentDetail {
                                       ManageEmployeeDto employee,
                                       String remark,
                                       ManagePaymentTransactionTypeDto paymentTransactionType,
-                                      ManagePaymentStatusDto paymentStatus,
+                                      ManagePaymentStatusDto appliedPaymentStatus,
                                       PaymentDetailDto parentDetail){
         this.payment = payment;
         this.amount = amount;
@@ -55,7 +55,7 @@ public class ProcessCreatePaymentDetail {
         this.employee = employee;
         this.remark = remark;
         this.paymentTransactionType = paymentTransactionType;
-        this.paymentStatus = paymentStatus;
+        this.appliedPaymentStatus = appliedPaymentStatus;
         this.parentDetail = parentDetail;
     }
 
@@ -94,8 +94,10 @@ public class ProcessCreatePaymentDetail {
         if (payment == null) throw new IllegalArgumentException("Payment must not be null");
         if (transactionDate == null) throw new IllegalArgumentException("transactionDate must not be null");
         if (employee == null) throw new IllegalArgumentException("employee must not be null");
-        if (paymentTransactionType == null) throw new IllegalArgumentException("paymentTransactionType must not be null");
-        if (paymentStatus == null && !paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit()) throw new IllegalArgumentException("paymentStatus must not be null");
+        if (paymentTransactionType == null
+        || (!paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit())) throw new IllegalArgumentException("paymentTransactionType must not be null");
+        if (appliedPaymentStatus == null) throw new IllegalArgumentException("paymentStatus must not be null");
+        if(!appliedPaymentStatus.getApplied()) throw new IllegalArgumentException("paymentStatus must be applied");
     }
 
     private PaymentDetailDto createPaymentDetailEntity(PaymentDto paymentDto,
@@ -188,7 +190,7 @@ public class ProcessCreatePaymentDetail {
 
     private void updatePaymentAsApplied(){
         if(this.payment.getPaymentBalance() == 0 && this.payment.getDepositBalance() == 0){
-            this.payment.setPaymentStatus(this.paymentStatus);
+            this.payment.setPaymentStatus(this.appliedPaymentStatus);
             this.paymentStatusHistory = createPaymentStatusHistory();
             this.isPaymentApplied = true;
         }

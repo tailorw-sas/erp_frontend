@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.domain.core.payment;
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
+import com.kynsoft.finamer.payment.domain.core.attachment.ProcessCreateAttachment;
 import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EAttachment;
@@ -19,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ProcessCreatePayment {
 
@@ -211,19 +213,10 @@ public class ProcessCreatePayment {
                                                               List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList){
         int countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
         for (CreateAttachment attachment : attachments) {
-            MasterPaymentAttachmentDto newAttachmentDto = new MasterPaymentAttachmentDto(
-                    UUID.randomUUID(),
-                    Status.ACTIVE,
-                    paymentDto,
-                    attachment.getManageResourceTypeDto(),
-                    attachment.getManageAttachmentTypeDto(),
-                    attachment.getFileName(),
-                    attachment.getFileWeight(),
-                    attachment.getPath(),
-                    attachment.getRemark(),
-                    0L
-            );
-            if (attachment.getManageAttachmentTypeDto().getDefaults()) {
+            ProcessCreateAttachment processCreateAttachment = new ProcessCreateAttachment(paymentDto, attachment);
+            MasterPaymentAttachmentDto newAttachmentDto = processCreateAttachment.create();
+
+            if (attachment.getAttachmentTypeDto().getDefaults()) {
                 countDefaults++;
                 newAttachmentDto.setStatusHistory(attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName());
             } else {

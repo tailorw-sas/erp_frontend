@@ -2,6 +2,7 @@ package com.kynsoft.finamer.payment.application.services.payment.create;
 
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.payment.create.CreateAttachmentRequest;
+import com.kynsoft.finamer.payment.domain.core.attachment.ProcessCreateAttachment;
 import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.core.payment.ProcessCreatePayment;
 import com.kynsoft.finamer.payment.domain.dto.*;
@@ -176,14 +177,7 @@ public class CreatePaymentService {
 
         return attachmentRequests.stream()
                 .map(attachmentRequest -> {
-                    return new CreateAttachment(attachmentRequest.getStatus(),
-                            resourceTypeDtoMap.get(attachmentRequest.getResourceType()),
-                            attachmentTypeDtoMap.get(attachmentRequest.getAttachmentType()),
-                            attachmentRequest.getFileName(),
-                            attachmentRequest.getFileWeight(),
-                            attachmentRequest.getPath(),
-                            attachmentRequest.getRemark(),
-                            attachmentRequest.isSupport());
+                    return this.getCreateAttachment(attachmentRequest, attachmentTypeDtoMap.get(attachmentRequest.getAttachmentType()), resourceTypeDtoMap.get(attachmentRequest.getResourceType()));
                 })
                 .collect(Collectors.toList());
     }
@@ -196,6 +190,16 @@ public class CreatePaymentService {
     private Map<UUID, AttachmentTypeDto> getAttachmentTypeMap(List<UUID> ids){
         return this.manageAttachmentTypeService.findAllById(ids).stream()
                 .collect(Collectors.toMap(AttachmentTypeDto::getId, attachmentTypeDto -> attachmentTypeDto));
+    }
+
+    private CreateAttachment getCreateAttachment(CreateAttachmentRequest request, AttachmentTypeDto attachmentTypeDto, ResourceTypeDto resourceTypeDto){
+        return new CreateAttachment(attachmentTypeDto,
+                resourceTypeDto,
+                request.getFileName(),
+                request.getFileWeight(),
+                request.getPath(),
+                request.getRemark(),
+                request.isSupport());
     }
 
     private void saveChanges(PaymentDto paymentDto,

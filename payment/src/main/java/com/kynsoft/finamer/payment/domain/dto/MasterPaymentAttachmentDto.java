@@ -24,6 +24,7 @@ public class MasterPaymentAttachmentDto {
     private String path;
     private String remark;
     private Long attachmentId;
+    private String statusHistory;
 
     public MasterPaymentAttachmentDto(UUID id, Status status, PaymentDto resource, ResourceTypeDto resourceType, AttachmentTypeDto attachmentType, String fileName, String fileWeight, String path, String remark, Long attachmentId) {
         this.id = id;
@@ -37,6 +38,4 @@ public class MasterPaymentAttachmentDto {
         this.remark = remark;
         this.attachmentId = attachmentId;
     }
-
-    private String statusHistory;
 }

@@ -11,10 +11,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class CreateAttachment {
-
-    private Status status;
-    private ResourceTypeDto manageResourceTypeDto;
-    private AttachmentTypeDto manageAttachmentTypeDto;
+    private AttachmentTypeDto attachmentTypeDto;
+    private ResourceTypeDto resourceTypeDto;
     private String fileName;
     private String fileWeight;
     private String path;

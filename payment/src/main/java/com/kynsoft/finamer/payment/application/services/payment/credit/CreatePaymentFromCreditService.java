@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.application.services.payment.credit;
 
 import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsoft.finamer.payment.application.command.payment.create.CreateAttachmentRequest;
 import com.kynsoft.finamer.payment.application.command.payment.createPaymentToCredit.CreatePaymentToCreditCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.applyPayment.ApplyPaymentDetailCommand;
 import com.kynsoft.finamer.payment.application.command.paymentDetail.createPaymentDetailsTypeCash.CreatePaymentDetailTypeCashCommand;
@@ -17,10 +18,8 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CreatePaymentFromCreditService {
@@ -37,6 +36,9 @@ public class CreatePaymentFromCreditService {
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
     private final IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService;
 
+    private final IManageAttachmentTypeService manageAttachmentTypeService;
+    private final IManageResourceTypeService manageResourceTypeService;
+
     public CreatePaymentFromCreditService(IManageHotelService hotelService,
                                           IManageBankAccountService manageBankAccountService,
                                           IManagePaymentSourceService sourceService,
@@ -47,7 +49,9 @@ public class CreatePaymentFromCreditService {
                                           IManagePaymentAttachmentStatusService attachmentStatusService,
                                           IPaymentCloseOperationService paymentCloseOperationService,
                                           IManagePaymentTransactionTypeService paymentTransactionTypeService,
-                                          IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService){
+                                          IManagePaymentAttachmentStatusService managePaymentAttachmentStatusService,
+                                          IManageAttachmentTypeService manageAttachmentTypeService,
+                                          IManageResourceTypeService manageResourceTypeService){
         this.hotelService = hotelService;
         this.manageBankAccountService = manageBankAccountService;
         this.sourceService = sourceService;
@@ -59,18 +63,22 @@ public class CreatePaymentFromCreditService {
         this.paymentCloseOperationService = paymentCloseOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
         this.managePaymentAttachmentStatusService = managePaymentAttachmentStatusService;
+        this.manageAttachmentTypeService = manageAttachmentTypeService;
+        this.manageResourceTypeService = manageResourceTypeService;
     }
 
-    public PaymentDto createPayment(UUID hotelId,
+    public PaymentDto create(UUID hotelId,
                                     UUID clientId,
                                     UUID agencyId,
                                     UUID employeeId,
-                                    ManageInvoiceDto invoiceDto){
+                                    ManageInvoiceDto invoiceDto,
+                                    List<CreateAttachmentRequest> createAttachmentRequests){
         //TODO Validar en caso de excepcion como se manaja para que no llegue la exepcion a kafka y siga enviando el registro
         ManageHotelDto hotelDto = this.getHotelFromCredit(hotelId);
         ManageBankAccountDto bankAccountDto = this.getBankAccountFromHotel(hotelDto);
         ManagePaymentSourceDto paymentSourceDto = this.getExpensePaymentSource();
-        ManagePaymentStatusDto paymentStatusDto = this.getAppliedPaymentStatus();
+        ManagePaymentStatusDto appliedPaymentStatusDto = this.getAppliedPaymentStatus();
+        ManagePaymentStatusDto confirmedPaymentStatusDto = this.getConfirmedPaymentStatus();
         ManageClientDto clientDto = this.getClient(clientId);
         ManageAgencyDto agencyDto = this.getAgency(agencyId);
         ManageEmployeeDto employee = this.getEmployee(employeeId);
@@ -82,11 +90,12 @@ public class CreatePaymentFromCreditService {
         List<PaymentStatusHistoryDto> paymentStatusHistoryList = new ArrayList<>();
         List<PaymentDetailDto> paymentDetailsToCreate = new ArrayList<>();
 
-        this.createPaymentToCreditNegative(hotelDto,
-                bankAccountDto,
+        this.createPaymentToCreditNegative(bankAccountDto,
                 paymentSourceDto,
-                paymentStatusDto,
+                confirmedPaymentStatusDto,
+                appliedPaymentStatusDto,
                 transactionDate,
+                hotelDto,
                 clientDto,
                 agencyDto,
                 attachmentStatusDto,
@@ -95,7 +104,8 @@ public class CreatePaymentFromCreditService {
                 cashPaymentTransactionType,
                 paymentStatusHistoryList,
                 paymentDetailsToCreate,
-                closeOperationDto);
+                closeOperationDto,
+                createAttachmentRequests);
 
         //this.createPaymentToCreditPositive(hotelDto, bankAccountDto, paymentSourceDto, paymentStatusDto, clientDto, agencyDto, attachmentStatusDto, command, employee);
 
@@ -103,36 +113,136 @@ public class CreatePaymentFromCreditService {
     }
 
     //Payment creado con el cash
-    private void createPaymentToCreditNegative(ManageHotelDto hotelDto,
+    private void createPaymentToCreditNegative(ManageBankAccountDto bankAccountDto,
+                                               ManagePaymentSourceDto paymentSourceDto,
+                                               ManagePaymentStatusDto confirmedPaymentStatusDto,
+                                               ManagePaymentStatusDto appliedPaymentStatusDto,
+                                               OffsetDateTime transactionDate,
+                                               ManageHotelDto hotelDto,
+                                               ManageClientDto clientDto,
+                                               ManageAgencyDto agencyDto,
+                                               ManagePaymentAttachmentStatusDto attachmentStatusDto,
+                                               ManageInvoiceDto invoiceDto,
+                                               ManageEmployeeDto employee,
+                                               List<PaymentStatusHistoryDto> paymentStatusHistoryDtoList,
+                                               List<PaymentDetailDto> paymentDetailDtoList,
+                                               PaymentCloseOperationDto closeOperationDto,
+                                               List<CreateAttachmentRequest> createAttachmentRequests) {
+        ManagePaymentTransactionTypeDto cashPaymentTransactionType = this.getCashPaymentTransactionType();
+
+        Double paymentAmount = invoiceDto.getInvoiceAmount();
+        PaymentDto paymentDto = this.createPayment(paymentSourceDto,
+                confirmedPaymentStatusDto,
+                transactionDate,
+                hotelDto,
+                clientDto,
+                agencyDto,
+                bankAccountDto,
+                paymentAmount,
+                attachmentStatusDto,
+                invoiceDto,
+                employee,
+                closeOperationDto,
+                createAttachmentRequests);
+        
+        if (invoiceDto.getBookings() != null) {
+            for (ManageBookingDto booking : invoiceDto.getBookings()) {
+                PaymentDetailDto paymentDetailDto = this.createPaymentDetailsToCredit(paymentDto,
+                        booking,
+                        transactionDate,
+                        employee,
+                        cashPaymentTransactionType,
+                        appliedPaymentStatusDto,
+                        paymentStatusHistoryDtoList,
+                        true
+                );
+                paymentDetailDtoList.add(paymentDetailDto);
+            }
+        }
+
+        //TODO Implementar la creación de los attachments
+        //if (command.getAttachments() != null) {
+            //paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto, command));
+            //this.createAttachmentStatusHistory(employee, paymentDto, command);
+        //}
+
+    }
+
+    private void createPaymentToCreditPositive(ManageHotelDto hotelDto,
                                                ManageBankAccountDto bankAccountDto,
                                                ManagePaymentSourceDto paymentSourceDto,
-                                               ManagePaymentStatusDto paymentStatusDto,
+                                               ManagePaymentStatusDto confirmedPaymentStatusDto,
+                                               ManagePaymentStatusDto appliedPaymentStatusDto,
                                                OffsetDateTime transactionDate,
                                                ManageClientDto clientDto,
                                                ManageAgencyDto agencyDto,
                                                ManagePaymentAttachmentStatusDto attachmentStatusDto,
                                                ManageInvoiceDto invoiceDto,
                                                ManageEmployeeDto employee,
-                                               ManagePaymentTransactionTypeDto cashPaymentTransactionType,
                                                List<PaymentStatusHistoryDto> paymentStatusHistoryDtoList,
                                                List<PaymentDetailDto> paymentDetailDtoList,
-                                               PaymentCloseOperationDto closeOperationDto) {
+                                               PaymentCloseOperationDto closeOperationDto,
+                                               List<CreateAttachmentRequest> createAttachmentRequests){
+        Double paymentAmount = invoiceDto.getInvoiceAmount() * -1;
+        ManagePaymentTransactionTypeDto depositPaymentTransactionType = this.getDepositPaymentTransactionType();
 
-        Double paymentAmount = invoiceDto.getInvoiceAmount();
+        PaymentDto paymentDto = this.createPayment(paymentSourceDto,
+                confirmedPaymentStatusDto,
+                transactionDate,
+                hotelDto,
+                clientDto,
+                agencyDto,
+                bankAccountDto,
+                paymentAmount,
+                attachmentStatusDto,
+                invoiceDto,
+                employee,
+                closeOperationDto,
+                createAttachmentRequests);
+
+        boolean applyPayment = !hotelDto.getNoAutoApplyCredit();
+
+        if (invoiceDto.getBookings() != null) {
+            for (ManageBookingDto booking : invoiceDto.getBookings()) {
+                PaymentDetailDto paymentDetailDto = this.createPaymentDetailsToCredit(paymentDto,
+                        booking,
+                        transactionDate,
+                        employee,
+                        depositPaymentTransactionType,
+                        appliedPaymentStatusDto,
+                        paymentStatusHistoryDtoList,
+                        applyPayment
+                );
+                paymentDetailDtoList.add(paymentDetailDto);
+            }
+        }
+    }
+
+    private PaymentDto createPayment(ManagePaymentSourceDto paymentSourceDto,
+                                     ManagePaymentStatusDto confirmedPaymentStatusDto,
+                                     OffsetDateTime transactionDate,
+                                     ManageHotelDto hotelDto,
+                                     ManageClientDto clientDto,
+                                     ManageAgencyDto agencyDto,
+                                     ManageBankAccountDto bankAccountDto,
+                                     Double paymentAmount,
+                                     ManagePaymentAttachmentStatusDto attachmentStatusDto,
+                                     ManageInvoiceDto invoiceDto,
+                                     ManageEmployeeDto employee,
+                                     PaymentCloseOperationDto closeOperationDto,
+                                     List<CreateAttachmentRequest> createAttachmentRequests){
         String remark = this.getRemark(invoiceDto);
-        String reference = "";
-        List<CreateAttachment> createAttachmentList = new ArrayList<>();
+        String reference = invoiceDto.getInvoiceNumber();
+        List<CreateAttachment> createAttachmentList = this.getCreateAttachments(createAttachmentRequests);
         ManagePaymentAttachmentStatusDto attachmentStatusSupport = this.managePaymentAttachmentStatusService.findBySupported();
         ManagePaymentAttachmentStatusDto attachmentOtherSupport = this.managePaymentAttachmentStatusService.findByOtherSupported();
-        //AttachmentTypeDto manageAttachmentTypeDto = this.manageAttachmentTypeService.findById(attachment.getAttachmentType());
-        //ResourceTypeDto manageResourceTypeDto = this.manageResourceTypeService.findById(attachment.getResourceType());
 
         PaymentStatusHistoryDto paymentStatusHistoryDto = new PaymentStatusHistoryDto();
         List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList = new ArrayList<>();
         List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList = new ArrayList<>();
 
         ProcessCreatePayment processCreatePayment = new ProcessCreatePayment(paymentSourceDto,
-                paymentStatusDto,
+                confirmedPaymentStatusDto,
                 transactionDate,
                 clientDto,
                 agencyDto,
@@ -153,48 +263,57 @@ public class CreatePaymentFromCreditService {
                 paymentStatusHistoryDto,
                 ImportType.AUTOMATIC,
                 true
-                );
+        );
 
-        PaymentDto paymentDto = processCreatePayment.create();
-        
-        if (invoiceDto.getBookings() != null) {
-            for (ManageBookingDto booking : invoiceDto.getBookings()) {
-                PaymentDetailDto paymentDetailDto = this.createPaymentDetailsToCreditCash(paymentDto,
-                        booking,
-                        transactionDate,
-                        employee,
-                        cashPaymentTransactionType,
-                        paymentStatusDto,
-                        paymentStatusHistoryDtoList
-                );
-                paymentDetailDtoList.add(paymentDetailDto);
-            }
-        }
-
-        //TODO Implementar la creación de los attachments
-        //if (command.getAttachments() != null) {
-            //paymentDto.setAttachments(this.createAttachment(command.getAttachments(), paymentDto, command));
-            //this.createAttachmentStatusHistory(employee, paymentDto, command);
-        //}
-
+        return processCreatePayment.create();
     }
 
-    private PaymentDetailDto createPaymentDetailsToCreditCash(PaymentDto paymentCash,
-                                                  ManageBookingDto booking,
-                                                  OffsetDateTime transactionDate,
-                                                  ManageEmployeeDto employeeDto,
-                                                  ManagePaymentTransactionTypeDto paymentTransactionType,
-                                                  ManagePaymentStatusDto paymentStatusDto,
-                                                  List<PaymentStatusHistoryDto> paymentStatusHistoryList) {
-        ProcessCreatePaymentDetail processCreatePaymentDetail = new ProcessCreatePaymentDetail(paymentCash,
+    private List<CreateAttachment> getCreateAttachments(List<CreateAttachmentRequest> createAttachmentRequests){
+        Set<UUID> resourceTypeIds = new HashSet<>();
+        Set<UUID> attachmentTypeIds = new HashSet<>();
+
+        for(CreateAttachmentRequest attachmentRequest : createAttachmentRequests){
+            resourceTypeIds.add(attachmentRequest.getResourceType());
+            attachmentTypeIds.add(attachmentRequest.getAttachmentType());
+        }
+
+        Map<UUID, AttachmentTypeDto> attachmentTypeDtoMap = this.getAttachmentTypeMap(new ArrayList<>(attachmentTypeIds));
+        Map<UUID, ResourceTypeDto> resourceTypeDtoMap = this.getResourceTypeMap(new ArrayList<>(resourceTypeIds));
+
+        return createAttachmentRequests.stream()
+                .map(attachmentRequest -> {
+                    return this.convertCreateAttachementRequestToCreateAttachment(attachmentRequest, attachmentTypeDtoMap.get(attachmentRequest.getAttachmentType()), resourceTypeDtoMap.get(attachmentRequest.getResourceType()));
+                })
+                .collect(Collectors.toList());
+    }
+
+    private CreateAttachment convertCreateAttachementRequestToCreateAttachment(CreateAttachmentRequest request, AttachmentTypeDto attachmentTypeDto, ResourceTypeDto resourceTypeDto){
+        return new CreateAttachment(attachmentTypeDto,
+                resourceTypeDto,
+                request.getFileName(),
+                request.getFileWeight(),
+                request.getPath(),
+                request.getRemark(),
+                request.isSupport());
+    }
+
+    private PaymentDetailDto createPaymentDetailsToCredit(PaymentDto paymentDto,
+                                                          ManageBookingDto booking,
+                                                          OffsetDateTime transactionDate,
+                                                          ManageEmployeeDto employeeDto,
+                                                          ManagePaymentTransactionTypeDto paymentTransactionType,
+                                                          ManagePaymentStatusDto appliedPaymentStatusDto,
+                                                          List<PaymentStatusHistoryDto> paymentStatusHistoryList,
+                                                          boolean applyPayment) {
+        ProcessCreatePaymentDetail processCreatePaymentDetail = new ProcessCreatePaymentDetail(paymentDto,
                 booking.getInvoiceAmount(),
                 transactionDate,
                 employeeDto,
                 null,
                 paymentTransactionType,
-                paymentStatusDto,
+                appliedPaymentStatusDto,
                 null
-                );
+        );
         processCreatePaymentDetail.process();
         PaymentDetailDto paymentDetailDto = processCreatePaymentDetail.getDetail();
         if(processCreatePaymentDetail.isPaymentApplied()){
@@ -202,12 +321,14 @@ public class CreatePaymentFromCreditService {
             paymentStatusHistoryList.add(paymentStatusHistoryDto);
         }
 
-        ProcessApplyPaymentDetail processApplyPaymentDetail = new ProcessApplyPaymentDetail(paymentCash,
-                paymentDetailDto,
-                booking,
-                transactionDate,
-                booking.getInvoiceAmount());
-        processApplyPaymentDetail.process();
+        if(applyPayment){
+            ProcessApplyPaymentDetail processApplyPaymentDetail = new ProcessApplyPaymentDetail(paymentDto,
+                    paymentDetailDto,
+                    booking,
+                    transactionDate,
+                    booking.getInvoiceAmount());
+            processApplyPaymentDetail.process();
+        }
 
         return paymentDetailDto;
     }
@@ -325,6 +446,10 @@ public class CreatePaymentFromCreditService {
         return this.sourceService.findByExpense();
     }
 
+    private ManagePaymentStatusDto getConfirmedPaymentStatus(){
+        return this.statusService.findByConfirmed();
+    }
+
     private ManagePaymentStatusDto getAppliedPaymentStatus(){
         return this.statusService.findByApplied();
     }
@@ -370,5 +495,15 @@ public class CreatePaymentFromCreditService {
 
     private PaymentCloseOperationDto getCloseOperacion(UUID hotelId){
         return this.paymentCloseOperationService.findByHotelId(hotelId);
+    }
+
+    private Map<UUID, ResourceTypeDto> getResourceTypeMap(List<UUID> ids){
+        return this.manageResourceTypeService.findAllByIds(ids).stream()
+                .collect(Collectors.toMap(ResourceTypeDto::getId, resourceTypeDto -> resourceTypeDto));
+    }
+
+    private Map<UUID, AttachmentTypeDto> getAttachmentTypeMap(List<UUID> ids){
+        return this.manageAttachmentTypeService.findAllById(ids).stream()
+                .collect(Collectors.toMap(AttachmentTypeDto::getId, attachmentTypeDto -> attachmentTypeDto));
     }
 }
