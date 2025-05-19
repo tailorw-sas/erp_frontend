@@ -2055,7 +2055,7 @@ async function applyPaymentGetList(): Promise<void> {
 
     // 👇 Reiniciar página si no hay resultados
     if (response.data.length === 0 && applyPaymentPayload.value.page > 0) {
-      // applyPaymentPayload.value.page = 500
+      applyPaymentPayload.value.page = 500
       return await applyPaymentGetList()
     }
 
@@ -3964,9 +3964,43 @@ async function onManualSearch() {
   const searchTerm = manualFilter.value.trim()
   applyPaymentPayload.value.page = 0 // arrancas siempre en la primera página
   applyPaymentPayload.value.filter = [
-    ...originalFilters,
     {
       key: 'invoiceNumberPrefix', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'couponNumbers',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceAmountTemp',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'dueAmountTemp',
       operator: 'LIKE',
       value: `%${searchTerm}%`,
       logicalOperation: 'AND',
