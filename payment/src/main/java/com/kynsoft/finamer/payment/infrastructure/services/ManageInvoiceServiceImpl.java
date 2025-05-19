@@ -98,7 +98,6 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
     @Override
     public List<ManageInvoiceDto> findSortedInvoicesByIdIn(List<UUID> ids) {
-        //return this.repositoryQuery.findInvoiceWithEntityGraphByIdIn(ids).stream()
         List<Invoice> invoices = this.repositoryQuery.findAllByIdInCustom(ids);
         return invoices.stream()
                 .map(Invoice::toAggregate)

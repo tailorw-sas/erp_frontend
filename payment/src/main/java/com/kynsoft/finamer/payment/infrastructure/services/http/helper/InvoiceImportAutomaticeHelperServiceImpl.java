@@ -14,7 +14,10 @@ import com.kynsoft.finamer.payment.domain.services.IManageInvoiceService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class InvoiceImportAutomaticeHelperServiceImpl {
@@ -34,24 +37,25 @@ public class InvoiceImportAutomaticeHelperServiceImpl {
         this.manageAgencyService = manageAgencyService;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createInvoice(InvoiceHttp invoiceHttp) {
         ManageHotelDto hotelDto = this.hotelService.findById(invoiceHttp.getHotel());
         ManageAgencyDto agencyDto = this.manageAgencyService.findById(invoiceHttp.getAgency());
+        ManageInvoiceDto invoice = this.getInvoice(invoiceHttp, hotelDto, agencyDto);
         List<ManageBookingDto> bookingDtos = new ArrayList<>();
-        createBookingList(invoiceHttp.getBookings(), bookingDtos);
-        create(bookingDtos, hotelDto, agencyDto, invoiceHttp);
+        createBookingList(invoiceHttp.getBookings(), bookingDtos, invoice);
+        create(bookingDtos, invoice);
     }
 
-    private void create(List<ManageBookingDto> bookingDtos, ManageHotelDto hotelDto, ManageAgencyDto agencyDto, InvoiceHttp invoiceHttp) {
-
-        ManageInvoiceDto invoiceDto = new ManageInvoiceDto(
+    private ManageInvoiceDto getInvoice(InvoiceHttp invoiceHttp, ManageHotelDto hotelDto, ManageAgencyDto agencyDto){
+        return new ManageInvoiceDto(
                 invoiceHttp.getId(),
                 invoiceHttp.getInvoiceId(),
                 invoiceHttp.getInvoiceNo(),
                 deleteHotelInfo(invoiceHttp.getInvoiceNumber()),
                 EInvoiceType.valueOf(invoiceHttp.getInvoiceType()),
                 invoiceHttp.getInvoiceAmount(),
-                bookingDtos,
+                new ArrayList<>(),
                 invoiceHttp.getHasAttachment(), //!= null ? objKafka.getHasAttachment() : false
                 invoiceHttp.getInvoiceParent() != null ? this.invoiceService.findById(invoiceHttp.getInvoiceParent()) : null,
                 LocalDateTime.parse(invoiceHttp.getInvoiceDate()),
@@ -59,12 +63,14 @@ public class InvoiceImportAutomaticeHelperServiceImpl {
                 agencyDto,
                 invoiceHttp.getAutoRec()
         );
-
-        this.invoiceService.create(invoiceDto);
-
     }
 
-    private void createBookingList(List<BookingHttp> bookings, List<ManageBookingDto> bookingDtos) {
+    private void create(List<ManageBookingDto> bookingDtos, ManageInvoiceDto invoice) {
+        this.invoiceService.create(invoice);
+        this.bookingService.createAll(bookingDtos);
+    }
+
+    private void createBookingList(List<BookingHttp> bookings, List<ManageBookingDto> bookingDtos, ManageInvoiceDto invoice) {
         for (BookingHttp booking : bookings) {
             bookingDtos.add(new ManageBookingDto(
                     booking.getId(),
@@ -80,7 +86,7 @@ public class InvoiceImportAutomaticeHelperServiceImpl {
                     booking.getCouponNumber(),
                     booking.getAdults(),
                     booking.getChildren(),
-                    null,
+                    invoice,
                     booking.getBookingParent() != null ? this.bookingService.findById(booking.getBookingParent()) : null,
                     LocalDateTime.parse(booking.getBookingDate())
             ));
