@@ -1375,14 +1375,18 @@ async function getList() {
 
     interface ListColor {
       NONE: string
+      OTHER: string
+      SUPPORTED: string
       ATTACHMENT_WITH_ERROR: string
       ATTACHMENT_WITHOUT_ERROR: string
     }
 
     const listColor: ListColor = {
-      NONE: '#616161',
-      ATTACHMENT_WITH_ERROR: '#ff002b',
-      ATTACHMENT_WITHOUT_ERROR: '#00b816',
+      NONE: '',
+      OTHER: '#9d9d9d',
+      SUPPORTED: '#0a0a0a',
+      ATTACHMENT_WITH_ERROR: '#fd1600',
+      ATTACHMENT_WITHOUT_ERROR: '#24d600',
     }
     let color = listColor.NONE
 
@@ -1459,16 +1463,19 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = String(iterator.status)
       }
-
+      console.log('iterator', iterator)
       if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
-        if (iterator.attachmentStatus?.patWithAttachment) {
+        if (iterator.attachmentStatus?.code === 'PAT') {
           color = listColor.ATTACHMENT_WITHOUT_ERROR
         }
-        else if (iterator.attachmentStatus?.pwaWithOutAttachment) {
+        else if (iterator.attachmentStatus?.code === 'PWA') {
           color = listColor.ATTACHMENT_WITH_ERROR
         }
-        else if (iterator.attachmentStatus?.nonNone) {
-          color = listColor.NONE
+        else if (iterator.attachmentStatus?.code === 'OTHER') {
+          color = listColor.OTHER
+        }
+        else if (iterator.attachmentStatus?.code === 'SUP') {
+          color = listColor.SUPPORTED
         }
         else {
           color = listColor.NONE
@@ -1982,7 +1989,7 @@ async function getAgencyByClient(clientId: string = '') {
   }
 }
 
-async function applyPaymentGetList() {
+async function applyPaymentGetList(): Promise<void> {
   if (applyPaymentOptions.value.loading) { return }
 
   try {
@@ -2005,11 +2012,9 @@ async function applyPaymentGetList() {
       },
       [
         { key: 'client.id', logicalOperation: 'AND', operator: 'EQUALS', value: objItemSelectedForRightClickApplyPayment.value.client.id },
-        { key: 'client.status', logicalOperation: 'AND', operator: 'EQUALS', value: 'ACTIVE' },
-        { key: 'status', logicalOperation: 'AND', operator: 'EQUALS', value: 'ACTIVE' }
+        { key: 'client.status', logicalOperation: 'AND', operator: 'EQUALS', value: 'ACTIVE' }
       ]
     )
-
     if (!agencies.length) { return }
 
     const hotel = objItemSelectedForRightClickApplyPayment.value.hotel
@@ -2018,7 +2023,6 @@ async function applyPaymentGetList() {
       { key: 'dueAmount', operator: 'GREATER_THAN', value: '0.00', logicalOperation: 'AND' },
       { key: 'manageInvoiceStatus.enabledToApply', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
     ]
-
     if (hotel && hotel.id) {
       if (hotel.status === 'ACTIVE' && hotel.applyByTradingCompany) {
         // Buscar hoteles de la misma trading company
@@ -2043,7 +2047,6 @@ async function applyPaymentGetList() {
 
     // Aplicar los filtros
     applyPaymentPayload.value.filter = filters
-
     const response = await GenericService.search(
       applyPaymentOptions.value.moduleApi,
       applyPaymentOptions.value.uriApi,
@@ -2052,7 +2055,7 @@ async function applyPaymentGetList() {
 
     // 👇 Reiniciar página si no hay resultados
     if (response.data.length === 0 && applyPaymentPayload.value.page > 0) {
-      applyPaymentPayload.value.page = 0
+      // applyPaymentPayload.value.page = 500
       return await applyPaymentGetList()
     }
 
@@ -3956,10 +3959,32 @@ const filteredInvoices = computed(() => {
   })
 })
 
-function onManualSearch() {
-  // volver a la primera página
-  applyPaymentPagination.value.page = 0
-  // no hace falta llamar a la API: filteredInvoices se actualiza solo
+async function onManualSearch() {
+  // 1. Construye tu filtro LIKE único (o varios términos con OR/AND)
+  const searchTerm = manualFilter.value.trim()
+  applyPaymentPayload.value.page = 0 // arrancas siempre en la primera página
+  applyPaymentPayload.value.filter = [
+    ...originalFilters,
+    {
+      key: 'invoiceNumberPrefix', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }
+  ]
+
+  // 2. Pides al servidor sólo las filas que coinciden
+  const response = await GenericService.search(
+    applyPaymentOptions.value.moduleApi,
+    applyPaymentOptions.value.uriApi,
+    applyPaymentPayload.value
+  )
+
+  // 3. Actualizas tu lista (y la paginación vendrá ya acorde al total de coincidencias)
+  applyPaymentListOfInvoice.value = response.data
+  applyPaymentPagination.value.totalElements = response.totalElements
+  applyPaymentPagination.value.totalPages = response.totalPages
 }
 
 async function parseDataTableFilterForApplyPayment1(payloadFilter: any) {
@@ -4788,14 +4813,14 @@ onMounted(async () => {
         @on-row-right-click="onRowContextMenu($event)"
       >
         <template #column-icon="{ data: objData, column }">
-          <div class="flex align-items-center justify-content-center p-0 m-0 w-2rem">
+          <div class="clip-wrapper">
             <!-- <pre>{{ objData.attachmentStatus }}</pre> -->
             <Button
               v-if="showIconAttachment(objData)"
               :icon="column.icon"
-              class="p-button-rounded p-button-text w-2rem h-2rem"
+              class="p-button-text p-button-rounded clip-icon-bg"
               aria-label="Submit"
-              :disabled="objData?.attachmentStatus?.nonNone || objData?.attachmentStatus?.supported === false"
+              :disabled="objData?.attachmentStatus?.nonNone"
               :style="{ color: objData.color }"
             />
           </div>
@@ -5814,6 +5839,22 @@ onMounted(async () => {
 }
 .p-text-disabled {
   color: #888888;
+}
+.clip-wrapper {
+  /* asegurarnos de tener espacio para el icono agrandado */
+  width: 3rem !important;
+  height: 1.8rem !important;
+  display: flex;
+  align-items: auto;
+  justify-content: auto;
+}
+.clip-icon-bg {
+   background-color: #ffffff;
+   font-size: 4rem !important;       /* agranda */
+  font-weight: 500 !important;        /* un poco más grueso */
+  text-shadow: 0 0 1px currentColor;  /* pequeño glow */
+  line-height: 1 !important;         /* ajustar línea */
+  transform: scale(1.8) !important;
 }
 
 // :deep(.p-datatable-tbody) {
