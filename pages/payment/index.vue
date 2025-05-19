@@ -31,6 +31,8 @@ const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
 
+const allInvoices = ref<any[]>([])
+
 // const  = { id: 'All', name: 'All', status: 'ACTIVE' }
 const listItems = ref<any[]>([])
 const clientItemsList = ref<any[]>([])
@@ -921,14 +923,14 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100,
+  pageSize: 1000,
   page: 0,
   sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
   page: 0,
-  limit: 100,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -936,7 +938,7 @@ const applyPaymentPagination = ref<IPagination>({
 
 const applyPaymentPaginationTemp = ref<IPagination>({
   page: 0,
-  limit: 100,
+  limit: 1000,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1996,6 +1998,7 @@ async function applyPaymentGetList(): Promise<void> {
     applyPaymentOptions.value.loading = true
     applyPaymentPagination.value = { ...applyPaymentPaginationTemp.value }
     applyPaymentListOfInvoice.value = []
+    allInvoices.value = []
     const newListItems = []
 
     if (objItemSelectedForRightClickApplyPayment.value?.client?.status !== 'ACTIVE') { return }
@@ -2088,6 +2091,7 @@ async function applyPaymentGetList(): Promise<void> {
     }
 
     applyPaymentListOfInvoice.value = [...applyPaymentListOfInvoice.value, ...newListItems]
+    allInvoices.value = [...allInvoices.value, ...newListItems]
   }
   catch (error) {
     console.error(error)
@@ -3936,14 +3940,14 @@ async function parseDataTableFilterForApplyPayment(event: any) {
 }
 
 const filteredInvoices = computed(() => {
-  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
+  const terms = debouncedFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
 
   if (!terms.length) {
-    return applyPaymentListOfInvoice.value // Si no hay término de búsqueda, devolver la lista completa
+    return allInvoices.value // Si no hay término de búsqueda, devolver la lista completa
   }
 
   // Filtrar las filas basadas en que cada término esté presente en cualquier campo de la fila
-  return applyPaymentListOfInvoice.value.filter((inv) => {
+  return allInvoices.value.filter((inv) => {
     return terms.some((term) => {
       // Buscar cada término en todos los campos de la fila
       return (
@@ -3970,6 +3974,41 @@ async function onManualSearch() {
       operator: 'LIKE',
       value: `%${searchTerm}%`,
       logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'OR',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'OR',
+      type: 'filterSearch'
+    },
+    {
+      key: 'couponNumbers',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'OR',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceAmountTemp',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'OR',
+      type: 'filterSearch'
+    },
+    {
+      key: 'dueAmountTemp',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'OR',
       type: 'filterSearch'
     }
   ]
@@ -4174,6 +4213,14 @@ watch(applyPaymentOnChangePage, (newValue) => {
 
   applyPaymentPayload.value.pageSize = newPageSize
   applyPaymentGetList()
+})
+
+let debTimeout: ReturnType<typeof setTimeout>
+const debouncedFilter = ref('')
+
+watch(manualFilter, (val) => {
+  clearTimeout(debTimeout)
+  debTimeout = setTimeout(() => { debouncedFilter.value = val }, 250)
 })
 
 watch(applyPaymentOnChangePageOtherDeduction, async (newValue) => {
