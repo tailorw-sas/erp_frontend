@@ -921,14 +921,14 @@ const payloadToApplyPayment = ref<GenericObject> ({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100,
+  pageSize: 10,
   page: 0,
   sortBy: 'invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
   page: 0,
-  limit: 100,
+  limit: 10,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -2055,7 +2055,7 @@ async function applyPaymentGetList(): Promise<void> {
 
     // 👇 Reiniciar página si no hay resultados
     if (response.data.length === 0 && applyPaymentPayload.value.page > 0) {
-      applyPaymentPayload.value.page = 500
+      applyPaymentPayload.value.page = 100
       return await applyPaymentGetList()
     }
 

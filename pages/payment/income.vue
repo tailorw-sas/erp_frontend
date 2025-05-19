@@ -209,8 +209,8 @@ const columns: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
   { field: 'invoiceAmount', header: 'Booking Amount', type: 'number' },
-
 ]
+
 const adjustmentColumns: IColumn[] = [
   { field: 'adjustmentId', header: 'ID', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'number' },
@@ -248,16 +248,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3',
   },
-  // {
-  //   field: 'dueDate',
-  //   header: 'Due Date',
-  //   dataType: 'date',
-  //   class: 'field col-12 md:col-2 required ',
-  //   validation: z.date({
-  //     required_error: 'The Due Date field is required',
-  //     invalid_type_error: 'The Due Date field is required',
-  //   }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  // },
+
   {
     field: 'invoiceDate',
     header: 'Invoice Date',
@@ -313,23 +304,6 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('Status'),
     disabled: true,
   },
-  // {
-  //   field: 'reSend',
-  //   header: 'Re-Send',
-  //   dataType: 'check',
-  //   class: 'field col-12 md:col-1 mt-3 mb-3',
-  // },
-  // {
-  //   field: 'reSendDate',
-  //   header: 'Re-Send Date',
-  //   dataType: 'date',
-  //   class: 'field col-12 md:col-2',
-  //   validation: z
-  //     .union([z.date(), z.null()])
-  //     .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
-  //       message: 'The Re-Send Date field cannot be greater than current date',
-  //     })
-  // },
   {
     field: 'manual',
     header: 'Manual',
@@ -397,16 +371,6 @@ const itemTemp = ref({
 })
 
 const fieldAdjustments = ref<FieldDefinitionType[]>([
-
-  // {
-  //   field: 'amount',
-  //   header: 'Amount',
-  //   dataType: 'text',
-  //   class: 'field col-12 required',
-  //   validation: z.string().min(1, { message: 'The amount field is required' })
-  //     .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-  //     .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
-  // },
   {
     field: 'amount',
     header: 'Amount',
@@ -642,25 +606,6 @@ watch(idItem, () => {
     }]
   }
 })
-
-async function validateIncomeCloseOperation(item: { [key: string]: any }) {
-  if (item) {
-    const hotelId = Object.prototype.hasOwnProperty.call(item.hotel, 'id') ? item.hotel.id : item.hotel
-    const dateList: string[] = AdjustmentList.value.map((e: any) => e.date)
-    if (item.invoiceDate) {
-      dateList.push(dayjs(item.invoiceDate).format('YYYY-MM-DD'))
-    }
-    await validateCloseOperation(hotelId, dateList)
-  }
-}
-
-async function validateCloseOperation(hotelId: string, dateList: string[]) {
-  const payload = {
-    hotelId,
-    dates: dateList
-  }
-  await GenericService.create(confApi.moduleApi, 'check-dates', payload)
-}
 
 async function goToList() {
   if (window.opener) {
