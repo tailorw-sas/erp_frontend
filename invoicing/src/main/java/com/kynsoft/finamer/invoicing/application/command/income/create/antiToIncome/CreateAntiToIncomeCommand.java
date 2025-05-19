@@ -60,26 +60,6 @@ public class CreateAntiToIncomeCommand implements ICommand {
         this.employee = employee;
         this.attachments = attachments;
     }
-    public CreateAntiToIncomeCommand(UUID id,Status status, LocalDateTime invoiceDate, Boolean manual,
-                               UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
-                               Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
-                               UUID invoiceStatus, String employee, List<CreateAntiToIncomeAttachmentRequest> attachments) {
-        this.id = id;
-        this.status = status;
-        this.invoiceDate = invoiceDate;
-        this.manual = manual;
-        this.agency = agency;
-        this.hotel = hotel;
-        this.invoiceType = invoiceType;
-        this.invoiceStatus = invoiceStatus;
-        this.incomeAmount = incomeAmount;
-        this.invoiceNumber = invoiceNumber;
-        this.dueDate = dueDate;
-        this.reSend = reSend;
-        this.reSendDate = reSendDate;
-        this.employee = employee;
-        this.attachments = attachments;
-    }
 
     public static CreateAntiToIncomeCommand fromRequest(CreateAntiToIncomeRequest request) {
         return new CreateAntiToIncomeCommand(
