@@ -78,6 +78,24 @@ public class Invoice {
         this.autoRec = dto.getAutoRec();
     }
 
+    public Invoice(ManageInvoiceDto dto, boolean includeBookings) {
+        this.id = dto.getId();
+        this.invoiceId = dto.getInvoiceId();
+        this.invoiceNumber = dto.getInvoiceNumber();
+        this.invoiceType = dto.getInvoiceType();
+        this.invoiceAmount = dto.getInvoiceAmount();
+        if(includeBookings){
+            this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(Booking::new).collect(Collectors.toList()) : null;
+        }
+        this.invoiceNo = dto.getInvoiceNo();
+        this.hasAttachment = dto.getHasAttachment();
+        this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
+        this.invoiceDate = dto.getInvoiceDate();
+        this.hotel = dto.getHotel() != null ? new ManageHotel(dto.getHotel()) : null;
+        this.agency = dto.getAgency() != null ? new ManageAgency(dto.getAgency()) : null;
+        this.autoRec = dto.getAutoRec();
+    }
+
     public ManageInvoiceDto toAggregateSample() {
         return new ManageInvoiceDto(
                 id,

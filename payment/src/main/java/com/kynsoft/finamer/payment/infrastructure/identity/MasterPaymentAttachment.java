@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.payment.domain.dto.MasterPaymentAttachmentDto;
@@ -39,6 +40,7 @@ public class MasterPaymentAttachment implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_id")
+    @JsonBackReference
     private Payment resource;
 
     @ManyToOne(fetch = FetchType.EAGER)

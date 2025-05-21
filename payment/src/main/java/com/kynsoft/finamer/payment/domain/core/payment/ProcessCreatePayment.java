@@ -110,13 +110,10 @@ public class ProcessCreatePayment {
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.employeeDto, "employee", "Employee ID cannot be null."));
 
         RulesChecker.checkRule(new CheckIfDateIsBeforeCurrentDateRule(this.transactionDate.toLocalDate()));
-        RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(this.amount));
+        RulesChecker.checkRule(new CheckPaymentAmountGreaterThanZeroRule(this.paymentSourceDto, this.amount));
 
         RulesChecker.checkRule(new CheckIfTransactionDateIsWithInRangeCloseOperationRule(this.transactionDate.toLocalDate(),
                 this.closeOperationDto.getBeginDate(), this.closeOperationDto.getEndDate()));
-
-        //attachmentStatusHistoryDtoList = new ArrayList<>();
-        //this.paymentStatusHistoryDto = new PaymentStatusHistoryDto();
 
         PaymentDto paymentDto = this.getPayment(this.paymentSourceDto,
                 this.transactionDate,
@@ -136,14 +133,10 @@ public class ProcessCreatePayment {
         if(!this.attachments.isEmpty()){
             paymentDto.setHasAttachment(true);
             this.createAttachment(paymentDto,
+                    this.employeeDto,
                     this.attachments,
                     this.attachmentStatusSupport,
                     this.attachmentOtherSupport,
-                    this.masterPaymentAttachmentDtoList);
-            paymentDto.setAttachments(this.masterPaymentAttachmentDtoList);
-
-            this.createAttachmentStatusHistory(this.employeeDto,
-                    paymentDto,
                     this.masterPaymentAttachmentDtoList,
                     this.attachmentStatusHistoryDtoList);
         }else{
@@ -152,14 +145,9 @@ public class ProcessCreatePayment {
                     this.attachmentStatusHistoryDtoList);
         }
 
-        this.createPaymentAttachmentStatusHistory(paymentDto,
+        this.createPaymentStatusHistory(paymentDto,
                 this.employeeDto,
                 this.paymentStatusHistoryDto);
-
-//        paymentDto.setCreateByCredit(true);
-//        paymentDto.setImportType(ImportType.AUTOMATIC);
-//        paymentDto.setHasAttachment(true);
-        //paymentDto.setHasDetailTypeDeposit(false);
 
         return paymentDto;
     }
@@ -207,51 +195,27 @@ public class ProcessCreatePayment {
     }
 
     private void createAttachment(PaymentDto paymentDto,
-                                                              List<CreateAttachment> attachments,
-                                                              ManagePaymentAttachmentStatusDto attachmentStatusSupport,
-                                                              ManagePaymentAttachmentStatusDto attachmentOtherSupport,
-                                                              List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList){
-        int countDefaults = 0;//El objetivo de este contador es controlar cuantos Payment Support han sido agregados.
+                                  ManageEmployeeDto employeeDto,
+                                  List<CreateAttachment> attachments,
+                                  ManagePaymentAttachmentStatusDto attachmentStatusSupport,
+                                  ManagePaymentAttachmentStatusDto attachmentOtherSupport,
+                                  List<MasterPaymentAttachmentDto> masterPaymentAttachmentDtoList,
+                                  List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList){
         for (CreateAttachment attachment : attachments) {
-            ProcessCreateAttachment processCreateAttachment = new ProcessCreateAttachment(paymentDto, attachment);
-            MasterPaymentAttachmentDto newAttachmentDto = processCreateAttachment.create();
-
-            if (attachment.getAttachmentTypeDto().getDefaults()) {
-                countDefaults++;
-                newAttachmentDto.setStatusHistory(attachmentStatusSupport.getCode() + "-" + attachmentStatusSupport.getName());
-            } else {
-                //newAttachmentDto.setStatusHistory(attachmentStatusNonNone.getCode() + "-" + attachmentStatusNonNone.getName());
-                newAttachmentDto.setStatusHistory(attachmentOtherSupport.getCode() + "-" + attachmentOtherSupport.getName());
-            }
-            masterPaymentAttachmentDtoList.add(newAttachmentDto);
-        }
-
-        RulesChecker.checkRule(new MasterPaymetAttachmentWhitDefaultTrueIntoCreateMustBeUniqueRule(countDefaults));
-
-        if (countDefaults > 0) {
-            paymentDto.setPaymentSupport(true);
-            paymentDto.setAttachmentStatus(attachmentStatusSupport);
-            //paymentDto.setAttachmentStatus(this.attachmentStatusService.findBySupported());
-        } else {
-            paymentDto.setAttachmentStatus(attachmentOtherSupport);
-            //paymentDto.setAttachmentStatus(attachmentStatusNonNone);
-            paymentDto.setPaymentSupport(false);
-        }
-    }
-
-    private void createAttachmentStatusHistory(ManageEmployeeDto employeeDto,
-                                               PaymentDto payment,
-                                               List<MasterPaymentAttachmentDto> list,
-                                               List<AttachmentStatusHistoryDto> attachmentStatusHistoryDtoList) {
-        for (MasterPaymentAttachmentDto attachment : list) {
             AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
-            attachmentStatusHistoryDto.setId(UUID.randomUUID());//Quitar
-            attachmentStatusHistoryDto.setDescription("An attachment to the payment was inserted. The file name: " + attachment.getFileName());
-            attachmentStatusHistoryDto.setEmployee(employeeDto);
-            attachmentStatusHistoryDto.setPayment(payment);
-            attachmentStatusHistoryDto.setStatus(attachment.getStatusHistory());
-            //attachmentStatusHistoryDto.setStatus(payment.getAttachmentStatus().getCode() + "-" + payment.getAttachmentStatus().getName());
-            attachmentStatusHistoryDto.setAttachmentId(attachment.getAttachmentId());
+            ProcessCreateAttachment processCreateAttachment = new ProcessCreateAttachment(paymentDto,
+                    employeeDto,
+                    attachment.getAttachmentTypeDto(),
+                    attachment.getResourceTypeDto(),
+                    attachment.getFileName(),
+                    attachment.getFileWeight(),
+                    attachment.getPath(),
+                    attachment.getRemark(),
+                    attachmentStatusSupport,
+                    attachmentOtherSupport,
+                    attachmentStatusHistoryDto);
+            MasterPaymentAttachmentDto newAttachmentDto = processCreateAttachment.create();
+            masterPaymentAttachmentDtoList.add(newAttachmentDto);
             attachmentStatusHistoryDtoList.add(attachmentStatusHistoryDto);
         }
     }
@@ -268,13 +232,13 @@ public class ProcessCreatePayment {
         attachmentStatusHistoryDtoList.add(attachmentStatusHistoryDto);
     }
 
-    private void createPaymentAttachmentStatusHistory(PaymentDto payment,
+    private void createPaymentStatusHistory(PaymentDto payment,
                                                       ManageEmployeeDto employeeDto,
-                                                      PaymentStatusHistoryDto attachmentStatusHistoryDto) {
-        attachmentStatusHistoryDto.setId(UUID.randomUUID());
-        attachmentStatusHistoryDto.setDescription("Creating Payment.");
-        attachmentStatusHistoryDto.setEmployee(employeeDto);
-        attachmentStatusHistoryDto.setPayment(payment);
-        attachmentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
+                                                      PaymentStatusHistoryDto paymentStatusHistoryDto) {
+        paymentStatusHistoryDto.setId(UUID.randomUUID());
+        paymentStatusHistoryDto.setDescription("Creating Payment.");
+        paymentStatusHistoryDto.setEmployee(employeeDto);
+        paymentStatusHistoryDto.setPayment(payment);
+        paymentStatusHistoryDto.setStatus(payment.getPaymentStatus().getCode() + "-" + payment.getPaymentStatus().getName());
     }
 }

@@ -19,7 +19,8 @@ public class CreateAttachmentCommandHandler implements ICommandHandler<CreateAtt
     @Override
     public void handle(CreateAttachmentCommand command) {
 
-        List<MasterPaymentAttachmentDto> masterPaymentAttachments = this.createAttachmentService.createMany(command.getPaymentDto(), command.getAttachments());
+        List<MasterPaymentAttachmentDto> masterPaymentAttachments = this.createAttachmentService.createMany(command.getPaymentDto().getId(),
+                command.getAttachments());
         command.setDtos(masterPaymentAttachments);
     }
 

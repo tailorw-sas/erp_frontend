@@ -55,12 +55,12 @@ public class CreatePaymentDetailFromFileCommandHandler implements ICommandHandle
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
-        RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
+        RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(paymentDto, paymentDto.isCreateByCredit(), command.getAmount()));
         RulesChecker.checkRule(new CheckIfNewPaymentDetailIsApplyDepositRule(paymentTransactionTypeDto.getApplyDeposit()));
 
         //identified and notIdentified
         if (paymentTransactionTypeDto.getCash()) {
-            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(command.getAmount(), paymentDto.getPaymentBalance()));
+            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(paymentDto.getPaymentSource(), paymentDto.isCreateByCredit(), command.getAmount(), paymentDto.getPaymentBalance()));
             UpdateIfNotNull.updateDouble(paymentDto::setIdentified, paymentDto.getIdentified() + command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setNotIdentified, paymentDto.getNotIdentified() - command.getAmount(), updatePayment::setUpdate);
             UpdateIfNotNull.updateDouble(paymentDto::setApplied, paymentDto.getApplied() + command.getAmount(), updatePayment::setUpdate);

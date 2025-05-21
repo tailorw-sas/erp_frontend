@@ -112,11 +112,7 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public PaymentDto findByIdCustom(UUID id) {
-        long startTime = System.nanoTime();
         Optional<Payment> payment = this.repositoryQuery.findByIdCustom(id);
-        long endTime = System.nanoTime();
-        System.out.println("*****************Tiempo:" + (endTime - startTime)/1_000_000);
-
         if (payment.isPresent()) {
             return payment.get().toAggregateBasicPayment();
         }

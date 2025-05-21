@@ -62,14 +62,14 @@ public class ProcessCreatePaymentDetail {
     public void process(){
         this.validate();
 
-        RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(this.amount));
+        RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(this.payment, this.payment.isCreateByCredit(), this.amount));
 
         this.detail = this.createPaymentDetailEntity(this.payment, paymentTransactionType, this.amount, this.remark, this.transactionDate);
         this.addDetailToPayment(this.payment, this.detail);
 
         switch(PaymentTransactionTypeCode.from(this.paymentTransactionType)){
             case CASH -> {
-                RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(this.amount, this.payment.getPaymentBalance()));
+                RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyRule(this.payment.getPaymentSource(), this.payment.isCreateByCredit(), this.amount, this.payment.getPaymentBalance()));
                 this.updatePaymentTypeCash(this.payment, this.amount);
             }
             case DEPOSIT -> {
