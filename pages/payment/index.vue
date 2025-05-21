@@ -2053,12 +2053,6 @@ async function applyPaymentGetList(): Promise<void> {
       applyPaymentPayload.value
     )
 
-    // 👇 Reiniciar página si no hay resultados
-    if (response.data.length === 0 && applyPaymentPayload.value.page > 0) {
-      applyPaymentPayload.value.page = 100
-      return await applyPaymentGetList()
-    }
-
     const { data: dataList, page, size, totalElements, totalPages } = response
 
     applyPaymentPagination.value.page = page
