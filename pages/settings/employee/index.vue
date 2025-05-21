@@ -62,14 +62,14 @@ const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 100,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
 })
 const pagination = ref<IPagination>({
   page: 0,
-  limit: 50,
+  limit: 100,
   totalElements: 0,
   totalPages: 0,
   search: ''

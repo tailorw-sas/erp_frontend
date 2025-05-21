@@ -196,7 +196,7 @@ async function getList(loadFirstItem: boolean = true) {
         iterator.manageBank = { id: iterator.manageBank.id, name: iterator.manageBank.name }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageHotel')) {
-        iterator.manageHotel = { id: iterator.manageHotel.id, name: iterator.manageHotel.name }
+        iterator.manageHotel = { id: iterator.manageHotel.id, name: `${iterator.manageHotel.code} - ${iterator.manageHotel.name}` }
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'manageAccountType')) {
         iterator.manageAccountType = { id: iterator.manageAccountType.id, name: iterator.manageAccountType.name }
