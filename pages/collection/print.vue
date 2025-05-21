@@ -11,17 +11,12 @@ import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 import DynamicTablePrint from '~//components/table/DynamicTablePrint.vue'
 import { formatNumber } from '~/utils/helpers'
 
-import type { IData } from '~/components/table/interfaces/IModelData'
-
 const emit = defineEmits(['close'])
 
 const toast = useToast()
 const totalInvoiceAmount = ref(0)
-const idItemToLoadFirstTime = ref('')
 const listPrintItems = ref<any[]>([])
 const totalDueAmount = ref(0)
-
-const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 
 const objPayloadOfCheckBox = ref({
   groupByClient: false,
@@ -29,27 +24,9 @@ const objPayloadOfCheckBox = ref({
   invoiceAndBookings: true
 })
 
-const filterToSearch = ref<IData>({
-  criteria: null,
-  search: '',
-  allFromAndTo: false,
-  agency: [allDefaultItem],
-  hotel: [allDefaultItem],
-  from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  to: new Date(),
-})
-
-const hotelList = ref<any[]>([])
-const agencyList = ref<any[]>([])
-
 const confApiPrint = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice/external-report',
-})
-
-const confAgencyApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-agency',
 })
 
 const confinvoiceApi = reactive({
@@ -57,28 +34,14 @@ const confinvoiceApi = reactive({
   uriApi: 'manage-invoice-type',
 })
 
-const confhotelListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-hotel',
-})
-
 const confagencyListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
 })
 
-// VARIABLES -----------------------------------------------------------------------------------------
-
-const ENUM_FILTER = [
-  { id: 'id', name: 'Id' },
-]
-const transformedData = listPrintItems.value.map(item => ({
-  ...item,
-  hotel: item.hotel?.name || 'N/A'
-}))
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'invoiceNo', header: 'Id', type: 'text', objApi: confagencyListApi },
+  { field: 'invoiceId', header: 'Id', type: 'text', objApi: confagencyListApi },
   { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi },
   {
     field: 'hotel',
@@ -121,8 +84,6 @@ const options = ref({
   showSelectedItems: true,
   messageToDelete: 'Do you want to save the change?'
 })
-const initialLimit = 10
-const route = useRoute()
 
 const payload = ref({
   filter: [],
@@ -132,23 +93,6 @@ const payload = ref({
   sortBy: '',
   sortType: ''
 })
-// Ahora esto será válido
-const payloadInv = ref<IQueryRequest>({
-  filter: [],
-  page: 0,
-  size: 50,
-  sort: 'invoiceDate,desc'
-})
-
-const payloadLocalStorage = ref<IQueryRequest>({
-  filter: [],
-  query: '',
-  pageSize: 50,
-  page: 0,
-  sortBy: 'invoiceId',
-  sortType: ENUM_SHORT_TYPE.DESC
-})
-
 const payloadOnChangePage = ref<PageState>()
 
 const pagination = ref<Pagination>({
@@ -158,10 +102,6 @@ const pagination = ref<Pagination>({
   totalPages: 0,
   search: ''
 })
-function handleSelectionChange(items: any[]) {
-  console.log('Selección actualizada:', items)
-  selectedElements.value = items
-}
 
 const selectedElements = ref<any[]>([])
 // -------------------------------------------------------------------------------------------------------
@@ -187,55 +127,6 @@ function handlePaginationChange(event: any) {
   pagination.value.page = event.page + 1
   pagination.value.limit = event.rows
 }
-
-// FUNCTIONS ---------------------------------------------------------------------------------------------
-
-// async function getPrintList(totalFromIndex: number) {
-//   try {
-//     options.value.loading = true
-//     listPrintItems.value = []
-
-//     totalInvoiceAmount.value = totalFromIndex;
-
-//     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value);
-
-//     const { data: dataList, page, size, totalElements, totalPages } = response;
-
-//     pagination.value.page = page; // Convierte a 1-based
-//     pagination.value.limit = size;
-//     pagination.value.totalElements = listItems.length;
-//     pagination.value.totalPages = totalPages;
-
-//      const newListItems = dataList.map(iterator => {
-//       let invoiceNumber;
-//       if (iterator?.invoiceNumber?.split('-')?.length === 3) {
-//         invoiceNumber = `${iterator?.invoiceNumber?.split('-')[0]}-${iterator?.invoiceNumber?.split('-')[2]}`;
-//       } else {
-//         invoiceNumber = iterator?.invoiceNumber;
-//       }
-
-//       return {
-//         ...iterator,
-//         loadingEdit: false,
-//         loadingDelete: false,
-//         agencyCd: iterator?.agency?.code,
-//         hasAttachments: iterator.hasAttachments || false,
-//         aging: iterator?.aging || 0,
-//         dueAmount: iterator?.dueAmount ? formatNumber(iterator.dueAmount) : 0,
-//         invoiceAmount: iterator?.invoiceAmount ? formatNumber(iterator.invoiceAmount) : 0,
-//         invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
-//         hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
-//         manageInvoiceType: { ...iterator?.manageInvoiceType, name: `${iterator?.manageInvoiceType?.code || ''}-${iterator?.manageInvoiceType?.name || ''}` }
-//       };
-//     });
-
-//     listPrintItems.value = newListItems; // Asigna los nuevos elementos a la lista
-//   } catch (error) {
-//     console.error(error);
-//   } finally {
-//     options.value.loading = false;
-//   }
-// }
 
 async function savePrint() {
   options.value.loading = true
@@ -294,92 +185,6 @@ async function savePrint() {
 function onClose() {
   emit('close')
 }
-
-async function getHotelList(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        }
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-    const { data: dataList } = response
-    hotelList.value = [allDefaultItem]
-    for (const iterator of dataList) {
-      hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
-async function getAgencyList(query: string = '') {
-  try {
-    const payload = {
-      filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'status',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-          logicalOperation: 'AND'
-        },
-
-      ],
-      query: '',
-      pageSize: 20,
-      page: 0,
-      sortBy: 'createdAt',
-      sortType: ENUM_SHORT_TYPE.DESC
-    }
-
-    const response = await GenericService.search(confAgencyApi.moduleApi, confAgencyApi.uriApi, payload)
-    const { data: dataList } = response
-    agencyList.value = [allDefaultItem]
-    for (const iterator of dataList) {
-      agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-    }
-  }
-  catch (error) {
-    console.error('Error loading hotel list:', error)
-  }
-}
-
 async function clearForm() {
   await goToList()
 }
@@ -396,7 +201,6 @@ async function parseDataTableFilter(payloadFilter: any) {
     ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
     : payload.value
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
-
   if (parseFilter && parseFilter?.length > 0) {
     for (let i = 0; i < parseFilter?.length; i++) {
       /*   if (parseFilter[i]?.key === 'status') {
@@ -416,43 +220,13 @@ async function parseDataTableFilter(payloadFilter: any) {
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   // await getPrintList()
 }
-// payload.value.filter = [...parseFilter || []]
-// getPrintList()
-// }
 
-async function onSortField(event: any) {
-  if (event) {
-    if (event.sortField === 'hotel') {
-      event.sortField = 'hotel.name'
-    }
-    if (event.sortField === 'status') {
-      event.sortField = 'invoiceStatus'
-    }
-    if (event.sortField === 'agency') {
-      event.sortField = 'agency.name'
-    }
-    if (event.sortField === 'agencyCd') {
-      event.sortField = 'agency.code'
-    }
-
-    if (event.sortField === 'invoiceNumber') {
-      event.sortField = 'invoiceNumberPrefix'
-    }
-
-    // payload.value = localStorage.getItem('payloadOfInvoiceList')
-    //   ? JSON.parse(localStorage.getItem('payloadOfInvoiceList') || '{}')
-    //   : payload.value
-    payload.value.sortBy = event.sortField
-    payload.value.sortType = event.sortOrder
-    // await getPrintList()
-  }
-}
 function getStatusName(code: string) {
   switch (code) {
     case 'PROCESSED': return 'Processed'
 
-    case 'RECONCILED': return 'Reconciled'
-    case 'SENT': return 'Sent'
+    case 'Reconciled': return 'Reconciled'
+    case 'Sent': return 'Sent'
     case 'CANCELED': return 'Cancelled'
     case 'PENDING': return 'Pending'
 
@@ -461,8 +235,8 @@ function getStatusName(code: string) {
   }
 }
 function getStatusSeverity(code: string) {
-  switch (code.toUpperCase()) {
-    case 'RECONCILED': return 'success'
+  switch (code) {
+    case 'REC': return 'success'
     case 'PENDING': return 'warning'
     case 'CANCELED': return 'danger'
     default: return 'info'
@@ -471,8 +245,8 @@ function getStatusSeverity(code: string) {
 function getStatusBadgeBackgroundColor(code: string) {
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
-    case 'RECONCILED': return '#005FB7'
-    case 'SENT': return '#006400'
+    case 'REC': return '#005FB7'
+    case 'SEN': return '#006400'
     case 'CANCELED': return '#888888'
     case 'PENDING': return '#686868'
 
@@ -480,98 +254,10 @@ function getStatusBadgeBackgroundColor(code: string) {
       return '#686868'
   }
 }
-function searchAndFilter() {
-  const newPayload: IQueryRequest = {
-    filter: [],
-    query: '',
-    pageSize: 50,
-    page: 0,
-    sortBy: 'createdAt',
-    sortType: ENUM_SHORT_TYPE.DESC
-  }
-  if (filterToSearch.value.criteria && filterToSearch.value.search) {
-    newPayload.filter = [{
-      key: filterToSearch.value.criteria ? filterToSearch.value.criteria.id : '',
-      operator: 'EQUALS',
-      value: filterToSearch.value.search,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    }]
-  }
-  else {
-    newPayload.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-    // Date
-    if (filterToSearch.value.from) {
-      newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
-        operator: 'GREATER_THAN_OR_EQUAL_TO',
-        value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      }]
-    }
-    if (filterToSearch.value.to) {
-      newPayload.filter = [...newPayload.filter, {
-        key: 'checkIn',
-        operator: 'LESS_THAN_OR_EQUAL_TO',
-        value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
-        logicalOperation: 'AND',
-        type: 'filterSearch'
-      }]
-    }
-    if (filterToSearch.value.merchant?.length > 0) {
-      const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
-          key: 'agency.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
-    }
-    if (filterToSearch.value.hotel?.length > 0) {
-      const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        newPayload.filter = [...newPayload.filter, {
-          key: 'hotel.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
-    }
-  }
-  payload.value = newPayload
-  getList()
-}
-
-function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  filterToSearch.value = {
-    criteria: null,
-    search: '',
-    agency: [allDefaultItem],
-    hotel: [allDefaultItem],
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    to: new Date(),
-  }
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  getList()
-}
 
 async function goToList() {
   await navigateTo('/invoice')
 }
-
-const disabledSearch = computed(() => {
-  // return !(filterToSearch.value.criteria && filterToSearch.value.search)
-  return false
-})
 
 watch(payloadOnChangePage, async (newValue) => {
   payload.value = localStorage.getItem('payloadOfInvoiceList')
@@ -632,9 +318,9 @@ function onMultipleSelect(selectedItems: any[]) {
 
             <template #column-status="{ data: item }">
               <Badge
-                :value="getStatusName(item?.status)"
-                :severity="getStatusSeverity(item.status)"
-                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
+                :value="getStatusName(item?.manageInvoiceStatus.name)"
+                :severity="getStatusSeverity(item?.manageInvoiceStatus.code)"
+                :style="`background-color: ${getStatusBadgeBackgroundColor(item.manageInvoiceStatus.code)}`"
               />
             </template>
 
