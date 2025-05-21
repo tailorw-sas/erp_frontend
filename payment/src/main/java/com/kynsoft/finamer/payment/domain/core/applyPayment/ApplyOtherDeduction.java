@@ -37,7 +37,7 @@ public class ApplyOtherDeduction {
     }
 
     public void applyOtherDeduction(){
-        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.paymentDetail.getAmount(), this.amount));
+        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.payment.getPaymentSource(), this.payment.isCreateByCredit(), this.paymentDetail.getAmount(), this.amount));
         //TODO Validar que el booking exista
         //TODO Validar que el monto no sea mayor al balance del booking
         this.booking.setAmountBalance(BankerRounding.round(this.booking.getAmountBalance() - this.amount));

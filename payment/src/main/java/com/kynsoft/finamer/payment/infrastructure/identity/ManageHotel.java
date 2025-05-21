@@ -62,7 +62,7 @@ public class ManageHotel implements Serializable {
         this.manageTradingCompany = dto.getManageTradingCompany();
         this.name = dto.getName();
         this.status = dto.getStatus();
-        this.autoApplyCredit = dto.getAutoApplyCredit();
+        this.autoApplyCredit = dto.getNoAutoApplyCredit();
     }
 
     public ManageHotelDto toAggregate() {

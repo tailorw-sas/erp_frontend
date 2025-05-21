@@ -97,7 +97,6 @@ public class ManageInvoiceCustomRepositoryImpl implements ManageInvoiceCustomRep
         }
 
         query.orderBy(QueryUtils.toOrders(pageable.getSort(), root, cb));
-
         TypedQuery<ManageInvoiceSearchProjection> typedQuery = entityManager.createQuery(query);
         typedQuery.setFirstResult((int) pageable.getOffset());
         typedQuery.setMaxResults(pageable.getPageSize());
@@ -112,8 +111,6 @@ public class ManageInvoiceCustomRepositoryImpl implements ManageInvoiceCustomRep
         }
         long total = entityManager.createQuery(countQuery).getSingleResult();
         org.hibernate.query.Query<?> hibernateQuery = typedQuery.unwrap(org.hibernate.query.Query.class);
-        List<ManageInvoiceSearchProjection> results = typedQuery.getResultList();
-        System.out.println("Registros devueltos: " + results.size());
-        return new PageImpl<>(results, pageable, total);
+        return new PageImpl<>(typedQuery.getResultList(), pageable, total);
     }
 }

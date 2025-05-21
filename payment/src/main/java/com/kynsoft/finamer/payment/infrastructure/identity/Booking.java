@@ -66,7 +66,7 @@ public class Booking {
         this.children = dto.getChildren();
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
-        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice()) : null;
+        this.invoice = dto.getInvoice() != null ? new Invoice(dto.getInvoice(), false) : null;
         this.parent = dto.getParent() != null ? new Booking(dto.getParent()) : null;
         this.bookingDate = dto.getBookingDate() != null ? dto.getBookingDate() : null;
     }
