@@ -805,7 +805,6 @@ async function getPaymentData() {
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
-
     listItems.value = [...listItems.value, ...newListItems]
   }
   catch (error) {
@@ -2011,8 +2010,6 @@ function onRowContextMenu(event: any) {
       menuItemApplayPayment.visible = true
     }
   }
-
-  console.log('event', event.data.attachmentStatus.pwaWithOutAttachment)
   if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
