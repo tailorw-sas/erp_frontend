@@ -52,7 +52,7 @@
         .p-menuitem-link {
             color: $menuitemTextColor;
             padding: $menuitemPadding;
-            user-select: none;
+           user-select: text !important;
 
             .p-menuitem-text {
                 color: $menuitemTextColor;
@@ -152,7 +152,7 @@
 
         .p-menuitem-link {
             padding: $horizontalMenuRootMenuitemPadding;
-            user-select: none;
+           user-select: text !important;
 
             .p-menuitem-text {
                 color: $horizontalMenuRootMenuitemTextColor;

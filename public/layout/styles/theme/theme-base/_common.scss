@@ -20,7 +20,7 @@
 .p-disabled, .p-disabled * {
     cursor: default;
     pointer-events: none;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-component-overlay {
@@ -32,7 +32,7 @@
 }
 
 .p-unselectable-text {
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-sr-only {
@@ -55,7 +55,7 @@
 	padding: 0;
 	border: none;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-link:disabled {

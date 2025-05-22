@@ -2,7 +2,7 @@
 .p-checkbox {
     position: relative;
     display: inline-flex;
-    user-select: none;
+   user-select: text !important;
     vertical-align: bottom;
 }
 

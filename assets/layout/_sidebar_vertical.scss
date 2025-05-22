@@ -79,7 +79,7 @@
         }
 
         a {
-            user-select: none;
+           user-select: text !important;
 
             &.active-menuitem {
                 > .layout-submenu-toggler {

@@ -209,7 +209,7 @@ a {
     display: none;
 }
 .layout-sidebar .layout-menu a {
-    user-select: none;
+   user-select: text !important;
 }
 .layout-sidebar .layout-menu a.active-menuitem > .layout-submenu-toggler {
     transform: rotate(-180deg);
@@ -936,7 +936,7 @@ a {
         transform: rotate(-180deg);
     }
     .layout-container.layout-drawer.layout-sidebar-active .layout-sidebar .layout-menu a {
-        user-select: none;
+       user-select: text !important;
     }
     .layout-container.layout-drawer.layout-sidebar-active .layout-sidebar .layout-menu a.active-menuitem > .layout-submenu-toggler {
         transform: rotate(-180deg);

@@ -3,7 +3,7 @@
     display: inline-flex;
     cursor: pointer;
     position: relative;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-dropdown-clear-icon {

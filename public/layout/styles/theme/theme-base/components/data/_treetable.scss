@@ -11,7 +11,7 @@
 
 .p-treetable .p-sortable-column {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-treetable-responsive-scroll > .p-treetable-wrapper {
@@ -29,7 +29,7 @@
 
 .p-treetable-toggler {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;

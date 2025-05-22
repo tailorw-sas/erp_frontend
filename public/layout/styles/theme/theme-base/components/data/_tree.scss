@@ -18,12 +18,12 @@
 
 .p-treenode-selectable {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-tree-toggler {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;

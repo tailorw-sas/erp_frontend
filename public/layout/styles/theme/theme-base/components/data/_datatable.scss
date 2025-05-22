@@ -10,7 +10,7 @@
 
 .p-datatable .p-sortable-column {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-datatable .p-sortable-column .p-column-title,

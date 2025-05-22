@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import '~/assets/styles.scss'
-import '~/assets/global-overrides.scss' // ¡este va *después*!
 
 useHead({
   link: [

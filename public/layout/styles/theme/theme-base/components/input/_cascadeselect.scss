@@ -2,7 +2,7 @@
 .p-cascadeselect {
     display: inline-flex;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
 }
 
 .p-cascadeselect-trigger {
