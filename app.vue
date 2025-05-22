@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import '~/assets/styles.scss'
+import '~/assets/global-overrides.scss' // ¡este va *después*!
 
 useHead({
   link: [
@@ -10,17 +11,6 @@ useHead({
       href: '/layout/styles/theme/theme-light/blue/theme.css',
     },
   ],
-})
-onMounted(() => {
-  const style = document.createElement('style')
-  style.textContent = `
-    *, *::before, *::after {
-      -webkit-user-select: text !important;
-         -moz-user-select: text !important;
-              user-select: text !important;
-    }
-  `
-  document.head.appendChild(style)
 })
 </script>
 
