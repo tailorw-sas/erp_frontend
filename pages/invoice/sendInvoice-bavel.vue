@@ -571,6 +571,11 @@ onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
   // await searchAndFilter()
+  const html = document.documentElement
+  html.style.setProperty('user-select', 'text', 'important')
+  html.style.setProperty('-webkit-user-select', 'text', 'important')
+  html.style.setProperty('-moz-user-select', 'text', 'important')
+  html.style.setProperty('-ms-user-select', 'text', 'important')
 })
 </script>
 

@@ -10,20 +10,6 @@ useHead({
       href: '/layout/styles/theme/theme-light/blue/theme.css',
     },
   ],
-
-  // este style se inyecta al final del <head>, tras tu tema
-  style: [
-    {
-      children: `
-        *, *::before, *::after {
-          -webkit-user-select: text !important;
-             -moz-user-select: text !important;
-              -ms-user-select: text !important;
-                  user-select: text !important;
-        }
-      `
-    }
-  ]
 })
 </script>
 
