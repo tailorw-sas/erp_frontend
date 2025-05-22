@@ -44,7 +44,7 @@ th .p-column-header-content .p-checkbox.p-component .p-checkbox-box {
     background-color: --var(--secondary-color);
     border-color: rgb(255, 255, 255); /* Ejemplo de estilo */
 }
-/* 2) Aquí, al final, tu “forcer” de selección de texto GLOBAL */
+/* ==== FORZAR SELECCIÓN DE TEXTO EN TODA LA APP ==== */
 *, *::before, *::after {
   -webkit-user-select: text !important;
      -moz-user-select: text !important;
