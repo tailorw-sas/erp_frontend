@@ -1479,3 +1479,9 @@ p:last-child {
 .hidden {
     display: none !important;
 }
+/* ==== FORZAR SELECCIÓN DE TEXTO ==== */
+*, *::before, *::after {
+  -webkit-user-select: text !important;
+     -moz-user-select: text !important;
+          user-select: text !important;
+}
