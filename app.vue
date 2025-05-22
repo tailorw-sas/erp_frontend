@@ -11,6 +11,17 @@ useHead({
     },
   ],
 })
+onMounted(() => {
+  const style = document.createElement('style')
+  style.textContent = `
+    *, *::before, *::after {
+      -webkit-user-select: text !important;
+         -moz-user-select: text !important;
+              user-select: text !important;
+    }
+  `
+  document.head.appendChild(style)
+})
 </script>
 
 <template>
@@ -43,11 +54,5 @@ th .p-column-header-content .p-checkbox.p-component .p-checkbox-box {
     /* Estilos que quieres aplicar */
     background-color: --var(--secondary-color);
     border-color: rgb(255, 255, 255); /* Ejemplo de estilo */
-}
-/* ==== FORZAR SELECCIÓN DE TEXTO EN TODA LA APP ==== */
-*, *::before, *::after {
-  -webkit-user-select: text !important;
-     -moz-user-select: text !important;
-          user-select: text !important;
 }
 </style>
