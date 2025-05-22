@@ -2,7 +2,7 @@
 .p-button {
     display: inline-flex;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     align-items: center;
     vertical-align: bottom;
     text-align: center;

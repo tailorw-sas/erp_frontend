@@ -295,7 +295,7 @@
   .p-disabled, .p-disabled * {
     cursor: default;
     pointer-events: none;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-component-overlay {
@@ -307,7 +307,7 @@
   }
 
   .p-unselectable-text {
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-sr-only {
@@ -330,7 +330,7 @@
     padding: 0;
     border: none;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-link:disabled {
@@ -1044,7 +1044,7 @@
   .p-cascadeselect {
     display: inline-flex;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-cascadeselect-trigger {
@@ -1224,7 +1224,7 @@
   .p-checkbox {
     position: relative;
     display: inline-flex;
-    user-select: none;
+   user-select: text !important;
     vertical-align: bottom;
   }
 
@@ -1441,7 +1441,7 @@
     display: inline-flex;
     cursor: pointer;
     position: relative;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-dropdown-clear-icon {
@@ -2277,7 +2277,7 @@
   .p-multiselect {
     display: inline-flex;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-multiselect-trigger {
@@ -2585,7 +2585,7 @@
   .p-radiobutton {
     position: relative;
     display: inline-flex;
-    user-select: none;
+   user-select: text !important;
     vertical-align: bottom;
   }
 
@@ -2879,7 +2879,7 @@
   .p-treeselect {
     display: inline-flex;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-treeselect-trigger {
@@ -3010,7 +3010,7 @@
   .p-togglebutton {
     position: relative;
     display: inline-flex;
-    user-select: none;
+   user-select: text !important;
     vertical-align: bottom;
   }
 
@@ -3088,7 +3088,7 @@
   .p-button {
     display: inline-flex;
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     align-items: center;
     vertical-align: bottom;
     text-align: center;
@@ -4004,7 +4004,7 @@
 
   .p-datatable .p-sortable-column {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-datatable .p-sortable-column .p-column-title,
@@ -4784,7 +4784,7 @@
     margin-left: -0.75rem;
     z-index: 2;
     left: 50%;
-    user-select: none;
+   user-select: text !important;
     cursor: pointer;
     width: 1.5rem;
     height: 1.5rem;
@@ -4884,7 +4884,7 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
-    user-select: none;
+   user-select: text !important;
     overflow: hidden;
     position: relative;
   }
@@ -5237,12 +5237,12 @@
 
   .p-treenode-selectable {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-tree-toggler {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -5402,7 +5402,7 @@
 
   .p-treetable .p-sortable-column {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-treetable-responsive-scroll > .p-treetable-wrapper {
@@ -5420,7 +5420,7 @@
 
   .p-treetable-toggler {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -5761,7 +5761,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
-    user-select: none;
+   user-select: text !important;
     position: relative;
     text-decoration: none;
   }
@@ -5884,7 +5884,7 @@
 
   .p-fieldset-toggleable .p-fieldset-legend a {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     overflow: hidden;
     position: relative;
     text-decoration: none;
@@ -6147,7 +6147,7 @@
   }
 
   .p-scrollpanel-grabbed {
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-scrollpanel .p-scrollpanel-bar {
@@ -6182,7 +6182,7 @@
 
   .p-splitter-horizontal.p-splitter-resizing {
     cursor: col-resize;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-splitter-horizontal > .p-splitter-gutter > .p-splitter-gutter-handle {
@@ -6196,7 +6196,7 @@
 
   .p-splitter-vertical.p-splitter-resizing {
     cursor: row-resize;
-    user-select: none;
+   user-select: text !important;
   }
 
   .p-splitter-vertical > .p-splitter-gutter {
@@ -6440,7 +6440,7 @@
 
   .p-tabview-header-action {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     display: flex;
     align-items: center;
     position: relative;
@@ -7531,7 +7531,7 @@
   .p-contextmenu .p-menuitem > .p-menuitem-content .p-menuitem-link {
     color: #C8CCD8;
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-contextmenu .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -7959,7 +7959,7 @@
   .p-megamenu .p-menuitem > .p-menuitem-content .p-menuitem-link {
     color: #C8CCD8;
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-megamenu .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -8049,7 +8049,7 @@
   }
   .p-megamenu.p-megamenu-horizontal .p-megamenu-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link {
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-megamenu.p-megamenu-horizontal .p-megamenu-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -8168,7 +8168,7 @@
   .p-menu .p-menuitem > .p-menuitem-content .p-menuitem-link {
     color: #C8CCD8;
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-menu .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -8365,7 +8365,7 @@
   }
   .p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link {
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -8405,7 +8405,7 @@
   .p-menubar .p-menuitem > .p-menuitem-content .p-menuitem-link {
     color: #C8CCD8;
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-menubar .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -8538,7 +8538,7 @@
   .p-panelmenu .p-panelmenu-header-action {
     display: flex;
     align-items: center;
-    user-select: none;
+   user-select: text !important;
     cursor: pointer;
     position: relative;
     text-decoration: none;
@@ -8557,7 +8557,7 @@
   .p-panelmenu .p-menuitem-link {
     display: flex;
     align-items: center;
-    user-select: none;
+   user-select: text !important;
     cursor: pointer;
     text-decoration: none;
     position: relative;
@@ -8644,7 +8644,7 @@
   .p-panelmenu .p-panelmenu-content .p-menuitem > .p-menuitem-content .p-menuitem-link {
     color: #C8CCD8;
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-panelmenu .p-panelmenu-content .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;
@@ -8850,7 +8850,7 @@
 
   .p-tabmenu-nav a {
     cursor: pointer;
-    user-select: none;
+   user-select: text !important;
     display: flex;
     align-items: center;
     position: relative;
@@ -9006,7 +9006,7 @@
   .p-tieredmenu .p-menuitem > .p-menuitem-content .p-menuitem-link {
     color: #C8CCD8;
     padding: 0.571rem 0.429rem;
-    user-select: none;
+   user-select: text !important;
   }
   .p-tieredmenu .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text {
     color: #C8CCD8;

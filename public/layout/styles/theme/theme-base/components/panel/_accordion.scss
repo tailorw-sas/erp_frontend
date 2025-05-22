@@ -3,7 +3,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
-    user-select: none;
+   user-select: text !important;
     position: relative;
     text-decoration: none;
 }
