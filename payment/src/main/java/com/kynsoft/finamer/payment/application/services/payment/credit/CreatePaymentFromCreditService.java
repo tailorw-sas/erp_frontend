@@ -315,26 +315,28 @@ public class CreatePaymentFromCreditService {
 
         if (!hotelDto.getNoAutoApplyCredit()) {
             for (ManageBookingDto creditBooking : invoiceDtoTypeCredit.getBookings()) {
-                //Crear un AANT por cada booking para el deposito
-                Double amountToApply = Math.abs(creditBooking.getAmountBalance());//  * -1;
-                PaymentDetailDto applyDepositPaymentDetail = this.createPaymentDetail(paymentDto,
-                        amountToApply,
-                        transactionDate,
-                        employee,
-                        null,
-                        applyDepositPaymentTransactionType,
-                        appliedPaymentStatus,
-                        depositPaymentDetail,
-                        paymentStatusHistoryList);
-                paymentDetailApplyDepositList.add(applyDepositPaymentDetail);
+                if(creditBooking.getParent().getAmountBalance() > 0){
+                    //Crear un AANT por cada booking para el deposito
+                    Double amountToApply = Math.min(creditBooking.getParent().getAmountBalance(), Math.abs(creditBooking.getAmountBalance()));
+                    PaymentDetailDto applyDepositPaymentDetail = this.createPaymentDetail(paymentDto,
+                            amountToApply,
+                            transactionDate,
+                            employee,
+                            null,
+                            applyDepositPaymentTransactionType,
+                            appliedPaymentStatus,
+                            depositPaymentDetail,
+                            paymentStatusHistoryList);
+                    paymentDetailApplyDepositList.add(applyDepositPaymentDetail);
 
-                //Se aplica al AANT
-                this.processApplyPaymentDetail(paymentDto,
-                        applyDepositPaymentDetail,
-                        creditBooking.getParent(),
-                        transactionDate,
-                        amountToApply);
-                bookingList.add(creditBooking.getParent());
+                    //Se aplica al AANT
+                    this.processApplyPaymentDetail(paymentDto,
+                            applyDepositPaymentDetail,
+                            creditBooking.getParent(),
+                            transactionDate,
+                            amountToApply);
+                    bookingList.add(creditBooking.getParent());
+                }
             }
         }
 
