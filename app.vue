@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import '~/assets/styles.scss'
+import { onMounted } from 'vue'
 
 useHead({
   link: [
@@ -10,6 +11,24 @@ useHead({
       href: '/layout/styles/theme/theme-light/blue/theme.css',
     },
   ],
+})
+onMounted(() => {
+  // si ya existe, lo quitamos
+  const old = document.getElementById('force-user-select')
+  if (old) { old.remove() }
+
+  const css = `
+    *, *::before, *::after {
+      -webkit-user-select: text !important;
+         -moz-user-select: text !important;
+          -ms-user-select: text !important;
+              user-select: text !important;
+    }
+  `
+  const s = document.createElement('style')
+  s.id = 'force-user-select'
+  s.appendChild(document.createTextNode(css))
+  document.head.appendChild(s)
 })
 </script>
 
