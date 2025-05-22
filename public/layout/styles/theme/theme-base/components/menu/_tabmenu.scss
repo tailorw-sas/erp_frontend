@@ -13,7 +13,7 @@
 
 .p-tabmenu-nav a {
     cursor: pointer;
-   user-select: text !important;
+   user-select: none;
     display: flex;
     align-items: center;
     position: relative;

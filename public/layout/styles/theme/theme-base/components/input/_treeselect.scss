@@ -4,7 +4,7 @@
 .p-treeselect {
     display: inline-flex;
     cursor: pointer;
-   user-select: text !important;
+   user-select: none;
 }
 
 .p-treeselect-trigger {
