@@ -13,11 +13,12 @@ useHead({
   ],
 })
 onMounted(() => {
-  // si ya existe, lo quitamos
-  const old = document.getElementById('force-user-select')
-  if (old) { old.remove() }
+  onMounted(() => {
+  // 1) Forzar CSS al final del <head>
+    const prev = document.getElementById('force-user-select')
+    if (prev) { prev.remove() }
 
-  const css = `
+    const css = `
     *, *::before, *::after {
       -webkit-user-select: text !important;
          -moz-user-select: text !important;
@@ -25,10 +26,37 @@ onMounted(() => {
               user-select: text !important;
     }
   `
-  const s = document.createElement('style')
-  s.id = 'force-user-select'
-  s.appendChild(document.createTextNode(css))
-  document.head.appendChild(s)
+    const styleTag = document.createElement('style')
+    styleTag.id = 'force-user-select'
+    styleTag.appendChild(document.createTextNode(css))
+    document.head.appendChild(styleTag)
+
+    // 2) Eliminar atributos "unselectable" si los hubiera
+    document.querySelectorAll('[unselectable]').forEach(el => el.removeAttribute('unselectable'))
+
+    // 3) Quitar handlers inline que bloqueen la selección
+    window.onselectstart = null
+    window.ondragstart = null
+
+    // 4) Añadir listeners en fase de captura para evitar que otros handlers
+    //    cancelen el select, copy, etc.
+    const events = [
+      'selectstart',
+      'copy',
+      'cut',
+      'mousedown',
+      'mouseup',
+      'keydown',
+      'contextmenu'
+    ]
+    events.forEach((evt) => {
+      document.addEventListener(evt, (e) => {
+      // detenemos la propagación hacia cualquier handler que haga e.preventDefault()
+        e.stopImmediatePropagation()
+      // no llamamos a preventDefault, de modo que el navegador por defecto copia el texto
+      }, true /* captura */)
+    })
+  })
 })
 </script>
 
