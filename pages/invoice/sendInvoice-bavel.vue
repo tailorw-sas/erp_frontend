@@ -4,7 +4,6 @@ import { useToast } from 'primevue/usetoast'
 
 import dayjs from 'dayjs'
 import type { PageState } from 'primevue/paginator'
-import CopyableArea from '@/components/CopyableArea.vue'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
