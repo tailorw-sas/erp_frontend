@@ -10,6 +10,7 @@ import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.util.*;
@@ -81,6 +82,7 @@ public class CreatePaymentFromCreditService {
         this.manageBookingService = manageBookingService;
     }
 
+    @Transactional
     public PaymentDto create(UUID hotelId,
                                     UUID clientId,
                                     UUID agencyId,

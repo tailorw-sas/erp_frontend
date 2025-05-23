@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ConsumerReplicateManageInvoiceService {
@@ -110,7 +111,10 @@ public class ConsumerReplicateManageInvoiceService {
     }
 
     private String deleteHotelInfo(String input) {
-        return input.replaceAll("-(.*?)-", "-");
+        if(Objects.nonNull(input)){
+            return input.replaceAll("-(.*?)-", "-");
+        }
+        return input;
     }
 
     private void addAttachment(ManageInvoiceKafka objKafka, List<CreateAttachmentRequest> attachmentKafkas) {
