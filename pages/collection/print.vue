@@ -17,6 +17,7 @@ const toast = useToast()
 const totalInvoiceAmount = ref(0)
 const listPrintItems = ref<any[]>([])
 const totalDueAmount = ref(0)
+const manualFilter = ref('')
 
 const objPayloadOfCheckBox = ref({
   groupByClient: false,
@@ -41,8 +42,8 @@ const confagencyListApi = reactive({
 
 // -------------------------------------------------------------------------------------------------------
 const columns: IColumn[] = [
-  { field: 'invoiceId', header: 'Id', type: 'text', objApi: confagencyListApi },
-  { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi },
+  { field: 'invoiceId', header: 'Id', type: 'text', objApi: confagencyListApi, sortable: false, showFilter: false },
+  { field: 'manageInvoiceType', header: 'Type', type: 'select', objApi: confinvoiceApi, sortable: false, showFilter: false },
   {
     field: 'hotel',
     header: 'Hotel',
@@ -51,18 +52,20 @@ const columns: IColumn[] = [
     maxWidth: '120px', // Controla el tamaño máximo
     columnClass: 'truncate-text', // Clase CSS para truncar el texto
     type: 'select',
+    sortable: false,
+    showFilter: false,
     objApi: confinvoiceApi
   },
-  { field: 'agencyCd', header: 'Agency CD', type: 'text' },
-  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
-  { field: 'invoiceNumber', header: 'Inv. No', type: 'text' },
-  { field: 'invoiceDate', header: 'Gen. Date', type: 'date' },
-  { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
-  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
-  { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
-  { field: 'hasAttachments', header: 'Attachment', type: 'bool' },
-  { field: 'aging', header: 'Aging', type: 'text' },
-  { field: 'status', header: 'Status', type: 'slot-select', localItems: ENUM_INVOICE_STATUS.map(item => ({
+  { field: 'agencyCd', header: 'Agency CD', type: 'text', sortable: false, showFilter: false },
+  { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi, sortable: false, showFilter: false },
+  { field: 'invoiceNumber', header: 'Inv. No', type: 'text', sortable: false, showFilter: false },
+  { field: 'invoiceDate', header: 'Gen. Date', type: 'date', sortable: false, showFilter: false },
+  { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual', sortable: false, showFilter: false },
+  { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number', sortable: false, showFilter: false },
+  { field: 'dueAmount', header: 'Invoice Balance', type: 'number', sortable: false, showFilter: false },
+  { field: 'hasAttachments', header: 'Attachment', type: 'bool', sortable: false, showFilter: false },
+  { field: 'aging', header: 'Aging', type: 'text', sortable: false, showFilter: false },
+  { field: 'status', header: 'Status', sortable: false, showFilter: false, type: 'slot-select', localItems: ENUM_INVOICE_STATUS.map(item => ({
     ...item,
     name: item.name.toUpperCase() // Asegura coincidencia con "RECONCILED"
   })) }
@@ -85,7 +88,14 @@ const options = ref({
   messageToDelete: 'Do you want to save the change?'
 })
 
-const payload = ref({
+const payload = ref<{
+  filter: IFilter[]
+  query: string
+  pageSize: number
+  page: number
+  sortBy: string
+  sortType: string
+}>({
   filter: [],
   query: '',
   pageSize: 0,
@@ -107,6 +117,7 @@ const selectedElements = ref<any[]>([])
 // -------------------------------------------------------------------------------------------------------
 
 onMounted(() => {
+  manualFilter.value = ''
   const storedData = localStorage.getItem('invoiceViewData')
   if (storedData) {
     const parsedData = JSON.parse(storedData)
@@ -122,6 +133,91 @@ onMounted(() => {
     pagination.value.totalPages = Math.ceil(parsedData.totalElements / pagination.value.limit)
   }
 })
+
+const filteredInvoices = computed(() => {
+  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
+
+  if (!terms.length) {
+    return listPrintItems.value // Si no hay término de búsqueda, devolver la lista completa
+  }
+
+  // Filtrar las filas basadas en que cada término esté presente en cualquier campo de la fila
+  return listPrintItems.value.filter((inv) => {
+    return terms.some((term) => {
+      // Buscar cada término en todos los campos de la fila
+      return (
+        inv.invoiceNumber?.toLowerCase().includes(term)
+        || String(inv.invoiceId)?.toLowerCase().includes(term)
+        || String(inv.invoiceNumber)?.toLowerCase().includes(term)
+        || String(inv.invoiceAmount)?.toLowerCase().includes(term)
+        || String(inv.dueAmount)?.toLowerCase().includes(term)
+        || String(inv.aging)?.toLowerCase().includes(term)
+        || String(inv.agency?.name)?.toLowerCase().includes(term)
+        || String(inv.agency?.code)?.toLowerCase().includes(term)
+        || String(inv.hotel?.name)?.toLowerCase().includes(term)
+        || String(inv.hotel?.code)?.toLowerCase().includes(term)
+      )
+    })
+  })
+})
+
+async function onManualSearch() {
+  // 1. Construye tu filtro LIKE único (o varios términos con OR/AND)
+  const searchTerm = manualFilter.value.trim()
+  payload.value.page = 0 // arrancas siempre en la primera página
+  payload.value.filter = [
+    {
+      key: 'invoiceNumber', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'couponNumbers',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceAmountTemp',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'dueAmountTemp',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }
+  ]
+
+  // 2. Pides al servidor sólo las filas que coinciden
+  const response: any = await GenericService.create(confApiPrint.moduleApi, confApiPrint.uriApi, payload)
+
+  // 3. Actualizas tu lista (y la paginación vendrá ya acorde al total de coincidencias)
+  listPrintItems.value = response.data
+  listPrintItems.value.totalElements = response.totalElements
+  listPrintItems.value.totalPages = response.totalPages
+}
 
 function handlePaginationChange(event: any) {
   pagination.value.page = event.page + 1
@@ -279,14 +375,21 @@ function onMultipleSelect(selectedItems: any[]) {
   <!-- <div class="font-bold text-lg px-4 bg-primary custom-card-header">
     Invoices to Print
   </div> -->
-  <div class="grid">
+  <div class="grid" :style="{ width: '90vw', maxHeight: '100vh' }">
     <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9 mt-0">
       <div class="p-fluid pt-3">
-        <div class="card p-0">
+        <InputText
+          v-model="manualFilter"
+          placeholder="Search data by Id,Hotel,Agency Cd,Inv No,Invoice Amount,Invoice Balance, Aging separated by spaces"
+          class="-mb-3 -mt-3"
+          style="padding-top: 0.1rem"
+          @keyup.enter="onManualSearch"
+        />
+        <div class="card p-0 pt-1">
           <div v-if="pagination.totalElements === 0" class="no-data-message" />
 
           <DynamicTablePrint
-            :data="listPrintItems"
+            :data="filteredInvoices"
             :columns="columns"
             :options="options"
             :pagination="pagination"
@@ -341,7 +444,7 @@ function onMultipleSelect(selectedItems: any[]) {
           </DynamicTablePrint>
         </div>
       </div>
-      <div class="flex justify-content-between">
+      <div class="flex justify-content-between -mt-2">
         <div class="flex align-items-center">
           <div class="ml-2">
             <Checkbox
@@ -385,7 +488,7 @@ function onMultipleSelect(selectedItems: any[]) {
           </div>
         </div>
 
-        <div class="flex align-items-end justify-content-end">
+        <div class="flex align-items-end justify-content-end -mb-5">
           <Button
             v-tooltip.top="'Print'"
             class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint"
