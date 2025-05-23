@@ -515,7 +515,10 @@ public class CreatePaymentFromCreditService {
     }
 
     private String deleteHotelInfo(String input) {
-        return input.replaceAll("-(.*?)-", "-");
+        if(Objects.nonNull(input)){
+            return input.replaceAll("-(.*?)-", "-");
+        }
+        return "";
     }
 
     private String getRemark(ManageInvoiceDto invoice){
