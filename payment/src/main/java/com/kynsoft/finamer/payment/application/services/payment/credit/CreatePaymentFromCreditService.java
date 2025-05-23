@@ -555,12 +555,33 @@ public class CreatePaymentFromCreditService {
                              List<ManageBookingDto> bookingList){
         this.paymentService.createBulk(payments);
         this.paymentDetailService.createAll(paymentDetailsApplyDepositToCreate);
-        this.paymentDetailService.createAll(paymentDetails);
+        List<PaymentDetailDto> newDepositPaymentDetails = this.paymentDetailService.createAll(paymentDetails);
+        this.setPaymentDetails(paymentDetailsApplyDepositToCreate, newDepositPaymentDetails);
+        this.paymentDetailService.bulk(paymentDetailsApplyDepositToCreate);
         this.masterPaymentAttachmentService.create(masterPaymentAttachments);
         this.assignAttachmentIdsToAttachmentStatusHistory(masterPaymentAttachments, attachmentStatusHistoryList);
         this.attachmentStatusHistoryService.create(attachmentStatusHistoryList);
         this.paymentStatusHistoryService.createAll(paymentStatusHistories);
         this.manageBookingService.updateAllBooking(bookingList);
+    }
+
+    private void setPaymentDetails(List<PaymentDetailDto> applyDepositPaymentDetail, List<PaymentDetailDto> depositPaymentDetail){
+        applyDepositPaymentDetail.forEach(applyDepositDetail ->  {
+            PaymentDetailDto parentPaymentDetail = getChildPaymentDetail(depositPaymentDetail, applyDepositDetail.getId());
+            if(Objects.nonNull(parentPaymentDetail)){
+                applyDepositDetail.setParentId(parentPaymentDetail.getPaymentDetailId());
+            }
+        });
+    }
+
+    private PaymentDetailDto getChildPaymentDetail(List<PaymentDetailDto> depositPaymentDetail, UUID toFindPaymentDetail){
+        for(PaymentDetailDto paymentDetail : depositPaymentDetail){
+            if(paymentDetail.getPaymentDetails().stream().anyMatch(childDetail -> childDetail.getId().equals(toFindPaymentDetail))){
+                return paymentDetail;
+            }
+        }
+
+        return null;
     }
 
     private void assignAttachmentIdsToAttachmentStatusHistory(List<MasterPaymentAttachmentDto> masterPaymentAttachments, List<AttachmentStatusHistoryDto> attachmentStatusHistoryList){
