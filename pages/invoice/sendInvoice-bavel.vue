@@ -578,7 +578,7 @@ onMounted(async () => {
 <template>
   <CopyableArea>
     <div class="grid">
-      <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
+      <div v-user-selectable class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
         <div class="mt-3">
           <!-- <Accordion :active-index="0" class="mb-2"> -->
           <AccordionTab>
