@@ -576,13 +576,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CopyableArea>
-    <div class="grid">
-      <div v-user-selectable class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
-        <div class="mt-3">
-          <!-- <Accordion :active-index="0" class="mb-2"> -->
-          <AccordionTab>
-            <!-- <template #header>
+  <div class="grid">
+    <div class="col-12 order-0 w-full md:order-1 md:col-6 xl:col-9">
+      <div class="mt-3">
+        <!-- <Accordion :active-index="0" class="mb-2"> -->
+        <AccordionTab>
+          <!-- <template #header>
             <div class="text-white font-bold custom-accordion-header flex justify-content-between w-full align-items-center">
               <div>
                 {{ sendType }}
@@ -590,162 +589,161 @@ onMounted(async () => {
             </div>
           </template> -->
 
-            <div class="grid">
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">Agency:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        item-value="id" :model="filterToSearch.agency"
-                        :suggestions="agencyList"
-                        :max-selected-labels="1"
-                        @load="($event) => getAgencyList($event)"
-                        @change="($event) => {
-                          filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
-                        }"
-                      >
+          <div class="grid">
+            <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="flex flex-column gap-2 w-full">
+                <div class="flex align-items-center gap-2 w-full" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">Agency:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll" id="autocomplete"
+                      :multiple="true" class="w-full" field="name"
+                      item-value="id" :model="filterToSearch.agency"
+                      :suggestions="agencyList"
+                      :max-selected-labels="1"
+                      @load="($event) => getAgencyList($event)"
+                      @change="($event) => {
+                        filterToSearch.agency = $event.filter((element: any) => element?.id !== 'All')
+                      }"
+                    >
                       <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template> -->
-                      </DebouncedMultiSelectComponent>
-                    </div>
+                    </DebouncedMultiSelectComponent>
                   </div>
-                  <div class="flex align-items-center gap-2">
-                    <label class="filter-label font-bold ml-3" for="">Hotel:</label>
-                    <div class="w-full" style=" z-index:5">
-                      <DebouncedMultiSelectComponent
-                        v-if="!loadingSaveAll" id="autocomplete"
-                        :multiple="true" class="w-full" field="name"
-                        :max-selected-labels="1"
-                        item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
-                        @load="($event) => getHotelList($event)" @change="($event) => {
-                          filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
-                        }"
-                      >
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <label class="filter-label font-bold ml-3" for="">Hotel:</label>
+                  <div class="w-full" style=" z-index:5">
+                    <DebouncedMultiSelectComponent
+                      v-if="!loadingSaveAll" id="autocomplete"
+                      :multiple="true" class="w-full" field="name"
+                      :max-selected-labels="1"
+                      item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
+                      @load="($event) => getHotelList($event)" @change="($event) => {
+                        filterToSearch.hotel = $event.filter((element: any) => element?.id !== 'All')
+                      }"
+                    >
                       <!-- <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template> -->
-                      </DebouncedMultiSelectComponent>
-                    </div>
+                    </DebouncedMultiSelectComponent>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-2 flex pb-0">
-                <div class="flex flex-column gap-2 w-full">
-                  <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                    <label class="filter-label font-bold" for="">From:</label>
-                    <div class="w-full" style=" z-index:5 ">
-                      <Calendar
-                        v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                        show-icon icon-display="input" class="w-full" :max-date="new Date()"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-2 ml-4">
-                    <label class="filter-label font-bold" for="">To:</label>
-                    <div class="w-full">
-                      <Calendar
-                        v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
-                        icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3 flex pb-0">
-                <div class="flex w-full">
-                  <div class="flex flex-row w-full">
-                    <div class="flex flex-column gap-2 w-full">
-                      <div class="flex align-items-center gap-2" style=" z-index:5 ">
-                        <label class="filter-label font-bold" for="">Criteria:</label>
-                        <div class="w-full">
-                          <Dropdown
-                            v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
-                            placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
-                          />
-                        </div>
-                      </div>
-                      <div class="flex align-items-center gap-2">
-                        <label class="filter-label font-bold ml-1" for="">Search:</label>
-                        <div class="w-full">
-                          <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 md:col-1 mt-6 w-auto">
-                <div class="flex justify-content-end">
-                  <Checkbox
-                    v-model="filterAllDateRange"
-                    binary
-                    class="mr-2"
-                    @change="() => {
-
-                      if (!filterAllDateRange) {
-                        filterToSearch.from = startOfMonth
-                        filterToSearch.to = endOfMonth
-                      }
-                    }"
-                  />
-                  <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
-                </div>
-              </div>
-
-              <div class="flex align-items-center ">
-                <Button
-                  v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
-                  :loading="loadingSearch" @click="searchAndFilter"
-                />
-                <Button
-                  v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
-                  :loading="loadingSearch" @click="clearFilterToSearch"
-                />
               </div>
             </div>
-          </AccordionTab>
-        <!-- </Accordion> -->
-        </div>
-        <div class="mt-0">
-          <DynamicTable
-            ref="tableRef"
-            :data="listItems"
-            :columns="columns"
-            :options="options"
-            :pagination="pagination"
-            @on-confirm-create="clearForm"
-            @update:clicked-item="onMultipleSelect"
-            @on-change-pagination="payloadOnChangePage = $event"
-            @on-change-filter="parseDataTableFilter"
-            @on-list-item="resetListItems"
-            @on-sort-field="onSortField"
-          >
-            <template #column-sendStatusError="{ data }">
-              <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
-                <span style="color: red;">{{ data.sendStatusError }}</span>
-              </div>
-            </template>
 
-            <template #column-status="{ data }">
-              <Badge
-                :value="getStatusName(data?.status)"
-                :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+            <div class="col-12 md:col-6 lg:col-2 flex pb-0">
+              <div class="flex flex-column gap-2 w-full">
+                <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                  <label class="filter-label font-bold" for="">From:</label>
+                  <div class="w-full" style=" z-index:5 ">
+                    <Calendar
+                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
+                      show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                    />
+                  </div>
+                </div>
+                <div class="flex align-items-center gap-2 ml-4">
+                  <label class="filter-label font-bold" for="">To:</label>
+                  <div class="w-full">
+                    <Calendar
+                      v-model="filterToSearch.to" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      icon-display="input" class="w-full" :max-date="new Date()" :min-date="filterToSearch.from"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6 lg:col-3 flex pb-0">
+              <div class="flex w-full">
+                <div class="flex flex-row w-full">
+                  <div class="flex flex-column gap-2 w-full">
+                    <div class="flex align-items-center gap-2" style=" z-index:5 ">
+                      <label class="filter-label font-bold" for="">Criteria:</label>
+                      <div class="w-full">
+                        <Dropdown
+                          v-model="filterToSearch.criteria" :options="[...ENUM_FILTER]" option-label="name"
+                          placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                        />
+                      </div>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <label class="filter-label font-bold ml-1" for="">Search:</label>
+                      <div class="w-full">
+                        <InputText v-model="filterToSearch.search" type="text" style="width: 100% !important;" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-1 mt-6 w-auto">
+              <div class="flex justify-content-end">
+                <Checkbox
+                  v-model="filterAllDateRange"
+                  binary
+                  class="mr-2"
+                  @change="() => {
+
+                    if (!filterAllDateRange) {
+                      filterToSearch.from = startOfMonth
+                      filterToSearch.to = endOfMonth
+                    }
+                  }"
+                />
+                <label for="" class="mr-2 mt-1 font-bold">Re-Send</label>
+              </div>
+            </div>
+
+            <div class="flex align-items-center ">
+              <Button
+                v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
+                :loading="loadingSearch" @click="searchAndFilter"
               />
-            </template>
-          </DynamicTable>
-        </div>
-        <div class="flex align-items-end justify-content-end">
-          <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
+              <Button
+                v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
+                :loading="loadingSearch" @click="clearFilterToSearch"
+              />
+            </div>
+          </div>
+        </AccordionTab>
+        <!-- </Accordion> -->
+      </div>
+      <div class="mt-0">
+        <DynamicTable
+          ref="tableRef"
+          :data="listItems"
+          :columns="columns"
+          :options="options"
+          :pagination="pagination"
+          @on-confirm-create="clearForm"
+          @update:clicked-item="onMultipleSelect"
+          @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems"
+          @on-sort-field="onSortField"
+        >
+          <template #column-sendStatusError="{ data }">
+            <div id="fieldError" v-tooltip.bottom="data.sendStatusError" class="ellipsis-text">
+              <span style="color: red;">{{ data.sendStatusError }}</span>
+            </div>
+          </template>
+
+          <template #column-status="{ data }">
+            <Badge
+              :value="getStatusName(data?.status)"
+              :style="`background-color: ${getStatusBadgeBackgroundColor(data?.status)}`"
+            />
+          </template>
+        </DynamicTable>
+      </div>
+      <div class="flex align-items-end justify-content-end">
+        <Button v-tooltip.top="'Apply'" class="w-3rem mx-2" icon="pi pi-check" :disabled="listItems.length === 0 || clickedItem.length === 0" @click="send" />
         <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
-        </div>
       </div>
     </div>
-  </CopyableArea>
+  </div>
 </template>
 
 <style lang="scss">
