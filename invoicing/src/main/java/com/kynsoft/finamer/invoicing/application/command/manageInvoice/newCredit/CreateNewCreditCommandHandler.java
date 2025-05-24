@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewCreditCommand> {
@@ -61,20 +63,20 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
     @Override
     public void handle(CreateNewCreditCommand command) {
         ManageInvoiceDto parentInvoice = this.invoiceService.findById(command.getInvoice());
-        ManageHotelDto hotelDto = this.hotelService.findById(parentInvoice.getHotel().getId());
+        ManageHotelDto hotelDto = parentInvoice.getHotel();
         RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(
                 this.closeOperationService,
                 command.getInvoiceDate().toLocalDate(),
                 hotelDto.getId()));
 
         EmployeeData employeeData = retrieveEmployeeData(command);
-        List<ManageBookingDto> parentBookings = parentInvoice.getBookings();
+        Map<UUID, ManageBookingDto> parentBookingsMap = parentInvoice.getBookings().stream().collect(Collectors.toMap(ManageBookingDto::getId, booking -> booking));
         List<ManageBookingDto> newBookings = new LinkedList<>();
         Double credits = this.invoiceService.findSumOfAmountByParentId(command.getInvoice());
         Double invoiceAmount = 0.0;
 
         for (CreateNewCreditBookingRequest bookingRequest : command.getBookings()) {
-            ManageBookingDto parentBooking = this.bookingService.findById(bookingRequest.getId());
+            ManageBookingDto parentBooking = parentBookingsMap.get(bookingRequest.getId());
 
             Double newBookingAmount = bookingRequest.getAmount();
 
@@ -83,9 +85,12 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 if (newBookingAmount > 0) {
                     newBookingAmount = -newBookingAmount;
                 }
+                //actualizando el invoiceAmount a guardar
+                invoiceAmount += newBookingAmount;
+
                 //sumando credits, el nuevo amount del booking y el amount del invoice
                 //para saber si excede el amount del invoice
-                if (credits + newBookingAmount + parentInvoice.getInvoiceAmount() < 0) {
+                if (credits + invoiceAmount + parentInvoice.getInvoiceAmount() < 0) {
                     throw new BusinessException(
                             DomainErrorMessage.CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT,
                             DomainErrorMessage.CREDITS_CANNOT_EXCEED_INVOICE_AMOUNT.getReasonPhrase());
@@ -97,8 +102,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 newBookings.add(newBooking);
                 System.out.println(credits + newBookingAmount + parentInvoice.getInvoiceAmount());
             }
-            //actualizando el invoiceAmount a guardar
-            invoiceAmount += newBookingAmount;
         }
 
         List<ManageAttachmentDto> attachments = createAttachments(command.getAttachmentCommands(), command.getEmployee());

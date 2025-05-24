@@ -69,7 +69,7 @@ public class CreateApplyOtherDeductionsCommandHandler implements ICommandHandler
 
         for (ManageBookingDto bookingRequest : bookings) {
             Double amountRequest = bookingRequestMap.get(bookingRequest.getId());
-            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(amountRequest, bookingRequest.getAmountBalance()));
+            RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(paymentDto.getPaymentSource(), paymentDto.isCreateByCredit(), amountRequest, bookingRequest.getAmountBalance()));
 
             ProcessCreatePaymentDetail createPaymentDetail = new ProcessCreatePaymentDetail(
                     paymentDto,

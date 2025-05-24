@@ -31,7 +31,7 @@ public class ManageHotelResponse implements IResponse {
         this.status = dto.getStatus();
         this.applyByTradingCompany = dto.getApplyByTradingCompany();
         this.manageTradingCompany = dto.getManageTradingCompany();
-        this.autoApplyCredit = dto.getAutoApplyCredit();
+        this.autoApplyCredit = dto.getNoAutoApplyCredit();
     }
 
     public ManageHotelResponse(HotelProjection hotel) {

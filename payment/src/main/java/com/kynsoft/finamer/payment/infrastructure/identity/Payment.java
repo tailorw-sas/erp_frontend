@@ -93,6 +93,7 @@ public class Payment implements Serializable {
     private ManagePaymentAttachmentStatus attachmentStatus;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "resource")
+    @JsonManagedReference
     private List<MasterPaymentAttachment> attachments;
 
     /**

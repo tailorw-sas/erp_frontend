@@ -20,5 +20,5 @@ public class ManageHotelDto implements Serializable {
     private String status;
     private Boolean applyByTradingCompany;
     private UUID manageTradingCompany;
-    private Boolean autoApplyCredit;
+    private Boolean noAutoApplyCredit;
 }

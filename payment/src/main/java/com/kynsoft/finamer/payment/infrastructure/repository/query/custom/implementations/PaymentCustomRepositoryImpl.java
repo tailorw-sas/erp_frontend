@@ -72,6 +72,7 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         Tuple tuple = entityManager.createQuery(query).getSingleResult();
 
         Payment payment = this.convertTupleToPayment(tuple);
+        payment.setAttachments(this.getAttachmentsByPaymentId(id));
 
         return Optional.of(payment);
     }
@@ -619,6 +620,100 @@ public class PaymentCustomRepositoryImpl implements PaymentCustomRepository {
         long total = entityManager.createQuery(countQuery).getSingleResult();
 
         return new PageImpl<>(results, pageable, total);
+    }
+
+    private List<MasterPaymentAttachment> getAttachmentsByPaymentId(UUID paymentId){
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+        Root<Payment> root = query.from(Payment.class);
+        Join<Payment, MasterPaymentAttachment> masterPaymentAttachmentJoin = root.join("attachments", JoinType.LEFT);
+        Join<MasterPaymentAttachment, MaganeResourceType> maganeResourceTypeJoin = masterPaymentAttachmentJoin.join("resourceType", JoinType.LEFT);
+        Join<MasterPaymentAttachment, ManageAttachmentType> manageAttachmentTypeJoin = masterPaymentAttachmentJoin.join("attachmentType", JoinType.LEFT);
+
+        List<Selection<?>> selections = new ArrayList<>();
+
+        selections.add(masterPaymentAttachmentJoin.get("id"));
+        selections.add(masterPaymentAttachmentJoin.get("status"));
+        selections.add(masterPaymentAttachmentJoin.get("attachmentId"));
+
+        selections.add(maganeResourceTypeJoin.get("id"));
+        selections.add(maganeResourceTypeJoin.get("code"));
+        selections.add(maganeResourceTypeJoin.get("name"));
+        selections.add(maganeResourceTypeJoin.get("description"));
+        selections.add(maganeResourceTypeJoin.get("status"));
+        selections.add(maganeResourceTypeJoin.get("defaults"));
+        selections.add(maganeResourceTypeJoin.get("invoice"));
+        selections.add(maganeResourceTypeJoin.get("vcc"));
+        selections.add(maganeResourceTypeJoin.get("createdAt"));
+        selections.add(maganeResourceTypeJoin.get("updatedAt"));
+
+        selections.add(manageAttachmentTypeJoin.get("id"));
+        selections.add(manageAttachmentTypeJoin.get("code"));
+        selections.add(manageAttachmentTypeJoin.get("name"));
+        selections.add(manageAttachmentTypeJoin.get("description"));
+        selections.add(manageAttachmentTypeJoin.get("defaults"));
+        selections.add(manageAttachmentTypeJoin.get("antiToIncomeImport"));
+        selections.add(manageAttachmentTypeJoin.get("status"));
+        selections.add(manageAttachmentTypeJoin.get("createdAt"));
+        selections.add(manageAttachmentTypeJoin.get("updatedAt"));
+
+        selections.add(masterPaymentAttachmentJoin.get("fileName"));
+        selections.add(masterPaymentAttachmentJoin.get("fileWeight"));
+        selections.add(masterPaymentAttachmentJoin.get("path"));
+        selections.add(masterPaymentAttachmentJoin.get("remark"));
+        selections.add(masterPaymentAttachmentJoin.get("createdAt"));
+        selections.add(masterPaymentAttachmentJoin.get("updatedAt"));
+
+        query.multiselect(selections.toArray(new Selection[0]));
+
+        query.where(cb.equal(root.get("id"), paymentId));
+
+        List<Tuple> tuples = entityManager.createQuery(query).getResultList();
+
+        List<MasterPaymentAttachment> results = tuples.stream()
+                .map(this::convertTupleToMasterPaymentAttachment)
+                .collect(Collectors.toList());
+
+        return results;
+    }
+
+    private MasterPaymentAttachment convertTupleToMasterPaymentAttachment(Tuple tuple){
+        int i = 0;
+        return new MasterPaymentAttachment(
+                tuple.get(i++, UUID.class),
+                tuple.get(i++, Status.class),
+                tuple.get(i++, Long.class),
+                null,
+                (tuple.get(i, UUID.class) != null) ? new MaganeResourceType(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, Status.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, LocalDateTime.class),
+                        tuple.get(i++, LocalDateTime.class)
+                ) : skip( i += 10),
+                (tuple.get(i, UUID.class) != null) ? new ManageAttachmentType(
+                        tuple.get(i++, UUID.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, String.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Boolean.class),
+                        tuple.get(i++, Status.class),
+                        tuple.get(i++, LocalDateTime.class),
+                        tuple.get(i++, LocalDateTime.class)
+                ) : skip( i += 9),
+                tuple.get(i++, String.class),
+                tuple.get(i++, String.class),
+                tuple.get(i++, String.class),
+                tuple.get(i++, String.class),
+                tuple.get(i++, LocalDateTime.class),
+                tuple.get(i++, LocalDateTime.class)
+        );
     }
 
     @SuppressWarnings("unchecked")
