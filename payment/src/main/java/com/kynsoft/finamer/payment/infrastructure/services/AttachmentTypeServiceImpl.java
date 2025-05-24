@@ -13,16 +13,14 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageAttachmentTypeService;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManageAttachmentType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageAttachmentTypeWriteDataJPARepository;
-import com.kynsoft.finamer.payment.infrastructure.repository.query.AttachmentTypeReadDataJPARepository;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageAttachmentTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
@@ -31,7 +29,7 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
     private ManageAttachmentTypeWriteDataJPARepository repositoryCommand;
 
     @Autowired
-    private AttachmentTypeReadDataJPARepository repositoryQuery;
+    private ManageAttachmentTypeReadDataJPARepository repositoryQuery;
 
     @Override
     public UUID create(AttachmentTypeDto dto) {
@@ -137,6 +135,17 @@ public class AttachmentTypeServiceImpl implements IManageAttachmentTypeService {
             return attachmentType.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.ATTACHMENT_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public List<AttachmentTypeDto> findAllById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The AttachmentType Ids must not be null");
+        }
+
+        return this.repositoryQuery.findAllById(ids).stream()
+                .map(ManageAttachmentType::toAggregate)
+                .collect(Collectors.toList());
     }
 
 }

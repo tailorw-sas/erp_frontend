@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ConsumerReplicateManageInvoiceService {
@@ -73,19 +74,14 @@ public class ConsumerReplicateManageInvoiceService {
         this.createBookingList(objKafka, bookingDtos, invoiceDto);
         this.serviceBookingService.updateAllBooking(bookingDtos);
 
+        invoiceDto.setBookings(bookingDtos);
+
         if (invoiceDto.getInvoiceType().equals(EInvoiceType.CREDIT)) {
-            ManageHotelDto hotelDto = this.hotelService.findById(objKafka.getHotel());
-            if (!hotelDto.getAutoApplyCredit()) {//check no marcado
-                this.automaticProcessApplyPayment(objKafka, invoiceDto, true);//Aplica al padre
-            } else {//check marcado
-                 this.automaticProcessApplyPayment(objKafka, invoiceDto, false);
-//                List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
-//                this.addAttachment(objKafka, attachmentKafkas);
-//                this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, false, mediator));
-            }
+            this.automaticProcessApplyPayment(objKafka, invoiceDto);
         }
+
         if (invoiceDto.getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {//check marcado
-            this.automaticProcessApplyPayment(objKafka, invoiceDto, false);
+            this.automaticProcessApplyPayment(objKafka, invoiceDto);
         }
     }
 
@@ -115,7 +111,10 @@ public class ConsumerReplicateManageInvoiceService {
     }
 
     private String deleteHotelInfo(String input) {
-        return input.replaceAll("-(.*?)-", "-");
+        if(Objects.nonNull(input)){
+            return input.replaceAll("-(.*?)-", "-");
+        }
+        return input;
     }
 
     private void addAttachment(ManageInvoiceKafka objKafka, List<CreateAttachmentRequest> attachmentKafkas) {
@@ -136,12 +135,10 @@ public class ConsumerReplicateManageInvoiceService {
         }
     }
 
-    private void automaticProcessApplyPayment(ManageInvoiceKafka objKafka, ManageInvoiceDto invoiceDto, boolean autoApplyCredit) {
+    private void automaticProcessApplyPayment(ManageInvoiceKafka objKafka, ManageInvoiceDto invoiceDto) {
 
         List<CreateAttachmentRequest> attachmentKafkas = new ArrayList<>();
         this.addAttachment(objKafka, attachmentKafkas);
-
-        //this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, true, mediator));
-        this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, autoApplyCredit, mediator, objKafka.getEmployee()));
+        this.mediator.send(new CreatePaymentToCreditCommand(objKafka.getClient(), objKafka.getAgency(), objKafka.getHotel(), invoiceDto, attachmentKafkas, objKafka.getEmployee()));
     }
 }

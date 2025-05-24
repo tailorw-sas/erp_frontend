@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.payment.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsoft.finamer.payment.domain.dto.AttachmentStatusHistoryDto;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
@@ -36,6 +37,7 @@ public class AttachmentStatusHistory implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_id")
+    //@JsonBackReference
     private Payment payment;
 
     @ManyToOne(fetch = FetchType.EAGER)

@@ -33,4 +33,6 @@ public interface IManageResourceTypeService {
     ResourceTypeDto getByDefault();
 
     Long countByVccAndNotId(UUID id);
+
+    List<ResourceTypeDto> findAllByIds(List<UUID> ids);
 }

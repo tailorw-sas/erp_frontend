@@ -10,11 +10,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface AttachmentTypeReadDataJPARepository extends JpaRepository<ManageAttachmentType, UUID>, 
+public interface ManageAttachmentTypeReadDataJPARepository extends JpaRepository<ManageAttachmentType, UUID>,
         JpaSpecificationExecutor<ManageAttachmentType> {
 
     Page<ManageAttachmentType> findAll(Specification specification, Pageable pageable);
@@ -35,4 +36,6 @@ public interface AttachmentTypeReadDataJPARepository extends JpaRepository<Manag
     Long countByAntiToIncomeImportAndNotId(@Param("id") UUID id);
 
     Optional<ManageAttachmentType> findByCode(String code);
+
+    List<ManageAttachmentType> findByIdIn(List<UUID> ids);
 }

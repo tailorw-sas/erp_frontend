@@ -11,11 +11,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ResourceTypeReadDataJPARepository extends JpaRepository<MaganeResourceType, UUID>, 
+public interface ManageResourceTypeReadDataJPARepository extends JpaRepository<MaganeResourceType, UUID>,
         JpaSpecificationExecutor<MaganeResourceType> {
 
     Page<MaganeResourceType> findAll(Specification specification, Pageable pageable);
@@ -36,4 +37,6 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<MaganeR
 
     @Query("SELECT COUNT(b) FROM MaganeResourceType b WHERE b.vcc = true AND b.id <> :id")
     Long countByVccAndNotId(@Param("id") UUID id);
+
+    List<MaganeResourceType> findByIdIn(List<UUID> ids);
 }

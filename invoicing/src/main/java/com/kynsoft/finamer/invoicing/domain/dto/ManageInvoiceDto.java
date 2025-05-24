@@ -90,4 +90,39 @@ public class ManageInvoiceDto {
         this.credits = credits;
         this.aging =aging;
     }
+
+    public ManageInvoiceDto(UUID id, ManageHotelDto hotel, ManageAgencyDto agency, EInvoiceType invoiceType, ManageInvoiceTypeDto manageInvoiceType,
+                            EInvoiceStatus status, ManageInvoiceStatusDto manageInvoiceStatus, LocalDateTime invoiceDate, Boolean isManual,
+                            Double originalAmount, Double invoiceAmount, Double dueAmount, List<ManageBookingDto> bookings,
+                            List<ManageAttachmentDto> attachments, Boolean isCloned, ManageInvoiceDto parent) {
+        this.id = id;
+        this.hotel = hotel;
+        this.agency = agency;
+        this.invoiceType = invoiceType;
+        this.manageInvoiceType = manageInvoiceType;
+        this.status = status;
+        this.manageInvoiceStatus = manageInvoiceStatus;
+        this.invoiceDate = invoiceDate;
+        this.isManual = isManual;
+        this.originalAmount = originalAmount;
+        this.invoiceAmount = invoiceAmount;
+        this.dueAmount = dueAmount;
+        this.bookings = bookings;
+        this.attachments = attachments;
+        this.isCloned = isCloned;
+        this.parent = parent;
+
+        this.invoiceId = 0L;
+        this.invoiceNo = 0L;
+        this.invoiceNumber = null;
+        this.invoiceNumberPrefix = null;
+        this.dueDate = null;
+        this.autoRec = Boolean.FALSE;
+        this.reSend = Boolean.FALSE;
+        this.reSendDate = null;
+        this.createdAt = null;
+        this.credits = 0D;
+        this.aging = 0;
+        this.deleteInvoice = Boolean.FALSE;
+    }
 }
