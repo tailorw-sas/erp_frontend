@@ -15,11 +15,3 @@ $gutter: 1rem; //for primeflex grid system
 
 @import './custom-styles.scss';
 @import './components/vcc-status-badge-style.css';
-/* ←— AÑADE ESTO AL FINAL ↓ */
-
-html, body, * {
-  -webkit-user-select: text !important;
-     -moz-user-select: text !important;
-       -ms-user-select: text !important;
-           user-select: text !important;
-}
