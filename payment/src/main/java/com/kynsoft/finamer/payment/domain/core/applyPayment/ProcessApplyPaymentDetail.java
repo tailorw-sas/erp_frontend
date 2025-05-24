@@ -32,7 +32,7 @@ public class ProcessApplyPaymentDetail {
     public void process(){
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(this.paymentDetail, "id", "Payment Detail ID cannot be null."));
         RulesChecker.checkRule(new CheckBookingExistsApplyPayment(true, booking));
-        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.amount, this.booking.getAmountBalance()));
+        RulesChecker.checkRule(new CheckAmountGreaterThanZeroStrictlyAndLessBookingBalanceRule(this.payment.getPaymentSource(), this.payment.isCreateByCredit(), this.amount, this.booking.getAmountBalance()));
 
         updatePayment(this.payment, this.amount);
         updateBooking(this.booking, this.amount);

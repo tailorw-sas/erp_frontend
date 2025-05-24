@@ -20,10 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHistoryService {
@@ -38,6 +36,17 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
     public UUID create(AttachmentStatusHistoryDto dto) {
         AttachmentStatusHistory data = new AttachmentStatusHistory(dto);
         return this.repositoryCommand.save(data).getId();
+    }
+
+    @Override
+    public void create(List<AttachmentStatusHistoryDto> dtoList) {
+        if(Objects.isNull(dtoList)){
+            throw new IllegalArgumentException("The Attachment Status History Ids must not be null");
+        }
+        List<AttachmentStatusHistory> attachmentStatusHistories = dtoList.stream()
+                .map(AttachmentStatusHistory::new)
+                .collect(Collectors.toList());
+        this.repositoryCommand.saveAll(attachmentStatusHistories);
     }
 
     @Override

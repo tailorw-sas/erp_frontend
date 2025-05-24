@@ -52,7 +52,11 @@ public class MasterPaymentAttachmentServiceImpl implements IMasterPaymentAttachm
             masterPaymentAttachments.add(new MasterPaymentAttachment(dto));
             maxId ++;
         }
-        this.repositoryCommand.saveAll(masterPaymentAttachments);
+        masterPaymentAttachments = this.repositoryCommand.saveAll(masterPaymentAttachments);
+
+        dtos = masterPaymentAttachments.stream()
+                .map(MasterPaymentAttachment::toAggregate)
+                .collect(Collectors.toList());
     }
 
     @Override

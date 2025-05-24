@@ -4,7 +4,9 @@ import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.rules.BusinessRule;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 public class CheckIfDateIsBeforeCurrentDateRule extends BusinessRule {
 
@@ -13,7 +15,7 @@ public class CheckIfDateIsBeforeCurrentDateRule extends BusinessRule {
 
     public CheckIfDateIsBeforeCurrentDateRule(LocalDate dateToValidate) {
         super(DomainErrorMessage.CHECK_DATE_IS_BEFORE_CURRENT_DATE, new ErrorField("transactionDate", DomainErrorMessage.CHECK_DATE_IS_BEFORE_CURRENT_DATE.getReasonPhrase()));
-        this.currentDate = LocalDate.now();
+        this.currentDate = Instant.now().atZone(ZoneOffset.UTC).toLocalDate();
         this.dateToValidate = dateToValidate;
     }
 

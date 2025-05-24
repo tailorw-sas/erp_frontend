@@ -13,17 +13,15 @@ import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageResourceTypeService;
 import com.kynsoft.finamer.payment.infrastructure.identity.MaganeResourceType;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageResourceTypeWriteDataJPARepository;
-import com.kynsoft.finamer.payment.infrastructure.repository.query.ResourceTypeReadDataJPARepository;
+import com.kynsoft.finamer.payment.infrastructure.repository.query.ManageResourceTypeReadDataJPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ResourceTypeServiceImpl implements IManageResourceTypeService {
@@ -32,7 +30,7 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     private ManageResourceTypeWriteDataJPARepository repositoryCommand;
 
     @Autowired
-    private ResourceTypeReadDataJPARepository repositoryQuery;
+    private ManageResourceTypeReadDataJPARepository repositoryQuery;
 
     @Override
     public UUID create(ResourceTypeDto dto) {
@@ -148,6 +146,17 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     @Override
     public Long countByVccAndNotId(UUID id) {
         return this.repositoryQuery.countByVccAndNotId(id);
+    }
+
+    @Override
+    public List<ResourceTypeDto> findAllByIds(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("ResourceType Id list must not be null");
+        }
+
+        return this.repositoryQuery.findByIdIn(ids).stream()
+                .map(MaganeResourceType::toAggregate)
+                .collect(Collectors.toList());
     }
 
 }

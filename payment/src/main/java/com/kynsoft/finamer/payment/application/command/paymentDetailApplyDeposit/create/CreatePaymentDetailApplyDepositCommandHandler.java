@@ -25,8 +25,6 @@ public class CreatePaymentDetailApplyDepositCommandHandler implements ICommandHa
 
     @Override
     public void handle(CreatePaymentDetailApplyDepositCommand command) {
-        RulesChecker.checkRule(new CheckPaymentDetailAmountGreaterThanZeroRule(command.getAmount()));
-
         PaymentDetailDto paymentDetail = this.createPaymentDetailService.create(command.getId(),
                 command.getEmployee(),
                 command.getStatus(),
