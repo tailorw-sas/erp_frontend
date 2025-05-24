@@ -481,10 +481,12 @@ async function getList(loadFirstItem: boolean = true) {
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(listItems.value.map(item => item.id))
-
     for (const iterator of dataList) {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
+      }
+      if (Object.prototype.hasOwnProperty.call(iterator, 'client')) {
+        iterator.client = { id: iterator.client.id, name: `${iterator.client.code} - ${iterator.client.name}` }
       }
 
       // Verificar si el ID ya existe en la lista
