@@ -12,6 +12,7 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -64,12 +65,24 @@ public class UpdatePaymentService {
 
         this.saveChanges(paymentDto);
     }
-
+    
     private ManageBankAccountDto getBankAccount(UUID bankAccountId, ManagePaymentSourceDto paymentSource){
-        if(!paymentSource.getExpense()){
-            return this.bankAccountService.findById(bankAccountId);
+        try{
+            if(Objects.nonNull(bankAccountId)){
+                return this.bankAccountService.findById(bankAccountId);
+            }else{
+                if(!paymentSource.getExpense()){
+                    throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+                }
+                return null;
+            }
+        }catch (BusinessNotFoundException ex){
+            if(!paymentSource.getExpense()){
+                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+            }else{
+                return null;
+            }
         }
-        return null;
     }
 
     private void saveChanges(PaymentDto payment){
