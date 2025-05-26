@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,7 +57,8 @@ public class ManageInvoiceDto {
 
     private Long hotelInvoiceNumber;
 
-    public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, String invoiceNumberPrefix, LocalDateTime invoiceDate, LocalDate dueDate, Boolean isManual,
+    public ManageInvoiceDto(UUID id, Long invoiceId, Long invoiceNo, String invoiceNumber, String invoiceNumberPrefix, LocalDateTime invoiceDate,
+                            LocalDate dueDate, Boolean isManual,
                             Double invoiceAmount, Double dueAmount, ManageHotelDto hotel,
                             ManageAgencyDto agency, EInvoiceType invoiceType, EInvoiceStatus status,
                             Boolean autoRec, List<ManageBookingDto> bookings, List<ManageAttachmentDto> attachments,

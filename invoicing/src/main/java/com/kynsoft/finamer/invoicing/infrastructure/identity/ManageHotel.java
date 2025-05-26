@@ -1,6 +1,5 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import com.kynsoft.finamer.invoicing.domain.dto.ManageCurrencyDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

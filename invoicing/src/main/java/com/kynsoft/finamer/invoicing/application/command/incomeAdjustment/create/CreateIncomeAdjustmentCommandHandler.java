@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<CreateIncomeAdjustmentCommand> {
 
@@ -85,10 +87,6 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
             RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(adjustment.getDate()));
-//            RulesChecker.checkRule(
-//                    new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
-//                            adjustment.getDate(), incomeDto.getHotel().getId()));
-
             ManagePaymentTransactionTypeDto paymentTransactionTypeDto = adjustment
                     .getTransactionType() != null
                             ? this.transactionTypeService
@@ -108,10 +106,11 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
             ));
             invoiceAmount += adjustment.getAmount();
         }
-        ConsumerUpdate updatePayment = new ConsumerUpdate();
-        UpdateIfNotNull.updateDouble(incomeDto::setInvoiceAmount, invoiceAmount, updatePayment::setUpdate);
-        UpdateIfNotNull.updateDouble(incomeDto::setDueAmount, invoiceAmount, updatePayment::setUpdate);
+
         incomeDto.setOriginalAmount(invoiceAmount);
+        incomeDto.setInvoiceAmount(invoiceAmount);
+        incomeDto.setDueAmount(invoiceAmount);
+
         roomRateDto.setInvoiceAmount(invoiceAmount);
         roomRateDto.setAdjustments(adjustmentDtos);
 
@@ -154,16 +153,13 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                 false,
                 null
         );
-        this.bookingService.create(bookingDto);
-
-        // this.manageAdjustmentService.create(adjustmentDtos);
+        incomeDto.getBookings().add(bookingDto);
         ManageInvoiceDto updated = this.service.update(incomeDto);
         try {
             this.producerReplicateManageInvoiceService.create(updated, null, null);
         } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
-        // ManageInvoiceDto updatedIncome = this.service.findById(incomeDto.getId());
-        // this.service.calculateInvoiceAmount(updatedIncome);
     }
 
     private LocalDateTime invoiceDate(UUID hotel, LocalDateTime invoiceDate) {
@@ -179,5 +175,4 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
         return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
-
 }
