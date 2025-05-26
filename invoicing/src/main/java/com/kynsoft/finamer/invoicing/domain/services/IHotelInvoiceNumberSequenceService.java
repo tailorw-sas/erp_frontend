@@ -21,5 +21,4 @@ public interface IHotelInvoiceNumberSequenceService {
     HotelInvoiceNumberSequenceDto getByTradingCompanyCodeAndInvoiceType(String code, EInvoiceType invoiceType);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
-
 }

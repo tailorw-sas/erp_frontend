@@ -42,10 +42,6 @@ public class IncomeController {
         CreateIncomeCommand createCommand = CreateIncomeCommand.fromRequest(request);
         CreateIncomeMessage response = mediator.send(createCommand);
 
-        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
-        ManageInvoiceResponse resp = mediator.send(query);
-
-//        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null));
         return ResponseEntity.ok(response);
     }
 
@@ -53,26 +49,18 @@ public class IncomeController {
     public ResponseEntity<CreateIncomeFromPaymentMessage> createAntiToIncome(@RequestBody CreateAntiToIncomeRequest request) {
         CreateAntiToIncomeCommand createCommand = CreateAntiToIncomeCommand.fromRequest(request);
         CreateIncomeFromPaymentMessage response = mediator.send(createCommand);
-
-        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
-        ManageInvoiceResponse resp = mediator.send(query);
-
-//        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null));
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping(path = "/{id}")
     public ResponseEntity<?> deleteById(@PathVariable UUID id) {
-
         DeleteIncomeCommand command = new DeleteIncomeCommand(id);
         DeleteIncomeMessage response = mediator.send(command);
-
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping(path = "/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateIncomeRequest request) {
-
         UpdateIncomeCommand command = UpdateIncomeCommand.fromRequest(request, id);
         UpdateIncomeMessage response = mediator.send(command);
         return ResponseEntity.ok(response);
@@ -80,17 +68,14 @@ public class IncomeController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id) {
-
         FindIncomeByIdQuery query = new FindIncomeByIdQuery(id);
         IncomeResponse response = mediator.send(query);
-
         return ResponseEntity.ok(response);
     }
     
     @PostMapping("/search")
     public ResponseEntity<?> search(@RequestBody SearchRequest request) {
         Pageable pageable = PageableUtil.createPageable(request);
-
         GetSearchIncomeQuery query = new GetSearchIncomeQuery(pageable, request.getFilter(), request.getQuery());
         PaginatedResponse data = mediator.send(query);
         return ResponseEntity.ok(data);

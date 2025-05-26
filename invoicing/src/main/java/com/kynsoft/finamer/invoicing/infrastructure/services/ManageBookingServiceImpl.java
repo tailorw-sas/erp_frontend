@@ -101,9 +101,9 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public UUID create(ManageBookingDto dto) {
+    public ManageBookingDto create(ManageBookingDto dto) {
         Booking entity = new Booking(dto);
-        return repositoryCommand.saveAndFlush(entity).getId();
+        return repositoryCommand.saveAndFlush(entity).toAggregate();
     }
 
     @Override
