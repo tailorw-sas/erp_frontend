@@ -65,14 +65,7 @@ public class UpdatePaymentService {
 
         this.saveChanges(paymentDto);
     }
-
-//    private ManageBankAccountDto getBankAccount(UUID bankAccountId, ManagePaymentSourceDto paymentSource){
-//        if(!paymentSource.getExpense()){
-//            return this.bankAccountService.findById(bankAccountId);
-//        }
-//        return null;
-//    }
-
+    
     private ManageBankAccountDto getBankAccount(UUID bankAccountId, ManagePaymentSourceDto paymentSource){
         try{
             if(Objects.nonNull(bankAccountId)){
