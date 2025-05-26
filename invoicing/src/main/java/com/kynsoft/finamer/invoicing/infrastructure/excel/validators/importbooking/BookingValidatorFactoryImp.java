@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.importbooking;
 
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
@@ -78,7 +79,12 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     @Override
     public boolean validate(BookingRow bookingRow) {
         validators.forEach((key, value) -> {
+            try{
             value.validate(bookingRow, errorFieldList);
+            }
+            catch (Exception e) {
+                errorFieldList.add(new ErrorField("Unknown error", e.getMessage()));
+            }
         });
         this.sendErrorEvent(bookingRow);
         boolean result = errorFieldList.isEmpty();
@@ -103,8 +109,6 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
        return errorFieldList.isEmpty();
     }
 
-
-
     private Map<String, List<BookingImportCache>> groupByInsistImportProcessBookingId(List<BookingImportCache> list) {
         return list.stream()
                 .collect(Collectors.groupingBy(
@@ -116,12 +120,6 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     private double checkAdultsCount(List<BookingImportCache> values) {
        return values.stream()
                 .mapToDouble(BookingImportCache::getAdults)
-                .sum();
-    }
-
-    private double checkInvoiceAmount(List<BookingImportCache> values) {
-        return values.stream()
-                .mapToDouble(BookingImportCache::getInvoiceAmount)
                 .sum();
     }
 }
