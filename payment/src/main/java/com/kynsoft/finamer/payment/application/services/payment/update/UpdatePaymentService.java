@@ -12,6 +12,7 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -66,15 +67,21 @@ public class UpdatePaymentService {
     }
 
     private ManageBankAccountDto getBankAccount(UUID bankAccountId, ManagePaymentSourceDto paymentSource){
-        try {
-            return this.bankAccountService.findById(bankAccountId);
-        }catch (BusinessNotFoundException businessNotFoundException){
-            if(!paymentSource.getExpense()){
-                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND,
-                        new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+        try{
+            if(Objects.nonNull(bankAccountId)){
+                return this.bankAccountService.findById(bankAccountId);
+            }else{
+                if(!paymentSource.getExpense()){
+                    throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+                }
+                return null;
             }
-
-            return null;
+        }catch (BusinessNotFoundException ex){
+            if(!paymentSource.getExpense()){
+                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+            }else{
+                return null;
+            }
         }
     }
 
