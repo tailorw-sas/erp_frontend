@@ -66,16 +66,10 @@ public class UpdatePaymentService {
     }
 
     private ManageBankAccountDto getBankAccount(UUID bankAccountId, ManagePaymentSourceDto paymentSource){
-        try {
+        if(!paymentSource.getExpense()){
             return this.bankAccountService.findById(bankAccountId);
-        }catch (BusinessNotFoundException businessNotFoundException){
-            if(!paymentSource.getExpense()){
-                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND,
-                        new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
-            }
-
-            return null;
         }
+        return null;
     }
 
     private void saveChanges(PaymentDto payment){
