@@ -96,7 +96,9 @@ public class ReportController {
             for (Map.Entry<String, Object> entry : originalParams.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
-                if (key.toLowerCase().contains("date") && value instanceof String) {
+                if (value instanceof String && ("true".equalsIgnoreCase((String) value) || "false".equalsIgnoreCase((String) value))) {
+                    convertedParams.put(key, Boolean.valueOf((String) value));
+                } else if (key.toLowerCase().contains("date") && value instanceof String) {
                     try {
                         java.sql.Date dateValue = java.sql.Date.valueOf((String) value);
                         convertedParams.put(key, dateValue);
