@@ -91,7 +91,6 @@ const emits = defineEmits([
 
 const attachmentTypeList = ref<any[]>([])
 const resourceTypeList = ref<any[]>([])
-const employeeList = ref<any[]>([])
 const pathFileLocal = ref('')
 
 const filterToSearch = ref<IData>({
@@ -158,14 +157,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     validation: validateEntityStatus('Attachment Type'),
 
-  },
-  {
-    field: 'employee',
-    header: 'Employee',
-    dataType: 'select',
-    class: 'field col-12',
-    headerClass: 'mb-1',
-    hidden: true,
   },
   {
     field: 'path',
@@ -631,35 +622,6 @@ async function getAttachmentTypeList(moduleApi: string, uriApi: string, queryObj
   attachmentTypeList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction)
 }
 
-interface DataListItemEmployee {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-}
-
-interface ListItemEmployee {
-  id: string
-  name: string
-  status: boolean | string
-}
-
-function mapFunctionEmployee(data: DataListItemEmployee): ListItemEmployee {
-  return {
-    id: data.id,
-    name: `${data.firstName} ${data.lastName}`,
-    status: 'Active'
-  }
-}
-
-async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  employeeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, filter, queryObj, mapFunctionEmployee)
-  const columnEmployee = historyColumns.value.find(item => item.field === 'employee')
-  if (columnEmployee) {
-    columnEmployee.localItems = [...JSON.parse(JSON.stringify(employeeList.value))]
-  }
-}
-
 const haveError = ref(false)
 
 async function createItemLocal(item: any) {
@@ -1107,18 +1069,6 @@ function requireConfirmationToDelete(event: any) {
 // }
 
 async function loadDefaultsValues() {
-  const filterForEmployee: FilterCriteria[] = [
-    {
-      key: 'status',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'ACTIVE',
-    },
-  ]
-  await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
-    query: '',
-    keys: ['name', 'code'],
-  }, filterForEmployee)
   const filter: FilterCriteria[] = [
     {
       key: 'defaults',
@@ -1407,25 +1357,6 @@ onMounted(async () => {
                       getAttachmentTypeList(objApis.attachmentType.moduleApi, objApis.attachmentType.uriApi, $event, filter)
 
                     }"
-                  >
-                    <template #option="props">
-                      <span>{{ props.item.name }}</span>
-                    </template>
-                  </DebouncedAutoCompleteComponent>
-                  <Skeleton v-else height="2rem" class="mb-2" />
-                </template>
-
-                <template #field-employee="{ item: data, onUpdate }">
-                  <DebouncedAutoCompleteComponent
-                    v-if="!loadingSaveAll"
-                    id="autocomplete"
-                    field="name"
-                    item-value="id"
-                    :model="data.employee"
-                    :suggestions="employeeList"
-                    @change="($event) => {
-                      onUpdate('employee', $event)
-                    }" @load="($event) => getEmployeeList(objApis.employee.moduleApi, objApis.employee.uriApi, $event)"
                   >
                     <template #option="props">
                       <span>{{ props.item.name }}</span>
