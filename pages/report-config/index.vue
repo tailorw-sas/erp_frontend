@@ -47,6 +47,7 @@ const ENUM_FILTER = [
 
 const item = ref<GenericObject>({
   file: '',
+  fileName: '',
   code: '',
   name: '',
   status: true,
@@ -60,6 +61,7 @@ const item = ref<GenericObject>({
 
 const itemTemp = ref<GenericObject>({
   file: '',
+  fileName: '',
   code: '',
   name: '',
   type: '',
@@ -285,44 +287,67 @@ async function resetListItems() {
 }
 
 async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      if (response) {
-        item.value.id = response.id
-        item.value.file = response.file
-        item.value.code = response.code
-        item.value.name = response.name
-        item.value.type = ENUM_REPORT_TYPE.find(x => x.id === response.type)
-        item.value.moduleSystems = ENUM_MODULES_SYSTEM.find(x => x.id === response.moduleSystems)
-        item.value.rootIndex = response.rootIndex
-        item.value.menuPosition = response.menuPosition
-        item.value.description = response.description
-        item.value.status = statusToBoolean(response.status)
-        if (response.dbConection) {
-          item.value.dbConection = {
-            id: response.dbConection.id,
-            name: response.dbConection.name,
-            code: response.dbConection.code,
-            status: response.dbConection.status
-          }
+  if (!id) { return }
+
+  idItem.value = id
+  loadingSaveAll.value = true
+
+  try {
+    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+    if (response) {
+      // --- Datos básicos ---
+      item.value.id = response.id
+      item.value.code = response.code
+      item.value.name = response.name
+      item.value.type = ENUM_REPORT_TYPE.find(x => x.id === response.type)
+      item.value.moduleSystems = ENUM_MODULES_SYSTEM.find(x => x.id === response.moduleSystems)
+      item.value.rootIndex = response.rootIndex
+      item.value.menuPosition = response.menuPosition
+      item.value.description = response.description
+      item.value.status = statusToBoolean(response.status)
+      item.value.query = response.query
+
+      // --- DB Connection ---
+      if (response.dbConection) {
+        item.value.dbConection = {
+          id: response.dbConection.id,
+          name: response.dbConection.name,
+          code: response.dbConection.code,
+          status: response.dbConection.status
         }
-        item.value.query = response.query
       }
-      updateFieldProperty(fields, 'reportParams', 'hidden', false)
-      updateFieldProperty(fields, 'status', 'disabled', false)
-      formReload.value += 1
+
+      // --- File JRXML ---
+      // 1) URL (string) que te viene de la API
+      item.value.file = response.file
+
+      // 2) Nombre del fichero: si el backend te da response.fileName lo usas,
+      //    si no, lo derivamos a partir de la URL
+      item.value.fileName = response.fileName
+        ? response.fileName
+        : response.file?.split('/').pop() ?? ''
+
+      // Si tu itemTemp no incluye fileName, inicialízalo allí también:
+      // itemTemp.value.fileName = '';
     }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not load mail configuration data', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
+
+    // Habilita campos tras la carga
+    updateFieldProperty(fields, 'reportParams', 'hidden', false)
+    updateFieldProperty(fields, 'status', 'disabled', false)
+
+    // Fuerza recarga del formulario
+    formReload.value += 1
+  }
+  catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Could not load report configuration data',
+      life: 3000
+    })
+  }
+  finally {
+    loadingSaveAll.value = false
   }
 }
 
@@ -357,33 +382,45 @@ async function createItem(item: { [key: string]: any }) {
 
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
-  let payload: { [key: string]: any } = { ...item }
+
+  // Como ya tienes item.file y item.fileName en el modelo, clonamos payload:
+  const payload: { [key: string]: any } = { ...item }
+
+  // Si es File, lo subimos y reasignamos URL
+  if (payload.file instanceof File) {
+    payload.file = await getUrlByImage(payload.file)
+  }
+
+  // Asegúrate de incluir fileName
+  payload.fileName = item.fileName
+
+  console.log('⚙️ [updateItem] payload:', payload)
+
+  // continua con el resto de tu lógica...
   payload.status = statusToString(payload.status)
   payload.type = typeof payload.type === 'object' ? payload.type.id : payload.type
-  payload.moduleSystems = typeof payload.moduleSystems === 'object' ? payload.moduleSystems.id : payload.moduleSystems
-  payload.dbConection = typeof payload.dbConection === 'object' ? payload.dbConection.id : payload.dbConection
+  payload.moduleSystems = typeof payload.moduleSystems === 'object'
+    ? payload.moduleSystems.id
+    : payload.moduleSystems
+  payload.dbConection = typeof payload.dbConection === 'object'
+    ? payload.dbConection.id
+    : payload.dbConection
+
   if (!payload.file) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'File is required', life: 3000 })
+    loadingSaveAll.value = false
+    return
   }
-  else {
-    payload.file = typeof payload.file === 'object' ? await getUrlByImage(payload.file) : payload.file
-    payload = {
-      ...payload,
-      parentIndex: 0.0,
-      // menuPosition: 0.0,
-      lanPath: 'lanPath',
-      web: false,
-      subMenu: false,
-      sendEmail: false,
-      internal: false,
-      highRisk: false,
-      visible: false,
-      cancel: false,
-      rootIndex: 'rootIndex',
-      language: 'language',
-    }
-    return await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
-  }
+
+  const response = await GenericService.update(
+    confApi.moduleApi,
+    confApi.uriApi,
+    idItem.value,
+    payload
+  )
+
+  loadingSaveAll.value = false
+  return response
 }
 
 async function deleteItem(id: string) {
@@ -403,38 +440,49 @@ async function deleteItem(id: string) {
   }
 }
 
-async function saveItem(item: { [key: string]: any }) {
+async function saveItem(payloadItem: { [key: string]: any }) {
   loadingSaveAll.value = true
-  let successOperation = null
-  if (idItem.value) {
-    try {
-      const response = await updateItem(item)
-      if (response) {
-        successOperation = true
-      }
+  let successOperation = false
+
+  // Guardamos el id actual para recargarlo después si estamos en edición
+  const editingId = idItem.value
+
+  try {
+    if (editingId) {
+      // Modo edición
+      const response = await updateItem(payloadItem)
+      successOperation = Boolean(response)
     }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-    idItem.value = ''
-  }
-  else {
-    try {
-      const response = await createItem(item)
-      if (response) {
-        successOperation = true
-      }
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    else {
+      // Modo creación
+      const response = await createItem(payloadItem)
+      successOperation = Boolean(response)
     }
   }
-  loadingSaveAll.value = false
+  catch (error: any) {
+    successOperation = false
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error?.data?.data?.error?.errorMessage || 'Unexpected error',
+      life: 10000
+    })
+  }
+  finally {
+    loadingSaveAll.value = false
+  }
+
   if (successOperation) {
-    clearForm()
-    getList()
+    if (editingId) {
+      // En edición, recargamos la lista y luego el mismo registro para ver los cambios
+      await getList()
+      await getItemById(editingId)
+    }
+    else {
+      // En creación, limpiamos el formulario y refrescamos la lista
+      clearForm()
+      await getList()
+    }
   }
 }
 
@@ -712,53 +760,58 @@ onMounted(() => {
               </InputGroup>
               <Skeleton v-else height="2rem" class="mb-2" />
             </template>
-            <!-- <template #field-file="{ item: data, onUpdate }">
-              <FileUpload
-                v-if="!loadingSaveAll" :max-file-size="1000000" :disabled="idItem !== '' || idItem === null" :multiple="false" auto custom-upload accept=".jrxml"
-                @uploader="($event: any) => {
-                  // customBase64Uploader($event, fieldsV2, 'path');
-                  onUpdate('path', $event)
-                  if ($event && $event.files.length > 0) {
-                    onUpdate('fileName', $event?.files[0]?.name)
-                    onUpdate('fileSize', formatSize($event?.files[0]?.size))
-                  }
-                  else {
-                    onUpdate('fileName', '')
-                  }
+            <template #field-file="{ item: data, onUpdate }">
+              <!-- 1.a) Si hay algo en data.file, muéstralo -->
+              <div v-if="data.file" class="mb-2">
+                <!-- si es URL string, mostramos link -->
+                <a
+                  v-if="typeof data.file === 'string'"
+                  :href="data.file"
+                  target="_blank"
+                  class="font-semibold"
+                >
+                  {{ data.fileName || data.file.split('/').pop() }}
+                </a>
+                <!-- si es File object (recién seleccionado), mostramos su nombre -->
+                <span v-else class="font-semibold">
+                  {{ data.file.name }}
+                </span>
+              </div>
 
+              <!-- 1.b) El uploader para elegir un nuevo .jrxml -->
+              <FileUpload
+                v-if="!loadingSaveAll"
+                custom-upload
+                accept=".jrxml"
+                :max-file-size="1000000"
+                :show-upload-button="false"
+                :show-cancel-button="false"
+                @select="e => {
+                  onUpdate('file', e.files[0])
+                  onUpdate('fileName', e.files[0].name)
                 }"
               >
                 <template #header="{ chooseCallback }">
-                  <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
-                    <div class="flex gap-2">
-                      <Button id="btn-choose" :disabled="idItem !== '' || idItem === null" class="p-2" icon="pi pi-plus" text @click="chooseCallback()" />
-                      <Button
-                        :disabled="idItem !== '' || idItem === null"
-                        icon="pi pi-times" class="ml-2" severity="danger" text @click="() => {
-                          onUpdate('path', null);
-                          onUpdate('fileName', '');
-
-                        }"
-                      />
-                    </div>
-                  </div>
+                  <Button
+                    v-tooltip.top="'Add File'"
+                    icon="pi pi-plus"
+                    text
+                    @click="chooseCallback()"
+                  />
                 </template>
                 <template #content="{ files }">
-                  <ul v-if="files[0] || (data.path && data.path?.files.length > 0)" class="list-none p-0 m-0">
-                    <li class="p-3 surface-border flex align-items-start sm:align-items-center">
+                  <!-- slot content para ver el fichero recién escogido -->
+                  <ul v-if="files.length" class="list-none p-0 m-0">
+                    <li class="p-3 surface-border flex align-items-center">
                       <div class="flex flex-column">
-                        <span class="text-900 font-semibold text-xl mb-2">{{ data.path?.files[0].name }}</span>
-                        <span class="text-900 font-medium">
-                          <Badge severity="warning">
-                            {{ formatSize(data.path?.files[0].size) }}
-                          </Badge>
-                        </span>
+                        <span class="font-semibold">{{ files[0].name }}</span>
+                        <small class="text-sm">({{ (files[0].size / 1024).toFixed(2) }} KB)</small>
                       </div>
                     </li>
                   </ul>
                 </template>
               </FileUpload>
-            </template> -->
+            </template>
           </EditFormV2>
           <DynamicContentModal
             :visible="dialogReportParams"
