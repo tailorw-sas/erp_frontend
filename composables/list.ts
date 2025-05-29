@@ -2,7 +2,7 @@ import { GenericService } from '~/services/generic-services'
 
 export interface FilterCriteria {
   key: string
-  operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'LESS_THAN' | 'LIKE' | 'IN' | 'NOT_IN' // Puedes añadir más operadores si es necesario
+  operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'LESS_THAN' | 'LIKE' | 'IN' | 'NOT_IN' | 'IS_NOT_NULL' // Puedes añadir más operadores si es necesario
   value: string | string[] | boolean// Puedes cambiar el tipo según sea necesario (por ejemplo, string | number)
   logicalOperation: 'AND' | 'OR'
 }

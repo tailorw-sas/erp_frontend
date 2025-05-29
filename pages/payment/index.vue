@@ -1156,6 +1156,14 @@ const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+const applyPaymentPayloadOtherDeductionPayment = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 100,
+  page: 0,
+  sortBy: 'manageBooking.bookingId',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
 const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   filter: [],
   query: '',
@@ -2830,114 +2838,174 @@ async function applyPaymentGetListForOtherDeductions() {
 
     // solo se agrega si no se marcó loadAllInvoices
     if (!loadAllInvoices.value && paymentCtx.id) {
+      await applyPaymentGetListForOtherDeductionsPayment(paymentCtx.id)
+    }
+    else {
       filters.push({
-        key: 'paymentDetails.payment.id',
+        key: 'dueAmount',
+        operator: 'GREATER_THAN',
+        value: '0.00',
+        logicalOperation: 'AND'
+      })
+
+      filters.push({
+        key: 'invoice.manageInvoiceStatus.enabledToApply',
         operator: 'EQUALS',
-        value: paymentCtx.id,
+        value: true,
         logicalOperation: 'AND'
       })
-    }
 
-    filters.push({
-      key: 'dueAmount',
-      operator: 'GREATER_THAN',
-      value: '0.00',
-      logicalOperation: 'AND'
-    })
+      const agencyQuery = { query: '', keys: ['name', 'code'] }
+      const agencyFilter: FilterCriteria[] = [
+        { key: 'client.id', operator: 'EQUALS', value: paymentCtx.client.id, logicalOperation: 'AND' },
+        { key: 'client.status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' },
+        { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
+      ]
 
-    filters.push({
-      key: 'invoice.manageInvoiceStatus.enabledToApply',
-      operator: 'EQUALS',
-      value: true,
-      logicalOperation: 'AND'
-    })
+      const agencies = await getAgencyListTemp(
+        objApis.value.agency.moduleApi,
+        objApis.value.agency.uriApi,
+        agencyQuery,
+        agencyFilter
+      )
 
-    const agencyQuery = { query: '', keys: ['name', 'code'] }
-    const agencyFilter: FilterCriteria[] = [
-      { key: 'client.id', operator: 'EQUALS', value: paymentCtx.client.id, logicalOperation: 'AND' },
-      { key: 'client.status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' },
-      { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
-    ]
-
-    const agencies = await getAgencyListTemp(
-      objApis.value.agency.moduleApi,
-      objApis.value.agency.uriApi,
-      agencyQuery,
-      agencyFilter
-    )
-
-    if (!agencies.length) { return }
-
-    filters.push({
-      key: 'invoice.agency.id',
-      operator: 'IN',
-      value: agencies.map(a => a.id),
-      logicalOperation: 'AND'
-    })
-
-    const hotel = paymentCtx.hotel
-    if (hotel?.id) {
-      const hotelQuery = { query: '', keys: ['name', 'code'] }
-      let hotelIds: string[] = []
-
-      if (hotel.status === 'ACTIVE' && hotel.applyByTradingCompany) {
-        const tradingFilter: FilterCriteria[] = [
-          { key: 'manageTradingCompanies.id', operator: 'EQUALS', value: hotel.manageTradingCompany, logicalOperation: 'AND' },
-          { key: 'applyByTradingCompany', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
-          { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
-        ]
-
-        const hotels = await getHotelListTemp(
-          objApis.value.hotel.moduleApi,
-          objApis.value.hotel.uriApi,
-          hotelQuery,
-          tradingFilter
-        )
-
-        hotelIds = hotels.length ? hotels.map(h => h.id) : [hotel.id]
-      }
-      else {
-        hotelIds = [hotel.id]
-      }
+      if (!agencies.length) { return }
 
       filters.push({
-        key: 'invoice.hotel.id',
-        operator: hotelIds.length > 1 ? 'IN' : 'EQUALS',
-        value: hotelIds.length > 1 ? hotelIds : hotelIds[0],
+        key: 'invoice.agency.id',
+        operator: 'IN',
+        value: agencies.map(a => a.id),
         logicalOperation: 'AND'
       })
-    }
 
-    applyPaymentPayloadOtherDeduction.value.filter = removeDuplicateFilters({ filter: filters } as IQueryRequest).filter
+      const hotel = paymentCtx.hotel
+      if (hotel?.id) {
+        const hotelQuery = { query: '', keys: ['name', 'code'] }
+        let hotelIds: string[] = []
+
+        if (hotel.status === 'ACTIVE' && hotel.applyByTradingCompany) {
+          const tradingFilter: FilterCriteria[] = [
+            { key: 'manageTradingCompanies.id', operator: 'EQUALS', value: hotel.manageTradingCompany, logicalOperation: 'AND' },
+            { key: 'applyByTradingCompany', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
+            { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
+          ]
+
+          const hotels = await getHotelListTemp(
+            objApis.value.hotel.moduleApi,
+            objApis.value.hotel.uriApi,
+            hotelQuery,
+            tradingFilter
+          )
+
+          hotelIds = hotels.length ? hotels.map(h => h.id) : [hotel.id]
+        }
+        else {
+          hotelIds = [hotel.id]
+        }
+
+        filters.push({
+          key: 'invoice.hotel.id',
+          operator: hotelIds.length > 1 ? 'IN' : 'EQUALS',
+          value: hotelIds.length > 1 ? hotelIds : hotelIds[0],
+          logicalOperation: 'AND'
+        })
+      }
+
+      applyPaymentPayloadOtherDeduction.value.filter = removeDuplicateFilters({ filter: filters } as IQueryRequest).filter
+
+      const response = await GenericService.search(
+        'invoicing',
+        'manage-booking',
+        applyPaymentPayloadOtherDeduction.value
+      )
+
+      const { data: dataList, page, size, totalElements, totalPages } = response
+
+      Object.assign(applyPaymentPaginationOtherDeduction.value, { page, limit: size, totalElements, totalPages })
+
+      const existing = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(i => i.id))
+      dataList.forEach((item) => {
+        if (!existing.has(item.id)) {
+          const record = {
+            ...item,
+            invoiceId: item.invoice?.invoiceId.toString(),
+            invoiceNumber: item.invoice?.invoiceNumberPrefix.toString(),
+            checkIn: item.checkIn ? dayjs(item.checkIn).format('YYYY-MM-DD') : null,
+            checkOut: item.checkOut ? dayjs(item.checkOut).format('YYYY-MM-DD') : null,
+            dueAmountTemp: item.dueAmount || 0,
+            bookingAmountTemp: item.invoiceAmount || 0,
+            paymentId: paymentCtx.paymentId,
+            loadingEdit: false,
+            loadingDelete: false,
+            loadingBookings: false
+          }
+          newListItems.push(record)
+          existing.add(item.id)
+        }
+      })
+
+      applyPaymentListOfInvoiceOtherDeduction.value = newListItems
+    }
+  }
+  catch (error) {
+    console.error('applyPaymentOtherDeduction error:', error)
+  }
+  finally {
+    applyPaymentOptionsOtherDeduction.value.loading = false
+    applyPaymentOptionsOtherDeduction1.value.loading = false
+  }
+}
+
+async function applyPaymentGetListForOtherDeductionsPayment(id: any) {
+  try {
+    const newListItems: typeof applyPaymentListOfInvoiceOtherDeduction.value = []
+    const filters: FilterCriteria[] = []
+
+    filters.push({
+      key: 'payment.id',
+      operator: 'EQUALS',
+      value: id,
+      logicalOperation: 'AND'
+    })
+
+    filters.push({
+      key: 'manageBooking',
+      operator: 'IS_NOT_NULL',
+      value: '',
+      logicalOperation: 'AND'
+    })
+
+    applyPaymentPayloadOtherDeductionPayment.value.filter = removeDuplicateFilters({ filter: filters } as IQueryRequest).filter
 
     const response = await GenericService.search(
-      'invoicing',
-      'manage-booking',
-      applyPaymentPayloadOtherDeduction.value
+      'payment',
+      'payment-detail',
+      applyPaymentPayloadOtherDeductionPayment.value
     )
-
     const { data: dataList, page, size, totalElements, totalPages } = response
-
     Object.assign(applyPaymentPaginationOtherDeduction.value, { page, limit: size, totalElements, totalPages })
 
     const existing = new Set(applyPaymentListOfInvoiceOtherDeduction.value.map(i => i.id))
     dataList.forEach((item) => {
-      if (!existing.has(item.id)) {
-        const record = {
-          ...item,
-          invoiceId: item.invoice?.invoiceId.toString(),
-          invoiceNumber: item.invoice?.invoiceNumberPrefix.toString(),
-          checkIn: item.checkIn ? dayjs(item.checkIn).format('YYYY-MM-DD') : null,
-          checkOut: item.checkOut ? dayjs(item.checkOut).format('YYYY-MM-DD') : null,
-          dueAmountTemp: item.dueAmount || 0,
-          bookingAmountTemp: item.invoiceAmount || 0,
-          paymentId: paymentCtx.paymentId,
-          loadingEdit: false,
-          loadingDelete: false,
-          loadingBookings: false
+      if (!existing.has(item.manageBooking.id)) {
+        if (item.manageBooking) {
+          const record = {
+            ...item.manageBooking,
+            invoiceId: item.manageBooking.invoice?.invoiceId.toString(),
+            invoiceNumber: item.manageBooking.invoice?.invoiceNumber.toString(),
+            checkIn: item.manageBooking.checkIn ? dayjs(item.manageBooking.checkIn).format('YYYY-MM-DD') : null,
+            checkOut: item.manageBooking.checkOut ? dayjs(item.manageBooking.checkOut).format('YYYY-MM-DD') : null,
+            dueAmountTemp: item.manageBooking.amountBalance || 0,
+            bookingAmountTemp: item.manageBooking.amountBalance || 0,
+            hotelBookingNumber: item.manageBooking.reservationNumber,
+            paymentId: id,
+            loadingEdit: false,
+            loadingDelete: false,
+            loadingBookings: false
+          }
+          newListItems.push(record)
+          existing.add(item.manageBooking.id)
         }
-        newListItems.push(record)
-        existing.add(item.id)
       }
     })
 
