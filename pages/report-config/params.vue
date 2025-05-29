@@ -274,7 +274,14 @@ const pagination = ref<IPagination>({
 // -------------------------------------------------------------------------------------------------------
 // FUNCTIONS ---------------------------------------------------------------------------------------------
 function clearForm() {
-  item.value = { ...itemTemp.value }
+  // Deep-clone de itemTemp como ya lo tienes
+  item.value = JSON.parse(JSON.stringify(itemTemp.value))
+
+  // <-- Aquí reseteas todo lo relacionado a los valores locales
+  localValuesFieldList.value = []
+  objLocalValue.value = { ...objLocalValueTemp }
+  editingRows.value = []
+
   idItem.value = ''
   formReload.value++
   if (!props.reportConfig) {
@@ -510,53 +517,72 @@ function showAndHideFieldInGetItemById(type: string) {
 }
 
 async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      if (response) {
-        item.value = { ...response }
-        item.value.id = response.id
-        item.value.componentType = FORM_FIELD_TYPE.find(x => x.id === response.componentType)
-        item.value.paramName = response.paramName || ''
-        item.value.type = response.type
-        item.value.module = response.module || ''
-        item.value.service = response.service || ''
-        item.value.label = response.label || ''
-        item.value.parameterPosition = response.parameterPosition
-        item.value.reportClass = response.reportClass || ''
-        item.value.reportValidation = response.reportValidation || ''
-        item.value.dependentField = response.dependentField ? JSON.parse(response.dependentField) : null
-        item.value.filterKeyValue = response.filterKeyValue || ''
-        item.value.reportId = response.jasperReportTemplate
-          ? {
-              id: response.jasperReportTemplate.id,
-              name: response.jasperReportTemplate.name,
-              status: response.jasperReportTemplate.status
-            }
-          : null
-      }
+  if (!id) { return }
 
+  // 1) Prepara el estado antes de cargar
+  idItem.value = id
+  loadingSaveAll.value = true
+  localValuesFieldList.value = [] // limpia valores locales
+  objLocalValue.value = { ...objLocalValueTemp } // resetea el form de añadir valor
+  editingRows.value = [] // limpia filas en edición
+
+  try {
+    const response = await GenericService.getById(
+      confApi.moduleApi,
+      confApi.uriApi,
+      id
+    )
+
+    if (response) {
+      // 2) Mapea todo lo demás
+      item.value = { ...response }
+      item.value.id = response.id
+      item.value.componentType = FORM_FIELD_TYPE.find(x => x.id === response.componentType)
+      item.value.paramName = response.paramName || ''
+      item.value.type = response.type
+      item.value.module = response.module || ''
+      item.value.service = response.service || ''
+      item.value.label = response.label || ''
+      item.value.parameterPosition = response.parameterPosition
+      item.value.reportClass = response.reportClass || ''
+      item.value.reportValidation = response.reportValidation || ''
+      item.value.dependentField = response.dependentField
+        ? JSON.parse(response.dependentField)
+        : null
+      item.value.filterKeyValue = response.filterKeyValue || ''
+      item.value.reportId = response.jasperReportTemplate
+        ? {
+            id: response.jasperReportTemplate.id,
+            name: response.jasperReportTemplate.name,
+            status: response.jasperReportTemplate.status
+          }
+        : null
+      item.value.dataValueStatic = response.dataValueStatic || '[]'
+
+      // 3) Solo si es local-select, parsea el JSON en la lista
       if (response.componentType === 'local-select') {
-        localValuesFieldList.value = response.dataValueStatic ? JSON.parse(response.dataValueStatic || []) : []
-        item.value.dataValueStatic = response.dataValueStatic ? response.dataValueStatic || [] : []
+        const arr = JSON.parse(response.dataValueStatic || '[]')
+        localValuesFieldList.value = Array.isArray(arr) ? arr : []
       }
 
+      // 4) Ajusta la visibilidad de campos según tipo
       showAndHideFieldInGetItemById(response.componentType)
 
-      formReload.value += 1
+      // 5) Fuerza recarga del formulario
+      formReload.value++
     }
-    catch (error) {
-      if (error) {
-        console.log(error)
-
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Item could not be loaded', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
+  }
+  catch (error: any) {
+    console.error(error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Item could not be loaded',
+      life: 3000
+    })
+  }
+  finally {
+    loadingSaveAll.value = false
   }
 }
 
@@ -890,6 +916,7 @@ onMounted(async () => {
         :columns="columns"
         :options="options"
         :pagination="pagination"
+        row-key="id"
         @on-confirm-create="clearForm"
         @update:clicked-item="getItemById($event)"
         @on-change-pagination="payloadOnChangePage = $event"
