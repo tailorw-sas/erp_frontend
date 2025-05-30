@@ -530,7 +530,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'paymentStatus',
     header: 'Status',
     dataType: 'select',
-    disabled: true,
+    disabled: false,
     class: 'field col-12 md:col-1 required',
     validation: validateEntityStatus('payment status'),
     tabIndex: 3
