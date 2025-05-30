@@ -13,20 +13,22 @@ public class ProcessUpdatePayment {
     private final ManageClientDto client;
     private final ManageBankAccountDto bankAccount;
     private final String remark;
-
+    private final ManagePaymentStatusDto managePaymentStatus;
 
     public ProcessUpdatePayment(PaymentDto payment,
                                 ManageHotelDto hotel,
                                 ManageAgencyDto agency,
                                 ManageClientDto client,
                                 ManageBankAccountDto bankAccount,
-                                String remark){
+                                String remark,
+                                ManagePaymentStatusDto managePaymentStatus){
         this.payment = payment;
         this.hotel = hotel;
         this.agency = agency;
         this.client = client;
         this.bankAccount = bankAccount;
         this.remark = remark;
+        this.managePaymentStatus = managePaymentStatus;
     }
 
     public void update(){
@@ -34,6 +36,7 @@ public class ProcessUpdatePayment {
                 this.hotel,
                 this.agency,
                 this.client,
+                this.managePaymentStatus,
                 this.remark);
     }
 
@@ -41,6 +44,7 @@ public class ProcessUpdatePayment {
                                ManageHotelDto hotel,
                                ManageAgencyDto agency,
                                ManageClientDto client,
+                               ManagePaymentStatusDto paymentStatus,
                                String remark
                                ){
         payment.setHotel(hotel);
@@ -67,5 +71,7 @@ public class ProcessUpdatePayment {
                 RulesChecker.checkRule(new PaymentValidateBankAccountAndHotelRule(payment.getHotel(), payment.getBankAccount()));
             }
         }
+
+        payment.setPaymentStatus(paymentStatus);
     }
 }

@@ -20,6 +20,7 @@ public class UpdatePaymentCommandHandler implements ICommandHandler<UpdatePaymen
                 command.getAgency(),
                 command.getHotel(),
                 command.getBankAccount(),
-                command.getRemark());
+                command.getRemark(),
+                command.getPaymentStatus());
     }
 }
