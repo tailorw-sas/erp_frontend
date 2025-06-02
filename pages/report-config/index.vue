@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
@@ -26,6 +26,8 @@ const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
 const loadingDelete = ref(false)
 const loadingSearch = ref(false)
+
+const editFormRef = ref()
 
 const reportParams = ref<any>({})
 const dialogReportParams = ref(false)
@@ -137,17 +139,17 @@ const fields: Array<FieldDefinitionType> = [
     validation: z.string().trim().min(0, 'The query field is required').max(250, 'Maximum 250 characters')
   },
   {
+    field: 'file',
+    header: 'File',
+    dataType: 'file',
+    class: 'field col-12 required',
+  },
+  {
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
     class: 'field col-12',
     validation: z.string().trim().max(50, 'Maximum 50 characters')
-  },
-  {
-    field: 'file',
-    header: 'File',
-    dataType: 'file',
-    class: 'field col-12 required',
   },
   {
     field: 'status',
@@ -486,6 +488,29 @@ async function saveItem(payloadItem: { [key: string]: any }) {
   }
 }
 
+function assignTabIndex() {
+  nextTick(() => {
+    const root = (editFormRef.value as any)?.$el as HTMLElement
+    if (!root) { return }
+
+    // selector genérico para elementos focusables
+    const focusables = Array.from(
+      root.querySelectorAll<HTMLElement>([
+        'a[href]',
+        'button:not([disabled])',
+        'input:not([type="hidden"]):not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+      ].join(','))
+    ).filter(el => !el.hasAttribute('disabled'))
+
+    focusables.forEach((el, i) => {
+      el.setAttribute('tabindex', String(i + 1))
+    })
+  })
+}
+
 function requireConfirmationToSave(item: any) {
   saveItem(item)
 }
@@ -615,6 +640,9 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
     await getItemById(newValue)
   }
 })
+watch(formReload, () => {
+  assignTabIndex()
+})
 // -------------------------------------------------------------------------------------------------------
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
@@ -625,6 +653,7 @@ onMounted(() => {
     getList()
     document.title = 'Report'
   }
+  assignTabIndex()
 })
 // -------------------------------------------------------------------------------------------------------
 </script>
@@ -699,7 +728,7 @@ onMounted(() => {
         </div>
         <div class="card p-4">
           <EditFormV2
-            :key="formReload" :fields="fields" :item="item" :show-actions="true"
+            ref="editFormRef" :key="formReload" :fields="fields" :item="item" :show-actions="true"
             :loading-save="loadingSaveAll" @cancel="clearForm" @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
