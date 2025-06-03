@@ -21,14 +21,10 @@ import com.kynsof.share.utils.ConsumerUpdate;
 import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dto.helper.DetailAndIncomeHelper;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
@@ -71,9 +67,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -123,6 +122,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     private List<Payment> uniquePayments;
     private List<Booking> bookins;
     private String attachment;
+
+    private static final Logger logger = LoggerFactory.getLogger(PaymentImportAntiIncomeHelperServiceImpl.class);
 
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentAntiValidatorFactory paymentAntiValidatorFactory,
@@ -177,24 +178,30 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        printLog("Start readExcel process");
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
-        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
+        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(UUID.fromString(request.getEmployeeId()));
 
-        paymentAntiValidatorFactory.createValidators();
         ExcelBeanReader<AntiToIncomeRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, AntiToIncomeRow.class);
         ExcelBean<AntiToIncomeRow> excelBean = new ExcelBean<>(excelBeanReader);
-        for (AntiToIncomeRow row : excelBean) {
-            row.setImportProcessId(request.getImportProcessId());
-            row.setImportType(request.getImportPaymentType().name());
-            row.setAgencys(agencys);
-            row.setHotels(hotels);
-            if (paymentAntiValidatorFactory.validate(row)) {
+        List<AntiToIncomeRow> antiToIncomeRows = new ArrayList<>();
+
+        printLog("Antes de obtener cache");
+        Cache cache = this.createCache(excelBean, employeeDto, request, antiToIncomeRows);
+        printLog("Antes de obtener cache");
+
+        paymentAntiValidatorFactory.createValidators(cache);
+
+        boolean result = paymentAntiValidatorFactory.validate(antiToIncomeRows);
+        if(result){
+            antiToIncomeRows.forEach(row -> {
                 cachingPaymentImport(row);
                 totalProcessRow++;
-            }
+            });
+
         }
+        printLog("End readExcel process");
     }
 
     public void createAttachment(PaymentImportDetailRequest request) {
@@ -523,4 +530,26 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         return response1.getId();
     }
 
+    private void printLog(String message){
+        logger.info("{} at: {}", message, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    }
+
+    private Cache createCache(ExcelBean<AntiToIncomeRow> excelBean, ManageEmployeeDto employeeDto, PaymentImportDetailRequest request, List<AntiToIncomeRow> antiToIncomeRows){
+        //PaymentDetails
+        Set<Long> paymentDetailGenIdSet = new HashSet<>();
+
+        for (AntiToIncomeRow row : excelBean){
+            paymentDetailGenIdSet.add(row.getTransactionId().longValue());
+
+            row.setImportProcessId(request.getImportProcessId());
+            row.setImportType(request.getImportPaymentType().name());
+
+            antiToIncomeRows.add(row);
+        }
+
+        List<Long> paymentDetailGenIdList = new ArrayList<>(paymentDetailGenIdSet);
+        List<PaymentDetailDto> paymentDetails = this.paymentDetailService.findSimpleDetailsByPaymentGenIds(paymentDetailGenIdList);
+
+        return new Cache(paymentDetails, employeeDto);
+    }
 }

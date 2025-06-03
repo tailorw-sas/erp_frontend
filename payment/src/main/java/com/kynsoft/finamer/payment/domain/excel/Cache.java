@@ -60,6 +60,13 @@ public class Cache implements ICache {
         this.setCloseOperationsByHotelMap(closeOperationList);
     }
 
+    public Cache(List<PaymentDetailDto> paymentDetails,
+                 ManageEmployeeDto employeeDto){
+        setPaymentDetailsByPaymentDetailIdMap(paymentDetails);
+        this.setAgencysByEmployeeMap(employeeDto);
+        this.setHotelsByEmployeeMap(employeeDto);
+    }
+
     /// Setters de los mapas
     private void setManagePaymentTransactionTypeMap(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList){
         this.managePaymentTransactionTypeMap = managePaymentTransactionTypeList.stream()

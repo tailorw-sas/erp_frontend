@@ -1,7 +1,9 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
+import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
@@ -10,6 +12,8 @@ import com.kynsoft.finamer.payment.infrastructure.excel.validators.SecurityImpor
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeRow> {
@@ -36,9 +40,16 @@ public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeR
 
     @Override
     public void createValidators() {
+
+    }
+
+    @Override
+    public void createValidators(ICache iCache) {
+        Cache cache = (Cache)iCache;
+
+        paymentTransactionIdValidator = new PaymentTransactionIdValidator(cache, applicationEventPublisher);
         paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
-        paymentTransactionIdValidator = new PaymentTransactionIdValidator(paymentDetailService, applicationEventPublisher);
-      //  totalAmountValidator = new PaymentTotalAmountValidator(paymentImportCacheRepository);
+
     }
 
     @Override
@@ -61,6 +72,15 @@ public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeR
         this.clearErrors();
         return result;
 
+    }
+
+    @Override
+    public boolean validate(List<AntiToIncomeRow> toValidateList){
+        int errors = 0;
+
+        for (AntiToIncomeRow toValidateRow : toValidateList) {
+            errors += paymentTransactionIdValidator.validate(toValidateRow, errorFieldList) ? 0 : 1;
+        }
     }
 
 
