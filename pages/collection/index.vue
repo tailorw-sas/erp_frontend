@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
@@ -14,24 +14,31 @@ import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import CollectionToPrintDialog from '~/pages/collection/print.vue'
+import ChangeAgencyModal from '@/components/modal/ChangeAgency.vue'
+import DynamicTable from '@/components/table/DynamicTable.vue'
+
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
-const selectedItem = ref({})
+const selectedItem = ref<SelectedItemType | null>(null);
+
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
-const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
 const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as GenericObject)
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
 const maxSelectedLabels = ref(2)
+const respectClient = ref(true)
 
 const CollectionToPrintDialogVisible = ref(false)
 
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
 const onOffDialogPaymentDetailSummary = ref(false)
+
+const openDialogApplyPayment = ref(false)
+
 
 // Attachments for Invoice
 const attachmentDialogOpenInvoice = ref<boolean>(false)
@@ -53,6 +60,99 @@ const dynamicTable = ref(0)
 const dynamicTableInv = ref(0)
 const router = useRouter()
 
+
+//Change Agency
+const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
+const objClientFormChangeAgency = ref<GenericObject>({})
+const currentAgencyForChangeAgency = ref<GenericObject>({})
+const listClientFormChangeAgency = ref<any[]>([])
+const listAgencyByClient = ref<any[]>([])
+const modalContext = ref('payment') // 'payment' o 'invoice'
+const selectedItemId = ref('')
+const currentIdLabel = computed(() => 
+  currentContext.value === 'payment' ? 'Payment ID' : 'Invoice ID'
+)
+const list = ref<any[]>([])
+const invoiceList = ref<any[]>([]); // Si no la tienes ya definida
+ 
+const isChangeAgencyModalOpen = ref(false)
+const agencyModalRef = ref<InstanceType<typeof ChangeAgencyModal> | null>(null);
+const agencies = ref<any[]>([]);
+
+const currentContext = ref<'payment' | 'invoice'>('payment')
+const currentClient = ref<any>(null)
+const currentAgency = ref<any>(null)
+const currentTarget = ref<any>(null)
+
+
+interface Agency {
+  code: string;
+  name: string;
+  client?: {
+    id: number | string;
+    name: string;
+  }
+}
+interface SelectedItemType {
+  id: number | string;
+  agency?: Agency;
+  // agrega otros campos si los tienes
+}
+
+const emit = defineEmits([
+  'close',
+  'sort-field',
+  'change-filter',
+  'change-pagination',
+  'row-double-click',
+  'refresh-payments', 
+  'refresh-invoices',
+  'onCloseDialog'
+])
+
+
+const columnsChangeAgency = ref<IColumn[]>([
+  { field: 'code', header: 'Code', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'name', header: 'Name', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'description', header: 'Description', type: 'text', width: '90px', sortable: true, showFilter: true },
+])
+const optionsOfTableChangeAgency = ref({
+  tableName: 'Change Agency',
+  moduleApi: 'settings',
+  uriApi: 'manage-agency',
+  expandableRows: false,
+  loading: false,
+  showDelete: false,
+  showFilters: true,
+  actionsAsMenu: false,
+  messageToDelete: 'Do you want to save the change?'
+})
+
+const payloadChangeAgency = ref<IQueryRequest>({
+  filter: [],
+  query: '',
+  pageSize: 50,
+  page: 0,
+  sortBy: 'name',
+  sortType: ENUM_SHORT_TYPE.ASC
+})
+const paginationChangeAgency = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const handleChangeAgencyPagination = ({ page, pageSize }) => {
+  paginationChangeAgency.value.page = page;
+  paginationChangeAgency.value.limit = pageSize;
+
+  nextTick(() => {
+    modalChangeAgencyRef.value?.getAgencyByClient()
+  })
+}
+
+const payloadOnChangePageChangeAgency = ref<PageState>()
 const allMenuListItems = ref([
   // {
   //   id: 'applayDeposit',
@@ -132,6 +232,18 @@ const allMenuListItems = ref([
     visible: authStore.can(['PAYMENT-MANAGEMENT:EDIT']),
   },
   {
+    id: 'changeAgency',
+    label: 'Change Agency',
+    icon: 'pi pi-arrow-right-arrow-left',
+    iconSvg: '',
+    viewBox: '',
+    width: '24px',
+    height: '24px',
+    command: ($event: any) => openDialogChangeAgency($event, 'payment'),
+    disabled: true,
+    visible: true,
+  },
+  {
     id: 'paymentWithoutAttachment',
     label: 'Payment Without Attachment',
     icon: '',
@@ -167,6 +279,16 @@ const allMenuListItemsInvoice = ref([
     disabled: false,
     visible: true,
   },
+  {
+      label: 'Change Agency',
+      icon: 'pi pi-arrow-right-arrow-left',
+      width: '24px',
+      height: '24px',
+      iconSvg:'',
+      command: ($event: any) => openDialogChangeAgency($event, 'invoice'),
+      default: false,
+       visible: true,
+    },
   {
     id: 'document',
     label: 'Document',
@@ -391,6 +513,7 @@ function closeCollectionToPrint() {
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
+
 const ENUM_FILTER = [
   { id: 'code', name: 'Code' },
   { id: 'name', name: 'Name' },
@@ -440,7 +563,10 @@ const columns = ref<IColumn[]>([
     widthTruncate: '80px', // Propiedad personalizada para truncar
     columnClass: 'truncate-text', // Clase CSS para truncar el texto
     type: 'select',
-    objApi: { moduleApi: 'settings', uriApi: 'manage-agency' }
+    objApi: {
+       moduleApi: 'settings',
+     uriApi: 'manage-agency' 
+    }
   },
   { field: 'paymentAmount', header: 'P.Amount', tooltip: 'Payment Amount', type: 'number' },
   { field: 'depositBalance', header: 'D.Balance', tooltip: 'Deposit Balance', type: 'number' },
@@ -535,6 +661,7 @@ const options = ref({
   tableName: 'Payment',
   moduleApi: 'payment',
   uriApi: 'payment/search-collection',
+  //uriApi: 'payment',
   loading: false,
   // selectionMode: 'single' as 'multiple' | 'single',
   scrollHeight: '70vh',
@@ -542,10 +669,12 @@ const options = ref({
   selectAllItemByDefault: false,
   actionsAsMenu: false,
   messageToDelete: 'Do you want to save the change?'
+  
 })
 const optionsInv = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
+  //uriApi: 'invoice',
   uriApi: 'collections/invoice-summary',
   loading: false,
   showDelete: false,
@@ -627,12 +756,18 @@ const paginationAgency = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+interface ChangeAgencyPayload {
+  agency: { id: string };
+  transactionDate?: string;  // Propiedad opcional para pagos
+  hotel?: { id: string };    // Propiedad opcional para pagos
+}
 
 const objExportToExcel = ref<GenericObject>({
   search: payload.value,
   fileName: '',
   exportSumary: true
 })
+
 // -------------------------------------------------------------------------------------------------------
 
 // FUNCTIONS ---------------------------------------------------------------------------------------------
@@ -656,6 +791,297 @@ function handlePrint() {
   // navigateTo('/collection/print', { open: { target: '_blank' } })
   CollectionToPrintDialogVisible.value = true
 }
+
+// const currentFormattedId = computed(() => {
+//   const item = props.targetObject
+
+//   if (!item) return 'N/A'
+
+//   if (props.context === 'payment') {
+//     return item.paymentInternalId ||
+//            item.paymentId ||
+//            item.id?.replace(/\D/g, '').slice(-4) ||
+//            'N/A'
+//   } else {
+//     return item.invoiceNumber || `INV-${item.id?.slice(0, 5)}` || 'N/A'
+//   }
+// })
+
+
+const extractNumericId = (id: string): string => {
+  // Extrae solo los dígitos numéricos
+  const numericId = id.replace(/\D/g, '')
+  
+  // Si el ID original era completamente numérico, devuélvelo tal cual
+  if (numericId === id) return id
+  
+  // Si no, toma los últimos 4 dígitos (para mostrar como 4500)
+  return numericId.slice(-4)
+}
+
+const handleAgencyChanged = async ({ newAgency, targetId, context }) => {
+  try {
+    // 1. Actualizar el estado local
+    if (context === 'payment') {
+      const index = list.value.findIndex(p => p.id === targetId)
+      if (index !== -1) {
+        list.value[index].agency = { ...newAgency }
+      }
+      
+      // Actualizar también la referencia seleccionada si es la misma
+      if (objItemSelectedForRightClickChangeAgency.value?.id === targetId) {
+        objItemSelectedForRightClickChangeAgency.value.agency = { ...newAgency }
+      }
+    } else {
+      const index = invoiceList.value.findIndex(i => i.id === targetId)
+      if (index !== -1) {
+        invoiceList.value[index].agency = { ...newAgency }
+      }
+      
+      if (objItemSelectedForRightClickInvoice.value?.id === targetId) {
+        objItemSelectedForRightClickInvoice.value.agency = { ...newAgency }
+      }
+    }
+
+    // 2. Cerrar el modal
+    isChangeAgencyModalOpen.value = false
+
+    // 3. Mostrar notificación de éxito
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Agency changed successfully',
+      life: 3000
+    })
+
+  } catch (error) {
+    console.error('Error updating agency:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to update agency',
+      life: 5000
+    })
+  }
+}
+async function parseDataTableFilterForChangeAgency(payloadFilter: any) {
+  const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columnsChangeAgency.value)
+  payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
+  payloadChangeAgency.value.filter = [...payloadChangeAgency.value.filter, ...parseFilter || []]
+  await getAgencyByClient() // objClientFormChangeAgency.value.id
+  emit('change-filter', payloadFilter)
+}
+
+
+
+// async function getAgencyByClient(clientId: string, context: 'payment' | 'invoice') {
+//   if (optionsOfTableChangeAgency.value.loading) {
+//     // Si ya hay una solicitud en proceso, no hacer nada.
+//     return
+//   }
+//   try {
+//     console.log('Client ID:', clientId)
+//     optionsOfTableChangeAgency.value.loading = true
+//     listAgencyByClient.value = []
+
+//     const newListItems = []
+//     const filters: FilterCriteria[] = []
+
+//    payloadChangeAgency.value.filter = [
+//       {
+//         key: 'client.id',
+//         operator: 'EQUALS',
+//         value: clientId,
+//         logicalOperation: 'AND',
+//       },
+//       {
+//         key: 'status',
+//         operator: 'EQUALS',
+//         value: 'ACTIVE',
+//         logicalOperation: 'AND',
+//       }
+//     ]
+
+//     const objFilterById = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'id')
+//     if (objFilterById) {
+//       objFilterById.value = currentAgency.value?.id
+//     }
+//     else {
+//       filters.push({
+//         key: 'id',
+//         operator: 'NOT_EQUALS',
+//         value: currentAgency.value?.id,
+//         logicalOperation: 'AND',
+//       })
+//     }
+
+//     if (clientId !== '') {
+//       const objFilterByClient = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'client.id')
+//       if (objFilterByClient) {
+//         objFilterByClient.value = clientId
+//       }
+//       else {
+//         filters.push({
+//           key: 'clientId',
+//           operator: 'EQUALS',
+//           value: clientId,
+//           logicalOperation: 'AND',
+//         })
+//       }
+//     }
+
+//     const objFilterByStatus = payloadChangeAgency.value.filter.find((item: FilterCriteria) => item.key === 'status')
+//     if (objFilterByStatus) {
+//       objFilterByStatus.value = 'ACTIVE'
+//     }
+//     else {
+//       filters.push({
+//         key: 'status',
+//         operator: 'EQUALS',
+//         value: 'ACTIVE',
+//         logicalOperation: 'AND',
+//       })
+//     }
+
+//      if (currentAgency.value?.id) {
+//       filters.push({
+//         key: 'id',
+//         operator: 'NOT_EQUALS',
+//         value: currentAgency.value.id,
+//         logicalOperation: 'AND',
+//       });
+//     }
+
+//     payloadChangeAgency.value.filter = filters
+
+//     const response = await GenericService.search(optionsOfTableChangeAgency.value.moduleApi,
+//     optionsOfTableChangeAgency.value.uriApi,
+//     payloadChangeAgency.value)
+//     console.log('Llamando a API con payload:', payloadChangeAgency.value);
+//     console.log(` [${context.toUpperCase()} VIEW] Total Elements from API: ${response.totalElements}`);
+//     console.log(` [${context.toUpperCase()} VIEW] Total Agencies Found: ${response.totalElements}`);
+//     console.log(`Agencias encontradas para ${context}:`, listAgencyByClient.value);
+//     console.log('API Response:', response)
+
+//     const { data: dataList, page, size, totalElements, totalPages } = response
+//     console.log(` Total Elements from API: ${response.totalElements}`);
+
+//     paginationChangeAgency.value.page = page
+//     paginationChangeAgency.value.limit = size
+//     paginationChangeAgency.value.totalElements = totalElements
+//     paginationChangeAgency.value.totalPages = totalPages
+
+//     const existingIds = new Set(listAgencyByClient.value.map(item => item.id))
+
+//     for (const iterator of dataList) {
+//       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+//         iterator.status = statusToBoolean(iterator.status)
+//       }
+
+//       // Verificar si el ID ya existe en la lista
+//       if (!existingIds.has(iterator.id)) {
+//         newListItems.push({
+//           id: iterator.id,
+//           name: `${iterator.name}`,
+//           code: `${iterator.code}`,
+//           description: `${iterator.description}`,
+//           status: statusToBoolean(iterator.status),
+//           client: iterator.client?.id
+//         })
+//         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+//       }
+//     }
+
+//     listAgencyByClient.value.splice(0, listAgencyByClient.value.length, ...newListItems);
+//     console.log('Agencias cargadas:', listAgencyByClient.value)
+//   }
+//   catch (error) {
+//     optionsOfTableChangeAgency.value.loading = false
+//     console.error(error)
+//   }
+//   finally {
+//     optionsOfTableChangeAgency.value.loading = false
+//   }
+// }
+
+function onSortFieldForChangeAgency(event: any) {
+  if (event) {
+    payloadChangeAgency.value.sortBy = event.sortField
+    payloadChangeAgency.value.sortType = event.sortOrder
+    parseDataTableFilterForChangeAgency(event.filter)
+  }
+   emit('sort-field', event)
+}
+
+
+
+const openDialogChangeAgency = async ($event: any, context: 'payment' | 'invoice') => {
+  try {
+    currentContext.value = context;
+
+    // Limpiar datos previos
+    listAgencyByClient.value = [];
+    currentClient.value = null;
+    currentAgency.value = null;
+
+    const selectedItem = context === 'payment'
+      ? objItemSelectedForRightClickChangeAgency.value
+      : objItemSelectedForRightClickInvoice.value;
+
+    if (!selectedItem?.id) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No item selected',
+        life: 3000
+      });
+      return;
+    }
+
+    currentTarget.value = selectedItem;
+    currentClient.value = selectedItem.client;
+    currentAgency.value = selectedItem.agency;
+
+    // Usar cliente desde selector
+    const clientFromSelector = filterToSearch.value.client;
+    if (!clientFromSelector?.id) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Warning',
+        detail: 'No client selected from the client selector',
+        life: 3000
+      });
+      return;
+    }
+
+    currentClient.value = clientFromSelector;
+
+    // Llamada centralizada al modal
+    await agencyModalRef.value?.getAgencyByClient(currentClient.value.id);
+
+    if (agencyModalRef.value?.agencies?.length === 0) {
+      toast.add({
+        severity: 'warn',
+        summary: 'No Agencies',
+        detail: 'No other agencies found for this client',
+        life: 3000
+      });
+    }
+
+    isChangeAgencyModalOpen.value = true;
+
+  } catch (error) {
+    console.error('Error opening agency dialog:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load agency data',
+      life: 3000
+    });
+    isChangeAgencyModalOpen.value = false;
+  }
+}
+
 
 function extractPaymentStatus(originalObject: any) {
   return {
@@ -755,7 +1181,7 @@ async function getPaymentData() {
       }
 
       if (Object.prototype.hasOwnProperty.call(iterator, 'paymentId')) {
-        iterator.paymentId = String(iterator.paymentId)
+        iterator.paymentInternalId = String(iterator.paymentInternalId)
       }
       if (Object.prototype.hasOwnProperty.call(iterator, 'paymentAmount')) {
         count.paymentAmount = count.paymentAmount + iterator.paymentAmount
@@ -806,6 +1232,7 @@ async function getPaymentData() {
       }
     }
     listItems.value = [...listItems.value, ...newListItems]
+    console.log('Datos de Payment:', dataList)
   }
   catch (error) {
     console.log(error)
@@ -1198,6 +1625,21 @@ async function getListInvoice() {
         if (Object.prototype.hasOwnProperty.call(iterator, 'dueAmount')) {
           count.invoiceDueTotalAmount = count.invoiceDueTotalAmount + iterator.dueAmount
         }
+        if (Object.prototype.hasOwnProperty.call(iterator, 'agency')) {
+         iterator.agency = {
+          ...iterator.agency,
+          name: `${iterator.agency.code} - ${iterator.agency.name}`
+         } 
+        }
+
+        if (Object.prototype.hasOwnProperty.call(iterator, 'client')) {
+        iterator.client = {
+          ...iterator.client,
+          name: `${iterator.client.code} - ${iterator.client.name}`
+        }
+      }
+       console.log('Invoice raw data:', iterator)
+
         newListItems.push({
           ...iterator,
           loadingEdit: false,
@@ -1972,12 +2414,11 @@ async function checkAttachment(code: string) {
 }
 
 function onRowContextMenu(event: any) {
-  // idPaymentSelectedForPrint.value = event?.data?.id || ''
-  // isPrintByRightClick.value = true
-  // idPaymentSelectedForPrintChangeAgency.value = event?.data?.id || ''
-  // objClientFormChangeAgency.value = event?.data?.client
-  // currentAgencyForChangeAgency.value = event?.data?.agency
-  // listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
+
+  objItemSelectedForRightClickChangeAgency.value = event.data
+  objClientFormChangeAgency.value = event?.data?.client
+  currentAgencyForChangeAgency.value = event?.data?.agency
+  listClientFormChangeAgency.value = event?.data?.client ? [event?.data?.client] : []
   objItemSelectedForRightClickChangeAgency.value = event.data
 
   if (event && event.data) {
@@ -2076,22 +2517,6 @@ function onRowContextMenu(event: any) {
       menuItemChangeAgency.visible = true
     }
   }
-
-  if (event && event.data && (event.data.paymentStatus.code !== 'CAN' || event.data.paymentStatus.name !== 'Cancelled')) {
-    const menuItemOtherDeduction = allMenuListItems.value.find(item => item.id === 'applyPaymentOtherDeduction')
-    if (menuItemOtherDeduction) {
-      menuItemOtherDeduction.disabled = false
-      menuItemOtherDeduction.visible = true
-    }
-  }
-  else {
-    const menuItemOtherDeduction = allMenuListItems.value.find(item => item.id === 'applyPaymentOtherDeduction')
-    if (menuItemOtherDeduction) {
-      menuItemOtherDeduction.disabled = true
-      menuItemOtherDeduction.visible = true
-    }
-  }
-
   const allHidden = allMenuListItems.value.every(item => !item.visible)
   if (!allHidden) {
     contextMenu.value.show(event.originalEvent)
@@ -2100,6 +2525,7 @@ function onRowContextMenu(event: any) {
     contextMenu.value.hide()
   }
 }
+
 
 function onRowContextMenuInvoice(event: any) {
   if (event && event.data) {
@@ -2113,10 +2539,6 @@ function onRowContextMenuInvoice(event: any) {
   else {
     contextMenuInvoice.value.hide()
   }
-}
-
-function addAttachment(attachment: any) {
-  attachmentList.value = [...attachmentList.value, attachment]
 }
 
 function updateAttachment(attachment: any) {
@@ -2697,7 +3119,8 @@ onMounted(() => {
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems"
         @on-sort-field="onSortField"
-        @on-row-right-click="onRowContextMenu($event)"
+        @on-row-right-click="onRowContextMenu"
+
       >
         <template #column-icon="{ data: objData, column }">
           <div class="flex align-items-center justify-content-center p-0 m-0">
@@ -2798,6 +3221,7 @@ onMounted(() => {
             @on-change-filter="parseDataTableFilterForContactAgency"
             @on-list-item="resetListItems"
             @on-sort-field="onSortFieldContactAgency"
+
           >
             <template #emptyTable="{ data }">
               <div class="flex flex-column flex-wrap align-items-center justify-content-center py-3">
@@ -2868,7 +3292,6 @@ onMounted(() => {
         :options="optionsInv"
         :pagination="paginationInvoice"
         :items="listItemsInvoice"
-        :row-class="rowClass"
         @on-confirm-create="clearForm"
         @on-change-pagination="payloadOnChangePageInv = $event"
         @on-change-filter="parseDataTableFilterInvoice"
@@ -2967,18 +3390,28 @@ onMounted(() => {
     </div>
   </div>
 
-  <div v-if="attachmentDialogOpenInvoice">
-    <AttachmentDialogForManagerInvoice
-      :close-dialog="() => { attachmentDialogOpenInvoice = false, getListInvoice() }"
-      :is-creation-dialog="false"
-      header="Manage Invoice Attachment"
-      :open-dialog="attachmentDialogOpenInvoice"
-      :selected-invoice="objItemSelectedForRightClickInvoice?.id"
-      :selected-invoice-obj="objItemSelectedForRightClickInvoice"
-      :disable-delete-btn="true"
-      :document-option-has-been-used="true"
-    />
-  </div>
+<ChangeAgencyModal
+  v-model:visible="isChangeAgencyModalOpen"
+:selectedItemId="selectedItem?.id"
+  :context="currentContext"
+  :target-object="currentTarget"
+  :client-info="(selectedItem as any)?.agency?.client"
+  :current-agency="(selectedItem as any)?.agency"
+  :agencies-list="listAgencyByClient"
+  :pagination-change-agency="paginationChangeAgency"
+  :columns-change-agency="columnsChangeAgency"
+  :options-of-table-change-agency="optionsOfTableChangeAgency"
+  @close="isChangeAgencyModalOpen = false"
+  @agency-changed="handleAgencyChanged"
+  @update:pagination-change-agency="val => paginationChangeAgency = val"
+  @change-pagination="payloadOnChangePageChangeAgency = $event"
+  @update:visible="isChangeAgencyModalOpen = $event"
+  ref="agencyModalRef"
+  :client-id="(selectedItem as any)?.agency?.client?.id"
+  :respect-client="true"
+  @update:payloadOnChangePageChangeAgency="handleChangeAgencyPagination"
+
+/>
 
   <DialogPaymentDetailSummary
     title="Transactions ANTI Summary"
