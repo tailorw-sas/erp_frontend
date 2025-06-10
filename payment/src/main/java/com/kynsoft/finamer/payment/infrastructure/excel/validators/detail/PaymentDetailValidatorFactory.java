@@ -60,10 +60,10 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
     public void createValidators(ICache iCache) {
         this.cache = (Cache) iCache;
 
-        paymentDetailAmountBalanceValidator = new PaymentDetailAmountBalanceValidator(applicationEventPublisher, cache);
-        paymentDetailAntiAmountValidator = new PaymentDetailAntiAmountValidator(applicationEventPublisher, cache);
-        paymentDetailAntiBookingValidator = new PaymentDetailAntiBookingValidator(applicationEventPublisher, cache);
-        paymentDetailOtherDeductionsValidator = new PaymentDetailOtherDeductionsValidator(applicationEventPublisher, cache);
+        paymentDetailAmountBalanceValidator = new PaymentDetailAmountBalanceValidator(cache);
+        paymentDetailAntiAmountValidator = new PaymentDetailAntiAmountValidator(cache);
+        paymentDetailAntiBookingValidator = new PaymentDetailAntiBookingValidator(cache);
+        paymentDetailOtherDeductionsValidator = new PaymentDetailOtherDeductionsValidator(cache);
 
         paymentDetailExistPaymentValidator= new PaymentDetailExistPaymentValidator(applicationEventPublisher, cache);
         paymentDetailsBookingFieldValidator = new PaymentDetailsBookingFieldValidator(applicationEventPublisher, cache);
@@ -72,6 +72,7 @@ public class PaymentDetailValidatorFactory extends IValidatorFactory<PaymentDeta
         paymentDetailAntiExistsValidator = new PaymentDetailAntiExistsValidator(applicationEventPublisher, cache);
 
         paymentDetailBelongToSamePayment = new PaymentDetailBelongToSamePayment(applicationEventPublisher, cache);
+
 
     }
 

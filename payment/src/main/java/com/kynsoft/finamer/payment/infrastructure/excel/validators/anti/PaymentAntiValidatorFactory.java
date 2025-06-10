@@ -2,40 +2,38 @@ package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
 import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentAntiRowError;
+import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
 import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.error.anti.PaymentImportAntiErrorEvent;
+import com.kynsoft.finamer.payment.infrastructure.excel.event.error.detail.PaymentImportDetailErrorEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.SecurityImportValidators;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeRow> {
 
-    private PaymentImportAmountValidator paymentImportAmountValidator;
     private PaymentTransactionIdValidator paymentTransactionIdValidator;
+    private PaymentImportAmountValidator paymentImportAmountValidator;
+    private PaymentTotalAmountValidator paymentTotalAmountValidator;
 
-    private final IPaymentDetailService paymentDetailService;
-    private final PaymentImportCacheRepository paymentImportCacheRepository;
 
-    private final SecurityImportValidators securityImportValidators;
-   // private PaymentTotalAmountValidator totalAmountValidator;
+    private SecurityImportValidators securityImportValidators;
 
-    public PaymentAntiValidatorFactory(ApplicationEventPublisher paymentEventPublisher,
-                                       IPaymentDetailService paymentDetailService,
-                                       PaymentImportCacheRepository paymentImportCacheRepository,
-                                       SecurityImportValidators securityImportValidators
-    ) {
+    public PaymentAntiValidatorFactory(ApplicationEventPublisher paymentEventPublisher) {
         super(paymentEventPublisher);
-        this.paymentDetailService = paymentDetailService;
-        this.paymentImportCacheRepository = paymentImportCacheRepository;
-        this.securityImportValidators = securityImportValidators;
     }
 
     @Override
@@ -47,31 +45,15 @@ public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeR
     public void createValidators(ICache iCache) {
         Cache cache = (Cache)iCache;
 
-        paymentTransactionIdValidator = new PaymentTransactionIdValidator(cache, applicationEventPublisher);
-        paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
-
+        this.paymentTransactionIdValidator = new PaymentTransactionIdValidator(cache, applicationEventPublisher);
+        this.paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher);
+        this.paymentTotalAmountValidator = new PaymentTotalAmountValidator(cache);
+        this.securityImportValidators = new SecurityImportValidators(cache);
     }
 
     @Override
     public boolean validate(AntiToIncomeRow toValidate) {
-       // totalAmountValidator.validate(toValidate.getAmount(), toValidate.getAmount(), toValidate.getImportProcessId());
-        paymentTransactionIdValidator.validate(toValidate, errorFieldList);
-        paymentImportAmountValidator.validate(toValidate, errorFieldList);
-        PaymentDetailSimpleDto paymentDetailDto = paymentDetailService.findSimpleDetailByGenId(toValidate.getTransactionId().intValue());
-        this.securityImportValidators.validateAgency(toValidate.getAgencys(), paymentDetailDto.getPaymentAgency(), errorFieldList);
-        this.securityImportValidators.validateHotel(toValidate.getHotels(), paymentDetailDto.getPaymentHotel(), errorFieldList);
-
-        if (this.hasErrors()) {
-            PaymentImportAntiErrorEvent paymentImportErrorEvent =
-                    new PaymentImportAntiErrorEvent(
-                            new PaymentAntiRowError(null, toValidate.getRowNumber(), toValidate.getImportProcessId(),
-                                    errorFieldList, toValidate));
-            this.sendErrorEvent(paymentImportErrorEvent);
-        }
-        boolean result = !this.hasErrors();
-        this.clearErrors();
-        return result;
-
+        return true;
     }
 
     @Override
@@ -79,9 +61,44 @@ public class PaymentAntiValidatorFactory extends IValidatorFactory<AntiToIncomeR
         int errors = 0;
 
         for (AntiToIncomeRow toValidateRow : toValidateList) {
-            errors += paymentTransactionIdValidator.validate(toValidateRow, errorFieldList) ? 0 : 1;
+            List<ErrorField> errorsList = new ArrayList<>();
+            errors += paymentTransactionIdValidator.validate(toValidateRow, errorsList) ? 0 : 1;
+            errors += paymentImportAmountValidator.validate(toValidateRow, errorsList) ? 0 : 1;
+
+            this.securityImportValidators.validateAgency(toValidateRow.getTransactionId().longValue(), errorFieldList);
+            this.securityImportValidators.validateHotel(toValidateRow.getTransactionId().longValue(), errorFieldList);
+
+            if(!errorsList.isEmpty()){
+                addErrorFieldToRowErrorField(rowErrorFieldList, errorsList, toValidateRow.getRowNumber());
+            }
         }
+
+        paymentTotalAmountValidator.validate(toValidateList, rowErrorFieldList);
+        errors += rowErrorFieldList.size();
+
+        if (this.hasListErrors()) {
+            Map<Integer, AntiToIncomeRow> antiToIncomeRowMap = getAntiToIncomeRowsMap(toValidateList);
+            rowErrorFieldList.forEach(rowError -> {
+                AntiToIncomeRow antiToIncomeRow = antiToIncomeRowMap.get(rowError.getRowNumber());
+
+                PaymentImportAntiErrorEvent paymentImportErrorEvent = new PaymentImportAntiErrorEvent(
+                        new PaymentAntiRowError(null,
+                                rowError.getRowNumber(),
+                                antiToIncomeRow.getImportProcessId(),
+                                rowError.getErrorFieldList(),
+                                antiToIncomeRow));
+                this.sendErrorEvent(paymentImportErrorEvent);
+            });
+        }
+
+        boolean result = errors == 0;
+        this.clearRowErrors();
+        return result;
     }
 
+    private Map<Integer, AntiToIncomeRow> getAntiToIncomeRowsMap(List<AntiToIncomeRow> antiToIncomeRows){
+        return antiToIncomeRows.stream()
+                .collect(Collectors.toMap(AntiToIncomeRow::getRowNumber, antiToIncomeRow -> antiToIncomeRow));
+    }
 
 }

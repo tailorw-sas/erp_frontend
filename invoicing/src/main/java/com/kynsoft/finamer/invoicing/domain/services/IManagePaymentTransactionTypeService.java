@@ -22,4 +22,6 @@ public interface IManagePaymentTransactionTypeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     ManagePaymentTransactionTypeDto findByDefaults();
+
+    List<ManagePaymentTransactionTypeDto> findAllByIds(List<UUID> ids);
 }

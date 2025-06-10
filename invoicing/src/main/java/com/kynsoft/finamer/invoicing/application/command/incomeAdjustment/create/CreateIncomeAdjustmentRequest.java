@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create;
 
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import java.util.List;
 import lombok.Getter;

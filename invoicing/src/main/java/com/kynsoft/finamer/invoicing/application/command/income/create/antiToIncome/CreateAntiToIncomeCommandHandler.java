@@ -64,7 +64,7 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     @Override
     public void handle(CreateAntiToIncomeCommand command) {
 
-        RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
+        /*RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
         //RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
@@ -127,7 +127,7 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
             invoiceDto.setAttachments(attachmentDtoList);
             this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
         }
-
+*/
     }
 
     private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {

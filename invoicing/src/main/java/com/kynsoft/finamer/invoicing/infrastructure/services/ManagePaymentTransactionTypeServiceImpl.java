@@ -14,14 +14,13 @@ import com.kynsoft.finamer.invoicing.domain.services.IManagePaymentTransactionTy
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManagePaymentTransactionType;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManagePaymentTransactionTypeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManagePaymentTransactionTypeReadDataJPARepository;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -86,6 +85,17 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
         return this.repositoryQuery.findByDefaults().map(ManagePaymentTransactionType::toAggregate).orElseThrow(
                 ()-> new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())))
         );
+    }
+
+    @Override
+    public List<ManagePaymentTransactionTypeDto> findAllByIds(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The Ids must not be null");
+        }
+
+        return this.repositoryQuery.findByIdIn(ids).stream()
+                .map(ManagePaymentTransactionType::toAggregate)
+                .collect(Collectors.toList());
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
