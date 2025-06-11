@@ -2633,28 +2633,35 @@ function onSortFieldApplyPayment(event: any) {
 }
 
 const filteredInvoices = computed(() => {
-  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
+  const terms = manualFilter.value
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
 
-  if (!terms.length) {
-    return applyPaymentList.value // Si no hay término de búsqueda, devolver la lista completa
+  if (!terms.length || !terms[0]) {
+    return applyPaymentList.value
   }
 
-  // Filtrar las filas basadas en que cada término esté presente en cualquier campo de la fila
-  return applyPaymentList.value.filter((inv) => {
-    return terms.some((term) => {
-      // Buscar cada término en todos los campos de la fila
-      return (
-        inv.invoiceNo?.toLowerCase().includes(term)
-        || String(inv.invoiceId)?.toLowerCase().includes(term)
-        || String(inv.bookingId)?.toLowerCase().includes(term)
-        || inv.couponNumber?.toLowerCase().includes(term)
-        || String(inv.hotelBookingNumber)?.toLowerCase().includes(term)
-        || String(inv.invoiceAmount)?.toLowerCase().includes(term)
-        || String(inv.dueAmount)?.toLowerCase().includes(term)
-        || inv.fullName?.toLowerCase().includes(term)
+  return applyPaymentList.value.filter(inv =>
+    terms.some((term) => {
+      const fields = [
+        inv.invoiceNo,
+        inv.invoiceId,
+        inv.bookingId,
+        inv.couponNumber,
+        inv.hotelBookingNumber,
+        inv.invoiceAmount,
+        inv.dueAmount,
+        inv.fullName
+      ]
+
+      return fields.some(k =>
+        String(k || '')
+          .toLowerCase()
+          .includes(term)
       )
     })
-  })
+  )
 })
 
 async function onManualSearch() {
