@@ -3,6 +3,8 @@ package com.kynsoft.finamer.invoicing.application.command.income.create.antiToIn
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeAttachmentRequest;
+import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
+import com.kynsoft.finamer.invoicing.domain.core.ProcessCreateIncome;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
@@ -63,6 +65,12 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
 
     @Override
     public void handle(CreateAntiToIncomeCommand command) {
+
+        for(CreateIncomeCommand incomeCommand : command.getCreateIncomeCommands()){
+
+            ProcessCreateIncome processCreateIncome = new ProcessCreateIncome(incomeCommand.getId(),
+                    )
+        }
 
         /*RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
         //RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));

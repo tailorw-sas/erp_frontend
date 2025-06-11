@@ -22,10 +22,7 @@ import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -86,7 +83,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     @Override
     public void handle(CreateIncomeCommand command) {
-
         InvoiceCloseOperationDto closeOperationDto = this.getHotelCloseOperation(command.getHotel());
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
@@ -116,6 +112,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         this.createAdjustments(income, command.getAdjustments(), employeeFullName, closeOperationDto);
 
         ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+
         command.setInvoiceId(invoiceDto.getInvoiceId());
         command.setInvoiceNo(invoiceDto.getInvoiceNumber());
         command.setIncome(invoiceDto);
@@ -137,14 +134,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     }
 
-    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
-        }
-        return invoiceNumber;
-    }
+
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
 
@@ -155,8 +145,10 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         dto.setEmployee(employee);
         dto.setInvoiceStatus(invoiceDto.getStatus());
 
+        Instant before = Instant.now();
         this.invoiceStatusHistoryService.create(dto);
-
+        Instant after = Instant.now();
+        System.out.println("updateInvoiceStatusHistory: " + Duration.between(before, after).toMillis()+ " ms");
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments, String employeeFullName) {
@@ -230,8 +222,9 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     }
 
     private void createAdjustments(ManageInvoiceDto incomeDto,
-                                               List<NewIncomeAdjustmentRequest> adjustmentRequests,
-                                               String employeeFullName, InvoiceCloseOperationDto closeOperationDto){
+                                   List<NewIncomeAdjustmentRequest> adjustmentRequests,
+                                   String employeeFullName,
+                                   InvoiceCloseOperationDto closeOperationDto){
         if(Objects.nonNull(adjustmentRequests) && !adjustmentRequests.isEmpty()){
             Double invoiceAmount = 0.0;
             List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();

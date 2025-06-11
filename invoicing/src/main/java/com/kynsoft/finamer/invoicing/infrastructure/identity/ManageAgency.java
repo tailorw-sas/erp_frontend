@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import jakarta.persistence.Column;
@@ -62,6 +63,7 @@ public class ManageAgency {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_b2bpartner_id")
+    @JsonManagedReference
     private ManageB2BPartner sentB2BPartner;
 
     @ManyToOne(fetch = FetchType.EAGER)

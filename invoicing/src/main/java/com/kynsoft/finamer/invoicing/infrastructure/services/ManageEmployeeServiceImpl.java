@@ -74,16 +74,14 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
     }
 
     @Override
-    public String getEmployeeFullName(String employee) {
-        String employeeFullName = "";
-        try {
-            ManageEmployeeDto employeeDto = findById(UUID.fromString(employee));
-            employeeFullName = employeeDto.getFirstName() + " " + employeeDto.getLastName();
-        } catch (Exception e) {
-            e.printStackTrace();
-            employeeFullName = employee;
+    public String getEmployeeFullName(String employeeId) {
+        Optional<ManageEmployee> employee = repositoryQuery.findByIdWithoutRelations(UUID.fromString(employeeId));
+        if(employee.isPresent()){
+            ManageEmployeeDto employeeDto = employee.get().toAggregate();
+            return employeeDto.getFirstName() + " " + employeeDto.getLastName();
         }
-        return employeeFullName;
+
+        return employeeId;
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

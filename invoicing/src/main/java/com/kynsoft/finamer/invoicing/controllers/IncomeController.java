@@ -42,8 +42,8 @@ public class IncomeController {
         CreateIncomeCommand createCommand = CreateIncomeCommand.fromRequest(request);
         CreateIncomeMessage response = mediator.send(createCommand);
 
-        FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
-        ManageInvoiceResponse resp = mediator.send(query);
+        //FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
+        //ManageInvoiceResponse resp = mediator.send(query);
 
 //        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null));
         return ResponseEntity.ok(response);
