@@ -1144,14 +1144,14 @@ const applyPaymentOptionsOtherDeduction1 = ref({
 const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100,
+  pageSize: 500,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   page: 0,
-  limit: 100,
+  limit: 500,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1159,14 +1159,14 @@ const applyPaymentPaginationOtherDeduction = ref<IPagination>({
 const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 1000,
+  pageSize: 500,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
   page: 0,
-  limit: 1000,
+  limit: 500,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -3930,7 +3930,6 @@ async function parseDataTableFilterForApplyPayment(event: any) {
 }
 
 const filteredInvoices = computed(() => {
-
   const terms = manualFilter.value.trim().toLowerCase().split(/\s+/)
 
   if (!terms.length || !terms[0]) {
