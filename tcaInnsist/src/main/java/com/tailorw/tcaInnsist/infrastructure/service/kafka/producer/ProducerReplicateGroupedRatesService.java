@@ -24,7 +24,6 @@ public class ProducerReplicateGroupedRatesService {
         try{
             ObjectMapper mapper = new ObjectMapper();
             String stringSerialized = mapper.writeValueAsString(entity);
-            System.out.println("finamer-replicate-grouped-rate ----> " + stringSerialized);
             producer.send("finamer-replicate-grouped-rate", stringSerialized);
         }catch (Exception ex){
             Logger.getLogger(ProducerReplicateGroupedRatesService.class.getName()).log(Level.SEVERE, null, ex);
