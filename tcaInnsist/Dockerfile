@@ -9,6 +9,7 @@ RUN microdnf update \
     && rm -rf /var/cache/yum
 
 # Install Maven
+ARG USER_HOME_DIR="/root"
 ARG MAVEN_VERSION=3.9.4
 ARG MAVEN_DOWNLOAD_URL=https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz
 
