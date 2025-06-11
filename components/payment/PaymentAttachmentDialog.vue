@@ -226,6 +226,7 @@ const Columns: IColumn[] = [
   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
+  { field: 'createdAt', header: 'Date', type: 'date', width: 'auto' },
   { field: 'remark', header: 'Remark', width: '200px', maxWidth: '200px', type: 'text' },
 ]
 const columnsAttachment: IColumn[] = [
@@ -424,13 +425,42 @@ async function getList() {
 
     ListItems.value = [...attachmentList]
 
-    // for (const iterator of dataList) {
-    //   ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId }]
-    // }
-
-    if (ListItems.value.length > 0) {
-      idItem.value = ListItems.value[0].id
+    // 5) Si no hay attachments, terminamos
+    if (ListItems.value.length === 0) {
+      return
     }
+
+    // 6) Llamar a historyGetList() para poblar historyList.value
+    await historyGetList()
+
+    // 7) Construir mapa de última fecha por attachmentId
+    const lastDateByAttachment: Record<string, string> = {}
+    for (const h of historyList.value) {
+      const attId = h.attachmentId
+      const fecha = h.createdAt
+      if (!attId || !fecha) { continue }
+
+      if (
+        !lastDateByAttachment[attId]
+        || new Date(fecha) > new Date(lastDateByAttachment[attId])
+      ) {
+        lastDateByAttachment[attId] = fecha
+      }
+    }
+
+    // 8) Fusionar “createdAt” en cada attachment de ListItems.value
+    ListItems.value = ListItems.value.map((item) => {
+      // Ajusta “item.attachmentId” si en realidad tu objeto usa “item.id”:
+      const keyId = item.attachmentId || item.id
+      return {
+        ...item,
+        createdAt: lastDateByAttachment[keyId] || null
+      }
+    })
+
+    // 9) Seleccionar el primer item
+    idItem.value = ListItems.value[0].id
+    console.log('▶️ ListItems.value con fecha:', ListItems.value)
   }
   catch (error) {
     console.error(error)
@@ -442,15 +472,15 @@ async function getList() {
 
 async function historyGetList() {
   if (historyOptions.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
   try {
     historyOptions.value.loading = true
     historyList.value = []
-    const newListItems = []
-    const objFilter = payloadHistory.value.filter.find(item => item.key === 'payment.id')
+    const newListItems: any[] = []
 
+    // 1) Preparar filtro por payment.id
+    const objFilter = payloadHistory.value.filter.find(item => item.key === 'payment.id')
     if (objFilter) {
       objFilter.value = externalProps.selectedPayment.id || ''
     }
@@ -463,34 +493,61 @@ async function historyGetList() {
       })
     }
 
-    const response = await GenericService.search(historyOptions.value.moduleApi, historyOptions.value.uriApi, payloadHistory.value)
+    // 2) Llamar a la API de historial
+    const response = await GenericService.search(
+      historyOptions.value.moduleApi,
+      historyOptions.value.uriApi,
+      payloadHistory.value
+    )
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
+    // 3) Actualizar paginación de historial
     historyPagination.value.page = page
     historyPagination.value.limit = size
     historyPagination.value.totalElements = totalElements
     historyPagination.value.totalPages = totalPages
 
+    // 4) Construir nuevos registros de historial
     const existingIds = new Set(historyList.value.map(item => item.id))
-
     for (const iterator of dataList) {
-      iterator.paymentId = externalProps.selectedPayment.paymentId
-      iterator.attachmentStatus = iterator.status
+      // 4a) Capturar “attachmentId” desde la API. Ajusta el nombre si es distinto
+      //    (p. ej. iterator.attachment.id si tu API anidara el objeto).
+      const attachmentIdDesdeApi: string = iterator.attachmentId
 
-      if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-        if (iterator.employee.firstName && iterator.employee.lastName) {
-          iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-        }
+      // 4b) Tomar la fecha tal cual llega de la API (podría ser iterator.createdDate u otro campo)
+      //    Aquí asumimos que viene como iterator.createdAt
+      const fechaDesdeApi: string = iterator.createdAt
+
+      // 4c) Construir el objeto final para la tabla de historial
+      const registro: any = {
+        id: iterator.id,
+        paymentId: externalProps.selectedPayment.paymentId,
+        attachmentId: attachmentIdDesdeApi,
+        attachmentStatus: iterator.status,
+        description: iterator.description,
+        createdAt: fechaDesdeApi
       }
 
-      // Verificar si el ID ya existe en la lista
+      // 4d) Formatear employee si existe
+      if (iterator.employee?.firstName && iterator.employee?.lastName) {
+        registro.employee = {
+          id: iterator.employee.id,
+          name: `${iterator.employee.firstName} ${iterator.employee.lastName}`
+        }
+      }
+      else {
+        registro.employee = null
+      }
+
+      // 4e) Evitar duplicados
       if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
+        newListItems.push(registro)
+        existingIds.add(iterator.id)
       }
     }
 
+    // 5) Asignar al ref de historial
     historyList.value = [...historyList.value, ...newListItems]
   }
   catch (error) {
