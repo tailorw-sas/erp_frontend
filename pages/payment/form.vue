@@ -3,7 +3,6 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
-import { debounce, filter, get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinition, FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -2739,7 +2738,6 @@ async function onManualSearch() {
   applyPaymentPagination.value.totalElements = response.totalElements
   applyPaymentPagination.value.totalPages = response.totalPages
 }
-const debouncedSearch = debounce(onManualSearch, 2000)
 
 async function historyParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns.value)
@@ -3159,9 +3157,6 @@ function disableBankAccount(data: any) {
 
   return result
 }
-watch(manualFilter, () => {
-  debouncedSearch()
-})
 
 watch(payloadOnChangePage, (newValue) => {
   payload.value.page = newValue?.page ? newValue?.page : 0
