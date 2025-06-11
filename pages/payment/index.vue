@@ -747,6 +747,7 @@ const pagination = ref<IPagination>({
 
 const messageForEmptyTable = ref('There are no items to show.')
 const loadingSaveApplyPayment = ref(false)
+const invoiceSelectedListForApplyPayment = ref<any[]>([])
 const applyPaymentListOfInvoice = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
   {
@@ -1462,6 +1463,7 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = String(iterator.status)
       }
+      console.log('iterator', iterator)
       if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
         if (iterator.attachmentStatus?.code === 'PAT') {
           color = listColor.ATTACHMENT_WITHOUT_ERROR
@@ -3945,8 +3947,7 @@ const filteredInvoices = computed(() => {
         || inv.couponNumbers?.toLowerCase().includes(term)
         || String(inv.invoiceAmount)?.toLowerCase().includes(term)
         || String(inv.dueAmount)?.toLowerCase().includes(term)
-        || inv.agency?.toLowerCase().includes(term)
-        || inv.hotel?.toLowerCase().includes(term)
+        || inv.name?.toLowerCase().includes(term)
       )
     })
   })
@@ -5069,20 +5070,11 @@ onMounted(async () => {
                   </template>
                 </DataTable>
               </BlockUI>
-              <div class="flex align-items-center -mb-1 pb-1">
-                <Button
-                  v-if="manualFilter"
-                  v-tooltip.top="'Clear'"
-                  class="p-button-text p-button-rounded p-button-sm my-0"
-                  style="height:2.2rem"
-                  icon="pi pi-filter-slash"
-                  aria-label="Clear"
-                  @click="manualFilter = ''"
-                />
+              <div class="flex align-items-center mb-3">
                 <InputText
                   v-model="manualFilter"
-                  placeholder="Search data by Id, Invoice No, Agency, Hotel, Coupon No, Invoice Amount, Invoice Balance"
-                  class="flex-grow-1 my-0"
+                  placeholder="Search Data…"
+                  class="-mb-3 -mt-3"
                   style="padding-top: 0.1rem"
                   @keyup.enter="onManualSearch"
                 />
