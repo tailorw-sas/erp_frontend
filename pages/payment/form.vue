@@ -3,7 +3,6 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
-import { filter, get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinition, FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -91,7 +90,7 @@ interface SubTotals {
   depositAmount: number
 }
 const subTotals = ref<SubTotals>({ depositAmount: 0 })
-
+const manualFilter = ref('')
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
@@ -186,16 +185,16 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: true, showFilter: true },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: true },
-  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: true },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '80px', maxWidth: '90px', sortable: true, showFilter: true },
-  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '50px', sortable: true, showFilter: true },
-  { field: 'checkIn', header: 'Check-In', type: 'date', width: '50px', sortable: true, showFilter: true },
-  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '50px', sortable: true, showFilter: true },
-  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: true, showFilter: false },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: false },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: false },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '80px', maxWidth: '90px', sortable: true, showFilter: false },
+  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '50px', sortable: true, showFilter: false },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '50px', sortable: true, showFilter: false },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '50px', sortable: true, showFilter: false },
+  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: false },
+  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: false },
 ])
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
@@ -939,7 +938,6 @@ function openDialogPaymentDetails(event: any) {
     onOffDialogPaymentDetail.value = true
   }
   actionOfModal.value = 'new-detail'
-
   const decimalSchema = z.object(
     {
       amount: z
@@ -2559,6 +2557,7 @@ async function openDialogStatusHistory() {
 }
 
 async function openModalApplyPayment($event: any) {
+  manualFilter.value = ''
   if ('originalEvent' in $event) {
     isApplyPaymentFromTheForm.value = false
   }
@@ -2630,6 +2629,114 @@ function onSortFieldApplyPayment(event: any) {
     applyPaymentPayload.value.sortType = event.sortOrder
     applyPaymentParseDataTableFilter(event.filter)
   }
+}
+
+const filteredInvoices = computed(() => {
+  const terms = manualFilter.value
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+
+  if (!terms.length || !terms[0]) {
+    return applyPaymentList.value
+  }
+
+  return applyPaymentList.value.filter(inv =>
+    terms.some((term) => {
+      const fields = [
+        inv.invoiceNo,
+        inv.invoiceId,
+        inv.bookingId,
+        inv.couponNumber,
+        inv.hotelBookingNumber,
+        inv.invoiceAmount,
+        inv.dueAmount,
+        inv.fullName
+      ]
+
+      return fields.some(k =>
+        String(k || '')
+          .toLowerCase()
+          .includes(term)
+      )
+    })
+  )
+})
+
+async function onManualSearch() {
+  // 1. Construye tu filtro LIKE único (o varios términos con OR/AND)
+  const searchTerm = manualFilter.value.trim()
+  applyPaymentPayload.value.page = 0 // arrancas siempre en la primera página
+  applyPaymentPayload.value.filter = [
+    {
+      key: 'invoiceNo', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'fullName', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'bookingId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'couponNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'hotelBookingNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceAmount',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'dueAmount',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }
+  ]
+
+  // 2. Pides al servidor sólo las filas que coinciden
+  const response = await GenericService.search(
+    applyPaymentOptions.value.moduleApi,
+    applyPaymentOptions.value.uriApi,
+    applyPaymentPayload.value
+  )
+
+  // 3. Actualizas tu lista (y la paginación vendrá ya acorde al total de coincidencias)
+  applyPaymentList.value = response.data
+  applyPaymentPagination.value.totalElements = response.totalElements
+  applyPaymentPagination.value.totalPages = response.totalPages
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -3808,10 +3915,27 @@ onMounted(async () => {
         </div>
       </template>
       <template #default>
+        <div class="flex align-items-center gap-0 p-fluid pt-3 -mt-3 -mb-3">
+          <Button
+            v-if="manualFilter"
+            v-tooltip.top="'Clear'"
+            class="p-button-text p-button-rounded p-button-sm my-0"
+            style="height:2.2rem"
+            icon="pi pi-filter-slash"
+            aria-label="Clear"
+            @click="manualFilter = ''"
+          />
+          <InputText
+            v-model="manualFilter"
+            placeholder="Search data by Invoice Id, Booking Id, Invoice No, Full Name, Coupon No, Reservation No, Booking Amount, Booking Balance"
+            class="flex-grow-1 my-0"
+            style="height:2.2rem; padding-top:0.25rem"
+          />
+        </div>
         <div class="p-fluid pt-3">
           <DynamicTable
             class="card p-0"
-            :data="applyPaymentList"
+            :data="filteredInvoices"
             :columns="applyPaymentColumns"
             :options="applyPaymentOptions"
             :pagination="applyPaymentPagination"
