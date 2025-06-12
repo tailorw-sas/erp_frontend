@@ -2106,13 +2106,15 @@ if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].incl
   let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency');
 
   if (changeAgencyItem) {
-    if (event.data.status === InvoiceStatus.PROCESSED && event.data.isInCloseOperation) {
+    if (event.data.status === InvoiceStatus.PROCESSED) {
+       //if (event.data.status === InvoiceStatus.PROCESSED && event.data.isInCloseOperation) {
       changeAgencyItem.showItem = true;
     } 
-    else if (event.data.status === InvoiceStatus.RECONCILED && event.data.isInCloseOperation) {
-      changeAgencyItem.showItem = true;
-    }
-    if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+    // else if (event.data.status === InvoiceStatus.RECONCILED && event.data.isInCloseOperation) {
+    //   changeAgencyItem.showItem = true;
+    // }
+    if (event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) 
+    || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
       changeAgencyItem.showItem = true;
     }
   }
