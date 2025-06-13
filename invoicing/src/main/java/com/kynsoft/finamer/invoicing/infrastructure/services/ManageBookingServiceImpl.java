@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBook
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
@@ -30,13 +31,16 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     private final ManageBookingWriteDataJpaRepository repositoryCommand;
     private final ManageRoomRateReadDataJPARepository manageRoomRateReadDataJPARepository;
     private final ManageBookingReadDataJPARepository repositoryQuery;
+    private final IManageRoomRateService roomRateService;
 
     public ManageBookingServiceImpl(
             ManageBookingWriteDataJpaRepository repositoryCommand,ManageRoomRateReadDataJPARepository manageRoomRateReadDataJPARepository,
-            ManageBookingReadDataJPARepository repositoryQuery) {
+            ManageBookingReadDataJPARepository repositoryQuery,
+            IManageRoomRateService roomRateService) {
         this.repositoryCommand = repositoryCommand;
         this.manageRoomRateReadDataJPARepository = manageRoomRateReadDataJPARepository;
         this.repositoryQuery = repositoryQuery;
+        this.roomRateService = roomRateService;
 
     }
 
@@ -114,7 +118,20 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         dto.setId(entity.getId());
         dto.setReservationNumber(entity.getReservationNumber());
         dto.setBookingId(entity.getBookingId());
+
+        if(Objects.nonNull(dto.getRoomRates()) && !dto.getRoomRates().isEmpty()){
+            dto.setRoomRates(this.roomRateService.insertAll(dto.getRoomRates()));
+        }
+
         return entity.getId();
+    }
+
+    @Override
+    public List<ManageBookingDto> createAll(List<ManageBookingDto> bookingDtoList) {
+        for(ManageBookingDto bookingDto : bookingDtoList){
+            this.insert(bookingDto);
+        }
+        return bookingDtoList;
     }
 
     @Override
@@ -272,6 +289,20 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         if(Objects.nonNull(bookingList) && !bookingList.isEmpty()){
             List<Booking> bookings = bookingList.stream().map(Booking::new).collect(Collectors.toList());
             repositoryCommand.saveAll(bookings);
+        }
+    }
+
+    public void insert(Booking booking){
+        this.repositoryCommand.insert(booking);
+        if(booking.getRoomRates() != null && !booking.getRoomRates().isEmpty()){
+            this.roomRateService.createAll(booking.getRoomRates());
+        }
+    }
+
+    @Override
+    public void insertAll(List<Booking> bookins) {
+        for (Booking booking : bookins){
+            this.insert(booking);
         }
     }
 }

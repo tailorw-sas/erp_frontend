@@ -5,11 +5,18 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import jakarta.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.DataSource;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Properties;
 import java.util.UUID;
 
 @Repository
@@ -17,13 +24,75 @@ public class ManageInvoiceWriteCustomRepositoryImpl implements ManageInvoiceWrit
 
     private static final Logger log = LoggerFactory.getLogger(ManageInvoiceWriteCustomRepositoryImpl.class);
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    private DataSource dataSource;
+
+    //@PersistenceContext
+    //private EntityManager entityManager;
 
     @Override
     @Transactional
     public void insert(Invoice invoice) {
-        try{
+        String sql = "{ CALL public.pr_insert_invoice(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }";
+
+        try(Connection connection = dataSource.getConnection();
+            CallableStatement stmt = connection.prepareCall(sql)){
+
+            connection.setAutoCommit(false);
+
+            stmt.setObject(1, invoice.getId());
+            stmt.setObject(2, invoice.getAging());
+            stmt.setObject(3, invoice.getAutoRec());
+            stmt.setObject(4, invoice.isCloneParent());
+            stmt.setObject(5, invoice.getCredits());
+            stmt.setObject(6, invoice.isDeleteInvoice());
+            stmt.setObject(7, invoice.getDueAmount());
+            stmt.setObject(8, invoice.getDueDate());
+            stmt.setObject(9, invoice.getHasAttachments());
+            stmt.setString(10, invoice.getImportType().name());
+            stmt.setDouble(11, invoice.getInvoiceAmount());
+            stmt.setObject(12, invoice.getInvoiceDate());
+            stmt.setString(13, invoice.getInvoiceStatus().name());
+            stmt.setString(14, invoice.getInvoiceType().name());
+            stmt.setObject(15, invoice.getIsCloned());
+            stmt.setObject(16, invoice.getIsManual());
+            stmt.setDouble(17, invoice.getOriginalAmount());
+            stmt.setObject(18, invoice.getReSend());
+            stmt.setObject(19, invoice.getReSendDate());
+            stmt.setString(20, invoice.getSendStatusError());
+            stmt.setObject(21, invoice.getUpdatedAt());
+            stmt.setObject(22, invoice.getAgency() != null ? invoice.getAgency().getId() : null);
+            stmt.setObject(23, invoice.getHotel() != null ? invoice.getHotel().getId() : null);
+            stmt.setObject(24, invoice.getManageInvoiceStatus() != null ? invoice.getManageInvoiceStatus().getId() : null);
+            stmt.setObject(25, invoice.getManageInvoiceType() != null ? invoice.getManageInvoiceType().getId() : null);
+            stmt.setObject(26, invoice.getParent() != null ? invoice.getParent().getId() : null);
+
+            // OUT parameters
+            stmt.registerOutParameter(27, Types.BIGINT); // p_invoice_no
+            stmt.registerOutParameter(28, Types.VARCHAR); // p_invoicenumber
+            stmt.registerOutParameter(29, Types.VARCHAR); // p_invoicenumberprefix
+            stmt.registerOutParameter(30, Types.INTEGER); // p_invoiceid
+
+            log.debug("Inserting invoice with ID: {}", invoice.getId());
+            log.info("Hilo actual: {}", Thread.currentThread().getName());
+
+            stmt.execute();
+
+            invoice.setInvoiceNo(stmt.getLong(27));
+            invoice.setInvoiceNumber(stmt.getString(28));
+            invoice.setInvoiceNumberPrefix(stmt.getString(29));
+            invoice.setInvoiceId((long) stmt.getInt(30));
+
+            connection.commit();
+        } catch (PersistenceException e) {
+            log.error("Error inserting invoice into database", e);
+            throw new InvoiceInsertException("Error inserting invoice into database", e);
+        } catch (SQLException sqlException){
+            log.error("Error inserting invoice via JDBC", sqlException);
+            throw new InvoiceInsertException("Error inserting invoice into database via JDBC", sqlException);
+        }
+
+        /*try{
             StoredProcedureQuery query = entityManager.createStoredProcedureQuery("pr_insert_invoice")
                     .registerStoredProcedureParameter("p_id", UUID.class, ParameterMode.IN)
                     .registerStoredProcedureParameter("p_aging", Integer.class, ParameterMode.IN)
@@ -103,6 +172,6 @@ public class ManageInvoiceWriteCustomRepositoryImpl implements ManageInvoiceWrit
         } catch (Exception e) {
             log.error("Unexpected error inserting invoice", e);
             throw new InvoiceInsertException("Unexpected error inserting invoice", e);
-        }
+        }*/
     }
 }
