@@ -5,6 +5,7 @@ import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeAttachmentRequest;
 import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest;
 import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
 import com.kynsof.share.core.domain.http.entity.income.ajustment.CreateIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.http.entity.income.ajustment.NewIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
@@ -450,20 +451,22 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     private CreateAntiToIncomeRequest getRelatedIncome(PaymentDetailDto paymentDetailDto, ManageEmployeeDto employeeDto, UUID status, String attachment) {
         CreateAntiToIncomeRequest income = new CreateAntiToIncomeRequest();
-        income.setInvoiceDate(LocalDateTime.now().toString());
-        income.setManual(Boolean.FALSE);
-        income.setAgency(paymentDetailDto.getPayment().getAgency().getId());
-        income.setHotel(paymentDetailDto.getPayment().getHotel().getId());
-        income.setInvoiceType(UUID.randomUUID());//TODO Cambiar por INCOME
-        income.setInvoiceStatus(status);
-        income.setIncomeAmount(paymentDetailDto.getAmount());
-        income.setStatus("ACTIVE");
-        income.setInvoiceNumber(0L);
-        income.setDueDate(LocalDate.now().toString());//TODO Validar que debe ser segun el close operation
-        income.setReSend(Boolean.FALSE);
-        income.setReSendDate(LocalDate.now().toString());
-        income.setEmployee(employeeDto.getId().toString());
-        income.setAttachments(List.of(this.attachment(attachment, employeeDto)));
+        CreateIncomeRequest incomeRequest = new CreateIncomeRequest();
+        incomeRequest.setInvoiceDate(LocalDateTime.now());
+        incomeRequest.setManual(Boolean.FALSE);
+        incomeRequest.setAgency(paymentDetailDto.getPayment().getAgency().getId());
+        incomeRequest.setHotel(paymentDetailDto.getPayment().getHotel().getId());
+        incomeRequest.setInvoiceType(UUID.randomUUID());//TODO Cambiar por INCOME
+        incomeRequest.setInvoiceStatus(status);
+        incomeRequest.setIncomeAmount(paymentDetailDto.getAmount());
+        incomeRequest.setStatus("ACTIVE");
+        incomeRequest.setInvoiceNumber(0L);
+        incomeRequest.setDueDate(LocalDate.now());//TODO Validar que debe ser segun el close operation
+        incomeRequest.setReSend(Boolean.FALSE);
+        incomeRequest.setReSendDate(LocalDate.now());
+        incomeRequest.setEmployee(employeeDto.getId().toString());
+        //incomeRequest.setAttachments(List.of(this.attachment(attachment, employeeDto)));
+        income.setCreateIncomeRequests(List.of(incomeRequest));
         return income;
     }
 

@@ -38,6 +38,7 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IInvoiceCloseOperationService closeOperationService;
 
     public CreateAntiToIncomeCommandHandler(IManageAgencyService agencyService,
                                             IManageHotelService hotelService,
@@ -47,11 +48,12 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
                                             IManageAttachmentTypeService attachmentTypeService,
                                             IManageResourceTypeService resourceTypeService,
                                             IInvoiceStatusHistoryService invoiceStatusHistoryService,
-                                            IInvoiceCloseOperationService closeOperationService,
                                             IManageAttachmentService attachmentService,
                                             IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                             IManageEmployeeService employeeService,
-                                            IManagePaymentTransactionTypeService paymentTransactionTypeService) {
+                                            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                            IInvoiceCloseOperationService closeOperationService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -64,6 +66,8 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
