@@ -14,13 +14,13 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageEmployee;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageEmployeeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -82,6 +82,28 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         }
 
         return employeeId;
+    }
+
+    @Override
+    public List<ManageEmployeeDto> findAllByIdsWithoutRelations(List<UUID> ids) {
+        if(Objects.isNull(ids) || ids.isEmpty()){
+            throw new IllegalArgumentException("The employee ID list must not be null or empty");
+        }
+
+        return this.repositoryQuery.findAllByIdWithoutRelations(ids).stream()
+                .map(ManageEmployee::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<UUID, String> getEmployeeFullNameMapByIds(List<UUID> ids) {
+        if(Objects.isNull(ids) || ids.isEmpty()){
+            throw new IllegalArgumentException("The employee ID list must not be null or empty");
+        }
+
+        return this.findAllByIdsWithoutRelations(ids).stream()
+                .collect(Collectors.toMap(ManageEmployeeDto::getId,
+                        manageEmployeeDto -> manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

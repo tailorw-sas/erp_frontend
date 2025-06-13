@@ -3,6 +3,8 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTypeDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface IManageInvoiceTypeService {
@@ -26,4 +28,8 @@ public interface IManageInvoiceTypeService {
     ManageInvoiceTypeDto findByCredit();
 
     ManageInvoiceTypeDto findByInvoice();
+
+    List<ManageInvoiceTypeDto> findByIds(List<UUID> ids);
+
+    Map<UUID, ManageInvoiceTypeDto> getMapById(List<UUID> invoiceTypeIds);
 }

@@ -18,10 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -93,6 +92,16 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Override
     public void clearManageHotelCache() {
         //System.out.println("Clearing manageHotel cache");
+    }
+
+    @Override
+    public Map<UUID, ManageHotelDto> getMapById(List<UUID> hotelIds) {
+        if(Objects.isNull(hotelIds) || hotelIds.isEmpty()){
+            throw new IllegalArgumentException("The hotel ID list is null or empty");
+        }
+
+        return this.findByIds(hotelIds).stream()
+                .collect(Collectors.toMap(ManageHotelDto::getId, manageHotelDto -> manageHotelDto));
     }
 
     @Override

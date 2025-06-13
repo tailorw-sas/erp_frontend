@@ -51,6 +51,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
+    private final IManageRoomRateService roomRateService;
+
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
                                       IManageHotelService hotelService,
                                       IManageInvoiceTypeService invoiceTypeService,
@@ -64,7 +66,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                                       IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                       IManageEmployeeService employeeService,
                                       IManagePaymentTransactionTypeService transactionTypeService,
-                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                      IManageRoomRateService roomRateService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -79,6 +82,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         this.employeeService = employeeService;
         this.transactionTypeService = transactionTypeService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.roomRateService = roomRateService;
     }
 
     @Override
@@ -111,17 +115,37 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
         this.createAdjustments(income, command.getAdjustments(), employeeFullName, closeOperationDto);
 
-        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+        //ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+        Instant before = Instant.now();
+        this.manageInvoiceService.insert(income);
+        Instant after = Instant.now();
+        System.out.println("Insert invoice - booking: " + Duration.between(before, after).toMillis() + " ms");
 
-        command.setInvoiceId(invoiceDto.getInvoiceId());
-        command.setInvoiceNo(invoiceDto.getInvoiceNumber());
-        command.setIncome(invoiceDto);
+        //TODO Luego guardar los bookings y rates con los ajustes
+        before = Instant.now();
+        if(Objects.nonNull(income.getBookings()) && !income.getBookings().isEmpty()){
+            //this.bookingService.updateAll(income.getBookings());
+            for (ManageBookingDto bookingDto : income.getBookings()){
+                if(Objects.nonNull(bookingDto.getRoomRates()) && !bookingDto.getRoomRates().isEmpty()){
+                    for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()){
+                        this.roomRateService.create(roomRateDto);
+                    }
+                }
+            }
+        }
+        after = Instant.now();
+        System.out.println("Insert room rates - adjustments: " + Duration.between(before, after).toMillis() + " ms");
 
-        this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
+
+        command.setInvoiceId(income.getInvoiceId());
+        command.setInvoiceNo(income.getInvoiceNumber());
+        command.setIncome(income);
+
+        this.updateInvoiceStatusHistory(income, employeeFullName);
         if (command.getAttachments() != null) {
-            List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), invoiceDto);
-            invoiceDto.setAttachments(attachmentDtoList);
-            this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
+            List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), income);
+            income.setAttachments(attachmentDtoList);
+            this.updateAttachmentStatusHistory(income, attachmentDtoList, employeeFullName);
         }
 
         if(command.getManual()){
@@ -134,7 +158,13 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     }
 
-
+    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceTypeCode) {
+        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+            return invoiceTypeCode + "-" + hotel.getManageTradingCompanies().getCode();
+        } else {
+            return invoiceTypeCode + "-" + hotel.getCode();
+        }
+    }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
 

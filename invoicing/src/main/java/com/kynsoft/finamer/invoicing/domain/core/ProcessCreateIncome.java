@@ -22,7 +22,7 @@ public class ProcessCreateIncome {
     private final UUID id;
     private final InvoiceCloseOperationDto closeOperationDto;
     private final LocalDateTime invoiceDate;
-    private final LocalDate dueAmount;
+    private final LocalDate dueDate;
     private final boolean manual;
     private final ManageAgencyDto agency;
     private final ManageHotelDto hotel;
@@ -35,7 +35,7 @@ public class ProcessCreateIncome {
 
     public ProcessCreateIncome(UUID id,
                                InvoiceCloseOperationDto closeOperationDto,
-                               LocalDateTime invoiceDate, LocalDate dueAmount, boolean manual,
+                               LocalDateTime invoiceDate, LocalDate dueDate, boolean manual,
                                ManageAgencyDto agency, ManageHotelDto hotel, boolean reSend, LocalDate reSendDate,
                                ManageInvoiceTypeDto invoiceType, ManageInvoiceStatusDto invoiceStatus,
                                String employeeName,
@@ -43,7 +43,7 @@ public class ProcessCreateIncome {
         this.id = id;
         this.closeOperationDto = closeOperationDto;
         this.invoiceDate = invoiceDate;
-        this.dueAmount = dueAmount;
+        this.dueDate = dueDate;
         this.manual = manual;
         this.agency = agency;
         this.hotel = hotel;
@@ -62,7 +62,7 @@ public class ProcessCreateIncome {
         ManageInvoiceDto income = this.generateNewManageInvoice(id,
                 invoiceNumber,
                 invoiceDate,
-                dueAmount,
+                dueDate,
                 manual,
                 hotel,
                 agency,

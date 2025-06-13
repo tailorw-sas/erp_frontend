@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageEmployeeDto;
 import java.util.List;
 
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 
@@ -20,4 +21,8 @@ public interface IManageEmployeeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     String getEmployeeFullName(String employee);
+
+    List<ManageEmployeeDto> findAllByIdsWithoutRelations(List<UUID> ids);
+
+    Map<UUID, String> getEmployeeFullNameMapByIds(List<UUID> ids);
 }

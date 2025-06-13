@@ -3,7 +3,9 @@ package com.kynsoft.finamer.invoicing.application.command.income.create.antiToIn
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeAttachmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
+import com.kynsoft.finamer.invoicing.domain.core.IncomeAdjustment;
 import com.kynsoft.finamer.invoicing.domain.core.ProcessCreateIncome;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -13,9 +15,8 @@ import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBefo
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateAntiToIncomeCommand> {
@@ -37,18 +38,21 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
 
+    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+
     public CreateAntiToIncomeCommandHandler(IManageAgencyService agencyService,
-            IManageHotelService hotelService,
-            IManageInvoiceTypeService invoiceTypeService,
-            IManageInvoiceStatusService invoiceStatusService,
-            IManageInvoiceService manageInvoiceService,
-            IManageAttachmentTypeService attachmentTypeService,
-            IManageResourceTypeService resourceTypeService,
-            IInvoiceStatusHistoryService invoiceStatusHistoryService,
-            IInvoiceCloseOperationService closeOperationService,
-            IManageAttachmentService attachmentService,
-            IAttachmentStatusHistoryService attachmentStatusHistoryService,
-            IManageEmployeeService employeeService) {
+                                            IManageHotelService hotelService,
+                                            IManageInvoiceTypeService invoiceTypeService,
+                                            IManageInvoiceStatusService invoiceStatusService,
+                                            IManageInvoiceService manageInvoiceService,
+                                            IManageAttachmentTypeService attachmentTypeService,
+                                            IManageResourceTypeService resourceTypeService,
+                                            IInvoiceStatusHistoryService invoiceStatusHistoryService,
+                                            IInvoiceCloseOperationService closeOperationService,
+                                            IManageAttachmentService attachmentService,
+                                            IAttachmentStatusHistoryService attachmentStatusHistoryService,
+                                            IManageEmployeeService employeeService,
+                                            IManagePaymentTransactionTypeService paymentTransactionTypeService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -61,72 +65,60 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
+        this.paymentTransactionTypeService = paymentTransactionTypeService;
     }
 
     @Override
     public void handle(CreateAntiToIncomeCommand command) {
 
+        Map<UUID, InvoiceCloseOperationDto> closeOperationByHotelMap = new HashMap<>();
+        Map<UUID, ManageAgencyDto> agencyMap = new HashMap<>();
+        Map<UUID, ManageHotelDto> hotelMap = new HashMap<>();
+        Map<UUID, ManageInvoiceTypeDto> invoiceTypeMap = new HashMap<>();
+        Map<UUID, ManageInvoiceStatusDto> invoiceStatusMap = new HashMap<>();
+        Map<UUID, String> employeeFullNameMap = new HashMap<>();
+
+        this.getManagerMaps(command.getCreateIncomeCommands(),
+                closeOperationByHotelMap,
+                agencyMap,
+                hotelMap,
+                invoiceTypeMap,
+                invoiceStatusMap,
+                employeeFullNameMap);
+
+        List<ManageInvoiceDto> incomes = new ArrayList<>();
+
         for(CreateIncomeCommand incomeCommand : command.getCreateIncomeCommands()){
+            InvoiceCloseOperationDto closeOperation = closeOperationByHotelMap.get(incomeCommand.getHotel());
+            ManageAgencyDto agencyDto = agencyMap.get(incomeCommand.getAgency());
+            ManageHotelDto hotelDto = hotelMap.get(incomeCommand.getHotel());
+            ManageInvoiceTypeDto invoiceTypeDto = invoiceTypeMap.get(incomeCommand.getInvoiceType());
+            ManageInvoiceStatusDto invoiceStatusDto = invoiceStatusMap.get(incomeCommand.getInvoiceStatus());
+            String employeeFullName = employeeFullNameMap.get(UUID.fromString(incomeCommand.getEmployee()));
+            List<IncomeAdjustment> incomeAdjustments = this.getIncomeAdjustmentList(incomeCommand.getAdjustments());
 
             ProcessCreateIncome processCreateIncome = new ProcessCreateIncome(incomeCommand.getId(),
-                    )
+                    closeOperation,
+                    incomeCommand.getInvoiceDate(),
+                    incomeCommand.getDueDate(),
+                    incomeCommand.getManual(),
+                    agencyDto,
+                    hotelDto,
+                    incomeCommand.getReSend(),
+                    incomeCommand.getReSendDate(),
+                    invoiceTypeDto,
+                    invoiceStatusDto,
+                    employeeFullName,
+                    incomeAdjustments);
+
+            ManageInvoiceDto income = processCreateIncome.process();
+
+            incomes.add(income);
         }
 
-        /*RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        //RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
+        //this.manageInvoiceService.create()
 
-        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
-        ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
-
-        ManageInvoiceTypeDto invoiceTypeDto = this.invoiceTypeService.findByEInvoiceType(EInvoiceType.INCOME);
-
-        ManageInvoiceStatusDto invoiceStatusDto = null;
-        try {
-            invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        } catch (Exception e) {
-        }
-
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
-        try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
-        } catch (Exception e) {
-            employeeFullName = command.getEmployee();
-        }
-
-        String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
-
-        ManageInvoiceDto income = new ManageInvoiceDto(
-                command.getId(),
-                0L,
-                0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
-                command.getInvoiceDate(),
-                command.getDueDate(),
-                command.getManual(),
-                0.0,
-                0.0,
-                hotelDto,
-                agencyDto,
-                EInvoiceType.INCOME,
-                EInvoiceStatus.SENT,
-                Boolean.FALSE,
-                null,
-                null,
-                command.getReSend(),
-                command.getReSendDate(),
-                invoiceTypeDto,
-                invoiceStatusDto,
-                null,
-                false,
-                null, 0.0, 0
-        );
-        income.setOriginalAmount(0.0);
-        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
-        command.setInvoiceId(invoiceDto.getInvoiceId());
-        command.setInvoiceNo(invoiceDto.getInvoiceNumber());
+        /*
 
         this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
         //this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
@@ -138,13 +130,82 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
 */
     }
 
-    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceNumber) {
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            invoiceNumber += "-" + hotel.getCode();
+    private void getManagerMaps(List<CreateIncomeCommand> createIncomeCommands,
+                                Map<UUID, InvoiceCloseOperationDto> closeOperationByHotelMap,
+                                Map<UUID, ManageAgencyDto> agencyMap,
+                                Map<UUID, ManageHotelDto> hotelMap,
+                                Map<UUID, ManageInvoiceTypeDto> invoiceTypeMap,
+                                Map<UUID, ManageInvoiceStatusDto> invoiceStatusMap,
+                                Map<UUID, String> employeeFullNameMap){
+        Set<UUID> hotelSet = new HashSet<>();
+        Set<UUID> agencySet = new HashSet<>();
+        Set<UUID> invoiceTypeSet = new HashSet<>();
+        Set<UUID> invoiceStatusSet = new HashSet<>();
+        Set<UUID> employeeIdSet = new HashSet<>();
+
+        for (CreateIncomeCommand command : createIncomeCommands){
+            hotelSet.add(command.getHotel());
+            agencySet.add(command.getAgency());
+            invoiceTypeSet.add(command.getInvoiceType());
+            invoiceStatusSet.add(command.getInvoiceStatus());
+            employeeIdSet.add(UUID.fromString(command.getEmployee()));
         }
-        return invoiceNumber;
+
+        closeOperationByHotelMap = this.getCloseOperationByHotelMap(new ArrayList<>(hotelSet));
+        agencyMap = this.getManageAgencyMap(new ArrayList<>(agencySet));
+        hotelMap = this.getManageHotelMap(new ArrayList<>(hotelSet));
+        invoiceTypeMap = this.getManageInvoiceTypeMap(new ArrayList<>(invoiceTypeSet));
+        invoiceStatusMap = this.getManageInvoiceStatusMap(new ArrayList<>(invoiceStatusSet));
+        employeeFullNameMap = this.getEmployeeFullNameMap(new ArrayList<>(employeeIdSet));
+    }
+
+    private Map<UUID, InvoiceCloseOperationDto> getCloseOperationByHotelMap(List<UUID> hotelIds){
+        if(Objects.isNull(hotelIds) || hotelIds.isEmpty()){
+            throw new IllegalArgumentException("The hotel ID list is null or empty for the search of close operations");
+        }
+        return this.closeOperationService.findByHotelIds(hotelIds).stream()
+                .collect(Collectors.toMap(closeOperation -> closeOperation.getHotel().getId(),
+                        closeOperation -> closeOperation));
+    }
+
+    private Map<UUID, ManageAgencyDto> getManageAgencyMap(List<UUID> agencyIds){
+        return this.agencyService.getMapById(agencyIds);
+    }
+
+    private Map<UUID, ManageHotelDto> getManageHotelMap(List<UUID> hotelIds){
+        return this.hotelService.getMapById(hotelIds);
+    }
+
+    private Map<UUID, ManageInvoiceTypeDto> getManageInvoiceTypeMap(List<UUID> invoiceTypeIds){
+        return this.invoiceTypeService.getMapById(invoiceTypeIds);
+    }
+
+    private Map<UUID, ManageInvoiceStatusDto> getManageInvoiceStatusMap(List<UUID> invoiceStatusIds){
+        return this.invoiceStatusService.getMapById(invoiceStatusIds);
+    }
+
+    private Map<UUID, String> getEmployeeFullNameMap(List<UUID> employeeIds){
+        return this.employeeService.getEmployeeFullNameMapByIds(employeeIds);
+    }
+
+    private List<IncomeAdjustment> getIncomeAdjustmentList(List<NewIncomeAdjustmentRequest> newIncomeAdjustmentRequests){
+        List<UUID> paymentTransactionTypeIds = newIncomeAdjustmentRequests.stream()
+                .map(NewIncomeAdjustmentRequest::getTransactionType).toList();
+        Map<UUID, ManagePaymentTransactionTypeDto> paymentTransactionTypeDtoMap = this.getManagePaymentTransactionTypeMap(paymentTransactionTypeIds);
+
+        return newIncomeAdjustmentRequests.stream()
+                .map(newIncomeAdjustmentRequest -> {
+                    ManagePaymentTransactionTypeDto paymentTransactionTypeDto = paymentTransactionTypeDtoMap.get(newIncomeAdjustmentRequest.getTransactionType());
+
+                    return new IncomeAdjustment(paymentTransactionTypeDto,
+                            newIncomeAdjustmentRequest.getAmount(),
+                            newIncomeAdjustmentRequest.getDate(),
+                            newIncomeAdjustmentRequest.getRemark());
+                }).collect(Collectors.toList());
+    }
+
+    private Map<UUID, ManagePaymentTransactionTypeDto> getManagePaymentTransactionTypeMap(List<UUID> paymentTransactionTypeIds){
+        return this.paymentTransactionTypeService.getMapById(paymentTransactionTypeIds);
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {

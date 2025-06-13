@@ -90,12 +90,23 @@ public class ManagePaymentTransactionTypeServiceImpl implements IManagePaymentTr
     @Override
     public List<ManagePaymentTransactionTypeDto> findAllByIds(List<UUID> ids) {
         if(Objects.isNull(ids)){
-            throw new IllegalArgumentException("The Ids must not be null");
+            throw new IllegalArgumentException("The ID list must not be null");
         }
 
         return this.repositoryQuery.findByIdIn(ids).stream()
                 .map(ManagePaymentTransactionType::toAggregate)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<UUID, ManagePaymentTransactionTypeDto> getMapById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The ID list must not be null");
+        }
+
+        return this.findAllByIds(ids).stream()
+                .collect(Collectors.toMap(ManagePaymentTransactionTypeDto::getId,
+                        managePaymentTransactionTypeDto -> managePaymentTransactionTypeDto));
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

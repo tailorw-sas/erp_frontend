@@ -29,6 +29,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
@@ -57,6 +58,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.Update
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -75,13 +77,16 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
+    private final ManageBookingWriteDataJpaRepository bookingRepositoryCommand;
+
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
             IInvoiceCloseOperationService closeOperationService,
             ApplicationEventPublisher applicationEventPublisher,
             IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
             ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
-            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository,
+                                    ManageBookingWriteDataJpaRepository bookingRepositoryCommand) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -89,6 +94,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
         this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
+        this.bookingRepositoryCommand = bookingRepositoryCommand;
     }
 
     public Long getInvoiceNumberSequence(String invoiceNumber) {
@@ -156,6 +162,29 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         Invoice invoice = this.repositoryCommand.saveAndFlush(entity);
         return invoice.toAggregate();
+    }
+
+    @Override
+    //@Transactional
+    public UUID insert(ManageInvoiceDto dto) {
+        Invoice invoice = new Invoice(dto);
+        this.repositoryCommand.insert(invoice);
+
+        if(Objects.nonNull(invoice.getBookings()) && !invoice.getBookings().isEmpty()){
+            for(Booking booking : invoice.getBookings()){
+                if(booking.getInvoice() == null){
+                    booking.setInvoice(invoice);
+                }
+                this.bookingRepositoryCommand.insert(booking);
+            }
+        }
+        dto.setId(invoice.getId());
+        dto.setInvoiceNo(invoice.getInvoiceNo());
+        dto.setInvoiceNumber(invoice.getInvoiceNumber());
+        dto.setInvoiceNumberPrefix(invoice.getInvoiceNumberPrefix());
+        dto.setInvoiceId(invoice.getInvoiceId());
+        dto.setBookings(invoice.getBookings().stream().map(Booking::toAggregateWithRates).collect(Collectors.toList()));
+        return invoice.getId();
     }
 
     @Override

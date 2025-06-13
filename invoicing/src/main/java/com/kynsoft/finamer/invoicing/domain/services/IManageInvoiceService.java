@@ -16,6 +16,8 @@ public interface IManageInvoiceService {
 
     ManageInvoiceDto create(ManageInvoiceDto dto);
 
+    UUID insert(ManageInvoiceDto dto);
+
     void calculateInvoiceAmount(ManageInvoiceDto dto);
 
     void exportInvoiceList(Pageable pageable, List<FilterCriteria> filterCriteria, ByteArrayOutputStream outputStream);
